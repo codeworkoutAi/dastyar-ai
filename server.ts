@@ -984,18 +984,58 @@ app.post('/api/chat/stream', async (req, res) => {
     // Prune history to last 6 messages max for high throughput and reduced prompt processing latency
     const prunedMessages = messages.slice(-6);
 
-    // Generate real-time live date and time context (Solar Hijri & Gregorian)
+    // Generate real-time live date and time context (Solar Hijri, Gregorian & Islamic Hijri)
     const now = new Date();
-    const faDate = new Intl.DateTimeFormat('fa-IR', { dateStyle: 'full', timeZone: 'Asia/Tehran' }).format(now);
+    const faFullDate = new Intl.DateTimeFormat('fa-IR-u-ca-persian', { dateStyle: 'full', timeZone: 'Asia/Tehran' }).format(now);
     const faTime = new Intl.DateTimeFormat('fa-IR', { timeStyle: 'short', timeZone: 'Asia/Tehran' }).format(now);
-    const enDate = now.toISOString().split('T')[0];
-    const timeContext = `[اطلاعات زمانی زنده: هم‌اکنون ${faDate}، ساعت ${faTime} به وقت ایران (معادل میلادی: ${enDate}) است.]`;
+    const enDateFull = new Intl.DateTimeFormat('en-US', { dateStyle: 'full', timeZone: 'Asia/Tehran' }).format(now);
+    const islamicDate = new Intl.DateTimeFormat('fa-IR-u-ca-islamic-umalqura', { dateStyle: 'full', timeZone: 'Asia/Tehran' }).format(now);
+    const timeContext = `[اطلاعات زمانی زنده: هم‌اکنون ${faFullDate}، ساعت ${faTime} به وقت ایران (معادل میلادی: ${enDateFull} | قمری: ${islamicDate}) است.]`;
 
     // Fetch real-time web search results if webSearch tool is enabled
     let liveWebContext = '';
-    if (apiConfig?.webSearch) {
-      const lastUserMsg = prunedMessages.slice().reverse().find((m: any) => m.role === 'user');
-      const userText = typeof lastUserMsg?.content === 'string' ? lastUserMsg.content : '';
+    const lastUserMsg = prunedMessages.slice().reverse().find((m: any) => m.role === 'user');
+    const userText = typeof lastUserMsg?.content === 'string' ? lastUserMsg.content : '';
+
+    // Check for Date & Calendar queries to render the gorgeous iOS-style Calendar Widget
+    const isDateInquiry = userText && (
+      userText.includes('امروز چه روز') ||
+      userText.includes('تاریخ امروز') ||
+      userText.includes('امروز چندمه') ||
+      userText.includes('امروز چندم') ||
+      userText.includes('امروز چه تاریخ') ||
+      userText.includes('تقویم امروز') ||
+      userText.includes('روز چندمه') ||
+      userText.includes('امروز چنده') ||
+      userText.includes('روز هفته')
+    );
+
+    if (isDateInquiry) {
+      liveWebContext = `\n\n[اطلاعات زمانی و تقویمی زنده و معتبر:
+- تاریخ هجری شمسی: ${faFullDate}
+- ساعت رسمی ایران: ${faTime}
+- تاریخ میلادی: ${enDateFull}
+- تاریخ هجری قمری: ${islamicDate}
+
+دستورالعمل حیاتی نمایش تقویم (ساختار ویجت مدرن سه‌گانه):
+کاربر درباره تاریخ امروز یا روز هفته سوال پرسیده است. پاسخ خود را دقیقاً در قالب کارت‌های شیشه‌ای زیبا و منظم زیر ارائه دهید:
+
+### 📅 **تقویم و زمان امروز**
+
+> ### ☀️ **${faFullDate}**
+> *ساعت ${faTime} به وقت ایران*
+
+> 🌍 **تاریخ میلادی:** ${enDateFull}
+> 
+> 🌙 **تاریخ قمری:** ${islamicDate}
+
+---
+
+📌 **مناسبت روز:**
+«امروز مناسبت تعطیل یا رویداد رسمی خاصی در تقویم ملی ثبت نشده است.» (یا در صورت وجود مناسبت تاریخی/ملی، آن را به کوتاهی بنویسید.)]`;
+    }
+
+    if (apiConfig?.webSearch && !isDateInquiry) {
       if (userText && userText.trim().length > 1) {
         const lower = userText.toLowerCase();
 
