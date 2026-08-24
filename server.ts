@@ -986,13 +986,19 @@ app.post('/api/chat/stream', async (req, res) => {
 
     // Generate real-time live date and time context (Solar Hijri, Gregorian & Islamic Hijri)
     const now = new Date();
-    const faFullDate = new Intl.DateTimeFormat('fa-IR-u-ca-persian', {
+    const faParts = new Intl.DateTimeFormat('fa-IR-u-ca-persian', {
       weekday: 'long',
       day: 'numeric',
       month: 'long',
       year: 'numeric',
       timeZone: 'Asia/Tehran',
-    }).format(now);
+    }).formatToParts(now);
+    const faWeekday = faParts.find(p => p.type === 'weekday')?.value || '';
+    const faDay = faParts.find(p => p.type === 'day')?.value || '';
+    const faMonth = faParts.find(p => p.type === 'month')?.value || '';
+    const faYear = faParts.find(p => p.type === 'year')?.value || '';
+    const faFullDate = `${faWeekday}، ${faDay} ${faMonth} ${faYear}`;
+
     const faNumeric = new Intl.DateTimeFormat('fa-IR-u-ca-persian-nu-arabext', {
       year: 'numeric',
       month: '2-digit',
@@ -1008,13 +1014,20 @@ app.post('/api/chat/stream', async (req, res) => {
       timeZone: 'Asia/Tehran',
     }).format(now);
     const enNumeric = `${now.getFullYear()}/${String(now.getMonth() + 1).padStart(2, '0')}/${String(now.getDate()).padStart(2, '0')}`;
-    const islamicDate = new Intl.DateTimeFormat('fa-IR-u-ca-islamic-umalqura', {
+    
+    const islamicParts = new Intl.DateTimeFormat('fa-IR-u-ca-islamic-umalqura', {
       weekday: 'long',
       day: 'numeric',
       month: 'long',
       year: 'numeric',
       timeZone: 'Asia/Tehran',
-    }).format(now);
+    }).formatToParts(now);
+    const islamicWeekday = islamicParts.find(p => p.type === 'weekday')?.value || '';
+    const islamicDay = islamicParts.find(p => p.type === 'day')?.value || '';
+    const islamicMonth = islamicParts.find(p => p.type === 'month')?.value || '';
+    const islamicYear = islamicParts.find(p => p.type === 'year')?.value || '';
+    const islamicDate = `${islamicWeekday}، ${islamicDay} ${islamicMonth} ${islamicYear}`;
+
     const islamicNumeric = new Intl.DateTimeFormat('fa-IR-u-ca-islamic-umalqura-nu-arabext', {
       year: 'numeric',
       month: '2-digit',
