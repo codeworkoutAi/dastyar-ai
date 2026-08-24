@@ -352,10 +352,11 @@ async function fetchTorobProducts(query: string): Promise<string | null> {
     const targetProducts = validProducts.length > 0 ? validProducts : data.results;
 
     const items = targetProducts.slice(0, 5).map((p: any) => {
-      const fullUrl = p.web_client_absolute_url
-        ? `https://torob.com${p.web_client_absolute_url}`
+      const productKey = p.random_key || p.prk;
+      const cleanUrl = productKey
+        ? `https://torob.com/p/${productKey}/`
         : `https://torob.com/search/?query=${encodeURIComponent(p.name1 || cleanQuery)}`;
-      return `• [نام کالا: ${p.name1}] | [قیمت: ${p.price_text || 'استعلام قیمت'}] | [موجودی: ${p.shop_text || 'در فروشگاه‌های آنلاین'}] | [لینک مقایسه و خرید در ترب: ${fullUrl}]`;
+      return `• [نام کالا: ${p.name1}] | [قیمت: ${p.price_text || 'استعلام قیمت'}] | [موجودی: ${p.shop_text || 'در فروشگاه‌های آنلاین'}] | [لینک مقایسه و خرید در ترب: ${cleanUrl}]`;
     });
     return items.join('\n');
   } catch (e) {
