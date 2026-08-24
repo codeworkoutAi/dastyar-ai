@@ -235,12 +235,21 @@ async function translateAndEnhanceImagePrompt(rawPrompt: string): Promise<string
 async function fetchLiveWebSearch(query: string): Promise<string | null> {
   if (!query || query.length < 2) return null;
   try {
-    const cleanQuery = query.replace(/[^\p{L}\p{N}\s]/gu, ' ').trim();
-    const encoded = encodeURIComponent(cleanQuery || query);
+    const stopWords = ['رو', 'برای', 'من', 'بیار', 'بگو', 'چیست', 'کیست', 'چیه', 'لطفا', 'میشه', 'درباره', 'در مورد', 'میخوام', 'بدونم', 'هست', 'جدید', 'آخرین'];
+    let cleaned = query.replace(/[^\p{L}\p{N}\s]/gu, ' ').trim();
+    for (const sw of stopWords) {
+      cleaned = cleaned.replace(new RegExp('\\b' + sw + '\\b', 'gi'), ' ').replace(new RegExp('(^|\\s)' + sw + '($|\\s)', 'gi'), ' ');
+    }
+    cleaned = cleaned.replace(/\s+/g, ' ').trim();
+
+    const isGeneralNews = !cleaned || cleaned.length < 2 || cleaned.includes('اخبار') || cleaned.includes('خبر') || cleaned.includes('news');
+    const rssUrl = isGeneralNews
+      ? 'https://news.google.com/rss?hl=fa&gl=IR&ceid=IR:fa'
+      : `https://news.google.com/rss/search?q=${encodeURIComponent(cleaned)}&hl=fa&gl=IR&ceid=IR:fa`;
+
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 4000);
 
-    const rssUrl = `https://news.google.com/rss/search?q=${encoded}&hl=fa&gl=IR&ceid=IR:fa`;
     const res = await fetch(rssUrl, {
       headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' },
       signal: controller.signal
@@ -250,11 +259,11 @@ async function fetchLiveWebSearch(query: string): Promise<string | null> {
 
     const xml = await res.text();
     const items: string[] = [];
-    const regex = /<item>[\s\S]*?<title>(.*?)<\/title>[\s\S]*?<link>(.*?)<\/link>[\s\S]*?<pubDate>(.*?)<\/pubDate>/g;
+    const regex = /<item>[\s\S]*?<title>(.*?)<\/title>[\s\S]*?<pubDate>(.*?)<\/pubDate>/g;
     let match;
-    while ((match = regex.exec(xml)) !== null && items.length < 6) {
+    while ((match = regex.exec(xml)) !== null && items.length < 8) {
       const title = match[1].replace(/<!\[CDATA\[(.*?)\]\]>/g, '$1').replace(/<[^>]+>/g, '').trim();
-      const date = match[3].trim();
+      const date = match[2].trim();
       if (title) {
         items.push(`• ${title} (${date})`);
       }
