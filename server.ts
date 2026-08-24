@@ -958,14 +958,27 @@ app.post('/api/chat/stream', async (req, res) => {
       const userText = typeof lastUserMsg?.content === 'string' ? lastUserMsg.content : '';
       if (userText && userText.trim().length > 1) {
         const lower = userText.toLowerCase();
-        const isShoppingQuery = userText.includes('قیمت') || userText.includes('خرید') || userText.includes('ترب') ||
-          userText.includes('چنده') || userText.includes('ارزان') || userText.includes('تومان') ||
-          userText.includes('فروشگاه') || userText.includes('دیجی کالا') || userText.includes('دیجیکالا') ||
+
+        // 1. Currency, Gold, Crypto, and Financial Market inquiries (MUST use Live Web/Financial Intelligence, NOT Torob)
+        const isFinancialOrCurrencyQuery = userText.includes('دلار') || userText.includes('یورو') || userText.includes('ارز') ||
+          userText.includes('تتر') || userText.includes('طلا') || userText.includes('سکه') ||
+          userText.includes('بیت کوین') || userText.includes('رمز ارز') || userText.includes('کریپتو') ||
+          userText.includes('بورس') || userText.includes('سهام') || userText.includes('نفت') ||
+          userText.includes('بنزین') || userText.includes('مسکن') || userText.includes('اجاره');
+
+        // 2. Physical consumer products / ecommerce shopping (Torob)
+        const isPhysicalShoppingQuery = !isFinancialOrCurrencyQuery && (
+          userText.includes('ترب') || userText.includes('دیجی کالا') || userText.includes('دیجیکالا') ||
+          userText.includes('خرید کالا') || userText.includes('خرید آنلاین') ||
+          userText.includes('گوشی') || userText.includes('موبایل') || userText.includes('لپ تاپ') ||
+          userText.includes('تبلت') || userText.includes('هدفون') || userText.includes('ایرپاد') ||
+          userText.includes('پاوربانک') || userText.includes('ساعت هوشمند') || userText.includes('تلویزیون') ||
+          userText.includes('یخچال') || userText.includes('ps5') || userText.includes('کنسول') ||
           lower.includes('galaxy') || lower.includes('iphone') || lower.includes('s24') || lower.includes('s25') ||
-          userText.includes('سامسونگ') || userText.includes('شیائومی') || userText.includes('آیفون') ||
-          userText.includes('لپ تاپ') || userText.includes('گوشی');
+          userText.includes('سامسونگ') || userText.includes('شیائومی') || userText.includes('آیفون')
+        );
         
-        if (isShoppingQuery) {
+        if (isPhysicalShoppingQuery) {
           const torobResults = await fetchTorobProducts(userText);
           if (torobResults) {
             liveWebContext = `\n\n[اطلاعات زنده استعلام و مقایسه قیمت کالاها از موتور جستجوی ترب:\n${torobResults}\n\nدستورالعمل مهم نمایش قیمت و کالاها (ساختار کارتی زیبا و راست‌چین):
