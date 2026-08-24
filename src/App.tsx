@@ -20,6 +20,7 @@ import { SettingsModal } from './components/SettingsModal';
 import { ExportModal } from './components/ExportModal';
 import { ImageGenStudio } from './components/ImageGenStudio';
 import { UiGuideModal } from './components/UiGuideModal';
+import { ErrorCapsule } from './components/ErrorCapsule';
 
 export default function App() {
   // State initialization from localStorage
@@ -36,6 +37,7 @@ export default function App() {
   const [platformMode, setPlatformMode] = useState<'windows' | 'android'>('windows');
   const [videoNotice, setVideoNotice] = useState<string | null>(null);
   const [metricsNotice, setMetricsNotice] = useState<string | null>(null);
+  const [activeError, setActiveError] = useState<{ message: string; timestamp: number } | null>(null);
   
   // Streaming state
   const [isStreaming, setIsStreaming] = useState<boolean>(false);
@@ -272,6 +274,7 @@ export default function App() {
   // Send Message & Stream Response
   const handleSendMessage = async (text: string, imageUrl?: string) => {
     if ((!text.trim() && !imageUrl) || isStreaming) return;
+    setActiveError(null);
 
     let targetConv = activeConversation;
     if (!targetConv) {
@@ -434,25 +437,15 @@ export default function App() {
               if (data.error) {
                 streamHadError = true;
                 const persianError = formatPersianErrorMessage(data.error);
+                setActiveError({ message: persianError, timestamp: Date.now() });
                 setConversations((prev) =>
                   prev.map((c) => {
                     if (c.id !== targetConv!.id) return c;
-                    const msgs = c.messages.map((m) =>
-                      m.id === assistantMessageId
-                        ? {
-                            ...m,
-                            content: m.content || 'متاسفانه در دریافت پاسخ خطایی رخ داد.',
-                            isStreaming: false,
-                            error: true,
-                            errorMessage: persianError,
-                          }
-                        : m
-                    );
+                    // Remove empty assistant message so chat area stays 100% clean and pristine
+                    const msgs = c.messages.filter((m) => m.id !== assistantMessageId);
                     return { ...c, messages: msgs };
                   })
                 );
-                // Auto-dismiss this error message after 15 seconds
-                scheduleErrorAutoDismiss(targetConv!.id, assistantMessageId, 15000);
               }
 
               if (data.chunk) {
@@ -580,26 +573,16 @@ export default function App() {
       } else {
         console.error('Error during streaming:', err);
         const userFacingError = formatPersianErrorMessage(err);
+        setActiveError({ message: userFacingError, timestamp: Date.now() });
 
         setConversations((prev) =>
           prev.map((c) => {
             if (c.id !== targetConv!.id) return c;
-            const msgs = c.messages.map((m) =>
-              m.id === assistantMessageId
-                ? {
-                    ...m,
-                    content: m.content || 'خطا در برقراری ارتباط با مدل هوش مصنوعی.',
-                    isStreaming: false,
-                    error: true,
-                    errorMessage: userFacingError,
-                  }
-                : m
-            );
+            // Remove empty assistant message so chat area stays 100% clean and pristine
+            const msgs = c.messages.filter((m) => m.id !== assistantMessageId);
             return { ...c, messages: msgs };
           })
         );
-        // Auto-dismiss this error message after 15 seconds
-        scheduleErrorAutoDismiss(targetConv!.id, assistantMessageId, 15000);
       }
     } finally {
       setIsStreaming(false);
@@ -742,6 +725,18 @@ export default function App() {
               <span>{videoNotice}</span>
             </div>
           )}
+
+          {/* Floating Glass Error Capsule */}
+          <ErrorCapsule
+            error={activeError}
+            onDismiss={() => setActiveError(null)}
+            onRetry={() => {
+              setActiveError(null);
+              handleRegenerate();
+            }}
+            onOpenSettings={() => setIsSettingsOpen(true)}
+            durationSeconds={15}
+          />
 
           <MessageInput
             onSendMessage={handleSendMessage}
