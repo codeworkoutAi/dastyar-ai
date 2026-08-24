@@ -986,10 +986,28 @@ app.post('/api/chat/stream', async (req, res) => {
 
     // Generate real-time live date and time context (Solar Hijri, Gregorian & Islamic Hijri)
     const now = new Date();
-    const faFullDate = new Intl.DateTimeFormat('fa-IR-u-ca-persian', { dateStyle: 'full', timeZone: 'Asia/Tehran' }).format(now);
+    const faFullDate = new Intl.DateTimeFormat('fa-IR-u-ca-persian', {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+      timeZone: 'Asia/Tehran',
+    }).format(now);
     const faTime = new Intl.DateTimeFormat('fa-IR', { timeStyle: 'short', timeZone: 'Asia/Tehran' }).format(now);
-    const enDateFull = new Intl.DateTimeFormat('en-US', { dateStyle: 'full', timeZone: 'Asia/Tehran' }).format(now);
-    const islamicDate = new Intl.DateTimeFormat('fa-IR-u-ca-islamic-umalqura', { dateStyle: 'full', timeZone: 'Asia/Tehran' }).format(now);
+    const enDateFull = new Intl.DateTimeFormat('en-US', {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+      timeZone: 'Asia/Tehran',
+    }).format(now);
+    const islamicDate = new Intl.DateTimeFormat('fa-IR-u-ca-islamic-umalqura', {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+      timeZone: 'Asia/Tehran',
+    }).format(now);
     const timeContext = `[اطلاعات زمانی زنده: هم‌اکنون ${faFullDate}، ساعت ${faTime} به وقت ایران (معادل میلادی: ${enDateFull} | قمری: ${islamicDate}) است.]`;
 
     // Fetch real-time web search results if webSearch tool is enabled
@@ -1017,22 +1035,21 @@ app.post('/api/chat/stream', async (req, res) => {
 - تاریخ میلادی: ${enDateFull}
 - تاریخ هجری قمری: ${islamicDate}
 
-دستورالعمل حیاتی نمایش تقویم (ساختار ویجت مدرن سه‌گانه):
-کاربر درباره تاریخ امروز یا روز هفته سوال پرسیده است. پاسخ خود را دقیقاً در قالب کارت‌های شیشه‌ای زیبا و منظم زیر ارائه دهید:
+دستورالعمل حیاتی نمایش تقویم (ساختار ۱ کارت ویجت شیشه‌ای کاملاً یکپارچه):
+کاربر درباره تاریخ امروز سوال پرسیده است. پاسخ خود را دقیقاً درون **یک بلوک نقل‌قول واحد (با قرار دادن علامت > در ابتدای تمامی خطوط)** به شکل زیر ارائه دهید تا همه موارد در یک کارت شیک قرار گیرند:
 
-### 📅 **تقویم و زمان امروز**
-
-> ### ☀️ **${faFullDate}**
-> *ساعت ${faTime} به وقت ایران*
-
-> 🌍 **تاریخ میلادی:** ${enDateFull}
+> ### 📅 **تقویم و زمان امروز**
 > 
-> 🌙 **تاریخ قمری:** ${islamicDate}
-
----
-
-📌 **مناسبت روز:**
-«امروز مناسبت تعطیل یا رویداد رسمی خاصی در تقویم ملی ثبت نشده است.» (یا در صورت وجود مناسبت تاریخی/ملی، آن را به کوتاهی بنویسید.)]`;
+> ### ☀️ **${faFullDate}**
+> *ساعت ${faTime} به وقت رسمی ایران*
+> 
+> ---
+> 🌍 **میلادی:** \`${enDateFull}\`
+> 
+> 🌙 **قمری:** ${islamicDate}
+> 
+> 📌 **مناسبت روز:**
+> امروز مناسبت تعطیل یا رویداد رسمی خاصی در تقویم ملی ثبت نشده است.]`;
     }
 
     if (apiConfig?.webSearch && !isDateInquiry) {
@@ -1078,19 +1095,16 @@ app.post('/api/chat/stream', async (req, res) => {
         if (!liveWebContext && isNewsQuery) {
           const searchResults = await fetchLiveWebSearch(userText);
           if (searchResults) {
-            liveWebContext = `\n\n[نتایج زنده جستجوی اینترنت و اخبار برای سوال کاربر:\n${searchResults}\n\nدستورالعمل حیاتی قالب‌بندی اخبار (ساختار کارتی زیبا، راست‌چین و بهینه‌شده برای موبایل):
-شما به نتایج زنده وب دسترسی دارید و اطلاعات بالا لحظاتی پیش استخراج شده است. اخبار و نتایج را دقیقاً با ساختار کارتی و منظم زیر به زبان فارسی بنویسید:
+            liveWebContext = `\n\n[نتایج زنده جستجوی اینترنت و اخبار برای سوال کاربر:\n${searchResults}\n\nدستورالعمل حیاتی قالب‌بندی اخبار (ساختار ۱ کارت واحد برای هر خبر):
+شما به نتایج زنده وب دسترسی دارید. برای هر خبر، تمام اجزا (تیتر، متن و منبع) را پیوسته و درون **یک بلوک نقل‌قول واحد (علامت > در تمام خطوط)** بنویسید تا در یک کارت منسجم قرار گیرند:
 
-برای هر خبر:
-۱. یک عنوان موضوعی با ایموجی (مانند #### 🏛️ **سیاست و بین‌الملل** یا #### 💰 **اقتصاد و بازار** یا #### 🤖 **فناوری و هوش مصنوعی** یا #### 🌍 **جامعه و حوادث**) بگذارید.
-۲. بدنه خبر را در یک بلوک نقل‌قول (علامت >) قرار دهید:
-   > **[تیتر برجسته خبر]**
-   > * [خلاصه کوتاه و روان از رویداد در یک یا دو جمله]
-   > 
-   > *📰 منبع: [نام خبرگزاری](لینک خبر) | 🕒 زمان انتشار: ساعت و تاریخ*
-۳. روی نام خبرگزاری حتماً لینک استخراج‌شده همان خبر را قرار دهید تا کاربر با کلیک روی نام منبع، مستقیماً وارد سایت خبرگزاری و صفحه آن خبر شود.
-۴. بین هر کارت یک خط جداکننده (---) قرار دهید تا در صفحات کوچک گوشی و دسکتاپ تفکیک‌شده و خوانا باشد.
-۵. هرگز و تحت هیچ شرایطی جملاتی مانند «در این محیط جستجوی زنده در دسترسم نیست»، «به اینترنت دسترسی ندارم» یا «خبر تأییدشده‌ای ندارم» ننویسید. اطلاعات ارائه‌شده کاملاً زنده هستند و مستقیماً اخبار را در قالب کارت‌ها ارائه دهید.]`;
+#### 🏛️ **[عنوان دسته‌بندی موضوعی با ایموجی]**
+> ### 📰 **[تیتر برجسته خبر]**
+> [خلاصه کوتاه و روان از رویداد در یک یا دو جمله]
+> 
+> *📌 منبع: [نام خبرگزاری](لینک خبر) • زمان انتشار: ساعت و تاریخ*
+
+بین هر خبر یک خط جداکننده (---) بگذارید.]`;
           }
         }
 
