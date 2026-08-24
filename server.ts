@@ -328,6 +328,49 @@ async function fetchLiveWebSearch(query: string): Promise<string | null> {
   return null;
 }
 
+// Helper for Universal Web Search (Programming code, documentation, guides, stackoverflow, general questions - like ChatGPT)
+async function fetchUniversalWebSnippets(query: string): Promise<string | null> {
+  if (!query || query.length < 2) return null;
+  try {
+    const url = `https://html.duckduckgo.com/html/?q=${encodeURIComponent(query)}`;
+    const res = await fetch(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        'Accept-Language': 'fa,en-US;q=0.9,en;q=0.8'
+      },
+      signal: AbortSignal.timeout(4500)
+    });
+    if (!res.ok) return null;
+    const html = await res.text();
+    
+    const linkMatches = [...html.matchAll(/<a class="result__url"[^>]*href="([^"]*)"[^>]*>/g)];
+    const snippetMatches = [...html.matchAll(/<a class="result__snippet[^"]*"[^>]*>([\s\S]*?)<\/a>/g)];
+    
+    const items: string[] = [];
+    for (let i = 0; i < Math.min(linkMatches.length, snippetMatches.length, 5); i++) {
+      let rawUrl = linkMatches[i][1];
+      if (rawUrl.includes('uddg=')) {
+        const m = rawUrl.match(/uddg=([^&]+)/);
+        if (m) rawUrl = decodeURIComponent(m[1]);
+      }
+      const snippet = snippetMatches[i][1]
+        .replace(/<[^>]+>/g, '')
+        .replace(/&quot;/g, '"')
+        .replace(/&amp;/g, '&')
+        .replace(/&#x27;/g, "'")
+        .replace(/\s+/g, ' ')
+        .trim();
+      if (rawUrl && snippet) {
+        items.push(`• [منبع: ${rawUrl}]\n  مستندات و خلاصه راهکار: ${snippet}`);
+      }
+    }
+    if (items.length > 0) {
+      return items.join('\n\n');
+    }
+  } catch (e) {}
+  return null;
+}
 // Helper to fetch live real-time product prices & shopping comparison from Torob API
 async function fetchTorobProducts(query: string): Promise<string | null> {
   if (!query || query.length < 2) return null;
@@ -929,7 +972,9 @@ app.post('/api/chat/stream', async (req, res) => {
           }
         }
 
-        if (!liveWebContext) {
+        const isNewsQuery = userText.includes('اخبار') || userText.includes('خبر') || userText.includes('رویداد') || userText.includes('تیتر') || userText.includes('اتفاقات');
+
+        if (!liveWebContext && isNewsQuery) {
           const searchResults = await fetchLiveWebSearch(userText);
           if (searchResults) {
             liveWebContext = `\n\n[نتایج زنده جستجوی اینترنت و اخبار برای سوال کاربر:\n${searchResults}\n\nدستورالعمل حیاتی قالب‌بندی اخبار (ساختار کارتی زیبا، راست‌چین و بهینه‌شده برای موبایل):
@@ -945,6 +990,19 @@ app.post('/api/chat/stream', async (req, res) => {
 ۳. روی نام خبرگزاری حتماً لینک استخراج‌شده همان خبر را قرار دهید تا کاربر با کلیک روی نام منبع، مستقیماً وارد سایت خبرگزاری و صفحه آن خبر شود.
 ۴. بین هر کارت یک خط جداکننده (---) قرار دهید تا در صفحات کوچک گوشی و دسکتاپ تفکیک‌شده و خوانا باشد.
 ۵. هرگز و تحت هیچ شرایطی جملاتی مانند «در این محیط جستجوی زنده در دسترسم نیست»، «به اینترنت دسترسی ندارم» یا «خبر تأییدشده‌ای ندارم» ننویسید. اطلاعات ارائه‌شده کاملاً زنده هستند و مستقیماً اخبار را در قالب کارت‌ها ارائه دهید.]`;
+          }
+        }
+
+        // For programming, technical questions, bug fixing, documentation lookup, tutorials and general knowledge
+        if (!liveWebContext) {
+          const universalSnippets = await fetchUniversalWebSnippets(userText);
+          if (universalSnippets) {
+            liveWebContext = `\n\n[مستندات، راهنماها و نتایج زنده وب مرتبط با سوال کاربر:\n${universalSnippets}\n\nدستورالعمل هوش مصنوعی برای پاسخ‌دهی (مشابه ChatGPT با وب‌سرچ):
+شما یک دستیار هوشمند، مهندس نرم‌افزار ارشد و متخصص مسلط به حل مسائل هستید. با ترکیب پایگاه دانش عمیق خود و مستندات زنده بالا از وب، پاسخی دقیق، جامع و ساختاریافته به زبان فارسی ارائه دهید.
+اگر سوال مربوط به کدنویسی، خطا یا معماری برنامه است:
+- قطعه کدهای کامل و کاربردی را در بلوک‌های کد استاندارد (با ذکر دقیق زبان مانند \`\`\`typescript یا \`\`\`python) بنویسید.
+- نکات کلیدی، دلایل فنی و بهترین الگوها (Best Practices) را به صورت شفاف و مرحله‌به‌مرحله توضیح دهید.
+- در صورت نیاز می‌توانید به لینک مستندات بالا ارجاع دهید.]`;
           }
         }
       }
