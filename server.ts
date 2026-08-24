@@ -755,6 +755,8 @@ app.post('/api/chat/stream', async (req, res) => {
       return finishStream();
     }
 
+    let provider = apiConfig?.activeProvider || 'gemini';
+
     // Generate real-time live date and time context (Solar Hijri & Gregorian)
     const now = new Date();
     const faDate = new Intl.DateTimeFormat('fa-IR', { dateStyle: 'full', timeZone: 'Asia/Tehran' }).format(now);
