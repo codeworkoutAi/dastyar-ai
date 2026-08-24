@@ -442,3 +442,17 @@ code:not(pre code) {
   animation: errorProgress 15s linear forwards;
 }
 
+/* Linear / Raycast Style Refined Icon Strokes */
+svg.lucide,
+.lucide {
+  stroke-width: 1.65px;
+  vector-effect: non-scaling-stroke;
+  transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1), stroke 0.15s ease, opacity 0.15s ease;
+}
+
+button:hover svg.lucide,
+button:hover .lucide {
+  stroke-width: 1.75px;
+}
+
+
