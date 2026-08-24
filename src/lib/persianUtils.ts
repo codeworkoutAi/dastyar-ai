@@ -236,3 +236,56 @@ export const MODEL_PRESETS = [
     description: 'پیکربندی دستی Base URL، هدرهای سفارشی، کلید و نام مدل دلخواه شما',
   },
 ];
+
+// Helper to translate and format any technical error into clear, friendly Persian
+export function formatPersianErrorMessage(err: any): string {
+  if (!err) return 'خطای نامشخص در برقراری ارتباط با مدل هوش مصنوعی.';
+  const msg = typeof err === 'string' ? err : (err.message || String(err));
+  const lower = msg.toLowerCase();
+
+  // 1. Quota / Rate limit (429)
+  if (lower.includes('429') || lower.includes('quota') || lower.includes('resource_exhausted') || lower.includes('rate limit') || lower.includes('rate_limit_exceeded')) {
+    return 'سقف مجاز تعداد درخواست‌های این مدل (Quota / Rate Limit) به پایان رسیده است. لطفاً چند لحظه بعد مجدداً تلاش کنید یا در بخش تنظیمات مدل دیگری (مانند Gemini Flash Lite) را انتخاب نمایید.';
+  }
+
+  // 2. Insufficient balance (402)
+  if (lower.includes('402') || lower.includes('insufficient balance') || lower.includes('insufficient_quota')) {
+    return 'موجودی یا اعتبار حساب کاربری شما در سرویس‌دهنده کافی نیست. لطفاً حساب خود را شارژ کرده یا مدل دیگری را انتخاب فرمایید.';
+  }
+
+  // 3. Invalid API Key / Unauthorized (401 / 403)
+  if (lower.includes('401') || lower.includes('403') || lower.includes('invalid api key') || lower.includes('unauthorized') || lower.includes('permission_denied') || lower.includes('api_key_invalid') || lower.includes('authentication fails')) {
+    return 'کلید دسترسی (API Key) وارد شده نامعتبر، منقضی یا بدون مجوز است. لطفاً از طریق آیکون چرخ‌دنده ⚙️ در بالای صفحه، کلید صحیح را وارد کنید.';
+  }
+
+  // 4. Service unavailable / Overloaded (503)
+  if (lower.includes('503') || lower.includes('high demand') || lower.includes('unavailable') || lower.includes('overloaded') || lower.includes('server_error')) {
+    return 'سرورهای هوش مصنوعی در حال حاضر با ترافیک و حجم بالای کاربران مواجه هستند (کد ۵۰۳). لطفاً چند لحظه بعد دکمه «تلاش مجدد» را بزنید.';
+  }
+
+  // 5. Network / Offline / Disconnect / Timeout
+  if (
+    lower.includes('failed to fetch') ||
+    lower.includes('networkerror') ||
+    lower.includes('network error') ||
+    lower.includes('econnrefused') ||
+    lower.includes('enotfound') ||
+    lower.includes('etimedout') ||
+    lower.includes('timeout') ||
+    lower.includes('aborted')
+  ) {
+    return 'ارتباط با سرور یا اینترنت برقرار نشد. لطفاً اتصال اینترنت خود را بررسی کرده و دکمه «تلاش مجدد» را بزنید.';
+  }
+
+  // 6. Model not found (404)
+  if (lower.includes('404') || lower.includes('not found') || lower.includes('model_not_found') || lower.includes('model not exist')) {
+    return 'مدل انتخابی در سرویس‌دهنده یافت نشد یا در دسترس نیست (کد ۴۰۴). لطفاً در بخش تنظیمات مدل دیگری را انتخاب کنید.';
+  }
+
+  // 7. If text is already in Persian, clean up any internal prefixes
+  if (/[\u0600-\u06FF]/.test(msg)) {
+    return msg.replace(/^Error:\s*/i, '').trim();
+  }
+
+  return `خطا در برقراری ارتباط با مدل (${msg.length > 120 ? msg.slice(0, 120) + '...' : msg}). لطفاً دکمه تلاش مجدد را بزنید.`;
+}

@@ -11,6 +11,7 @@ import {
 } from './lib/storage';
 import { buildOptimizedContext } from './lib/tokenOptimizer';
 import { calculateEstimatedCostUSD, formatCostUSD, estimateTokenCount } from './utils/pricing';
+import { formatPersianErrorMessage } from './lib/persianUtils';
 import { Header } from './components/Header';
 import { Sidebar } from './components/Sidebar';
 import { ChatBox } from './components/ChatBox';
@@ -432,6 +433,7 @@ export default function App() {
 
               if (data.error) {
                 streamHadError = true;
+                const persianError = formatPersianErrorMessage(data.error);
                 setConversations((prev) =>
                   prev.map((c) => {
                     if (c.id !== targetConv!.id) return c;
@@ -439,10 +441,10 @@ export default function App() {
                       m.id === assistantMessageId
                         ? {
                             ...m,
-                            content: m.content || 'متاسفانه در تولید پاسخ خطایی رخ داد.',
+                            content: m.content || 'متاسفانه در دریافت پاسخ خطایی رخ داد.',
                             isStreaming: false,
                             error: true,
-                            errorMessage: data.error,
+                            errorMessage: persianError,
                           }
                         : m
                     );
@@ -577,16 +579,7 @@ export default function App() {
         // Generation aborted by user
       } else {
         console.error('Error during streaming:', err);
-        let userFacingError = err?.message || 'عدم دسترسی به سرویس هوش مصنوعی';
-        const lowerErr = userFacingError.toLowerCase();
-        if (
-          lowerErr.includes('failed to fetch') || 
-          lowerErr.includes('networkerror') || 
-          lowerErr.includes('network error') ||
-          lowerErr.includes('the operation was aborted')
-        ) {
-          userFacingError = 'عدم برقراری ارتباط با سرور یا اختلال موقت شبکه. لطفاً دکمه «تلاش مجدد» را بزنید.';
-        }
+        const userFacingError = formatPersianErrorMessage(err);
 
         setConversations((prev) =>
           prev.map((c) => {
