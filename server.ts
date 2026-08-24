@@ -763,6 +763,7 @@ app.post('/api/chat/stream', async (req, res) => {
       custom: settings.providers?.custom,
       systemInstruction: settings.persona?.systemPrompt,
       temperature: settings.persona?.temperature,
+      webSearch: settings.tools?.webSearch,
     } : undefined);
 
     if (!messages || !Array.isArray(messages) || messages.length === 0) {
@@ -830,6 +831,10 @@ app.post('/api/chat/stream', async (req, res) => {
 
             if (typeof apiConfig?.maxTokens === 'number' && apiConfig.maxTokens > 0) {
               streamConfig.maxOutputTokens = apiConfig.maxTokens;
+            }
+
+            if (apiConfig?.webSearch) {
+              streamConfig.tools = [{ googleSearch: {} }];
             }
 
             const streamResponse = await ai.models.generateContentStream({
