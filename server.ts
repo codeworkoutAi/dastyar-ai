@@ -755,9 +755,15 @@ app.post('/api/chat/stream', async (req, res) => {
       return finishStream();
     }
 
-    let provider = apiConfig?.activeProvider || 'gemini';
-    const baseSystemPrompt = 'شما یک دستیار هوشمند، مودب و با دقت بسیار بالا به زبان فارسی هستید. به عنوان یک دستیار قدرتمند هوش مصنوعی مجهز به ابزار تصویرساز، هرگاه کاربر درخواست ساخت تصویر، عکس، نقاشی یا طراحی کند، سیستم به طور خودکار تصویر مورد نظر را خلق و نمایش می‌دهد، بنابراین هرگز نگویید که «من قابلیت تولید تصویر ندارم» بلکه همیشه با اشتیاق درخواست کاربر را تأیید کرده و تصویر ایجاد می‌شود. اصول، نکات کلیدی و لیست‌ها را همیشه در خطوط کاملاً جداگانه (با ساختار منظم لیست در Markdown) بنویسید.';
-    const systemInstruction = apiConfig?.systemInstruction ? `${apiConfig.systemInstruction}\n\nنکته نگارشی: همیشه اصول، مراحل و لیست‌های شماره‌دار را در خطوط مجزا تفکیک کن.` : baseSystemPrompt;
+    // Generate real-time live date and time context (Solar Hijri & Gregorian)
+    const now = new Date();
+    const faDate = new Intl.DateTimeFormat('fa-IR', { dateStyle: 'full', timeZone: 'Asia/Tehran' }).format(now);
+    const faTime = new Intl.DateTimeFormat('fa-IR', { timeStyle: 'short', timeZone: 'Asia/Tehran' }).format(now);
+    const enDate = now.toISOString().split('T')[0];
+    const timeContext = `[اطلاعات زمانی زنده: هم‌اکنون ${faDate}، ساعت ${faTime} به وقت ایران (معادل میلادی: ${enDate}) است.]`;
+
+    const baseSystemPrompt = `شما یک دستیار هوشمند، مودب و با دقت بسیار بالا به زبان فارسی هستید. ${timeContext} به عنوان یک دستیار قدرتمند هوش مصنوعی مجهز به ابزار تصویرساز، هرگاه کاربر درخواست ساخت تصویر، عکس، نقاشی یا طراحی کند، سیستم به طور خودکار تصویر مورد نظر را خلق و نمایش می‌دهد، بنابراین هرگز نگویید که «من قابلیت تولید تصویر ندارم» بلکه همیشه با اشتیاق درخواست کاربر را تأیید کرده و تصویر ایجاد می‌شود. اصول، نکات کلیدی و لیست‌ها را همیشه در خطوط کاملاً جداگانه (با ساختار منظم لیست در Markdown) بنویسید.`;
+    const systemInstruction = apiConfig?.systemInstruction ? `${apiConfig.systemInstruction}\n\n${timeContext}\n\nنکته نگارشی: همیشه اصول، مراحل و لیست‌های شماره‌دار را در خطوط مجزا تفکیک کن.` : baseSystemPrompt;
     const temperature = typeof apiConfig?.temperature === 'number' ? apiConfig.temperature : 0.7;
 
     // Prune history to last 6 messages max for high throughput and reduced prompt processing latency
