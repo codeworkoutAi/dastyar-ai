@@ -993,7 +993,7 @@ app.post('/api/chat/stream', async (req, res) => {
       year: 'numeric',
       timeZone: 'Asia/Tehran',
     }).format(now);
-    const faNumeric = new Intl.DateTimeFormat('fa-IR-u-ca-persian-u-nu-arabext', {
+    const faNumeric = new Intl.DateTimeFormat('fa-IR-u-ca-persian-nu-arabext', {
       year: 'numeric',
       month: '2-digit',
       day: '2-digit',
@@ -1015,7 +1015,7 @@ app.post('/api/chat/stream', async (req, res) => {
       year: 'numeric',
       timeZone: 'Asia/Tehran',
     }).format(now);
-    const islamicNumeric = new Intl.DateTimeFormat('fa-IR-u-ca-islamic-umalqura-u-nu-arabext', {
+    const islamicNumeric = new Intl.DateTimeFormat('fa-IR-u-ca-islamic-umalqura-nu-arabext', {
       year: 'numeric',
       month: '2-digit',
       day: '2-digit',
