@@ -29,6 +29,14 @@ function computeCacheKey(messages: Array<{ role: string; content: string; imageU
   return crypto.createHash('sha256').update(rawKey).digest('hex');
 }
 
+function setCachedResponse(key: string, data: CachedResponse): void {
+  if (responseCache.size >= MAX_CACHE_ENTRIES) {
+    const oldestKey = responseCache.keys().next().value;
+    if (oldestKey) responseCache.delete(oldestKey);
+  }
+  responseCache.set(key, data);
+}
+
 process.on('uncaughtException', (err) => {
   console.error('[Server] Uncaught Exception:', err);
 });
@@ -1126,11 +1134,7 @@ app.post('/api/chat/stream', async (req, res) => {
 
             // Cache full response in-memory for instant recall
             if (fullText) {
-              if (responseCache.size >= MAX_CACHE_ENTRIES) {
-                const oldestKey = responseCache.keys().next().value;
-                if (oldestKey) responseCache.delete(oldestKey);
-              }
-              responseCache.set(cacheKey, {
+              setCachedResponse(cacheKey, {
                 chunk: fullText,
                 usage: geminiUsage,
                 imageUrl: generatedImageUrl,
@@ -1420,11 +1424,7 @@ app.post('/api/chat/stream', async (req, res) => {
 
       // Cache full response in-memory for instant recall
       if (fullAccumulatedCustom) {
-        if (responseCache.size >= MAX_CACHE_ENTRIES) {
-          const oldestKey = responseCache.keys().next().value;
-          if (oldestKey) responseCache.delete(oldestKey);
-        }
-        responseCache.set(cacheKey, {
+        setCachedResponse(cacheKey, {
           chunk: fullAccumulatedCustom,
           usage: openaiUsage,
           timestamp: Date.now(),
