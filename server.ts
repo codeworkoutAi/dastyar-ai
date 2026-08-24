@@ -546,9 +546,18 @@ function sanitizeErrorMessage(err: any): string {
     return 'کلید دسترسی (API Key) نامعتبر است یا دسترسی لازم به این مدل را ندارد (کد ۴۰۳). لطفاً در تنظیمات کلید صحیح را وارد کنید.';
   }
 
-  // 404 / Model Not Found
-  if (msg.includes('not found') || msg.includes('404') || msg.includes('Model Not Exist') || msg.includes('model_not_found')) {
-    return 'مدل انتخابی یافت نشد یا در دسترس نیست (کد ۴۰۴). می‌توانید مدل دیگری (مانند deepseek-chat یا gemini-2.5-flash) را در تنظیمات انتخاب کنید.';
+  // 404 / Model Not Found or Not Available
+  if (
+    msg.includes('not found') ||
+    msg.includes('404') ||
+    msg.includes('Model Not Exist') ||
+    msg.includes('model_not_found') ||
+    msg.includes('not available') ||
+    msg.includes('is not available') ||
+    msg.includes('unknown model') ||
+    msg.includes('invalid model')
+  ) {
+    return 'مدل انتخابی در سرویس‌دهنده در دسترس نیست یا نام آن تغییر کرده است. لطفاً از طریق آیکون تنظیمات ⚙️ مدل دیگری را انتخاب فرمایید.';
   }
 
   // 500 / Internal Server Error

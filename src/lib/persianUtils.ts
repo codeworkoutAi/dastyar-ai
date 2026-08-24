@@ -277,9 +277,20 @@ export function formatPersianErrorMessage(err: any): string {
     return 'ارتباط با سرور یا اینترنت برقرار نشد. لطفاً اتصال اینترنت خود را بررسی کرده و دکمه «تلاش مجدد» را بزنید.';
   }
 
-  // 6. Model not found (404)
-  if (lower.includes('404') || lower.includes('not found') || lower.includes('model_not_found') || lower.includes('model not exist')) {
-    return 'مدل انتخابی در سرویس‌دهنده یافت نشد یا در دسترس نیست (کد ۴۰۴). لطفاً در بخش تنظیمات مدل دیگری را انتخاب کنید.';
+  // 6. Model not found or not available (404 / Model Not Available)
+  if (
+    lower.includes('404') ||
+    lower.includes('not found') ||
+    lower.includes('model_not_found') ||
+    lower.includes('model not exist') ||
+    lower.includes('not exist') ||
+    lower.includes('not available') ||
+    lower.includes('is not available') ||
+    lower.includes('unknown model') ||
+    lower.includes('invalid model') ||
+    lower.includes('unsupported model')
+  ) {
+    return 'مدل انتخابی (یا نسخه مدل وارد شده) در سرویس‌دهنده در دسترس نیست یا نام آن تغییر کرده است. لطفاً از طریق آیکون چرخ‌دنده ⚙️ در بالای صفحه، مدل دیگری را انتخاب فرمایید.';
   }
 
   // 7. If text is already in Persian, clean up any internal prefixes
@@ -287,5 +298,7 @@ export function formatPersianErrorMessage(err: any): string {
     return msg.replace(/^Error:\s*/i, '').trim();
   }
 
-  return `خطا در برقراری ارتباط با مدل (${msg.length > 120 ? msg.slice(0, 120) + '...' : msg}). لطفاً دکمه تلاش مجدد را بزنید.`;
+  // Fallback for any other English error without showing technical request IDs
+  const cleanSnippet = msg.replace(/\(request id:[^)]+\)/gi, '').replace(/https?:\/\/\S+/gi, '').trim();
+  return `خطا در پردازش مدل هوش مصنوعی (${cleanSnippet.length > 80 ? cleanSnippet.slice(0, 80) + '...' : cleanSnippet}). لطفاً دکمه «تلاش مجدد» را بزنید یا مدل دیگری را در تنظیمات انتخاب کنید.`;
 }
