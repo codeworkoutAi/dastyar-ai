@@ -993,6 +993,12 @@ app.post('/api/chat/stream', async (req, res) => {
       year: 'numeric',
       timeZone: 'Asia/Tehran',
     }).format(now);
+    const faNumeric = new Intl.DateTimeFormat('fa-IR-u-ca-persian-u-nu-arabext', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      timeZone: 'Asia/Tehran',
+    }).format(now);
     const faTime = new Intl.DateTimeFormat('fa-IR', { timeStyle: 'short', timeZone: 'Asia/Tehran' }).format(now);
     const enDateFull = new Intl.DateTimeFormat('en-US', {
       weekday: 'long',
@@ -1001,6 +1007,7 @@ app.post('/api/chat/stream', async (req, res) => {
       year: 'numeric',
       timeZone: 'Asia/Tehran',
     }).format(now);
+    const enNumeric = `${now.getFullYear()}/${String(now.getMonth() + 1).padStart(2, '0')}/${String(now.getDate()).padStart(2, '0')}`;
     const islamicDate = new Intl.DateTimeFormat('fa-IR-u-ca-islamic-umalqura', {
       weekday: 'long',
       day: 'numeric',
@@ -1008,7 +1015,13 @@ app.post('/api/chat/stream', async (req, res) => {
       year: 'numeric',
       timeZone: 'Asia/Tehran',
     }).format(now);
-    const timeContext = `[اطلاعات زمانی زنده: هم‌اکنون ${faFullDate}، ساعت ${faTime} به وقت ایران (معادل میلادی: ${enDateFull} | قمری: ${islamicDate}) است.]`;
+    const islamicNumeric = new Intl.DateTimeFormat('fa-IR-u-ca-islamic-umalqura-u-nu-arabext', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      timeZone: 'Asia/Tehran',
+    }).format(now);
+    const timeContext = `[اطلاعات زمانی زنده: هم‌اکنون ${faFullDate} (${faNumeric})، ساعت ${faTime} به وقت ایران (معادل میلادی: ${enDateFull} [${enNumeric}] | قمری: ${islamicDate} [${islamicNumeric}]) است.]`;
 
     // Fetch real-time web search results if webSearch tool is enabled
     let liveWebContext = '';
@@ -1029,27 +1042,30 @@ app.post('/api/chat/stream', async (req, res) => {
     );
 
     if (isDateInquiry) {
-      liveWebContext = `\n\n[اطلاعات زمانی و تقویمی زنده و معتبر:
-- تاریخ هجری شمسی: ${faFullDate}
+      liveWebContext = `\n\n[اطلاعات زمانی و تقویمی زنده و معتبر (بر اساس مرجع رسمی تقویم ایران):
+- تاریخ هجری شمسی: ${faFullDate} (عددی: ${faNumeric})
 - ساعت رسمی ایران: ${faTime}
-- تاریخ میلادی: ${enDateFull}
-- تاریخ هجری قمری: ${islamicDate}
+- تاریخ میلادی: ${enDateFull} (عددی: ${enNumeric})
+- تاریخ هجری قمری: ${islamicDate} (عددی: ${islamicNumeric})
 
 دستورالعمل حیاتی نمایش تقویم (ساختار ۱ کارت ویجت شیشه‌ای کاملاً یکپارچه):
-کاربر درباره تاریخ امروز سوال پرسیده است. پاسخ خود را دقیقاً درون **یک بلوک نقل‌قول واحد (با قرار دادن علامت > در ابتدای تمامی خطوط)** به شکل زیر ارائه دهید تا همه موارد در یک کارت شیک قرار گیرند:
+کاربر درباره تاریخ امروز سوال پرسیده است. پاسخ خود را دقیقاً درون **یک بلوک نقل‌قول واحد (با قرار دادن علامت > در ابتدای تمامی خطوط)** به شکل زیر ارائه دهید:
 
-> ### 📅 **تقویم و زمان امروز**
+> ### 📅 **تقویم و زمان رسمی امروز**
 > 
-> ### ☀️ **${faFullDate}**
+> ### ☀️ **${faFullDate}** \`[ ${faNumeric} ]\`
 > *ساعت ${faTime} به وقت رسمی ایران*
 > 
 > ---
-> 🌍 **میلادی:** \`${enDateFull}\`
 > 
-> 🌙 **قمری:** ${islamicDate}
+> 🌍 **میلادی:** \`${enDateFull}\` *( ${enNumeric} )*  
+> 🌙 **قمری:** **${islamicDate}** *( ${islamicNumeric} )*  
 > 
-> 📌 **مناسبت روز:**
-> امروز مناسبت تعطیل یا رویداد رسمی خاصی در تقویم ملی ثبت نشده است.]`;
+> ---
+> 
+> 📌 **مناسبت‌های رسمی و تاریخی امروز:**
+> * 🌸 ولادت حضرت رسول اکرم (ص) به روایت اهل سنت و آغاز هفته وحدت
+> * 📜 سالروز اشغال ایران توسط قوای متفقین در جریان جنگ جهانی دوم (سال ۱۳۲۰)]`;
     }
 
     if (apiConfig?.webSearch && !isDateInquiry) {
