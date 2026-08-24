@@ -263,7 +263,6 @@ async function fetchLiveWebSearch(query: string): Promise<string | null> {
     let match;
     while ((match = regex.exec(xml)) !== null && items.length < 8) {
       let fullTitle = match[1].replace(/<!\[CDATA\[(.*?)\]\]>/g, '$1').replace(/<[^>]+>/g, '').trim();
-      const link = match[2].trim();
       const date = match[3].trim();
       const sourceName = match[4].replace(/<!\[CDATA\[(.*?)\]\]>/g, '$1').replace(/<[^>]+>/g, '').trim();
       
@@ -271,8 +270,12 @@ async function fetchLiveWebSearch(query: string): Promise<string | null> {
         fullTitle = fullTitle.slice(0, -(sourceName.length + 3)).trim();
       }
 
-      if (fullTitle && link) {
-        items.push(`• [تیتر: ${fullTitle}] | [نام منبع: ${sourceName || 'خبرگزاری'}] | [لینک: ${link}] | [زمان: ${date}]`);
+      // Generate direct, clean search query URL to avoid broken RSS redirect tokens (400 Bad Request / Regional locks)
+      const cleanSearchQuery = `${fullTitle} ${sourceName || ''}`.trim();
+      const directLink = `https://www.google.com/search?q=${encodeURIComponent(cleanSearchQuery)}`;
+
+      if (fullTitle) {
+        items.push(`• [تیتر: ${fullTitle}] | [نام منبع: ${sourceName || 'خبرگزاری'}] | [لینک خبر: ${directLink}] | [زمان: ${date}]`);
       }
     }
     if (items.length > 0) {
