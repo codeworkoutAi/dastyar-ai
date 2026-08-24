@@ -10,7 +10,7 @@ const STORAGE_KEYS = {
 export const DEFAULT_SETTINGS: AppSettings = {
   providers: {
     activeProvider: 'gemini',
-    gemini: { apiKey: '', modelName: 'gemini-2.5-flash' },
+    gemini: { apiKey: '', modelName: 'gemini-3.1-flash-lite' },
     openai: { apiKey: '', modelName: 'gpt-4o-mini' },
     anthropic: { apiKey: '', modelName: 'claude-3-5-sonnet' },
     custom: { baseUrl: '', apiKey: '', modelName: '', customHeaders: '' }

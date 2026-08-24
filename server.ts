@@ -162,36 +162,19 @@ export function isSafeBaseUrl(targetUrl?: string): boolean {
   }
 }
 
-// Lazy initializer for Gemini client
-let defaultAiClient: GoogleGenAI | null = null;
 function getGeminiClient(customApiKey?: string): GoogleGenAI {
-  const key = customApiKey || process.env.GEMINI_API_KEY;
+  const key = (customApiKey && String(customApiKey).trim()) || process.env.GEMINI_API_KEY;
   if (!key) {
     throw new Error('کلید API جمینای تنظیم نشده است (GEMINI_API_KEY). لطفاً در بخش تنظیمات کلید خود را وارد کنید.');
   }
-  
-  if (customApiKey) {
-    return new GoogleGenAI({
-      apiKey: customApiKey,
-      httpOptions: {
-        headers: {
-          'User-Agent': 'aistudio-build',
-        },
+  return new GoogleGenAI({
+    apiKey: key,
+    httpOptions: {
+      headers: {
+        'User-Agent': 'aistudio-build',
       },
-    });
-  }
-
-  if (!defaultAiClient) {
-    defaultAiClient = new GoogleGenAI({
-      apiKey: key,
-      httpOptions: {
-        headers: {
-          'User-Agent': 'aistudio-build',
-        },
-      },
-    });
-  }
-  return defaultAiClient;
+    },
+  });
 }
 
 // Helper to get Pollinations image URL
@@ -415,7 +398,7 @@ app.post(['/api/models/test', '/api/ping'], modelTestRateLimiter, async (req, re
     if (provider === 'gemini') {
       const apiKey = customApiKey ? String(customApiKey).trim() : undefined;
       const ai = getGeminiClient(apiKey);
-      const targetModel = modelName || 'gemini-2.5-flash';
+      const targetModel = modelName || 'gemini-3.1-flash-lite';
       
       const testCandidates = [
         targetModel,
@@ -796,7 +779,7 @@ app.post('/api/chat/stream', async (req, res) => {
 
     if (provider === 'gemini') {
       const ai = getGeminiClient(apiConfig?.[provider]?.apiKey);
-      let modelName = apiConfig?.[provider]?.modelName || 'gemini-2.5-flash';
+      let modelName = apiConfig?.[provider]?.modelName || 'gemini-3.1-flash-lite';
 
       // Format messages for Gemini API using robust helper on pruned history
       const formattedContents = formatContentsForGemini(prunedMessages);

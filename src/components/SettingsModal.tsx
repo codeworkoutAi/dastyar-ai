@@ -208,7 +208,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                       {tempSettings.providers.activeProvider === 'gemini' ? (
                         <div className="space-y-2">
                           <select 
-                            value={['gemini-2.5-flash', 'gemini-3.1-pro', 'gemini-2.5-pro', 'gemini-1.5-pro'].includes(tempSettings.providers.gemini.modelName) ? tempSettings.providers.gemini.modelName : 'custom'} 
+                            value={['gemini-3.1-flash-lite', 'gemini-2.5-flash', 'gemini-3.1-pro', 'gemini-2.5-pro'].includes(tempSettings.providers.gemini.modelName) ? tempSettings.providers.gemini.modelName : 'custom'} 
                             onChange={(e) => {
                               const val = e.target.value;
                               if (val !== 'custom') {
@@ -219,14 +219,14 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                             }}
                             className="w-full bg-zinc-950 border border-zinc-800 rounded-xl py-2.5 px-3 text-sm outline-none focus:border-blue-500 min-h-[44px]"
                           >
-                            <option value="gemini-2.5-flash">Gemini 2.5 Flash (همه‌فن‌حریف و سریع - پیش‌فرض)</option>
+                            <option value="gemini-3.1-flash-lite">Gemini 3.1 Flash-Lite (فوق‌سریع و پایدار - پیش‌فرض)</option>
+                            <option value="gemini-2.5-flash">Gemini 2.5 Flash (همه‌فن‌حریف و سریع)</option>
                             <option value="gemini-3.1-pro">Gemini 3.1 Pro (استدلال پیشرفته و کدنویسی)</option>
                             <option value="gemini-2.5-pro">Gemini 2.5 Pro (کانتکست طولانی و استدلال بالا)</option>
-                            <option value="gemini-1.5-pro">Gemini 1.5 Pro (کانتکست طولانی و اسناد حجیم)</option>
                             <option value="custom">سفارشی / مدل دیگر...</option>
                           </select>
-                          {(!['gemini-2.5-flash', 'gemini-3.1-pro', 'gemini-2.5-pro', 'gemini-1.5-pro'].includes(tempSettings.providers.gemini.modelName)) && (
-                            <input type="text" dir="ltr" value={tempSettings.providers.gemini.modelName} onChange={(e) => updateProvider('gemini', 'modelName', e.target.value)} className="w-full bg-zinc-950 border border-zinc-800 rounded-xl py-2.5 px-4 text-sm focus:border-blue-500 outline-none transition-all font-mono min-h-[44px]" placeholder="مثال: gemini-2.5-pro" />
+                          {(!['gemini-3.1-flash-lite', 'gemini-2.5-flash', 'gemini-3.1-pro', 'gemini-2.5-pro'].includes(tempSettings.providers.gemini.modelName)) && (
+                            <input type="text" dir="ltr" value={tempSettings.providers.gemini.modelName} onChange={(e) => updateProvider('gemini', 'modelName', e.target.value)} className="w-full bg-zinc-950 border border-zinc-800 rounded-xl py-2.5 px-4 text-sm focus:border-blue-500 outline-none transition-all font-mono min-h-[44px]" placeholder="مثال: gemini-3.1-flash-lite" />
                           )}
                         </div>
                       ) : (

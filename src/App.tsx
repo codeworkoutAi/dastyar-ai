@@ -50,7 +50,7 @@ export default function App() {
           activeProvider: 'gemini',
           gemini: {
             ...prev.providers.gemini,
-            modelName: 'gemini-2.5-flash'
+            modelName: 'gemini-3.1-flash-lite'
           }
         }
       }));
