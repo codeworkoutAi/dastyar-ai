@@ -489,11 +489,11 @@ app.post(['/api/models/test', '/api/ping'], modelTestRateLimiter, async (req, re
       Object.assign(headers, userHeaders);
 
       let model = modelName;
-      if (!model || model.startsWith('gemini')) {
+      if (!model) {
         if (provider === 'deepseek') model = 'deepseek-chat';
         else if (provider === 'openai') model = 'gpt-4o-mini';
         else if (provider === 'openrouter') model = 'meta-llama/llama-3.3-70b-instruct';
-        else model = 'gpt-4o-mini';
+        else model = 'gpt-5.4-mini';
       }
 
       let response: Response;
@@ -1043,11 +1043,11 @@ app.post('/api/chat/stream', async (req, res) => {
       }
 
       let model = apiConfig?.[provider]?.modelName;
-      if (!model || model.startsWith('gemini')) {
+      if (!model) {
         if (provider === 'deepseek') model = 'deepseek-chat';
         else if (provider === 'openai') model = 'gpt-4o-mini';
         else if (provider === 'openrouter') model = 'meta-llama/llama-3.3-70b-instruct';
-        else model = 'gpt-4o-mini';
+        else model = 'gpt-5.4-mini';
       }
 
       let response: any;
