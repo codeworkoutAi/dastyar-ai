@@ -1066,12 +1066,12 @@ app.post('/api/chat/stream', async (req, res) => {
 
 > ### 📅 **تقویم و زمان رسمی امروز**
 > 
-> ### ☀️ **${faFullDate}** \`[ ${faNumeric} ]\`
-> *ساعت ${faTime} به وقت رسمی ایران*
+> ### ☀️ **${faFullDate}**
+> \`[ ${faNumeric} ]\` • *ساعت ${faTime} به وقت رسمی ایران*
 > 
 > ---
 > 
-> 🌍 **میلادی:** \`${enDateFull}\` *( ${enNumeric} )*  
+> 🌍 **میلادی:** \`${enDateFull}\`  
 > 🌙 **قمری:** **${islamicDate}** *( ${islamicNumeric} )*  
 > 
 > ---
