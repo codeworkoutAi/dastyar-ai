@@ -39,6 +39,41 @@ export default function App() {
   // Streaming state
   const [isStreaming, setIsStreaming] = useState<boolean>(false);
   const abortControllerRef = useRef<AbortController | null>(null);
+  const errorTimersRef = useRef<Map<string, NodeJS.Timeout>>(new Map());
+
+  // Auto-dismiss failed / error message from chat after 15 seconds
+  const scheduleErrorAutoDismiss = (convId: string, messageId: string, delayMs = 15000) => {
+    if (errorTimersRef.current.has(messageId)) {
+      clearTimeout(errorTimersRef.current.get(messageId)!);
+    }
+    const timer = setTimeout(() => {
+      errorTimersRef.current.delete(messageId);
+      setConversations((prev) =>
+        prev.map((c) => {
+          if (c.id !== convId) return c;
+          return {
+            ...c,
+            messages: c.messages.filter((m) => m.id !== messageId)
+          };
+        })
+      );
+    }, delayMs);
+    errorTimersRef.current.set(messageId, timer);
+  };
+
+  // Immediate manual dismiss of error message via (✕) button
+  const handleDismissError = (messageId: string) => {
+    if (errorTimersRef.current.has(messageId)) {
+      clearTimeout(errorTimersRef.current.get(messageId)!);
+      errorTimersRef.current.delete(messageId);
+    }
+    setConversations((prev) =>
+      prev.map((c) => ({
+        ...c,
+        messages: c.messages.filter((m) => m.id !== messageId)
+      }))
+    );
+  };
 
   // Auto-switch model to Gemini when video is attached
   const handleVideoAttached = () => {
@@ -414,6 +449,8 @@ export default function App() {
                     return { ...c, messages: msgs };
                   })
                 );
+                // Auto-dismiss this error message after 15 seconds
+                scheduleErrorAutoDismiss(targetConv!.id, assistantMessageId, 15000);
               }
 
               if (data.chunk) {
@@ -568,6 +605,8 @@ export default function App() {
             return { ...c, messages: msgs };
           })
         );
+        // Auto-dismiss this error message after 15 seconds
+        scheduleErrorAutoDismiss(targetConv!.id, assistantMessageId, 15000);
       }
     } finally {
       setIsStreaming(false);
@@ -685,6 +724,7 @@ export default function App() {
             onEditMessage={handleEditMessage}
             onRegenerate={handleRegenerate}
             onStopGeneration={handleStopGeneration}
+            onDismissError={handleDismissError}
             usePersianDigits={settings.appearance.persianNumerals}
             showPerformanceMetrics={settings.tools.showPerformanceMetrics !== false}
             onToggleMetrics={(val) => {

@@ -429,3 +429,16 @@ code:not(pre code) {
   height: 0 !important;
 }
 
+@keyframes errorProgress {
+  from {
+    width: 100%;
+  }
+  to {
+    width: 0%;
+  }
+}
+
+.animate-error-progress {
+  animation: errorProgress 15s linear forwards;
+}
+

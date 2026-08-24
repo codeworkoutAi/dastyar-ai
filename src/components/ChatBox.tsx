@@ -40,6 +40,7 @@ interface ChatBoxProps {
   onEditMessage?: (messageId: string, newText: string) => void;
   onRegenerate: () => void;
   onStopGeneration?: () => void;
+  onDismissError?: (messageId: string) => void;
   usePersianDigits: boolean;
   showPerformanceMetrics?: boolean;
   onToggleMetrics?: (val: boolean) => void;
@@ -52,6 +53,7 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
   onEditMessage,
   onRegenerate,
   onStopGeneration,
+  onDismissError,
   usePersianDigits,
   showPerformanceMetrics = true,
   onToggleMetrics,
@@ -271,22 +273,43 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
                   }`}
                 >
                   {msg.error ? (
-                    <div className="flex flex-col gap-3">
-                      <div className="flex items-start gap-3">
-                        <AlertCircle className="w-5 h-5 shrink-0 mt-0.5 text-red-500" />
-                        <div>
-                          <p className="font-bold mb-1">عدم برقراری ارتباط با مدل هوش مصنوعی</p>
-                          <p className="text-[13px] leading-relaxed opacity-90">{msg.errorMessage || msg.content}</p>
+                    <div className="flex flex-col gap-3 relative overflow-hidden animate-fadeIn">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-start gap-3">
+                          <AlertCircle className="w-5 h-5 shrink-0 mt-0.5 text-red-500" />
+                          <div>
+                            <p className="font-bold mb-1 text-sm text-red-400">عدم برقراری ارتباط با مدل هوش مصنوعی</p>
+                            <p className="text-[13px] leading-relaxed text-red-300/90">{msg.errorMessage || msg.content}</p>
+                          </div>
                         </div>
+                        {onDismissError && (
+                          <button
+                            type="button"
+                            onClick={() => onDismissError(msg.id)}
+                            className="text-red-400/60 hover:text-red-400 hover:bg-red-500/10 p-1.5 rounded-lg transition-colors cursor-pointer shrink-0"
+                            title="بستن پیام خطا"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        )}
                       </div>
+
+                      {/* 15-second visual countdown progress bar */}
+                      <div className="w-full bg-red-500/10 h-1 rounded-full overflow-hidden mt-0.5">
+                        <div className="bg-red-500/50 h-full rounded-full animate-error-progress" />
+                      </div>
+
                       {!isStreaming && (
-                        <div className="pt-2 border-t border-red-500/20 flex items-center justify-end">
+                        <div className="pt-2 border-t border-red-500/20 flex flex-wrap items-center justify-between gap-2">
+                          <span className="text-[11px] text-red-400/70 font-normal">
+                            این پیام پس از ۱۵ ثانیه به صورت خودکار پاک می‌شود
+                          </span>
                           <button
                             onClick={onRegenerate}
-                            className="bg-red-600/20 hover:bg-red-600/30 text-red-400 text-xs px-4 py-2 rounded-xl flex items-center gap-2 font-bold cursor-pointer transition-all shadow-sm active:scale-95"
+                            className="bg-red-600/20 hover:bg-red-600/30 text-red-400 text-xs px-3.5 py-1.5 rounded-xl flex items-center gap-1.5 font-bold cursor-pointer transition-all shadow-sm active:scale-95 ml-auto"
                           >
                             <RotateCw className="w-3.5 h-3.5" />
-                            <span>تلاش مجدد و ارسال دوباره</span>
+                            <span>تلاش مجدد</span>
                           </button>
                         </div>
                       )}
