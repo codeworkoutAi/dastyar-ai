@@ -235,51 +235,61 @@ async function translateAndEnhanceImagePrompt(rawPrompt: string): Promise<string
 async function fetchLiveWebSearch(query: string): Promise<string | null> {
   if (!query || query.length < 2) return null;
   try {
-    const stopWords = ['رو', 'برای', 'من', 'بیار', 'بگو', 'چیست', 'کیست', 'چیه', 'لطفا', 'میشه', 'درباره', 'در مورد', 'میخوام', 'بدونم', 'هست', 'جدید', 'آخرین'];
+    const stopWords = [
+      'رو', 'برای', 'من', 'بیار', 'بگو', 'چیست', 'کیست', 'چیه', 'لطفا', 'میشه', 'درباره', 'در مورد',
+      'میخوام', 'بدونم', 'هست', 'جدید', 'آخرین', 'اخبار', 'خبر', 'خبرهای', 'رویداد', 'رویدادهای',
+      'امروز', 'روز', 'لحظه', 'لحظه ای', 'news', 'latest'
+    ];
     let cleaned = query.replace(/[^\p{L}\p{N}\s]/gu, ' ').trim();
     for (const sw of stopWords) {
       cleaned = cleaned.replace(new RegExp('\\b' + sw + '\\b', 'gi'), ' ').replace(new RegExp('(^|\\s)' + sw + '($|\\s)', 'gi'), ' ');
     }
     cleaned = cleaned.replace(/\s+/g, ' ').trim();
 
-    const isGeneralNews = !cleaned || cleaned.length < 2 || cleaned.includes('اخبار') || cleaned.includes('خبر') || cleaned.includes('news');
-    const rssUrl = isGeneralNews
-      ? 'https://news.google.com/rss?hl=fa&gl=IR&ceid=IR:fa'
-      : `https://news.google.com/rss/search?q=${encodeURIComponent(cleaned)}&hl=fa&gl=IR&ceid=IR:fa`;
+    const isSpecificTopic = cleaned.length >= 2;
+    const rssUrls = isSpecificTopic
+      ? [
+          `https://news.google.com/rss/search?q=${encodeURIComponent(cleaned)}&hl=fa&gl=IR&ceid=IR:fa`,
+          'https://news.google.com/rss?hl=fa&gl=IR&ceid=IR:fa'
+        ]
+      : ['https://news.google.com/rss?hl=fa&gl=IR&ceid=IR:fa'];
 
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 4000);
+    for (const rssUrl of rssUrls) {
+      try {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 4000);
 
-    const res = await fetch(rssUrl, {
-      headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' },
-      signal: controller.signal
-    });
-    clearTimeout(timeout);
-    if (!res.ok) return null;
+        const res = await fetch(rssUrl, {
+          headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' },
+          signal: controller.signal
+        });
+        clearTimeout(timeout);
+        if (!res.ok) continue;
 
-    const xml = await res.text();
-    const items: string[] = [];
-    const regex = /<item>[\s\S]*?<title>(.*?)<\/title>[\s\S]*?<link>(.*?)<\/link>[\s\S]*?<pubDate>(.*?)<\/pubDate>[\s\S]*?<source[^>]*>(.*?)<\/source>/g;
-    let match;
-    while ((match = regex.exec(xml)) !== null && items.length < 8) {
-      let fullTitle = match[1].replace(/<!\[CDATA\[(.*?)\]\]>/g, '$1').replace(/<[^>]+>/g, '').trim();
-      const date = match[3].trim();
-      const sourceName = match[4].replace(/<!\[CDATA\[(.*?)\]\]>/g, '$1').replace(/<[^>]+>/g, '').trim();
-      
-      if (fullTitle.endsWith(` - ${sourceName}`)) {
-        fullTitle = fullTitle.slice(0, -(sourceName.length + 3)).trim();
-      }
+        const xml = await res.text();
+        const items: string[] = [];
+        const regex = /<item>[\s\S]*?<title>(.*?)<\/title>[\s\S]*?<link>(.*?)<\/link>[\s\S]*?<pubDate>(.*?)<\/pubDate>[\s\S]*?<source[^>]*>(.*?)<\/source>/g;
+        let match;
+        while ((match = regex.exec(xml)) !== null && items.length < 8) {
+          let fullTitle = match[1].replace(/<!\[CDATA\[(.*?)\]\]>/g, '$1').replace(/<[^>]+>/g, '').trim();
+          const date = match[3].trim();
+          const sourceName = match[4].replace(/<!\[CDATA\[(.*?)\]\]>/g, '$1').replace(/<[^>]+>/g, '').trim();
+          
+          if (fullTitle.endsWith(` - ${sourceName}`)) {
+            fullTitle = fullTitle.slice(0, -(sourceName.length + 3)).trim();
+          }
 
-      // Generate direct, clean search query URL to avoid broken RSS redirect tokens (400 Bad Request / Regional locks)
-      const cleanSearchQuery = `${fullTitle} ${sourceName || ''}`.trim();
-      const directLink = `https://www.google.com/search?q=${encodeURIComponent(cleanSearchQuery)}`;
+          const cleanSearchQuery = `${fullTitle} ${sourceName || ''}`.trim();
+          const directLink = `https://www.google.com/search?q=${encodeURIComponent(cleanSearchQuery)}`;
 
-      if (fullTitle) {
-        items.push(`• [تیتر: ${fullTitle}] | [نام منبع: ${sourceName || 'خبرگزاری'}] | [لینک خبر: ${directLink}] | [زمان: ${date}]`);
-      }
-    }
-    if (items.length > 0) {
-      return items.join('\n');
+          if (fullTitle) {
+            items.push(`• [تیتر: ${fullTitle}] | [نام منبع: ${sourceName || 'خبرگزاری'}] | [لینک خبر: ${directLink}] | [زمان: ${date}]`);
+          }
+        }
+        if (items.length > 0) {
+          return items.join('\n');
+        }
+      } catch (e) {}
     }
   } catch (e) {}
   return null;
@@ -841,7 +851,7 @@ app.post('/api/chat/stream', async (req, res) => {
    > *📰 منبع: [نام خبرگزاری](لینک خبر) | 🕒 زمان انتشار: ساعت و تاریخ*
 ۳. روی نام خبرگزاری حتماً لینک استخراج‌شده همان خبر را قرار دهید تا کاربر با کلیک روی نام منبع، مستقیماً وارد سایت خبرگزاری و صفحه آن خبر شود.
 ۴. بین هر کارت یک خط جداکننده (---) قرار دهید تا در صفحات کوچک گوشی و دسکتاپ تفکیک‌شده و خوانا باشد.
-۵. هرگز نگویید به اینترنت دسترسی ندارید و مستقیماً اخبار را ارائه دهید.]`;
+۵. هرگز و تحت هیچ شرایطی جملاتی مانند «در این محیط جستجوی زنده در دسترسم نیست»، «به اینترنت دسترسی ندارم» یا «خبر تأییدشده‌ای ندارم» ننویسید. اطلاعات ارائه‌شده کاملاً زنده هستند و مستقیماً اخبار را در قالب کارت‌ها ارائه دهید.]`;
         }
       }
     }
