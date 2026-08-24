@@ -259,13 +259,20 @@ async function fetchLiveWebSearch(query: string): Promise<string | null> {
 
     const xml = await res.text();
     const items: string[] = [];
-    const regex = /<item>[\s\S]*?<title>(.*?)<\/title>[\s\S]*?<pubDate>(.*?)<\/pubDate>/g;
+    const regex = /<item>[\s\S]*?<title>(.*?)<\/title>[\s\S]*?<link>(.*?)<\/link>[\s\S]*?<pubDate>(.*?)<\/pubDate>[\s\S]*?<source[^>]*>(.*?)<\/source>/g;
     let match;
     while ((match = regex.exec(xml)) !== null && items.length < 8) {
-      const title = match[1].replace(/<!\[CDATA\[(.*?)\]\]>/g, '$1').replace(/<[^>]+>/g, '').trim();
-      const date = match[2].trim();
-      if (title) {
-        items.push(`• ${title} (${date})`);
+      let fullTitle = match[1].replace(/<!\[CDATA\[(.*?)\]\]>/g, '$1').replace(/<[^>]+>/g, '').trim();
+      const link = match[2].trim();
+      const date = match[3].trim();
+      const sourceName = match[4].replace(/<!\[CDATA\[(.*?)\]\]>/g, '$1').replace(/<[^>]+>/g, '').trim();
+      
+      if (fullTitle.endsWith(` - ${sourceName}`)) {
+        fullTitle = fullTitle.slice(0, -(sourceName.length + 3)).trim();
+      }
+
+      if (fullTitle && link) {
+        items.push(`• [تیتر: ${fullTitle}] | [نام منبع: ${sourceName || 'خبرگزاری'}] | [لینک: ${link}] | [زمان: ${date}]`);
       }
     }
     if (items.length > 0) {
@@ -828,9 +835,10 @@ app.post('/api/chat/stream', async (req, res) => {
    > **[تیتر برجسته خبر]**
    > * [خلاصه کوتاه و روان از رویداد در یک یا دو جمله]
    > 
-   > 📰 **منبع:** [نام خبرگزاری] | 🕒 **زمان انتشار:** [ساعت و تاریخ]
-۳. بین هر کارت یک خط جداکننده (---) قرار دهید تا در صفحات کوچک گوشی و دسکتاپ تفکیک‌شده و زیبا باشد.
-۴. هرگز نگویید به اینترنت دسترسی ندارید و مستقیماً اخبار را ارائه دهید.]`;
+   > *📰 منبع: [نام خبرگزاری](لینک خبر) | 🕒 زمان انتشار: ساعت و تاریخ*
+۳. روی نام خبرگزاری حتماً لینک استخراج‌شده همان خبر را قرار دهید تا کاربر با کلیک روی نام منبع، مستقیماً وارد سایت خبرگزاری و صفحه آن خبر شود.
+۴. بین هر کارت یک خط جداکننده (---) قرار دهید تا در صفحات کوچک گوشی و دسکتاپ تفکیک‌شده و خوانا باشد.
+۵. هرگز نگویید به اینترنت دسترسی ندارید و مستقیماً اخبار را ارائه دهید.]`;
         }
       }
     }

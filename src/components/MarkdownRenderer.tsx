@@ -282,6 +282,15 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
             return <strong className="font-bold text-inherit">{children}</strong>;
           },
 
+          // Emphasis / Italic (smaller caption & metadata formatting)
+          em({ children }) {
+            return (
+              <em className="text-xs sm:text-[13px] text-zinc-500 dark:text-zinc-400 not-italic font-normal inline-block mt-1 leading-relaxed opacity-95">
+                {children}
+              </em>
+            );
+          },
+
           // Blockquotes with adaptive accent
           blockquote({ children }) {
             const rawText = extractNodeText(children);
