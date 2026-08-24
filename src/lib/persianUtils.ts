@@ -243,6 +243,20 @@ export function formatPersianErrorMessage(err: any): string {
   const msg = typeof err === 'string' ? err : (err.message || String(err));
   const lower = msg.toLowerCase();
 
+  // Location / Region Restriction & Sanctions
+  if (
+    lower.includes('location is not supported') ||
+    lower.includes('location_not_supported') ||
+    lower.includes('region not supported') ||
+    lower.includes('country not supported') ||
+    lower.includes('unsupported country') ||
+    lower.includes('geographical restriction') ||
+    lower.includes('geo-restriction') ||
+    lower.includes('blocked region')
+  ) {
+    return 'دسترسی به این مدل از این موقعیت مکانی با محدودیت منطقه‌ای (تحریم) مواجه است. لطفاً ارتباط سرور/فیلترشکن را بررسی کرده یا از مدل‌های دیگر (مانند DeepSeek یا OpenRouter) استفاده فرمایید.';
+  }
+
   // 1. Quota / Rate limit (429)
   if (lower.includes('429') || lower.includes('quota') || lower.includes('resource_exhausted') || lower.includes('rate limit') || lower.includes('rate_limit_exceeded')) {
     return 'سقف مجاز تعداد درخواست‌های این مدل (Quota / Rate Limit) به پایان رسیده است. لطفاً چند لحظه بعد مجدداً تلاش کنید یا در بخش تنظیمات مدل دیگری (مانند Gemini Flash Lite) را انتخاب نمایید.';

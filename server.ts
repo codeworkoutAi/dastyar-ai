@@ -515,7 +515,22 @@ function sanitizeErrorMessage(err: any): string {
   if (!err) return 'خطای نامشخص در ارتباط با سرور.';
   const rawMsg = extractCleanErrorMessage(err);
   const msg = rawMsg || (typeof err === 'string' ? err : err.message || '');
+  const lower = msg.toLowerCase();
   
+  // Location / Region Restriction & Sanctions
+  if (
+    lower.includes('location is not supported') ||
+    lower.includes('location_not_supported') ||
+    lower.includes('region not supported') ||
+    lower.includes('country not supported') ||
+    lower.includes('unsupported country') ||
+    lower.includes('geographical restriction') ||
+    lower.includes('geo-restriction') ||
+    lower.includes('blocked region')
+  ) {
+    return 'دسترسی به این مدل از این موقعیت مکانی با محدودیت منطقه‌ای (تحریم) مواجه است. لطفاً ارتباط سرور/فیلترشکن را بررسی کرده یا از مدل‌های دیگر (مانند DeepSeek یا OpenRouter) استفاده فرمایید.';
+  }
+
   // 402 / Insufficient Balance
   if (msg.includes('Insufficient Balance') || msg.includes('insufficient_quota') || msg.includes('402')) {
     return 'موجودی یا اعتبار حساب کاربری شما کافی نیست (Insufficient Balance). لطفاً حساب خود را در پورتال ارائه‌دهنده بررسی و شارژ فرمایید.';
