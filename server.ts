@@ -327,6 +327,38 @@ async function fetchLiveWebSearch(query: string): Promise<string | null> {
   } catch (e) {}
   return null;
 }
+
+// Helper to fetch live real-time product prices & shopping comparison from Torob API
+async function fetchTorobProducts(query: string): Promise<string | null> {
+  if (!query || query.length < 2) return null;
+  try {
+    const stopWords = ['قیمت', 'خرید', 'ترب', 'دیجی کالا', 'دیجیکالا', 'چنده', 'ارزان', 'تومان', 'فروشگاه', 'مشخصات', 'رو', 'برای', 'من', 'بیار', 'بگو', 'چیست', 'لطفا'];
+    let cleanQuery = query.replace(/[^\p{L}\p{N}\s]/gu, ' ').trim();
+    for (const sw of stopWords) {
+      cleanQuery = cleanQuery.replace(new RegExp('\\b' + sw + '\\b', 'gi'), ' ').replace(new RegExp('(^|\\s)' + sw + '($|\\s)', 'gi'), ' ');
+    }
+    cleanQuery = cleanQuery.replace(/\s+/g, ' ').trim() || query;
+
+    const url = `https://api.torob.com/v4/base-product/search/?sort=popularity&page=0&size=5&query=${encodeURIComponent(cleanQuery)}`;
+    const res = await fetch(url, {
+      headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' },
+      signal: AbortSignal.timeout(4000)
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    if (!data.results || data.results.length === 0) return null;
+
+    const items = data.results.slice(0, 5).map((p: any) => {
+      const fullUrl = p.web_client_absolute_url
+        ? `https://torob.com${p.web_client_absolute_url}`
+        : `https://torob.com/search/?query=${encodeURIComponent(p.name1 || cleanQuery)}`;
+      return `• [نام کالا: ${p.name1}] | [قیمت: ${p.price_text || 'استعلام قیمت'}] | [موجودی: ${p.shop_text || 'در فروشگاه‌های آنلاین'}] | [لینک مقایسه و خرید در ترب: ${fullUrl}]`;
+    });
+    return items.join('\n');
+  } catch (e) {
+    return null;
+  }
+}
 function normalizeBaseUrl(url?: string, provider?: string): string {
   let clean = (url || '').trim();
   
@@ -870,9 +902,27 @@ app.post('/api/chat/stream', async (req, res) => {
       const lastUserMsg = prunedMessages.slice().reverse().find((m: any) => m.role === 'user');
       const userText = typeof lastUserMsg?.content === 'string' ? lastUserMsg.content : '';
       if (userText && userText.trim().length > 1) {
-        const searchResults = await fetchLiveWebSearch(userText);
-        if (searchResults) {
-          liveWebContext = `\n\n[نتایج زنده جستجوی اینترنت و اخبار برای سوال کاربر:\n${searchResults}\n\nدستورالعمل حیاتی قالب‌بندی اخبار (ساختار کارتی زیبا، راست‌چین و بهینه‌شده برای موبایل):
+        const isShoppingQuery = userText.includes('قیمت') || userText.includes('خرید') || userText.includes('ترب') || userText.includes('چنده') || userText.includes('ارزان') || userText.includes('تومان') || userText.includes('فروشگاه') || userText.includes('دیجی کالا') || userText.includes('دیجیکالا');
+        
+        if (isShoppingQuery) {
+          const torobResults = await fetchTorobProducts(userText);
+          if (torobResults) {
+            liveWebContext = `\n\n[اطلاعات زنده استعلام و مقایسه قیمت کالاها از موتور جستجوی ترب:\n${torobResults}\n\nدستورالعمل مهم نمایش قیمت و کالاها (ساختار کارتی زیبا و راست‌چین):
+اطلاعات بالا قیمت‌های لحظه‌ای و زنده بازار از موتور جستجوی ترب هستند. لطفاً برای هر کالا یک کارت بسیار تمیز به شکل زیر بنویسید:
+#### 🛍️ **[نام دقیق کالا]**
+> **[قیمت استخراج‌شده: قیمت کالا]**
+> * وضعیت موجودی: [تعداد فروشگاه‌های آنلاین موجود]
+> 
+> *🔍 [مشاهده و مقایسه قیمت‌ها در ترب](لینک مستقیم ترب)*
+
+بین هر کارت یک خط جداکننده (---) بگذارید و هرگز نگویید به قیمت‌ها دسترسی ندارید.]`;
+          }
+        }
+
+        if (!liveWebContext) {
+          const searchResults = await fetchLiveWebSearch(userText);
+          if (searchResults) {
+            liveWebContext = `\n\n[نتایج زنده جستجوی اینترنت و اخبار برای سوال کاربر:\n${searchResults}\n\nدستورالعمل حیاتی قالب‌بندی اخبار (ساختار کارتی زیبا، راست‌چین و بهینه‌شده برای موبایل):
 شما به نتایج زنده وب دسترسی دارید و اطلاعات بالا لحظاتی پیش استخراج شده است. اخبار و نتایج را دقیقاً با ساختار کارتی و منظم زیر به زبان فارسی بنویسید:
 
 برای هر خبر:
@@ -885,6 +935,7 @@ app.post('/api/chat/stream', async (req, res) => {
 ۳. روی نام خبرگزاری حتماً لینک استخراج‌شده همان خبر را قرار دهید تا کاربر با کلیک روی نام منبع، مستقیماً وارد سایت خبرگزاری و صفحه آن خبر شود.
 ۴. بین هر کارت یک خط جداکننده (---) قرار دهید تا در صفحات کوچک گوشی و دسکتاپ تفکیک‌شده و خوانا باشد.
 ۵. هرگز و تحت هیچ شرایطی جملاتی مانند «در این محیط جستجوی زنده در دسترسم نیست»، «به اینترنت دسترسی ندارم» یا «خبر تأییدشده‌ای ندارم» ننویسید. اطلاعات ارائه‌شده کاملاً زنده هستند و مستقیماً اخبار را در قالب کارت‌ها ارائه دهید.]`;
+          }
         }
       }
     }
