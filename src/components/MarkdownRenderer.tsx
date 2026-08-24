@@ -291,16 +291,14 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
             );
           },
 
-          // Blockquotes with adaptive accent
+          // Blockquotes styled as clean, uniform 4-corner rounded cards
           blockquote({ children }) {
             const rawText = extractNodeText(children);
             const rtl = rawText ? isRtlText(rawText) : isOverallRtl;
             return (
               <blockquote
-                className={`py-2.5 my-3 bg-black/5 dark:bg-white/5 text-inherit opacity-95 italic shadow-xs ${
-                  rtl
-                    ? 'border-r-4 border-slate-300 dark:border-slate-600 pr-4 pl-2 rounded-l-xl text-right'
-                    : 'border-l-4 border-slate-300 dark:border-slate-600 pl-4 pr-2 rounded-r-xl text-left'
+                className={`p-4 my-3 bg-black/[0.03] dark:bg-white/[0.04] border border-black/10 dark:border-white/10 rounded-2xl text-inherit opacity-95 shadow-xs transition-colors not-italic ${
+                  rtl ? 'text-right' : 'text-left'
                 }`}
                 dir={rtl ? 'rtl' : 'ltr'}
               >
