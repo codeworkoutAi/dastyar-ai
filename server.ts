@@ -339,7 +339,7 @@ async function fetchTorobProducts(query: string): Promise<string | null> {
     }
     cleanQuery = cleanQuery.replace(/\s+/g, ' ').trim() || query;
 
-    const url = `https://api.torob.com/v4/base-product/search/?sort=popularity&page=0&size=5&query=${encodeURIComponent(cleanQuery)}`;
+    const url = `https://api.torob.com/v4/base-product/search/?size=6&q=${encodeURIComponent(cleanQuery)}`;
     const res = await fetch(url, {
       headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' },
       signal: AbortSignal.timeout(4000)
@@ -348,7 +348,10 @@ async function fetchTorobProducts(query: string): Promise<string | null> {
     const data = await res.json();
     if (!data.results || data.results.length === 0) return null;
 
-    const items = data.results.slice(0, 5).map((p: any) => {
+    const validProducts = (data.results || []).filter((x: any) => !x.is_adv);
+    const targetProducts = validProducts.length > 0 ? validProducts : data.results;
+
+    const items = targetProducts.slice(0, 5).map((p: any) => {
       const fullUrl = p.web_client_absolute_url
         ? `https://torob.com${p.web_client_absolute_url}`
         : `https://torob.com/search/?query=${encodeURIComponent(p.name1 || cleanQuery)}`;
@@ -902,7 +905,13 @@ app.post('/api/chat/stream', async (req, res) => {
       const lastUserMsg = prunedMessages.slice().reverse().find((m: any) => m.role === 'user');
       const userText = typeof lastUserMsg?.content === 'string' ? lastUserMsg.content : '';
       if (userText && userText.trim().length > 1) {
-        const isShoppingQuery = userText.includes('قیمت') || userText.includes('خرید') || userText.includes('ترب') || userText.includes('چنده') || userText.includes('ارزان') || userText.includes('تومان') || userText.includes('فروشگاه') || userText.includes('دیجی کالا') || userText.includes('دیجیکالا');
+        const lower = userText.toLowerCase();
+        const isShoppingQuery = userText.includes('قیمت') || userText.includes('خرید') || userText.includes('ترب') ||
+          userText.includes('چنده') || userText.includes('ارزان') || userText.includes('تومان') ||
+          userText.includes('فروشگاه') || userText.includes('دیجی کالا') || userText.includes('دیجیکالا') ||
+          lower.includes('galaxy') || lower.includes('iphone') || lower.includes('s24') || lower.includes('s25') ||
+          userText.includes('سامسونگ') || userText.includes('شیائومی') || userText.includes('آیفون') ||
+          userText.includes('لپ تاپ') || userText.includes('گوشی');
         
         if (isShoppingQuery) {
           const torobResults = await fetchTorobProducts(userText);
