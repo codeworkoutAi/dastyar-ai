@@ -752,7 +752,18 @@ app.post('/api/chat/stream', async (req, res) => {
   res.on('error', cleanup);
 
   try {
-    const { messages, apiConfig } = req.body;
+    const { messages, apiConfig: rawApiConfig, settings } = req.body;
+
+    // Normalize apiConfig from either `apiConfig` or `settings`
+    const apiConfig = rawApiConfig || (settings ? {
+      activeProvider: settings.providers?.activeProvider,
+      gemini: settings.providers?.gemini,
+      openai: settings.providers?.openai,
+      anthropic: settings.providers?.anthropic,
+      custom: settings.providers?.custom,
+      systemInstruction: settings.persona?.systemPrompt,
+      temperature: settings.persona?.temperature,
+    } : undefined);
 
     if (!messages || !Array.isArray(messages) || messages.length === 0) {
       sendChunk({ error: 'پیامی برای ارسال یافت نشد.' });
@@ -785,7 +796,6 @@ app.post('/api/chat/stream', async (req, res) => {
     if (provider === 'gemini') {
       const ai = getGeminiClient(apiConfig?.[provider]?.apiKey);
       let modelName = apiConfig?.[provider]?.modelName || 'gemini-2.5-flash';
-      if (modelName === 'gemini-3.7-flash') modelName = 'gemini-2.5-flash';
 
       // Format messages for Gemini API using robust helper on pruned history
       const formattedContents = formatContentsForGemini(prunedMessages);
@@ -1226,10 +1236,10 @@ app.post('/api/generate-image', async (req, res) => {
 // 5. Enhance Prompt endpoint
 app.post('/api/enhance-prompt', async (req, res) => {
   try {
-    const { prompt } = req.body;
+    const { prompt, apiKey } = req.body;
     if (!prompt) return res.status(400).json({ error: 'توصیف مورد نظر ارسال نشده است.' });
     
-    const ai = getGeminiClient();
+    const ai = getGeminiClient(apiKey);
     const response = await ai.models.generateContent({
       model: 'gemini-3.1-flash-lite',
       contents: `You are an expert AI prompt engineer. Translate the user's short/simple idea (which could be in Persian or English) into a highly detailed, cinematic, and professional English prompt optimized for AI image generators like Midjourney or Flux. Add details about lighting, camera angle, mood, and texture. Return ONLY the English prompt, no extra text. User idea: "${prompt}"`,

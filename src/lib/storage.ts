@@ -30,10 +30,40 @@ export function loadConversations(): Conversation[] {
   }
 }
 
+function stripOlderImages(conversations: Conversation[]): Conversation[] {
+  const copy: Conversation[] = JSON.parse(JSON.stringify(conversations));
+  // Keep images only in the most recent conversation; replace in older conversations
+  for (let i = 0; i < copy.length - 1; i++) {
+    if (copy[i].messages) {
+      copy[i].messages = copy[i].messages.map(msg => {
+        if (msg.imageUrl && msg.imageUrl.startsWith('data:image')) {
+          return {
+            ...msg,
+            imageUrl: undefined,
+            content: msg.content + '\n\n*(تصویر جهت آزادسازی فضای ذخیره‌سازی حذف شد)*'
+          };
+        }
+        return msg;
+      });
+    }
+  }
+  return copy;
+}
+
 export function saveConversations(conversations: Conversation[]): void {
   try {
     localStorage.setItem(STORAGE_KEYS.CONVERSATIONS, JSON.stringify(conversations));
   } catch (err) {
+    if (err instanceof DOMException && (err.name === 'QuotaExceededError' || err.code === 22)) {
+      console.warn('LocalStorage quota exceeded. Stripping images from older conversations...');
+      try {
+        const cleaned = stripOlderImages(conversations);
+        localStorage.setItem(STORAGE_KEYS.CONVERSATIONS, JSON.stringify(cleaned));
+        return;
+      } catch (retryErr) {
+        console.error('Failed to save conversations even after stripping images.', retryErr);
+      }
+    }
     console.error('Failed to save conversations.', err);
   }
 }
