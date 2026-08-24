@@ -231,14 +231,49 @@ async function translateAndEnhanceImagePrompt(rawPrompt: string): Promise<string
   return `${rawPrompt}, highly detailed, 8k resolution, photorealistic, professional lighting, crisp focus, zero artifacts`;
 }
 
-// Helper to fetch live real-time web search results (Google News RSS / Web)
+// Helper to fetch live real-time web search results (Domestic Persian Feeds + Google News RSS / Web)
 async function fetchLiveWebSearch(query: string): Promise<string | null> {
   if (!query || query.length < 2) return null;
   try {
+    const isDomesticRequest = query.includes('ایران') || query.includes('داخلی') || query.includes('مهر') || query.includes('ایسنا') || query.includes('تسنیم') || query.includes('فارس') || query.includes('تابناک') || query.includes('خبرآنلاین') || query.includes('سایت');
+
+    const items: string[] = [];
+
+    // 1. If domestic Iranian news requested, fetch top domestic feeds in parallel directly from newsrooms
+    if (isDomesticRequest) {
+      const domesticSources = [
+        { name: 'خبرگزاری ایسنا (ISNA)', url: 'https://www.isna.ir/rss' },
+        { name: 'خبرگزاری مهر (Mehr)', url: 'https://www.mehrnews.com/rss' },
+        { name: 'تابناک (Tabnak)', url: 'https://www.tabnak.ir/fa/rss/allnews' },
+        { name: 'خبرآنلاین (Khabaronline)', url: 'https://www.khabaronline.ir/rss' }
+      ];
+
+      await Promise.allSettled(domesticSources.map(async (src) => {
+        try {
+          const res = await fetch(src.url, { headers: { 'User-Agent': 'Mozilla/5.0' }, signal: AbortSignal.timeout(3000) });
+          if (!res.ok) return;
+          const xml = await res.text();
+          const regex = /<item>[\s\S]*?<title>(.*?)<\/title>[\s\S]*?<link>(.*?)<\/link>[\s\S]*?<pubDate>(.*?)<\/pubDate>/g;
+          let match;
+          let count = 0;
+          while ((match = regex.exec(xml)) !== null && count < 3) {
+            const title = match[1].replace(/<!\[CDATA\[(.*?)\]\]>/g, '$1').replace(/<[^>]+>/g, '').trim();
+            const link = match[2].trim();
+            const date = match[3].trim();
+            if (title && link) {
+              items.push(`• [تیتر: ${title}] | [نام منبع: ${src.name}] | [لینک خبر: ${link}] | [زمان: ${date}]`);
+              count++;
+            }
+          }
+        } catch (e) {}
+      }));
+    }
+
+    // 2. Fetch Google News RSS for international or topic-specific context
     const stopWords = [
       'رو', 'برای', 'من', 'بیار', 'بگو', 'چیست', 'کیست', 'چیه', 'لطفا', 'میشه', 'درباره', 'در مورد',
       'میخوام', 'بدونم', 'هست', 'جدید', 'آخرین', 'اخبار', 'خبر', 'خبرهای', 'رویداد', 'رویدادهای',
-      'امروز', 'روز', 'لحظه', 'لحظه ای', 'news', 'latest'
+      'امروز', 'روز', 'لحظه', 'لحظه ای', 'سایت های خبری', 'سایت های', 'چک بکن', 'چک کن', 'news', 'latest'
     ];
     let cleaned = query.replace(/[^\p{L}\p{N}\s]/gu, ' ').trim();
     for (const sw of stopWords) {
@@ -255,22 +290,18 @@ async function fetchLiveWebSearch(query: string): Promise<string | null> {
       : ['https://news.google.com/rss?hl=fa&gl=IR&ceid=IR:fa'];
 
     for (const rssUrl of rssUrls) {
+      if (items.length >= 6) break;
       try {
-        const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 4000);
-
         const res = await fetch(rssUrl, {
           headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' },
-          signal: controller.signal
+          signal: AbortSignal.timeout(3500)
         });
-        clearTimeout(timeout);
         if (!res.ok) continue;
 
         const xml = await res.text();
-        const items: string[] = [];
         const regex = /<item>[\s\S]*?<title>(.*?)<\/title>[\s\S]*?<link>(.*?)<\/link>[\s\S]*?<pubDate>(.*?)<\/pubDate>[\s\S]*?<source[^>]*>(.*?)<\/source>/g;
         let match;
-        while ((match = regex.exec(xml)) !== null && items.length < 8) {
+        while ((match = regex.exec(xml)) !== null && items.length < 10) {
           let fullTitle = match[1].replace(/<!\[CDATA\[(.*?)\]\]>/g, '$1').replace(/<[^>]+>/g, '').trim();
           const date = match[3].trim();
           const sourceName = match[4].replace(/<!\[CDATA\[(.*?)\]\]>/g, '$1').replace(/<[^>]+>/g, '').trim();
@@ -286,10 +317,12 @@ async function fetchLiveWebSearch(query: string): Promise<string | null> {
             items.push(`• [تیتر: ${fullTitle}] | [نام منبع: ${sourceName || 'خبرگزاری'}] | [لینک خبر: ${directLink}] | [زمان: ${date}]`);
           }
         }
-        if (items.length > 0) {
-          return items.join('\n');
-        }
+        if (items.length > 0) break;
       } catch (e) {}
+    }
+
+    if (items.length > 0) {
+      return items.join('\n');
     }
   } catch (e) {}
   return null;
