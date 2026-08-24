@@ -1,0 +1,51 @@
+.gemini-input-wrapper {
+  position: relative;
+  border-radius: 32px;
+  overflow: hidden;
+  padding: 1px;
+  background-color: var(--border-subtle);
+  transition: background-color 0.3s ease;
+}
+
+.gemini-input-wrapper::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 300%;
+  height: 300%;
+  background: conic-gradient(from 0deg, transparent 70%, #4285f4, #9b72cb, #d96570, transparent 100%);
+  transform-origin: center;
+  animation: gemini-spin 2s linear infinite;
+  translate: -50% -50%;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: 0;
+}
+
+.gemini-input-wrapper:focus-within::before,
+.gemini-input-wrapper.is-streaming::before {
+  opacity: 1;
+}
+
+.gemini-input-wrapper.is-streaming,
+.gemini-input-wrapper:focus-within {
+  background-color: transparent;
+}
+
+.gemini-input-inner {
+  position: relative;
+  background-color: var(--input-bg);
+  border-radius: 31px;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+@keyframes gemini-spin {
+  100% {
+    transform: rotate(360deg);
+  }
+}

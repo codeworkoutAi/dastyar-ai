@@ -1,0 +1,431 @@
+@import "tailwindcss";
+@import "@fontsource/estedad/index.css";
+
+@font-face {
+  font-family: 'Mikhak';
+  src: url('https://cdn.jsdelivr.net/gh/aminabedi68/Mikhak@main/fonts/woff2/Mikhak-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Mikhak';
+  src: url('https://cdn.jsdelivr.net/gh/aminabedi68/Mikhak@main/fonts/woff2/Mikhak-Bold.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@theme {
+  --font-sans: var(--user-font-family);
+  --font-mono: var(--font-mono);
+  --color-subtle: var(--border-subtle);
+  --color-strong: var(--border-strong);
+}
+
+@layer base {
+  :root {
+  --chat-font-size: 15.5px;
+  --chat-line-height: 1.8;
+    --user-font-family: 'Vazirmatn', 'Vazir', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --font-persian: var(--user-font-family);
+    --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace;
+    --chat-font-size: 15.5px;
+    --chat-line-height: 1.8;
+  }
+
+  [data-font="vazir"],
+  [data-font="vazirmatn"],
+  :root:not([data-font]) {
+    --user-font-family: 'Vazirmatn', 'Vazir', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --font-persian: var(--user-font-family);
+  }
+
+  [data-font="sahel"] {
+    --user-font-family: 'Sahel', 'Vazirmatn', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --font-persian: var(--user-font-family);
+  }
+
+  [data-font="estedad"] {
+    --user-font-family: 'Estedad', 'Vazirmatn', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --font-persian: var(--user-font-family);
+  }
+
+  [data-font="mikhak"] {
+    --user-font-family: 'Mikhak', 'Vazirmatn', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --font-persian: var(--user-font-family);
+  }
+
+
+  body, button, input, select, textarea {
+    font-family: var(--user-font-family);
+  }
+
+  body {
+    background-color: var(--bg-main);
+    color: var(--text-main);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+}
+
+/* ==========================================================================
+   GEMINI DESIGN SYSTEM VARIABLES
+   ========================================================================== */
+:root {
+  --chat-font-size: 15.5px;
+  --chat-line-height: 1.8;
+  --gemini-gradient: linear-gradient(90deg, #4285f4, #9b72cb, #d96570);
+  --gemini-gradient-subtle: linear-gradient(90deg, rgba(66, 133, 244, 0.15), rgba(155, 114, 203, 0.15), rgba(217, 101, 112, 0.15));
+}
+
+:root, [data-theme="light"], .light {
+  --bg-main: #FFFFFF;
+  --header-bg: rgba(255, 255, 255, 0.9);
+  --sidebar-bg: #F0F4F9;
+  --card-bg: #FFFFFF;
+  --card-border: rgba(0, 0, 0, 0.05);
+  --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  
+  --btn-bg: #FFFFFF;
+  --btn-hover: #E8EAED;
+  
+  --input-bg: #F0F4F9;
+  --input-border: transparent;
+  --input-shadow: none;
+  
+  --bubble-ai-bg: transparent;
+  --bubble-user-bg: #F0F4F9;
+  
+  --text-main: #1F1F1F;
+  --text-muted: #444746;
+  --text-dim: #747775;
+  
+  --border-subtle: rgba(0, 0, 0, 0.08);
+  --border-strong: rgba(0, 0, 0, 0.15);
+  
+  --accent-primary: #0B57D0;
+  --accent-hover: #0842A0;
+  --accent-text: #0B57D0;
+  
+  --error-bg: #FEF2F2;
+  --error-text: #B3261E;
+  --error-border: #F9DEDC;
+}
+
+[data-theme="dark"], .dark {
+  --bg-main: #131314;
+  --header-bg: rgba(19, 19, 20, 0.9);
+  --sidebar-bg: #1E1F20;
+  --card-bg: #1E1F20;
+  --card-border: rgba(255, 255, 255, 0.05);
+  --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  
+  --btn-bg: #1E1F20;
+  --btn-hover: #282A2C;
+  
+  --input-bg: #1E1F20;
+  --input-border: transparent;
+  --input-shadow: none;
+  
+  --bubble-ai-bg: transparent;
+  --bubble-user-bg: #1E1F20;
+  
+  --text-main: #C8C8C8;
+  --text-muted: #C4C7C5;
+  --text-dim: #8E918F;
+  
+  --border-subtle: rgba(255, 255, 255, 0.04);
+  --border-strong: rgba(255, 255, 255, 0.08);
+  
+  --accent-primary: #A8C7FA;
+  --accent-hover: #D3E3FD;
+  --accent-text: #A8C7FA;
+  
+  --error-bg: rgba(179, 38, 30, 0.15);
+  --error-text: #F2B8B5;
+  --error-border: #8C1D18;
+}
+
+/* ==========================================================================
+   GEMINI UI COMPONENT CLASSES
+   ========================================================================== */
+.clay-app-bg {
+  background-color: var(--bg-main);
+  color: var(--text-main);
+  transition: background-color 0.2s ease;
+}
+
+.clay-header {
+  background: var(--header-bg);
+  border-bottom: 1px solid var(--border-subtle);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.clay-sidebar {
+  background: var(--sidebar-bg);
+}
+
+.clay-card {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 24px;
+}
+
+.clay-bubble-user {
+  background: var(--bubble-user-bg);
+  color: var(--text-main);
+  border-radius: 24px;
+  padding: 12px 18px;
+  font-weight: 400;
+}
+
+.clay-bubble-ai {
+  background: var(--bubble-ai-bg);
+  border: none;
+  border-radius: 0;
+  padding: 8px 0;
+}
+
+.clay-btn {
+  background: transparent;
+  border-radius: 12px;
+  transition: all 0.2s ease;
+  color: var(--text-main);
+}
+
+.clay-btn:hover {
+  background: var(--btn-hover);
+}
+
+.clay-btn:active {
+  transform: scale(0.98);
+}
+
+.clay-btn-primary {
+  background: var(--bubble-user-bg);
+  color: var(--text-main);
+  border-radius: 12px;
+  transition: all 0.2s ease;
+  font-weight: 500;
+}
+
+.clay-btn-primary:hover {
+  background: var(--btn-hover);
+}
+
+.clay-input-box {
+  background: var(--input-bg);
+  border-radius: 14px;
+  transition: all 0.2s ease;
+  color: var(--text-main);
+}
+
+.clay-input-box:focus-within {
+  background: var(--input-bg);
+  box-shadow: 0 0 0 1px var(--border-strong);
+}
+
+.gemini-gradient-text {
+  background: var(--gemini-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  color: transparent;
+}
+
+.gemini-gradient-bg {
+  background: var(--gemini-gradient);
+}
+
+/* Custom sleek scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-dim);
+}
+
+/* Code block & pre styling: Strict isolation of code and monospace */
+pre,
+pre code,
+code,
+.font-mono,
+kbd,
+samp {
+  font-family: var(--font-mono) !important;
+}
+
+pre {
+  direction: ltr !important;
+  text-align: left !important;
+  unicode-bidi: isolate;
+}
+
+pre code {
+  direction: ltr !important;
+  text-align: left !important;
+  unicode-bidi: isolate;
+  display: block;
+}
+
+code:not(pre code) {
+  font-family: var(--font-mono) !important;
+  direction: ltr !important;
+  unicode-bidi: isolate;
+  background-color: var(--bubble-user-bg);
+  padding: 0.15em 0.35em;
+  border-radius: 6px;
+  font-size: 0.88em;
+}
+
+/* Chat bubble & Markdown typography mapping to CSS variables */
+.chat-message-bubble,
+.chat-message-text,
+.markdown-body {
+  font-family: var(--user-font-family);
+  font-size: var(--chat-font-size);
+  line-height: var(--chat-line-height);
+}
+
+.markdown-body p,
+.markdown-body li,
+.markdown-body blockquote {
+  font-family: var(--user-font-family);
+  line-height: var(--chat-line-height);
+}
+
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+.animate-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+
+.animate-shimmer::after {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  transform: translateX(-100%);
+  background-image: linear-gradient(
+    90deg,
+    transparent 0,
+    var(--border-subtle) 20%,
+    var(--border-strong) 60%,
+    transparent
+  );
+  animation: shimmer 2.5s infinite ease-in-out;
+  content: '';
+}
+
+/* Streaming Cursor at the end of generating text */
+@keyframes cursor-pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.2;
+    transform: scale(0.85);
+  }
+}
+
+.streaming-cursor > *:last-child::after,
+.streaming-cursor:empty::after {
+  content: '';
+  display: inline-block;
+  width: 7px;
+  height: 15px;
+  margin-inline-start: 4px;
+  vertical-align: -2px;
+  border-radius: 4px;
+  background: linear-gradient(135deg, #4285f4, #9b72cb, #d96570);
+  box-shadow: 0 0 10px rgba(66, 133, 244, 0.7);
+  animation: cursor-pulse 0.9s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.3s ease-out forwards;
+}
+
+/* Ensure markdown and content text do not cause horizontal page overflow */
+.markdown-body {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+.markdown-body * {
+  max-width: 100%;
+}
+.markdown-body p, 
+.markdown-body h1, 
+.markdown-body h2, 
+.markdown-body h3, 
+.markdown-body h4, 
+.markdown-body h5, 
+.markdown-body h6, 
+.markdown-body li {
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  line-height: 1.8;
+}
+
+.markdown-body code {
+  word-wrap: break-word;
+  overflow-wrap: anywhere;
+}
+
+.markdown-body table {
+  direction: ltr !important;
+  text-align: left !important;
+}
+
+.markdown-body pre {
+  direction: ltr !important;
+  text-align: left !important;
+  unicode-bidi: isolate;
+}
+
+/* Eliminate all internal borders and scrollbar lines inside message input */
+#chat-message-input,
+#chat-message-input:focus,
+#chat-message-input:focus-visible {
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+#chat-message-input::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+

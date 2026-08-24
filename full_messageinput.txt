@@ -1,0 +1,417 @@
+import React, { useState, useRef, useEffect } from 'react';
+import { ArrowUp, Square, Sparkles, CornerDownLeft, RotateCcw, Mic, MicOff, Paperclip, FileText } from 'lucide-react';
+import { toPersianDigits, isRtlText } from '../lib/persianUtils';
+import { Tooltip } from './Tooltip';
+
+interface MessageInputProps {
+  onSendMessage: (text: string, imageUrl?: string) => void;
+  isStreaming: boolean;
+  onStopGeneration: () => void;
+  enterToSend: boolean;
+  usePersianDigits: boolean;
+  platformMode: 'windows' | 'android';
+}
+
+export const MessageInput: React.FC<MessageInputProps> = ({
+  onSendMessage,
+  isStreaming,
+  onStopGeneration,
+  enterToSend,
+  usePersianDigits,
+  platformMode,
+}) => {
+  const [text, setText] = useState('');
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [isRecording, setIsRecording] = useState(false);
+  const recognitionRef = useRef<any>(null);
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  // Auto resize textarea
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+      const scrollHeight = textareaRef.current.scrollHeight;
+      textareaRef.current.style.height = `${Math.min(scrollHeight, 180)}px`;
+    }
+  }, [text]);
+
+  const baseTextRef = useRef('');
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    if (file.type.startsWith('image/')) {
+      reader.onload = (event) => {
+        const dataUrl = event.target?.result as string;
+        if (dataUrl) {
+          // Resize image using canvas to prevent localStorage quota exhaustion
+          const img = new Image();
+          img.onload = () => {
+            const canvas = document.createElement('canvas');
+            const MAX_WIDTH = 1200;
+            const MAX_HEIGHT = 1200;
+            let width = img.width;
+            let height = img.height;
+
+            if (width > height) {
+              if (width > MAX_WIDTH) {
+                height = Math.round((height * MAX_WIDTH) / width);
+                width = MAX_WIDTH;
+              }
+            } else {
+              if (height > MAX_HEIGHT) {
+                width = Math.round((width * MAX_HEIGHT) / height);
+                height = MAX_HEIGHT;
+              }
+            }
+
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            if (ctx) {
+              ctx.drawImage(img, 0, 0, width, height);
+              const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.8);
+              setImagePreview(compressedDataUrl);
+            } else {
+              setImagePreview(dataUrl);
+            }
+            if (!text.trim()) {
+              setText('این تصویر را تحلیل کن و جزئیات آن را توضیح بده.');
+            }
+          };
+          img.src = dataUrl;
+        }
+      };
+      reader.readAsDataURL(file);
+    } else if (file.type.startsWith('text/') || file.name.match(/\.(txt|md|json|js|ts|tsx|css|html|csv)$/i)) {
+      reader.onload = (event) => {
+        const content = event.target?.result as string;
+        if (content) {
+          const prefix = text ? `${text}\n\n` : '';
+          setText(`${prefix}--- فایل: ${file.name} ---\n${content}\n---------------------\n`);
+        }
+      };
+      reader.readAsText(file);
+    } else if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
+      if (file.size > 10 * 1024 * 1024) { // 10MB limit for PDFs
+         alert('حجم فایل PDF بسیار زیاد است (بیش از ۱۰ مگابایت).');
+         e.target.value = '';
+         return;
+      }
+      reader.onload = (event) => {
+        const dataUrl = event.target?.result as string;
+        if (dataUrl) {
+          setImagePreview(dataUrl);
+          if (!text.trim()) {
+            setText(`فایل ضمیمه شده: ${file.name}\nلطفاً محتوای این فایل را تحلیل کن.`);
+          }
+        }
+      };
+      reader.readAsDataURL(file);
+    } else {
+      if (file.size > 5 * 1024 * 1024) { // 5MB limit for other unknown files
+         alert('حجم فایل بسیار زیاد است (بیش از ۵ مگابایت).');
+         e.target.value = '';
+         return;
+      }
+      reader.onload = (event) => {
+        const dataUrl = event.target?.result as string;
+        if (dataUrl) {
+          setImagePreview(dataUrl);
+          if (!text.trim()) {
+            setText(`فایل ضمیمه شده: ${file.name}\nلطفاً محتوای این سند را بررسی کن.`);
+          }
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+    e.target.value = '';
+  };
+
+  // Handle Speech Recognition for Persian
+  const toggleVoiceRecording = () => {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      alert('مرورگر شما از قابلیت تشخیص صوت پشتیبانی نمی‌کند. لطفاً از مرورگر گوگل کروم استفاده کنید.');
+      return;
+    }
+
+    if (isRecording) {
+      if (recognitionRef.current) {
+        try {
+          recognitionRef.current.stop();
+        } catch (err) {
+          // ignore
+        }
+      }
+      setIsRecording(false);
+      return;
+    }
+
+    try {
+      baseTextRef.current = text;
+      const recognition = new SpeechRecognition();
+      recognition.lang = 'fa-IR';
+      recognition.continuous = true;
+      recognition.interimResults = true;
+
+      let finalSoFar = '';
+
+      recognition.onstart = () => {
+        setIsRecording(true);
+        finalSoFar = '';
+      };
+
+      recognition.onresult = (event: any) => {
+        let interim = '';
+        let final = '';
+
+        for (let i = 0; i < event.results.length; ++i) {
+          const transcript = event.results[i][0].transcript;
+          if (event.results[i].isFinal) {
+            final += transcript;
+          } else {
+            interim += transcript;
+          }
+        }
+
+        if (final) {
+          finalSoFar = final;
+        }
+
+        const currentSpoken = finalSoFar || interim;
+        const sep = baseTextRef.current && !baseTextRef.current.endsWith(' ') && currentSpoken ? ' ' : '';
+        const combined = baseTextRef.current ? `${baseTextRef.current}${sep}${currentSpoken}` : currentSpoken;
+        setText(combined);
+      };
+
+      recognition.onerror = (event: any) => {
+        console.warn('Speech recognition error', event.error);
+        if (event.error === 'not-allowed') {
+          alert('دسترسی به میکروفون مسدود شده است. اگر برنامه در پنجره پیش‌نمایش (iframe) اجرا می‌شود، لطفاً آن را در یک تب جدید مرورگر باز کنید تا دسترسی به میکروفون مجاز باشد.');
+        }
+        setIsRecording(false);
+      };
+
+      recognition.onend = () => {
+        setIsRecording(false);
+      };
+
+      recognitionRef.current = recognition;
+      recognition.start();
+    } catch (e) {
+      console.error('Failed to start speech recognition', e);
+      setIsRecording(false);
+      alert('خطا در شروع تایپ صوتی. لطفاً مطمئن شوید میکروفون متصل است و اجازه دسترسی داده شده است.');
+    }
+  };
+
+  const handleSend = () => {
+    if ((!text.trim() && !imagePreview) || isStreaming) return;
+    onSendMessage(text.trim() || 'این تصویر را تحلیل کن.', imagePreview || undefined);
+    setText('');
+    setImagePreview(null);
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter') {
+      if (enterToSend && !e.shiftKey) {
+        e.preventDefault();
+        handleSend();
+      }
+    }
+  };
+
+  const isRtl = isRtlText(text);
+  const charCount = text.length;
+
+  return (
+    <div className="p-2.5 sm:p-4 md:p-5 bg-[var(--bg-main)]/90 border-t border-subtle backdrop-blur-md shrink-0">
+      <div className="max-w-3xl mx-auto space-y-2">
+        {/* Image Preview Thumbnail */}
+        {imagePreview && (
+          <div className="relative inline-flex items-center gap-2.5 sm:gap-3 p-2 sm:p-2.5 bg-[var(--card-bg)] backdrop-blur-md rounded-2xl border border-white/10 shadow-lg animate-fadeIn w-fit max-w-full">
+            {imagePreview.startsWith('data:image/') ? (
+               <img src={imagePreview} alt="Preview" className="w-12 h-12 sm:w-14 sm:h-14 object-cover rounded-xl border border-white/20 shrink-0" />
+            ) : (
+               <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl border border-white/20 shrink-0 bg-blue-500/10 flex items-center justify-center">
+                 <FileText className="w-6 h-6 sm:w-8 sm:h-8 text-blue-400" />
+               </div>
+            )}
+            <div className="flex flex-col text-xs text-inherit pr-1 min-w-0">
+              <span className="font-bold text-[var(--accent-text)] truncate">تصویر ضمیمه شده</span>
+              <span className="text-[10px] sm:text-[11px] opacity-70 truncate">آماده برای ارسال و تحلیل هوش مصنوعی</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setImagePreview(null)}
+              className="p-1.5 rounded-xl bg-red-500/20 text-red-400 hover:bg-red-500/40 transition-colors mr-2 sm:mr-3 cursor-pointer shrink-0"
+              aria-label="Remove image"
+            >
+              ✕
+            </button>
+          </div>
+        )}
+
+        {/* Crisp, Smooth-bordered Input Frame */}
+        <div className={`gemini-input-wrapper ${isStreaming ? 'is-streaming' : ''}`}>
+          <div className="gemini-input-inner">
+            <textarea
+              ref={textareaRef}
+              id="chat-message-input"
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              onKeyDown={handleKeyDown}
+              dir={isRtl ? 'rtl' : 'ltr'}
+              placeholder={isRecording ? 'در حال شنیدن صدای شما... (صحبت کنید)' : 'پیام خود را به زبان فارسی یا انگلیسی بنویسید...'}
+              rows={1}
+              disabled={isStreaming}
+              className={`w-full px-3.5 sm:px-5 pt-3.5 sm:pt-4 pb-13 sm:pb-14 bg-transparent resize-none text-sm sm:text-base text-inherit placeholder:opacity-50 outline-none focus:outline-none border-none focus:border-none focus:ring-0 disabled:opacity-60 leading-relaxed max-h-[180px] ${
+                isRecording ? 'placeholder:text-red-400 placeholder:animate-pulse' : ''
+              }`}
+            />
+
+            {/* Bottom Toolbar inside input */}
+            <div className="absolute bottom-2 sm:bottom-2.5 left-2 sm:left-3 right-2 sm:right-3 flex items-center justify-between pointer-events-none">
+              {/* Left side in RTL / Char count */}
+              <div className="flex items-center gap-1.5 pointer-events-auto text-[11px] opacity-70 px-1">
+                {charCount > 0 && (
+                  <span className="hidden xs:inline-block px-2 py-0.5 rounded-full text-[10px] bg-black/5 dark:bg-white/10 font-mono">
+                    {usePersianDigits ? toPersianDigits(charCount) : charCount} کاراکتر
+                  </span>
+                )}
+              </div>
+
+              {/* Right side in RTL / Actions */}
+              <div className="flex items-center gap-1 sm:gap-1.5 md:gap-2 pointer-events-auto mr-auto xs:mr-0">
+                {/* Image Generation mode button - Gemini Gradient */}
+                <Tooltip content={text.startsWith('/image ') ? 'لغو حالت ساخت تصویر' : 'ساخت تصویر با هوش مصنوعی'}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (text.startsWith('/image ')) {
+                        setText(text.replace('/image ', ''));
+                      } else {
+                        setText('/image ' + text);
+                      }
+                      textareaRef.current?.focus();
+                    }}
+                    disabled={isStreaming}
+                    className={`w-11 h-11 flex items-center justify-center transition-all rounded-full ${
+                      text.startsWith('/image ')
+                        ? 'bg-gradient-to-tr from-[#4285f4] via-[#9b72cb] to-[#d96570] text-white shadow-md shadow-purple-500/25 scale-105 opacity-90'
+                        : 'text-[#9b72cb]/50 dark:text-[#c4a1eb]/50 hover:text-[#9b72cb] dark:hover:text-[#c4a1eb] hover:bg-[#9b72cb]/10 active:scale-95'
+                    }`}
+                    aria-label="Generate Image"
+                  >
+                    <Sparkles className="w-4 h-4" />
+                  </button>
+                </Tooltip>
+
+                {/* Add file button - Google Green */}
+                <Tooltip content="افزودن فایل و تصویر">
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={isStreaming}
+                    className="w-11 h-11 flex items-center justify-center rounded-full text-[#34a853]/50 dark:text-[#4ade80]/50 hover:text-[#34a853] dark:hover:text-[#4ade80] hover:bg-[#34a853]/10 active:scale-95 transition-all cursor-pointer"
+                    aria-label="Add file"
+                  >
+                    <Paperclip className="w-4 h-4" />
+                  </button>
+                </Tooltip>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  className="hidden"
+                  onChange={handleFileChange}
+                  accept="image/*,.txt,.pdf,.doc,.docx,.js,.ts,.json,.csv,.md"
+                />
+
+                {/* Voice dictation button - Google Yellow/Amber */}
+                <Tooltip content={isRecording ? 'توقف ضبط صدا' : 'تایپ صوتی به زبان فارسی'}>
+                  <button
+                    type="button"
+                    onClick={toggleVoiceRecording}
+                    disabled={isStreaming}
+                    className={`w-11 h-11 flex items-center justify-center transition-all rounded-full active:scale-95 ${
+                      isRecording
+                        ? 'bg-[#ea4335] text-white animate-pulse shadow-[0_0_12px_rgba(234,67,53,0.8)]'
+                        : 'text-[#ea8600]/50 dark:text-[#fbbc04]/50 hover:text-[#ea8600] dark:hover:text-[#fbbc04] hover:bg-[#fbbc04]/10'
+                    }`}
+                    aria-label="Voice input"
+                  >
+                    {isRecording ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+                  </button>
+                </Tooltip>
+
+                {/* Cancel generation icon button - Google Red */}
+                {isStreaming && (
+                  <Tooltip content="توقف تولید پاسخ">
+                    <button
+                      type="button"
+                      onClick={onStopGeneration}
+                      className="w-11 h-11 flex items-center justify-center transition-all rounded-full bg-[#ea4335]/15 hover:bg-[#ea4335]/25 text-[#ea4335]/70 hover:text-[#ea4335] dark:text-red-400/70 border border-[#ea4335]/30 animate-pulse cursor-pointer shadow-sm"
+                      aria-label="Stop generation"
+                    >
+                      <Square className="w-4 h-4 fill-current" />
+                    </button>
+                  </Tooltip>
+                )}
+
+                {text.trim() && !isStreaming && (
+                  <Tooltip content="پاک کردن متن">
+                    <button
+                      type="button"
+                      onClick={() => setText('')}
+                      className="w-11 h-11 flex items-center justify-center rounded-full text-slate-400/50 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-black/5 dark:hover:bg-white/10 transition-all active:scale-95"
+                      aria-label="Clear input"
+                    >
+                      <RotateCcw className="w-3.5 h-3.5" />
+                    </button>
+                  </Tooltip>
+                )}
+
+                {isStreaming ? (
+                  <div className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2 text-xs opacity-60 font-medium">
+                    <span className="w-2 h-2 rounded-full bg-[#4285f4] animate-ping" />
+                    <span className="hidden sm:inline text-blue-600 dark:text-sky-300">در حال تولید...</span>
+                  </div>
+                ) : (
+                  <Tooltip content={text.trim() ? 'ارسال پیام' : 'متنی بنویسید'}>
+                    <button
+                      type="button"
+                      id="send-message-btn"
+                      onClick={handleSend}
+                      disabled={!text.trim()}
+                      className={`w-11 h-11 flex items-center justify-center transition-all rounded-full bg-black/5 dark:bg-white/[0.08] ${
+                        text.trim()
+                          ? 'text-[#1a73e8] dark:text-[#8ab4f8] hover:bg-black/10 dark:hover:bg-white/[0.14] cursor-pointer active:scale-95'
+                          : 'text-slate-400/50 dark:text-slate-500/50 cursor-not-allowed'
+                      }`}
+                      aria-label="Send Message"
+                    >
+                      <ArrowUp className="w-4 h-4 stroke-[2.5]" />
+                    </button>
+                  </Tooltip>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Footer info */}
+        <div className="flex items-center justify-center gap-1.5 text-[10px] sm:text-[11px] opacity-70 select-none text-center px-2">
+          <Sparkles className="w-3.5 h-3.5 text-[var(--accent-text)] shrink-0" />
+          <span className="truncate sm:whitespace-normal">پاسخ‌های مدل‌های زبانی را بازبینی کنید. ممکن است خطاهایی وجود داشته باشد.</span>
+        </div>
+      </div>
+    </div>
+  );
+};

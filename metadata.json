@@ -1,0 +1,11 @@
+{
+  "name": "Persian AI Chatbox",
+  "description": "RTL-native AI chat assistant with Persian font typography, custom API endpoints, real-time message streaming, dark/light themes, and history export.",
+  "requestFramePermissions": [
+    "microphone",
+    "camera"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
