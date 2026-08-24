@@ -560,6 +560,22 @@ function sanitizeErrorMessage(err: any): string {
     return 'مدل انتخابی در سرویس‌دهنده در دسترس نیست یا نام آن تغییر کرده است. لطفاً از طریق آیکون تنظیمات ⚙️ مدل دیگری را انتخاب فرمایید.';
   }
 
+  // Network / Fetch failed / Offline / Connection Timeout
+  if (
+    msg.includes('fetch failed') ||
+    msg.includes('ECONNREFUSED') ||
+    msg.includes('ENOTFOUND') ||
+    msg.includes('ETIMEDOUT') ||
+    msg.includes('NetworkError') ||
+    msg.includes('network error') ||
+    msg.includes('timeout') ||
+    msg.includes('und_err_connect_timeout') ||
+    msg.includes('ConnectTimeoutError') ||
+    msg.includes('socket hang up')
+  ) {
+    return 'ارتباط با اینترنت یا سرویس‌دهنده هوش مصنوعی برقرار نشد. لطفاً اتصال اینترنت خود را بررسی کرده و دکمه «تلاش مجدد» را بزنید.';
+  }
+
   // 500 / Internal Server Error
   if (msg.includes('500') || msg.includes('internal_server_error')) {
     return 'خطای داخلی سرور ارائه‌دهنده هوش مصنوعی (کد ۵۰۰). لطفاً چند لحظه بعد دوباره تلاش کنید.';
@@ -1338,7 +1354,7 @@ app.post('/api/chat/stream', async (req, res) => {
         });
       } catch (fetchErr: any) {
         console.error('Fetch error to custom endpoint:', fetchErr);
-        sendChunk({ error: `عدم برقراری اتصال با اندپوینت (${baseUrl}): ${sanitizeErrorMessage(fetchErr)}` });
+        sendChunk({ error: sanitizeErrorMessage(fetchErr) });
         sendChunk({ done: true });
         return finishStream();
       }
