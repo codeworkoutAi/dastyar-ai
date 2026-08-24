@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { AlertCircle, RotateCw, Settings, X } from 'lucide-react';
 
 interface ErrorCapsuleProps {
@@ -40,22 +40,19 @@ export const ErrorCapsule: React.FC<ErrorCapsuleProps> = ({
   return (
     <div
       dir="rtl"
-      className={`px-3 sm:px-4 w-full max-w-2xl mx-auto transition-all duration-300 transform z-30 select-none ${
+      className={`px-3 w-full max-w-lg mx-auto transition-all duration-300 transform z-30 select-none ${
         visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2 pointer-events-none'
       }`}
     >
-      <div className="relative overflow-hidden rounded-2xl bg-zinc-900/95 dark:bg-zinc-950/95 border border-red-500/35 text-zinc-100 shadow-[0_10px_35px_-5px_rgba(239,68,68,0.25)] backdrop-blur-xl p-3 sm:p-3.5 flex flex-col gap-2.5">
+      <div className="relative overflow-hidden rounded-xl bg-zinc-900/95 dark:bg-zinc-950/95 border border-zinc-700/60 dark:border-zinc-800 text-zinc-100 shadow-md backdrop-blur-md p-2.5 sm:p-3 flex flex-col gap-2">
         {/* Top Header & Message */}
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex items-start gap-2.5 flex-1 min-w-0">
-            <div className="w-8 h-8 rounded-xl bg-red-500/15 border border-red-500/30 flex items-center justify-center shrink-0 mt-0.5 shadow-xs">
-              <AlertCircle className="w-4 h-4 text-red-400 animate-pulse" />
+        <div className="flex items-start justify-between gap-2.5">
+          <div className="flex items-start gap-2 flex-1 min-w-0">
+            <div className="w-6 h-6 rounded-lg bg-red-500/10 border border-red-500/20 flex items-center justify-center shrink-0 mt-0.5">
+              <AlertCircle className="w-3.5 h-3.5 text-red-400" />
             </div>
             <div className="flex-1 min-w-0">
-              <h5 className="font-bold text-xs sm:text-[13px] text-red-300 mb-0.5 flex items-center gap-1.5">
-                <span>عدم برقراری ارتباط با مدل هوش مصنوعی</span>
-              </h5>
-              <p className="text-[12px] sm:text-[13px] text-zinc-300/95 leading-relaxed break-words font-normal">
+              <p className="text-[12px] text-zinc-200 leading-relaxed break-words font-normal">
                 {error.message}
               </p>
             </div>
@@ -68,27 +65,27 @@ export const ErrorCapsule: React.FC<ErrorCapsuleProps> = ({
               setVisible(false);
               setTimeout(onDismiss, 200);
             }}
-            className="text-zinc-400 hover:text-white hover:bg-white/10 p-1.5 rounded-xl transition-colors cursor-pointer shrink-0"
+            className="text-zinc-400 hover:text-white hover:bg-white/10 p-1 rounded-lg transition-colors cursor-pointer shrink-0 -mt-0.5"
             title="بستن اعلان"
           >
-            <X className="w-4 h-4" />
+            <X className="w-3.5 h-3.5" />
           </button>
         </div>
 
         {/* Action Buttons Row */}
-        <div className="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-white/5 text-xs">
-          <span className="text-[11px] text-zinc-400/80 font-normal">
-            ⏱️ حذف خودکار تا چند لحظه دیگر
+        <div className="flex items-center justify-between gap-2 pt-1 border-t border-zinc-800/80 text-[11px]">
+          <span className="text-[10.5px] text-zinc-500 font-normal">
+            ⏱️ حذف خودکار (۱۵ ثانیه)
           </span>
 
-          <div className="flex items-center gap-2 mr-auto">
+          <div className="flex items-center gap-1.5 mr-auto">
             {onOpenSettings && (
               <button
                 type="button"
                 onClick={onOpenSettings}
-                className="bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs px-3 py-1.5 rounded-xl flex items-center gap-1.5 font-medium cursor-pointer transition-all border border-zinc-700 active:scale-95 shadow-xs"
+                className="bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-[11px] px-2.5 py-1 rounded-lg flex items-center gap-1 font-normal cursor-pointer transition-all border border-zinc-700/70 active:scale-95"
               >
-                <Settings className="w-3.5 h-3.5 text-zinc-400" />
+                <Settings className="w-3 h-3 text-zinc-400" />
                 <span>تنظیمات مدل</span>
               </button>
             )}
@@ -96,18 +93,18 @@ export const ErrorCapsule: React.FC<ErrorCapsuleProps> = ({
             <button
               type="button"
               onClick={onRetry}
-              className="bg-red-500/20 hover:bg-red-500/30 text-red-300 text-xs px-3.5 py-1.5 rounded-xl flex items-center gap-1.5 font-bold cursor-pointer transition-all border border-red-500/30 active:scale-95 shadow-xs"
+              className="bg-zinc-800 hover:bg-zinc-700 text-red-400 hover:text-red-300 text-[11px] px-2.5 py-1 rounded-lg flex items-center gap-1 font-medium cursor-pointer transition-all border border-red-500/20 active:scale-95"
             >
-              <RotateCw className="w-3.5 h-3.5" />
+              <RotateCw className="w-3 h-3" />
               <span>تلاش مجدد</span>
             </button>
           </div>
         </div>
 
-        {/* Animated 15-second shrinking countdown bar */}
-        <div className="w-full bg-red-500/10 h-1 rounded-full overflow-hidden absolute bottom-0 left-0 right-0">
+        {/* Ultra-slim 15-second shrinking countdown bar */}
+        <div className="w-full bg-zinc-800 h-0.5 rounded-full overflow-hidden absolute bottom-0 left-0 right-0">
           <div
-            className="bg-gradient-to-r from-red-500 to-amber-500 h-full rounded-full animate-error-progress"
+            className="bg-red-400/60 h-full rounded-full animate-error-progress"
             style={{ animationDuration: `${durationSeconds}s` }}
           />
         </div>
