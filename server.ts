@@ -230,6 +230,41 @@ async function translateAndEnhanceImagePrompt(rawPrompt: string): Promise<string
 
   return `${rawPrompt}, highly detailed, 8k resolution, photorealistic, professional lighting, crisp focus, zero artifacts`;
 }
+
+// Helper to fetch live real-time web search results (Google News RSS / Web)
+async function fetchLiveWebSearch(query: string): Promise<string | null> {
+  if (!query || query.length < 2) return null;
+  try {
+    const cleanQuery = query.replace(/[^\p{L}\p{N}\s]/gu, ' ').trim();
+    const encoded = encodeURIComponent(cleanQuery || query);
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 4000);
+
+    const rssUrl = `https://news.google.com/rss/search?q=${encoded}&hl=fa&gl=IR&ceid=IR:fa`;
+    const res = await fetch(rssUrl, {
+      headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' },
+      signal: controller.signal
+    });
+    clearTimeout(timeout);
+    if (!res.ok) return null;
+
+    const xml = await res.text();
+    const items: string[] = [];
+    const regex = /<item>[\s\S]*?<title>(.*?)<\/title>[\s\S]*?<link>(.*?)<\/link>[\s\S]*?<pubDate>(.*?)<\/pubDate>/g;
+    let match;
+    while ((match = regex.exec(xml)) !== null && items.length < 6) {
+      const title = match[1].replace(/<!\[CDATA\[(.*?)\]\]>/g, '$1').replace(/<[^>]+>/g, '').trim();
+      const date = match[3].trim();
+      if (title) {
+        items.push(`• ${title} (${date})`);
+      }
+    }
+    if (items.length > 0) {
+      return items.join('\n');
+    }
+  } catch (e) {}
+  return null;
+}
 function normalizeBaseUrl(url?: string, provider?: string): string {
   let clean = (url || '').trim();
   
@@ -764,8 +799,21 @@ app.post('/api/chat/stream', async (req, res) => {
     const enDate = now.toISOString().split('T')[0];
     const timeContext = `[اطلاعات زمانی زنده: هم‌اکنون ${faDate}، ساعت ${faTime} به وقت ایران (معادل میلادی: ${enDate}) است.]`;
 
-    const baseSystemPrompt = `شما یک دستیار هوشمند، مودب و با دقت بسیار بالا به زبان فارسی هستید. ${timeContext} به عنوان یک دستیار قدرتمند هوش مصنوعی مجهز به ابزار تصویرساز، هرگاه کاربر درخواست ساخت تصویر، عکس، نقاشی یا طراحی کند، سیستم به طور خودکار تصویر مورد نظر را خلق و نمایش می‌دهد، بنابراین هرگز نگویید که «من قابلیت تولید تصویر ندارم» بلکه همیشه با اشتیاق درخواست کاربر را تأیید کرده و تصویر ایجاد می‌شود. اصول، نکات کلیدی و لیست‌ها را همیشه در خطوط کاملاً جداگانه (با ساختار منظم لیست در Markdown) بنویسید.`;
-    const systemInstruction = apiConfig?.systemInstruction ? `${apiConfig.systemInstruction}\n\n${timeContext}\n\nنکته نگارشی: همیشه اصول، مراحل و لیست‌های شماره‌دار را در خطوط مجزا تفکیک کن.` : baseSystemPrompt;
+    // Fetch real-time web search results if webSearch tool is enabled
+    let liveWebContext = '';
+    if (apiConfig?.webSearch) {
+      const lastUserMsg = prunedMessages.slice().reverse().find((m: any) => m.role === 'user');
+      const userText = typeof lastUserMsg?.content === 'string' ? lastUserMsg.content : '';
+      if (userText && userText.trim().length > 1) {
+        const searchResults = await fetchLiveWebSearch(userText);
+        if (searchResults) {
+          liveWebContext = `\n\n[نتایج زنده جستجوی اینترنت و اخبار برای سوال کاربر:\n${searchResults}\n\nدستورالعمل مهم: شما مجهز به جستجوی زنده وب هستید و نتایج بالا همین لحظه از وب دریافت شده است. لطفاً با استناد و اتکا به این اطلاعات جدید و زنده، به زبان فارسی به کاربر پاسخ دهید و هرگز نگویید به اینترنت دسترسی ندارید.]`;
+        }
+      }
+    }
+
+    const baseSystemPrompt = `شما یک دستیار هوشمند، مودب و با دقت بسیار بالا به زبان فارسی هستید. ${timeContext}${liveWebContext} به عنوان یک دستیار قدرتمند هوش مصنوعی مجهز به ابزار تصویرساز، هرگاه کاربر درخواست ساخت تصویر، عکس، نقاشی یا طراحی کند، سیستم به طور خودکار تصویر مورد نظر را خلق و نمایش می‌دهد، بنابراین هرگز نگویید که «من قابلیت تولید تصویر ندارم» بلکه همیشه با اشتیاق درخواست کاربر را تأیید کرده و تصویر ایجاد می‌شود. اصول، نکات کلیدی و لیست‌ها را همیشه در خطوط کاملاً جداگانه (با ساختار منظم لیست در Markdown) بنویسید.`;
+    const systemInstruction = apiConfig?.systemInstruction ? `${apiConfig.systemInstruction}\n\n${timeContext}${liveWebContext}\n\nنکته نگارشی: همیشه اصول، مراحل و لیست‌های شماره‌دار را در خطوط مجزا تفکیک کن.` : baseSystemPrompt;
     const temperature = typeof apiConfig?.temperature === 'number' ? apiConfig.temperature : 0.7;
 
     // Prune history to last 6 messages max for high throughput and reduced prompt processing latency
