@@ -26,6 +26,14 @@ import {
   InfoCircleBoldDuotoneIcon,
   ChatRoundBoldDuotoneIcon,
   HeartBoldDuotoneIcon,
+  VolumeLoudBoldDuotoneIcon,
+  BuildingsBoldDuotoneIcon,
+  DocumentTextBoldDuotoneIcon,
+  CupBoldDuotoneIcon,
+  MedalStarBoldDuotoneIcon,
+  TagBoldDuotoneIcon,
+  LinkBoldDuotoneIcon,
+  BellBoldDuotoneIcon,
 } from '@solar-icons/react';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
@@ -84,6 +92,20 @@ const EMOJI_TO_SOLAR_ICON: Record<string, { icon: React.ComponentType<{ classNam
   '🔎': { icon: MinimalisticMagnifierBoldDuotoneIcon, color: 'text-sky-400' },
   '📁': { icon: FolderBoldDuotoneIcon, color: 'text-amber-400' },
   '📂': { icon: FolderBoldDuotoneIcon, color: 'text-amber-400' },
+  // News, Sources, Buildings & Media
+  '📣': { icon: VolumeLoudBoldDuotoneIcon, color: 'text-rose-400' },
+  '📢': { icon: VolumeLoudBoldDuotoneIcon, color: 'text-rose-400' },
+  '🏛️': { icon: BuildingsBoldDuotoneIcon, color: 'text-amber-400' },
+  '🏛': { icon: BuildingsBoldDuotoneIcon, color: 'text-amber-400' },
+  '📰': { icon: DocumentTextBoldDuotoneIcon, color: 'text-sky-400' },
+  '🗞️': { icon: DocumentTextBoldDuotoneIcon, color: 'text-sky-400' },
+  '🗞': { icon: DocumentTextBoldDuotoneIcon, color: 'text-sky-400' },
+  '⚽': { icon: CupBoldDuotoneIcon, color: 'text-emerald-400' },
+  '🏆': { icon: MedalStarBoldDuotoneIcon, color: 'text-amber-300' },
+  '🏷️': { icon: TagBoldDuotoneIcon, color: 'text-teal-400' },
+  '🏷': { icon: TagBoldDuotoneIcon, color: 'text-teal-400' },
+  '🔗': { icon: LinkBoldDuotoneIcon, color: 'text-blue-400' },
+  '🔔': { icon: BellBoldDuotoneIcon, color: 'text-amber-400' },
   // Time & Charts
   '⏰': { icon: ClockCircleBoldDuotoneIcon, color: 'text-blue-400' },
   '⏱️': { icon: ClockCircleBoldDuotoneIcon, color: 'text-blue-400' },
@@ -110,7 +132,7 @@ const EMOJI_TO_SOLAR_ICON: Record<string, { icon: React.ComponentType<{ classNam
   'ℹ': { icon: InfoCircleBoldDuotoneIcon, color: 'text-sky-400' }
 };
 
-const EMOJI_REGEX = /([📅🗓️🗓☀️🌞🌙🌘🌍🌐🌎🌏📌📍📜📄📝🌸🌺🌹🌷💡⚡✨🌟⭐💻🖥️🤖🔍🔎📁📂⏰⏱️⏳⌛📊📈📉🔒🔓🔑💬🗨️❤️✅✔️❌❎⚠️🚨ℹ️ℹ])/gu;
+const EMOJI_REGEX = /([📅🗓️🗓☀️🌞🌙🌘🌍🌐🌎🌏📌📍📜📄📝🌸🌺🌹🌷💡⚡✨🌟⭐💻🖥️🤖🔍🔎📁📂📣📢🏛️🏛📰🗞️🗞⚽🏆🏷️🏷🔗🔔⏰⏱️⏳⌛📊📈📉🔒🔓🔑💬🗨️❤️✅✔️❌❎⚠️🚨ℹ️ℹ])/gu;
 
 type IconContext = 'heading' | 'body' | 'meta' | 'badge';
 
