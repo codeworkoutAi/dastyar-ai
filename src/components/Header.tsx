@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React from 'react';
 import { 
   HamburgerMenuLineDuotoneIcon, 
   SettingsMinimalisticLineDuotoneIcon, 
@@ -6,10 +6,9 @@ import {
   StarsMinimalisticBoldDuotoneIcon, 
   HelpLineDuotoneIcon, 
   Code2LineDuotoneIcon, 
-  GlobalLineDuotoneIcon,
-  MenuDotsLineDuotoneIcon
+  GlobalLineDuotoneIcon
 } from '@solar-icons/react';
-import { Monitor, Smartphone, MessageSquare } from 'lucide-react';
+import { Menu, Settings as SettingsIcon, Download, Monitor, Smartphone, Sparkles, HelpCircle, Code2, Globe } from 'lucide-react';
 import { AppSettings, Conversation } from '../types';
 import { calculateSessionStats } from '../utils/pricing';
 import { Tooltip } from './Tooltip';
@@ -27,7 +26,6 @@ interface HeaderProps {
   conversations?: Conversation[];
   platformMode: 'windows' | 'android';
   setPlatformMode: (mode: 'windows' | 'android') => void;
-  isStreaming?: boolean;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -43,202 +41,179 @@ export const Header: React.FC<HeaderProps> = ({
   conversations,
   platformMode,
   setPlatformMode,
-  isStreaming = false,
 }) => {
-  const [showTools, setShowTools] = useState(false);
-  const toolsRef = useRef<HTMLDivElement>(null);
-
   const sessionStats = React.useMemo(() => {
     return calculateSessionStats(conversations || (activeConversation ? [activeConversation] : []));
   }, [conversations, activeConversation]);
-
-  // Click outside to close tools menu
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (toolsRef.current && !toolsRef.current.contains(event.target as Node)) {
-        setShowTools(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  const getProviderInfo = () => {
+  const getProviderLabel = () => {
     switch (settings.providers.activeProvider) {
     case 'gemini':
-      return { 
-        icon: <StarsMinimalisticBoldDuotoneIcon className="w-4 h-4 text-purple-500 dark:text-purple-400" />,
-        glowClass: 'from-purple-500/20 to-blue-500/20'
-      };
+      return <div className="w-5 h-5 rounded-md gemini-gradient-bg flex items-center justify-center shrink-0"><StarsMinimalisticBoldDuotoneIcon className="w-3.5 h-3.5 text-white" /></div>;
     case 'openai':
-      return {
-        icon: <Code2LineDuotoneIcon className="w-4 h-4 text-emerald-500 dark:text-emerald-400" />,
-        glowClass: 'from-emerald-500/20 to-teal-500/20'
-      };
+      return <div className="w-5 h-5 rounded-md bg-emerald-500/10 flex items-center justify-center shrink-0"><Code2LineDuotoneIcon className="w-3.5 h-3.5 text-emerald-500" /></div>;
     case 'anthropic':
-      return {
-        icon: <Code2LineDuotoneIcon className="w-4 h-4 text-amber-500 dark:text-amber-400" />,
-        glowClass: 'from-amber-500/20 to-orange-500/20'
-      };
+      return <div className="w-5 h-5 rounded-md bg-amber-500/10 flex items-center justify-center shrink-0"><Code2LineDuotoneIcon className="w-3.5 h-3.5 text-amber-500" /></div>;
     case 'custom':
-      return {
-        icon: <GlobalLineDuotoneIcon className="w-4 h-4 text-sky-500 dark:text-sky-400" />,
-        glowClass: 'from-sky-500/20 to-blue-500/20'
-      };
+      return <div className="w-5 h-5 rounded-md bg-blue-500/10 flex items-center justify-center shrink-0"><GlobalLineDuotoneIcon className="w-3.5 h-3.5 text-blue-500" /></div>;
     default:
-        return {
-          icon: <StarsMinimalisticBoldDuotoneIcon className="w-4 h-4 text-zinc-500" />,
-          glowClass: 'from-zinc-500/20 to-zinc-500/20'
-        };
+        return 'هوش مصنوعی';
     }
   };
 
-  const providerInfo = getProviderInfo();
-  const chatTitle = activeConversation?.title || 'دستیار هوشمند';
-
   return (
-    <header className="relative h-16 sm:h-[4.5rem] flex items-center justify-between z-30 shrink-0 select-none overflow-visible">
-      {/* Absolute Ambient Mesh Background */}
-      <div className="absolute inset-0 bg-white/40 dark:bg-[#0a0a0a]/40 backdrop-blur-2xl border-b border-black/5 dark:border-white/[0.08] transition-colors duration-500" />
-      
-      {/* Subtle Glow based on active model */}
-      <div className={`absolute inset-0 bg-gradient-to-r ${providerInfo.glowClass} opacity-30 dark:opacity-40 pointer-events-none transition-all duration-1000`} />
+    <header className="h-16 sm:h-18 px-2.5 sm:px-4 md:px-6 flex items-center justify-between z-20 shrink-0 select-none border-b border-subtle clay-header backdrop-blur-md">
+      {/* Right side in RTL (Start) */}
+      <div className="flex items-center gap-1.5 sm:gap-3 min-w-0">
+        <Tooltip content="منوی گفتگوها">
+          <button
+            id="sidebar-toggle-btn"
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+            className="clay-btn w-11 h-11 flex items-center justify-center text-inherit hover:opacity-90 rounded-xl sm:rounded-2xl shrink-0"
+            aria-label="Toggle Sidebar"
+          >
+            <HamburgerMenuLineDuotoneIcon className="w-4 h-4 sm:w-5 sm:h-5" />
+          </button>
+        </Tooltip>
 
-      {/* Neon Streaming Progress Bar */}
-      {isStreaming && (
-        <div className="absolute bottom-0 left-0 w-full h-[2px] overflow-hidden">
-          <div className="w-full h-full bg-gradient-to-r from-transparent via-blue-500 dark:via-purple-400 to-transparent animate-shimmer" style={{ backgroundSize: '200% 100%' }} />
-        </div>
-      )}
-
-      {/* Header Content Container */}
-      <div className="relative w-full px-3 sm:px-6 flex items-center justify-between">
-        
-        {/* RIGHT: Menu & Title (RTL) */}
-        <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
-          <Tooltip content="منوی گفتگوها (سایدبار)">
-            <button
-              onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="w-10 h-10 sm:w-11 sm:h-11 flex items-center justify-center text-zinc-700 dark:text-zinc-300 hover:bg-black/5 dark:hover:bg-white/10 rounded-xl sm:rounded-2xl transition-all shrink-0"
-            >
-              <HamburgerMenuLineDuotoneIcon className="w-5 h-5" />
-            </button>
-          </Tooltip>
-
-          <div className="flex flex-col min-w-0 justify-center">
-            <h1 className="font-extrabold text-sm sm:text-base tracking-tight text-zinc-900 dark:text-zinc-100 truncate flex items-center gap-1.5">
-              <MessageSquare className="w-3.5 h-3.5 opacity-50 hidden sm:block" />
-              {chatTitle}
-            </h1>
-            {isStreaming && (
-              <span className="text-[10px] sm:text-[11px] text-blue-600 dark:text-purple-400 font-medium animate-pulse">
-                در حال پاسخ‌گویی...
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+          <div className="relative flex items-center justify-center shrink-0">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl gemini-gradient-bg text-white flex items-center justify-center shadow-md">
+              <StarsMinimalisticBoldDuotoneIcon className="w-4 h-4 sm:w-5 sm:h-5" />
+            </div>
+            <div className="absolute -top-0.5 -right-0.5 w-2 sm:w-2.5 h-2 sm:h-2.5 rounded-full bg-emerald-500 ring-2 ring-[var(--card-bg)]" />
+          </div>
+          <div className="min-w-0">
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              <h1 className="font-extrabold text-sm sm:text-base md:text-lg tracking-tight truncate hidden min-[360px]:block">
+                دستیار هوشمند
+              </h1>
+              <span className="hidden lg:inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-xs font-semibold clay-btn">
+                <span className="w-2 h-2 rounded-full bg-teal-400 animate-pulse"></span>
+                <span className="opacity-70 text-[11px]">مدل:</span>
+                <span className="font-bold text-[var(--accent-text)]">{getProviderLabel()}</span>
               </span>
-            )}
+            </div>
+            <p className="text-[10px] sm:text-[11px] opacity-70 hidden md:block truncate">
+              پشتیبانی از زبان فارسی با هوش مصنوعی چندمدلی
+            </p>
           </div>
         </div>
+      </div>
 
-        {/* LEFT: Smart Chip & More Actions */}
-        <div className="flex items-center gap-2 sm:gap-3 shrink-0" dir="ltr">
-          
-          {/* Smart Chip (Model + Token Stats) */}
-          <Tooltip content={`مدل فعال: ${settings.providers.activeProvider} \n کل توکن‌ها: ${sessionStats.totalTokens.toLocaleString('fa-IR')} (~$${sessionStats.totalCostUSDFormatted})`}>
-            <button 
-              onClick={onOpenSettings}
-              className="flex items-center gap-2 px-2 sm:px-3 h-9 sm:h-10 bg-white/60 dark:bg-black/40 hover:bg-white/90 dark:hover:bg-black/60 border border-black/5 dark:border-white/10 rounded-xl sm:rounded-2xl transition-all shadow-sm backdrop-blur-md"
+      {/* Left side in RTL (End Actions) */}
+      <div className="flex items-center gap-1 sm:gap-2 md:gap-3 shrink-0">
+        {/* Platform View Toggle */}
+        <div className="hidden xl:flex items-center p-1 clay-input-box rounded-2xl text-xs">
+          <Tooltip content="نمای ویندوز (دسکتاپ)">
+            <button
+              onClick={() => setPlatformMode('windows')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl transition-all ${
+                platformMode === 'windows'
+                  ? 'clay-btn font-bold shadow-md'
+                  : 'opacity-70 hover:opacity-100'
+              }`}
             >
-              <div className="flex items-center justify-center w-5 h-5 sm:w-6 sm:h-6 rounded-lg bg-black/5 dark:bg-white/5 shrink-0">
-                {providerInfo.icon}
-              </div>
-              {sessionStats.totalTokens > 0 && (
-                <div className="hidden sm:flex items-center gap-1.5 text-[11px] sm:text-xs font-mono font-medium text-zinc-600 dark:text-zinc-300">
-                  <span>{sessionStats.totalTokens >= 1000 ? `${(sessionStats.totalTokens / 1000).toFixed(1)}k` : sessionStats.totalTokens}</span>
-                  <span className="w-1 h-1 rounded-full bg-zinc-300 dark:bg-zinc-600" />
-                  <span className="text-emerald-600 dark:text-emerald-400">${sessionStats.totalCostUSDFormatted}</span>
-                </div>
-              )}
+              <Monitor className="w-3.5 h-3.5 text-[var(--accent-text)]" />
+              <span>ویندوز</span>
             </button>
           </Tooltip>
 
-          {/* Tools Menu (Dropdown) */}
-          <div className="relative" ref={toolsRef}>
-            <Tooltip content="ابزارها و تنظیمات">
-              <button
-                onClick={() => setShowTools(!showTools)}
-                className="w-10 h-10 sm:w-11 sm:h-11 flex items-center justify-center text-zinc-700 dark:text-zinc-300 hover:bg-black/5 dark:hover:bg-white/10 rounded-xl sm:rounded-2xl transition-all"
-              >
-                <MenuDotsLineDuotoneIcon className="w-6 h-6" />
-              </button>
-            </Tooltip>
-
-            {/* Dropdown Popover */}
-            {showTools && (
-              <div className="absolute top-full mt-2 left-0 w-56 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-xl border border-zinc-200/50 dark:border-zinc-800/50 rounded-2xl shadow-xl z-50 overflow-hidden animate-fadeIn" dir="rtl">
-                <div className="p-1.5 flex flex-col gap-0.5">
-                  {/* Image Studio */}
-                  <button onClick={() => { onOpenImageStudio(); setShowTools(false); }} className="flex items-center gap-3 w-full p-2.5 hover:bg-zinc-100 dark:hover:bg-zinc-800/50 rounded-xl transition-colors text-right">
-                    <div className="w-8 h-8 rounded-lg bg-purple-500/10 flex items-center justify-center text-purple-500">
-                      <StarsMinimalisticBoldDuotoneIcon className="w-4 h-4" />
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="text-sm font-semibold text-zinc-800 dark:text-zinc-200">استودیو تصویر</span>
-                      <span className="text-[10px] text-zinc-500 dark:text-zinc-400">Midjourney, DALL-E, Flux</span>
-                    </div>
-                  </button>
-
-                  {/* Export */}
-                  {activeConversation && activeConversation.messages.length > 0 && (
-                    <button onClick={() => { onOpenExport(); setShowTools(false); }} className="flex items-center gap-3 w-full p-2.5 hover:bg-zinc-100 dark:hover:bg-zinc-800/50 rounded-xl transition-colors text-right">
-                      <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-500">
-                        <DownloadMinimalisticLineDuotoneIcon className="w-4 h-4" />
-                      </div>
-                      <span className="text-sm font-semibold text-zinc-800 dark:text-zinc-200">خروجی گفتگو</span>
-                    </button>
-                  )}
-
-                  {/* UI Guide */}
-                  {onOpenUiGuide && (
-                    <button onClick={() => { onOpenUiGuide(); setShowTools(false); }} className="flex items-center gap-3 w-full p-2.5 hover:bg-zinc-100 dark:hover:bg-zinc-800/50 rounded-xl transition-colors text-right">
-                      <div className="w-8 h-8 rounded-lg bg-sky-500/10 flex items-center justify-center text-sky-500">
-                        <HelpLineDuotoneIcon className="w-4 h-4" />
-                      </div>
-                      <span className="text-sm font-semibold text-zinc-800 dark:text-zinc-200">راهنمای تصویری اجزا</span>
-                    </button>
-                  )}
-
-                  {/* Divider */}
-                  <div className="h-px bg-zinc-200 dark:bg-zinc-800 my-1" />
-
-                  {/* View Mode Toggle */}
-                  <div className="flex items-center gap-1 p-1.5 bg-zinc-100 dark:bg-zinc-800/50 rounded-xl mx-1">
-                    <button 
-                      onClick={() => setPlatformMode('windows')} 
-                      className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-medium transition-all ${platformMode === 'windows' ? 'bg-white dark:bg-zinc-700 shadow-sm text-zinc-900 dark:text-white' : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'}`}
-                    >
-                      <Monitor className="w-3.5 h-3.5" />
-                      ویندوز
-                    </button>
-                    <button 
-                      onClick={() => setPlatformMode('android')} 
-                      className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-medium transition-all ${platformMode === 'android' ? 'bg-white dark:bg-zinc-700 shadow-sm text-zinc-900 dark:text-white' : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'}`}
-                    >
-                      <Smartphone className="w-3.5 h-3.5" />
-                      اندروید
-                    </button>
-                  </div>
-
-                  {/* Settings */}
-                  <button onClick={() => { onOpenSettings(); setShowTools(false); }} className="flex items-center gap-3 w-full p-2.5 mt-1 hover:bg-zinc-100 dark:hover:bg-zinc-800/50 rounded-xl transition-colors text-right">
-                    <div className="w-8 h-8 rounded-lg bg-zinc-200 dark:bg-zinc-700 flex items-center justify-center text-zinc-600 dark:text-zinc-300">
-                      <SettingsMinimalisticLineDuotoneIcon className="w-4 h-4" />
-                    </div>
-                    <span className="text-sm font-semibold text-zinc-800 dark:text-zinc-200">تنظیمات پیشرفته</span>
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
+          <Tooltip content="نمای اندروید (موبایل)">
+            <button
+              onClick={() => setPlatformMode('android')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl transition-all ${
+                platformMode === 'android'
+                  ? 'clay-btn font-bold shadow-md'
+                  : 'opacity-70 hover:opacity-100'
+              }`}
+            >
+              <Smartphone className="w-3.5 h-3.5 text-[var(--accent-text)]" />
+              <span>اندروید</span>
+            </button>
+          </Tooltip>
         </div>
+
+
+
+        {/* Export Button */}
+        {activeConversation && activeConversation.messages.length > 0 && (
+          <Tooltip content="خروجی و ذخیره گفتگو">
+            <button
+              id="header-export-btn"
+              onClick={onOpenExport}
+              className="clay-btn w-11 h-11 flex items-center justify-center hover:opacity-90 rounded-xl sm:rounded-2xl"
+              aria-label="Export Chat"
+            >
+              <DownloadMinimalisticLineDuotoneIcon className="w-4 h-4 sm:w-5 sm:h-5" />
+            </button>
+          </Tooltip>
+        )}
+
+        {/* Image Studio button */}
+        <Tooltip content="استودیوی پیشرفته ساخت تصویر (Midjourney, DALL-E, SD, Flux)">
+          <button
+            id="header-image-studio-btn"
+            onClick={onOpenImageStudio}
+            className="clay-btn w-11 lg:w-auto lg:px-3 h-11 flex items-center justify-center hover:opacity-90 gap-1.5 text-purple-400 font-bold text-xs rounded-xl sm:rounded-2xl"
+            aria-label="Image Generation Studio"
+          >
+            <StarsMinimalisticBoldDuotoneIcon className="w-4 h-4 sm:w-5 sm:h-5 text-purple-400 animate-pulse" />
+            <span className="hidden lg:inline">استودیوی تصویر</span>
+          </button>
+        </Tooltip>
+
+        {/* UI Guide button */}
+        {onOpenUiGuide && (
+          <Tooltip content="راهنمای تصویری و نقشه اجزای برنامه (UI Map)">
+            <button
+              id="header-ui-guide-btn"
+              onClick={onOpenUiGuide}
+              className="clay-btn w-11 lg:w-auto lg:px-3 h-11 flex items-center justify-center hover:opacity-90 gap-1.5 text-blue-600 dark:text-sky-400 font-bold text-xs rounded-xl sm:rounded-2xl"
+              aria-label="UI Visual Guide"
+            >
+              <HelpLineDuotoneIcon className="w-4 h-4 sm:w-5 sm:h-5" />
+              <span className="hidden 2xl:inline">نقشه اجزا</span>
+            </button>
+          </Tooltip>
+        )}
+
+        {/* Live Session Usage Analytics Pill */}
+        {sessionStats.totalTokens > 0 && (
+          <Tooltip content={`آمار کل نشست: ${sessionStats.totalTokens.toLocaleString('fa-IR')} توکن • هزینه کل: ~$${sessionStats.totalCostUSDFormatted}`}>
+            <button
+              id="header-session-stats-btn"
+              onClick={onOpenSettings}
+              className="hidden md:flex items-center gap-1.5 px-3 h-11 clay-btn rounded-xl sm:rounded-2xl text-xs font-mono select-none"
+              aria-label="Session Stats"
+            >
+              <span className="text-amber-400 text-sm">⚡</span>
+              <span dir="ltr" className="font-bold text-zinc-200">
+                {sessionStats.totalTokens >= 1000 
+                  ? `${(sessionStats.totalTokens / 1000).toFixed(1)}k` 
+                  : sessionStats.totalTokens}
+              </span>
+              <span className="opacity-40">•</span>
+              <span dir="ltr" className="text-emerald-400 font-bold">
+                ~${sessionStats.totalCostUSDFormatted}
+              </span>
+            </button>
+          </Tooltip>
+        )}
+
+        {/* Settings button */}
+        <Tooltip content="تنظیمات سیستم (تم، پالت رنگی، مدل‌ها و قلم)">
+          <button
+            id="header-settings-btn"
+            onClick={onOpenSettings}
+            className="clay-btn w-11 h-11 flex items-center justify-center hover:opacity-90 relative rounded-xl sm:rounded-2xl"
+            aria-label="Open Settings"
+          >
+            <SettingsMinimalisticLineDuotoneIcon className="w-4 h-4 sm:w-5 sm:h-5" />
+            {true && (
+              <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-blue-400 rounded-full ring-2 ring-[var(--card-bg)] shadow-[0_0_8px_rgba(59,130,246,0.9)]" />
+            )}
+          </button>
+        </Tooltip>
       </div>
     </header>
   );
