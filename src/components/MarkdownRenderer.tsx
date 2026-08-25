@@ -199,7 +199,7 @@ function replaceEmojisWithSolarIcons(node: React.ReactNode, context: IconContext
     if (context === 'heading') {
       sizeClass = 'w-[1.25em] h-[1.25em] drop-shadow-sm mx-1';
     } else if (context === 'meta' || context === 'badge') {
-      sizeClass = 'w-[0.75em] h-[0.75em] opacity-80 mx-0.5';
+      sizeClass = 'w-[0.7em] h-[0.7em] max-w-[12px] max-h-[12px] opacity-75 mx-0.5 align-baseline';
     }
 
     return parts.map((part, index) => {
@@ -533,7 +533,7 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
                 }`}
                 dir={rtl ? 'rtl' : 'ltr'}
               >
-                {replaceEmojisWithSolarIcons(children)}
+                {children}
               </blockquote>
             );
           },
