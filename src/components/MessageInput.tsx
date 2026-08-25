@@ -769,7 +769,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({
                      textareaRef.current?.focus();
                   }}
                 >
-                  <span className="font-bold text-[11px] text-sky-500 leading-none mb-1">{c.cmd}</span>
+                  <span className="font-mono font-bold text-[11px] tracking-tight text-sky-500 leading-none mb-1" dir="ltr">{c.cmd}</span>
                   <span className="text-[9px] text-zinc-500 dark:text-zinc-400 line-clamp-1 leading-none">{c.text}</span>
                 </button>
               ))}
