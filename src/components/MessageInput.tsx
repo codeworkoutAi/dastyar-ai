@@ -755,12 +755,12 @@ export const MessageInput: React.FC<MessageInputProps> = ({
 
           {/* Textarea */}
           {slashMenuOpen && slashCommands.filter(c => c.cmd.startsWith(slashQuery)).length > 0 && (
-            <div className="absolute bottom-full right-0 mb-1 w-full max-w-[200px] bg-white dark:bg-[#1e1f20] border border-zinc-200 dark:border-[#333333] rounded-xl shadow-xl z-[60] flex flex-col p-0.5 animate-fadeIn">
+            <div className="absolute bottom-full right-0 mb-1 w-full max-w-[220px] bg-white dark:bg-[#1e1f20] border border-zinc-200 dark:border-[#333333] rounded-xl shadow-xl z-[60] flex flex-col p-0.5 animate-fadeIn">
               {slashCommands.filter(c => c.cmd.startsWith(slashQuery)).map((c, idx) => (
                 <button
                   key={idx}
                   type="button"
-                  className="flex flex-row items-center gap-1.5 px-2 py-1 hover:bg-zinc-100 dark:hover:bg-white/10 rounded-lg transition-colors text-right w-full"
+                  className="flex flex-col text-right px-2 py-1 hover:bg-zinc-100 dark:hover:bg-white/10 rounded-lg transition-colors w-full"
                   onClick={() => {
                      const words = text.split(' ');
                      words.pop();
@@ -769,8 +769,8 @@ export const MessageInput: React.FC<MessageInputProps> = ({
                      textareaRef.current?.focus();
                   }}
                 >
-                  <span className="font-bold text-[11px] text-sky-500 shrink-0 leading-none">{c.cmd}</span>
-                  <span className="text-[9px] text-zinc-500 dark:text-zinc-400 truncate leading-none mt-0.5">{c.text}</span>
+                  <span className="font-bold text-[11px] text-sky-500 leading-none mb-1">{c.cmd}</span>
+                  <span className="text-[9px] text-zinc-500 dark:text-zinc-400 line-clamp-1 leading-none">{c.text}</span>
                 </button>
               ))}
             </div>
