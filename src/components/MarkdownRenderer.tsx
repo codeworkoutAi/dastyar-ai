@@ -112,20 +112,30 @@ const EMOJI_TO_SOLAR_ICON: Record<string, { icon: React.ComponentType<{ classNam
 
 const EMOJI_REGEX = /([📅🗓️🗓☀️🌞🌙🌘🌍🌐🌎🌏📌📍📜📄📝🌸🌺🌹🌷💡⚡✨🌟⭐💻🖥️🤖🔍🔎📁📂⏰⏱️⏳⌛📊📈📉🔒🔓🔑💬🗨️❤️✅✔️❌❎⚠️🚨ℹ️ℹ])/gu;
 
-// Replace emojis recursively inside React children with crisp Solar Icons
-function replaceEmojisWithSolarIcons(node: React.ReactNode): React.ReactNode {
+type IconContext = 'heading' | 'body' | 'meta' | 'badge';
+
+// Replace emojis recursively inside React children with context-aware Solar Icons
+function replaceEmojisWithSolarIcons(node: React.ReactNode, context: IconContext = 'body'): React.ReactNode {
   if (typeof node === 'string') {
     if (!EMOJI_REGEX.test(node)) return node;
     const parts = node.split(EMOJI_REGEX);
     if (parts.length === 1) return node;
+
+    // Size mappings per context
+    let sizeClass = 'w-[1.05em] h-[1.05em] drop-shadow-xs mx-0.5';
+    if (context === 'heading') {
+      sizeClass = 'w-[1.18em] h-[1.18em] drop-shadow-sm mx-1';
+    } else if (context === 'meta' || context === 'badge') {
+      sizeClass = 'w-[0.82em] h-[0.82em] opacity-80 mx-0.5';
+    }
 
     return parts.map((part, index) => {
       const match = EMOJI_TO_SOLAR_ICON[part];
       if (match) {
         const IconComponent = match.icon;
         return (
-          <span key={index} className="inline-flex items-center align-middle mx-0.5 select-none pointer-events-none transition-transform hover:scale-110">
-            <IconComponent className={`w-[1.05em] h-[1.05em] ${match.color} drop-shadow-xs`} />
+          <span key={index} className="inline-flex items-center align-middle select-none pointer-events-none transition-transform hover:scale-110">
+            <IconComponent className={`${sizeClass} ${match.color}`} />
           </span>
         );
       }
@@ -136,7 +146,7 @@ function replaceEmojisWithSolarIcons(node: React.ReactNode): React.ReactNode {
   if (Array.isArray(node)) {
     return node.map((child, i) => (
       <React.Fragment key={i}>
-        {replaceEmojisWithSolarIcons(child)}
+        {replaceEmojisWithSolarIcons(child, context)}
       </React.Fragment>
     ));
   }
@@ -148,7 +158,7 @@ function replaceEmojisWithSolarIcons(node: React.ReactNode): React.ReactNode {
     const children = (node.props as any)?.children;
     if (children) {
       return React.cloneElement(node as React.ReactElement<any>, {
-        children: replaceEmojisWithSolarIcons(children)
+        children: replaceEmojisWithSolarIcons(children, context)
       });
     }
   }
@@ -275,8 +285,24 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
                   {iconMap[callout.type]}
                   <div className="flex-1 text-[13px] leading-6">
                     <p className="font-bold text-[12px] opacity-90 mb-0.5">{callout.title}</p>
-                    <p className="opacity-95">{replaceEmojisWithSolarIcons(callout.cleanText || children)}</p>
+                    <p className="opacity-95">{replaceEmojisWithSolarIcons(callout.cleanText || children, 'body')}</p>
                   </div>
+                </div>
+              );
+            }
+
+            // Detect Source / Citation lines (e.g. "منبع: مهر • زمان انتشار: ...") and render as modern sleek pill
+            const isSourceLine = rawText.includes('منبع:') || rawText.includes('منبع :') || rawText.includes('زمان انتشار:') || rawText.includes('Source:');
+            if (isSourceLine) {
+              const rtl = rawText ? isRtlText(rawText) : isOverallRtl;
+              return (
+                <div
+                  className={`my-2 inline-flex items-center flex-wrap gap-1.5 px-3 py-1.5 rounded-xl bg-black/[0.03] dark:bg-white/[0.04] border border-zinc-300/40 dark:border-white/10 text-xs text-zinc-400 font-normal shadow-xs backdrop-blur-xs select-none ${
+                    rtl ? 'text-right' : 'text-left'
+                  }`}
+                  dir={rtl ? 'rtl' : 'ltr'}
+                >
+                  {replaceEmojisWithSolarIcons(children, 'meta')}
                 </div>
               );
             }
@@ -287,7 +313,7 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
                 className={`mb-3.5 last:mb-0 leading-7 font-normal ${rtl ? 'text-right' : 'text-left'}`}
                 dir={rtl ? 'rtl' : 'ltr'}
               >
-                {replaceEmojisWithSolarIcons(children)}
+                {replaceEmojisWithSolarIcons(children, 'body')}
               </p>
             );
           },
@@ -324,7 +350,7 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
                 }`}
                 dir={rtl ? 'rtl' : 'ltr'}
               >
-                {replaceEmojisWithSolarIcons(children)}
+                {replaceEmojisWithSolarIcons(children, 'heading')}
               </h1>
             );
           },
@@ -338,7 +364,7 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
                 }`}
                 dir={rtl ? 'rtl' : 'ltr'}
               >
-                {replaceEmojisWithSolarIcons(children)}
+                {replaceEmojisWithSolarIcons(children, 'heading')}
               </h2>
             );
           },
@@ -352,7 +378,7 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
                 }`}
                 dir={rtl ? 'rtl' : 'ltr'}
               >
-                {replaceEmojisWithSolarIcons(children)}
+                {replaceEmojisWithSolarIcons(children, 'heading')}
               </h3>
             );
           },
@@ -366,7 +392,7 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
                 }`}
                 dir={rtl ? 'rtl' : 'ltr'}
               >
-                {replaceEmojisWithSolarIcons(children)}
+                {replaceEmojisWithSolarIcons(children, 'heading')}
               </h4>
             );
           },
@@ -404,21 +430,21 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
                 className={`leading-7 my-1 ${rtl ? 'text-right' : 'text-left'}`}
                 dir={rtl ? 'rtl' : 'ltr'}
               >
-                {replaceEmojisWithSolarIcons(children)}
+                {replaceEmojisWithSolarIcons(children, 'body')}
               </li>
             );
           },
 
           // Strong / Bold tags
           strong({ children }) {
-            return <strong className="font-bold text-inherit">{replaceEmojisWithSolarIcons(children)}</strong>;
+            return <strong className="font-bold text-inherit">{replaceEmojisWithSolarIcons(children, 'body')}</strong>;
           },
 
           // Emphasis / Italic (smaller caption & metadata formatting)
           em({ children }) {
             return (
-              <em className="text-xs sm:text-[13px] text-zinc-500 dark:text-zinc-400 not-italic font-normal inline-block mt-1 leading-relaxed opacity-95">
-                {replaceEmojisWithSolarIcons(children)}
+              <em className="text-xs sm:text-[12px] text-zinc-400 dark:text-zinc-400 not-italic font-normal inline-flex items-center flex-wrap gap-1 mt-1 leading-relaxed opacity-90">
+                {replaceEmojisWithSolarIcons(children, 'meta')}
               </em>
             );
           },
