@@ -17,6 +17,70 @@ interface SettingsModalProps {
 
 type TabType = 'providers' | 'persona' | 'appearance' | 'tools' | 'data';
 
+// Custom Combobox Component
+const SearchableCombobox = ({ value, onChange, options, placeholder, className }: any) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const wrapperRef = React.useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (wrapperRef.current && !wrapperRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const filteredOptions = options.filter((opt: any) => {
+    const search = searchTerm.toLowerCase();
+    const nameMatch = opt.name ? opt.name.toLowerCase().includes(search) : false;
+    const idMatch = opt.id ? opt.id.toLowerCase().includes(search) : false;
+    return nameMatch || idMatch;
+  });
+
+  return (
+    <div ref={wrapperRef} className="relative w-full">
+      <input
+        type="text"
+        dir="ltr"
+        value={isOpen ? searchTerm : value}
+        onChange={(e) => {
+          if (isOpen) setSearchTerm(e.target.value);
+          else onChange(e.target.value);
+        }}
+        onClick={() => { setIsOpen(true); setSearchTerm(''); }}
+        placeholder={placeholder}
+        className={className}
+      />
+      <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+        <svg className="w-4 h-4 text-zinc-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+      </div>
+      {isOpen && (
+        <div className="absolute z-50 w-full mt-1 bg-zinc-900 border border-zinc-700 rounded-xl shadow-xl max-h-60 overflow-auto">
+          {filteredOptions.length === 0 ? (
+             <div className="p-3 text-sm text-zinc-400 text-center">موردی یافت نشد</div>
+          ) : (
+            filteredOptions.map((opt: any) => (
+              <div 
+                key={opt.id} 
+                className="p-3 hover:bg-zinc-800 cursor-pointer text-sm font-mono border-b border-zinc-800/50 last:border-0 truncate text-left"
+                onClick={() => {
+                  onChange(opt.id);
+                  setIsOpen(false);
+                }}
+              >
+                {opt.name || opt.id}
+              </div>
+            ))
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+
 export const SettingsModal: React.FC<SettingsModalProps> = ({
   isOpen,
   onClose,
@@ -42,6 +106,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     const config = tempSettings.providers[provider] as any;
     const baseUrl = config.baseUrl || (provider === 'gemini' ? 'https://generativelanguage.googleapis.com' : 'https://api.openai.com');
     
+    const startTime = performance.now();
     setFetchingModels(true);
     try {
        const res = await fetch('/api/fetch-models', {
@@ -54,15 +119,17 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           })
        });
        const data = await res.json();
+       const latencyMs = Math.round(performance.now() - startTime);
        if (res.ok && data.models) {
           setCachedModels(data.models);
           localStorage.setItem('chatbox_models', JSON.stringify(data.models));
-          setTestResult({ success: true, message: `تعداد ${data.models.length} مدل با موفقیت دریافت شد.` });
+          setTestResult({ success: true, message: `تعداد ${data.models.length} مدل با موفقیت دریافت شد.`, latencyMs });
        } else {
-          setTestResult({ success: false, message: data.error || 'خطا در دریافت مدل‌ها' });
+          setTestResult({ success: false, message: data.error || 'خطا در دریافت مدل‌ها', latencyMs });
        }
     } catch (e) {
-       setTestResult({ success: false, message: 'خطای شبکه در اتصال به سرور' });
+       const latencyMs = Math.round(performance.now() - startTime);
+       setTestResult({ success: false, message: 'خطای شبکه در اتصال به سرور', latencyMs });
     } finally {
        setFetchingModels(false);
     }
@@ -264,10 +331,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                           {(!['gemini-3.1-flash-lite', 'gemini-2.5-flash', 'gemini-3.1-pro', 'gemini-2.5-pro'].includes(tempSettings.providers.gemini.modelName)) && (
                               <div className="flex gap-2">
                                 <div className="relative flex-1">
-                                  <input list="cached-models" type="text" dir="ltr" value={tempSettings.providers.gemini.modelName} onChange={(e) => updateProvider('gemini', 'modelName', e.target.value)} className="w-full bg-zinc-950 border border-zinc-800 rounded-xl py-2.5 px-4 text-sm focus:border-blue-500 outline-none transition-all font-mono min-h-[44px]" placeholder="مثال: gemini-3.1-flash-lite" />
-                                  <datalist id="cached-models">
-                                    {cachedModels.map(m => (<option key={m.id} value={m.id}>{m.name}</option>))}
-                                  </datalist>
+                                  <SearchableCombobox value={tempSettings.providers.gemini.modelName} onChange={(val: string) => updateProvider('gemini', 'modelName', val)} options={cachedModels} placeholder="مثال: gemini-3.1-flash-lite" className="w-full bg-zinc-950 border border-zinc-800 rounded-xl py-2.5 px-4 text-sm focus:border-blue-500 outline-none transition-all font-mono min-h-[44px]" />
                                 </div>
                                 <button type="button" onClick={handleFetchModels} disabled={fetchingModels} className="px-3 rounded-xl border border-zinc-700 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 transition-colors flex items-center justify-center shrink-0" title="دریافت مدل‌ها">
                                   {fetchingModels ? <div className="w-4 h-4 border-2 border-zinc-500 border-t-white rounded-full animate-spin" /> : <RefreshCcw className="w-4 h-4" />}
@@ -278,10 +342,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                       ) : (
                           <div className="flex gap-2">
                             <div className="relative flex-1">
-                              <input list="cached-models" type="text" dir="ltr" value={(tempSettings.providers as any)[tempSettings.providers.activeProvider].modelName} onChange={(e) => updateProvider(tempSettings.providers.activeProvider, 'modelName', e.target.value)} className="w-full bg-zinc-950 border border-zinc-800 rounded-xl py-2.5 px-4 text-sm focus:border-blue-500 outline-none transition-all font-mono min-h-[44px]" />
-                              <datalist id="cached-models">
-                                {cachedModels.map(m => (<option key={m.id} value={m.id}>{m.name}</option>))}
-                              </datalist>
+                              <SearchableCombobox value={(tempSettings.providers as any)[tempSettings.providers.activeProvider].modelName} onChange={(val: string) => updateProvider(tempSettings.providers.activeProvider, 'modelName', val)} options={cachedModels} placeholder="" className="w-full bg-zinc-950 border border-zinc-800 rounded-xl py-2.5 px-4 text-sm focus:border-blue-500 outline-none transition-all font-mono min-h-[44px]" />
                             </div>
                             <button type="button" onClick={handleFetchModels} disabled={fetchingModels} className="px-3 rounded-xl border border-zinc-700 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 transition-colors flex items-center justify-center shrink-0" title="دریافت مدل‌ها">
                               {fetchingModels ? <div className="w-4 h-4 border-2 border-zinc-500 border-t-white rounded-full animate-spin" /> : <RefreshCcw className="w-4 h-4" />}
@@ -417,15 +478,15 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                       <div className="pt-4 border-t border-zinc-800 grid grid-cols-1 gap-4 animate-fadeIn">
                         <div>
                           <label className="block text-xs font-medium text-zinc-300 mb-1.5">مدل پیش‌فرض (مکالمه عادی)</label>
-                          <input list="cached-models" type="text" dir="ltr" value={tempSettings.tools.routingRoles?.default || ''} onChange={(e) => setTempSettings({...tempSettings, tools: {...tempSettings.tools, routingRoles: {...(tempSettings.tools.routingRoles || {default:'', coding:'', vision:''}), default: e.target.value}}})} className="w-full bg-zinc-950 border border-zinc-800 rounded-lg py-2 px-3 text-sm focus:border-indigo-500 outline-none transition-all font-mono" placeholder="gpt-4o-mini" />
+                          <SearchableCombobox value={tempSettings.tools.routingRoles?.default || ''} onChange={(val: string) => setTempSettings({...tempSettings, tools: {...tempSettings.tools, routingRoles: {...(tempSettings.tools.routingRoles || {default:'', coding:'', vision:''}), default: val}}})} options={cachedModels} placeholder="gpt-4o-mini" className="w-full bg-zinc-950 border border-zinc-800 rounded-lg py-2 px-3 text-sm focus:border-indigo-500 outline-none transition-all font-mono" />
                         </div>
                         <div>
                           <label className="block text-xs font-medium text-zinc-300 mb-1.5">مدل تخصصی برنامه‌نویسی</label>
-                          <input list="cached-models" type="text" dir="ltr" value={tempSettings.tools.routingRoles?.coding || ''} onChange={(e) => setTempSettings({...tempSettings, tools: {...tempSettings.tools, routingRoles: {...(tempSettings.tools.routingRoles || {default:'', coding:'', vision:''}), coding: e.target.value}}})} className="w-full bg-zinc-950 border border-zinc-800 rounded-lg py-2 px-3 text-sm focus:border-indigo-500 outline-none transition-all font-mono" placeholder="claude-3-5-sonnet-20240620" />
+                          <SearchableCombobox value={tempSettings.tools.routingRoles?.coding || ''} onChange={(val: string) => setTempSettings({...tempSettings, tools: {...tempSettings.tools, routingRoles: {...(tempSettings.tools.routingRoles || {default:'', coding:'', vision:''}), coding: val}}})} options={cachedModels} placeholder="claude-3-5-sonnet-20240620" className="w-full bg-zinc-950 border border-zinc-800 rounded-lg py-2 px-3 text-sm focus:border-indigo-500 outline-none transition-all font-mono" />
                         </div>
                         <div>
                           <label className="block text-xs font-medium text-zinc-300 mb-1.5">مدل پردازش تصویر/فایل (Vision)</label>
-                          <input list="cached-models" type="text" dir="ltr" value={tempSettings.tools.routingRoles?.vision || ''} onChange={(e) => setTempSettings({...tempSettings, tools: {...tempSettings.tools, routingRoles: {...(tempSettings.tools.routingRoles || {default:'', coding:'', vision:''}), vision: e.target.value}}})} className="w-full bg-zinc-950 border border-zinc-800 rounded-lg py-2 px-3 text-sm focus:border-indigo-500 outline-none transition-all font-mono" placeholder="gemini-1.5-pro" />
+                          <SearchableCombobox value={tempSettings.tools.routingRoles?.vision || ''} onChange={(val: string) => setTempSettings({...tempSettings, tools: {...tempSettings.tools, routingRoles: {...(tempSettings.tools.routingRoles || {default:'', coding:'', vision:''}), vision: val}}})} options={cachedModels} placeholder="gemini-1.5-pro" className="w-full bg-zinc-950 border border-zinc-800 rounded-lg py-2 px-3 text-sm focus:border-indigo-500 outline-none transition-all font-mono" />
                         </div>
                       </div>
                     )}
