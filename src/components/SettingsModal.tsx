@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   X, Save, Globe, Cpu, Key, Link as LinkIcon, 
-  UserCircle, Palette, Wrench, AlertCircle, Trash2, Download, Upload
+  UserCircle, Palette, Wrench, AlertCircle, Trash2, Download, Upload, RefreshCcw, Sparkles
 } from 'lucide-react';
 import { AppSettings, Conversation } from '../types';
 
@@ -31,6 +31,42 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   
   const [testing, setTesting] = useState(false);
   const [testResult, setTestResult] = useState<{ success: boolean; message: string; latencyMs?: number } | null>(null);
+
+  const [cachedModels, setCachedModels] = useState<{id: string, name?: string}[]>(() => {
+    try { return JSON.parse(localStorage.getItem('chatbox_models') || '[]'); } catch { return []; }
+  });
+  const [fetchingModels, setFetchingModels] = useState(false);
+
+  const handleFetchModels = async () => {
+    const provider = tempSettings.providers.activeProvider;
+    const config = tempSettings.providers[provider] as any;
+    const baseUrl = config.baseUrl || (provider === 'gemini' ? 'https://generativelanguage.googleapis.com' : 'https://api.openai.com');
+    
+    setFetchingModels(true);
+    try {
+       const res = await fetch('/api/fetch-models', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+             baseUrl,
+             apiKey: config.apiKey,
+             customHeaders: config.customHeaders
+          })
+       });
+       const data = await res.json();
+       if (res.ok && data.models) {
+          setCachedModels(data.models);
+          localStorage.setItem('chatbox_models', JSON.stringify(data.models));
+          setTestResult({ success: true, message: `تعداد ${data.models.length} مدل با موفقیت دریافت شد.` });
+       } else {
+          setTestResult({ success: false, message: data.error || 'خطا در دریافت مدل‌ها' });
+       }
+    } catch (e) {
+       setTestResult({ success: false, message: 'خطای شبکه در اتصال به سرور' });
+    } finally {
+       setFetchingModels(false);
+    }
+  };
   const [importStatus, setImportStatus] = useState<{ success: boolean; message: string } | null>(null);
 
   const handleFileImport = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -226,11 +262,31 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                             <option value="custom">سفارشی / مدل دیگر...</option>
                           </select>
                           {(!['gemini-3.1-flash-lite', 'gemini-2.5-flash', 'gemini-3.1-pro', 'gemini-2.5-pro'].includes(tempSettings.providers.gemini.modelName)) && (
-                            <input type="text" dir="ltr" value={tempSettings.providers.gemini.modelName} onChange={(e) => updateProvider('gemini', 'modelName', e.target.value)} className="w-full bg-zinc-950 border border-zinc-800 rounded-xl py-2.5 px-4 text-sm focus:border-blue-500 outline-none transition-all font-mono min-h-[44px]" placeholder="مثال: gemini-3.1-flash-lite" />
-                          )}
+                              <div className="flex gap-2">
+                                <div className="relative flex-1">
+                                  <input list="cached-models" type="text" dir="ltr" value={tempSettings.providers.gemini.modelName} onChange={(e) => updateProvider('gemini', 'modelName', e.target.value)} className="w-full bg-zinc-950 border border-zinc-800 rounded-xl py-2.5 px-4 text-sm focus:border-blue-500 outline-none transition-all font-mono min-h-[44px]" placeholder="مثال: gemini-3.1-flash-lite" />
+                                  <datalist id="cached-models">
+                                    {cachedModels.map(m => (<option key={m.id} value={m.id}>{m.name}</option>))}
+                                  </datalist>
+                                </div>
+                                <button type="button" onClick={handleFetchModels} disabled={fetchingModels} className="px-3 rounded-xl border border-zinc-700 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 transition-colors flex items-center justify-center shrink-0" title="دریافت مدل‌ها">
+                                  {fetchingModels ? <div className="w-4 h-4 border-2 border-zinc-500 border-t-white rounded-full animate-spin" /> : <RefreshCcw className="w-4 h-4" />}
+                                </button>
+                              </div>
+                            )}
                         </div>
                       ) : (
-                        <input type="text" dir="ltr" value={(tempSettings.providers as any)[tempSettings.providers.activeProvider].modelName} onChange={(e) => updateProvider(tempSettings.providers.activeProvider, 'modelName', e.target.value)} className="w-full bg-zinc-950 border border-zinc-800 rounded-xl py-2.5 px-4 text-sm focus:border-blue-500 outline-none transition-all font-mono min-h-[44px]" />
+                          <div className="flex gap-2">
+                            <div className="relative flex-1">
+                              <input list="cached-models" type="text" dir="ltr" value={(tempSettings.providers as any)[tempSettings.providers.activeProvider].modelName} onChange={(e) => updateProvider(tempSettings.providers.activeProvider, 'modelName', e.target.value)} className="w-full bg-zinc-950 border border-zinc-800 rounded-xl py-2.5 px-4 text-sm focus:border-blue-500 outline-none transition-all font-mono min-h-[44px]" />
+                              <datalist id="cached-models">
+                                {cachedModels.map(m => (<option key={m.id} value={m.id}>{m.name}</option>))}
+                              </datalist>
+                            </div>
+                            <button type="button" onClick={handleFetchModels} disabled={fetchingModels} className="px-3 rounded-xl border border-zinc-700 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 transition-colors flex items-center justify-center shrink-0" title="دریافت مدل‌ها">
+                              {fetchingModels ? <div className="w-4 h-4 border-2 border-zinc-500 border-t-white rounded-full animate-spin" /> : <RefreshCcw className="w-4 h-4" />}
+                            </button>
+                          </div>
                       )}
                     </div>
 
@@ -345,9 +401,39 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                     </div>
                     <ToggleSwitch checked={tempSettings.tools.enterToSend} onChange={(v) => setTempSettings({...tempSettings, tools: {...tempSettings.tools, enterToSend: v}})} />
                   </div>
+                  
+                  <div className="p-4 bg-zinc-900 border border-zinc-800 rounded-xl space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="font-medium text-sm text-indigo-400 flex items-center gap-2">
+                          <Sparkles className="w-4 h-4" /> مسیریابی هوشمند (Smart Routing)
+                        </div>
+                        <div className="text-xs text-zinc-400 mt-1">ارسال پیام‌ها بر اساس نوع محتوا به مدل‌های اختصاصی</div>
+                      </div>
+                      <ToggleSwitch checked={tempSettings.tools.smartRouting} onChange={(v) => setTempSettings({...tempSettings, tools: {...tempSettings.tools, smartRouting: v}})} />
+                    </div>
+                    
+                    {tempSettings.tools.smartRouting && (
+                      <div className="pt-4 border-t border-zinc-800 grid grid-cols-1 gap-4 animate-fadeIn">
+                        <div>
+                          <label className="block text-xs font-medium text-zinc-300 mb-1.5">مدل پیش‌فرض (مکالمه عادی)</label>
+                          <input list="cached-models" type="text" dir="ltr" value={tempSettings.tools.routingRoles?.default || ''} onChange={(e) => setTempSettings({...tempSettings, tools: {...tempSettings.tools, routingRoles: {...(tempSettings.tools.routingRoles || {default:'', coding:'', vision:''}), default: e.target.value}}})} className="w-full bg-zinc-950 border border-zinc-800 rounded-lg py-2 px-3 text-sm focus:border-indigo-500 outline-none transition-all font-mono" placeholder="gpt-4o-mini" />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-zinc-300 mb-1.5">مدل تخصصی برنامه‌نویسی</label>
+                          <input list="cached-models" type="text" dir="ltr" value={tempSettings.tools.routingRoles?.coding || ''} onChange={(e) => setTempSettings({...tempSettings, tools: {...tempSettings.tools, routingRoles: {...(tempSettings.tools.routingRoles || {default:'', coding:'', vision:''}), coding: e.target.value}}})} className="w-full bg-zinc-950 border border-zinc-800 rounded-lg py-2 px-3 text-sm focus:border-indigo-500 outline-none transition-all font-mono" placeholder="claude-3-5-sonnet-20240620" />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-zinc-300 mb-1.5">مدل پردازش تصویر/فایل (Vision)</label>
+                          <input list="cached-models" type="text" dir="ltr" value={tempSettings.tools.routingRoles?.vision || ''} onChange={(e) => setTempSettings({...tempSettings, tools: {...tempSettings.tools, routingRoles: {...(tempSettings.tools.routingRoles || {default:'', coding:'', vision:''}), vision: e.target.value}}})} className="w-full bg-zinc-950 border border-zinc-800 rounded-lg py-2 px-3 text-sm focus:border-indigo-500 outline-none transition-all font-mono" placeholder="gemini-1.5-pro" />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
                   <div className="flex items-center justify-between p-4 bg-zinc-900 border border-zinc-800 rounded-xl">
                     <div>
-                      <div className="font-medium text-sm">نمایش آمار عملکرد</div>
+                      <div className="font-medium text-sm">نمایش عملکرد</div>
                       <div className="text-xs text-zinc-400">محاسبه توکن‌ها و هزینه‌ها</div>
                     </div>
                     <ToggleSwitch checked={tempSettings.tools.showPerformanceMetrics} onChange={(v) => setTempSettings({...tempSettings, tools: {...tempSettings.tools, showPerformanceMetrics: v}})} />

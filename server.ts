@@ -1589,6 +1589,45 @@ app.post('/api/chat/stream', async (req, res) => {
   }
 });
 
+// Fetch Models endpoint (Dynamic Synchronization)
+app.post('/api/fetch-models', async (req, res) => {
+  try {
+    const { baseUrl, apiKey, customHeaders } = req.body;
+    if (!baseUrl) return res.status(400).json({ error: 'Base URL is required' });
+
+    const headers: any = { 'Content-Type': 'application/json' };
+    if (apiKey) headers['Authorization'] = `Bearer ${apiKey}`;
+    if (customHeaders) {
+      try {
+        const parsed = JSON.parse(customHeaders);
+        Object.assign(headers, parsed);
+      } catch (e) {}
+    }
+
+    // Try to normalize endpoint
+    const endpoint = baseUrl.replace(/\/v1\/?$/, '') + '/v1/models';
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+    const response = await fetch(endpoint, { headers, signal: controller.signal });
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      throw new Error(`API returned ${response.status}: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    const models = data.data ? data.data.map((m: any) => ({ id: m.id, name: m.name || m.id })) : [];
+    res.json({ models });
+  } catch (err: any) {
+    if (err.name === 'AbortError') {
+      res.status(504).json({ error: 'ارتباط قطع شد (Timeout). لطفاً Base URL را بررسی کنید.' });
+    } else {
+      res.status(500).json({ error: sanitizeErrorMessage(err) });
+    }
+  }
+});
+
 // 4. Image Generation endpoint
 app.post('/api/generate-image', async (req, res) => {
   try {

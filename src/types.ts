@@ -54,5 +54,5 @@ export interface AppSettings {
   providers: MultiProviderConfig;
   persona: { systemPrompt: string; tone: 'friendly' | 'formal' | 'expert'; temperature: number };
   appearance: { theme: 'dark' | 'light' | 'system'; font: string; fontSize: number; persianNumerals: boolean; direction: 'rtl' | 'ltr' | 'auto'; uiLanguage: 'fa' | 'en' };
-  tools: { webSearch: boolean; enterToSend: boolean; soundEnabled: boolean; showPerformanceMetrics: boolean };
+  tools: { webSearch: boolean; enterToSend: boolean; soundEnabled: boolean; showPerformanceMetrics: boolean; smartRouting: boolean; routingRoles: { default: string; coding: string; vision: string; } };
 }

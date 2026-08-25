@@ -297,6 +297,25 @@ export default function App() {
     const isImageGen = text.trim().startsWith('/image ');
     const promptText = isImageGen ? text.trim().replace('/image ', '') : text;
 
+    let payloadSettings = JSON.parse(JSON.stringify(settings));
+    let finalModelUsed = (settings.providers as any)[settings.providers.activeProvider]?.modelName || 'gemini-1.5-flash';
+
+    if (settings.tools.smartRouting && !isImageGen) {
+         const roles = settings.tools.routingRoles || { default: '', coding: '', vision: '' };
+         const providerKey = settings.providers.activeProvider;
+         
+         if (effectiveImageUrls && effectiveImageUrls.length > 0 && roles.vision) {
+             (payloadSettings.providers as any)[providerKey].modelName = roles.vision;
+             finalModelUsed = roles.vision + ' (Auto)';
+         } else if (/(function|class|const|let|var|def|return|import|console\.log|export|interface|type )/.test(text) && roles.coding) {
+             (payloadSettings.providers as any)[providerKey].modelName = roles.coding;
+             finalModelUsed = roles.coding + ' (Auto)';
+         } else if (roles.default) {
+             (payloadSettings.providers as any)[providerKey].modelName = roles.default;
+             finalModelUsed = roles.default + ' (Auto)';
+         }
+    }
+
     const userMessage: ChatMessage = {
       id: userMessageId,
       role: 'user',
@@ -309,9 +328,9 @@ export default function App() {
     const assistantMessage: ChatMessage = {
       id: assistantMessageId,
       role: 'assistant',
-      content: isImageGen ? '🎨 در حال ساخت تصویر با هوش مصنوعی...' : '',
+      content: isImageGen ? 'در حال ساخت تصویر با هوش مصنوعی...' : '',
       timestamp: Date.now(),
-      modelUsed: (settings.providers[settings.providers.activeProvider]?.modelName) || 'gemini-2.5-flash',
+      modelUsed: isImageGen ? 'image-generation' : finalModelUsed,
       isStreaming: true,
       isImageGen,
     };
@@ -348,7 +367,7 @@ export default function App() {
         const res = await fetch('/api/generate-image', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ prompt: promptText, settings }),
+          body: JSON.stringify({ prompt: promptText, settings: payloadSettings }),
           signal: controller.signal,
         });
         const data = await res.json();
@@ -399,7 +418,7 @@ export default function App() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           messages: contextMessages,
-          settings,
+          settings: payloadSettings,
         }),
         signal: controller.signal,
       });

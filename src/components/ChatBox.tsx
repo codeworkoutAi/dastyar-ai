@@ -436,6 +436,13 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
                     )
                   ) : (
                     <div className="flex flex-col gap-3">
+                      {msg.modelUsed && msg.modelUsed.includes('(Auto)') && (
+                        <div className="flex items-center gap-1.5 text-[10px] sm:text-xs text-indigo-400 font-mono mb-1 mr-2 opacity-90 select-none">
+                          <Sparkles className="w-3.5 h-3.5" />
+                          <span dir="ltr">{msg.modelUsed.replace(' (Auto)', '')}</span>
+                          <span className="text-[9px] text-zinc-300 bg-indigo-500/20 px-1.5 py-0.5 rounded border border-indigo-500/30 mr-1">هوشمند</span>
+                        </div>
+                      )}
                       {msg.isStreaming && !msg.imageUrl && msg.isImageGen ? (
                         <div className="flex flex-col items-center justify-center p-6 sm:p-8 my-2 rounded-3xl bg-zinc-900 border border-zinc-800 relative overflow-hidden group max-w-md w-full animate-fadeIn">
                           <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent animate-shimmer" />

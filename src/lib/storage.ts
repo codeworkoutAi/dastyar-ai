@@ -17,7 +17,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   },
   persona: { systemPrompt: '', tone: 'expert', temperature: 0.7 },
   appearance: { theme: 'dark', font: 'vazir', fontSize: 16, persianNumerals: false, direction: 'rtl', uiLanguage: 'fa' },
-  tools: { webSearch: false, enterToSend: true, soundEnabled: false, showPerformanceMetrics: true }
+  tools: { webSearch: false, enterToSend: true, soundEnabled: false, showPerformanceMetrics: true, smartRouting: false, routingRoles: { default: '', coding: '', vision: '' } }
 };
 
 export function loadConversations(): Conversation[] {
