@@ -21,6 +21,7 @@ import { ExportModal } from './components/ExportModal';
 import { ImageGenStudio } from './components/ImageGenStudio';
 import { UiGuideModal } from './components/UiGuideModal';
 import { ErrorCapsule } from './components/ErrorCapsule';
+import { ReloadPrompt } from './components/ReloadPrompt';
 
 export default function App() {
   // State initialization from localStorage
@@ -811,6 +812,8 @@ export default function App() {
         isOpen={isUiGuideOpen}
         onClose={() => setIsUiGuideOpen(false)}
       />
+      {/* PWA Update Prompt */}
+      <ReloadPrompt />
     </div>
   );
 }
