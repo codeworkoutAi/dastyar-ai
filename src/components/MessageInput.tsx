@@ -459,8 +459,10 @@ export const MessageInput: React.FC<MessageInputProps> = ({
   const canSend = (!!text.trim() || attachments.some(a => a.status === 'ready')) && !isStreaming;
 
   const estimatedTokens = useMemo(() => {
-    return estimateTokenCount(text, attachments.length > 0);
-  }, [text, imagePreview, attachedFileMeta]);
+    // Each media attachment is ~300 tokens; text is calculated per-char
+    const mediaTokens = attachments.length * 300;
+    return estimateTokenCount(text, false) + mediaTokens;
+  }, [text, attachments]);
 
   return (
     <div className="p-2.5 sm:p-4 md:p-5 bg-[var(--bg-main)]/90 border-t border-subtle backdrop-blur-md shrink-0">

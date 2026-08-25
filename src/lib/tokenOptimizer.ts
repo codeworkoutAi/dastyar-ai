@@ -63,17 +63,18 @@ export function buildOptimizedContext(
   if (validHistory.length <= maxRecent) {
     // History is short enough: keep all turns, but de-duplicate media from past turns
     for (const msg of validHistory) {
-      const sanitizedImageUrl = undefined; // Past turns do not re-transmit raw media
       let content = msg.content || '';
 
-      if (msg.imageUrl && !content.includes('[تصویر/رسانه')) {
+      const hadMedia = msg.imageUrl || (msg.imageUrls && msg.imageUrls.length > 0);
+      if (hadMedia && !content.includes('[تصویر/رسانه')) {
         content = `[تصویر/رسانه ضمیمه شده قبلی: بررسی شد]\n${content}`;
       }
 
       outbound.push({
         role: msg.role,
         content,
-        imageUrl: sanitizedImageUrl,
+        imageUrl: undefined,   // Past turns never re-transmit raw media
+        imageUrls: undefined,
       });
     }
   } else {
@@ -109,14 +110,16 @@ export function buildOptimizedContext(
     // Add recent turns in high fidelity with de-duplicated media
     for (const msg of recentMessages) {
       let content = msg.content || '';
-      if (msg.imageUrl && !content.includes('[تصویر/رسانه')) {
+      const hadMedia = msg.imageUrl || (msg.imageUrls && msg.imageUrls.length > 0);
+      if (hadMedia && !content.includes('[تصویر/رسانه')) {
         content = `[تصویر/رسانه ضمیمه شده قبلی: بررسی شد]\n${content}`;
       }
 
       outbound.push({
         role: msg.role,
         content,
-        imageUrl: undefined, // Never re-send past base64 payloads
+        imageUrl: undefined,   // Never re-send past base64 payloads
+        imageUrls: undefined,
       });
     }
   }
