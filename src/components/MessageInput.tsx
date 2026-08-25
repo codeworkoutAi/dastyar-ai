@@ -624,12 +624,12 @@ export const MessageInput: React.FC<MessageInputProps> = ({
                   disabled={isStreaming}
                   className={`w-10 h-10 flex items-center justify-center transition-all rounded-full bg-transparent border-0 outline-none active:scale-95 ${
                     isRecording
-                      ? 'text-red-500 bg-red-100 dark:bg-red-500/10 animate-pulse'
+                      ? 'text-red-500 bg-red-100 dark:bg-red-500/10 animate-pulse shadow-[0_0_10px_rgba(239,68,68,0.3)]'
                       : 'text-zinc-500 dark:text-slate-400 hover:text-zinc-800 dark:hover:text-slate-200 hover:bg-zinc-200 dark:hover:bg-white/5'
                   }`}
                   aria-label="Voice input"
                 >
-                  {isRecording ? <Microphone2BoldDuotoneIcon className="w-4 h-4 text-red-500" /> : <Microphone2LineDuotoneIcon className="w-4 h-4" />}
+                  {isRecording ? <Microphone2BoldDuotoneIcon className="w-5 h-5 text-red-500" /> : <Microphone2LineDuotoneIcon className="w-5 h-5" />}
                 </button>
               </Tooltip>
             )}
