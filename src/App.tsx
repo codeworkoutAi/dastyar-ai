@@ -659,6 +659,7 @@ export default function App() {
         conversations={conversations}
         platformMode={platformMode}
         setPlatformMode={setPlatformMode}
+        isStreaming={isStreaming}
       />
 
       {/* Main Workspace */}
