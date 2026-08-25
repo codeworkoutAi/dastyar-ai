@@ -9,7 +9,7 @@ import {
   GlobalLineDuotoneIcon,
   MenuDotsLineDuotoneIcon
 } from '@solar-icons/react';
-import { Menu, Settings as SettingsIcon, Download, Monitor, Smartphone, Sparkles, HelpCircle, Code2, Globe } from 'lucide-react';
+import { Monitor, Smartphone, MessageSquare } from 'lucide-react';
 import { AppSettings, Conversation } from '../types';
 import { calculateSessionStats } from '../utils/pricing';
 import { Tooltip } from './Tooltip';
@@ -27,7 +27,6 @@ interface HeaderProps {
   conversations?: Conversation[];
   platformMode: 'windows' | 'android';
   setPlatformMode: (mode: 'windows' | 'android') => void;
-  isStreaming?: boolean;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -43,7 +42,6 @@ export const Header: React.FC<HeaderProps> = ({
   conversations,
   platformMode,
   setPlatformMode,
-  isStreaming,
 }) => {
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
@@ -61,25 +59,44 @@ export const Header: React.FC<HeaderProps> = ({
   const sessionStats = React.useMemo(() => {
     return calculateSessionStats(conversations || (activeConversation ? [activeConversation] : []));
   }, [conversations, activeConversation]);
-  const getProviderLabel = () => {
+
+  const getProviderInfo = () => {
     switch (settings.providers.activeProvider) {
     case 'gemini':
-      return <div className="w-5 h-5 rounded-md gemini-gradient-bg flex items-center justify-center shrink-0"><StarsMinimalisticBoldDuotoneIcon className="w-3.5 h-3.5 text-white" /></div>;
+      return { 
+        name: 'Gemini (Flash)',
+        icon: <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-md sm:rounded-lg gemini-gradient-bg flex items-center justify-center shrink-0 shadow-md"><StarsMinimalisticBoldDuotoneIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white" /></div> 
+      };
     case 'openai':
-      return <div className="w-5 h-5 rounded-md bg-emerald-500/10 flex items-center justify-center shrink-0"><Code2LineDuotoneIcon className="w-3.5 h-3.5 text-emerald-500" /></div>;
+      return { 
+        name: 'OpenAI (GPT)',
+        icon: <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-md sm:rounded-lg bg-emerald-500/15 flex items-center justify-center shrink-0 shadow-md"><Code2LineDuotoneIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-500" /></div> 
+      };
     case 'anthropic':
-      return <div className="w-5 h-5 rounded-md bg-amber-500/10 flex items-center justify-center shrink-0"><Code2LineDuotoneIcon className="w-3.5 h-3.5 text-amber-500" /></div>;
+      return { 
+        name: 'Claude (Sonnet)',
+        icon: <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-md sm:rounded-lg bg-amber-500/15 flex items-center justify-center shrink-0 shadow-md"><Code2LineDuotoneIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-500" /></div> 
+      };
     case 'custom':
-      return <div className="w-5 h-5 rounded-md bg-blue-500/10 flex items-center justify-center shrink-0"><GlobalLineDuotoneIcon className="w-3.5 h-3.5 text-blue-500" /></div>;
+      return { 
+        name: 'مدل شخصی',
+        icon: <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-md sm:rounded-lg bg-blue-500/15 flex items-center justify-center shrink-0 shadow-md"><GlobalLineDuotoneIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-500" /></div> 
+      };
     default:
-        return 'هوش مصنوعی';
+        return { 
+          name: 'هوش مصنوعی',
+          icon: <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-md sm:rounded-lg bg-zinc-500/15 flex items-center justify-center shrink-0 shadow-md"><Code2LineDuotoneIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-zinc-500" /></div> 
+        };
     }
   };
 
+  const providerInfo = getProviderInfo();
+
   return (
-    <header className="h-16 sm:h-18 px-2.5 sm:px-4 md:px-6 flex items-center justify-between z-20 shrink-0 select-none border-b border-subtle clay-header backdrop-blur-md">
-      {/* Right side in RTL (Start) */}
-      <div className="flex items-center gap-1.5 sm:gap-3 min-w-0">
+    <header className="relative h-16 sm:h-18 px-2.5 sm:px-4 md:px-6 flex items-center justify-between z-20 shrink-0 select-none border-b border-subtle clay-header backdrop-blur-md">
+      
+      {/* 1. Right Side (Start) - Sidebar Toggle & Chat Title */}
+      <div className="flex items-center gap-1.5 sm:gap-3 min-w-0 z-10 w-1/3 justify-start">
         <Tooltip content="منوی گفتگوها">
           <button
             id="sidebar-toggle-btn"
@@ -91,33 +108,42 @@ export const Header: React.FC<HeaderProps> = ({
           </button>
         </Tooltip>
 
-        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-          <div className="relative flex items-center justify-center shrink-0">
-            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl gemini-gradient-bg text-white flex items-center justify-center shadow-md">
-              <StarsMinimalisticBoldDuotoneIcon className="w-4 h-4 sm:w-5 sm:h-5" />
-            </div>
-            <div className="absolute -top-0.5 -right-0.5 w-2 sm:w-2.5 h-2 sm:h-2.5 rounded-full bg-emerald-500 ring-2 ring-[var(--card-bg)]" />
-          </div>
-          <div className="min-w-0">
-            <div className="flex items-center gap-1.5 sm:gap-2">
-              <h1 className="font-extrabold text-sm sm:text-base md:text-lg tracking-tight truncate hidden min-[360px]:block">
-                {activeConversation?.title || 'دستیار هوشمند'}
-              </h1>
-              <span className="hidden lg:inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-xs font-semibold clay-btn">
-                <span className="w-2 h-2 rounded-full bg-teal-400 animate-pulse"></span>
-                <span className="opacity-70 text-[11px]">مدل:</span>
-                <span className="font-bold text-[var(--accent-text)]">{getProviderLabel()}</span>
-              </span>
-            </div>
-            <p className="text-[10px] sm:text-[11px] opacity-70 hidden md:block truncate">
-              پشتیبانی از زبان فارسی با هوش مصنوعی چندمدلی
-            </p>
-          </div>
+        <div className="min-w-0 hidden sm:flex flex-col justify-center">
+          <h1 className="font-extrabold text-sm sm:text-base md:text-lg tracking-tight truncate flex items-center gap-1.5">
+            <MessageSquare className="w-4 h-4 opacity-50 hidden md:block" />
+            {activeConversation?.title || 'دستیار هوشمند'}
+          </h1>
+          <p className="text-[10px] sm:text-[11px] opacity-70 truncate">
+            پشتیبانی از زبان فارسی با هوش مصنوعی
+          </p>
         </div>
       </div>
 
-      {/* Left side in RTL (End Actions) */}
-      <div className="flex items-center gap-1 sm:gap-2 md:gap-3 shrink-0">
+      {/* 2. Absolute Center - Interactive Model Label Pill */}
+      <div className="absolute inset-0 flex justify-center items-center pointer-events-none z-0">
+        <div className="pointer-events-auto max-w-[45%] sm:max-w-[40%]">
+          <Tooltip content="برای تغییر مدل کلیک کنید">
+            <button 
+              onClick={onOpenSettings}
+              className="flex items-center gap-2 px-1.5 py-1.5 sm:px-2 sm:py-1.5 clay-btn rounded-xl sm:rounded-2xl hover:opacity-90 transition-opacity min-w-0 shadow-sm"
+            >
+              {providerInfo.icon}
+              <div className="flex flex-col items-start pr-1 pl-2 sm:pr-1 sm:pl-3 min-w-0" dir="rtl">
+                <span className="text-[8px] sm:text-[9px] opacity-70 uppercase tracking-wider hidden min-[400px]:block text-teal-500 font-bold mb-[-2px]">
+                  مدل فعال
+                </span>
+                <span className="font-extrabold text-[11px] sm:text-xs text-[var(--accent-text)] truncate" dir="ltr">
+                  {providerInfo.name}
+                </span>
+              </div>
+            </button>
+          </Tooltip>
+        </div>
+      </div>
+
+      {/* 3. Left Side (End) - Tools & Mobile Menu */}
+      <div className="flex items-center gap-1 sm:gap-2 md:gap-3 shrink-0 z-10 w-1/3 justify-end">
+        
         {/* Desktop View Tools (Hidden on Mobile) */}
         <div className="hidden sm:flex items-center gap-1 sm:gap-2 md:gap-3">
           {/* Platform View Toggle */}
@@ -150,8 +176,6 @@ export const Header: React.FC<HeaderProps> = ({
               </button>
             </Tooltip>
           </div>
-
-
 
           {/* Export Button */}
           {activeConversation && activeConversation.messages.length > 0 && (
@@ -234,7 +258,7 @@ export const Header: React.FC<HeaderProps> = ({
           </Tooltip>
         </div>
 
-        {/* Mobile Dropdown Menu */}
+        {/* Mobile Dropdown Menu (Visible on Mobile) */}
         <div className="sm:hidden relative" ref={mobileMenuRef}>
           <Tooltip content="ابزارهای بیشتر">
             <button
@@ -247,21 +271,21 @@ export const Header: React.FC<HeaderProps> = ({
           </Tooltip>
 
           {showMobileMenu && (
-            <div className="absolute top-full mt-2 left-0 w-48 clay-card shadow-2xl z-50 flex flex-col gap-1 p-2 animate-fadeIn" dir="rtl">
-              <button onClick={() => { onOpenImageStudio(); setShowMobileMenu(false); }} className="flex items-center gap-2 p-2 rounded-lg hover:bg-black/5 dark:hover:bg-white/5 transition-colors text-right">
+            <div className="absolute top-full mt-2 left-0 w-48 clay-card shadow-2xl z-50 flex flex-col gap-1 p-2 animate-fadeIn border border-subtle" dir="rtl">
+              <button onClick={() => { onOpenImageStudio(); setShowMobileMenu(false); }} className="flex items-center gap-2 p-2 rounded-lg hover:bg-[var(--bg-main)] transition-colors text-right">
                 <StarsMinimalisticBoldDuotoneIcon className="w-4 h-4 text-purple-400" />
                 <span className="text-xs font-bold text-[var(--text-main)]">استودیو تصویر</span>
               </button>
               
               {activeConversation && activeConversation.messages.length > 0 && (
-                <button onClick={() => { onOpenExport(); setShowMobileMenu(false); }} className="flex items-center gap-2 p-2 rounded-lg hover:bg-black/5 dark:hover:bg-white/5 transition-colors text-right">
+                <button onClick={() => { onOpenExport(); setShowMobileMenu(false); }} className="flex items-center gap-2 p-2 rounded-lg hover:bg-[var(--bg-main)] transition-colors text-right">
                   <DownloadMinimalisticLineDuotoneIcon className="w-4 h-4 text-emerald-400" />
                   <span className="text-xs font-bold text-[var(--text-main)]">خروجی گفتگو</span>
                 </button>
               )}
 
               {onOpenUiGuide && (
-                <button onClick={() => { onOpenUiGuide(); setShowMobileMenu(false); }} className="flex items-center gap-2 p-2 rounded-lg hover:bg-black/5 dark:hover:bg-white/5 transition-colors text-right">
+                <button onClick={() => { onOpenUiGuide(); setShowMobileMenu(false); }} className="flex items-center gap-2 p-2 rounded-lg hover:bg-[var(--bg-main)] transition-colors text-right">
                   <HelpLineDuotoneIcon className="w-4 h-4 text-sky-400" />
                   <span className="text-xs font-bold text-[var(--text-main)]">نقشه اجزا</span>
                 </button>
@@ -269,7 +293,7 @@ export const Header: React.FC<HeaderProps> = ({
 
               <div className="h-px bg-[var(--border-color)] opacity-50 my-1" />
 
-              <button onClick={() => { onOpenSettings(); setShowMobileMenu(false); }} className="flex items-center gap-2 p-2 rounded-lg hover:bg-black/5 dark:hover:bg-white/5 transition-colors text-right">
+              <button onClick={() => { onOpenSettings(); setShowMobileMenu(false); }} className="flex items-center gap-2 p-2 rounded-lg hover:bg-[var(--bg-main)] transition-colors text-right">
                 <SettingsMinimalisticLineDuotoneIcon className="w-4 h-4 text-[var(--text-main)]" />
                 <span className="text-xs font-bold text-[var(--text-main)]">تنظیمات پیشرفته</span>
               </button>
