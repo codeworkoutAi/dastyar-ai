@@ -9,7 +9,7 @@ import {
   GlobalLineDuotoneIcon,
   MenuDotsLineDuotoneIcon
 } from '@solar-icons/react';
-import { Monitor, Smartphone, MessageSquare } from 'lucide-react';
+import { Monitor, Smartphone, MessageSquare, ChevronDown } from 'lucide-react';
 import { AppSettings, Conversation } from '../types';
 import { calculateSessionStats } from '../utils/pricing';
 import { Tooltip } from './Tooltip';
@@ -121,21 +121,18 @@ export const Header: React.FC<HeaderProps> = ({
 
       {/* 2. Absolute Center - Interactive Model Label Pill */}
       <div className="absolute inset-0 flex justify-center items-center pointer-events-none z-0">
-        <div className="pointer-events-auto max-w-[45%] sm:max-w-[40%]">
+        <div className="pointer-events-auto max-w-[50%] sm:max-w-[40%]">
           <Tooltip content="برای تغییر مدل کلیک کنید">
             <button 
               onClick={onOpenSettings}
-              className="flex items-center gap-2 px-1.5 py-1.5 sm:px-2 sm:py-1.5 clay-btn rounded-xl sm:rounded-2xl hover:opacity-90 transition-opacity min-w-0 shadow-sm"
+              className="group flex items-center gap-2.5 px-2.5 py-2 sm:px-3 sm:py-2 clay-btn rounded-xl sm:rounded-2xl hover:opacity-90 transition-all min-w-0 shadow-sm"
+              dir="ltr"
             >
               {providerInfo.icon}
-              <div className="flex flex-col items-start pr-1 pl-2 sm:pr-1 sm:pl-3 min-w-0" dir="rtl">
-                <span className="text-[8px] sm:text-[9px] opacity-70 uppercase tracking-wider hidden min-[400px]:block text-teal-500 font-bold mb-[-2px]">
-                  مدل فعال
-                </span>
-                <span className="font-extrabold text-[11px] sm:text-xs text-[var(--accent-text)] truncate" dir="ltr">
-                  {providerInfo.name}
-                </span>
-              </div>
+              <span className="font-extrabold text-sm sm:text-base text-[var(--accent-text)] truncate mt-0.5">
+                {providerInfo.name}
+              </span>
+              <ChevronDown className="w-4 h-4 text-[var(--text-main)] opacity-50 group-hover:opacity-100 transition-opacity shrink-0" />
             </button>
           </Tooltip>
         </div>
