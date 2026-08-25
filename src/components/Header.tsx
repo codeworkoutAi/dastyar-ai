@@ -79,7 +79,7 @@ export const Header: React.FC<HeaderProps> = ({
       };
     case 'custom':
       return { 
-        name: 'مدل شخصی',
+        name: settings.providers.custom.modelName || 'مدل شخصی',
         icon: <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-md sm:rounded-lg bg-blue-500/15 flex items-center justify-center shrink-0 shadow-md"><GlobalLineDuotoneIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-500" /></div> 
       };
     default:
