@@ -9,7 +9,7 @@ import {
   GlobalLineDuotoneIcon,
   MenuDotsLineDuotoneIcon
 } from '@solar-icons/react';
-import { Monitor, Smartphone, MessageSquare, ChevronDown } from 'lucide-react';
+import { Smartphone, MessageSquare, ChevronDown } from 'lucide-react';
 import { AppSettings, Conversation } from '../types';
 import { calculateSessionStats } from '../utils/pricing';
 import { Tooltip } from './Tooltip';
@@ -26,8 +26,6 @@ interface HeaderProps {
   settings: AppSettings;
   activeConversation: Conversation | null;
   conversations?: Conversation[];
-  platformMode: 'windows' | 'android';
-  setPlatformMode: (mode: 'windows' | 'android') => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -40,9 +38,7 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenUiGuide,
   settings,
   activeConversation,
-  conversations,
-  platformMode,
-  setPlatformMode,
+  conversations = [],
 }) => {
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
@@ -146,36 +142,7 @@ export const Header: React.FC<HeaderProps> = ({
         
         {/* Desktop View Tools (Hidden on Mobile) */}
         <div className="hidden sm:flex items-center gap-1 sm:gap-2 md:gap-3">
-          {/* Platform View Toggle */}
-          <div className="hidden xl:flex items-center p-1 clay-input-box rounded-2xl text-xs">
-            <Tooltip content="نمای ویندوز (دسکتاپ)">
-              <button
-                onClick={() => setPlatformMode('windows')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl transition-all ${
-                  platformMode === 'windows'
-                    ? 'clay-btn font-bold shadow-md'
-                    : 'opacity-70 hover:opacity-100'
-                }`}
-              >
-                <Monitor className="w-3.5 h-3.5 text-[var(--accent-text)]" />
-                <span>ویندوز</span>
-              </button>
-            </Tooltip>
 
-            <Tooltip content="نمای اندروید (موبایل)">
-              <button
-                onClick={() => setPlatformMode('android')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl transition-all ${
-                  platformMode === 'android'
-                    ? 'clay-btn font-bold shadow-md'
-                    : 'opacity-70 hover:opacity-100'
-                }`}
-              >
-                <Smartphone className="w-3.5 h-3.5 text-[var(--accent-text)]" />
-                <span>اندروید</span>
-              </button>
-            </Tooltip>
-          </div>
 
           {/* Export Button */}
           {activeConversation && activeConversation.messages.length > 0 && (

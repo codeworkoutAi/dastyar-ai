@@ -34,7 +34,6 @@ export default function App() {
   const [isExportOpen, setIsExportOpen] = useState<boolean>(false);
   const [isImageStudioOpen, setIsImageStudioOpen] = useState<boolean>(false);
   const [isUiGuideOpen, setIsUiGuideOpen] = useState<boolean>(false);
-  const [platformMode, setPlatformMode] = useState<'windows' | 'android'>('windows');
   const [videoNotice, setVideoNotice] = useState<string | null>(null);
   const [metricsNotice, setMetricsNotice] = useState<string | null>(null);
   const [activeError, setActiveError] = useState<{ message: string; timestamp: number } | null>(null);
@@ -666,8 +665,6 @@ export default function App() {
         settings={settings}
         activeConversation={activeConversation}
         conversations={conversations}
-        platformMode={platformMode}
-        setPlatformMode={setPlatformMode}
       />
 
       {/* Main Workspace */}
@@ -696,11 +693,7 @@ export default function App() {
         {/* Central Chat Area */}
         <main 
           id="main-chat-container"
-          className={`flex-1 flex flex-col min-w-0 overflow-hidden ${
-            platformMode === 'android' 
-              ? 'max-w-md mx-auto clay-card my-0 sm:my-3 sm:rounded-[2.5rem] border-2 shadow-2xl' 
-              : 'bg-transparent'
-          }`}
+          className="flex-1 flex flex-col min-w-0 overflow-hidden bg-transparent"
         >
           <ChatBox
             conversation={activeConversation}
@@ -753,7 +746,6 @@ export default function App() {
             onStopGeneration={handleStopGeneration}
             enterToSend={settings.tools.enterToSend}
             usePersianDigits={settings.appearance.persianNumerals}
-            platformMode={platformMode}
             onVideoAttached={handleVideoAttached}
           />
         </main>

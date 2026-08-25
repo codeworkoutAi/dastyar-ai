@@ -48,7 +48,6 @@ interface MessageInputProps {
   onStopGeneration: () => void;
   enterToSend: boolean;
   usePersianDigits: boolean;
-  platformMode: 'windows' | 'android';
   onVideoAttached?: () => void;
 }
 
@@ -58,7 +57,6 @@ export const MessageInput: React.FC<MessageInputProps> = ({
   onStopGeneration,
   enterToSend,
   usePersianDigits,
-  platformMode: _platformMode,
   onVideoAttached,
 }) => {
   const [text, setText] = useState('');
