@@ -42,7 +42,7 @@ import { ChatMessage, Conversation } from '../types';
 import { MarkdownRenderer } from './MarkdownRenderer';
 import { formatPersianDateTime, PERSIAN_STARTER_PROMPTS, isRtlText, toPersianDigits } from '../lib/persianUtils';
 import { calculateEstimatedCostUSD, formatCostUSD } from '../utils/pricing';
-import { Tooltip } from './ui/Tooltip';
+import { Tooltip } from './Tooltip';
 import { ThinkingIndicator } from './ThinkingIndicator';
 import { speakText, SpeakController } from '../lib/tts';
 
