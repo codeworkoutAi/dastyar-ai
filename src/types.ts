@@ -17,7 +17,8 @@ export interface ChatMessage {
   id: string;
   role: Role;
   content: string;
-  imageUrl?: string;
+  imageUrl?: string;      // backward compat: first image (single attachment)
+  imageUrls?: string[];   // NEW: multiple attachments support
   timestamp: number;
   modelUsed?: string;
   isStreaming?: boolean;

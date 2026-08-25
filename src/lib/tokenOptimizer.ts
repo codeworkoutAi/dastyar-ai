@@ -34,6 +34,7 @@ export interface OptimizedContextMessage {
   role: Role;
   content: string;
   imageUrl?: string;
+  imageUrls?: string[]; // NEW: multiple attachments
 }
 
 export interface ContextPruningOptions {
@@ -50,7 +51,7 @@ export interface ContextPruningOptions {
  */
 export function buildOptimizedContext(
   history: ChatMessage[],
-  currentTurn: { content: string; imageUrl?: string },
+  currentTurn: { content: string; imageUrl?: string; imageUrls?: string[] },
   options: ContextPruningOptions = {}
 ): OptimizedContextMessage[] {
   const maxRecent = options.maxRecentTurns ?? 8;
@@ -125,6 +126,7 @@ export function buildOptimizedContext(
     role: 'user',
     content: currentTurn.content,
     imageUrl: currentTurn.imageUrl,
+    imageUrls: currentTurn.imageUrls,
   });
 
   return outbound;

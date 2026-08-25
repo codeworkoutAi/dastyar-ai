@@ -43,7 +43,7 @@ import * as pdfjsLib from 'pdfjs-dist';
 pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`;
 
 interface MessageInputProps {
-  onSendMessage: (text: string, imageUrl?: string) => void;
+  onSendMessage: (text: string, imageUrl?: string, imageUrls?: string[]) => void;
   isStreaming: boolean;
   onStopGeneration: () => void;
   enterToSend: boolean;
@@ -62,8 +62,13 @@ export const MessageInput: React.FC<MessageInputProps> = ({
   onVideoAttached,
 }) => {
   const [text, setText] = useState('');
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [attachedFileMeta, setAttachedFileMeta] = useState<{ name: string; size: string } | null>(null);
+  const [attachments, setAttachments] = useState<{
+    id: string; dataUrl: string; mimeType: string; name: string; size: string;
+    status: 'processing' | 'ready'; progress: number;
+  }[]>([]);
+  // Backward compat derived values
+  const imagePreview = attachments.find(a => a.status === 'ready')?.dataUrl ?? null;
+  const attachedFileMeta = attachments.length > 0 ? { name: attachments[0].name, size: attachments[0].size } : null;
   const [isAttachmentMenuOpen, setIsAttachmentMenuOpen] = useState(false);
   const [isCameraModalOpen, setIsCameraModalOpen] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
@@ -133,29 +138,49 @@ export const MessageInput: React.FC<MessageInputProps> = ({
   };
 
   const resetAttachments = () => {
-    setImagePreview(null);
-    setAttachedFileMeta(null);
+    setAttachments([]);
     if (fileInputRef.current) fileInputRef.current.value = '';
     if (cameraInputRef.current) cameraInputRef.current.value = '';
   };
+
+  const removeAttachment = (id: string) => {
+    setAttachments(prev => prev.filter(a => a.id !== id));
+  };
+
   const handlePaste = (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
     if (e.clipboardData.files && e.clipboardData.files.length > 0) {
       e.preventDefault();
-      const file = e.clipboardData.files[0];
-      const fakeEvent = {
-        target: {
-          files: [file],
-          value: ''
-        }
-      } as unknown as React.ChangeEvent<HTMLInputElement>;
-      
-      handleFileChange(fakeEvent);
+      // Support multiple files from clipboard
+      const files = Array.from(e.clipboardData.files);
+      files.forEach(file => {
+        const fakeEvent = {
+          target: { files: [file], value: '' }
+        } as unknown as React.ChangeEvent<HTMLInputElement>;
+        handleFileChange(fakeEvent);
+      });
     }
+  };
+
+  // Helper: add attachment with progress animation then mark ready
+  const addAttachmentWithProgress = (id: string, dataUrl: string, mimeType: string, name: string, size: string) => {
+    setAttachments(prev => [...prev, { id, dataUrl, mimeType, name, size, status: 'processing' as const, progress: 0 }]);
+    const steps = 8;
+    let step = 0;
+    const interval = setInterval(() => {
+      step++;
+      const p = Math.min(100, Math.round((step / steps) * 100));
+      setAttachments(prev => prev.map(a => a.id === id ? { ...a, progress: p } : a));
+      if (step >= steps) {
+        clearInterval(interval);
+        setAttachments(prev => prev.map(a => a.id === id ? { ...a, status: 'ready' as const, progress: 100 } : a));
+      }
+    }, 100);
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    const attachmentId = `att_${Date.now()}_${Math.random().toString(36).slice(2)}`;
 
     // 1. Text, Markdown, and Code files -> Extract client-side text
     if (file.type.startsWith('text/') || file.name.match(/\.(txt|md|json|js|jsx|ts|tsx|css|html|csv|py|sql|sh|xml|yml|yaml)$/i)) {
@@ -167,7 +192,6 @@ export const MessageInput: React.FC<MessageInputProps> = ({
             const prefix = prev ? `${prev}\n\n` : '';
             return `${prefix}--- فایل: ${file.name} ---\n${content}\n---------------------\n`;
           });
-          resetAttachments();
         }
       };
       reader.readAsText(file);
@@ -176,10 +200,10 @@ export const MessageInput: React.FC<MessageInputProps> = ({
     else if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
       if (file.size > 10 * 1024 * 1024) {
         alert('حجم فایل PDF بیش از حد مجاز است (حداکثر ۱۰ مگابایت).');
-        resetAttachments();
         e.target.value = '';
         return;
       }
+      addAttachmentWithProgress(attachmentId, '', file.type, file.name, formatFileSize(file.size));
       const extractPdfText = async () => {
         try {
           const arrayBuffer = await file.arrayBuffer();
@@ -191,26 +215,30 @@ export const MessageInput: React.FC<MessageInputProps> = ({
             const pageText = textContent.items.map((item: any) => item.str).join(' ');
             fullText += pageText + '\n';
           }
+          removeAttachment(attachmentId);
           if (fullText.trim()) {
             setText((prev) => {
               const prefix = prev ? `${prev}\n\n` : '';
               return `${prefix}--- فایل: ${file.name} ---\n${fullText}\n---------------------\n`;
             });
-            resetAttachments();
           } else {
             alert('متنی در این فایل PDF یافت نشد.');
-            resetAttachments();
           }
         } catch (err) {
           console.error('PDF extract error:', err);
           alert('خطا در استخراج متن فایل PDF.');
-          resetAttachments();
+          removeAttachment(attachmentId);
         }
       };
       extractPdfText();
     } 
     // 3. Images -> Compress/Downscale via Canvas (max 1200px, 0.8 quality)
     else if (file.type.startsWith('image/')) {
+      if (file.size > 10 * 1024 * 1024) {
+        alert('حجم تصویر بیش از حد مجاز است (حداکثر ۱۰ مگابایت).');
+        e.target.value = '';
+        return;
+      }
       const reader = new FileReader();
       reader.onload = (event) => {
         const dataUrl = event.target?.result as string;
@@ -221,33 +249,17 @@ export const MessageInput: React.FC<MessageInputProps> = ({
             const MAX_DIM = 1200;
             let width = img.width;
             let height = img.height;
-
             if (width > height) {
-              if (width > MAX_DIM) {
-                height = Math.round((height * MAX_DIM) / width);
-                width = MAX_DIM;
-              }
+              if (width > MAX_DIM) { height = Math.round((height * MAX_DIM) / width); width = MAX_DIM; }
             } else {
-              if (height > MAX_DIM) {
-                width = Math.round((width * MAX_DIM) / height);
-                height = MAX_DIM;
-              }
+              if (height > MAX_DIM) { width = Math.round((width * MAX_DIM) / height); height = MAX_DIM; }
             }
-
             canvas.width = width;
             canvas.height = height;
             const ctx = canvas.getContext('2d');
-            if (ctx) {
-              ctx.drawImage(img, 0, 0, width, height);
-              const compressed = canvas.toDataURL('image/jpeg', 0.8);
-              setImagePreview(compressed);
-            } else {
-              setImagePreview(dataUrl);
-            }
-            setAttachedFileMeta({ name: file.name, size: formatFileSize(file.size) });
-            if (!text.trim()) {
-              setText('این تصویر را تحلیل کن و جزئیات آن را توضیح بده.');
-            }
+            const compressed = ctx ? (() => { ctx.drawImage(img, 0, 0, width, height); return canvas.toDataURL('image/jpeg', 0.8); })() : dataUrl;
+            addAttachmentWithProgress(attachmentId, compressed, 'image/jpeg', file.name, formatFileSize(file.size));
+            if (!text.trim()) setText('این تصویر را تحلیل کن و جزئیات آن را توضیح بده.');
           };
           img.src = dataUrl;
         }
@@ -258,7 +270,6 @@ export const MessageInput: React.FC<MessageInputProps> = ({
     else if (file.type.startsWith('audio/')) {
       if (file.size > 15 * 1024 * 1024) {
         alert('حجم فایل صوتی بیش از حد مجاز است (حداکثر ۱۵ مگابایت).');
-        resetAttachments();
         e.target.value = '';
         return;
       }
@@ -266,11 +277,8 @@ export const MessageInput: React.FC<MessageInputProps> = ({
       reader.onload = (event) => {
         const dataUrl = event.target?.result as string;
         if (dataUrl) {
-          setImagePreview(dataUrl);
-          setAttachedFileMeta({ name: file.name, size: formatFileSize(file.size) });
-          if (!text.trim()) {
-            setText(`فایل صوتی ضمیمه شده: ${file.name}\nلطفاً این فایل صوتی را بررسی کن.`);
-          }
+          addAttachmentWithProgress(attachmentId, dataUrl, file.type, file.name, formatFileSize(file.size));
+          if (!text.trim()) setText(`فایل صوتی ضمیمه شده: ${file.name}\nلطفاً این فایل صوتی را بررسی کن.`);
         }
       };
       reader.readAsDataURL(file);
@@ -279,7 +287,6 @@ export const MessageInput: React.FC<MessageInputProps> = ({
     else if (file.type.startsWith('video/')) {
       if (file.size > 25 * 1024 * 1024) {
         alert('حجم فایل ویدیویی بیش از حد مجاز است (حداکثر ۲۵ مگابایت).');
-        resetAttachments();
         e.target.value = '';
         return;
       }
@@ -287,12 +294,8 @@ export const MessageInput: React.FC<MessageInputProps> = ({
       reader.onload = (event) => {
         const dataUrl = event.target?.result as string;
         if (dataUrl) {
-          setImagePreview(dataUrl);
-          setAttachedFileMeta({ name: file.name, size: formatFileSize(file.size) });
-          if (!text.trim()) {
-            setText(`فایل ویدیویی ضمیمه شده: ${file.name}\nلطفاً این ویدیو را بررسی کن.`);
-          }
-          // Automatically switch model to Gemini for video processing
+          addAttachmentWithProgress(attachmentId, dataUrl, file.type, file.name, formatFileSize(file.size));
+          if (!text.trim()) setText(`فایل ویدیویی ضمیمه شده: ${file.name}\nلطفاً این ویدیو را بررسی کن.`);
           onVideoAttached?.();
         }
       };
@@ -302,7 +305,6 @@ export const MessageInput: React.FC<MessageInputProps> = ({
     else {
       if (file.size > 5 * 1024 * 1024) {
         alert('حجم فایل انتخابی بیش از حد مجاز است (حداکثر ۵ مگابایت).');
-        resetAttachments();
         e.target.value = '';
         return;
       }
@@ -310,11 +312,8 @@ export const MessageInput: React.FC<MessageInputProps> = ({
       reader.onload = (event) => {
         const dataUrl = event.target?.result as string;
         if (dataUrl) {
-          setImagePreview(dataUrl);
-          setAttachedFileMeta({ name: file.name, size: formatFileSize(file.size) });
-          if (!text.trim()) {
-            setText(`فایل ضمیمه شده: ${file.name}\nلطفاً محتوای این سند را بررسی کن.`);
-          }
+          addAttachmentWithProgress(attachmentId, dataUrl, file.type, file.name, formatFileSize(file.size));
+          if (!text.trim()) setText(`فایل ضمیمه شده: ${file.name}\nلطفاً محتوای این سند را بررسی کن.`);
         }
       };
       reader.readAsDataURL(file);
@@ -341,8 +340,8 @@ export const MessageInput: React.FC<MessageInputProps> = ({
 
   // Handle image captured from CameraCaptureModal
   const handleCameraModalCapture = (base64Image: string, fileName: string) => {
-    setImagePreview(base64Image);
-    setAttachedFileMeta({ name: fileName, size: 'تصویر دوربین' });
+    const attachmentId = `att_cam_${Date.now()}`;
+    addAttachmentWithProgress(attachmentId, base64Image, 'image/jpeg', fileName, 'تصویر دوربین');
     if (!text.trim()) {
       setText('این تصویر را تحلیل کن و جزئیات آن را توضیح بده.');
     }
@@ -427,8 +426,18 @@ export const MessageInput: React.FC<MessageInputProps> = ({
   };
 
   const handleSend = () => {
-    if ((!text.trim() && !imagePreview) || isStreaming) return;
-    onSendMessage(text.trim() || 'این فایل پیوست شده را تحلیل کن.', imagePreview || undefined);
+    const readyAttachments = attachments.filter(a => a.status === 'ready' && a.dataUrl);
+    const hasContent = !!text.trim() || readyAttachments.length > 0;
+    if (!hasContent || isStreaming) return;
+
+    const imageUrls = readyAttachments.map(a => a.dataUrl);
+    const firstImageUrl = imageUrls[0] || undefined;
+
+    onSendMessage(
+      text.trim() || 'این فایل‌های پیوست شده را تحلیل کن.',
+      firstImageUrl,
+      imageUrls.length > 0 ? imageUrls : undefined
+    );
     setText('');
     resetAttachments();
     if (textareaRef.current) {
@@ -447,53 +456,86 @@ export const MessageInput: React.FC<MessageInputProps> = ({
 
   const isRtl = isRtlText(text);
   const charCount = text.length;
-  const canSend = (!!text.trim() || !!imagePreview) && !isStreaming;
+  const canSend = (!!text.trim() || attachments.some(a => a.status === 'ready')) && !isStreaming;
 
   const estimatedTokens = useMemo(() => {
-    return estimateTokenCount(text, Boolean(imagePreview || attachedFileMeta));
+    return estimateTokenCount(text, attachments.length > 0);
   }, [text, imagePreview, attachedFileMeta]);
 
   return (
     <div className="p-2.5 sm:p-4 md:p-5 bg-[var(--bg-main)]/90 border-t border-subtle backdrop-blur-md shrink-0">
       <div className="max-w-3xl mx-auto space-y-2">
-        {/* Attachment Preview Thumbnail */}
-        {imagePreview && (
-          <div className="relative inline-flex items-center gap-2.5 sm:gap-3 p-2 sm:p-2.5 bg-[var(--card-bg)] backdrop-blur-md rounded-2xl border border-white/10 shadow-lg animate-fadeIn w-fit max-w-full">
-            {imagePreview.startsWith('data:image/') ? (
-              <img src={imagePreview} alt="Preview" className="w-12 h-12 sm:w-14 sm:h-14 object-cover rounded-xl border border-white/20 shrink-0" />
-            ) : imagePreview.startsWith('data:audio/') ? (
-              <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl border border-white/20 shrink-0 bg-yellow-500/10 flex items-center justify-center">
-                <MusicNoteLineDuotoneIcon className="w-6 h-6 sm:w-8 sm:h-8 text-yellow-500" />
-              </div>
-            ) : imagePreview.startsWith('data:video/') ? (
-              <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl border border-white/20 shrink-0 bg-purple-500/10 flex items-center justify-center">
-                <VideocameraLineDuotoneIcon className="w-6 h-6 sm:w-8 sm:h-8 text-purple-400" />
-              </div>
-            ) : (
-              <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl border border-white/20 shrink-0 bg-blue-500/10 flex items-center justify-center">
-                <DocumentTextLineDuotoneIcon className="w-6 h-6 sm:w-8 sm:h-8 text-blue-400" />
-              </div>
-            )}
-            <div className="flex flex-col text-xs text-inherit pr-1 min-w-0">
-              <span className="font-bold text-[var(--accent-text)] truncate">
-                {attachedFileMeta?.name || (
-                  imagePreview.startsWith('data:image/') ? 'تصویر ضمیمه شده' : 
-                  imagePreview.startsWith('data:audio/') ? 'فایل صوتی ضمیمه شده' : 
-                  imagePreview.startsWith('data:video/') ? 'فایل ویدیویی ضمیمه شده' : 'فایل ضمیمه شده'
+        {/* Multi-File Attachment Preview Strip */}
+        {attachments.length > 0 && (
+          <div className="flex items-end gap-2 overflow-x-auto pb-1 animate-fadeIn scrollbar-thin scrollbar-thumb-zinc-300 dark:scrollbar-thumb-zinc-600">
+            {attachments.map((att) => (
+              <div
+                key={att.id}
+                className="relative flex-shrink-0 w-16 h-16 sm:w-18 sm:h-18 rounded-xl overflow-hidden border border-white/20 bg-[var(--card-bg)] shadow-md group"
+              >
+                {/* Thumbnail */}
+                {att.mimeType.startsWith('image/') && att.dataUrl ? (
+                  <img src={att.dataUrl} alt={att.name} className="w-full h-full object-cover" />
+                ) : att.mimeType.startsWith('audio/') ? (
+                  <div className="w-full h-full flex items-center justify-center bg-yellow-500/10">
+                    <MusicNoteLineDuotoneIcon className="w-7 h-7 text-yellow-500" />
+                  </div>
+                ) : att.mimeType.startsWith('video/') ? (
+                  <div className="w-full h-full flex items-center justify-center bg-purple-500/10">
+                    <VideocameraLineDuotoneIcon className="w-7 h-7 text-purple-400" />
+                  </div>
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center bg-blue-500/10">
+                    <DocumentTextLineDuotoneIcon className="w-7 h-7 text-blue-400" />
+                  </div>
                 )}
-              </span>
-              <span className="text-[10px] sm:text-[11px] opacity-70 truncate">
-                {attachedFileMeta ? `حجم: ${attachedFileMeta.size} - آماده تحلیل` : 'آماده برای ارسال و تحلیل هوش مصنوعی'}
-              </span>
-            </div>
-            <button
-              type="button"
-              onClick={resetAttachments}
-              className="p-1.5 rounded-xl bg-red-500/20 text-red-400 hover:bg-red-500/40 transition-colors mr-2 sm:mr-3 cursor-pointer shrink-0"
-              aria-label="Remove attachment"
-            >
-              <X className="w-4 h-4" />
-            </button>
+
+                {/* Progress Bar Overlay (during processing) */}
+                {att.status === 'processing' && (
+                  <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-end pb-1 px-1">
+                    <div className="w-full h-1.5 bg-white/20 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-[var(--accent-text)] rounded-full transition-all duration-100"
+                        style={{ width: `${att.progress}%` }}
+                      />
+                    </div>
+                    <span className="text-[9px] text-white/80 mt-0.5">{att.progress}%</span>
+                  </div>
+                )}
+
+                {/* Filename tooltip on hover */}
+                <div className="absolute inset-x-0 bottom-0 bg-black/70 text-white text-[8px] px-1 py-0.5 truncate opacity-0 group-hover:opacity-100 transition-opacity">
+                  {att.name}
+                </div>
+
+                {/* Remove button */}
+                <button
+                  type="button"
+                  onClick={() => removeAttachment(att.id)}
+                  className="absolute top-0.5 right-0.5 w-4 h-4 rounded-full bg-red-500 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600 cursor-pointer"
+                  aria-label="Remove"
+                >
+                  <X className="w-2.5 h-2.5" />
+                </button>
+
+                {/* Ready indicator */}
+                {att.status === 'ready' && (
+                  <div className="absolute top-0.5 left-0.5 w-3 h-3 rounded-full bg-emerald-500 border border-white shadow-sm" />
+                )}
+              </div>
+            ))}
+
+            {/* Clear all button when multiple */}
+            {attachments.length > 1 && (
+              <button
+                type="button"
+                onClick={resetAttachments}
+                className="flex-shrink-0 w-8 h-8 rounded-xl bg-red-500/15 text-red-400 hover:bg-red-500/30 flex items-center justify-center transition-colors cursor-pointer self-center"
+                aria-label="Remove all attachments"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
           </div>
         )}
 

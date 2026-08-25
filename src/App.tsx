@@ -272,8 +272,16 @@ export default function App() {
   };
 
   // Send Message & Stream Response
-  const handleSendMessage = async (text: string, imageUrl?: string) => {
-    if ((!text.trim() && !imageUrl) || isStreaming) return;
+  const handleSendMessage = async (text: string, imageUrl?: string, imageUrls?: string[]) => {
+    // Resolve effective media list (prefer imageUrls array, fallback to single imageUrl)
+    const effectiveImageUrls = imageUrls && imageUrls.length > 0
+      ? imageUrls
+      : imageUrl
+        ? [imageUrl]
+        : undefined;
+    const effectiveImageUrl = effectiveImageUrls?.[0]; // backward compat: first item
+
+    if ((!text.trim() && !effectiveImageUrl) || isStreaming) return;
     setActiveError(null);
 
     let targetConv = activeConversation;
@@ -293,7 +301,8 @@ export default function App() {
       id: userMessageId,
       role: 'user',
       content: promptText,
-      imageUrl,
+      imageUrl: effectiveImageUrl,
+      imageUrls: effectiveImageUrls,
       timestamp: Date.now(),
     };
 
@@ -381,7 +390,7 @@ export default function App() {
       // - Keeps active user input and attached media intact in current turn
       const contextMessages = buildOptimizedContext(
         targetConv.messages,
-        { content: text, imageUrl },
+        { content: text, imageUrl: effectiveImageUrl, imageUrls: effectiveImageUrls },
         { maxRecentTurns: 6 }
       );
 

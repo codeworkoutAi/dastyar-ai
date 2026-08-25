@@ -821,28 +821,27 @@ function formatContentsForGemini(messages: any[]) {
       parts.push({ text: textContent });
     }
 
-    if (m.imageUrl) {
-      if (isCurrentTurn) {
-        const matches = m.imageUrl.match(/^data:(.+?);base64,(.+)$/);
+    // Process all media attachments for current turn (supports multiple)
+    const mediaUrls: string[] = isCurrentTurn
+      ? (m.imageUrls && m.imageUrls.length > 0 ? m.imageUrls : m.imageUrl ? [m.imageUrl] : [])
+      : [];
+
+    if (mediaUrls.length > 0) {
+      for (const mediaUrl of mediaUrls) {
+        const matches = mediaUrl.match(/^data:(.+?);base64,(.+)$/);
         if (matches && matches.length === 3) {
           const mimeType = matches[1];
           let cleanBase64 = matches[2];
           cleanBase64 = cleanBase64.replace(/^(?:data:[^;]+;base64,)+/, '').replace(/^base64[:,]/, '').trim();
-          
           if (cleanBase64) {
-            parts.push({
-              inlineData: {
-                mimeType,
-                data: cleanBase64,
-              },
-            });
+            parts.push({ inlineData: { mimeType, data: cleanBase64 } });
           }
         }
-      } else {
-        // De-duplicate past media: replace heavy base64 in past turns with lightweight textual placeholder
-        if (!textContent.includes('[تصویر/رسانه')) {
-          parts.push({ text: '[تصویر/رسانه ضمیمه شده قبلی: بررسی و تحلیل شد]' });
-        }
+      }
+    } else if (!isCurrentTurn && (m.imageUrl || (m.imageUrls && m.imageUrls.length > 0))) {
+      // De-duplicate past media: replace heavy base64 in past turns with lightweight textual placeholder
+      if (!textContent.includes('[تصویر/رسانه')) {
+        parts.push({ text: '[تصویر/رسانه ضمیمه شده قبلی: بررسی و تحلیل شد]' });
       }
     }
 
@@ -1384,42 +1383,45 @@ app.post('/api/chat/stream', async (req, res) => {
           const isCurrentTurn = index === prunedMessages.length - 1;
           const textContent = typeof m.content === 'string' ? m.content : '';
 
-          if (m.imageUrl) {
-            if (!isCurrentTurn) {
-              // Past turn: de-duplicate media to lightweight text placeholder
-              const contentWithNote = textContent.includes('[تصویر/رسانه')
-                ? textContent
-                : `[تصویر/رسانه ضمیمه شده قبلی: بررسی و تحلیل شد]\n${textContent}`;
-              return { role: m.role, content: contentWithNote };
+          // Gather all media URLs for this message (prefer imageUrls array, fallback to imageUrl)
+          const allMediaUrls: string[] = isCurrentTurn
+            ? (m.imageUrls && m.imageUrls.length > 0 ? m.imageUrls : m.imageUrl ? [m.imageUrl] : [])
+            : [];
+
+          const hasPastMedia = !isCurrentTurn && (m.imageUrl || (m.imageUrls && m.imageUrls.length > 0));
+          if (hasPastMedia) {
+            // Past turn: de-duplicate media to lightweight text placeholder
+            const contentWithNote = textContent.includes('[تصویر/رسانه')
+              ? textContent
+              : `[تصویر/رسانه ضمیمه شده قبلی: بررسی و تحلیل شد]\n${textContent}`;
+            return { role: m.role, content: contentWithNote };
+          }
+
+          if (allMediaUrls.length > 0) {
+            const imageParts: any[] = [];
+            for (const mediaUrl of allMediaUrls) {
+              const matches = mediaUrl.match(/^data:(.+?);base64,(.+)$/);
+              if (matches && matches.length === 3) {
+                const mimeType = matches[1];
+                let cleanBase64 = matches[2];
+                cleanBase64 = cleanBase64.replace(/^(?:data:[^;]+;base64,)+/, '').replace(/^base64[:,]/, '').trim();
+                const isAudioOrVideo = mimeType.startsWith('audio/') || mimeType.startsWith('video/');
+                if (isAudioOrVideo) {
+                  hasUnsupportedMediaInCurrentTurn = true;
+                  continue;
+                }
+                if (mimeType.startsWith('image/')) {
+                  imageParts.push({ type: 'image_url', image_url: { url: `data:${mimeType};base64,${cleanBase64}` } });
+                }
+              }
             }
-
-            const matches = m.imageUrl.match(/^data:(.+?);base64,(.+)$/);
-            if (matches && matches.length === 3) {
-              const mimeType = matches[1];
-              let cleanBase64 = matches[2];
-              cleanBase64 = cleanBase64.replace(/^(?:data:[^;]+;base64,)+/, '').replace(/^base64[:,]/, '').trim();
-              
-              const isAudioOrVideo = mimeType.startsWith('audio/') || mimeType.startsWith('video/');
-
-              if (isAudioOrVideo) {
-                hasUnsupportedMediaInCurrentTurn = true;
-                return { role: m.role, content: textContent };
-              }
-
-              // For images in current turn, format as multimodal image_url
-              if (mimeType.startsWith('image/')) {
-                return {
-                  role: m.role,
-                  content: [
-                    { type: 'text', text: textContent },
-                    { type: 'image_url', image_url: { url: `data:${mimeType};base64,${cleanBase64}` } },
-                  ],
-                };
-              }
-
+            if (imageParts.length > 0) {
               return {
                 role: m.role,
-                content: textContent,
+                content: [
+                  { type: 'text', text: textContent },
+                  ...imageParts,
+                ],
               };
             }
           }
