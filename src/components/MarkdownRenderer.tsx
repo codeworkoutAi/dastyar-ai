@@ -1,10 +1,32 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
 import remarkBreaks from 'remark-breaks';
 import rehypeKatex from 'rehype-katex';
-import twemoji from '@twemoji/api';
+import {
+  CalendarBoldDuotoneIcon,
+  SunBoldDuotoneIcon,
+  MoonStarsBoldDuotoneIcon,
+  GlobalBoldDuotoneIcon,
+  PinBoldDuotoneIcon,
+  NotesBoldDuotoneIcon,
+  LightbulbBoldDuotoneIcon,
+  CpuBoltBoldDuotoneIcon,
+  StarsMinimalisticBoldDuotoneIcon,
+  Code2BoldDuotoneIcon,
+  ChartBoldDuotoneIcon,
+  LockKeyholeBoldDuotoneIcon,
+  MinimalisticMagnifierBoldDuotoneIcon,
+  FolderBoldDuotoneIcon,
+  ClockCircleBoldDuotoneIcon,
+  CheckCircleBoldDuotoneIcon,
+  CloseCircleBoldDuotoneIcon,
+  DangerTriangleBoldDuotoneIcon,
+  InfoCircleBoldDuotoneIcon,
+  ChatRoundBoldDuotoneIcon,
+  HeartBoldDuotoneIcon,
+} from '@solar-icons/react';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import {
@@ -23,6 +45,115 @@ interface MarkdownRendererProps {
   content: string;
   isStreaming?: boolean;
   usePersianDigits?: boolean;
+}
+
+// Universal Solar Icon mapping for common emojis
+const EMOJI_TO_SOLAR_ICON: Record<string, { icon: React.ComponentType<{ className?: string }>; color: string }> = {
+  // Calendar & Dates
+  '📅': { icon: CalendarBoldDuotoneIcon, color: 'text-sky-400' },
+  '🗓️': { icon: CalendarBoldDuotoneIcon, color: 'text-sky-400' },
+  '🗓': { icon: CalendarBoldDuotoneIcon, color: 'text-sky-400' },
+  '☀️': { icon: SunBoldDuotoneIcon, color: 'text-amber-400' },
+  '🌞': { icon: SunBoldDuotoneIcon, color: 'text-amber-400' },
+  '🌙': { icon: MoonStarsBoldDuotoneIcon, color: 'text-amber-300' },
+  '🌘': { icon: MoonStarsBoldDuotoneIcon, color: 'text-amber-300' },
+  '🌍': { icon: GlobalBoldDuotoneIcon, color: 'text-teal-400' },
+  '🌐': { icon: GlobalBoldDuotoneIcon, color: 'text-teal-400' },
+  '🌎': { icon: GlobalBoldDuotoneIcon, color: 'text-teal-400' },
+  '🌏': { icon: GlobalBoldDuotoneIcon, color: 'text-teal-400' },
+  // Pins, Notes & Events
+  '📌': { icon: PinBoldDuotoneIcon, color: 'text-rose-400' },
+  '📍': { icon: PinBoldDuotoneIcon, color: 'text-rose-400' },
+  '📜': { icon: NotesBoldDuotoneIcon, color: 'text-amber-200' },
+  '📄': { icon: NotesBoldDuotoneIcon, color: 'text-slate-300' },
+  '📝': { icon: NotesBoldDuotoneIcon, color: 'text-blue-400' },
+  '🌸': { icon: StarsMinimalisticBoldDuotoneIcon, color: 'text-pink-400' },
+  '🌺': { icon: StarsMinimalisticBoldDuotoneIcon, color: 'text-pink-400' },
+  '🌹': { icon: StarsMinimalisticBoldDuotoneIcon, color: 'text-rose-400' },
+  '🌷': { icon: StarsMinimalisticBoldDuotoneIcon, color: 'text-pink-400' },
+  // Ideas, Tech & Coding
+  '💡': { icon: LightbulbBoldDuotoneIcon, color: 'text-yellow-400' },
+  '⚡': { icon: CpuBoltBoldDuotoneIcon, color: 'text-sky-400' },
+  '✨': { icon: StarsMinimalisticBoldDuotoneIcon, color: 'text-purple-400' },
+  '🌟': { icon: StarsMinimalisticBoldDuotoneIcon, color: 'text-amber-300' },
+  '⭐': { icon: StarsMinimalisticBoldDuotoneIcon, color: 'text-amber-400' },
+  '💻': { icon: Code2BoldDuotoneIcon, color: 'text-emerald-400' },
+  '🖥️': { icon: Code2BoldDuotoneIcon, color: 'text-emerald-400' },
+  '🤖': { icon: CpuBoltBoldDuotoneIcon, color: 'text-purple-400' },
+  '🔍': { icon: MinimalisticMagnifierBoldDuotoneIcon, color: 'text-sky-400' },
+  '🔎': { icon: MinimalisticMagnifierBoldDuotoneIcon, color: 'text-sky-400' },
+  '📁': { icon: FolderBoldDuotoneIcon, color: 'text-amber-400' },
+  '📂': { icon: FolderBoldDuotoneIcon, color: 'text-amber-400' },
+  // Time & Charts
+  '⏰': { icon: ClockCircleBoldDuotoneIcon, color: 'text-blue-400' },
+  '⏱️': { icon: ClockCircleBoldDuotoneIcon, color: 'text-blue-400' },
+  '⏳': { icon: ClockCircleBoldDuotoneIcon, color: 'text-amber-400' },
+  '⌛': { icon: ClockCircleBoldDuotoneIcon, color: 'text-amber-400' },
+  '📊': { icon: ChartBoldDuotoneIcon, color: 'text-teal-400' },
+  '📈': { icon: ChartBoldDuotoneIcon, color: 'text-emerald-400' },
+  '📉': { icon: ChartBoldDuotoneIcon, color: 'text-rose-400' },
+  // Security & Chat
+  '🔒': { icon: LockKeyholeBoldDuotoneIcon, color: 'text-emerald-400' },
+  '🔓': { icon: LockKeyholeBoldDuotoneIcon, color: 'text-amber-400' },
+  '🔑': { icon: LockKeyholeBoldDuotoneIcon, color: 'text-amber-400' },
+  '💬': { icon: ChatRoundBoldDuotoneIcon, color: 'text-blue-400' },
+  '🗨️': { icon: ChatRoundBoldDuotoneIcon, color: 'text-blue-400' },
+  '❤️': { icon: HeartBoldDuotoneIcon, color: 'text-rose-500' },
+  // Statuses
+  '✅': { icon: CheckCircleBoldDuotoneIcon, color: 'text-emerald-400' },
+  '✔️': { icon: CheckCircleBoldDuotoneIcon, color: 'text-emerald-400' },
+  '❌': { icon: CloseCircleBoldDuotoneIcon, color: 'text-rose-400' },
+  '❎': { icon: CloseCircleBoldDuotoneIcon, color: 'text-rose-400' },
+  '⚠️': { icon: DangerTriangleBoldDuotoneIcon, color: 'text-amber-400' },
+  '🚨': { icon: DangerTriangleBoldDuotoneIcon, color: 'text-rose-500' },
+  'ℹ️': { icon: InfoCircleBoldDuotoneIcon, color: 'text-sky-400' },
+  'ℹ': { icon: InfoCircleBoldDuotoneIcon, color: 'text-sky-400' }
+};
+
+const EMOJI_REGEX = /([📅🗓️🗓☀️🌞🌙🌘🌍🌐🌎🌏📌📍📜📄📝🌸🌺🌹🌷💡⚡✨🌟⭐💻🖥️🤖🔍🔎📁📂⏰⏱️⏳⌛📊📈📉🔒🔓🔑💬🗨️❤️✅✔️❌❎⚠️🚨ℹ️ℹ])/gu;
+
+// Replace emojis recursively inside React children with crisp Solar Icons
+function replaceEmojisWithSolarIcons(node: React.ReactNode): React.ReactNode {
+  if (typeof node === 'string') {
+    if (!EMOJI_REGEX.test(node)) return node;
+    const parts = node.split(EMOJI_REGEX);
+    if (parts.length === 1) return node;
+
+    return parts.map((part, index) => {
+      const match = EMOJI_TO_SOLAR_ICON[part];
+      if (match) {
+        const IconComponent = match.icon;
+        return (
+          <span key={index} className="inline-flex items-center align-middle mx-1 select-none pointer-events-none transition-transform hover:scale-110">
+            <IconComponent className={`w-[1.25em] h-[1.25em] ${match.color} drop-shadow-sm`} />
+          </span>
+        );
+      }
+      return part;
+    });
+  }
+
+  if (Array.isArray(node)) {
+    return node.map((child, i) => (
+      <React.Fragment key={i}>
+        {replaceEmojisWithSolarIcons(child)}
+      </React.Fragment>
+    ));
+  }
+
+  if (React.isValidElement(node)) {
+    if (node.type === 'code' || node.type === 'pre') {
+      return node;
+    }
+    const children = (node.props as any)?.children;
+    if (children) {
+      return React.cloneElement(node as React.ReactElement<any>, {
+        children: replaceEmojisWithSolarIcons(children)
+      });
+    }
+  }
+
+  return node;
 }
 
 // Safely extract string content from any nested ReactNode
@@ -101,29 +232,12 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
   isStreaming,
   usePersianDigits = false,
 }) => {
-  const containerRef = useRef<HTMLDivElement>(null);
   const formattedContent = formatInlineListsAndPrinciples(content);
   const processedContent = usePersianDigits ? toPersianDigits(formattedContent) : formattedContent;
   const isOverallRtl = isRtlText(processedContent);
 
-  useEffect(() => {
-    if (containerRef.current && (twemoji as any)?.parse) {
-      try {
-        (twemoji as any).parse(containerRef.current, {
-          folder: 'svg',
-          ext: '.svg',
-          base: 'https://cdn.jsdelivr.net/gh/jdecked/twemoji@17.0.3/assets/',
-          className: 'twemoji-img'
-        });
-      } catch (err) {
-        console.warn('Twemoji parse error:', err);
-      }
-    }
-  }, [processedContent, isStreaming]);
-
   return (
     <div
-      ref={containerRef}
       className={`markdown-body text-inherit leading-relaxed ${isOverallRtl ? 'text-right' : 'text-left'} ${
         isStreaming ? 'streaming-cursor' : ''
       }`}
@@ -161,7 +275,7 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
                   {iconMap[callout.type]}
                   <div className="flex-1 text-[13px] leading-6">
                     <p className="font-bold text-[12px] opacity-90 mb-0.5">{callout.title}</p>
-                    <p className="opacity-95">{callout.cleanText || children}</p>
+                    <p className="opacity-95">{replaceEmojisWithSolarIcons(callout.cleanText || children)}</p>
                   </div>
                 </div>
               );
@@ -173,7 +287,7 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
                 className={`mb-3.5 last:mb-0 leading-7 font-normal ${rtl ? 'text-right' : 'text-left'}`}
                 dir={rtl ? 'rtl' : 'ltr'}
               >
-                {children}
+                {replaceEmojisWithSolarIcons(children)}
               </p>
             );
           },
@@ -199,7 +313,7 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
             );
           },
 
-          // Headings with RTL alignment
+          // Headings with RTL alignment and Solar Icons support
           h1({ children }) {
             const rawText = extractNodeText(children);
             const rtl = rawText ? isRtlText(rawText) : isOverallRtl;
@@ -210,7 +324,7 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
                 }`}
                 dir={rtl ? 'rtl' : 'ltr'}
               >
-                {children}
+                {replaceEmojisWithSolarIcons(children)}
               </h1>
             );
           },
@@ -224,7 +338,7 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
                 }`}
                 dir={rtl ? 'rtl' : 'ltr'}
               >
-                {children}
+                {replaceEmojisWithSolarIcons(children)}
               </h2>
             );
           },
@@ -238,7 +352,7 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
                 }`}
                 dir={rtl ? 'rtl' : 'ltr'}
               >
-                {children}
+                {replaceEmojisWithSolarIcons(children)}
               </h3>
             );
           },
@@ -252,7 +366,7 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
                 }`}
                 dir={rtl ? 'rtl' : 'ltr'}
               >
-                {children}
+                {replaceEmojisWithSolarIcons(children)}
               </h4>
             );
           },
@@ -290,21 +404,21 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
                 className={`leading-7 my-1 ${rtl ? 'text-right' : 'text-left'}`}
                 dir={rtl ? 'rtl' : 'ltr'}
               >
-                {children}
+                {replaceEmojisWithSolarIcons(children)}
               </li>
             );
           },
 
           // Strong / Bold tags
           strong({ children }) {
-            return <strong className="font-bold text-inherit">{children}</strong>;
+            return <strong className="font-bold text-inherit">{replaceEmojisWithSolarIcons(children)}</strong>;
           },
 
           // Emphasis / Italic (smaller caption & metadata formatting)
           em({ children }) {
             return (
               <em className="text-xs sm:text-[13px] text-zinc-500 dark:text-zinc-400 not-italic font-normal inline-block mt-1 leading-relaxed opacity-95">
-                {children}
+                {replaceEmojisWithSolarIcons(children)}
               </em>
             );
           },
@@ -320,7 +434,7 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
                 }`}
                 dir={rtl ? 'rtl' : 'ltr'}
               >
-                {children}
+                {replaceEmojisWithSolarIcons(children)}
               </blockquote>
             );
           },
@@ -345,10 +459,10 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
             return <tr className="hover:bg-black/[0.02] dark:hover:bg-white/[0.02] transition-colors">{children}</tr>;
           },
           th({ children }) {
-            return <th className="px-4 py-2.5 text-left font-bold text-inherit">{children}</th>;
+            return <th className="px-4 py-2.5 text-left font-bold text-inherit">{replaceEmojisWithSolarIcons(children)}</th>;
           },
           td({ children }) {
-            return <td className="px-4 py-2.5 text-left text-inherit opacity-90">{children}</td>;
+            return <td className="px-4 py-2.5 text-left text-inherit opacity-90">{replaceEmojisWithSolarIcons(children)}</td>;
           },
 
           // Links
