@@ -501,17 +501,17 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
                 {/* Single Unified Bottom Row */}
                 <div className="flex items-center justify-between gap-2 mt-2 pt-2 border-t border-zinc-800/40 text-xs text-zinc-400">
                   {/* Right Side: Actions Toolbar */}
-                  <div className="flex items-center gap-1 text-zinc-500">
+                  <div className="flex items-center gap-1.5 text-zinc-400">
                     {!msg.error && (
                       <Tooltip content={copiedId === msg.id ? 'کپی شد!' : 'کپی'}>
                         <button
                           onClick={() => handleCopyMessage(msg)}
-                          className="p-1 rounded-md text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800 transition-colors cursor-pointer"
+                          className="p-1.5 rounded-lg text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/80 transition-colors cursor-pointer"
                         >
                           {copiedId === msg.id ? (
-                            <Check className="w-3.5 h-3.5 text-emerald-400" />
+                            <Check className="w-4 h-4 text-emerald-400" />
                           ) : (
-                            <CopyLineDuotoneIcon className="w-3.5 h-3.5" />
+                            <CopyLineDuotoneIcon className="w-4 h-4" />
                           )}
                         </button>
                       </Tooltip>
@@ -524,13 +524,13 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
                             setEditingMessageId(msg.id);
                             setEditingText(msg.content);
                           }}
-                          className={`p-1 rounded-md transition-colors cursor-pointer ${
+                          className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
                             editingMessageId === msg.id
-                              ? 'text-sky-400 bg-sky-500/10'
-                              : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800'
+                              ? 'text-sky-400 bg-sky-500/15'
+                              : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/80'
                           }`}
                         >
-                          <PenLineDuotoneIcon className="w-3.5 h-3.5" />
+                          <PenLineDuotoneIcon className="w-4 h-4" />
                         </button>
                       </Tooltip>
                     )}
@@ -540,18 +540,18 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
                         <Tooltip content={loadingTtsId === msg.id ? 'در حال آماده‌سازی صوت...' : speakingId === msg.id ? 'توقف خوانش' : 'خواندن صوتی'}>
                           <button
                             onClick={() => handleToggleSpeak(msg)}
-                            className={`p-1 rounded-md transition-colors cursor-pointer ${
+                            className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
                               speakingId === msg.id || loadingTtsId === msg.id
-                                ? 'text-sky-400 bg-sky-500/10'
-                                : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800'
+                                ? 'text-sky-400 bg-sky-500/15'
+                                : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/80'
                             }`}
                           >
                             {loadingTtsId === msg.id ? (
-                              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                              <Loader2 className="w-4 h-4 animate-spin" />
                             ) : speakingId === msg.id ? (
-                              <VolumeCrossLineDuotoneIcon className="w-3.5 h-3.5 animate-pulse" />
+                              <VolumeCrossLineDuotoneIcon className="w-4 h-4 animate-pulse" />
                             ) : (
-                              <VolumeLoudLineDuotoneIcon className="w-3.5 h-3.5" />
+                              <VolumeLoudLineDuotoneIcon className="w-4 h-4" />
                             )}
                           </button>
                         </Tooltip>
@@ -559,35 +559,35 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
                         <Tooltip content="خروجی Markdown">
                           <button
                             onClick={() => handleExportSingleMessage(msg)}
-                            className="p-1 rounded-md text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800 transition-colors cursor-pointer"
+                            className="p-1.5 rounded-lg text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/80 transition-colors cursor-pointer"
                           >
-                            <DownloadMinimalisticLineDuotoneIcon className="w-3.5 h-3.5" />
+                            <DownloadMinimalisticLineDuotoneIcon className="w-4 h-4" />
                           </button>
                         </Tooltip>
 
                         <Tooltip content="پاسخ خوب بود">
                           <button
                             onClick={() => handleFeedback(msg.id, 'up')}
-                            className={`p-1 rounded-md transition-colors cursor-pointer ${
+                            className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
                               feedback[msg.id] === 'up'
-                                ? 'text-emerald-400 bg-emerald-500/10'
-                                : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800'
+                                ? 'text-emerald-400 bg-emerald-500/15'
+                                : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/80'
                             }`}
                           >
-                            {feedback[msg.id] === 'up' ? <LikeBoldDuotoneIcon className="w-3.5 h-3.5 text-emerald-400" /> : <LikeLineDuotoneIcon className="w-3.5 h-3.5" />}
+                            {feedback[msg.id] === 'up' ? <LikeBoldDuotoneIcon className="w-4 h-4 text-emerald-400" /> : <LikeLineDuotoneIcon className="w-4 h-4" />}
                           </button>
                         </Tooltip>
 
                         <Tooltip content="پاسخ بد بود">
                           <button
                             onClick={() => handleFeedback(msg.id, 'down')}
-                            className={`p-1 rounded-md transition-colors cursor-pointer ${
+                            className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
                               feedback[msg.id] === 'down'
-                                ? 'text-rose-400 bg-rose-500/10'
-                                : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800'
+                                ? 'text-rose-400 bg-rose-500/15'
+                                : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/80'
                             }`}
                           >
-                            {feedback[msg.id] === 'down' ? <DislikeBoldDuotoneIcon className="w-3.5 h-3.5 text-rose-400" /> : <DislikeLineDuotoneIcon className="w-3.5 h-3.5" />}
+                            {feedback[msg.id] === 'down' ? <DislikeBoldDuotoneIcon className="w-4 h-4 text-rose-400" /> : <DislikeLineDuotoneIcon className="w-4 h-4" />}
                           </button>
                         </Tooltip>
 
@@ -595,9 +595,9 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
                           <Tooltip content="تولید مجدد پاسخ">
                             <button
                               onClick={onRegenerate}
-                              className="p-1 rounded-md text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800 transition-colors cursor-pointer"
+                              className="p-1.5 rounded-lg text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/80 transition-colors cursor-pointer"
                             >
-                              <RestartLineDuotoneIcon className="w-3.5 h-3.5" />
+                              <RestartLineDuotoneIcon className="w-4 h-4" />
                             </button>
                           </Tooltip>
                         )}
