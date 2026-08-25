@@ -124,8 +124,8 @@ function replaceEmojisWithSolarIcons(node: React.ReactNode): React.ReactNode {
       if (match) {
         const IconComponent = match.icon;
         return (
-          <span key={index} className="inline-flex items-center align-middle mx-1 select-none pointer-events-none transition-transform hover:scale-110">
-            <IconComponent className={`w-[1.25em] h-[1.25em] ${match.color} drop-shadow-sm`} />
+          <span key={index} className="inline-flex items-center align-middle mx-0.5 select-none pointer-events-none transition-transform hover:scale-110">
+            <IconComponent className={`w-[1.05em] h-[1.05em] ${match.color} drop-shadow-xs`} />
           </span>
         );
       }
