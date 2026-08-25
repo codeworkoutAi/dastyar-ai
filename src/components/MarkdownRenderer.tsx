@@ -32,8 +32,24 @@ import {
   CupBoldDuotoneIcon,
   MedalStarBoldDuotoneIcon,
   TagBoldDuotoneIcon,
+  TagPriceBoldDuotoneIcon,
   LinkBoldDuotoneIcon,
   BellBoldDuotoneIcon,
+  WalletBoldDuotoneIcon,
+  Card2BoldDuotoneIcon,
+  GamepadBoldDuotoneIcon,
+  CityBoldDuotoneIcon,
+  UsersGroupRoundedBoldDuotoneIcon,
+  ScaleBoldDuotoneIcon,
+  DiplomaBoldDuotoneIcon,
+  TestTubeBoldDuotoneIcon,
+  MedicalKitBoldDuotoneIcon,
+  CameraBoldDuotoneIcon,
+  ClapperboardBoldDuotoneIcon,
+  MasksBoldDuotoneIcon,
+  MusicNoteBoldDuotoneIcon,
+  RocketBoldDuotoneIcon,
+  ShieldCheckBoldDuotoneIcon,
 } from '@solar-icons/react';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
@@ -57,6 +73,59 @@ interface MarkdownRendererProps {
 
 // Universal Solar Icon mapping for common emojis
 const EMOJI_TO_SOLAR_ICON: Record<string, { icon: React.ComponentType<{ className?: string }>; color: string }> = {
+  // Economy & Finance
+  '💰': { icon: WalletBoldDuotoneIcon, color: 'text-amber-400' },
+  '💵': { icon: WalletBoldDuotoneIcon, color: 'text-emerald-400' },
+  '🪙': { icon: WalletBoldDuotoneIcon, color: 'text-yellow-400' },
+  '💳': { icon: Card2BoldDuotoneIcon, color: 'text-sky-400' },
+  '📈': { icon: ChartBoldDuotoneIcon, color: 'text-emerald-400' },
+  '📉': { icon: ChartBoldDuotoneIcon, color: 'text-rose-400' },
+  '📊': { icon: ChartBoldDuotoneIcon, color: 'text-teal-400' },
+  // Sports & Entertainment
+  '⚽': { icon: CupBoldDuotoneIcon, color: 'text-emerald-400' },
+  '🏀': { icon: CupBoldDuotoneIcon, color: 'text-amber-500' },
+  '🏐': { icon: CupBoldDuotoneIcon, color: 'text-sky-400' },
+  '🎾': { icon: CupBoldDuotoneIcon, color: 'text-lime-400' },
+  '🏆': { icon: MedalStarBoldDuotoneIcon, color: 'text-amber-300' },
+  '🥇': { icon: MedalStarBoldDuotoneIcon, color: 'text-amber-400' },
+  '🎮': { icon: GamepadBoldDuotoneIcon, color: 'text-purple-400' },
+  // Society, City & People
+  '🏙️': { icon: CityBoldDuotoneIcon, color: 'text-teal-400' },
+  '🌆': { icon: CityBoldDuotoneIcon, color: 'text-amber-400' },
+  '🏢': { icon: BuildingsBoldDuotoneIcon, color: 'text-sky-400' },
+  '🏛️': { icon: BuildingsBoldDuotoneIcon, color: 'text-amber-400' },
+  '🏛': { icon: BuildingsBoldDuotoneIcon, color: 'text-amber-400' },
+  '👥': { icon: UsersGroupRoundedBoldDuotoneIcon, color: 'text-indigo-400' },
+  // Politics, Law & Judiciary
+  '⚖️': { icon: ScaleBoldDuotoneIcon, color: 'text-purple-400' },
+  '📜': { icon: DiplomaBoldDuotoneIcon, color: 'text-amber-200' },
+  '📄': { icon: NotesBoldDuotoneIcon, color: 'text-slate-300' },
+  '📝': { icon: NotesBoldDuotoneIcon, color: 'text-blue-400' },
+  // Science, Health & Medicine
+  '🔬': { icon: TestTubeBoldDuotoneIcon, color: 'text-emerald-400' },
+  '🧪': { icon: TestTubeBoldDuotoneIcon, color: 'text-teal-400' },
+  '🩺': { icon: MedicalKitBoldDuotoneIcon, color: 'text-rose-400' },
+  '🏥': { icon: MedicalKitBoldDuotoneIcon, color: 'text-rose-500' },
+  '💊': { icon: MedicalKitBoldDuotoneIcon, color: 'text-pink-400' },
+  '🧬': { icon: TestTubeBoldDuotoneIcon, color: 'text-purple-400' },
+  // Culture, Art, Cinema & Music
+  '🎭': { icon: MasksBoldDuotoneIcon, color: 'text-pink-400' },
+  '🎬': { icon: ClapperboardBoldDuotoneIcon, color: 'text-purple-400' },
+  '🎨': { icon: CameraBoldDuotoneIcon, color: 'text-amber-400' },
+  '🎵': { icon: MusicNoteBoldDuotoneIcon, color: 'text-sky-400' },
+  '📻': { icon: VolumeLoudBoldDuotoneIcon, color: 'text-indigo-400' },
+  '📺': { icon: ClapperboardBoldDuotoneIcon, color: 'text-sky-400' },
+  '🎥': { icon: CameraBoldDuotoneIcon, color: 'text-rose-400' },
+  // News, Sources, Media & Links
+  '📣': { icon: VolumeLoudBoldDuotoneIcon, color: 'text-rose-400' },
+  '📢': { icon: VolumeLoudBoldDuotoneIcon, color: 'text-rose-400' },
+  '📰': { icon: DocumentTextBoldDuotoneIcon, color: 'text-sky-400' },
+  '🗞️': { icon: DocumentTextBoldDuotoneIcon, color: 'text-sky-400' },
+  '🗞': { icon: DocumentTextBoldDuotoneIcon, color: 'text-sky-400' },
+  '🏷️': { icon: TagPriceBoldDuotoneIcon, color: 'text-teal-400' },
+  '🏷': { icon: TagBoldDuotoneIcon, color: 'text-teal-400' },
+  '🔗': { icon: LinkBoldDuotoneIcon, color: 'text-blue-400' },
+  '🔔': { icon: BellBoldDuotoneIcon, color: 'text-amber-400' },
   // Calendar & Dates
   '📅': { icon: CalendarBoldDuotoneIcon, color: 'text-sky-400' },
   '🗓️': { icon: CalendarBoldDuotoneIcon, color: 'text-sky-400' },
@@ -69,12 +138,9 @@ const EMOJI_TO_SOLAR_ICON: Record<string, { icon: React.ComponentType<{ classNam
   '🌐': { icon: GlobalBoldDuotoneIcon, color: 'text-teal-400' },
   '🌎': { icon: GlobalBoldDuotoneIcon, color: 'text-teal-400' },
   '🌏': { icon: GlobalBoldDuotoneIcon, color: 'text-teal-400' },
-  // Pins, Notes & Events
+  // Pins & Flowers
   '📌': { icon: PinBoldDuotoneIcon, color: 'text-rose-400' },
   '📍': { icon: PinBoldDuotoneIcon, color: 'text-rose-400' },
-  '📜': { icon: NotesBoldDuotoneIcon, color: 'text-amber-200' },
-  '📄': { icon: NotesBoldDuotoneIcon, color: 'text-slate-300' },
-  '📝': { icon: NotesBoldDuotoneIcon, color: 'text-blue-400' },
   '🌸': { icon: StarsMinimalisticBoldDuotoneIcon, color: 'text-pink-400' },
   '🌺': { icon: StarsMinimalisticBoldDuotoneIcon, color: 'text-pink-400' },
   '🌹': { icon: StarsMinimalisticBoldDuotoneIcon, color: 'text-rose-400' },
@@ -88,32 +154,18 @@ const EMOJI_TO_SOLAR_ICON: Record<string, { icon: React.ComponentType<{ classNam
   '💻': { icon: Code2BoldDuotoneIcon, color: 'text-emerald-400' },
   '🖥️': { icon: Code2BoldDuotoneIcon, color: 'text-emerald-400' },
   '🤖': { icon: CpuBoltBoldDuotoneIcon, color: 'text-purple-400' },
+  '🚀': { icon: RocketBoldDuotoneIcon, color: 'text-purple-400' },
+  '🛡️': { icon: ShieldCheckBoldDuotoneIcon, color: 'text-emerald-400' },
+  '🛡': { icon: ShieldCheckBoldDuotoneIcon, color: 'text-emerald-400' },
   '🔍': { icon: MinimalisticMagnifierBoldDuotoneIcon, color: 'text-sky-400' },
   '🔎': { icon: MinimalisticMagnifierBoldDuotoneIcon, color: 'text-sky-400' },
   '📁': { icon: FolderBoldDuotoneIcon, color: 'text-amber-400' },
   '📂': { icon: FolderBoldDuotoneIcon, color: 'text-amber-400' },
-  // News, Sources, Buildings & Media
-  '📣': { icon: VolumeLoudBoldDuotoneIcon, color: 'text-rose-400' },
-  '📢': { icon: VolumeLoudBoldDuotoneIcon, color: 'text-rose-400' },
-  '🏛️': { icon: BuildingsBoldDuotoneIcon, color: 'text-amber-400' },
-  '🏛': { icon: BuildingsBoldDuotoneIcon, color: 'text-amber-400' },
-  '📰': { icon: DocumentTextBoldDuotoneIcon, color: 'text-sky-400' },
-  '🗞️': { icon: DocumentTextBoldDuotoneIcon, color: 'text-sky-400' },
-  '🗞': { icon: DocumentTextBoldDuotoneIcon, color: 'text-sky-400' },
-  '⚽': { icon: CupBoldDuotoneIcon, color: 'text-emerald-400' },
-  '🏆': { icon: MedalStarBoldDuotoneIcon, color: 'text-amber-300' },
-  '🏷️': { icon: TagBoldDuotoneIcon, color: 'text-teal-400' },
-  '🏷': { icon: TagBoldDuotoneIcon, color: 'text-teal-400' },
-  '🔗': { icon: LinkBoldDuotoneIcon, color: 'text-blue-400' },
-  '🔔': { icon: BellBoldDuotoneIcon, color: 'text-amber-400' },
-  // Time & Charts
+  // Time
   '⏰': { icon: ClockCircleBoldDuotoneIcon, color: 'text-blue-400' },
   '⏱️': { icon: ClockCircleBoldDuotoneIcon, color: 'text-blue-400' },
   '⏳': { icon: ClockCircleBoldDuotoneIcon, color: 'text-amber-400' },
   '⌛': { icon: ClockCircleBoldDuotoneIcon, color: 'text-amber-400' },
-  '📊': { icon: ChartBoldDuotoneIcon, color: 'text-teal-400' },
-  '📈': { icon: ChartBoldDuotoneIcon, color: 'text-emerald-400' },
-  '📉': { icon: ChartBoldDuotoneIcon, color: 'text-rose-400' },
   // Security & Chat
   '🔒': { icon: LockKeyholeBoldDuotoneIcon, color: 'text-emerald-400' },
   '🔓': { icon: LockKeyholeBoldDuotoneIcon, color: 'text-amber-400' },
@@ -132,23 +184,22 @@ const EMOJI_TO_SOLAR_ICON: Record<string, { icon: React.ComponentType<{ classNam
   'ℹ': { icon: InfoCircleBoldDuotoneIcon, color: 'text-sky-400' }
 };
 
-const EMOJI_REGEX = /([📅🗓️🗓☀️🌞🌙🌘🌍🌐🌎🌏📌📍📜📄📝🌸🌺🌹🌷💡⚡✨🌟⭐💻🖥️🤖🔍🔎📁📂📣📢🏛️🏛📰🗞️🗞⚽🏆🏷️🏷🔗🔔⏰⏱️⏳⌛📊📈📉🔒🔓🔑💬🗨️❤️✅✔️❌❎⚠️🚨ℹ️ℹ])/gu;
+const EMOJI_REGEX = /(💰|💵|🪙|💳|📈|📉|📊|⚽|🏀|🏐|🎾|🏆|🥇|🎮|🏛️|🏛|🏙️|🌆|🏢|👥|🔬|🧪|🩺|🏥|💊|🧬|🎭|🎬|🎨|🎵|📻|📺|🎥|💻|🖥️|🤖|⚡|💡|🚀|🛡️|🛡|🔒|🔓|🔑|📣|📢|📰|🗞️|🗞|🏷️|🏷|🔗|🔔|📅|🗓️|🗓|☀️|🌞|🌙|🌘|🌍|🌐|🌎|🌏|📌|📍|📜|📄|📝|🌸|🌺|🌹|🌷|✨|🌟|⭐|🔍|🔎|📁|📂|⏰|⏱️|⏳|⌛|💬|🗨️|❤️|✅|✔️|❌|❎|⚠️|🚨|ℹ️|ℹ)/u;
 
 type IconContext = 'heading' | 'body' | 'meta' | 'badge';
 
 // Replace emojis recursively inside React children with context-aware Solar Icons
 function replaceEmojisWithSolarIcons(node: React.ReactNode, context: IconContext = 'body'): React.ReactNode {
   if (typeof node === 'string') {
-    if (!EMOJI_REGEX.test(node)) return node;
     const parts = node.split(EMOJI_REGEX);
     if (parts.length === 1) return node;
 
     // Size mappings per context
     let sizeClass = 'w-[1.05em] h-[1.05em] drop-shadow-xs mx-0.5';
     if (context === 'heading') {
-      sizeClass = 'w-[1.18em] h-[1.18em] drop-shadow-sm mx-1';
+      sizeClass = 'w-[1.25em] h-[1.25em] drop-shadow-sm mx-1';
     } else if (context === 'meta' || context === 'badge') {
-      sizeClass = 'w-[0.82em] h-[0.82em] opacity-80 mx-0.5';
+      sizeClass = 'w-[0.75em] h-[0.75em] opacity-80 mx-0.5';
     }
 
     return parts.map((part, index) => {
