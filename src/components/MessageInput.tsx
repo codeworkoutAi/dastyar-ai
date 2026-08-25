@@ -1,5 +1,20 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
+import {
+  PaperclipLineDuotoneIcon,
+  Microphone2BoldDuotoneIcon,
+  Microphone2LineDuotoneIcon,
+  StarsMinimalisticBoldDuotoneIcon,
+  RestartCircleLineDuotoneIcon,
+  Plane2BoldDuotoneIcon,
+  CloudUploadLineDuotoneIcon,
+  CameraLineDuotoneIcon,
+  MusicNoteLineDuotoneIcon,
+  VideocameraLineDuotoneIcon,
+  DocumentTextLineDuotoneIcon,
+  CpuBoltLineDuotoneIcon,
+  StopCircleBoldDuotoneIcon
+} from '@solar-icons/react';
 import { 
   ArrowUp, 
   Square, 
@@ -434,15 +449,15 @@ export const MessageInput: React.FC<MessageInputProps> = ({
               <img src={imagePreview} alt="Preview" className="w-12 h-12 sm:w-14 sm:h-14 object-cover rounded-xl border border-white/20 shrink-0" />
             ) : imagePreview.startsWith('data:audio/') ? (
               <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl border border-white/20 shrink-0 bg-yellow-500/10 flex items-center justify-center">
-                <Music className="w-6 h-6 sm:w-8 sm:h-8 text-yellow-500" />
+                <MusicNoteLineDuotoneIcon className="w-6 h-6 sm:w-8 sm:h-8 text-yellow-500" />
               </div>
             ) : imagePreview.startsWith('data:video/') ? (
               <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl border border-white/20 shrink-0 bg-purple-500/10 flex items-center justify-center">
-                <Film className="w-6 h-6 sm:w-8 sm:h-8 text-purple-400" />
+                <VideocameraLineDuotoneIcon className="w-6 h-6 sm:w-8 sm:h-8 text-purple-400" />
               </div>
             ) : (
               <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl border border-white/20 shrink-0 bg-blue-500/10 flex items-center justify-center">
-                <FileText className="w-6 h-6 sm:w-8 sm:h-8 text-blue-400" />
+                <DocumentTextLineDuotoneIcon className="w-6 h-6 sm:w-8 sm:h-8 text-blue-400" />
               </div>
             )}
             <div className="flex flex-col text-xs text-inherit pr-1 min-w-0">
@@ -487,7 +502,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({
                   }`}
                   aria-label="Add attachment"
                 >
-                  <Paperclip className="w-5 h-5 transition-transform duration-200" strokeWidth={2} />
+                  <PaperclipLineDuotoneIcon className="w-5 h-5 transition-transform duration-200" />
                 </button>
               </Tooltip>
 
@@ -497,10 +512,10 @@ export const MessageInput: React.FC<MessageInputProps> = ({
                   ref={menuRef}
                   dir="rtl"
                   style={{ 
-                    position: 'fixed', 
-                    bottom: `${menuCoords.bottom}px`, 
-                    right: `${menuCoords.right}px`, 
-                    zIndex: 999999 
+                     position: 'fixed', 
+                     bottom: `${menuCoords.bottom}px`, 
+                     right: `${menuCoords.right}px`, 
+                     zIndex: 999999 
                   }}
                   className="w-44 bg-white dark:bg-[#1e1f20] border border-zinc-200 dark:border-[#333333] rounded-2xl shadow-xl p-1.5 flex flex-col gap-1 origin-bottom-right animate-fadeIn"
                 >
@@ -512,7 +527,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({
                     }}
                     className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-zinc-100 dark:hover:bg-white/10 transition-colors text-right cursor-pointer text-zinc-700 dark:text-slate-200"
                   >
-                    <UploadCloud className="w-4 h-4 text-emerald-500 dark:text-emerald-400 shrink-0" />
+                    <CloudUploadLineDuotoneIcon className="w-4 h-4 text-emerald-500 dark:text-emerald-400 shrink-0" />
                     <span className="text-xs font-medium">بارگذاری فایل</span>
                   </button>
                   
@@ -521,7 +536,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({
                     onClick={handleCameraClick}
                     className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-zinc-100 dark:hover:bg-white/10 transition-colors text-right cursor-pointer text-zinc-700 dark:text-slate-200"
                   >
-                    <Camera className="w-4 h-4 text-sky-500 dark:text-sky-400 shrink-0" />
+                    <CameraLineDuotoneIcon className="w-4 h-4 text-sky-500 dark:text-sky-400 shrink-0" />
                     <span className="text-xs font-medium">دوربین</span>
                   </button>
                 </div>,
@@ -548,7 +563,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({
                 }`}
                 aria-label="Generate Image"
               >
-                <Sparkles className="w-4 h-4" />
+                <StarsMinimalisticBoldDuotoneIcon className="w-4 h-4" />
               </button>
             </Tooltip>
 
@@ -595,7 +610,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({
                   className="w-10 h-10 hidden sm:flex items-center justify-center rounded-full text-zinc-400 hover:text-zinc-700 dark:text-zinc-500 dark:hover:text-zinc-300 bg-transparent border-0 outline-none transition-all hover:bg-zinc-200 dark:hover:bg-white/5 active:scale-95 cursor-pointer"
                   aria-label="Clear input"
                 >
-                  <RotateCcw className="w-3.5 h-3.5" />
+                  <RestartCircleLineDuotoneIcon className="w-4 h-4" />
                 </button>
               </Tooltip>
             )}
@@ -614,7 +629,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({
                   }`}
                   aria-label="Voice input"
                 >
-                  {isRecording ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+                  {isRecording ? <Microphone2BoldDuotoneIcon className="w-4 h-4 text-red-500" /> : <Microphone2LineDuotoneIcon className="w-4 h-4" />}
                 </button>
               </Tooltip>
             )}
@@ -628,7 +643,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({
                   className="w-10 h-10 flex items-center justify-center transition-all rounded-full text-red-500 hover:bg-red-100 dark:hover:bg-red-500/10 bg-transparent border-0 outline-none animate-pulse cursor-pointer"
                   aria-label="Stop generation"
                 >
-                  <Square className="w-4 h-4 fill-current" />
+                  <StopCircleBoldDuotoneIcon className="w-4 h-4" />
                 </button>
               </Tooltip>
             )}
@@ -648,7 +663,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({
                   }`}
                   aria-label="Send Message"
                 >
-                  <ArrowUp className="w-5 h-5 stroke-[2]" />
+                  <Plane2BoldDuotoneIcon className="w-5 h-5" />
                 </button>
               </Tooltip>
             )}
@@ -665,7 +680,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({
         {/* Footer info: Disclaimer and Token Footprint Estimator */}
         <div className="flex items-center justify-between flex-wrap gap-2 text-[10px] sm:text-[11px] opacity-75 select-none px-2">
           <div className="flex items-center gap-1.5 min-w-0">
-            <Sparkles className="w-3.5 h-3.5 text-[var(--accent-text)] shrink-0" />
+            <StarsMinimalisticBoldDuotoneIcon className="w-3.5 h-3.5 text-[var(--accent-text)] shrink-0" />
             <span className="truncate sm:whitespace-normal">پاسخ‌های مدل‌های زبانی را بازبینی کنید. ممکن است خطاهایی وجود داشته باشد.</span>
           </div>
 
@@ -674,7 +689,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({
               className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-zinc-200/70 dark:bg-zinc-800/80 text-zinc-700 dark:text-zinc-300 border border-zinc-300/50 dark:border-white/10 font-mono text-[10px] select-none"
               title="تعداد تخمینی توکن‌های این پیام بر اساس تحلیل نویسه‌ها و رسانه"
             >
-              <Cpu className="w-3 h-3 text-sky-500 shrink-0" />
+              <CpuBoltLineDuotoneIcon className="w-3 h-3 text-sky-500 shrink-0" />
               <span>~{usePersianDigits ? toPersianDigits(estimatedTokens) : estimatedTokens} توکن تخمینی</span>
             </div>
           )}

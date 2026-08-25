@@ -1,4 +1,17 @@
 import React, { useState } from 'react';
+import {
+  AddCircleBoldDuotoneIcon,
+  MinimalisticMagnifierLineDuotoneIcon,
+  PinBoldDuotoneIcon,
+  PinLineDuotoneIcon,
+  TrashBinMinimalisticLineDuotoneIcon,
+  PenLineDuotoneIcon,
+  DownloadMinimalisticLineDuotoneIcon,
+  StarsMinimalisticBoldDuotoneIcon,
+  Code2LineDuotoneIcon,
+  CalendarLineDuotoneIcon,
+  DatabaseLineDuotoneIcon
+} from '@solar-icons/react';
 import { 
   Plus, 
   Search, 
@@ -246,7 +259,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     }`}
                     aria-label="Pin conversation"
                   >
-                    <Pin className="w-3.5 h-3.5" />
+                    {conv.isPinned ? <PinBoldDuotoneIcon className="w-3.5 h-3.5" /> : <PinLineDuotoneIcon className="w-3.5 h-3.5" />}
                   </button>
                 </Tooltip>
 
@@ -256,7 +269,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     className="p-1.5 rounded-lg opacity-60 hover:opacity-100 hover:bg-white/10 text-zinc-400 hover:text-zinc-200 transition-all cursor-pointer"
                     aria-label="Rename conversation"
                   >
-                    <Edit3 className="w-3.5 h-3.5" />
+                    <PenLineDuotoneIcon className="w-3.5 h-3.5" />
                   </button>
                 </Tooltip>
 
@@ -269,7 +282,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     className="p-1.5 rounded-lg opacity-60 hover:opacity-100 hover:bg-white/10 text-zinc-400 hover:text-zinc-200 transition-all cursor-pointer"
                     aria-label="Export conversation"
                   >
-                    <Download className="w-3.5 h-3.5" />
+                    <DownloadMinimalisticLineDuotoneIcon className="w-3.5 h-3.5" />
                   </button>
                 </Tooltip>
 
@@ -282,7 +295,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     className="p-1.5 rounded-lg opacity-60 hover:opacity-100 hover:bg-red-500/20 text-zinc-400 hover:text-red-400 transition-all cursor-pointer"
                     aria-label="Delete conversation"
                   >
-                    <Trash2 className="w-3.5 h-3.5" />
+                    <TrashBinMinimalisticLineDuotoneIcon className="w-3.5 h-3.5" />
                   </button>
                 </Tooltip>
               </div>
@@ -312,30 +325,30 @@ export const Sidebar: React.FC<SidebarProps> = ({
       {isOpen && (
         <div
           onClick={onClose}
-          className="fixed inset-0 bg-black/70 backdrop-blur-xs z-40 md:hidden transition-opacity"
+          className="fixed inset-0 bg-black/60 backdrop-blur-xs z-30 md:hidden transition-opacity"
+          aria-hidden="true"
         />
       )}
 
-      {/* Sidebar Panel */}
+      {/* Sidebar Container */}
       <aside
-        id="app-sidebar"
-        className={`fixed md:static inset-y-0 right-0 z-50 w-72 md:w-64 bg-zinc-900 border-l border-zinc-800/80 flex flex-col transition-transform duration-200 ease-in-out shrink-0 shadow-2xl ${
-          isOpen ? 'translate-x-0' : 'translate-x-full md:translate-x-0 md:w-0 md:border-l-0 md:overflow-hidden'
+        id="sidebar-panel"
+        aria-label="Sidebar Panel"
+        className={`fixed md:static inset-y-0 right-0 z-40 w-72 sm:w-80 flex flex-col transition-all duration-200 ease-in-out border-l border-subtle clay-sidebar select-none ${
+          isOpen ? 'translate-x-0' : 'translate-x-full md:translate-x-0 md:w-0 md:overflow-hidden md:border-none'
         }`}
       >
-        {/* Quick Action Tools (Top of Sidebar) */}
-        <div className="p-3 border-b border-zinc-800/80 space-y-2 shrink-0">
-          <div className="flex items-center justify-between gap-1 px-1">
-            <span className="text-[11px] font-bold text-zinc-400">ابزارهای سریع</span>
-            <Tooltip content="بستن منو">
-              <button
-                onClick={onClose}
-                className="p-1.5 rounded-lg md:hidden text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors"
-                aria-label="Close sidebar"
-              >
-                <ChevronRight className="w-4 h-4" />
-              </button>
-            </Tooltip>
+        {/* Top Header & Actions in Sidebar */}
+        <div className="p-3 pb-2 space-y-2 shrink-0">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold opacity-70 px-1">تاریخچه گفتگوها</span>
+            <button
+              onClick={onClose}
+              className="p-1.5 rounded-xl text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 transition-colors md:hidden cursor-pointer"
+              aria-label="Close sidebar"
+            >
+              <X className="w-4 h-4" />
+            </button>
           </div>
 
           {/* 1. New Chat Button */}
@@ -348,7 +361,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             className="w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-2xl bg-zinc-800 hover:bg-zinc-700 text-zinc-100 font-bold text-xs sm:text-sm transition-all text-right shadow-xs hover:scale-[1.01] active:scale-[0.99] cursor-pointer"
           >
             <div className="w-7 h-7 rounded-xl bg-blue-500/15 text-blue-400 flex items-center justify-center shrink-0">
-              <Plus className="w-4 h-4" strokeWidth={2.4} />
+              <AddCircleBoldDuotoneIcon className="w-4 h-4" />
             </div>
             <span className="flex-1">گفتگوی جدید</span>
           </button>
@@ -364,7 +377,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               className="flex items-center gap-2 px-2.5 py-2 rounded-xl bg-zinc-800/50 hover:bg-purple-950/30 border border-white/5 text-zinc-200 hover:text-purple-300 text-xs font-semibold transition-all text-right hover:scale-[1.01] active:scale-[0.98] cursor-pointer"
             >
               <div className="w-6 h-6 rounded-lg bg-purple-500/15 text-purple-400 flex items-center justify-center shrink-0">
-                <Sparkles className="w-3.5 h-3.5" />
+                <StarsMinimalisticBoldDuotoneIcon className="w-3.5 h-3.5" />
               </div>
               <span className="truncate">استودیو تصویر</span>
             </button>
@@ -378,7 +391,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               className="flex items-center gap-2 px-2.5 py-2 rounded-xl bg-zinc-800/50 hover:bg-emerald-950/30 border border-white/5 text-zinc-200 hover:text-emerald-300 text-xs font-semibold transition-all text-right hover:scale-[1.01] active:scale-[0.98] cursor-pointer"
             >
               <div className="w-6 h-6 rounded-lg bg-emerald-500/15 text-emerald-400 flex items-center justify-center shrink-0">
-                <Code2 className="w-3.5 h-3.5" />
+                <Code2LineDuotoneIcon className="w-3.5 h-3.5" />
               </div>
               <span className="truncate">دستیار کد</span>
             </button>
@@ -388,7 +401,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         {/* Search box */}
         <div className="p-3 pb-1 shrink-0">
           <div className="relative flex items-center">
-            <Search className="w-4 h-4 text-zinc-400 absolute right-3 pointer-events-none" />
+            <MinimalisticMagnifierLineDuotoneIcon className="w-4 h-4 text-zinc-400 absolute right-3 pointer-events-none" />
             <input
               id="sidebar-search-input"
               type="text"
@@ -416,7 +429,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             <div className="space-y-1.5">
               <div className="flex items-center justify-between px-2 py-0.5 text-xs font-bold text-amber-400">
                 <div className="flex items-center gap-1.5">
-                  <Pin className="w-3.5 h-3.5" />
+                  <PinBoldDuotoneIcon className="w-3.5 h-3.5" />
                   <span>گفتگوهای سنجاق شده</span>
                   <span className="text-[10px] font-mono font-normal text-amber-400/90 bg-amber-500/10 px-1.5 py-0.5 rounded-full">
                     {usePersianDigits ? toPersianDigits(pinnedConversations.length) : pinnedConversations.length}
@@ -442,7 +455,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     className="w-full flex items-center justify-between px-2 py-1 rounded-lg text-xs font-bold text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50 transition-colors cursor-pointer select-none group"
                   >
                     <div className="flex items-center gap-1.5">
-                      <Calendar className="w-3.5 h-3.5 text-zinc-500 group-hover:text-zinc-300" />
+                      <CalendarLineDuotoneIcon className="w-3.5 h-3.5 text-zinc-500 group-hover:text-zinc-300" />
                       <span>{group.label}</span>
                       <span className="text-[10px] font-mono font-normal text-zinc-400 bg-zinc-800 px-1.5 py-0.2 rounded-full">
                         {usePersianDigits ? toPersianDigits(group.items.length) : group.items.length}
@@ -470,7 +483,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 <p className="text-xs">هیچ گفتگویی با عبارت «{searchQuery}» یافت نشد.</p>
               ) : (
                 <div className="space-y-2">
-                  <Sparkles className="w-8 h-8 mx-auto text-blue-400 opacity-60" />
+                  <StarsMinimalisticBoldDuotoneIcon className="w-8 h-8 mx-auto text-blue-400 opacity-60" />
                   <p className="text-xs font-semibold text-zinc-400">تاریخچه گفتگوها خالی است</p>
                   <p className="text-[11px] text-zinc-500">یک گفتگوی جدید را آغاز کنید</p>
                 </div>
@@ -483,7 +496,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         <div className="p-3 border-t border-zinc-800/80 bg-zinc-900 shrink-0">
           <div className="flex items-center justify-between text-[11px] text-zinc-400 mb-2 px-1">
             <span className="flex items-center gap-1.5">
-              <Database className="w-3.5 h-3.5 text-blue-400" />
+              <DatabaseLineDuotoneIcon className="w-3.5 h-3.5 text-blue-400" />
               <span>حافظه محلی:</span>
             </span>
             <span className="font-mono text-xs text-zinc-300">
@@ -521,7 +534,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 onClick={() => setShowClearConfirm(true)}
                 className="w-full text-center text-[11px] text-zinc-400 hover:text-red-400 transition-colors py-1.5 flex items-center justify-center gap-1.5 rounded-xl hover:bg-red-500/10 cursor-pointer"
               >
-                <Trash2 className="w-3.5 h-3.5" />
+                <TrashBinMinimalisticLineDuotoneIcon className="w-3.5 h-3.5" />
                 <span>پاک‌سازی تاریخچه گفتگوها</span>
               </button>
             )

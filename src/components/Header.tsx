@@ -1,4 +1,13 @@
 import React from 'react';
+import { 
+  HamburgerMenuLineDuotoneIcon, 
+  SettingsMinimalisticLineDuotoneIcon, 
+  DownloadMinimalisticLineDuotoneIcon, 
+  StarsMinimalisticBoldDuotoneIcon, 
+  HelpLineDuotoneIcon, 
+  Code2LineDuotoneIcon, 
+  GlobalLineDuotoneIcon
+} from '@solar-icons/react';
 import { Menu, Settings as SettingsIcon, Download, Monitor, Smartphone, Sparkles, HelpCircle, Code2, Globe } from 'lucide-react';
 import { AppSettings, Conversation } from '../types';
 import { calculateSessionStats } from '../utils/pricing';
@@ -39,13 +48,13 @@ export const Header: React.FC<HeaderProps> = ({
   const getProviderLabel = () => {
     switch (settings.providers.activeProvider) {
     case 'gemini':
-      return <div className="w-5 h-5 rounded-md gemini-gradient-bg flex items-center justify-center shrink-0"><Sparkles className="w-3.5 h-3.5 text-white" /></div>;
+      return <div className="w-5 h-5 rounded-md gemini-gradient-bg flex items-center justify-center shrink-0"><StarsMinimalisticBoldDuotoneIcon className="w-3.5 h-3.5 text-white" /></div>;
     case 'openai':
-      return <div className="w-5 h-5 rounded-md bg-emerald-500/10 flex items-center justify-center shrink-0"><Code2 className="w-3.5 h-3.5 text-emerald-500" /></div>;
+      return <div className="w-5 h-5 rounded-md bg-emerald-500/10 flex items-center justify-center shrink-0"><Code2LineDuotoneIcon className="w-3.5 h-3.5 text-emerald-500" /></div>;
     case 'anthropic':
-      return <div className="w-5 h-5 rounded-md bg-amber-500/10 flex items-center justify-center shrink-0"><Code2 className="w-3.5 h-3.5 text-amber-500" /></div>;
+      return <div className="w-5 h-5 rounded-md bg-amber-500/10 flex items-center justify-center shrink-0"><Code2LineDuotoneIcon className="w-3.5 h-3.5 text-amber-500" /></div>;
     case 'custom':
-      return <div className="w-5 h-5 rounded-md bg-blue-500/10 flex items-center justify-center shrink-0"><Globe className="w-3.5 h-3.5 text-blue-500" /></div>;
+      return <div className="w-5 h-5 rounded-md bg-blue-500/10 flex items-center justify-center shrink-0"><GlobalLineDuotoneIcon className="w-3.5 h-3.5 text-blue-500" /></div>;
     default:
         return 'هوش مصنوعی';
     }
@@ -62,14 +71,14 @@ export const Header: React.FC<HeaderProps> = ({
             className="clay-btn w-11 h-11 flex items-center justify-center text-inherit hover:opacity-90 rounded-xl sm:rounded-2xl shrink-0"
             aria-label="Toggle Sidebar"
           >
-            <Menu className="w-4 h-4 sm:w-5 sm:h-5" />
+            <HamburgerMenuLineDuotoneIcon className="w-4 h-4 sm:w-5 sm:h-5" />
           </button>
         </Tooltip>
 
         <div className="flex items-center gap-2 sm:gap-3 min-w-0">
           <div className="relative flex items-center justify-center shrink-0">
             <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl gemini-gradient-bg text-white flex items-center justify-center shadow-md">
-              <Sparkles className="w-4 h-4 sm:w-5 sm:h-5" />
+              <StarsMinimalisticBoldDuotoneIcon className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
             <div className="absolute -top-0.5 -right-0.5 w-2 sm:w-2.5 h-2 sm:h-2.5 rounded-full bg-emerald-500 ring-2 ring-[var(--card-bg)]" />
           </div>
@@ -135,7 +144,7 @@ export const Header: React.FC<HeaderProps> = ({
               className="clay-btn w-11 h-11 flex items-center justify-center hover:opacity-90 rounded-xl sm:rounded-2xl"
               aria-label="Export Chat"
             >
-              <Download className="w-4 h-4 sm:w-5 sm:h-5" />
+              <DownloadMinimalisticLineDuotoneIcon className="w-4 h-4 sm:w-5 sm:h-5" />
             </button>
           </Tooltip>
         )}
@@ -148,7 +157,7 @@ export const Header: React.FC<HeaderProps> = ({
             className="clay-btn w-11 lg:w-auto lg:px-3 h-11 flex items-center justify-center hover:opacity-90 gap-1.5 text-purple-400 font-bold text-xs rounded-xl sm:rounded-2xl"
             aria-label="Image Generation Studio"
           >
-            <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-purple-400 animate-pulse" />
+            <StarsMinimalisticBoldDuotoneIcon className="w-4 h-4 sm:w-5 sm:h-5 text-purple-400 animate-pulse" />
             <span className="hidden lg:inline">استودیوی تصویر</span>
           </button>
         </Tooltip>
@@ -162,7 +171,7 @@ export const Header: React.FC<HeaderProps> = ({
               className="clay-btn w-11 lg:w-auto lg:px-3 h-11 flex items-center justify-center hover:opacity-90 gap-1.5 text-blue-600 dark:text-sky-400 font-bold text-xs rounded-xl sm:rounded-2xl"
               aria-label="UI Visual Guide"
             >
-              <HelpCircle className="w-4 h-4 sm:w-5 sm:h-5" />
+              <HelpLineDuotoneIcon className="w-4 h-4 sm:w-5 sm:h-5" />
               <span className="hidden 2xl:inline">نقشه اجزا</span>
             </button>
           </Tooltip>
@@ -199,7 +208,7 @@ export const Header: React.FC<HeaderProps> = ({
             className="clay-btn w-11 h-11 flex items-center justify-center hover:opacity-90 relative rounded-xl sm:rounded-2xl"
             aria-label="Open Settings"
           >
-            <SettingsIcon className="w-4 h-4 sm:w-5 sm:h-5" />
+            <SettingsMinimalisticLineDuotoneIcon className="w-4 h-4 sm:w-5 sm:h-5" />
             {true && (
               <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-blue-400 rounded-full ring-2 ring-[var(--card-bg)] shadow-[0_0_8px_rgba(59,130,246,0.9)]" />
             )}

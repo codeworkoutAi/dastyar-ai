@@ -1,4 +1,17 @@
 import React, { useEffect, useRef, useState } from 'react';
+import {
+  CopyLineDuotoneIcon,
+  LikeBoldDuotoneIcon,
+  LikeLineDuotoneIcon,
+  DislikeBoldDuotoneIcon,
+  DislikeLineDuotoneIcon,
+  RestartLineDuotoneIcon,
+  VolumeLoudLineDuotoneIcon,
+  VolumeCrossLineDuotoneIcon,
+  PenLineDuotoneIcon,
+  DownloadMinimalisticLineDuotoneIcon,
+  StarsMinimalisticBoldDuotoneIcon
+} from '@solar-icons/react';
 import { 
   Bot, 
   User, 
@@ -498,7 +511,7 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
                           {copiedId === msg.id ? (
                             <Check className="w-3.5 h-3.5 text-emerald-400" />
                           ) : (
-                            <Copy className="w-3.5 h-3.5" />
+                            <CopyLineDuotoneIcon className="w-3.5 h-3.5" />
                           )}
                         </button>
                       </Tooltip>
@@ -517,7 +530,7 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
                               : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800'
                           }`}
                         >
-                          <Pencil className="w-3.5 h-3.5" />
+                          <PenLineDuotoneIcon className="w-3.5 h-3.5" />
                         </button>
                       </Tooltip>
                     )}
@@ -536,9 +549,9 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
                             {loadingTtsId === msg.id ? (
                               <Loader2 className="w-3.5 h-3.5 animate-spin" />
                             ) : speakingId === msg.id ? (
-                              <VolumeX className="w-3.5 h-3.5 animate-pulse" />
+                              <VolumeCrossLineDuotoneIcon className="w-3.5 h-3.5 animate-pulse" />
                             ) : (
-                              <Volume2 className="w-3.5 h-3.5" />
+                              <VolumeLoudLineDuotoneIcon className="w-3.5 h-3.5" />
                             )}
                           </button>
                         </Tooltip>
@@ -548,7 +561,7 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
                             onClick={() => handleExportSingleMessage(msg)}
                             className="p-1 rounded-md text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800 transition-colors cursor-pointer"
                           >
-                            <Download className="w-3.5 h-3.5" />
+                            <DownloadMinimalisticLineDuotoneIcon className="w-3.5 h-3.5" />
                           </button>
                         </Tooltip>
 
@@ -561,7 +574,7 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
                                 : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800'
                             }`}
                           >
-                            <ThumbsUp className="w-3.5 h-3.5" />
+                            {feedback[msg.id] === 'up' ? <LikeBoldDuotoneIcon className="w-3.5 h-3.5 text-emerald-400" /> : <LikeLineDuotoneIcon className="w-3.5 h-3.5" />}
                           </button>
                         </Tooltip>
 
@@ -574,7 +587,7 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
                                 : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800'
                             }`}
                           >
-                            <ThumbsDown className="w-3.5 h-3.5" />
+                            {feedback[msg.id] === 'down' ? <DislikeBoldDuotoneIcon className="w-3.5 h-3.5 text-rose-400" /> : <DislikeLineDuotoneIcon className="w-3.5 h-3.5" />}
                           </button>
                         </Tooltip>
 
@@ -584,7 +597,7 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
                               onClick={onRegenerate}
                               className="p-1 rounded-md text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800 transition-colors cursor-pointer"
                             >
-                              <RotateCw className="w-3.5 h-3.5" />
+                              <RestartLineDuotoneIcon className="w-3.5 h-3.5" />
                             </button>
                           </Tooltip>
                         )}
