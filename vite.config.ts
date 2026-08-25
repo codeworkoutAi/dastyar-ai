@@ -15,10 +15,10 @@ export default defineConfig(() => {
           enabled: true,
           type: 'module'
         },
-        includeAssets: ['pwa-192x192.svg', 'pwa-512x512.svg'],
+        includeAssets: ['pwa-192x192.png', 'pwa-512x512.png'],
         manifest: {
           name: 'دستیار هوشمند فارسی',
-          short_name: 'AI Chatbox',
+          short_name: 'دستیار هوشمند',
           description: 'دستیار هوشمند فارسی با پشتیبانی از مدل‌های مختلف',
           theme_color: '#0f172a',
           background_color: '#020617',
@@ -27,9 +27,9 @@ export default defineConfig(() => {
           display: 'standalone',
           orientation: 'portrait-primary',
           icons: [
-            { src: '/pwa-192x192.svg', sizes: '192x192', type: 'image/svg+xml' },
-            { src: '/pwa-512x512.svg', sizes: '512x512', type: 'image/svg+xml' },
-            { src: '/pwa-512x512.svg', sizes: '512x512', type: 'image/svg+xml', purpose: 'any maskable' }
+            { src: '/pwa-192x192.png', sizes: '192x192', type: 'image/png' },
+            { src: '/pwa-512x512.png', sizes: '512x512', type: 'image/png' },
+            { src: '/pwa-512x512.png', sizes: '512x512', type: 'image/png', purpose: 'any maskable' }
           ]
         },
         workbox: {
