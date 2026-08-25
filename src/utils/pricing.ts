@@ -1,3 +1,5 @@
+import { Conversation } from '../types';
+
 export interface ModelPricing {
   inputPer1M: number;
   outputPer1M: number;
@@ -162,7 +164,7 @@ export function formatCostUSD(costUSD: number): string {
 /**
  * Aggregates all token usage, latency metrics, and costs for a list of conversations
  */
-export function calculateSessionStats(conversations: Array<{ messages?: Array<{ role: string; content?: string; modelUsed?: string; metrics?: any }> }>): {
+export function calculateSessionStats(conversations: Conversation[]): {
   totalPromptTokens: number;
   totalCompletionTokens: number;
   totalTokens: number;

@@ -18,30 +18,32 @@ import { usePWAInstall } from '../lib/usePWAInstall';
 interface HeaderProps {
   sidebarOpen: boolean;
   setSidebarOpen: (open: boolean) => void;
-  onNewChat: () => void;
   onOpenSettings: () => void;
   onOpenExport: () => void;
   onOpenImageStudio: () => void;
   onOpenUiGuide?: () => void;
+  onSaveSettings: (settings: AppSettings) => void;
   settings: AppSettings;
   activeConversation: Conversation | null;
   conversations?: Conversation[];
 }
 
-export const Header: React.FC<HeaderProps> = ({
+export const Header: React.FC<HeaderProps> = React.memo(({
   sidebarOpen,
   setSidebarOpen,
-  onNewChat,
   onOpenSettings,
   onOpenExport,
   onOpenImageStudio,
   onOpenUiGuide,
+  onSaveSettings,
   settings,
   activeConversation,
   conversations = [],
 }) => {
   const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const [showModelDropdown, setShowModelDropdown] = useState(false);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
   
   const { isInstallable, install } = usePWAInstall();
 
@@ -49,6 +51,9 @@ export const Header: React.FC<HeaderProps> = ({
     const handleClickOutside = (event: MouseEvent) => {
       if (mobileMenuRef.current && !mobileMenuRef.current.contains(event.target as Node)) {
         setShowMobileMenu(false);
+      }
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setShowModelDropdown(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -60,6 +65,12 @@ export const Header: React.FC<HeaderProps> = ({
   }, [conversations, activeConversation]);
 
   const getProviderInfo = () => {
+    if (settings.tools.smartRouting) {
+      return { 
+        name: 'مسیریابی هوشمند',
+        icon: <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-md sm:rounded-lg bg-indigo-500/15 flex items-center justify-center shrink-0 shadow-md"><BrainIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-indigo-400" /></div> 
+      };
+    }
     switch (settings.providers.activeProvider) {
     case 'gemini':
       return { 
@@ -120,21 +131,71 @@ export const Header: React.FC<HeaderProps> = ({
 
       {/* 2. Absolute Center - Interactive Model Label Pill */}
       <div className="absolute inset-0 flex justify-center items-center pointer-events-none z-0">
-        <div className="pointer-events-auto max-w-[50%] sm:max-w-[40%]">
-          <Tooltip content="برای تغییر مدل کلیک کنید">
+        <div className="pointer-events-auto max-w-[50%] sm:max-w-[40%] relative" ref={dropdownRef}>
+          <Tooltip content="تغییر سریع مدل یا باز کردن تنظیمات">
             <button 
-              onClick={onOpenSettings}
+              onClick={() => setShowModelDropdown(!showModelDropdown)}
               className="group flex items-center gap-2.5 px-2.5 py-2 sm:px-3 sm:py-2 clay-btn rounded-xl sm:rounded-2xl hover:opacity-90 transition-all min-w-0 shadow-sm"
               dir="ltr"
             >
-              {providerInfo.icon}
+              <BrainIcon size={18} className="text-cyan-400 shrink-0" />
               <span className="font-extrabold text-sm sm:text-base text-[var(--accent-text)] truncate mt-0.5">
                 {providerInfo.name}
               </span>
-              <BrainIcon size={18} className="text-cyan-400 shrink-0" />
-              <ChevronDown className="w-4 h-4 text-[var(--text-main)] opacity-50 group-hover:opacity-100 transition-opacity shrink-0" />
+              <ChevronDown className={`w-4 h-4 text-[var(--text-main)] opacity-50 group-hover:opacity-100 transition-all shrink-0 ${showModelDropdown ? 'rotate-180' : ''}`} />
             </button>
           </Tooltip>
+
+          {/* Dropdown Menu */}
+          {showModelDropdown && (
+            <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 w-64 bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl p-2 z-50 flex flex-col gap-1 overflow-hidden" dir="rtl">
+              <button 
+                onClick={() => {
+                  onSaveSettings({ ...settings, tools: { ...settings.tools, smartRouting: !settings.tools.smartRouting } });
+                  setShowModelDropdown(false);
+                }}
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors cursor-pointer w-full text-right ${settings.tools.smartRouting ? 'bg-indigo-500/10 text-indigo-400' : 'hover:bg-zinc-800 text-zinc-300'}`}
+              >
+                <BrainIcon className="w-4 h-4 shrink-0" />
+                مسیریابی هوشمند
+              </button>
+              
+              <div className="h-px bg-zinc-800 my-1 mx-2" />
+              
+              {/* Models List */}
+              {['gpt-4o-mini', 'claude-3-5-sonnet-20240620', 'gemini-1.5-pro'].map((model) => (
+                <button 
+                  key={model}
+                  onClick={() => {
+                    const newSettings = { ...settings };
+                    newSettings.tools.smartRouting = false;
+                    newSettings.providers.activeProvider = 'custom';
+                    if (!newSettings.providers.custom) newSettings.providers.custom = { modelName: '', customHeaders: '', baseUrl: '', apiKey: '' };
+                    newSettings.providers.custom.modelName = model;
+                    onSaveSettings(newSettings);
+                    setShowModelDropdown(false);
+                  }}
+                  className={`flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition-colors cursor-pointer w-full text-left ${!settings.tools.smartRouting && settings.providers.activeProvider === 'custom' && settings.providers.custom.modelName === model ? 'bg-zinc-800 text-white' : 'hover:bg-zinc-800/60 text-zinc-400'}`}
+                  dir="ltr"
+                >
+                  <Code2LineDuotoneIcon className="w-4 h-4 shrink-0" />
+                  {model}
+                </button>
+              ))}
+              
+              <div className="h-px bg-zinc-800 my-1 mx-2" />
+              <button
+                onClick={() => {
+                  setShowModelDropdown(false);
+                  onOpenSettings();
+                }}
+                className="flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-xs font-medium transition-colors hover:bg-zinc-800 text-zinc-400 cursor-pointer w-full mt-1"
+              >
+                <SettingsMinimalisticLineDuotoneIcon className="w-4 h-4 shrink-0" />
+                تنظیمات پیشرفته...
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
@@ -291,4 +352,4 @@ export const Header: React.FC<HeaderProps> = ({
       </div>
     </header>
   );
-};
+});

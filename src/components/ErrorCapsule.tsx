@@ -12,7 +12,7 @@ interface ErrorCapsuleProps {
   durationSeconds?: number;
 }
 
-export const ErrorCapsule: React.FC<ErrorCapsuleProps> = ({
+export const ErrorCapsule: React.FC<ErrorCapsuleProps> = React.memo(({
   error,
   onDismiss,
   onRetry,
@@ -118,4 +118,4 @@ export const ErrorCapsule: React.FC<ErrorCapsuleProps> = ({
       </div>
     </div>
   );
-};
+});

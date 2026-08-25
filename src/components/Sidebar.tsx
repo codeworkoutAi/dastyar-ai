@@ -13,21 +13,10 @@ import {
   DatabaseLineDuotoneIcon
 } from '@solar-icons/react';
 import { 
-  Plus, 
-  Search, 
-  Pin, 
-  Trash2, 
-  Edit3, 
   Check, 
   X, 
-  Download, 
-  Database,
-  ChevronRight,
   ChevronDown,
-  Sparkles,
   AlertTriangle,
-  Code2,
-  Calendar,
   MessageSquare
 } from 'lucide-react';
 import { Conversation } from '../types';
@@ -58,7 +47,7 @@ interface GroupedConversations {
   items: Conversation[];
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({
+export const Sidebar: React.FC<SidebarProps> = React.memo(({
   isOpen,
   onClose,
   conversations,
@@ -543,4 +532,4 @@ export const Sidebar: React.FC<SidebarProps> = ({
       </aside>
     </>
   );
-};
+});

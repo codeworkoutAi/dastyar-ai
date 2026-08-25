@@ -9,13 +9,9 @@ import {
   VolumeLoudLineDuotoneIcon,
   VolumeCrossLineDuotoneIcon,
   PenLineDuotoneIcon,
-  DownloadMinimalisticLineDuotoneIcon,
-  StarsMinimalisticBoldDuotoneIcon
+  DownloadMinimalisticLineDuotoneIcon
 } from '@solar-icons/react';
 import { 
-  Bot, 
-  User, 
-  Copy, 
   Check, 
   RotateCw, 
   Sparkles, 
@@ -24,26 +20,16 @@ import {
   Code, 
   FileText, 
   ListChecks, 
-  Volume2, 
-  VolumeX, 
   Loader2, 
-  Pencil, 
   X, 
-  ThumbsUp, 
-  ThumbsDown, 
   Download, 
   Maximize2,
-  Zap,
-  ChevronDown,
-  Activity,
   EyeOff
 } from 'lucide-react';
 import { ChatMessage, Conversation } from '../types';
 import { MarkdownRenderer } from './MarkdownRenderer';
-import { formatPersianDateTime, PERSIAN_STARTER_PROMPTS, isRtlText, toPersianDigits } from '../lib/persianUtils';
-import { calculateEstimatedCostUSD, formatCostUSD } from '../utils/pricing';
+import { PERSIAN_STARTER_PROMPTS, isRtlText } from '../lib/persianUtils';
 import { Tooltip } from './Tooltip';
-import { ThinkingIndicator } from './ThinkingIndicator';
 import { speakText, SpeakController } from '../lib/tts';
 
 interface ChatBoxProps {
@@ -52,7 +38,6 @@ interface ChatBoxProps {
   onSendMessage: (text: string) => void;
   onEditMessage?: (messageId: string, newText: string) => void;
   onRegenerate: () => void;
-  onStopGeneration?: () => void;
   onDismissError?: (messageId: string) => void;
   usePersianDigits: boolean;
   showPerformanceMetrics?: boolean;
@@ -65,7 +50,6 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
   onSendMessage,
   onEditMessage,
   onRegenerate,
-  onStopGeneration,
   onDismissError,
   usePersianDigits,
   showPerformanceMetrics = true,
@@ -82,7 +66,6 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
   const [editingText, setEditingText] = useState<string>('');
   const [feedback, setFeedback] = useState<Record<string, 'up' | 'down'>>({});
   const [lightboxMedia, setLightboxMedia] = useState<{url: string, type: 'image' | 'video'} | null>(null);
-  const [expandedMetricsId, setExpandedMetricsId] = useState<string | null>(null);
 
   const handleFeedback = (msgId: string, type: 'up' | 'down') => {
     setFeedback(prev => ({ ...prev, [msgId]: type }));
@@ -262,9 +245,8 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
       {/* Messages List */}
       {messages.length > 0 && (
         <div className="max-w-3xl mx-auto flex flex-col space-y-6 pb-4">
-          {messages.map((msg, index) => {
+          {messages.map((msg) => {
             const isUser = msg.role === 'user';
-            const isLastMessage = index === messages.length - 1;
 
             return (
               <div
@@ -376,51 +358,70 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
                       </div>
                     ) : (
                       <div className="flex flex-col gap-3">
-                        {msg.imageUrl && (
-                          <div className="rounded-2xl overflow-hidden relative group/media max-w-sm border border-zinc-700 bg-black/40">
-                            {msg.imageUrl.startsWith('data:image/') ? (
-                              <img src={msg.imageUrl} alt="Attached" className="w-full object-cover max-h-72 transition-transform duration-300 group-hover/media:scale-[1.02]" />
-                            ) : msg.imageUrl.startsWith('data:audio/') ? (
-                              <div className="p-4 w-full flex flex-col gap-2">
-                                <span className="text-sm font-bold px-1 text-zinc-200">فایل صوتی ضمیمه شده</span>
-                                <audio controls src={msg.imageUrl} className="w-full max-w-sm rounded-lg" dir="ltr" />
-                              </div>
-                            ) : msg.imageUrl.startsWith('data:video/') ? (
-                              <video controls src={msg.imageUrl} className="w-full object-cover max-h-72 bg-black" dir="ltr" />
-                            ) : (
-                              <div className="flex items-center gap-3 p-4">
-                                <div className="p-3 bg-blue-500/10 rounded-xl text-sky-400 shrink-0">
-                                  <FileText className="w-8 h-8" />
-                                </div>
-                                <div className="flex flex-col text-sm min-w-0">
-                                  <span className="font-bold truncate text-zinc-200">سند ضمیمه شده</span>
-                                  <span className="text-xs opacity-70 truncate text-zinc-400">آماده تحلیل</span>
-                                </div>
-                              </div>
-                            )}
-                            {/* Floating Media Actions */}
-                            {(msg.imageUrl.startsWith('data:image/') || msg.imageUrl.startsWith('data:video/')) && (
-                              <div className="absolute top-2 right-2 flex items-center gap-1.5 bg-black/60 backdrop-blur-md p-1 rounded-xl opacity-0 group-hover/media:opacity-100 transition-opacity">
-                                <button
-                                  type="button"
-                                  onClick={() => setLightboxMedia({ url: msg.imageUrl!, type: msg.imageUrl!.startsWith('data:video/') ? 'video' : 'image' })}
-                                  className="p-1.5 rounded-lg hover:bg-white/20 text-zinc-300 hover:text-white transition-colors cursor-pointer"
-                                  title="نمایش تمام‌صفحه"
-                                >
-                                  <Maximize2 className="w-4 h-4" />
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => handleDownloadMedia(msg.imageUrl!, msg.imageUrl!.startsWith('data:video/'))}
-                                  className="p-1.5 rounded-lg hover:bg-white/20 text-zinc-300 hover:text-white transition-colors cursor-pointer"
-                                  title="دانلود"
-                                >
-                                  <Download className="w-4 h-4" />
-                                </button>
-                              </div>
-                            )}
-                          </div>
-                        )}
+                        {(() => {
+                          const urls = msg.imageUrls && msg.imageUrls.length > 0 ? msg.imageUrls : (msg.imageUrl ? [msg.imageUrl] : []);
+                          if (urls.length === 0) return null;
+                          const isMulti = urls.length > 1;
+                          return (
+                            <div className="flex flex-wrap gap-2">
+                              {urls.map((url, i) => {
+                                const isMedia = url.startsWith('data:image/') || url.startsWith('data:video/');
+                                const wrapperClass = (isMulti && isMedia)
+                                  ? "rounded-2xl overflow-hidden relative group/media w-24 h-24 sm:w-28 sm:h-28 border border-zinc-700 bg-black/40 shrink-0 shadow-sm"
+                                  : "rounded-2xl overflow-hidden relative group/media max-w-sm border border-zinc-700 bg-black/40 shadow-sm";
+                                const imgClass = (isMulti && isMedia)
+                                  ? "w-full h-full object-cover transition-transform duration-300 group-hover/media:scale-[1.1]"
+                                  : "w-full object-cover max-h-72 transition-transform duration-300 group-hover/media:scale-[1.02]";
+
+                                return (
+                                  <div key={i} className={wrapperClass}>
+                                    {url.startsWith('data:image/') ? (
+                                      <img src={url} alt={`Attached ${i + 1}`} className={imgClass} />
+                                    ) : url.startsWith('data:audio/') ? (
+                                      <div className="p-4 w-full flex flex-col gap-2">
+                                        <span className="text-sm font-bold px-1 text-zinc-200">فایل صوتی ضمیمه شده</span>
+                                        <audio controls src={url} className="w-full max-w-sm rounded-lg" dir="ltr" />
+                                      </div>
+                                    ) : url.startsWith('data:video/') ? (
+                                      <video controls={!isMulti} src={url} className={imgClass + " bg-black"} dir="ltr" />
+                                    ) : (
+                                      <div className="flex items-center gap-3 p-4">
+                                        <div className="p-3 bg-blue-500/10 rounded-xl text-sky-400 shrink-0">
+                                          <FileText className="w-8 h-8" />
+                                        </div>
+                                        <div className="flex flex-col text-sm min-w-0">
+                                          <span className="font-bold truncate text-zinc-200">سند ضمیمه شده</span>
+                                          <span className="text-xs opacity-70 truncate text-zinc-400">آماده تحلیل</span>
+                                        </div>
+                                      </div>
+                                    )}
+                                    {/* Floating Media Actions */}
+                                    {(isMedia) && (
+                                      <div className="absolute top-1.5 right-1.5 flex items-center gap-1 bg-black/60 backdrop-blur-md p-1 rounded-xl opacity-0 group-hover/media:opacity-100 transition-opacity">
+                                        <button
+                                          type="button"
+                                          onClick={() => setLightboxMedia({ url, type: url.startsWith('data:video/') ? 'video' : 'image' })}
+                                          className="p-1 rounded-lg hover:bg-white/20 text-zinc-300 hover:text-white transition-colors cursor-pointer"
+                                          title="نمایش تمام‌صفحه"
+                                        >
+                                          <Maximize2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                                        </button>
+                                        <button
+                                          type="button"
+                                          onClick={() => handleDownloadMedia(url, url.startsWith('data:video/'))}
+                                          className="p-1 rounded-lg hover:bg-white/20 text-zinc-300 hover:text-white transition-colors cursor-pointer"
+                                          title="دانلود"
+                                        >
+                                          <Download className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                                        </button>
+                                      </div>
+                                    )}
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          );
+                        })()}
                         {msg.content && (
                           <div
                             className={`whitespace-pre-wrap break-words overflow-wrap-anywhere ${
@@ -436,13 +437,6 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
                     )
                   ) : (
                     <div className="flex flex-col gap-3">
-                      {msg.modelUsed && msg.modelUsed.includes('(Auto)') && (
-                        <div className="flex items-center gap-1.5 text-[10px] sm:text-xs text-indigo-400 font-mono mb-1 mr-2 opacity-90 select-none">
-                          <Sparkles className="w-3.5 h-3.5" />
-                          <span dir="ltr">{msg.modelUsed.replace(' (Auto)', '')}</span>
-                          <span className="text-[9px] text-zinc-300 bg-indigo-500/20 px-1.5 py-0.5 rounded border border-indigo-500/30 mr-1">هوشمند</span>
-                        </div>
-                      )}
                       {msg.isStreaming && !msg.imageUrl && msg.isImageGen ? (
                         <div className="flex flex-col items-center justify-center p-6 sm:p-8 my-2 rounded-3xl bg-zinc-900 border border-zinc-800 relative overflow-hidden group max-w-md w-full animate-fadeIn">
                           <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent animate-shimmer" />
@@ -612,9 +606,17 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
                     )}
                   </div>
 
-                  {/* Left Side: Metrics Badges + Eye Button */}
-                  {!isUser && !msg.error && showPerformanceMetrics && (
-                    <div className="flex items-center gap-1.5 flex-wrap">
+                  {/* Left Side: Metrics Badges + Model Badge + Eye Button */}
+                  <div className="flex items-center gap-1.5 flex-wrap justify-end mr-auto">
+                    {!isUser && msg.modelUsed && !msg.error && (
+                      <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-blue-500/10 border border-blue-500/20 text-[10px] sm:text-[11px] text-blue-400 font-mono select-none" title="مدل پردازش‌کننده">
+                        <Sparkles className="w-3 h-3" />
+                        <span dir="ltr">{msg.modelUsed.replace(' (Auto)', '')}</span>
+                      </div>
+                    )}
+                    
+                    {!isUser && !msg.error && showPerformanceMetrics && (
+                      <div className="flex items-center gap-1.5 flex-wrap">
                       <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-zinc-900 border border-zinc-800 text-[11px] text-zinc-400">
                         <span className="text-zinc-500 font-sans">زمان:</span>
                         <span className="font-mono text-zinc-300" dir="ltr">
@@ -650,6 +652,7 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
                       )}
                     </div>
                   )}
+                  </div>
                 </div>
               </div>
             );

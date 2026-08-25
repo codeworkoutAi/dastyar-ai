@@ -31,18 +31,37 @@ export function loadConversations(): Conversation[] {
 }
 
 function stripOlderImages(conversations: Conversation[]): Conversation[] {
+  // Deep clone to avoid mutating state
   const copy: Conversation[] = JSON.parse(JSON.stringify(conversations));
+  
   // Keep images only in the most recent conversation; replace in older conversations
   for (let i = 0; i < copy.length - 1; i++) {
     if (copy[i].messages) {
-      copy[i].messages = copy[i].messages.map(msg => {
-        if (msg.imageUrl && msg.imageUrl.startsWith('data:image')) {
+      copy[i].messages = copy[i].messages.map((msg) => {
+        let hasBase64Image = false;
+
+        // Check legacy single image
+        if (msg.imageUrl?.startsWith('data:image')) {
+          hasBase64Image = true;
+          msg.imageUrl = undefined;
+        }
+
+        // Check new multi-image array
+        if (msg.imageUrls && msg.imageUrls.some(url => url.startsWith('data:image'))) {
+          hasBase64Image = true;
+          msg.imageUrls = msg.imageUrls.filter(url => !url.startsWith('data:image'));
+          if (msg.imageUrls.length === 0) {
+            msg.imageUrls = undefined;
+          }
+        }
+
+        if (hasBase64Image) {
           return {
             ...msg,
-            imageUrl: undefined,
-            content: msg.content + '\n\n*(تصویر جهت آزادسازی فضای ذخیره‌سازی حذف شد)*'
+            content: msg.content + '\n\n*(تصویر جهت آزادسازی فضای ذخیره‌سازی حذف شد)*',
           };
         }
+        
         return msg;
       });
     }

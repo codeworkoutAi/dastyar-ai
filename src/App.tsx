@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Conversation, ChatMessage, AppSettings } from './types';
 import { 
   loadConversations, 
@@ -43,26 +43,6 @@ export default function App() {
   const [isStreaming, setIsStreaming] = useState<boolean>(false);
   const abortControllerRef = useRef<AbortController | null>(null);
   const errorTimersRef = useRef<Map<string, NodeJS.Timeout>>(new Map());
-
-  // Auto-dismiss failed / error message from chat after 15 seconds
-  const scheduleErrorAutoDismiss = (convId: string, messageId: string, delayMs = 15000) => {
-    if (errorTimersRef.current.has(messageId)) {
-      clearTimeout(errorTimersRef.current.get(messageId)!);
-    }
-    const timer = setTimeout(() => {
-      errorTimersRef.current.delete(messageId);
-      setConversations((prev) =>
-        prev.map((c) => {
-          if (c.id !== convId) return c;
-          return {
-            ...c,
-            messages: c.messages.filter((m) => m.id !== messageId)
-          };
-        })
-      );
-    }, delayMs);
-    errorTimersRef.current.set(messageId, timer);
-  };
 
   // Immediate manual dismiss of error message via (✕) button
   const handleDismissError = (messageId: string) => {
@@ -272,7 +252,7 @@ export default function App() {
   };
 
   // Send Message & Stream Response
-  const handleSendMessage = async (text: string, imageUrl?: string, imageUrls?: string[]) => {
+  const handleSendMessage = async (text: string, imageUrl?: string, imageUrls?: string[], webSearch?: boolean) => {
     // Resolve effective media list (prefer imageUrls array, fallback to single imageUrl)
     const effectiveImageUrls = imageUrls && imageUrls.length > 0
       ? imageUrls
@@ -298,21 +278,33 @@ export default function App() {
     const promptText = isImageGen ? text.trim().replace('/image ', '') : text;
 
     let payloadSettings = JSON.parse(JSON.stringify(settings));
+    if (webSearch !== undefined) {
+      payloadSettings.tools = payloadSettings.tools || {};
+      payloadSettings.tools.webSearch = webSearch;
+    }
     let finalModelUsed = (settings.providers as any)[settings.providers.activeProvider]?.modelName || 'gemini-1.5-flash';
 
     if (settings.tools.smartRouting && !isImageGen) {
-         const roles = settings.tools.routingRoles || { default: '', coding: '', vision: '' };
-         const providerKey = settings.providers.activeProvider;
+         const roles = settings.tools.routingRoles || {} as any;
+         const rVision = roles.vision || 'gemini-1.5-pro';
+         const rVisionProv = roles.visionProvider || 'custom';
+         const rCoding = roles.coding || 'claude-3-5-sonnet-20240620';
+         const rCodingProv = roles.codingProvider || 'custom';
+         const rDefault = roles.default || 'gpt-4o-mini';
+         const rDefaultProv = roles.defaultProvider || 'custom';
          
-         if (effectiveImageUrls && effectiveImageUrls.length > 0 && roles.vision) {
-             (payloadSettings.providers as any)[providerKey].modelName = roles.vision;
-             finalModelUsed = roles.vision + ' (Auto)';
-         } else if (/(function|class|const|let|var|def|return|import|console\.log|export|interface|type )/.test(text) && roles.coding) {
-             (payloadSettings.providers as any)[providerKey].modelName = roles.coding;
-             finalModelUsed = roles.coding + ' (Auto)';
-         } else if (roles.default) {
-             (payloadSettings.providers as any)[providerKey].modelName = roles.default;
-             finalModelUsed = roles.default + ' (Auto)';
+         if (effectiveImageUrls && effectiveImageUrls.length > 0) {
+             payloadSettings.providers.activeProvider = rVisionProv;
+             (payloadSettings.providers as any)[payloadSettings.providers.activeProvider].modelName = rVision;
+             finalModelUsed = rVision + ' (Auto)';
+         } else if (/(function|class|const|let|var|def|return|import|console\.log|export|interface|type )/.test(text)) {
+             payloadSettings.providers.activeProvider = rCodingProv;
+             (payloadSettings.providers as any)[payloadSettings.providers.activeProvider].modelName = rCoding;
+             finalModelUsed = rCoding + ' (Auto)';
+         } else {
+             payloadSettings.providers.activeProvider = rDefaultProv;
+             (payloadSettings.providers as any)[payloadSettings.providers.activeProvider].modelName = rDefault;
+             finalModelUsed = rDefault + ' (Auto)';
          }
     }
 
@@ -677,12 +669,12 @@ export default function App() {
       <Header
         sidebarOpen={sidebarOpen}
         setSidebarOpen={setSidebarOpen}
-        onNewChat={handleNewChat}
         onOpenSettings={() => setIsSettingsOpen(true)}
         onOpenExport={() => setIsExportOpen(true)}
         onOpenImageStudio={() => setIsImageStudioOpen(true)}
         onOpenUiGuide={() => setIsUiGuideOpen(true)}
         settings={settings}
+        onSaveSettings={(s) => setSettings(s)}
         activeConversation={activeConversation}
         conversations={conversations}
       />
@@ -721,7 +713,6 @@ export default function App() {
             onSendMessage={handleSendMessage}
             onEditMessage={handleEditMessage}
             onRegenerate={handleRegenerate}
-            onStopGeneration={handleStopGeneration}
             onDismissError={handleDismissError}
             usePersianDigits={settings.appearance.persianNumerals}
             showPerformanceMetrics={settings.tools.showPerformanceMetrics !== false}
@@ -777,7 +768,6 @@ export default function App() {
         onClose={() => setIsSettingsOpen(false)}
         settings={settings}
         onSaveSettings={(s) => setSettings(s)}
-        conversations={conversations}
         onImportConversations={(imported) => {
           setConversations(imported);
           if (imported.length > 0) setActiveId(imported[0].id);

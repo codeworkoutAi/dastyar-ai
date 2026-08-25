@@ -238,9 +238,9 @@ export const MODEL_PRESETS = [
 ];
 
 // Helper to translate and format any technical error into clear, friendly Persian
-export function formatPersianErrorMessage(err: any): string {
+export function formatPersianErrorMessage(err: unknown): string {
   if (!err) return 'خطای نامشخص در برقراری ارتباط با مدل هوش مصنوعی.';
-  const msg = typeof err === 'string' ? err : (err.message || String(err));
+  const msg = typeof err === 'string' ? err : ((err as Error).message || String(err));
   const lower = msg.toLowerCase();
 
   // Location / Region Restriction & Sanctions

@@ -53,6 +53,17 @@ export interface MultiProviderConfig {
 export interface AppSettings {
   providers: MultiProviderConfig;
   persona: { systemPrompt: string; tone: 'friendly' | 'formal' | 'expert'; temperature: number };
-  appearance: { theme: 'dark' | 'light' | 'system'; font: string; fontSize: number; persianNumerals: boolean; direction: 'rtl' | 'ltr' | 'auto'; uiLanguage: 'fa' | 'en' };
-  tools: { webSearch: boolean; enterToSend: boolean; soundEnabled: boolean; showPerformanceMetrics: boolean; smartRouting: boolean; routingRoles: { default: string; coding: string; vision: string; } };
+  appearance: { theme: ThemeMode; font: FontFamily; fontSize: number; persianNumerals: boolean; direction: 'rtl' | 'ltr' | 'auto'; uiLanguage: 'fa' | 'en' };
+  tools: { 
+    webSearch: boolean; 
+    enterToSend: boolean; 
+    soundEnabled: boolean; 
+    showPerformanceMetrics: boolean; 
+    smartRouting: boolean; 
+    routingRoles?: { 
+      default: string; defaultProvider?: string;
+      coding: string; codingProvider?: string;
+      vision: string; visionProvider?: string;
+    } 
+  };
 }

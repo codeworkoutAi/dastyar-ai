@@ -600,7 +600,7 @@ function sanitizeErrorMessage(err: any): string {
 }
 
 // 1. Health check
-app.get('/api/health', (req, res) => {
+app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: Date.now() });
 });
 
@@ -902,8 +902,10 @@ app.post('/api/chat/stream', async (req, res) => {
 
   let isEnded = false;
   let heartbeat: any = null;
+  const abortController = new AbortController();
 
   const cleanup = () => {
+    abortController.abort(); // Cancel outgoing requests if user disconnects
     if (heartbeat) {
       clearInterval(heartbeat);
       heartbeat = null;
@@ -1160,9 +1162,8 @@ app.post('/api/chat/stream', async (req, res) => {
       }
     }
 
-    const baseSystemPrompt = `شما «دستیار هوشمند» هستید؛ متمرکز، دقیق و مسلط به زبان فارسی. پاسخها را به فارسی شیوا، دستهبندیشده و ساختاریافته ارائه دهید. در موضوعات فنی و برنامهنویسی، کدهای استاندارد همراه با توضیحات موجز بنویسید. هرگز خود را با نام پلتفرمهای متفرقه معرفی نکنید.\n\n`;
+    const baseSystemPrompt = `شما «دستیار هوشمند» هستید؛ متمرکز، دقیق و مسلط به زبان فارسی. پاسخها را به فارسی شیوا، دستهبندیشده و ساختاریافته ارائه دهید. در موضوعات فنی و برنامهنویسی، کدهای استاندارد همراه با توضیحات موجز بنویسید. هرگز خود را با نام پلتفرمهای متفرقه معرفی نکنید.\n\n${timeContext}${liveWebContext}`;
     const systemInstruction = apiConfig?.systemInstruction ? `${apiConfig.systemInstruction}\n\n${timeContext}${liveWebContext}\n\nنکته نگارشی: همیشه اصول، مراحل و لیست‌های شماره‌دار را در خطوط مجزا تفکیک کن.` : baseSystemPrompt;
-    const temperature = typeof apiConfig?.temperature === 'number' ? apiConfig.temperature : 0.7;
 
     // Check In-Memory Cache for normalized query
     const cacheKey = computeCacheKey(prunedMessages, apiConfig?.[provider]?.modelName || 'default', systemInstruction);
@@ -1631,7 +1632,7 @@ app.post('/api/fetch-models', async (req, res) => {
 // 4. Image Generation endpoint
 app.post('/api/generate-image', async (req, res) => {
   try {
-    const { prompt, aspectRatio = '1:1', engine, negativePrompt } = req.body;
+    const { prompt, aspectRatio = '1:1', negativePrompt } = req.body;
     if (!prompt) {
       console.warn('[ImageGen API] ❌ Error: Missing prompt');
       return res.status(400).json({ error: 'دستور ساخت تصویر الزامی است.' });
@@ -1807,7 +1808,7 @@ async function start() {
   } else {
     const distPath = path.join(process.cwd(), 'dist');
     app.use(express.static(distPath));
-    app.get('*', (req, res) => {
+    app.get('*', (_req, res) => {
       res.sendFile(path.join(distPath, 'index.html'));
     });
   }

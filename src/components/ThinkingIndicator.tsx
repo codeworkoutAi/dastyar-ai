@@ -5,7 +5,7 @@ interface ThinkingIndicatorProps {
   modelName?: string;
 }
 
-export const ThinkingIndicator: React.FC<ThinkingIndicatorProps> = ({ modelName = 'Gemini' }) => {
+export const ThinkingIndicator: React.FC<ThinkingIndicatorProps> = React.memo(({ modelName = 'Gemini' }) => {
   return (
     <div className="flex flex-col gap-3.5 py-2 px-1 max-w-lg w-full animate-fadeIn" dir="rtl">
       {/* Header with glowing animated icon and live status */}
@@ -46,4 +46,4 @@ export const ThinkingIndicator: React.FC<ThinkingIndicatorProps> = ({ modelName 
       </div>
     </div>
   );
-};
+});

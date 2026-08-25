@@ -8,7 +8,7 @@ interface TooltipProps {
   delay?: number;
 }
 
-export const Tooltip: React.FC<TooltipProps> = ({
+export const Tooltip: React.FC<TooltipProps> = React.memo(({
   content,
   children,
   position = 'bottom',
@@ -16,7 +16,7 @@ export const Tooltip: React.FC<TooltipProps> = ({
   delay = 250,
 }) => {
   const [isVisible, setIsVisible] = useState(false);
-  const timerRef = useRef<any>(null);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   if (!content) {
     return <>{children}</>;
@@ -62,4 +62,4 @@ export const Tooltip: React.FC<TooltipProps> = ({
       )}
     </div>
   );
-};
+});

@@ -6,7 +6,6 @@ import {
   Microphone2LineDuotoneIcon,
   StarsMinimalisticBoldDuotoneIcon,
   RestartCircleLineDuotoneIcon,
-  Plane2BoldDuotoneIcon,
   CloudUploadLineDuotoneIcon,
   CameraLineDuotoneIcon,
   MusicNoteLineDuotoneIcon,
@@ -17,21 +16,8 @@ import {
 } from '@solar-icons/react';
 import { 
   ArrowUp, 
-  Square, 
-  Sparkles, 
-  RotateCcw, 
-  Mic, 
-  MicOff, 
-  Plus, 
-  UploadCloud, 
-  Camera, 
-  Music, 
-  Film, 
-  FileText,
   X,
-  Cpu,
-  Paperclip,
-  Image as ImageIcon
+  Globe
 } from 'lucide-react';
 import { toPersianDigits, isRtlText } from '../lib/persianUtils';
 import { estimateTokenCount } from '../lib/tokenOptimizer';
@@ -43,7 +29,7 @@ import * as pdfjsLib from 'pdfjs-dist';
 pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`;
 
 interface MessageInputProps {
-  onSendMessage: (text: string, imageUrl?: string, imageUrls?: string[]) => void;
+  onSendMessage: (text: string, imageUrl?: string, imageUrls?: string[], webSearch?: boolean) => void;
   isStreaming: boolean;
   onStopGeneration: () => void;
   enterToSend: boolean;
@@ -70,6 +56,16 @@ export const MessageInput: React.FC<MessageInputProps> = ({
   const [isAttachmentMenuOpen, setIsAttachmentMenuOpen] = useState(false);
   const [isCameraModalOpen, setIsCameraModalOpen] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
+  const [webSearchEnabled, setWebSearchEnabled] = useState(false);
+  const [sentHistory, setSentHistory] = useState<string[]>([]);
+  const [historyIndex, setHistoryIndex] = useState(-1);
+  const [slashMenuOpen, setSlashMenuOpen] = useState(false);
+  const [slashQuery, setSlashQuery] = useState('');
+  const [isHoldingMic, setIsHoldingMic] = useState(false);
+  
+  const holdTimeoutRef = useRef<any>(null);
+  const mediaRecorderRef = useRef<any>(null);
+  const audioChunksRef = useRef<any[]>([]);
 
   const recognitionRef = useRef<any>(null);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
@@ -345,6 +341,64 @@ export const MessageInput: React.FC<MessageInputProps> = ({
     }
   };
 
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = mediaRecorder;
+      audioChunksRef.current = [];
+
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
+        }
+      };
+
+      mediaRecorder.onstop = () => {
+        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const dataUrl = e.target?.result as string;
+          const attachmentId = `att_voice_${Date.now()}`;
+          addAttachmentWithProgress(attachmentId, dataUrl, 'audio/webm', 'Voice Message.webm', formatFileSize(audioBlob.size));
+        };
+        reader.readAsDataURL(audioBlob);
+        stream.getTracks().forEach(track => track.stop());
+      };
+
+      mediaRecorder.start();
+      setIsHoldingMic(true);
+    } catch (err) {
+      console.error('Error starting audio recording:', err);
+      alert('دسترسی به میکروفون مسدود است.');
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && isHoldingMic) {
+      mediaRecorderRef.current.stop();
+      setIsHoldingMic(false);
+    }
+  };
+
+  const handlePointerDownMic = () => {
+    holdTimeoutRef.current = setTimeout(() => {
+      startRecording();
+    }, 300); // 300ms hold to start recording memo
+  };
+
+  const handlePointerUpMic = () => {
+    if (holdTimeoutRef.current) {
+      clearTimeout(holdTimeoutRef.current);
+      holdTimeoutRef.current = null;
+    }
+    if (isHoldingMic) {
+      stopRecording();
+    } else {
+      toggleVoiceRecording();
+    }
+  };
+
   // Handle Speech Recognition for Persian
   const toggleVoiceRecording = () => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
@@ -428,13 +482,19 @@ export const MessageInput: React.FC<MessageInputProps> = ({
     const hasContent = !!text.trim() || readyAttachments.length > 0;
     if (!hasContent || isStreaming) return;
 
+    if (text.trim()) {
+      setSentHistory(prev => [...prev, text.trim()]);
+    }
+    setHistoryIndex(-1);
+
     const imageUrls = readyAttachments.map(a => a.dataUrl);
     const firstImageUrl = imageUrls[0] || undefined;
 
     onSendMessage(
-      text.trim() || 'این فایل‌های پیوست شده را تحلیل کن.',
+      text.trim() || 'یک فایل ضمیمه شده است. آن را تحلیل کن.',
       firstImageUrl,
-      imageUrls.length > 0 ? imageUrls : undefined
+      imageUrls.length > 0 ? imageUrls : undefined,
+      webSearchEnabled
     );
     setText('');
     resetAttachments();
@@ -443,17 +503,69 @@ export const MessageInput: React.FC<MessageInputProps> = ({
     }
   };
 
+  const slashCommands = [
+    { cmd: '/خلاصه', text: 'متن زیر را در چند خط خلاصه کن:\n' },
+    { cmd: '/ترجمه', text: 'متن زیر را به انگلیسی روان ترجمه کن:\n' },
+    { cmd: '/کد', text: 'کد زیر را دیباگ کن و مشکلش را توضیح بده:\n' },
+    { cmd: '/تصویر', text: '/image ' }
+  ];
+
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'ArrowUp' && !text.trim() && sentHistory.length > 0) {
+      e.preventDefault();
+      const newIndex = sentHistory.length - 1;
+      setHistoryIndex(newIndex);
+      setText(sentHistory[newIndex]);
+      return;
+    }
+    if (e.key === 'ArrowDown' && historyIndex >= 0) {
+      e.preventDefault();
+      const newIndex = historyIndex + 1;
+      if (newIndex >= sentHistory.length) {
+        setHistoryIndex(-1);
+        setText('');
+      } else {
+        setHistoryIndex(newIndex);
+        setText(sentHistory[newIndex]);
+      }
+      return;
+    }
+
     if (e.key === 'Enter') {
-      if (enterToSend && !e.shiftKey) {
+      if (!e.shiftKey) {
         e.preventDefault();
-        handleSend();
+        if (slashMenuOpen) {
+          const filtered = slashCommands.filter(c => c.cmd.startsWith(slashQuery));
+          if (filtered.length > 0) {
+             const match = filtered[0];
+             const words = text.split(' ');
+             words.pop();
+             setText(words.join(' ') + (words.length > 0 ? ' ' : '') + match.text);
+             setSlashMenuOpen(false);
+             return;
+          }
+        }
+        if (enterToSend) {
+          handleSend();
+        }
       }
     }
   };
 
+  const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const val = e.target.value;
+    setText(val);
+    const words = val.split(/\s+/);
+    const lastWord = words[words.length - 1];
+    if (lastWord.startsWith('/')) {
+       setSlashQuery(lastWord);
+       setSlashMenuOpen(true);
+    } else {
+       setSlashMenuOpen(false);
+    }
+  };
+
   const isRtl = isRtlText(text);
-  const charCount = text.length;
   const canSend = (!!text.trim() || attachments.some(a => a.status === 'ready')) && !isStreaming;
 
   const estimatedTokens = useMemo(() => {
@@ -642,11 +754,32 @@ export const MessageInput: React.FC<MessageInputProps> = ({
           </div>
 
           {/* Textarea */}
+          {slashMenuOpen && slashCommands.filter(c => c.cmd.startsWith(slashQuery)).length > 0 && (
+            <div className="absolute bottom-full left-0 mb-2 w-full max-w-sm bg-white dark:bg-[#1e1f20] border border-zinc-200 dark:border-[#333333] rounded-2xl shadow-xl overflow-hidden z-[60] flex flex-col p-1 animate-fadeIn">
+              {slashCommands.filter(c => c.cmd.startsWith(slashQuery)).map((c, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  className="flex flex-col text-right px-3 py-2 hover:bg-zinc-100 dark:hover:bg-white/10 rounded-xl transition-colors"
+                  onClick={() => {
+                     const words = text.split(' ');
+                     words.pop();
+                     setText(words.join(' ') + (words.length > 0 ? ' ' : '') + c.text);
+                     setSlashMenuOpen(false);
+                     textareaRef.current?.focus();
+                  }}
+                >
+                  <span className="font-bold text-sky-500">{c.cmd}</span>
+                  <span className="text-xs text-zinc-500 dark:text-zinc-400 line-clamp-1">{c.text}</span>
+                </button>
+              ))}
+            </div>
+          )}
           <textarea
             ref={textareaRef}
             id="chat-message-input"
             value={text}
-            onChange={(e) => setText(e.target.value)}
+            onChange={handleTextChange}
             onKeyDown={handleKeyDown}
             onPaste={handlePaste}
             dir={isRtl ? 'rtl' : 'ltr'}
@@ -658,6 +791,16 @@ export const MessageInput: React.FC<MessageInputProps> = ({
 
           {/* Left actions (Mic, Clear, Send) */}
           <div className="flex items-center gap-1 pb-0.5 sm:pb-1 pr-1 border-0 border-none outline-none">
+            <Tooltip content={webSearchEnabled ? 'جستجو در وب فعال است' : 'جستجو در وب'}>
+                  <button
+                type="button"
+                onClick={() => setWebSearchEnabled(!webSearchEnabled)}
+                className={`w-10 h-10 flex items-center justify-center rounded-full transition-all cursor-pointer ${webSearchEnabled ? 'text-sky-500 bg-sky-500/10' : 'text-zinc-500 hover:bg-zinc-200 dark:hover:bg-white/5'}`}
+              >
+                <Globe className="w-5 h-5" />
+              </button>
+            </Tooltip>
+
             {/* Clear text button */}
             {text.trim() && !isStreaming && (
               <Tooltip content="پاک کردن متن">
@@ -674,13 +817,15 @@ export const MessageInput: React.FC<MessageInputProps> = ({
 
             {/* Voice dictation button */}
             {!text.trim() && !isStreaming && (
-              <Tooltip content={isRecording ? 'توقف ضبط صدا' : 'تایپ صوتی به زبان فارسی'}>
+              <Tooltip content={isHoldingMic ? 'در حال ضبط ویس...' : isRecording ? 'توقف تایپ صوتی' : 'تایپ صوتی (کلیک) / ضبط ویس (نگه‌داشتن)'}>
                 <button
                   type="button"
-                  onClick={toggleVoiceRecording}
+                  onPointerDown={handlePointerDownMic}
+                  onPointerUp={handlePointerUpMic}
+                  onPointerLeave={handlePointerUpMic}
                   disabled={isStreaming}
                   className={`w-10 h-10 flex items-center justify-center transition-all rounded-full bg-transparent border-0 outline-none active:scale-95 ${
-                    isRecording
+                    isRecording || isHoldingMic
                       ? 'text-red-500 bg-red-100 dark:bg-red-500/10 animate-pulse shadow-[0_0_10px_rgba(239,68,68,0.3)]'
                       : 'text-zinc-500 dark:text-slate-400 hover:text-zinc-800 dark:hover:text-slate-200 hover:bg-zinc-200 dark:hover:bg-white/5'
                   }`}
@@ -743,10 +888,10 @@ export const MessageInput: React.FC<MessageInputProps> = ({
 
           {(text.trim() || imagePreview || attachedFileMeta) && (
             <div 
-              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-zinc-200/70 dark:bg-zinc-800/80 text-zinc-700 dark:text-zinc-300 border border-zinc-300/50 dark:border-white/10 font-mono text-[10px] select-none"
-              title="تعداد تخمینی توکن‌های این پیام بر اساس تحلیل نویسه‌ها و رسانه"
+              className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md border font-mono text-[10px] select-none transition-colors ${estimatedTokens > 32000 ? 'text-red-600 dark:text-red-400 bg-red-500/10 border-red-500/20' : estimatedTokens > 8000 ? 'text-amber-600 dark:text-amber-400 bg-amber-500/10 border-amber-500/20' : 'text-zinc-700 dark:text-zinc-300 bg-zinc-200/70 dark:bg-zinc-800/80 border-zinc-300/50 dark:border-white/10'}`}
+              title="تخمین توکن‌های این پیام بر اساس طول نویسه‌ها و اسناد"
             >
-              <CpuBoltLineDuotoneIcon className="w-3 h-3 text-sky-500 shrink-0" />
+              <CpuBoltLineDuotoneIcon className={`w-3 h-3 shrink-0 ${estimatedTokens > 32000 ? 'text-red-500' : estimatedTokens > 8000 ? 'text-amber-500' : 'text-sky-500'}`} />
               <span>~{usePersianDigits ? toPersianDigits(estimatedTokens) : estimatedTokens} توکن تخمینی</span>
             </div>
           )}

@@ -310,9 +310,9 @@ function getCalloutType(text: string): { type: 'note' | 'tip' | 'warning' | 'cau
   return { type: 'none', title: '', cleanText: text };
 }
 
-export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
+export const MarkdownRenderer: React.FC<MarkdownRendererProps> = React.memo(({
   content,
-  isStreaming,
+  isStreaming = false,
   usePersianDigits = false,
 }) => {
   const formattedContent = formatInlineListsAndPrinciples(content);
@@ -588,7 +588,7 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
       </ReactMarkdown>
     </div>
   );
-};
+});
 
 interface CodeBlockProps {
   language: string;

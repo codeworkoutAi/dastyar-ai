@@ -3,14 +3,13 @@ import {
   X, Save, Globe, Cpu, Key, Link as LinkIcon, 
   UserCircle, Palette, Wrench, AlertCircle, Trash2, Download, Upload, RefreshCcw, Sparkles
 } from 'lucide-react';
-import { AppSettings, Conversation } from '../types';
+import { AppSettings, Conversation, FontFamily, ThemeMode } from '../types';
 
 interface SettingsModalProps {
   isOpen: boolean;
   onClose: () => void;
   settings: AppSettings;
   onSaveSettings: (settings: AppSettings) => void;
-  conversations: Conversation[];
   onImportConversations: (imported: Conversation[]) => void;
   onClearAllConversations: () => void;
 }
@@ -86,7 +85,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   onClose,
   settings,
   onSaveSettings,
-  conversations,
   onImportConversations,
   onClearAllConversations,
 }) => {
@@ -257,25 +255,21 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 mb-6 sm:mb-8">
                   <ProviderSelectBox 
-                    id="gemini" 
                     title="Gemini" 
                     active={tempSettings.providers.activeProvider === 'gemini'} 
                     onClick={() => setTempSettings({...tempSettings, providers: {...tempSettings.providers, activeProvider: 'gemini'}})} 
                   />
                   <ProviderSelectBox 
-                    id="openai" 
                     title="OpenAI" 
                     active={tempSettings.providers.activeProvider === 'openai'} 
                     onClick={() => setTempSettings({...tempSettings, providers: {...tempSettings.providers, activeProvider: 'openai'}})} 
                   />
                   <ProviderSelectBox 
-                    id="anthropic" 
                     title="Anthropic" 
                     active={tempSettings.providers.activeProvider === 'anthropic'} 
                     onClick={() => setTempSettings({...tempSettings, providers: {...tempSettings.providers, activeProvider: 'anthropic'}})} 
                   />
                   <ProviderSelectBox 
-                    id="custom" 
                     title="Custom (OpenRouter)" 
                     active={tempSettings.providers.activeProvider === 'custom'} 
                     onClick={() => setTempSettings({...tempSettings, providers: {...tempSettings.providers, activeProvider: 'custom'}})} 
@@ -411,7 +405,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-zinc-300 mb-2">فونت فارسی</label>
-                    <select value={tempSettings.appearance.font} onChange={(e) => setTempSettings({...tempSettings, appearance: {...tempSettings.appearance, font: e.target.value}})} className="w-full bg-zinc-900 border border-zinc-800 rounded-xl py-2.5 px-3 text-sm outline-none focus:border-blue-500">
+                    <select value={tempSettings.appearance.font} onChange={(e) => setTempSettings({...tempSettings, appearance: {...tempSettings.appearance, font: e.target.value as FontFamily}})} className="w-full bg-zinc-900 border border-zinc-800 rounded-xl py-2.5 px-3 text-sm outline-none focus:border-blue-500">
                       <option value="vazir">وزیرمتن (Vazirmatn)</option>
                       <option value="estedad">استعداد (Estedad)</option>
                       <option value="sahel">ساحل (Sahel)</option>
@@ -420,7 +414,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-zinc-300 mb-2">پوسته</label>
-                    <select value={tempSettings.appearance.theme} onChange={(e) => setTempSettings({...tempSettings, appearance: {...tempSettings.appearance, theme: e.target.value as any}})} className="w-full bg-zinc-900 border border-zinc-800 rounded-xl py-2.5 px-3 text-sm outline-none focus:border-blue-500">
+                    <select value={tempSettings.appearance.theme} onChange={(e) => setTempSettings({...tempSettings, appearance: {...tempSettings.appearance, theme: e.target.value as ThemeMode}})} className="w-full bg-zinc-900 border border-zinc-800 rounded-xl py-2.5 px-3 text-sm outline-none focus:border-blue-500">
                       <option value="dark">تاریک (Dark)</option>
                       <option value="light">روشن (Light)</option>
                       <option value="system">خودکار (System)</option>
@@ -478,15 +472,57 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                       <div className="pt-4 border-t border-zinc-800 grid grid-cols-1 gap-4 animate-fadeIn">
                         <div>
                           <label className="block text-xs font-medium text-zinc-300 mb-1.5">مدل پیش‌فرض (مکالمه عادی)</label>
-                          <SearchableCombobox value={tempSettings.tools.routingRoles?.default || ''} onChange={(val: string) => setTempSettings({...tempSettings, tools: {...tempSettings.tools, routingRoles: {...(tempSettings.tools.routingRoles || {default:'', coding:'', vision:''}), default: val}}})} options={cachedModels} placeholder="gpt-4o-mini" className="w-full bg-zinc-950 border border-zinc-800 rounded-lg py-2 px-3 text-sm focus:border-indigo-500 outline-none transition-all font-mono" />
+                          <div className="flex gap-2">
+                            <select 
+                              value={tempSettings.tools.routingRoles?.defaultProvider || 'custom'} 
+                              onChange={(e) => setTempSettings({...tempSettings, tools: {...tempSettings.tools, routingRoles: {...(tempSettings.tools.routingRoles || {default:'', coding:'', vision:''}), defaultProvider: e.target.value}}})} 
+                              className="w-1/3 bg-zinc-950 border border-zinc-800 rounded-lg py-2 px-3 text-sm focus:border-indigo-500 outline-none transition-all"
+                            >
+                              <option value="custom">Custom</option>
+                              <option value="openai">OpenAI</option>
+                              <option value="anthropic">Claude</option>
+                              <option value="gemini">Gemini</option>
+                            </select>
+                            <div className="flex-1">
+                              <SearchableCombobox value={tempSettings.tools.routingRoles?.default || ''} onChange={(val: string) => setTempSettings({...tempSettings, tools: {...tempSettings.tools, routingRoles: {...(tempSettings.tools.routingRoles || {default:'', coding:'', vision:''}), default: val}}})} options={cachedModels} placeholder="gpt-4o-mini" className="w-full bg-zinc-950 border border-zinc-800 rounded-lg py-2 px-3 text-sm focus:border-indigo-500 outline-none transition-all font-mono" />
+                            </div>
+                          </div>
                         </div>
                         <div>
                           <label className="block text-xs font-medium text-zinc-300 mb-1.5">مدل تخصصی برنامه‌نویسی</label>
-                          <SearchableCombobox value={tempSettings.tools.routingRoles?.coding || ''} onChange={(val: string) => setTempSettings({...tempSettings, tools: {...tempSettings.tools, routingRoles: {...(tempSettings.tools.routingRoles || {default:'', coding:'', vision:''}), coding: val}}})} options={cachedModels} placeholder="claude-3-5-sonnet-20240620" className="w-full bg-zinc-950 border border-zinc-800 rounded-lg py-2 px-3 text-sm focus:border-indigo-500 outline-none transition-all font-mono" />
+                          <div className="flex gap-2">
+                            <select 
+                              value={tempSettings.tools.routingRoles?.codingProvider || 'custom'} 
+                              onChange={(e) => setTempSettings({...tempSettings, tools: {...tempSettings.tools, routingRoles: {...(tempSettings.tools.routingRoles || {default:'', coding:'', vision:''}), codingProvider: e.target.value}}})} 
+                              className="w-1/3 bg-zinc-950 border border-zinc-800 rounded-lg py-2 px-3 text-sm focus:border-indigo-500 outline-none transition-all"
+                            >
+                              <option value="custom">Custom</option>
+                              <option value="openai">OpenAI</option>
+                              <option value="anthropic">Claude</option>
+                              <option value="gemini">Gemini</option>
+                            </select>
+                            <div className="flex-1">
+                              <SearchableCombobox value={tempSettings.tools.routingRoles?.coding || ''} onChange={(val: string) => setTempSettings({...tempSettings, tools: {...tempSettings.tools, routingRoles: {...(tempSettings.tools.routingRoles || {default:'', coding:'', vision:''}), coding: val}}})} options={cachedModels} placeholder="claude-3-5-sonnet-20240620" className="w-full bg-zinc-950 border border-zinc-800 rounded-lg py-2 px-3 text-sm focus:border-indigo-500 outline-none transition-all font-mono" />
+                            </div>
+                          </div>
                         </div>
                         <div>
                           <label className="block text-xs font-medium text-zinc-300 mb-1.5">مدل پردازش تصویر/فایل (Vision)</label>
-                          <SearchableCombobox value={tempSettings.tools.routingRoles?.vision || ''} onChange={(val: string) => setTempSettings({...tempSettings, tools: {...tempSettings.tools, routingRoles: {...(tempSettings.tools.routingRoles || {default:'', coding:'', vision:''}), vision: val}}})} options={cachedModels} placeholder="gemini-1.5-pro" className="w-full bg-zinc-950 border border-zinc-800 rounded-lg py-2 px-3 text-sm focus:border-indigo-500 outline-none transition-all font-mono" />
+                          <div className="flex gap-2">
+                            <select 
+                              value={tempSettings.tools.routingRoles?.visionProvider || 'custom'} 
+                              onChange={(e) => setTempSettings({...tempSettings, tools: {...tempSettings.tools, routingRoles: {...(tempSettings.tools.routingRoles || {default:'', coding:'', vision:''}), visionProvider: e.target.value}}})} 
+                              className="w-1/3 bg-zinc-950 border border-zinc-800 rounded-lg py-2 px-3 text-sm focus:border-indigo-500 outline-none transition-all"
+                            >
+                              <option value="custom">Custom</option>
+                              <option value="openai">OpenAI</option>
+                              <option value="anthropic">Claude</option>
+                              <option value="gemini">Gemini</option>
+                            </select>
+                            <div className="flex-1">
+                              <SearchableCombobox value={tempSettings.tools.routingRoles?.vision || ''} onChange={(val: string) => setTempSettings({...tempSettings, tools: {...tempSettings.tools, routingRoles: {...(tempSettings.tools.routingRoles || {default:'', coding:'', vision:''}), vision: val}}})} options={cachedModels} placeholder="gemini-1.5-pro" className="w-full bg-zinc-950 border border-zinc-800 rounded-lg py-2 px-3 text-sm focus:border-indigo-500 outline-none transition-all font-mono" />
+                            </div>
+                          </div>
                         </div>
                       </div>
                     )}
@@ -578,7 +614,7 @@ const TabButton = ({ active, onClick, icon, label }: { active: boolean, onClick:
   </button>
 );
 
-const ProviderSelectBox = ({ id, title, active, onClick }: { id: string, title: string, active: boolean, onClick: () => void }) => (
+const ProviderSelectBox = ({ title, active, onClick }: { title: string, active: boolean, onClick: () => void }) => (
   <button 
     onClick={onClick}
     className={`p-2 sm:p-3 rounded-xl border text-center transition-all ${active ? 'bg-blue-600/10 border-blue-500 text-blue-400 shadow-sm' : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:bg-zinc-800 hover:border-zinc-700'}`}

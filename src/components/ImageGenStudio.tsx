@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { X, Sparkles, Download, Image as ImageIcon, Send, Sliders, Trash2, Wand2, History, RotateCcw } from 'lucide-react';
-import { Tooltip } from './Tooltip';
 
 interface ImageGenStudioProps {
   isOpen: boolean;
@@ -54,7 +53,6 @@ export const ImageGenStudio: React.FC<ImageGenStudioProps> = ({
   const [isEnhancing, setIsEnhancing] = useState(false);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [copied, setCopied] = useState(false);
   
   const [history, setHistory] = useState<ImageHistory[]>([]);
   const [showHistory, setShowHistory] = useState(false);
