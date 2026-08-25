@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
 import remarkBreaks from 'remark-breaks';
 import rehypeKatex from 'rehype-katex';
+import twemoji from '@twemoji/api';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import {
@@ -100,12 +101,29 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
   isStreaming,
   usePersianDigits = false,
 }) => {
+  const containerRef = useRef<HTMLDivElement>(null);
   const formattedContent = formatInlineListsAndPrinciples(content);
   const processedContent = usePersianDigits ? toPersianDigits(formattedContent) : formattedContent;
   const isOverallRtl = isRtlText(processedContent);
 
+  useEffect(() => {
+    if (containerRef.current && (twemoji as any)?.parse) {
+      try {
+        (twemoji as any).parse(containerRef.current, {
+          folder: 'svg',
+          ext: '.svg',
+          base: 'https://cdn.jsdelivr.net/gh/jdecked/twemoji@17.0.3/assets/',
+          className: 'twemoji-img'
+        });
+      } catch (err) {
+        console.warn('Twemoji parse error:', err);
+      }
+    }
+  }, [processedContent, isStreaming]);
+
   return (
     <div
+      ref={containerRef}
       className={`markdown-body text-inherit leading-relaxed ${isOverallRtl ? 'text-right' : 'text-left'} ${
         isStreaming ? 'streaming-cursor' : ''
       }`}
