@@ -564,6 +564,11 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
             return <td className="px-4 py-2.5 text-left text-inherit opacity-90">{replaceEmojisWithSolarIcons(children)}</td>;
           },
 
+          // Smart Card Image renderer with skeleton loading, fallback and zoom
+          img({ src, alt }) {
+            return <SmartCardImage src={src} alt={alt} />;
+          },
+
           // Links
           a({ href, children }) {
             return (
@@ -586,6 +591,61 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
       >
         {processedContent}
       </ReactMarkdown>
+    </div>
+  );
+};
+
+const TOPIC_FALLBACK_IMAGES: Record<string, string> = {
+  sport: 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?w=800&auto=format&fit=crop&q=80',
+  economy: 'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=800&auto=format&fit=crop&q=80',
+  health: 'https://images.unsplash.com/photo-1505751172876-fa1923c5c528?w=800&auto=format&fit=crop&q=80',
+  tech: 'https://images.unsplash.com/photo-1518770660439-4636190af475?w=800&auto=format&fit=crop&q=80',
+  culture: 'https://images.unsplash.com/photo-1514306191717-452ec28c7814?w=800&auto=format&fit=crop&q=80',
+  city: 'https://images.unsplash.com/photo-1477959858617-67f30bc75b82?w=800&auto=format&fit=crop&q=80',
+  default: 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800&auto=format&fit=crop&q=80'
+};
+
+const SmartCardImage: React.FC<{ src?: string; alt?: string }> = ({ src, alt }) => {
+  const [loaded, setLoaded] = useState(false);
+  const [error, setError] = useState(false);
+
+  if (!src) return null;
+
+  const altLower = (alt || '').toLowerCase();
+  let fallback = TOPIC_FALLBACK_IMAGES.default;
+  if (altLower.includes('ورزش') || altLower.includes('فوتبال') || altLower.includes('sport')) fallback = TOPIC_FALLBACK_IMAGES.sport;
+  else if (altLower.includes('اقتصاد') || altLower.includes('بازار') || altLower.includes('تحریم') || altLower.includes('economy') || altLower.includes('طلا') || altLower.includes('ارز')) fallback = TOPIC_FALLBACK_IMAGES.economy;
+  else if (altLower.includes('پزشک') || altLower.includes('سلامت') || altLower.includes('دارو') || altLower.includes('health')) fallback = TOPIC_FALLBACK_IMAGES.health;
+  else if (altLower.includes('تکنولوژی') || altLower.includes('فناوری') || altLower.includes('هوش مصنوعی') || altLower.includes('tech') || altLower.includes('کد')) fallback = TOPIC_FALLBACK_IMAGES.tech;
+  else if (altLower.includes('فرهنگ') || altLower.includes('هنر') || altLower.includes('سینما') || altLower.includes('فیلم') || altLower.includes('موسیقی')) fallback = TOPIC_FALLBACK_IMAGES.culture;
+  else if (altLower.includes('جامعه') || altLower.includes('تهران') || altLower.includes('شهر') || altLower.includes('مسکن')) fallback = TOPIC_FALLBACK_IMAGES.city;
+
+  const activeSrc = error ? fallback : src;
+
+  return (
+    <div className="relative w-full overflow-hidden rounded-2xl my-2.5 bg-black/10 dark:bg-white/[0.03] border border-black/10 dark:border-white/10 group shadow-xs">
+      {!loaded && (
+        <div className="w-full h-44 sm:h-52 bg-zinc-800/40 animate-pulse flex items-center justify-center">
+          <div className="w-6 h-6 rounded-full border-2 border-zinc-500 border-t-sky-400 animate-spin opacity-60" />
+        </div>
+      )}
+      <img
+        src={activeSrc}
+        alt={alt || 'تصویر رویداد'}
+        loading="lazy"
+        onLoad={() => setLoaded(true)}
+        onError={() => {
+          if (!error) setError(true);
+        }}
+        className={`w-full h-44 sm:h-52 object-cover transition-all duration-500 group-hover:scale-105 ${
+          loaded ? 'opacity-100' : 'opacity-0 absolute inset-0'
+        }`}
+      />
+      {alt && (
+        <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-2.5 pt-6 text-[11px] text-zinc-200/90 font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none text-right" dir="rtl">
+          {alt}
+        </div>
+      )}
     </div>
   );
 };
