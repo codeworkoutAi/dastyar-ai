@@ -112,7 +112,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
     >
       <div 
         id="export-modal"
-        className="w-full max-w-xl clay-card text-inherit rounded-[2rem] border border-subtle flex flex-col max-h-[90vh] overflow-hidden shadow-2xl"
+        className="w-[95vw] md:w-full max-w-xl clay-card text-inherit rounded-[2rem] border border-subtle flex flex-col max-h-[90dvh] overflow-hidden shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}

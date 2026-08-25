@@ -119,7 +119,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5" dir="rtl" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
-      <div className="w-full max-w-4xl bg-zinc-950 border border-zinc-800 rounded-3xl shadow-2xl flex flex-col sm:flex-row overflow-hidden text-zinc-100 h-[85vh] sm:h-auto sm:max-h-[85vh]">
+      <div className="w-[95vw] md:w-full max-w-4xl bg-zinc-950 border border-zinc-800 rounded-3xl shadow-2xl flex flex-col sm:flex-row overflow-hidden text-zinc-100 h-[85dvh] sm:h-auto sm:max-h-[85dvh]">
         
         {/* Sidebar Tabs */}
         <div className="w-full sm:w-64 bg-zinc-900 border-l border-zinc-800 flex flex-col shrink-0">

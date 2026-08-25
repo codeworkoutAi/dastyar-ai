@@ -651,7 +651,7 @@ export default function App() {
 
   return (
     <div
-      className="min-h-screen flex flex-col clay-app-bg transition-colors duration-200 overflow-x-hidden"
+      className="h-[100dvh] w-full max-w-[100vw] flex flex-col clay-app-bg transition-colors duration-200 overflow-hidden pb-[env(safe-area-inset-bottom)]"
       dir={settings.appearance.direction === 'ltr' ? 'ltr' : 'rtl'}
     >
       {/* Top Header */}

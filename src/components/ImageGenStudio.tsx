@@ -160,7 +160,7 @@ export const ImageGenStudio: React.FC<ImageGenStudioProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-2.5 sm:p-4 bg-black/60 backdrop-blur-md animate-fadeIn">
-      <div className="w-full max-w-4xl max-h-[92vh] overflow-y-auto rounded-3xl clay-card bg-[var(--card-bg)] text-[var(--text-color)] shadow-2xl border border-white/20 flex flex-col">
+      <div className="w-[95vw] md:w-full max-w-4xl max-h-[92dvh] overflow-y-auto rounded-3xl clay-card bg-[var(--card-bg)] text-[var(--text-color)] shadow-2xl border border-white/20 flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between p-4 sm:p-6 border-b border-white/10 shrink-0">
           <div className="flex items-center gap-3">

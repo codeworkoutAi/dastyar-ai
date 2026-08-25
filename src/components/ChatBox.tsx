@@ -224,7 +224,7 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
     >
       {/* Empty State */}
       {messages.length === 0 && (
-        <div className="min-h-[70vh] flex flex-col items-center justify-center max-w-2xl mx-auto text-center px-4 py-8">
+        <div className="min-h-[70dvh] flex flex-col items-center justify-center max-w-2xl mx-auto text-center px-4 py-8">
           <div className="w-16 h-16 rounded-3xl gemini-gradient-bg flex items-center justify-center text-white shadow-md mb-5">
             <Sparkles className="w-8 h-8 " />
           </div>
@@ -676,13 +676,13 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
           </button>
           
           <div 
-            className="relative max-w-[90vw] max-h-[90vh]"
+            className="relative max-w-[90vw] max-h-[90dvh]"
             onClick={(e) => e.stopPropagation()}
           >
             {lightboxMedia.type === 'image' ? (
-              <img src={lightboxMedia.url} className="max-w-full max-h-[90vh] object-contain rounded-xl shadow-2xl" alt="Preview" />
+              <img src={lightboxMedia.url} className="max-w-full max-h-[90dvh] object-contain rounded-xl shadow-2xl" alt="Preview" />
             ) : (
-              <video src={lightboxMedia.url} controls autoPlay className="max-w-full max-h-[90vh] object-contain rounded-xl shadow-2xl" />
+              <video src={lightboxMedia.url} controls autoPlay className="max-w-full max-h-[90dvh] object-contain rounded-xl shadow-2xl" />
             )}
             
             <div className="absolute -bottom-14 left-1/2 -translate-x-1/2 flex items-center gap-3">

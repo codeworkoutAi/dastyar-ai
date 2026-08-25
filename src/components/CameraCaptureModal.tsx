@@ -351,7 +351,7 @@ export const CameraCaptureModal: React.FC<CameraCaptureModalProps> = ({
       dir="rtl"
     >
       <div
-        className="relative w-full max-w-lg bg-[#1e1f20] border border-[#333333] rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh] sm:max-h-[88vh] text-slate-100 mx-auto my-auto"
+        className="relative w-full max-w-lg bg-[#1e1f20] border border-[#333333] rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[92dvh] sm:max-h-[88dvh] text-slate-100 mx-auto my-auto"
       >
         {/* Header */}
         <div className="shrink-0 flex items-center justify-between px-4 sm:px-5 py-3 border-b border-white/10 bg-white/[0.02]">
@@ -455,7 +455,7 @@ export const CameraCaptureModal: React.FC<CameraCaptureModalProps> = ({
         )}
 
         {/* Video / Snapshot Viewport */}
-        <div className="flex-1 min-h-[220px] max-h-[48vh] sm:max-h-[52vh] relative w-full bg-[#0d0e10] flex items-center justify-center overflow-hidden">
+        <div className="flex-1 min-h-[220px] max-h-[48dvh] sm:max-h-[52dvh] relative w-full bg-[#0d0e10] flex items-center justify-center overflow-hidden">
           {isLoading && !capturedImage && !errorMessage && (
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-black/60 z-10">
               <RefreshCw className="w-7 h-7 text-sky-400 animate-spin" />
@@ -492,7 +492,7 @@ export const CameraCaptureModal: React.FC<CameraCaptureModalProps> = ({
             <img
               src={capturedImage}
               alt="عکس گرفته شده"
-              className="w-full h-full object-contain max-h-[48vh]"
+              className="w-full h-full object-contain max-h-[48dvh]"
             />
           ) : (
             <video
@@ -508,7 +508,7 @@ export const CameraCaptureModal: React.FC<CameraCaptureModalProps> = ({
                 }
               }}
               onPlay={() => setIsLoading(false)}
-              className={`w-full h-full object-contain max-h-[48vh] bg-black ${
+              className={`w-full h-full object-contain max-h-[48dvh] bg-black ${
                 facingMode === 'user' && !selectedDeviceId ? 'scale-x-[-1]' : ''
               }`}
             />

@@ -13,6 +13,7 @@ import { Monitor, Smartphone, MessageSquare, ChevronDown } from 'lucide-react';
 import { AppSettings, Conversation } from '../types';
 import { calculateSessionStats } from '../utils/pricing';
 import { Tooltip } from './Tooltip';
+import { usePWAInstall } from '../lib/usePWAInstall';
 
 interface HeaderProps {
   sidebarOpen: boolean;
@@ -45,6 +46,8 @@ export const Header: React.FC<HeaderProps> = ({
 }) => {
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
+  
+  const { isInstallable, install } = usePWAInstall();
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -239,6 +242,19 @@ export const Header: React.FC<HeaderProps> = ({
             </Tooltip>
           )}
 
+          {/* Install PWA Button */}
+          {isInstallable && (
+            <Tooltip content="نصب برنامه (App)">
+              <button
+                onClick={install}
+                className="clay-btn w-11 h-11 flex items-center justify-center hover:opacity-90 rounded-xl sm:rounded-2xl text-blue-500 font-bold"
+                aria-label="Install App"
+              >
+                <Smartphone className="w-4 h-4 sm:w-5 sm:h-5" />
+              </button>
+            </Tooltip>
+          )}
+
           {/* Settings button */}
           <Tooltip content="تنظیمات سیستم (تم، پالت رنگی، مدل‌ها و قلم)">
             <button
@@ -278,6 +294,13 @@ export const Header: React.FC<HeaderProps> = ({
                 <button onClick={() => { onOpenExport(); setShowMobileMenu(false); }} className="flex items-center gap-2 p-2 rounded-lg hover:bg-[var(--bg-main)] transition-colors text-right">
                   <DownloadMinimalisticLineDuotoneIcon className="w-4 h-4 text-emerald-400" />
                   <span className="text-xs font-bold text-[var(--text-main)]">خروجی گفتگو</span>
+                </button>
+              )}
+
+              {isInstallable && (
+                <button onClick={() => { install(); setShowMobileMenu(false); }} className="flex items-center gap-2 p-2 rounded-lg hover:bg-[var(--bg-main)] transition-colors text-right">
+                  <Smartphone className="w-4 h-4 text-blue-500" />
+                  <span className="text-xs font-bold text-[var(--text-main)]">نصب برنامه</span>
                 </button>
               )}
 

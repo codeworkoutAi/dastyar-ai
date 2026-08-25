@@ -139,7 +139,7 @@ export const UiGuideModal: React.FC<UiGuideModalProps> = ({ isOpen, onClose }) =
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/60 backdrop-blur-md animate-fadeIn" dir="rtl">
-      <div className="clay-card border-subtle w-full max-w-4xl max-h-[92vh] flex flex-col rounded-3xl shadow-2xl overflow-hidden bg-[var(--card-bg)] text-[var(--text-main)]">
+      <div className="clay-card border-subtle w-[95vw] md:w-full max-w-4xl max-h-[92dvh] flex flex-col rounded-3xl shadow-2xl overflow-hidden bg-[var(--card-bg)] text-[var(--text-main)]">
         
         {/* Modal Header */}
         <div className="p-4 sm:p-5 border-b border-subtle flex items-center justify-between bg-white/5 dark:bg-black/20 shrink-0">
