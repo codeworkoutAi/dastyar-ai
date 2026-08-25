@@ -138,6 +138,20 @@ export const MessageInput: React.FC<MessageInputProps> = ({
     if (fileInputRef.current) fileInputRef.current.value = '';
     if (cameraInputRef.current) cameraInputRef.current.value = '';
   };
+  const handlePaste = (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
+    if (e.clipboardData.files && e.clipboardData.files.length > 0) {
+      e.preventDefault();
+      const file = e.clipboardData.files[0];
+      const fakeEvent = {
+        target: {
+          files: [file],
+          value: ''
+        }
+      } as unknown as React.ChangeEvent<HTMLInputElement>;
+      
+      handleFileChange(fakeEvent);
+    }
+  };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -592,6 +606,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({
             value={text}
             onChange={(e) => setText(e.target.value)}
             onKeyDown={handleKeyDown}
+            onPaste={handlePaste}
             dir={isRtl ? 'rtl' : 'ltr'}
             placeholder={isRecording ? 'در حال شنیدن صدای شما... (صحبت کنید)' : 'پیام خود را بنویسید...'}
             rows={1}
