@@ -663,7 +663,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({
                   }`}
                   aria-label="Send Message"
                 >
-                  <Plane2BoldDuotoneIcon className="w-5 h-5" />
+                  <ArrowUp className="w-5 h-5" />
                 </button>
               </Tooltip>
             )}
