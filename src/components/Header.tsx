@@ -9,7 +9,7 @@ import {
   GlobalLineDuotoneIcon,
   MenuDotsLineDuotoneIcon
 } from '@solar-icons/react';
-import { Smartphone, MessageSquare, ChevronDown } from 'lucide-react';
+import { Smartphone, MessageSquare, ChevronDown, Brain as BrainIcon } from 'lucide-react';
 import { AppSettings, Conversation } from '../types';
 import { calculateSessionStats } from '../utils/pricing';
 import { Tooltip } from './Tooltip';
@@ -131,6 +131,7 @@ export const Header: React.FC<HeaderProps> = ({
               <span className="font-extrabold text-sm sm:text-base text-[var(--accent-text)] truncate mt-0.5">
                 {providerInfo.name}
               </span>
+              <BrainIcon size={18} className="text-cyan-400 shrink-0" />
               <ChevronDown className="w-4 h-4 text-[var(--text-main)] opacity-50 group-hover:opacity-100 transition-opacity shrink-0" />
             </button>
           </Tooltip>
