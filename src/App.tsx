@@ -34,6 +34,7 @@ export default function App() {
   const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
   const [isExportOpen, setIsExportOpen] = useState<boolean>(false);
   const [isImageStudioOpen, setIsImageStudioOpen] = useState<boolean>(false);
+  const [imageStudioInitial, setImageStudioInitial] = useState<{prompt: string, engine: string} | null>(null);
   const [isUiGuideOpen, setIsUiGuideOpen] = useState<boolean>(false);
   const [videoNotice, setVideoNotice] = useState<string | null>(null);
   const [metricsNotice, setMetricsNotice] = useState<string | null>(null);

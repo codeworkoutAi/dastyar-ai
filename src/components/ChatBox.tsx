@@ -31,6 +31,13 @@ import { MarkdownRenderer } from './MarkdownRenderer';
 import { PERSIAN_STARTER_PROMPTS, isRtlText } from '../lib/persianUtils';
 import { Tooltip } from './Tooltip';
 import { speakText, SpeakController } from '../lib/tts';
+import { Image as ImageIcon, Sparkles } from 'lucide-react';
+
+const MAGIC_IMAGE_PROMPTS = [
+  { id: 'realism', title: 'پرتره فوق‌واقع‌گرایانه', engine: 'flux', icon: '📸', desc: 'عکس ماکرو و فوق‌واقع‌گرایانه از چشم یک گربه جنگلی که انعکاس یک کهکشان پر از ستاره در مردمک آن پیداست. نورپردازی دراماتیک، بافت بی‌نظیر، وضوح 8k.' },
+  { id: 'anime', title: 'انیمه سینمایی', engine: 'flux-anime', icon: '🌸', desc: 'یک شاهکار انیمه‌ای به سبک ماکوتو شینکای. دختری با شمشیر شیشه‌ای روی سقف یک قطار شناور در آسمان. قطره‌های باران و پرتوهای نور خورشید.' },
+  { id: '3d', title: 'رندر سه‌بعدی کیوت', engine: 'flux-3d', icon: '🧸', desc: 'رندر سه‌بعدی شاهکار به سبک پیکسار. یک اژدهای کوچک و بسیار بامزه که با خوشحالی در حال خوردن یک پیتزای بزرگ است. نورپردازی استودیو.' },
+];
 
 interface ChatBoxProps {
   conversation: Conversation | null;
@@ -42,6 +49,7 @@ interface ChatBoxProps {
   usePersianDigits: boolean;
   showPerformanceMetrics?: boolean;
   onToggleMetrics?: (val: boolean) => void;
+  onOpenImageStudio?: (prompt?: string, engine?: string) => void;
 }
 
 export const ChatBox: React.FC<ChatBoxProps> = ({

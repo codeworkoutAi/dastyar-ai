@@ -3,6 +3,8 @@ import { X, Sparkles, Download, Image as ImageIcon, Send, Sliders, Trash2, Wand2
 import { loadSettings } from '../lib/storage';
 
 interface ImageGenStudioProps {
+  initialPrompt?: string;
+  initialEngine?: string;
   isOpen: boolean;
   onClose: () => void;
   onInsertToChat?: (prompt: string, imageUrl: string) => void;
@@ -39,7 +41,7 @@ const ASPECT_RATIOS = [
   { id: '9:16', name: 'استوری', icon: '▯', w: 'w-4', h: 'h-7' },
 ];
 
-export function ImageGenStudio({ isOpen, onClose, onInsertToChat }: ImageGenStudioProps) {
+export function ImageGenStudio({ isOpen, onClose, onInsertToChat, initialPrompt, initialEngine }: ImageGenStudioProps) {
   const [prompt, setPrompt] = useState('');
   const [aspectRatio, setAspectRatio] = useState('1:1');
   const [engine, setEngine] = useState('flux');
@@ -59,8 +61,12 @@ export function ImageGenStudio({ isOpen, onClose, onInsertToChat }: ImageGenStud
   const settings = loadSettings();
   const hasOpenAiKey = !!settings.providers.openai?.apiKey;
 
+
   useEffect(() => {
     if (isOpen) {
+      if (initialPrompt) setPrompt(initialPrompt);
+      if (initialEngine) setEngine(initialEngine);
+      
       const saved = localStorage.getItem('image_gen_history');
       if (saved) {
         try {
@@ -68,7 +74,7 @@ export function ImageGenStudio({ isOpen, onClose, onInsertToChat }: ImageGenStud
         } catch (e) {}
       }
     }
-  }, [isOpen]);
+  }, [isOpen, initialPrompt, initialEngine]);
 
   const saveHistory = (item: ImageHistory) => {
     const newHistory = [item, ...history].slice(0, 50); // Keep last 50
