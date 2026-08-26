@@ -731,7 +731,7 @@ app.post(['/api/models/test', '/api/ping'], modelTestRateLimiter, async (req, re
         if (provider === 'deepseek') model = 'deepseek-chat';
         else if (provider === 'openai') model = 'gpt-4o-mini';
         else if (provider === 'openrouter') model = 'meta-llama/llama-3.3-70b-instruct';
-        else model = 'gpt-5.4-mini';
+        else model = 'gpt-4o-mini';
       }
 
       let response: Response;
@@ -1458,7 +1458,7 @@ app.post('/api/chat/stream', async (req, res) => {
         if (provider === 'deepseek') model = 'deepseek-chat';
         else if (provider === 'openai') model = 'gpt-4o-mini';
         else if (provider === 'openrouter') model = 'meta-llama/llama-3.3-70b-instruct';
-        else model = 'gpt-5.4-mini';
+        else model = 'gpt-4o-mini';
       }
 
       let response: any;

@@ -298,14 +298,14 @@ export default function App() {
              payloadSettings.providers.activeProvider = rVisionProv;
              (payloadSettings.providers as any)[payloadSettings.providers.activeProvider].modelName = rVision;
              finalModelUsed = rVision + ' (Auto)';
-         } else if (/(function|class|const|let|var|def|return|import|console\.log|export|interface|type )/.test(text)) {
+         } else if (/(function|class|const|let|var|def|return|import|console\.log|export|interface|type|کد|پایتون|جاوا|سی شارپ|اسکریپت|ری‌اکت|فرانت|بک‌اند|دیباگ|برنامه|الگوریتم|پایگاه داده|کوئری|سایت|html|css|js|python|php|cpp|c\+\+|java|sql|react|node|api|برنامه نویسی|تابع|حلقه|آرایه|متغیر|آبجکت)/i.test(text)) {
              payloadSettings.providers.activeProvider = rCodingProv;
              (payloadSettings.providers as any)[payloadSettings.providers.activeProvider].modelName = rCoding;
-             finalModelUsed = rCoding + ' (Auto)';
+             finalModelUsed = (rCoding || 'Claude-3.5') + ' (Auto)';
          } else {
              payloadSettings.providers.activeProvider = rDefaultProv;
-             (payloadSettings.providers as any)[payloadSettings.providers.activeProvider].modelName = rDefault;
-             finalModelUsed = rDefault + ' (Auto)';
+             (payloadSettings.providers as any)[payloadSettings.providers.activeProvider].modelName = rDefault || 'gpt-4o-mini';
+             finalModelUsed = (rDefault || 'gpt-4o-mini') + ' (Auto)';
          }
     }
 
