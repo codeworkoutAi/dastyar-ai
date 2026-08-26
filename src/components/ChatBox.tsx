@@ -247,6 +247,38 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
               </button>
             ))}
           </div>
+            {/* --- MAGIC IMAGE PROMPTS SECTION --- */}
+            <div className="w-full mt-12 pt-10 border-t border-zinc-200 dark:border-white/10 relative">
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-[#f8f9fa] dark:bg-[#121212] px-4 flex items-center gap-2">
+                <Sparkles className="w-5 h-5 text-purple-500" />
+                <h3 className="font-extrabold text-sm sm:text-base gemini-gradient-text">جادوی تصویرسازی (روی کارت‌ها کلیک کنید)</h3>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full text-right mt-4">
+                {MAGIC_IMAGE_PROMPTS.map((item) => (
+                  <button
+                    key={item.id}
+                    onClick={() => onOpenImageStudio?.(item.desc, item.engine)}
+                    className="group relative p-5 rounded-3xl text-right flex flex-col justify-between transition-all duration-300 hover:-translate-y-1 cursor-pointer overflow-hidden border border-zinc-200 dark:border-white/10 bg-white/50 dark:bg-black/20 hover:shadow-[0_0_20px_rgba(168,85,247,0.15)] hover:border-purple-500/30"
+                  >
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/10 blur-3xl rounded-full -translate-y-1/2 translate-x-1/2 group-hover:bg-purple-500/20 transition-colors"></div>
+                    
+                    <div className="flex items-center gap-3 mb-3 relative z-10">
+                      <div className="text-2xl group-hover:scale-110 transition-transform origin-bottom-right">
+                        {item.icon}
+                      </div>
+                      <span className="font-bold text-sm text-zinc-800 dark:text-zinc-100 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
+                        {item.title}
+                      </span>
+                    </div>
+                    <p className="text-[11px] opacity-70 group-hover:opacity-90 line-clamp-3 leading-relaxed relative z-10 text-zinc-600 dark:text-zinc-300">
+                      {item.desc}
+                    </p>
+                  </button>
+                ))}
+              </div>
+            </div>
+
         </div>
       )}
 
