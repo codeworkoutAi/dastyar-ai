@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { X, Sparkles, Download, Image as ImageIcon, Send, Sliders, Trash2, Wand2, History, RotateCcw, AlertTriangle, ChevronDown, Check } from 'lucide-react';
 import { loadSettings } from '../lib/storage';
-import { X, Sparkles, Download, Image as ImageIcon, Send, Sliders, Trash2, Wand2, History, RotateCcw } from 'lucide-react';
 
 interface ImageGenStudioProps {
   isOpen: boolean;
@@ -17,109 +17,135 @@ interface ImageHistory {
 }
 
 export const IMAGE_ENGINES = [
-  { id: 'flux', name: 'Flux.1 Realism', tag: 'رایگان / طبیعی', desc: 'مدل قدرتمند با خروجی فوق‌العاده واقعی و طبیعی', tier: 'free' },
-  { id: 'flux-anime', name: 'Flux Anime', tag: 'رایگان / انیمه', desc: 'ساخت تصاویر با استایل انیمه و نقاشی دیجیتال', tier: 'free' },
-  { id: 'flux-3d', name: 'Flux 3D', tag: 'رایگان / سه‌بعدی', desc: 'رندرهای خیره‌کننده سه‌بعدی و سینمایی', tier: 'free' },
-  { id: 'turbo', name: 'SDXL Turbo', tag: 'سرعت بالا', desc: 'تولید سریع و آنی تصاویر در کسری از ثانیه', tier: 'free' },
-  { id: 'dalle-3', name: 'DALL-E 3 (OpenAI)', tag: 'ویژه (نیاز به API)', desc: 'دقیق‌ترین هوش مصنوعی با قابلیت درک متون', tier: 'pro' },
+  { id: 'flux', name: 'Flux.1 Realism', tag: 'رایگان', desc: 'خروجی فوق‌العاده واقعی و طبیعی', tier: 'free' },
+  { id: 'flux-anime', name: 'Flux Anime', tag: 'رایگان', desc: 'استایل انیمه و نقاشی دیجیتال', tier: 'free' },
+  { id: 'flux-3d', name: 'Flux 3D', tag: 'رایگان', desc: 'رندرهای خیره‌کننده سه‌بعدی', tier: 'free' },
+  { id: 'turbo', name: 'SDXL Turbo', tag: 'آنی', desc: 'تولید سریع تصاویر', tier: 'free' },
+  { id: 'dalle-3', name: 'DALL-E 3', tag: 'ویژه', desc: 'نیازمند API Key (درک متن و هوش بالا)', tier: 'pro' },
 ];
 
 export const STYLE_PRESETS = [
-  { name: 'فوتورئال (Photorealistic)', prompt: 'highly detailed photorealistic 8k resolution, cinematic lighting, professional photography' },
-  { name: 'سینمایی (Cinematic)', prompt: 'cinematic film still, anamorphic lens, dramatic moody lighting, 35mm photograph' },
-  { name: 'انیمه / کارتونی (Anime)', prompt: 'vibrant anime style, studio ghibli aesthetic, highly detailed, beautiful illustration' },
-  { name: 'رندر سه‌بعدی (3D Render)', prompt: 'octane render, unreal engine 5, 3d isometric clay style, smooth lighting' },
-  { name: 'نقاشی رنگ روغن (Oil Painting)', prompt: 'classical oil painting on canvas, rich textured brushstrokes, museum art' },
-  { name: 'سایبرپانک (Cyberpunk)', prompt: 'cyberpunk neon lights, futuristic city, glowing holographic accents, dark moody atmosphere' },
+  { id: 'none', name: 'بدون استایل', icon: '✨', prompt: '' },
+  { id: 'photo', name: 'فوتورئال', icon: '📸', prompt: 'highly detailed photorealistic 8k resolution, cinematic lighting, professional photography' },
+  { id: 'cinematic', name: 'سینمایی', icon: '🎬', prompt: 'cinematic film still, anamorphic lens, dramatic moody lighting, 35mm photograph' },
+  { id: 'anime', name: 'انیمه', icon: '🌸', prompt: 'vibrant anime style, studio ghibli aesthetic, highly detailed, beautiful illustration' },
+  { id: '3d', name: 'رندر سه‌بعدی', icon: '🧸', prompt: 'octane render, unreal engine 5, 3d isometric clay style, smooth lighting' },
+  { id: 'cyberpunk', name: 'سایبرپانک', icon: '🌃', prompt: 'cyberpunk neon lights, futuristic city, glowing holographic accents, dark moody atmosphere' },
 ];
 
-export const ASPECT_RATIOS = [
-  { id: '1:1', name: 'مربع (1:1)', icon: 'square' },
-  { id: '16:9', name: 'افقی / ویدیو (16:9)', icon: 'rectangle-horizontal' },
-  { id: '9:16', name: 'عمودی / استوری (9:16)', icon: 'rectangle-vertical' },
-  { id: '4:3', name: 'کلاسیک (4:3)', icon: 'monitor' },
-  { id: '3:4', name: 'پرتره (3:4)', icon: 'smartphone' },
+const ASPECT_RATIOS = [
+  { id: '1:1', name: 'مربع', icon: '◻️', w: 'w-6', h: 'h-6' },
+  { id: '16:9', name: 'سینمایی', icon: '▭', w: 'w-7', h: 'h-4' },
+  { id: '9:16', name: 'استوری', icon: '▯', w: 'w-4', h: 'h-7' },
 ];
 
-export const ImageGenStudio: React.FC<ImageGenStudioProps> = ({
-  isOpen,
-  onClose,
-  onInsertToChat,
-}) => {
+export default function ImageGenStudio({ isOpen, onClose, onInsertToChat }: ImageGenStudioProps) {
   const [prompt, setPrompt] = useState('');
-  const [negativePrompt, setNegativePrompt] = useState('');
-  const [engine, setEngine] = useState('midjourney');
   const [aspectRatio, setAspectRatio] = useState('1:1');
+  const [engine, setEngine] = useState('flux');
+  const [selectedStyle, setSelectedStyle] = useState('none');
+  
   const [loading, setLoading] = useState(false);
-  const [isEnhancing, setIsEnhancing] = useState(false);
-  const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [enhancing, setEnhancing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [history, setHistory] = useState<ImageHistory[]>([]);
+  
+  const [isMobileSettingsOpen, setIsMobileSettingsOpen] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
 
-  useEffect(() => {
-    const saved = localStorage.getItem('image_gen_history');
-    if (saved) {
-      try {
-        setHistory(JSON.parse(saved));
-      } catch(e) {}
-    }
-  }, []);
+  // Settings
+  const settings = loadSettings();
+  const hasOpenAiKey = !!settings.providers.openai?.apiKey;
 
-  const saveHistory = (newItem: ImageHistory) => {
-    const updated = [newItem, ...history].slice(0, 20); // Keep last 20
-    setHistory(updated);
-    localStorage.setItem('image_gen_history', JSON.stringify(updated));
+  useEffect(() => {
+    if (isOpen) {
+      const saved = localStorage.getItem('image_gen_history');
+      if (saved) {
+        try {
+          setHistory(JSON.parse(saved));
+        } catch (e) {}
+      }
+    }
+  }, [isOpen]);
+
+  const saveHistory = (item: ImageHistory) => {
+    const newHistory = [item, ...history].slice(0, 50); // Keep last 50
+    setHistory(newHistory);
+    localStorage.setItem('image_gen_history', JSON.stringify(newHistory));
   };
 
-  if (!isOpen) return null;
+  const clearHistory = () => {
+    if (confirm('آیا از پاک کردن تاریخچه تصاویر اطمینان دارید؟')) {
+      setHistory([]);
+      localStorage.removeItem('image_gen_history');
+    }
+  };
 
   const handleEnhancePrompt = async () => {
     if (!prompt.trim()) return;
-    setIsEnhancing(true);
-    setError(null);
+    setEnhancing(true);
     try {
       const res = await fetch('/api/enhance-prompt', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt }),
+        body: JSON.stringify({
+          prompt,
+          apiKey: settings.providers.google?.apiKey || ''
+        }),
       });
       const data = await res.json();
-      if (data.error) throw new Error(data.error);
-      if (data.enhancedPrompt) setPrompt(data.enhancedPrompt);
-    } catch (err: any) {
-      setError(err.message || 'خطا در بهبود توصیف.');
+      if (data.enhancedPrompt) {
+        setPrompt(data.enhancedPrompt);
+      }
+    } catch (err) {
+      console.error(err);
     } finally {
-      setIsEnhancing(false);
+      setEnhancing(false);
     }
   };
 
   const handleGenerate = async () => {
     if (!prompt.trim()) {
-      setError('لطفاً توصیف (پرامپت) تصویر را وارد کنید.');
+      setError('لطفاً توصیف تصویر را وارد کنید.');
+      return;
+    }
+    
+    // Check Pro lock
+    const selectedEngineConf = IMAGE_ENGINES.find(e => e.id === engine);
+    if (selectedEngineConf?.tier === 'pro' && !hasOpenAiKey) {
+      setError('برای استفاده از این مدل باید کلید OpenAI API را در تنظیمات وارد کنید.');
       return;
     }
 
     setLoading(true);
     setError(null);
     setImageUrl(null);
+    setShowHistory(false);
+    
+    // Apply style preset if not none
+    let finalPrompt = prompt;
+    const preset = STYLE_PRESETS.find(s => s.id === selectedStyle);
+    if (preset && preset.id !== 'none' && preset.prompt) {
+      finalPrompt = \`\${prompt}, \${preset.prompt}\`;
+    }
 
     try {
       const res = await fetch('/api/generate-image', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          prompt,
-          negativePrompt,
+          prompt: finalPrompt,
           aspectRatio,
           engine,
+          apiKey: engine === 'dalle-3' ? settings.providers.openai?.apiKey : undefined,
         }),
       });
 
       const data = await res.json();
-      if (data.error) {
-        throw new Error(data.error);
+      if (!res.ok || data.error) {
+        throw new Error(data.error || 'خطا در تولید تصویر');
       }
       if (data.imageUrl) {
         setImageUrl(data.imageUrl);
@@ -130,332 +156,347 @@ export const ImageGenStudio: React.FC<ImageGenStudioProps> = ({
           engine,
           timestamp: Date.now(),
         });
-      } else {
-        throw new Error('تصویری دریافت نشد.');
+        if (window.innerWidth < 1024) {
+          setIsMobileSettingsOpen(false); // Close mobile settings on success
+        }
       }
     } catch (err: any) {
-      setError(err.message || 'خطا در ارتباط با سرور ساخت تصویر.');
+      setError(err.message);
     } finally {
       setLoading(false);
     }
   };
 
-  const applyStyle = (stylePrompt: string) => {
-    setPrompt((prev) => (prev ? `${prev}, ${stylePrompt}` : stylePrompt));
-  };
-
   const loadFromHistory = (item: ImageHistory) => {
+    setImageUrl(item.url);
     setPrompt(item.prompt);
     setEngine(item.engine);
-    setImageUrl(item.url);
     setShowHistory(false);
   };
 
-  const deleteFromHistory = (indexToDelete: number) => {
-    const updated = history.filter((_, idx) => idx !== indexToDelete);
-    setHistory(updated);
-    localStorage.setItem('image_gen_history', JSON.stringify(updated));
-  };
+  if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-2.5 sm:p-4 bg-black/60 backdrop-blur-md animate-fadeIn">
-      <div className="w-[95vw] md:w-full max-w-4xl max-h-[92dvh] overflow-y-auto rounded-3xl clay-card bg-[var(--card-bg)] text-[var(--text-color)] shadow-2xl border border-white/20 flex flex-col">
-        {/* Header */}
-        <div className="flex items-center justify-between p-4 sm:p-6 border-b border-white/10 shrink-0">
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 sm:p-3 rounded-2xl bg-gradient-to-br from-purple-500 to-indigo-600 text-white shadow-lg shrink-0">
-              <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 animate-pulse" />
-            </div>
-            <div className="min-w-0">
-              <h2 className="text-base sm:text-xl font-black tracking-tight truncate">استودیوی ساخت تصویر</h2>
-              <p className="text-[11px] sm:text-xs opacity-70 truncate">موتورهای حرفه‌ای Midjourney، DALL-E 3، Stable Diffusion و Flux</p>
-            </div>
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm sm:p-4 transition-all" dir="rtl">
+      <div className="bg-[#f8f9fa] dark:bg-[#121212] w-full h-full sm:h-[90vh] sm:max-h-[900px] max-w-7xl sm:rounded-3xl shadow-2xl flex flex-col lg:flex-row overflow-hidden relative border border-zinc-200 dark:border-white/10 animate-scaleIn">
+        
+        {/* Mobile Header (Only visible on small screens) */}
+        <div className="lg:hidden flex items-center justify-between p-4 border-b border-zinc-200 dark:border-white/10 bg-white/50 dark:bg-[#1e1f20]/50 backdrop-blur-md z-10">
+          <div className="flex items-center gap-2 text-purple-500">
+            <Sparkles className="w-5 h-5" />
+            <h2 className="font-extrabold text-sm text-zinc-800 dark:text-zinc-100">استودیوی تصویر</h2>
           </div>
-          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-            <button
-              onClick={() => setShowHistory(true)}
-              className="clay-btn p-2 rounded-xl hover:opacity-100 opacity-80 flex items-center gap-1.5 transition-all text-xs"
-            >
+          <div className="flex items-center gap-2">
+            <button onClick={() => setShowHistory(!showHistory)} className="p-2 bg-zinc-100 dark:bg-white/5 rounded-full text-zinc-600 dark:text-zinc-300">
               <History className="w-4 h-4" />
-              <span className="font-bold hidden sm:inline">گالری</span>
             </button>
-            <button
-              onClick={onClose}
-              className="clay-btn p-2 rounded-xl hover:opacity-100 opacity-80 transition-all"
-              aria-label="Close"
-            >
-              <X className="w-5 h-5" />
+            <button onClick={() => setIsMobileSettingsOpen(!isMobileSettingsOpen)} className={\`p-2 rounded-full transition-colors \${isMobileSettingsOpen ? 'bg-purple-500 text-white' : 'bg-zinc-100 dark:bg-white/5 text-zinc-600 dark:text-zinc-300'}\`}>
+              <Sliders className="w-4 h-4" />
+            </button>
+            <button onClick={onClose} className="p-2 bg-rose-500/10 text-rose-500 hover:bg-rose-500/20 rounded-full transition-colors">
+              <X className="w-4 h-4" />
             </button>
           </div>
         </div>
 
-        {/* Content Body */}
-        <div className="p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6">
-          {/* Left / Settings Column */}
-          <div className="lg:col-span-7 flex flex-col gap-5">
-            {/* Engine Selection */}
-            <div>
-              <label className="block text-xs font-bold mb-2 opacity-80 flex items-center gap-1.5">
-                <Sliders className="w-4 h-4 text-purple-400" />
-                <span>موتور هوش مصنوعی (Image Engine)</span>
-              </label>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                {IMAGE_ENGINES.map((eng) => (
-                  <button
-                    key={eng.id}
-                    type="button"
-                    onClick={() => setEngine(eng.id)}
-                    className={`p-3 rounded-2xl text-right transition-all border flex flex-col gap-1 ${
-                      engine === eng.id
-                        ? 'bg-purple-600 text-white/80 border-purple-400 shadow-[0_0_15px_rgba(168,85,247,0.4)]'
-                        : 'clay-btn opacity-80 hover:opacity-100 border-white/10'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between w-full">
-                      <span className="font-bold text-sm">{eng.name}</span>
-                      <span className={`text-[10px] px-2 py-0.5 rounded-full ${engine === eng.id ? 'bg-white/20 text-white/80' : 'bg-purple-500/20 text-purple-400'}`}>
-                        {eng.tag}
-                      </span>
-                    </div>
-                    <p className="text-[11px] opacity-80 line-clamp-1">{eng.desc}</p>
-                  </button>
-                ))}
-              </div>
+        {/* --- MAIN CANVAS (Right side on Desktop, Top on Mobile) --- */}
+        <div className="flex-1 relative flex flex-col bg-zinc-100 dark:bg-[#0a0a0a] overflow-hidden">
+          
+          {/* Desktop Top Bar (Absolute) */}
+          <div className="hidden lg:flex absolute top-4 left-4 right-4 justify-between items-center z-10 pointer-events-none">
+            <div className="pointer-events-auto">
+              <button onClick={() => setShowHistory(!showHistory)} className={\`flex items-center gap-2 px-4 py-2 rounded-xl backdrop-blur-md border transition-all \${showHistory ? 'bg-purple-500/90 text-white border-purple-400' : 'bg-white/70 dark:bg-black/50 text-zinc-700 dark:text-zinc-300 border-zinc-200 dark:border-white/10 hover:bg-white dark:hover:bg-black'}\`}>
+                <History className="w-4 h-4" />
+                <span className="text-sm font-bold">گالری من</span>
+              </button>
             </div>
+          </div>
 
-            {/* Aspect Ratio */}
-            <div>
-              <label className="block text-xs font-bold mb-2 opacity-80">نسبت تصویر (Aspect Ratio)</label>
-              <div className="flex flex-wrap gap-2">
-                {ASPECT_RATIOS.map((ar) => (
-                  <button
-                    key={ar.id}
-                    type="button"
-                    onClick={() => setAspectRatio(ar.id)}
-                    className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all ${
-                      aspectRatio === ar.id
-                        ? 'bg-teal-500 text-white shadow-md'
-                        : 'clay-btn opacity-80 hover:opacity-100'
-                    }`}
-                  >
-                    {ar.name}
-                  </button>
-                ))}
+          {/* Canvas Area */}
+          <div className="flex-1 overflow-y-auto p-4 lg:p-8 flex items-center justify-center relative min-h-[40vh] lg:min-h-[50vh] pb-32">
+            {showHistory ? (
+              <div className="w-full max-w-5xl h-full flex flex-col animate-fadeIn">
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-xl font-extrabold flex items-center gap-2"><History className="w-5 h-5 text-purple-500"/> تاریخچه تصاویر</h3>
+                  {history.length > 0 && (
+                    <button onClick={clearHistory} className="text-xs flex items-center gap-1 text-rose-500 hover:text-rose-400 px-3 py-1.5 rounded-lg bg-rose-500/10">
+                      <Trash2 className="w-3.5 h-3.5" /> پاکسازی
+                    </button>
+                  )}
+                </div>
+                {history.length === 0 ? (
+                  <div className="flex-1 flex flex-col items-center justify-center opacity-50">
+                    <ImageIcon className="w-16 h-16 mb-4 opacity-20" />
+                    <p>هیچ تصویری در گالری شما نیست.</p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    {history.map((item, i) => (
+                      <div key={i} className="group relative aspect-square rounded-2xl overflow-hidden bg-zinc-200 dark:bg-zinc-800 cursor-pointer border border-zinc-200 dark:border-white/10" onClick={() => loadFromHistory(item)}>
+                        <img src={item.url} alt={item.prompt} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" loading="lazy" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity p-3 flex flex-col justify-end">
+                          <p className="text-white text-xs line-clamp-2 mb-1">{item.prompt}</p>
+                          <span className="text-[9px] text-white/70 bg-white/20 w-fit px-2 py-0.5 rounded-full backdrop-blur-md">{item.engine}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
-            </div>
-
-            {/* Style Presets */}
-            <div>
-              <label className="block text-xs font-bold mb-2 opacity-80">سبک‌های آماده (Style Presets)</label>
-              <div className="flex flex-wrap gap-2">
-                {STYLE_PRESETS.map((style, idx) => (
-                  <button
-                    key={idx}
-                    type="button"
-                    onClick={() => applyStyle(style.prompt)}
-                    className="clay-btn px-3 py-1.5 rounded-xl text-xs opacity-80 hover:opacity-100 transition-all flex items-center gap-1.5"
+            ) : imageUrl ? (
+              <div className="relative group max-w-full max-h-full rounded-2xl overflow-hidden shadow-2xl animate-scaleIn ring-1 ring-white/10">
+                <img 
+                  src={imageUrl} 
+                  alt="Generated" 
+                  className="max-w-full max-h-[55vh] lg:max-h-[75vh] object-contain bg-black/10 backdrop-blur-3xl"
+                />
+                
+                {/* Image Actions Overlay */}
+                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-black/60 backdrop-blur-xl border border-white/20 p-2 rounded-2xl opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all duration-300 transform sm:translate-y-4 sm:group-hover:translate-y-0 shadow-xl">
+                  <a 
+                    href={imageUrl} 
+                    download="persian-ai-image.png" 
+                    target="_blank" 
+                    rel="noreferrer"
+                    className="p-3 bg-white/10 hover:bg-white/20 text-white rounded-xl transition-colors tooltip-trigger"
+                    title="دانلود کیفیت اصلی"
                   >
-                    <Sparkles className="w-3 h-3 text-amber-400" />
+                    <Download className="w-5 h-5" />
+                  </a>
+                  {onInsertToChat && (
+                    <button 
+                      onClick={() => {
+                        onInsertToChat(prompt, imageUrl);
+                        onClose();
+                      }}
+                      className="flex items-center gap-2 px-4 py-3 bg-purple-500 hover:bg-purple-400 text-white rounded-xl transition-colors font-bold text-sm"
+                    >
+                      <Send className="w-4 h-4" />
+                      <span>ارسال به چت</span>
+                    </button>
+                  )}
+                </div>
+              </div>
+            ) : loading ? (
+              <div className="flex flex-col items-center justify-center space-y-6 text-purple-500 animate-pulse mt-10">
+                <div className="relative">
+                  <div className="w-20 h-20 sm:w-24 sm:h-24 border-4 border-purple-500/30 rounded-full animate-ping absolute inset-0"></div>
+                  <div className="w-20 h-20 sm:w-24 sm:h-24 bg-gradient-to-tr from-purple-600 to-blue-500 rounded-full flex items-center justify-center shadow-[0_0_40px_rgba(168,85,247,0.5)]">
+                    <Sparkles className="w-8 h-8 sm:w-10 sm:h-10 text-white animate-spin-slow" />
+                  </div>
+                </div>
+                <div className="text-center px-4">
+                  <p className="font-extrabold text-base sm:text-lg text-zinc-800 dark:text-white">در حال خلق شاهکار شما...</p>
+                  <p className="text-xs sm:text-sm opacity-60 mt-1">این فرآیند ممکن است چند ثانیه طول بکشد</p>
+                </div>
+              </div>
+            ) : (
+              <div className="text-center opacity-40 flex flex-col items-center mt-10">
+                <div className="w-20 h-20 sm:w-24 sm:h-24 mb-6 rounded-full bg-zinc-200 dark:bg-zinc-800 flex items-center justify-center">
+                  <ImageIcon className="w-10 h-10 text-zinc-400" />
+                </div>
+                <h3 className="text-xl sm:text-2xl font-extrabold text-zinc-800 dark:text-white mb-2 tracking-tight">بوم خالی شما</h3>
+                <p className="text-xs sm:text-sm max-w-sm mx-auto leading-relaxed px-4">
+                  تخیلات خود را در کادر پایین بنویسید تا هوش مصنوعی آن را به یک شاهکار بصری تبدیل کند.
+                </p>
+              </div>
+            )}
+          </div>
+
+          {/* Floating Prompt Bar */}
+          <div className="absolute bottom-0 left-0 right-0 p-3 lg:p-6 bg-gradient-to-t from-zinc-100 via-zinc-100/95 dark:from-[#0a0a0a] dark:via-[#0a0a0a]/95 to-transparent pt-12 z-20">
+            <div className="max-w-4xl mx-auto flex flex-col gap-3">
+              
+              {/* Style Presets Carousel (Above Input) */}
+              <div className="flex overflow-x-auto hide-scrollbar gap-2 pb-1 px-1">
+                {STYLE_PRESETS.map((style) => (
+                  <button
+                    key={style.id}
+                    onClick={() => setSelectedStyle(style.id)}
+                    className={\`shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-bold transition-all border \${
+                      selectedStyle === style.id
+                        ? 'bg-purple-500 text-white border-purple-400 shadow-md shadow-purple-500/20'
+                        : 'bg-white dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 border-zinc-200 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-700'
+                    }\`}
+                  >
+                    <span>{style.icon}</span>
                     <span>{style.name}</span>
                   </button>
                 ))}
               </div>
-            </div>
 
-            {/* Prompt input */}
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <label className="block text-xs font-bold opacity-80">توصیف تصویر (Prompt) به انگلیسی یا فارسی</label>
-                <div className="flex items-center gap-2">
-                  {prompt && (
-                    <button
-                      type="button"
-                      onClick={handleEnhancePrompt}
-                      disabled={isEnhancing}
-                      className="text-xs text-purple-500 hover:text-purple-600 dark:text-purple-400 dark:hover:text-purple-300 flex items-center gap-1 transition-colors px-2 py-0.5 rounded-lg hover:bg-purple-500/10 cursor-pointer disabled:opacity-50"
-                    >
-                      <Wand2 className={`w-3.5 h-3.5 ${isEnhancing ? 'animate-spin' : ''}`} />
-                      <span>{isEnhancing ? 'در حال بهبود...' : '🪄 بهبود هوشمند'}</span>
-                    </button>
-                  )}
-                  {prompt && (
-                    <button
-                      type="button"
-                      onClick={() => setPrompt('')}
-                      className="text-xs text-rose-500 hover:text-rose-600 dark:text-rose-400 dark:hover:text-rose-300 flex items-center gap-1 transition-colors px-2 py-0.5 rounded-lg hover:bg-rose-500/10 cursor-pointer"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                      <span>پاک کردن</span>
-                    </button>
-                  )}
-                </div>
-              </div>
-              <textarea
-                value={prompt}
-                onChange={(e) => setPrompt(e.target.value)}
-                placeholder="مثال: یک جنگل جادویی با درختان درخشان و رودخانه کریستالی در شب..."
-                rows={4}
-                className="w-full p-4 rounded-2xl clay-input-box text-sm resize-none focus:outline-none focus:ring-2 focus:ring-purple-500"
-              />
-            </div>
-
-            {/* Negative Prompt input */}
-            <div>
-              <label className="block text-xs font-bold mb-2 opacity-80">نکات منفی / حذفیات (Negative Prompt) <span className="opacity-50 font-normal">(اختیاری)</span></label>
-              <input
-                type="text"
-                value={negativePrompt}
-                onChange={(e) => setNegativePrompt(e.target.value)}
-                placeholder="مثال: blurry, low quality, watermark, text"
-                className="w-full p-3 rounded-xl clay-input-box text-sm focus:outline-none focus:ring-2 focus:ring-rose-500"
-              />
-            </div>
-
-            {/* Action Generate Button */}
-            <button
-              onClick={handleGenerate}
-              disabled={loading}
-              className="clay-btn-primary w-full py-3.5 rounded-2xl font-bold text-base flex items-center justify-center gap-2 shadow-xl hover:opacity-90 disabled:opacity-50"
-            >
-              {loading ? (
-                <>
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  <span>در حال خلق تصویر با {IMAGE_ENGINES.find(e => e.id === engine)?.name}...</span>
-                </>
-              ) : (
-                <>
-                  <Sparkles className="w-5 h-5" />
-                  <span>تولید تصویر با کیفیت بالا</span>
-                </>
-              )}
-            </button>
-
-            {error && (
-              <div className="p-3 rounded-xl bg-red-500/20 text-red-400 text-xs border border-red-500/30">
-                {error}
-              </div>
-            )}
-          </div>
-
-          {/* Right / Preview Column */}
-          <div className="lg:col-span-5 flex flex-col items-center justify-center border-t lg:border-t-0 lg:border-r border-white/10 pt-6 lg:pt-0 lg:pr-6">
-            <div className="w-full aspect-square rounded-3xl clay-input-box flex flex-col items-center justify-center relative overflow-hidden shadow-inner border border-white/10">
-              {loading ? (
-                <div className="flex flex-col items-center gap-3 p-6 text-center">
-                  <div className="w-12 h-12 border-4 border-purple-500 border-t-transparent rounded-full animate-spin" />
-                  <p className="text-xs font-semibold opacity-80">هوش مصنوعی در حال پردازش و رندر پیکسل‌هاست...</p>
-                  <p className="text-[10px] opacity-50">معمولاً بین ۵ تا ۱۰ ثانیه طول می‌کشد.</p>
-                </div>
-               ) : imageUrl ? (
-                <div className="relative w-full h-full flex flex-col justify-end">
-                  <img src={imageUrl} alt="Generated Art" className="absolute inset-0 w-full h-full object-cover rounded-3xl shadow-2xl animate-fadeIn" />
-                  <div className="absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black/90 via-black/60 to-transparent flex flex-col gap-2 rounded-b-3xl">
-                    <div className="flex items-center justify-center gap-1.5 text-xs text-white/90 font-bold px-2 py-1 bg-black/40 backdrop-blur-md rounded-xl border border-white/10">
-                      <Sparkles className="w-3.5 h-3.5 text-purple-400" />
-                      <span>تصویر ساخته شده با هوش مصنوعی {IMAGE_ENGINES.find(e => e.id === engine)?.name || engine}</span>
-                    </div>
-                    <div className="flex items-center justify-between gap-2">
-                      <a
-                        href={imageUrl}
-                        download="ai-masterpiece.jpg"
-                        target="_blank"
-                        rel="noreferrer"
-                        className="clay-btn px-4 py-2 bg-white/20 hover:bg-white/30 text-white/80 rounded-xl text-xs font-bold flex items-center gap-1.5 backdrop-blur-sm"
-                      >
-                        <Download className="w-4 h-4" />
-                        <span>دانلود</span>
-                      </a>
-                      {onInsertToChat && (
-                        <button
-                          onClick={() => {
-                            onInsertToChat(prompt, imageUrl);
-                            onClose();
-                          }}
-                          className="clay-btn-primary px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5"
-                        >
-                          <Send className="w-4 h-4" />
-                          <span>ارسال به چت</span>
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <div className="flex flex-col items-center gap-3 p-6 text-center opacity-60">
-                  <ImageIcon className="w-16 h-16 stroke-[1.5] text-purple-400 animate-pulse" />
-                  <p className="text-sm font-bold">پیش‌نمایش تصویر خروجی</p>
-                  <p className="text-xs max-w-xs">توصیف خود را وارد کرده و دکمه تولید را بزنید تا شاهکار هنری شما خلق شود.</p>
+              {error && (
+                <div className="flex items-center gap-2 text-rose-500 bg-rose-500/10 px-4 py-2.5 rounded-xl text-xs font-bold border border-rose-500/20 mx-1">
+                  <AlertTriangle className="w-4 h-4 shrink-0" />
+                  <p>{error}</p>
                 </div>
               )}
+
+              <div className="relative group flex items-end gap-2 bg-white dark:bg-[#1e1f20] p-2 lg:p-3 rounded-3xl border border-zinc-200 dark:border-white/10 shadow-lg focus-within:ring-2 focus-within:ring-purple-500/50 focus-within:border-purple-500/50 transition-all">
+                
+                {/* Magic Enhance Button */}
+                <button
+                  type="button"
+                  onClick={handleEnhancePrompt}
+                  disabled={enhancing || loading || !prompt.trim()}
+                  className="shrink-0 p-3 bg-gradient-to-br from-indigo-500 to-purple-600 hover:from-indigo-400 hover:to-purple-500 text-white rounded-2xl transition-all disabled:opacity-50 disabled:grayscale shadow-md hover:shadow-lg hover:-translate-y-0.5"
+                  title="ارتقای جادویی پرامپت"
+                >
+                  <Wand2 className={\`w-5 h-5 \${enhancing ? 'animate-pulse' : ''}\`} />
+                </button>
+
+                <textarea
+                  value={prompt}
+                  onChange={(e) => setPrompt(e.target.value)}
+                  placeholder="توصیف تصویر (فارسی یا انگلیسی)..."
+                  className="flex-1 bg-transparent border-none focus:ring-0 resize-none text-sm lg:text-base py-3 px-2 max-h-24 sm:max-h-32 min-h-[48px] custom-scrollbar placeholder:text-zinc-400 dark:placeholder:text-zinc-500"
+                  rows={Math.min(3, prompt.split('\\n').length || 1)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      handleGenerate();
+                    }
+                  }}
+                />
+
+                <button
+                  onClick={handleGenerate}
+                  disabled={loading || !prompt.trim()}
+                  className="shrink-0 p-3 bg-purple-600 hover:bg-purple-500 text-white rounded-2xl transition-all disabled:opacity-50 shadow-md hover:shadow-lg hover:-translate-y-0.5 flex items-center justify-center"
+                >
+                  {loading ? <RotateCcw className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5 rotate-180 sm:rotate-0" />}
+                </button>
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      {showHistory && (
-        <div className="absolute inset-0 z-50 bg-black/80 backdrop-blur-md rounded-3xl overflow-hidden flex flex-col animate-fadeIn">
-          <div className="flex items-center justify-between p-6 border-b border-white/10">
-            <h3 className="text-xl font-bold flex items-center gap-2">
-              <History className="w-6 h-6 text-purple-400" />
-              گالری تصاویر شما
-            </h3>
-            <button
-              onClick={() => setShowHistory(false)}
-              className="clay-btn p-2 rounded-xl hover:opacity-100 opacity-80 transition-all"
-            >
-              <X className="w-5 h-5" />
+        {/* --- SETTINGS SIDEBAR (Left on Desktop, Drawer on Mobile) --- */}
+        <div className={\`
+          fixed lg:static inset-y-0 left-0 w-[280px] sm:w-[320px] lg:w-80 bg-[#f8f9fa] dark:bg-[#121212] lg:bg-transparent
+          border-r border-zinc-200 dark:border-white/10 shadow-2xl lg:shadow-none
+          flex flex-col z-[70] transform transition-transform duration-300 ease-out
+          \${isMobileSettingsOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+        \`}>
+          
+          {/* Sidebar Header */}
+          <div className="hidden lg:flex items-center justify-between p-6 border-b border-zinc-200 dark:border-white/10">
+            <div className="flex items-center gap-2 text-purple-500">
+              <Sliders className="w-5 h-5" />
+              <h2 className="font-extrabold text-sm text-zinc-800 dark:text-white">تنظیمات استودیو</h2>
+            </div>
+            <button onClick={onClose} className="p-2 bg-zinc-200/50 dark:bg-white/5 hover:bg-rose-500/10 hover:text-rose-500 rounded-full transition-colors">
+              <X className="w-4 h-4" />
             </button>
           </div>
           
-          <div className="flex-1 overflow-y-auto p-6">
-            {history.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-full opacity-50 gap-3">
-                <ImageIcon className="w-12 h-12" />
-                <p>هیچ تصویری هنوز ساخته نشده است.</p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-                {history.map((item, idx) => (
-                  <div key={idx} className="group relative aspect-square rounded-2xl overflow-hidden clay-card">
-                    <img src={item.url} alt={item.prompt} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
-                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-between p-3">
-                      <div className="text-[10px] text-white/90 line-clamp-3 leading-relaxed">
-                        {item.prompt}
-                      </div>
-                      <div className="flex items-center justify-center gap-2">
-                        <button
-                          onClick={() => loadFromHistory(item)}
-                          className="clay-btn-primary p-2 rounded-xl"
-                          title="استفاده مجدد (Remix)"
-                        >
-                          <RotateCcw className="w-4 h-4" />
-                        </button>
-                        <a
-                          href={item.url}
-                          download={`ai-art-${idx}.jpg`}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="clay-btn bg-white/20 p-2 rounded-xl text-white/80"
-                          title="دانلود"
-                        >
-                          <Download className="w-4 h-4" />
-                        </a>
-                        <button
-                          onClick={(e) => { e.stopPropagation(); deleteFromHistory(idx); }}
-                          className="clay-btn bg-rose-500/80 hover:bg-rose-500 p-2 rounded-xl text-white/80"
-                          title="حذف"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
+          {/* Mobile Sidebar Close Button */}
+          <div className="lg:hidden flex items-center justify-between p-4 border-b border-zinc-200 dark:border-white/10">
+            <div className="flex items-center gap-2 text-purple-500">
+              <Sliders className="w-4 h-4" />
+              <h3 className="font-bold text-sm">تنظیمات</h3>
+            </div>
+            <button onClick={() => setIsMobileSettingsOpen(false)} className="p-2 bg-zinc-200/50 dark:bg-white/10 rounded-full">
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+
+          <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-8 custom-scrollbar pb-24 lg:pb-5">
+            
+            {/* Visual Aspect Ratios */}
+            <div className="space-y-4">
+              <label className="text-xs font-bold text-zinc-500 dark:text-zinc-400 flex items-center gap-2">
+                <div className="w-1.5 h-1.5 rounded-full bg-blue-500"></div> ابعاد تصویر
+              </label>
+              <div className="grid grid-cols-3 gap-2">
+                {ASPECT_RATIOS.map((ar) => (
+                  <button
+                    key={ar.id}
+                    onClick={() => setAspectRatio(ar.id)}
+                    className={\`flex flex-col items-center justify-center gap-2 p-3 rounded-2xl border transition-all \${
+                      aspectRatio === ar.id 
+                        ? 'bg-blue-500/10 border-blue-500 text-blue-600 dark:text-blue-400 shadow-sm'
+                        : 'bg-white dark:bg-[#1e1f20] border-zinc-200 dark:border-white/10 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-white/5'
+                    }\`}
+                  >
+                    <div className={\`border-2 rounded-sm flex items-center justify-center \${ar.w} \${ar.h} \${aspectRatio === ar.id ? 'border-current' : 'border-zinc-400 dark:border-zinc-500'}\`}></div>
+                    <span className="text-[10px] font-bold">{ar.name}</span>
+                  </button>
                 ))}
               </div>
-            )}
+            </div>
+
+            {/* Model Engines */}
+            <div className="space-y-4">
+              <label className="text-xs font-bold text-zinc-500 dark:text-zinc-400 flex items-center gap-2">
+                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500"></div> موتور پردازش
+              </label>
+              <div className="flex flex-col gap-2">
+                {IMAGE_ENGINES.map((eng) => {
+                  const isLocked = eng.tier === 'pro' && !hasOpenAiKey;
+                  const isSelected = engine === eng.id;
+
+                  return (
+                    <button
+                      key={eng.id}
+                      onClick={() => {
+                        if (isLocked) {
+                          alert('برای استفاده از این مدل باید کلید OpenAI API خود را در تنظیمات وارد کنید.');
+                          return;
+                        }
+                        setEngine(eng.id);
+                        if (window.innerWidth < 1024) setIsMobileSettingsOpen(false);
+                      }}
+                      className={\`relative flex flex-col items-start p-3 sm:p-3.5 rounded-2xl border transition-all text-right \${
+                        isSelected
+                          ? eng.tier === 'pro'
+                            ? 'bg-amber-50 dark:bg-amber-500/10 border-amber-500 text-amber-700 dark:text-amber-400 shadow-sm'
+                            : 'bg-emerald-50 dark:bg-emerald-500/10 border-emerald-500 text-emerald-700 dark:text-emerald-400 shadow-sm'
+                          : isLocked
+                            ? 'bg-zinc-50 dark:bg-[#1e1f20]/50 border-zinc-200 dark:border-white/5 opacity-60 hover:opacity-80 grayscale'
+                            : 'bg-white dark:bg-[#1e1f20] border-zinc-200 dark:border-white/10 hover:border-zinc-300 dark:hover:border-white/20'
+                      }\`}
+                    >
+                      {isLocked && (
+                        <div className="absolute top-3 left-3 bg-zinc-200 dark:bg-zinc-800 p-1.5 rounded-full text-zinc-500">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                        </div>
+                      )}
+                      {isSelected && !isLocked && (
+                        <div className="absolute top-3 left-3">
+                          <Check className="w-4 h-4" />
+                        </div>
+                      )}
+                      
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className={\`font-extrabold text-xs sm:text-sm \${isSelected ? '' : 'text-zinc-700 dark:text-zinc-200'}\`}>{eng.name}</span>
+                        <span className={\`text-[9px] px-1.5 py-0.5 rounded-md font-bold \${
+                          isSelected
+                            ? eng.tier === 'pro' ? 'bg-amber-200/50 dark:bg-amber-500/20' : 'bg-emerald-200/50 dark:bg-emerald-500/20'
+                            : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500'
+                        }\`}>
+                          {eng.tag}
+                        </span>
+                      </div>
+                      <p className={\`text-[9px] sm:text-[10px] leading-relaxed line-clamp-1 \${isSelected ? 'opacity-90' : 'text-zinc-500 dark:text-zinc-400'}\`}>{eng.desc}</p>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
           </div>
         </div>
-      )}
+
+        {/* Mobile Settings Overlay Backdrop */}
+        {isMobileSettingsOpen && (
+          <div 
+            className="fixed inset-0 bg-black/60 z-[60] lg:hidden backdrop-blur-sm"
+            onClick={() => setIsMobileSettingsOpen(false)}
+          />
+        )}
+
+      </div>
     </div>
   );
-};
+}
