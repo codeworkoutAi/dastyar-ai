@@ -354,23 +354,7 @@ async function fetchLiveWebSearch(query: string): Promise<string | null> {
 async function fetchUniversalWebSnippets(query: string): Promise<string | null> {
   if (!query || query.length < 2) return null;
   try {
-    // Smart Domain Routing based on query intent to improve speed and accuracy
-    let searchDomain = '';
-    if (query.match(/(کد|برنامه نویسی|پایتون|ریئکت|ارور|باگ|جاوا|پی اچ پی|سی شارپ|سی پلاس|فرانت|بک اند|پایگاه داده|دیتا|html|css|js|javascript|python|react|node|error|bug|java|php|c#|c\+\+|sql|database|frontend|backend)/i)) {
-        searchDomain = 'site:stackoverflow.com OR site:developer.mozilla.org OR site:github.com OR site:geeksforgeeks.org';
-    } else if (query.match(/(دلار|ارز|یورو|پوند|طلا|سکه|بورس|سهام|فرابورس|اونس|مثقال|تتر|بیت کوین|رمز ارز|قیمت روز)/i)) {
-        searchDomain = 'site:tgju.org OR site:eghtesadnews.com OR site:donya-e-eqtesad.com';
-    } else if (query.match(/(پزشکی|بیماری|علائم|درمان|قرص|دارو|پزشک|دکتر|سندروم|سرطان|سلامت)/i)) {
-        searchDomain = 'site:paziresh24.com OR site:nobat.ir OR site:webmd.com OR site:mayoclinic.org';
-    } else if (query.match(/(اخبار|خبر|فوری|گزارش|تحلیل|ورزشی|فوتبال|نتیجه بازی|سیاسی)/i)) {
-        searchDomain = 'site:isna.ir OR site:irna.ir OR site:farsnews.ir OR site:tabnak.ir OR site:varzesh3.com';
-    } else if (query.match(/(نجوم|جغرافیا|تاریخ|ریاضیات|فیزیک|شیمی|زیست|علمی)/i)) {
-        searchDomain = 'site:fa.wikipedia.org OR site:en.wikipedia.org OR site:nationalgeographic.com';
-    }
-
-    const finalQuery = searchDomain ? `(${searchDomain}) ${query}` : query;
-    const url = 'https://www.bing.com/search?q=' + encodeURIComponent(finalQuery);
-    
+    const url = 'https://www.bing.com/search?q=' + encodeURIComponent(query);
     const res = await fetch(url, {
       headers: {
         'User-Agent': 'curl/7.81.0',
@@ -381,16 +365,14 @@ async function fetchUniversalWebSnippets(query: string): Promise<string | null> 
     if (!res.ok) return null;
     const html = await res.text();
     
-    // Extract search results (b_algo contains actual results, skipping widgets)
     const titles = [...html.matchAll(/<h2[^>]*><a[^>]*href="([^"]*)"[^>]*>([\s\S]*?)<\/a><\/h2>/gi)];
     const snippets = [...html.matchAll(/<div class="b_caption[^>]*>([\s\S]*?)<\/div>/gi)];
     
     const items: string[] = [];
-    const limit = Math.min(titles.length, snippets.length, 5);
+    const limit = Math.min(titles.length, snippets.length, 6);
     let firstUrl = null;
-    let actualCount = 0;
     
-    for (let i = 0; i < titles.length && actualCount < 5; i++) {
+    for (let i = 0; i < limit; i++) {
       let rawUrl = titles[i][1];
       const uMatch = rawUrl.match(/&u=a1([^&]+)/);
       if (uMatch) {
@@ -398,23 +380,13 @@ async function fetchUniversalWebSnippets(query: string): Promise<string | null> 
           rawUrl = Buffer.from(uMatch[1], 'base64').toString('utf8');
         } catch(e) {}
       }
-      
-      // Skip generic bing widgets or dictionary links
-      if (rawUrl.includes('bing.com/dict') || rawUrl.includes('microsoft.com')) continue;
-      
-      if (!firstUrl) firstUrl = rawUrl;
+      if (i === 0) firstUrl = rawUrl;
       
       const title = titles[i][2].replace(/<[^>]+>/g, '').replace(/&nbsp;/g, ' ').replace(/&quot;/g, '"').replace(/&amp;/g, '&').replace(/&#x27;/g, "'").replace(/&#039;/g, "'").replace(/&#0183;/g, "·").trim();
+      const snippet = snippets[i][1].replace(/<[^>]+>/g, '').replace(/&nbsp;/g, ' ').replace(/&quot;/g, '"').replace(/&amp;/g, '&').replace(/&#x27;/g, "'").replace(/&#039;/g, "'").replace(/&#0183;/g, "·").replace(/\s+/g, ' ').trim();
       
-      // Attempt to get corresponding snippet (might misalign if widgets exist, but acceptable)
-      let snippet = "";
-      if (snippets[i] && snippets[i][1]) {
-         snippet = snippets[i][1].replace(/<[^>]+>/g, '').replace(/&nbsp;/g, ' ').replace(/&quot;/g, '"').replace(/&amp;/g, '&').replace(/&#x27;/g, "'").replace(/&#039;/g, "'").replace(/&#0183;/g, "·").replace(/\s+/g, ' ').trim();
-      }
-      
-      if (title.length > 5 && snippet.length > 5) {
+      if (snippet.length > 10) {
         items.push(`• [منبع: ${rawUrl}]\n  تیتر: ${title}\n  خلاصه: ${snippet}`);
-        actualCount++;
       }
     }
     
@@ -431,7 +403,7 @@ async function fetchUniversalWebSnippets(query: string): Promise<string | null> 
            pageHtml = pageHtml.replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, ' ');
            let pageText = pageHtml.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
            if (pageText.length > 200) {
-             items.push(`\n--- محتوای استخراج شده از بهترین منبع ---\n${pageText.substring(0, 3500)}`);
+             items.push(`\n--- محتوای استخراج شده از لینک اول ---\n${pageText.substring(0, 3000)}`);
            }
         }
       } catch (e) {}
@@ -1156,6 +1128,17 @@ app.post('/api/chat/stream', async (req, res) => {
           userText.includes('بنزین') || userText.includes('مسکن') || userText.includes('اجاره');
 
         // 2. Physical consumer products / ecommerce shopping (Torob)
+        
+        if (isFinancialOrCurrencyQuery) {
+          const universalSnippets = await fetchUniversalWebSnippets(userText);
+          if (universalSnippets) {
+            liveWebContext = `\n\n[اطلاعات زنده استخراج شده از منابع مالی برای سوال کاربر:\n${universalSnippets}\n\nدستورالعمل اکید برای پاسخ‌دهی قیمت‌ها:
+شما به قیمت‌های زنده و لحظه‌ای دسترسی دارید! اطلاعات بالا دقیقاً نرخ امروز بازار هستند که توسط سیستم استخراج شده‌اند. 
+هرگز نگویید به قیمت‌ها دسترسی ندارید! اطلاعات استخراج شده را با اعتماد به نفس کامل در یک جدول مرتب یا بولت‌پوینت ارائه دهید.
+برای هر قیمت، نام ارز/طلا، مبلغ دقیق (با جداکننده هزارگان) و منبع استخراج شده را ذکر کنید.]`;
+          }
+        }
+
         const isPhysicalShoppingQuery = !isFinancialOrCurrencyQuery && (
           userText.includes('ترب') || userText.includes('دیجی کالا') || userText.includes('دیجیکالا') ||
           userText.includes('خرید کالا') || userText.includes('خرید آنلاین') ||
@@ -1188,7 +1171,7 @@ app.post('/api/chat/stream', async (req, res) => {
           const searchResults = await fetchLiveWebSearch(userText);
           if (searchResults) {
             liveWebContext = `\n\n[نتایج زنده جستجوی اینترنت و اخبار برای سوال کاربر:\n${searchResults}\n\nدستورالعمل حیاتی قالب‌بندی اخبار (ساختار ۱ کارت واحد برای هر خبر):
-شما به نتایج زنده وب دسترسی دارید. برای هر خبر، تمام اجزا (تیتر، متن و منبع) را پیوسته و درون **یک بلوک نقل‌قول واحد (علامت > در تمام خطوط)** بنویسید تا در یک کارت منسجم قرار گیرند.
+شما به نتایج زنده وب دسترسی دارید. مهم: برای اینکه اخبار در رابط کاربری به هم نچسبند، **هر خبر باید در یک بلوک نقل‌قول کاملاً مجزا** باشد. حتماً بین بلوک‌های نقل‌قول (خارج از علامت >) یک خط خالی و خط جداکننده (---) و دوباره یک خط خالی بگذارید.
 برای عنوان هر دسته‌بندی موضوعی، دقیقاً از ایموجی متناسب با همان موضوع استفاده کنید:
 - اقتصاد، بازار و تحریم‌ها: 💰 یا 📈
 - ورزش، مسابقات و فوتبال: ⚽ یا 🏆
@@ -1209,8 +1192,11 @@ app.post('/api/chat/stream', async (req, res) => {
           }
         }
 
+        const wordCount = userText.trim().split(/\s+/).length;
+        const isConversational = wordCount <= 3 && !isFinancialOrCurrencyQuery && !isPhysicalShoppingQuery && !isNewsQuery && !userText.match(/(چیست|چگونه|چطور|آموزش|ارور|مشکل|چرا|کی|کجا|کد|کدوم|چه|تفاوت|فرق)/i);
+
         // For programming, technical questions, bug fixing, documentation lookup, tutorials and general knowledge
-        if (!liveWebContext) {
+        if (!liveWebContext && !isConversational) {
           const universalSnippets = await fetchUniversalWebSnippets(userText);
           if (universalSnippets) {
             liveWebContext = `\n\n[مستندات، راهنماها و نتایج زنده وب مرتبط با سوال کاربر:\n${universalSnippets}\n\nدستورالعمل هوش مصنوعی برای پاسخ‌دهی (مشابه ChatGPT با وب‌سرچ):
