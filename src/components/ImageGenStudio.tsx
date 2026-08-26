@@ -45,23 +45,48 @@ const ASPECT_RATIOS = [
   { id: '9:16', name: 'استوری', icon: '▯', w: 'w-4', h: 'h-7' },
 ];
 
-// Helper to preload image before rendering in DOM
-function preloadImage(url: string, timeoutMs = 30000): Promise<void> {
+// Helper to preload image before rendering in DOM with automatic fallback retry
+function preloadImage(url: string, timeoutMs = 45000): Promise<string> {
   return new Promise((resolve, reject) => {
     const img = new Image();
+    let isSettled = false;
+
     const timer = setTimeout(() => {
+      if (isSettled) return;
+      isSettled = true;
       img.src = '';
-      reject(new Error('زمان انتظار برای بارگذاری تصویر به پایان رسید. لطفاً مجدداً تلاش کنید.'));
+      reject(new Error('زمان انتظار برای تولید و بارگذاری تصویر به پایان رسید. لطفاً مجدداً تلاش فرمایید.'));
     }, timeoutMs);
 
     img.onload = () => {
+      if (isSettled) return;
+      isSettled = true;
       clearTimeout(timer);
-      resolve();
+      resolve(url);
     };
+
     img.onerror = () => {
-      clearTimeout(timer);
-      reject(new Error('خطا در دریافت فایل تصویر از سرور. لطفاً دوباره دکمه تولید را بزنید.'));
+      if (isSettled) return;
+      // If error occurs, try to fetch with a fresh seed fallback
+      const separator = url.includes('?') ? '&' : '?';
+      const fallbackUrl = `${url.replace(/seed=\d+/, '')}${separator}seed=${Math.floor(Math.random() * 10000000)}`;
+      
+      const retryImg = new Image();
+      retryImg.onload = () => {
+        if (isSettled) return;
+        isSettled = true;
+        clearTimeout(timer);
+        resolve(fallbackUrl);
+      };
+      retryImg.onerror = () => {
+        if (isSettled) return;
+        isSettled = true;
+        clearTimeout(timer);
+        reject(new Error('خطا در دریافت فایل تصویر از سرور. لطفاً مجدداً دکمه تولید را بزنید.'));
+      };
+      retryImg.src = fallbackUrl;
     };
+
     img.src = url;
   });
 }
@@ -238,11 +263,11 @@ export function ImageGenStudio({ isOpen, onClose, onInsertToChat, initialPrompt,
         throw new Error(data.error || 'خطا در تولید تصویر');
       }
       if (data.imageUrl) {
-        // Preload image in memory before showing to prevent broken image icons on re-generation
-        await preloadImage(data.imageUrl);
-        setImageUrl(data.imageUrl);
+        // Preload image in memory with fallback retry before showing
+        const finalLoadedUrl = await preloadImage(data.imageUrl);
+        setImageUrl(finalLoadedUrl);
         saveHistory({
-          url: data.imageUrl,
+          url: finalLoadedUrl,
           prompt,
           enhancedPrompt: data.enhancedPrompt,
           engine,

@@ -187,19 +187,26 @@ function getGeminiClient(customApiKey?: string): GoogleGenAI {
 
 // Helper to get Pollinations image URL
 function getPollinationsImageUrl(prompt: string, aspectRatio = '1:1', engine = 'flux') {
-  const encoded = encodeURIComponent(prompt);
+  let styledPrompt = prompt;
+  if (engine === 'flux-anime') {
+    styledPrompt = `${prompt}, masterpiece anime aesthetic, vibrant digital art, crisp anime illustration`;
+  } else if (engine === 'flux-3d') {
+    styledPrompt = `${prompt}, 3d octane render, unreal engine 5, isometric 3d style, smooth clay render, cinematic lighting`;
+  } else if (engine === 'turbo') {
+    styledPrompt = `${prompt}, fast rendering, high quality, crisp focus`;
+  }
+
+  const encoded = encodeURIComponent(styledPrompt);
   let dimW = 1024, dimH = 1024;
-  if (aspectRatio === '16:9') { dimW = 1280; dimH = 720; }
-  else if (aspectRatio === '9:16') { dimW = 720; dimH = 1280; }
+  if (aspectRatio === '16:9') { dimW = 1024; dimH = 576; }
+  else if (aspectRatio === '9:16') { dimW = 576; dimH = 1024; }
   
   let modelParam = 'flux';
-  if (engine === 'flux-anime') modelParam = 'flux-anime';
+  if (engine === 'turbo') modelParam = 'turbo';
+  else if (engine === 'flux-anime') modelParam = 'flux-anime';
   else if (engine === 'flux-3d') modelParam = 'flux-3d';
-  else if (engine === 'turbo') modelParam = 'turbo';
-  else if (engine === 'dall-e-3') modelParam = 'dall-e-3';
-  else if (engine === 'flux') modelParam = 'flux';
 
-  return `https://image.pollinations.ai/prompt/${encoded}?width=${dimW}&height=${dimH}&model=${modelParam}&nologo=true&seed=${Math.floor(Math.random() * 1000000)}`;
+  return `https://image.pollinations.ai/prompt/${encoded}?width=${dimW}&height=${dimH}&model=${modelParam}&nologo=true&seed=${Math.floor(Math.random() * 10000000)}`;
 }
 
 function extractImagePrompt(text: string): string | null {
