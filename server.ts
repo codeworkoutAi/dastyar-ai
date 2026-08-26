@@ -354,7 +354,23 @@ async function fetchLiveWebSearch(query: string): Promise<string | null> {
 async function fetchUniversalWebSnippets(query: string): Promise<string | null> {
   if (!query || query.length < 2) return null;
   try {
-    const url = 'https://www.bing.com/search?q=' + encodeURIComponent(query);
+    // Smart Domain Routing based on query intent to improve speed and accuracy
+    let searchDomain = '';
+    if (query.match(/(کد|برنامه نویسی|پایتون|ریئکت|ارور|باگ|جاوا|پی اچ پی|سی شارپ|سی پلاس|فرانت|بک اند|پایگاه داده|دیتا|html|css|js|javascript|python|react|node|error|bug|java|php|c#|c\+\+|sql|database|frontend|backend)/i)) {
+        searchDomain = 'site:stackoverflow.com OR site:developer.mozilla.org OR site:github.com OR site:geeksforgeeks.org';
+    } else if (query.match(/(دلار|ارز|یورو|پوند|طلا|سکه|بورس|سهام|فرابورس|اونس|مثقال|تتر|بیت کوین|رمز ارز|قیمت روز)/i)) {
+        searchDomain = 'site:tgju.org OR site:eghtesadnews.com OR site:donya-e-eqtesad.com';
+    } else if (query.match(/(پزشکی|بیماری|علائم|درمان|قرص|دارو|پزشک|دکتر|سندروم|سرطان|سلامت)/i)) {
+        searchDomain = 'site:paziresh24.com OR site:nobat.ir OR site:webmd.com OR site:mayoclinic.org';
+    } else if (query.match(/(اخبار|خبر|فوری|گزارش|تحلیل|ورزشی|فوتبال|نتیجه بازی|سیاسی)/i)) {
+        searchDomain = 'site:isna.ir OR site:irna.ir OR site:farsnews.ir OR site:tabnak.ir OR site:varzesh3.com';
+    } else if (query.match(/(نجوم|جغرافیا|تاریخ|ریاضیات|فیزیک|شیمی|زیست|علمی)/i)) {
+        searchDomain = 'site:fa.wikipedia.org OR site:en.wikipedia.org OR site:nationalgeographic.com';
+    }
+
+    const finalQuery = searchDomain ? `(${searchDomain}) ${query}` : query;
+    const url = 'https://www.bing.com/search?q=' + encodeURIComponent(finalQuery);
+    
     const res = await fetch(url, {
       headers: {
         'User-Agent': 'curl/7.81.0',
@@ -365,14 +381,16 @@ async function fetchUniversalWebSnippets(query: string): Promise<string | null> 
     if (!res.ok) return null;
     const html = await res.text();
     
+    // Extract search results (b_algo contains actual results, skipping widgets)
     const titles = [...html.matchAll(/<h2[^>]*><a[^>]*href="([^"]*)"[^>]*>([\s\S]*?)<\/a><\/h2>/gi)];
     const snippets = [...html.matchAll(/<div class="b_caption[^>]*>([\s\S]*?)<\/div>/gi)];
     
     const items: string[] = [];
-    const limit = Math.min(titles.length, snippets.length, 6);
+    const limit = Math.min(titles.length, snippets.length, 5);
     let firstUrl = null;
+    let actualCount = 0;
     
-    for (let i = 0; i < limit; i++) {
+    for (let i = 0; i < titles.length && actualCount < 5; i++) {
       let rawUrl = titles[i][1];
       const uMatch = rawUrl.match(/&u=a1([^&]+)/);
       if (uMatch) {
@@ -380,13 +398,23 @@ async function fetchUniversalWebSnippets(query: string): Promise<string | null> 
           rawUrl = Buffer.from(uMatch[1], 'base64').toString('utf8');
         } catch(e) {}
       }
-      if (i === 0) firstUrl = rawUrl;
+      
+      // Skip generic bing widgets or dictionary links
+      if (rawUrl.includes('bing.com/dict') || rawUrl.includes('microsoft.com')) continue;
+      
+      if (!firstUrl) firstUrl = rawUrl;
       
       const title = titles[i][2].replace(/<[^>]+>/g, '').replace(/&nbsp;/g, ' ').replace(/&quot;/g, '"').replace(/&amp;/g, '&').replace(/&#x27;/g, "'").replace(/&#039;/g, "'").replace(/&#0183;/g, "·").trim();
-      const snippet = snippets[i][1].replace(/<[^>]+>/g, '').replace(/&nbsp;/g, ' ').replace(/&quot;/g, '"').replace(/&amp;/g, '&').replace(/&#x27;/g, "'").replace(/&#039;/g, "'").replace(/&#0183;/g, "·").replace(/\s+/g, ' ').trim();
       
-      if (snippet.length > 10) {
+      // Attempt to get corresponding snippet (might misalign if widgets exist, but acceptable)
+      let snippet = "";
+      if (snippets[i] && snippets[i][1]) {
+         snippet = snippets[i][1].replace(/<[^>]+>/g, '').replace(/&nbsp;/g, ' ').replace(/&quot;/g, '"').replace(/&amp;/g, '&').replace(/&#x27;/g, "'").replace(/&#039;/g, "'").replace(/&#0183;/g, "·").replace(/\s+/g, ' ').trim();
+      }
+      
+      if (title.length > 5 && snippet.length > 5) {
         items.push(`• [منبع: ${rawUrl}]\n  تیتر: ${title}\n  خلاصه: ${snippet}`);
+        actualCount++;
       }
     }
     
@@ -403,7 +431,7 @@ async function fetchUniversalWebSnippets(query: string): Promise<string | null> 
            pageHtml = pageHtml.replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, ' ');
            let pageText = pageHtml.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
            if (pageText.length > 200) {
-             items.push(`\n--- محتوای استخراج شده از لینک اول ---\n${pageText.substring(0, 3000)}`);
+             items.push(`\n--- محتوای استخراج شده از بهترین منبع ---\n${pageText.substring(0, 3500)}`);
            }
         }
       } catch (e) {}
