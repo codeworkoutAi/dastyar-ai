@@ -406,6 +406,16 @@ export const MessageInput: React.FC<MessageInputProps> = ({
     }
   };
 
+  const handlePointerLeaveMic = () => {
+    if (holdTimeoutRef.current) {
+      clearTimeout(holdTimeoutRef.current);
+      holdTimeoutRef.current = null;
+    }
+    if (isHoldingMic) {
+      stopRecording();
+    }
+  };
+
   // Handle Speech Recognition for Persian
   const toggleVoiceRecording = () => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
@@ -421,6 +431,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({
         } catch {
           // ignore
         }
+        recognitionRef.current = null;
       }
       setIsRecording(false);
       return;
@@ -447,7 +458,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({
         for (let i = 0; i < event.results.length; ++i) {
           const transcript = event.results[i][0].transcript;
           if (event.results[i].isFinal) {
-            final += transcript;
+            final += transcript + ' ';
           } else {
             interim += transcript;
           }
@@ -457,7 +468,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({
           finalSoFar = final;
         }
 
-        const currentSpoken = finalSoFar || interim;
+        const currentSpoken = (finalSoFar || interim).trim();
         const sep = baseTextRef.current && !baseTextRef.current.endsWith(' ') && currentSpoken ? ' ' : '';
         const combined = baseTextRef.current ? `${baseTextRef.current}${sep}${currentSpoken}` : currentSpoken;
         setText(combined);
@@ -469,10 +480,12 @@ export const MessageInput: React.FC<MessageInputProps> = ({
           alert('دسترسی به میکروفون مسدود شده است. لطفاً دسترسی به میکروفون را در تنظیمات مرورگر فعال نمایید.');
         }
         setIsRecording(false);
+        recognitionRef.current = null;
       };
 
       recognition.onend = () => {
         setIsRecording(false);
+        recognitionRef.current = null;
       };
 
       recognitionRef.current = recognition;
@@ -480,6 +493,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({
     } catch (e) {
       console.error('Failed to start speech recognition', e);
       setIsRecording(false);
+      recognitionRef.current = null;
       alert('خطا در شروع تایپ صوتی. لطفاً دسترسی به میکروفون را بررسی فرمایید.');
     }
   };
@@ -742,6 +756,23 @@ export const MessageInput: React.FC<MessageInputProps> = ({
               </button>
             </Tooltip>
 
+            {/* Smart Web Search Toggle */}
+            <Tooltip content={webSearchEnabled ? 'جستجوی هوشمند وب فعال است (کلیک برای غیرفعال‌سازی)' : 'جستجوی هوشمند وب غیرفعال است (کلیک برای فعال‌سازی)'}>
+              <button
+                type="button"
+                onClick={() => setWebSearchEnabled(!webSearchEnabled)}
+                disabled={isStreaming}
+                className={`w-10 h-10 hidden xs:flex items-center justify-center transition-all rounded-full bg-transparent border-0 outline-none ${
+                  webSearchEnabled
+                    ? 'text-sky-500 bg-sky-100 dark:bg-sky-500/10 scale-105 opacity-100 shadow-[0_0_8px_rgba(14,165,233,0.3)]'
+                    : 'text-zinc-500 dark:text-slate-400 hover:text-sky-500 hover:bg-zinc-200 dark:hover:bg-white/5 active:scale-95'
+                }`}
+                aria-label="Toggle Web Search"
+              >
+                <Globe className="w-4 h-4" />
+              </button>
+            </Tooltip>
+
             <input
               ref={fileInputRef}
               type="file"
@@ -790,18 +821,17 @@ export const MessageInput: React.FC<MessageInputProps> = ({
             onKeyDown={handleKeyDown}
             onPaste={handlePaste}
             dir={isRtl ? 'rtl' : 'ltr'}
-            placeholder={isRecording ? 'در حال شنیدن صدای شما... (صحبت کنید)' : 'پیام خود را بنویسید...'}
+            placeholder={isRecording ? 'در حال شنیدن صدای شما... (صحبت کنید یا برای توقف کلیک کنید)' : 'پیام خود را بنویسید...'}
             rows={1}
             disabled={isStreaming}
             className={`flex-1 w-full max-h-[150px] min-h-[40px] py-2.5 sm:py-3 px-1 sm:px-2 bg-transparent resize-none text-[length:var(--chat-font-size)] [font-family:var(--user-font-family)] text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-500 dark:placeholder:text-zinc-500 border-0 border-none outline-none ring-0 shadow-none focus:ring-0 focus:outline-none focus:border-none focus:shadow-none appearance-none overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden disabled:opacity-60 leading-relaxed ${isRecording ? 'placeholder:text-red-500 dark:placeholder:text-red-400 placeholder:animate-pulse' : ''}`}
           />
 
-          {/* Left actions (Mic, Clear, Send) */}
+          {/* Left actions (Clear, Mic, Cancel, Send) */}
           <div className="flex items-center gap-1 pb-0.5 sm:pb-1 pr-1 border-0 border-none outline-none">
             
-
             {/* Clear text button */}
-            {text.trim() && !isStreaming && (
+            {text.trim() && !isStreaming && !isRecording && (
               <Tooltip content="پاک کردن متن">
                 <button
                   type="button"
@@ -814,18 +844,18 @@ export const MessageInput: React.FC<MessageInputProps> = ({
               </Tooltip>
             )}
 
-            {/* Voice dictation button */}
-            {!text.trim() && !isStreaming && (
+            {/* Voice dictation button - Stable & Fixed Position */}
+            {!isStreaming && (
               <Tooltip content={isHoldingMic ? 'در حال ضبط ویس...' : isRecording ? 'توقف تایپ صوتی' : 'تایپ صوتی (کلیک) / ضبط ویس (نگه‌داشتن)'}>
                 <button
                   type="button"
                   onPointerDown={handlePointerDownMic}
                   onPointerUp={handlePointerUpMic}
-                  onPointerLeave={handlePointerUpMic}
+                  onPointerLeave={handlePointerLeaveMic}
                   disabled={isStreaming}
-                  className={`w-10 h-10 flex items-center justify-center transition-all rounded-full bg-transparent border-0 outline-none active:scale-95 ${
+                  className={`w-10 h-10 flex items-center justify-center transition-all rounded-full bg-transparent border-0 outline-none active:scale-95 cursor-pointer ${
                     isRecording || isHoldingMic
-                      ? 'text-red-500 bg-red-100 dark:bg-red-500/10 animate-pulse shadow-[0_0_10px_rgba(239,68,68,0.3)]'
+                      ? 'text-red-500 bg-red-100 dark:bg-red-500/20 ring-2 ring-red-400 animate-pulse shadow-[0_0_12px_rgba(239,68,68,0.4)]'
                       : 'text-zinc-500 dark:text-slate-400 hover:text-zinc-800 dark:hover:text-slate-200 hover:bg-zinc-200 dark:hover:bg-white/5'
                   }`}
                   aria-label="Voice input"

@@ -286,27 +286,40 @@ export default function App() {
     let finalModelUsed = (settings.providers as any)[settings.providers.activeProvider]?.modelName || 'gemini-1.5-flash';
 
     if (settings.tools.smartRouting && !isImageGen) {
-         const roles = settings.tools.routingRoles || {} as any;
-         const rVision = roles.vision || 'gemini-1.5-pro';
-         const rVisionProv = roles.visionProvider || 'custom';
-         const rCoding = roles.coding || 'claude-3-5-sonnet-20240620';
-         const rCodingProv = roles.codingProvider || 'custom';
-         const rDefault = roles.default || 'gpt-4o-mini';
-         const rDefaultProv = roles.defaultProvider || 'custom';
-         
-         if (effectiveImageUrls && effectiveImageUrls.length > 0) {
-             payloadSettings.providers.activeProvider = rVisionProv;
-             (payloadSettings.providers as any)[payloadSettings.providers.activeProvider].modelName = rVision;
-             finalModelUsed = rVision + ' (Auto)';
-         } else if (/(function|class|const|let|var|def|return|import|console\.log|export|interface|type|کد|پایتون|جاوا|سی شارپ|اسکریپت|ری‌اکت|فرانت|بک‌اند|دیباگ|برنامه|الگوریتم|پایگاه داده|کوئری|سایت|html|css|js|python|php|cpp|c\+\+|java|sql|react|node|api|برنامه نویسی|تابع|حلقه|آرایه|متغیر|آبجکت)/i.test(text)) {
-             payloadSettings.providers.activeProvider = rCodingProv;
-             (payloadSettings.providers as any)[payloadSettings.providers.activeProvider].modelName = rCoding;
-             finalModelUsed = (rCoding || 'Claude-3.5') + ' (Auto)';
-         } else {
-             payloadSettings.providers.activeProvider = rDefaultProv;
-             (payloadSettings.providers as any)[payloadSettings.providers.activeProvider].modelName = rDefault || 'gpt-4o-mini';
-             finalModelUsed = (rDefault || 'gpt-4o-mini') + ' (Auto)';
-         }
+      const activeProv = settings.providers.activeProvider || 'gemini';
+      const roles = settings.tools.routingRoles || {} as any;
+      
+      const rVisionProv = roles.visionProvider || activeProv;
+      const rCodingProv = roles.codingProvider || activeProv;
+      const rDefaultProv = roles.defaultProvider || activeProv;
+
+      const defaultModelName = (settings.providers as any)[activeProv]?.modelName || 'gemini-2.5-flash';
+      const defaultVisionModel = activeProv === 'gemini' ? 'gemini-2.5-pro' : (roles.vision || defaultModelName);
+      const defaultCodingModel = activeProv === 'gemini' ? 'gemini-2.5-flash' : (roles.coding || defaultModelName);
+
+      const rVision = roles.vision || defaultVisionModel;
+      const rCoding = roles.coding || defaultCodingModel;
+      const rDefault = roles.default || defaultModelName;
+      
+      if (effectiveImageUrls && effectiveImageUrls.length > 0) {
+          payloadSettings.providers.activeProvider = rVisionProv;
+          if ((payloadSettings.providers as any)[rVisionProv]) {
+            (payloadSettings.providers as any)[rVisionProv].modelName = rVision;
+          }
+          finalModelUsed = rVision + ' (هوشمند)';
+      } else if (/(function|class|const|let|var|def|return|import|console\.log|export|interface|type|کد|پایتون|جاوا|سی شارپ|اسکریپت|ری‌اکت|فرانت|بک‌اند|دیباگ|برنامه|الگوریتم|پایگاه داده|کوئری|سایت|html|css|js|python|php|cpp|c\+\+|java|sql|react|node|api|برنامه نویسی|تابع|حلقه|آرایه|متغیر|آبجکت)/i.test(text)) {
+          payloadSettings.providers.activeProvider = rCodingProv;
+          if ((payloadSettings.providers as any)[rCodingProv]) {
+            (payloadSettings.providers as any)[rCodingProv].modelName = rCoding;
+          }
+          finalModelUsed = rCoding + ' (هوشمند)';
+      } else {
+          payloadSettings.providers.activeProvider = rDefaultProv;
+          if ((payloadSettings.providers as any)[rDefaultProv]) {
+            (payloadSettings.providers as any)[rDefaultProv].modelName = rDefault;
+          }
+          finalModelUsed = rDefault + ' (هوشمند)';
+      }
     }
 
     const userMessage: ChatMessage = {

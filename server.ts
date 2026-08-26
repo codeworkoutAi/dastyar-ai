@@ -274,7 +274,7 @@ class SmartWebAgent {
     let html = '';
     try {
       const res = await fetch(searchUrl, {
-        headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36', 'Accept-Language': 'fa,en-US;q=0.9,en;q=0.8' },
+        headers: { 'User-Agent': 'curl/7.81.0', 'Accept-Language': 'fa,en-US;q=0.9,en;q=0.8' },
         signal: AbortSignal.timeout(4500)
       });
       if (res.ok) html = await res.text();
