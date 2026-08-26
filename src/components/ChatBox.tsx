@@ -62,6 +62,7 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
   usePersianDigits,
   showPerformanceMetrics = true,
   onToggleMetrics,
+  onOpenImageStudio,
 }) => {
   const chatEndRef = useRef<HTMLDivElement | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
