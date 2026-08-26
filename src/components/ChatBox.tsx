@@ -31,7 +31,7 @@ import { MarkdownRenderer } from './MarkdownRenderer';
 import { PERSIAN_STARTER_PROMPTS, isRtlText } from '../lib/persianUtils';
 import { Tooltip } from './Tooltip';
 import { speakText, SpeakController } from '../lib/tts';
-import { Image as ImageIcon, Sparkles } from 'lucide-react';
+import { Image as ImageIcon } from 'lucide-react';
 
 const MAGIC_IMAGE_PROMPTS = [
   { id: 'realism', title: 'پرتره فوق‌واقع‌گرایانه', engine: 'flux', icon: '📸', desc: 'عکس ماکرو و فوق‌واقع‌گرایانه از چشم یک گربه جنگلی که انعکاس یک کهکشان پر از ستاره در مردمک آن پیداست. نورپردازی دراماتیک، بافت بی‌نظیر، وضوح 8k.' },
