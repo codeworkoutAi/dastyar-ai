@@ -35,6 +35,7 @@ interface MessageInputProps {
   enterToSend: boolean;
   usePersianDigits: boolean;
   onVideoAttached?: () => void;
+  defaultWebSearch?: boolean;
 }
 
 export const MessageInput: React.FC<MessageInputProps> = ({
@@ -44,6 +45,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({
   enterToSend,
   usePersianDigits,
   onVideoAttached,
+  defaultWebSearch = false,
 }) => {
   const [text, setText] = useState('');
   const [attachments, setAttachments] = useState<{
@@ -56,7 +58,12 @@ export const MessageInput: React.FC<MessageInputProps> = ({
   const [isAttachmentMenuOpen, setIsAttachmentMenuOpen] = useState(false);
   const [isCameraModalOpen, setIsCameraModalOpen] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
-  const [webSearchEnabled, setWebSearchEnabled] = useState(false);
+  const [webSearchEnabled, setWebSearchEnabled] = useState(defaultWebSearch);
+  
+  useEffect(() => {
+    setWebSearchEnabled(defaultWebSearch);
+  }, [defaultWebSearch]);
+
   const [sentHistory, setSentHistory] = useState<string[]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
   const [slashMenuOpen, setSlashMenuOpen] = useState(false);

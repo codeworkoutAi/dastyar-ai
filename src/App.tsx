@@ -764,6 +764,7 @@ export default function App() {
             enterToSend={settings.tools.enterToSend}
             usePersianDigits={settings.appearance.persianNumerals}
             onVideoAttached={handleVideoAttached}
+            defaultWebSearch={settings?.tools?.webSearch || false}
           />
         </main>
       </div>
