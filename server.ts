@@ -354,10 +354,10 @@ async function fetchLiveWebSearch(query: string): Promise<string | null> {
 async function fetchUniversalWebSnippets(query: string): Promise<string | null> {
   if (!query || query.length < 2) return null;
   try {
-    const url = 'https://search.yahoo.com/search?p=' + encodeURIComponent(query);
+    const url = 'https://www.bing.com/search?q=' + encodeURIComponent(query);
     const res = await fetch(url, {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
         'Accept-Language': 'fa,en-US;q=0.9,en;q=0.8'
       },
       signal: AbortSignal.timeout(4500)
@@ -365,23 +365,21 @@ async function fetchUniversalWebSnippets(query: string): Promise<string | null> 
     if (!res.ok) return null;
     const html = await res.text();
     
-    const snippetMatches = [...html.matchAll(/<div class="compTitle[^>]*>([\s\S]*?)<\/div>/gi)];
-    const snippetMatches2 = [...html.matchAll(/<div class="compText[^>]*>([\s\S]*?)<\/div>/gi)];
+    const titles = [...html.matchAll(/<h2[^>]*><a[^>]*href="([^"]*)"[^>]*>([\s\S]*?)<\/a><\/h2>/gi)];
+    const snippets = [...html.matchAll(/<div class="b_caption[^>]*>([\s\S]*?)<\/div>/gi)];
     
     const items: string[] = [];
-    const limit = Math.min(snippetMatches.length, snippetMatches2.length, 6);
+    const limit = Math.min(titles.length, snippets.length, 6);
     for (let i = 0; i < limit; i++) {
-      let rawUrl = '';
-      const urlMatch = snippetMatches[i][1].match(/href="([^"]+)"/);
-      if (urlMatch) {
-        rawUrl = urlMatch[1];
-        if (rawUrl.includes('RU=')) {
-          const ruMatch = rawUrl.match(/RU=([^/]+)/);
-          if (ruMatch) rawUrl = decodeURIComponent(ruMatch[1]);
-        }
+      let rawUrl = titles[i][1];
+      const uMatch = rawUrl.match(/&u=a1([^&]+)/);
+      if (uMatch) {
+        try {
+          rawUrl = Buffer.from(uMatch[1], 'base64').toString('utf8');
+        } catch(e) {}
       }
-      const title = snippetMatches[i][1].replace(/<[^>]+>/g, '').replace(/&nbsp;/g, ' ').replace(/&quot;/g, '"').replace(/&amp;/g, '&').replace(/&#x27;/g, "'").trim();
-      const snippet = snippetMatches2[i][1].replace(/<[^>]+>/g, '').replace(/&nbsp;/g, ' ').replace(/&quot;/g, '"').replace(/&amp;/g, '&').replace(/&#x27;/g, "'").replace(/\s+/g, ' ').trim();
+      const title = titles[i][2].replace(/<[^>]+>/g, '').replace(/&nbsp;/g, ' ').replace(/&quot;/g, '"').replace(/&amp;/g, '&').replace(/&#x27;/g, "'").replace(/&#039;/g, "'").replace(/&#0183;/g, "·").trim();
+      const snippet = snippets[i][1].replace(/<[^>]+>/g, '').replace(/&nbsp;/g, ' ').replace(/&quot;/g, '"').replace(/&amp;/g, '&').replace(/&#x27;/g, "'").replace(/&#039;/g, "'").replace(/&#0183;/g, "·").replace(/\s+/g, ' ').trim();
       
       if (snippet.length > 10) {
         items.push(`• [منبع: ${rawUrl}]\n  تیتر: ${title}\n  مستندات و خلاصه راهکار: ${snippet}`);
