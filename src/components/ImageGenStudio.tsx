@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { 
   X, Sparkles, Download, Image as ImageIcon, Send, Sliders, Trash2, Wand2, 
-  History, RotateCcw, AlertTriangle, Check, Copy, Search, ArrowRight, Eye, RefreshCw
+  History, RotateCcw, AlertTriangle, Check, Copy, Search, ArrowRight, Eye, RefreshCw,
+  Grid2X2, Grid3X3, LayoutGrid
 } from 'lucide-react';
 import { loadSettings } from '../lib/storage';
 
@@ -44,6 +45,27 @@ const ASPECT_RATIOS = [
   { id: '9:16', name: 'استوری', icon: '▯', w: 'w-4', h: 'h-7' },
 ];
 
+// Helper to preload image before rendering in DOM
+function preloadImage(url: string, timeoutMs = 30000): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const timer = setTimeout(() => {
+      img.src = '';
+      reject(new Error('زمان انتظار برای بارگذاری تصویر به پایان رسید. لطفاً مجدداً تلاش کنید.'));
+    }, timeoutMs);
+
+    img.onload = () => {
+      clearTimeout(timer);
+      resolve();
+    };
+    img.onerror = () => {
+      clearTimeout(timer);
+      reject(new Error('خطا در دریافت فایل تصویر از سرور. لطفاً دوباره دکمه تولید را بزنید.'));
+    };
+    img.src = url;
+  });
+}
+
 export function ImageGenStudio({ isOpen, onClose, onInsertToChat, initialPrompt, initialEngine }: ImageGenStudioProps) {
   const [prompt, setPrompt] = useState('');
   const [aspectRatio, setAspectRatio] = useState('1:1');
@@ -65,6 +87,22 @@ export function ImageGenStudio({ isOpen, onClose, onInsertToChat, initialPrompt,
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDetailImage, setSelectedDetailImage] = useState<ImageHistory | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  
+  // Gallery Grid Density / Zoom State
+  const [gridDensity, setGridDensity] = useState<'compact' | 'medium' | 'large'>(() => {
+    try {
+      return (localStorage.getItem('image_gen_grid_density') as any) || 'medium';
+    } catch {
+      return 'medium';
+    }
+  });
+
+  const handleSetGridDensity = (density: 'compact' | 'medium' | 'large') => {
+    setGridDensity(density);
+    try {
+      localStorage.setItem('image_gen_grid_density', density);
+    } catch {}
+  };
 
   // Settings
   const settings = loadSettings();
@@ -200,6 +238,8 @@ export function ImageGenStudio({ isOpen, onClose, onInsertToChat, initialPrompt,
         throw new Error(data.error || 'خطا در تولید تصویر');
       }
       if (data.imageUrl) {
+        // Preload image in memory before showing to prevent broken image icons on re-generation
+        await preloadImage(data.imageUrl);
         setImageUrl(data.imageUrl);
         saveHistory({
           url: data.imageUrl,
@@ -227,6 +267,19 @@ export function ImageGenStudio({ isOpen, onClose, onInsertToChat, initialPrompt,
       (item.enhancedPrompt && item.enhancedPrompt.toLowerCase().includes(searchQuery.toLowerCase()));
     return matchesEngine && matchesSearch;
   });
+
+  // Dynamic grid classes based on density selection
+  const getGridClasses = () => {
+    switch (gridDensity) {
+      case 'compact':
+        return 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2.5 sm:gap-3.5';
+      case 'large':
+        return 'grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-2 gap-4 sm:gap-6';
+      case 'medium':
+      default:
+        return 'grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-3.5 sm:gap-5';
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -368,7 +421,7 @@ export function ImageGenStudio({ isOpen, onClose, onInsertToChat, initialPrompt,
                             isSelected
                               ? eng.tier === 'pro' ? 'bg-amber-200/50 dark:bg-amber-500/20' : 'bg-emerald-200/50 dark:bg-emerald-500/20'
                               : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500'
-                          }`}>
+                        }`}>
                             {eng.tag}
                           </span>
                         </div>
@@ -425,35 +478,74 @@ export function ImageGenStudio({ isOpen, onClose, onInsertToChat, initialPrompt,
             </div>
           ) : (
             /* Gallery Fullscreen Header */
-            <div className="p-4 lg:p-6 border-b border-zinc-200 dark:border-white/10 bg-white/40 dark:bg-black/40 backdrop-blur-md z-20 flex flex-col gap-4 animate-fadeIn">
+            <div className="p-3.5 lg:p-5 border-b border-zinc-200 dark:border-white/10 bg-white/40 dark:bg-black/40 backdrop-blur-md z-20 flex flex-col gap-3.5 animate-fadeIn">
               <div className="flex items-center justify-between gap-3 flex-wrap">
                 
                 {/* Back to Canvas */}
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2.5">
                   <button 
                     onClick={() => { setShowHistory(false); setSelectedDetailImage(null); }}
-                    className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs sm:text-sm font-bold transition-all shadow-md hover:shadow-lg cursor-pointer"
+                    className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs sm:text-sm font-bold transition-all shadow-md hover:shadow-lg cursor-pointer"
                   >
                     <ArrowRight className="w-4 h-4" />
                     <span>بازگشت به استودیو</span>
                   </button>
                   
-                  <div className="hidden sm:flex items-center gap-2 text-zinc-500 dark:text-zinc-400 text-xs font-bold">
+                  <div className="hidden md:flex items-center gap-2 text-zinc-500 dark:text-zinc-400 text-xs font-bold">
                     <span className="w-1.5 h-1.5 rounded-full bg-purple-500"></span>
                     <span>{history.length} اثر ذخیره‌شده</span>
                   </div>
                 </div>
 
-                {/* Search and Clear Actions */}
-                <div className="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-end">
-                  <div className="relative flex-1 sm:w-60">
-                    <Search className="w-4 h-4 text-zinc-400 absolute right-3 top-1/2 -translate-y-1/2" />
+                {/* Right Actions: Size Slider / Density Selector + Search + Clear */}
+                <div className="flex items-center gap-2.5 w-full sm:w-auto justify-between sm:justify-end flex-wrap">
+                  
+                  {/* Grid Density Zoom Selector / Slider */}
+                  <div className="flex items-center gap-1 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-white/10 p-1 rounded-xl shadow-xs">
+                    <button
+                      onClick={() => handleSetGridDensity('compact')}
+                      className={`px-2 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
+                        gridDensity === 'compact'
+                          ? 'bg-purple-600 text-white shadow-xs'
+                          : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200'
+                      }`}
+                      title="نمایش ریز (تراکم بالا)"
+                    >
+                      ریز
+                    </button>
+                    <button
+                      onClick={() => handleSetGridDensity('medium')}
+                      className={`px-2 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
+                        gridDensity === 'medium'
+                          ? 'bg-purple-600 text-white shadow-xs'
+                          : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200'
+                      }`}
+                      title="نمایش استاندارد (متوسط)"
+                    >
+                      متوسط
+                    </button>
+                    <button
+                      onClick={() => handleSetGridDensity('large')}
+                      className={`px-2 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
+                        gridDensity === 'large'
+                          ? 'bg-purple-600 text-white shadow-xs'
+                          : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200'
+                      }`}
+                      title="نمایش بزرگ (با جزئیات)"
+                    >
+                      بزرگ
+                    </button>
+                  </div>
+
+                  {/* Search input */}
+                  <div className="relative flex-1 sm:w-52">
+                    <Search className="w-3.5 h-3.5 text-zinc-400 absolute right-3 top-1/2 -translate-y-1/2" />
                     <input 
                       type="text" 
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       placeholder="جستجو در پرامپت‌ها..." 
-                      className="w-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-white/10 rounded-xl pr-9 pl-3 py-1.5 text-xs text-zinc-800 dark:text-zinc-200 placeholder:text-zinc-400 outline-none focus:border-purple-500 transition-colors"
+                      className="w-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-white/10 rounded-xl pr-8 pl-3 py-1.5 text-xs text-zinc-800 dark:text-zinc-200 placeholder:text-zinc-400 outline-none focus:border-purple-500 transition-colors"
                     />
                     {searchQuery && (
                       <button onClick={() => setSearchQuery('')} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-200">
@@ -465,11 +557,11 @@ export function ImageGenStudio({ isOpen, onClose, onInsertToChat, initialPrompt,
                   {history.length > 0 && (
                     <button 
                       onClick={clearHistory}
-                      className="flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-rose-500 hover:text-rose-400 bg-rose-500/10 hover:bg-rose-500/20 rounded-xl transition-colors cursor-pointer shrink-0"
+                      className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-rose-500 hover:text-rose-400 bg-rose-500/10 hover:bg-rose-500/20 rounded-xl transition-colors cursor-pointer shrink-0"
                       title="پاکسازی تمام تاریخچه"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
-                      <span className="hidden sm:inline">پاکسازی گالری</span>
+                      <span className="hidden md:inline">پاکسازی</span>
                     </button>
                   )}
                 </div>
@@ -512,7 +604,7 @@ export function ImageGenStudio({ isOpen, onClose, onInsertToChat, initialPrompt,
           {/* Main Body Area */}
           <div className="flex-1 overflow-y-auto p-4 lg:p-8 flex items-center justify-center relative min-h-[40vh] lg:min-h-[50vh] pb-36 lg:pb-40 custom-scrollbar">
             {showHistory ? (
-              /* --- PRO GALLERY VIEW --- */
+              /* --- PRO GALLERY VIEW WITH DYNAMIC GRID DENSITY --- */
               <div className="w-full max-w-6xl h-full flex flex-col animate-fadeIn">
                 {filteredHistory.length === 0 ? (
                   <div className="flex-1 flex flex-col items-center justify-center py-20 text-center opacity-60">
@@ -525,7 +617,7 @@ export function ImageGenStudio({ isOpen, onClose, onInsertToChat, initialPrompt,
                     <p className="text-xs text-zinc-500 mt-1">تصاویری که در استودیو خلق می‌کنید به صورت خودکار در اینجا ذخیره می‌شوند.</p>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-3.5 sm:gap-5 pb-12">
+                  <div className={`${getGridClasses()} pb-12 transition-all duration-300`}>
                     {filteredHistory.map((item) => {
                       const engineInfo = IMAGE_ENGINES.find(e => e.id === item.engine);
                       const isCopied = copiedId === `card_${item.timestamp}`;
@@ -618,6 +710,9 @@ export function ImageGenStudio({ isOpen, onClose, onInsertToChat, initialPrompt,
                   src={imageUrl} 
                   alt="Generated" 
                   className="max-w-full max-h-[55vh] lg:max-h-[72vh] object-contain bg-black/10 backdrop-blur-3xl"
+                  onError={() => {
+                    setError('خطا در نمایش فایل تصویر. لطفاً مجدداً دکمه تولید را فشار دهید.');
+                  }}
                 />
                 
                 {/* Send to Chat Floating Overlay */}
@@ -689,196 +784,196 @@ export function ImageGenStudio({ isOpen, onClose, onInsertToChat, initialPrompt,
 
                 {error && (
                   <div className="flex items-center gap-2 text-rose-500 bg-rose-500/10 px-4 py-2.5 rounded-xl text-xs font-bold border border-rose-500/20 mx-1">
-                    <AlertTriangle className="w-4 h-4 shrink-0" />
-                    <p>{error}</p>
-                  </div>
-                )}
-
-                {/* Clean Borderless Prompt Box */}
-                <div className="relative flex items-end gap-2 bg-white/75 dark:bg-[#18181b]/75 backdrop-blur-md p-2 rounded-2xl transition-all shadow-md">
-                  
-                  {/* Magic Enhance Button */}
-                  <button
-                    type="button"
-                    onClick={handleEnhancePrompt}
-                    disabled={enhancing || loading || !prompt.trim()}
-                    className="shrink-0 p-3 bg-gradient-to-br from-indigo-500 to-purple-600 hover:from-indigo-400 hover:to-purple-500 text-white rounded-xl transition-all disabled:opacity-50 disabled:grayscale shadow-sm hover:shadow hover:-translate-y-0.5 cursor-pointer"
-                    title="ارتقای جادویی پرامپت با هوش مصنوعی"
-                  >
-                    <Wand2 className={`w-5 h-5 ${enhancing ? 'animate-pulse' : ''}`} />
-                  </button>
-
-                  <textarea
-                    value={prompt}
-                    onChange={(e) => setPrompt(e.target.value)}
-                    placeholder="توصیف تصویر (فارسی یا انگلیسی)..."
-                    className="flex-1 bg-transparent border-none outline-none focus:ring-0 focus:outline-none resize-none text-sm lg:text-base py-2.5 px-3 max-h-24 sm:max-h-32 min-h-[44px] custom-scrollbar placeholder:text-zinc-400 dark:placeholder:text-zinc-500 text-zinc-800 dark:text-zinc-100"
-                    rows={Math.min(3, prompt.split('\n').length || 1)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' && !e.shiftKey) {
-                        e.preventDefault();
-                        handleGenerate();
-                      }
-                    }}
-                  />
-
-                  <button
-                    onClick={handleGenerate}
-                    disabled={loading || !prompt.trim()}
-                    className="shrink-0 p-3 bg-purple-600 hover:bg-purple-500 text-white rounded-xl transition-all disabled:opacity-50 shadow-sm hover:shadow hover:-translate-y-0.5 flex items-center justify-center cursor-pointer"
-                    title="تولید تصویر"
-                  >
-                    {loading ? <RotateCcw className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
-                  </button>
+                  <AlertTriangle className="w-4 h-4 shrink-0" />
+                  <p>{error}</p>
                 </div>
-              </div>
-            </div>
-          )}
-        </div>
+              )}
 
-        {/* Mobile Settings Overlay Backdrop */}
-        {isMobileSettingsOpen && !showHistory && (
-          <div 
-            className="fixed inset-0 bg-black/60 z-[60] lg:hidden backdrop-blur-sm"
-            onClick={() => setIsMobileSettingsOpen(false)}
-          />
-        )}
+              {/* Clean Borderless Prompt Box */}
+              <div className="relative flex items-end gap-2 bg-white/75 dark:bg-[#18181b]/75 backdrop-blur-md p-2 rounded-2xl transition-all shadow-md">
+                
+                {/* Magic Enhance Button */}
+                <button
+                  type="button"
+                  onClick={handleEnhancePrompt}
+                  disabled={enhancing || loading || !prompt.trim()}
+                  className="shrink-0 p-3 bg-gradient-to-br from-indigo-500 to-purple-600 hover:from-indigo-400 hover:to-purple-500 text-white rounded-xl transition-all disabled:opacity-50 disabled:grayscale shadow-sm hover:shadow hover:-translate-y-0.5 cursor-pointer"
+                  title="ارتقای جادویی پرامپت با هوش مصنوعی"
+                >
+                  <Wand2 className={`w-5 h-5 ${enhancing ? 'animate-pulse' : ''}`} />
+                </button>
 
-        {/* --- 3. LIGHTBOX DETAIL MODAL (RESPONSIVE FOR ALL DEVICES) --- */}
-        {selectedDetailImage && (
-          <div 
-            className="fixed inset-0 z-[80] bg-black/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 animate-fadeIn"
-            onClick={() => setSelectedDetailImage(null)}
-          >
-            <div 
-              className="bg-[#18181b] border border-white/10 w-full max-w-4xl max-h-[92vh] rounded-3xl overflow-hidden shadow-2xl flex flex-col md:flex-row text-right animate-scaleIn"
-              onClick={(e) => e.stopPropagation()}
-            >
-              {/* Left Side: Large Image Preview */}
-              <div className="flex-1 bg-black/40 flex items-center justify-center p-4 min-h-[260px] sm:min-h-[380px] relative">
-                <img 
-                  src={selectedDetailImage.url} 
-                  alt={selectedDetailImage.prompt} 
-                  className="max-w-full max-h-[45vh] md:max-h-[75vh] object-contain rounded-2xl shadow-xl"
+                <textarea
+                  value={prompt}
+                  onChange={(e) => setPrompt(e.target.value)}
+                  placeholder="توصیف تصویر (فارسی یا انگلیسی)..."
+                  className="flex-1 bg-transparent border-none outline-none focus:ring-0 focus:outline-none resize-none text-sm lg:text-base py-2.5 px-3 max-h-24 sm:max-h-32 min-h-[44px] custom-scrollbar placeholder:text-zinc-400 dark:placeholder:text-zinc-500 text-zinc-800 dark:text-zinc-100"
+                  rows={Math.min(3, prompt.split('\n').length || 1)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      handleGenerate();
+                    }
+                  }}
                 />
-              </div>
 
-              {/* Right Side: Metadata & Action Controls */}
-              <div className="w-full md:w-80 lg:w-96 p-5 sm:p-6 flex flex-col justify-between border-t md:border-t-0 md:border-r border-white/10 overflow-y-auto custom-scrollbar max-h-[45vh] md:max-h-[85vh]">
-                <div className="space-y-4">
-                  
-                  {/* Top Bar with Close Button */}
-                  <div className="flex items-center justify-between pb-3 border-b border-white/10">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-bold text-purple-400 bg-purple-500/10 px-2.5 py-1 rounded-lg border border-purple-500/20">
-                        {IMAGE_ENGINES.find(e => e.id === selectedDetailImage.engine)?.name || selectedDetailImage.engine}
-                      </span>
-                      <span className="text-[11px] text-zinc-400">
-                        {getRelativeTime(selectedDetailImage.timestamp)}
-                      </span>
-                    </div>
-                    <button 
-                      onClick={() => setSelectedDetailImage(null)}
-                      className="p-1.5 text-zinc-400 hover:text-white rounded-full hover:bg-white/10 transition-colors cursor-pointer"
-                    >
-                      <X className="w-5 h-5" />
-                    </button>
-                  </div>
-
-                  {/* Prompt Text with Copy Button */}
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <label className="text-xs font-bold text-zinc-400">پرامپت استفاده‌شده:</label>
-                      <button
-                        onClick={() => copyPromptText(selectedDetailImage.prompt, 'modal_prompt')}
-                        className="flex items-center gap-1 text-[11px] font-bold text-purple-400 hover:text-purple-300 cursor-pointer"
-                      >
-                        {copiedId === 'modal_prompt' ? (
-                          <>
-                            <Check className="w-3.5 h-3.5 text-emerald-400" />
-                            <span className="text-emerald-400">کپی شد!</span>
-                          </>
-                        ) : (
-                          <>
-                            <Copy className="w-3.5 h-3.5" />
-                            <span>کپی پرامپت</span>
-                          </>
-                        )}
-                      </button>
-                    </div>
-                    <div className="p-3.5 rounded-2xl bg-black/40 border border-white/5 text-zinc-200 text-xs sm:text-sm leading-relaxed max-h-36 overflow-y-auto custom-scrollbar select-text font-sans">
-                      {selectedDetailImage.prompt}
-                    </div>
-                  </div>
-
-                  {/* Enhanced prompt if exists */}
-                  {selectedDetailImage.enhancedPrompt && selectedDetailImage.enhancedPrompt !== selectedDetailImage.prompt && (
-                    <div className="space-y-1.5">
-                      <label className="text-[11px] font-bold text-indigo-400 flex items-center gap-1">
-                        <Wand2 className="w-3 h-3" /> پرامپت ارتقایافته:
-                      </label>
-                      <p className="text-[11px] text-zinc-400 bg-black/20 p-2.5 rounded-xl border border-white/5 line-clamp-3">
-                        {selectedDetailImage.enhancedPrompt}
-                      </p>
-                    </div>
-                  )}
-                </div>
-
-                {/* Primary Action Buttons */}
-                <div className="space-y-2.5 pt-6 mt-4 border-t border-white/10">
-                  {/* Remix in Studio */}
-                  <button
-                    onClick={() => remixPrompt(selectedDetailImage)}
-                    className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl bg-purple-600 hover:bg-purple-500 text-white text-sm font-bold shadow-lg transition-all hover:scale-[1.02] cursor-pointer"
-                  >
-                    <Wand2 className="w-4 h-4" />
-                    <span>بارگذاری و ویرایش در بوم (Remix)</span>
-                  </button>
-
-                  {/* Send to Chat */}
-                  {onInsertToChat && (
-                    <button
-                      onClick={() => {
-                        onInsertToChat(selectedDetailImage.prompt, selectedDetailImage.url);
-                        setSelectedDetailImage(null);
-                        onClose();
-                      }}
-                      className="w-full flex items-center justify-center gap-2 py-2.5 rounded-2xl bg-white/10 hover:bg-white/20 text-zinc-100 text-sm font-bold transition-colors cursor-pointer border border-white/5"
-                    >
-                      <Send className="w-4 h-4" />
-                      <span>ارسال به گفتگوی چت</span>
-                    </button>
-                  )}
-
-                  <div className="flex items-center gap-2 pt-1">
-                    {/* Download */}
-                    <a
-                      href={selectedDetailImage.url}
-                      download="persian-ai-image.png"
-                      target="_blank"
-                      rel="noreferrer"
-                      className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-2xl bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-bold transition-colors border border-white/5 cursor-pointer"
-                    >
-                      <Download className="w-3.5 h-3.5" />
-                      <span>دانلود فایل</span>
-                    </a>
-
-                    {/* Delete */}
-                    <button
-                      onClick={() => deleteSingleHistory(selectedDetailImage.timestamp)}
-                      className="flex items-center justify-center p-2.5 rounded-2xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 text-xs font-bold transition-colors border border-rose-500/20 cursor-pointer"
-                      title="حذف این تصویر"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
+                <button
+                  onClick={handleGenerate}
+                  disabled={loading || !prompt.trim()}
+                  className="shrink-0 p-3 bg-purple-600 hover:bg-purple-500 text-white rounded-xl transition-all disabled:opacity-50 shadow-sm hover:shadow hover:-translate-y-0.5 flex items-center justify-center cursor-pointer"
+                  title="تولید تصویر"
+                >
+                  {loading ? <RotateCcw className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
+                </button>
               </div>
             </div>
           </div>
         )}
-
       </div>
+
+      {/* Mobile Settings Overlay Backdrop */}
+      {isMobileSettingsOpen && !showHistory && (
+        <div 
+          className="fixed inset-0 bg-black/60 z-[60] lg:hidden backdrop-blur-sm"
+          onClick={() => setIsMobileSettingsOpen(false)}
+        />
+      )}
+
+      {/* --- 3. LIGHTBOX DETAIL MODAL (RESPONSIVE FOR ALL DEVICES) --- */}
+      {selectedDetailImage && (
+        <div 
+          className="fixed inset-0 z-[80] bg-black/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 animate-fadeIn"
+          onClick={() => setSelectedDetailImage(null)}
+        >
+          <div 
+            className="bg-[#18181b] border border-white/10 w-full max-w-4xl max-h-[92vh] rounded-3xl overflow-hidden shadow-2xl flex flex-col md:flex-row text-right animate-scaleIn"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Left Side: Large Image Preview */}
+            <div className="flex-1 bg-black/40 flex items-center justify-center p-4 min-h-[260px] sm:min-h-[380px] relative">
+              <img 
+                src={selectedDetailImage.url} 
+                alt={selectedDetailImage.prompt} 
+                className="max-w-full max-h-[45vh] md:max-h-[75vh] object-contain rounded-2xl shadow-xl"
+              />
+            </div>
+
+            {/* Right Side: Metadata & Action Controls */}
+            <div className="w-full md:w-80 lg:w-96 p-5 sm:p-6 flex flex-col justify-between border-t md:border-t-0 md:border-r border-white/10 overflow-y-auto custom-scrollbar max-h-[45vh] md:max-h-[85vh]">
+              <div className="space-y-4">
+                
+                {/* Top Bar with Close Button */}
+                <div className="flex items-center justify-between pb-3 border-b border-white/10">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold text-purple-400 bg-purple-500/10 px-2.5 py-1 rounded-lg border border-purple-500/20">
+                      {IMAGE_ENGINES.find(e => e.id === selectedDetailImage.engine)?.name || selectedDetailImage.engine}
+                    </span>
+                    <span className="text-[11px] text-zinc-400">
+                      {getRelativeTime(selectedDetailImage.timestamp)}
+                    </span>
+                  </div>
+                  <button 
+                    onClick={() => setSelectedDetailImage(null)}
+                    className="p-1.5 text-zinc-400 hover:text-white rounded-full hover:bg-white/10 transition-colors cursor-pointer"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+
+                {/* Prompt Text with Copy Button */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-bold text-zinc-400">پرامپت استفاده‌شده:</label>
+                    <button
+                      onClick={() => copyPromptText(selectedDetailImage.prompt, 'modal_prompt')}
+                      className="flex items-center gap-1 text-[11px] font-bold text-purple-400 hover:text-purple-300 cursor-pointer"
+                    >
+                      {copiedId === 'modal_prompt' ? (
+                        <>
+                          <Check className="w-3.5 h-3.5 text-emerald-400" />
+                          <span className="text-emerald-400">کپی شد!</span>
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="w-3.5 h-3.5" />
+                          <span>کپی پرامپت</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                  <div className="p-3.5 rounded-2xl bg-black/40 border border-white/5 text-zinc-200 text-xs sm:text-sm leading-relaxed max-h-36 overflow-y-auto custom-scrollbar select-text font-sans">
+                    {selectedDetailImage.prompt}
+                  </div>
+                </div>
+
+                {/* Enhanced prompt if exists */}
+                {selectedDetailImage.enhancedPrompt && selectedDetailImage.enhancedPrompt !== selectedDetailImage.prompt && (
+                  <div className="space-y-1.5">
+                    <label className="text-[11px] font-bold text-indigo-400 flex items-center gap-1">
+                      <Wand2 className="w-3 h-3" /> پرامپت ارتقایافته:
+                    </label>
+                    <p className="text-[11px] text-zinc-400 bg-black/20 p-2.5 rounded-xl border border-white/5 line-clamp-3">
+                      {selectedDetailImage.enhancedPrompt}
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* Primary Action Buttons */}
+              <div className="space-y-2.5 pt-6 mt-4 border-t border-white/10">
+                {/* Remix in Studio */}
+                <button
+                  onClick={() => remixPrompt(selectedDetailImage)}
+                  className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl bg-purple-600 hover:bg-purple-500 text-white text-sm font-bold shadow-lg transition-all hover:scale-[1.02] cursor-pointer"
+                >
+                  <Wand2 className="w-4 h-4" />
+                  <span>بارگذاری و ویرایش در بوم (Remix)</span>
+                </button>
+
+                {/* Send to Chat */}
+                {onInsertToChat && (
+                  <button
+                    onClick={() => {
+                      onInsertToChat(selectedDetailImage.prompt, selectedDetailImage.url);
+                      setSelectedDetailImage(null);
+                      onClose();
+                    }}
+                    className="w-full flex items-center justify-center gap-2 py-2.5 rounded-2xl bg-white/10 hover:bg-white/20 text-zinc-100 text-sm font-bold transition-colors cursor-pointer border border-white/5"
+                  >
+                    <Send className="w-4 h-4" />
+                    <span>ارسال به گفتگوی چت</span>
+                  </button>
+                )}
+
+                <div className="flex items-center gap-2 pt-1">
+                  {/* Download */}
+                  <a
+                    href={selectedDetailImage.url}
+                    download="persian-ai-image.png"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-2xl bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-bold transition-colors border border-white/5 cursor-pointer"
+                  >
+                    <Download className="w-3.5 h-3.5" />
+                    <span>دانلود فایل</span>
+                  </a>
+
+                  {/* Delete */}
+                  <button
+                    onClick={() => deleteSingleHistory(selectedDetailImage.timestamp)}
+                    className="flex items-center justify-center p-2.5 rounded-2xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 text-xs font-bold transition-colors border border-rose-500/20 cursor-pointer"
+                    title="حذف این تصویر"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
+  </div>
   );
 }
