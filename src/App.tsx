@@ -722,9 +722,14 @@ export default function App() {
               if (!val) {
                 setMetricsNotice('آمار و بنچمارک مخفی شد. برای فعال‌سازی مجدد به تنظیمات مراجعه کنید.');
                 setTimeout(() => setMetricsNotice(null), 5000);
-              }
-            }}
-          />
+                }
+              }}
+              onOpenImageStudio={(prompt, engine) => {
+                if (prompt && engine) setImageStudioInitial({ prompt, engine });
+                else setImageStudioInitial(null);
+                setIsImageStudioOpen(true);
+              }}
+            />
 
           {metricsNotice && (
             <div className="px-4 py-1.5 mx-auto -mb-1 bg-blue-500/15 border border-blue-500/30 text-blue-300 text-xs rounded-full flex items-center gap-2 animate-fadeIn z-10 select-none shadow-sm backdrop-blur-md">
