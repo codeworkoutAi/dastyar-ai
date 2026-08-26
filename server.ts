@@ -357,7 +357,7 @@ async function fetchUniversalWebSnippets(query: string): Promise<string | null> 
     const url = 'https://www.bing.com/search?q=' + encodeURIComponent(query);
     const res = await fetch(url, {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'User-Agent': 'curl/7.81.0',
         'Accept-Language': 'fa,en-US;q=0.9,en;q=0.8'
       },
       signal: AbortSignal.timeout(4500)
@@ -370,6 +370,8 @@ async function fetchUniversalWebSnippets(query: string): Promise<string | null> 
     
     const items: string[] = [];
     const limit = Math.min(titles.length, snippets.length, 6);
+    let firstUrl = null;
+    
     for (let i = 0; i < limit; i++) {
       let rawUrl = titles[i][1];
       const uMatch = rawUrl.match(/&u=a1([^&]+)/);
@@ -378,13 +380,35 @@ async function fetchUniversalWebSnippets(query: string): Promise<string | null> 
           rawUrl = Buffer.from(uMatch[1], 'base64').toString('utf8');
         } catch(e) {}
       }
+      if (i === 0) firstUrl = rawUrl;
+      
       const title = titles[i][2].replace(/<[^>]+>/g, '').replace(/&nbsp;/g, ' ').replace(/&quot;/g, '"').replace(/&amp;/g, '&').replace(/&#x27;/g, "'").replace(/&#039;/g, "'").replace(/&#0183;/g, "·").trim();
       const snippet = snippets[i][1].replace(/<[^>]+>/g, '').replace(/&nbsp;/g, ' ').replace(/&quot;/g, '"').replace(/&amp;/g, '&').replace(/&#x27;/g, "'").replace(/&#039;/g, "'").replace(/&#0183;/g, "·").replace(/\s+/g, ' ').trim();
       
       if (snippet.length > 10) {
-        items.push(`• [منبع: ${rawUrl}]\n  تیتر: ${title}\n  مستندات و خلاصه راهکار: ${snippet}`);
+        items.push(`• [منبع: ${rawUrl}]\n  تیتر: ${title}\n  خلاصه: ${snippet}`);
       }
     }
+    
+    // Auto-scrape the first URL to get deep content (useful for prices, weather, exact answers)
+    if (firstUrl) {
+      try {
+        const pageRes = await fetch(firstUrl, {
+          headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' },
+          signal: AbortSignal.timeout(3500)
+        });
+        if (pageRes.ok) {
+           let pageHtml = await pageRes.text();
+           pageHtml = pageHtml.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, ' ');
+           pageHtml = pageHtml.replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, ' ');
+           let pageText = pageHtml.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+           if (pageText.length > 200) {
+             items.push(`\n--- محتوای استخراج شده از لینک اول ---\n${pageText.substring(0, 3000)}`);
+           }
+        }
+      } catch (e) {}
+    }
+
     if (items.length > 0) return items.join('\n\n');
   } catch (e) {}
   return null;
