@@ -798,15 +798,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({
 
           {/* Left actions (Mic, Clear, Send) */}
           <div className="flex items-center gap-1 pb-0.5 sm:pb-1 pr-1 border-0 border-none outline-none">
-            <Tooltip content={webSearchEnabled ? 'جستجو در وب فعال است' : 'جستجو در وب'}>
-                  <button
-                type="button"
-                onClick={() => setWebSearchEnabled(!webSearchEnabled)}
-                className={`w-10 h-10 flex items-center justify-center rounded-full transition-all cursor-pointer ${webSearchEnabled ? 'text-sky-500 bg-sky-500/10' : 'text-zinc-500 hover:bg-zinc-200 dark:hover:bg-white/5'}`}
-              >
-                <Globe className="w-5 h-5" />
-              </button>
-            </Tooltip>
+            
 
             {/* Clear text button */}
             {text.trim() && !isStreaming && (

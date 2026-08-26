@@ -254,144 +254,49 @@ async function translateAndEnhanceImagePrompt(rawPrompt: string): Promise<string
 }
 
 // Helper to fetch live real-time web search results (Domestic Persian Feeds + Google News RSS / Web)
-async function fetchLiveWebSearch(query: string): Promise<string | null> {
-  if (!query || query.length < 2) return null;
-  try {
-    const isDomesticRequest = query.includes('ایران') || query.includes('داخلی') || query.includes('مهر') || query.includes('ایسنا') || query.includes('تسنیم') || query.includes('فارس') || query.includes('تابناک') || query.includes('خبرآنلاین') || query.includes('سایت');
 
-    const items: string[] = [];
-
-    // 1. If domestic Iranian news requested, fetch top domestic feeds in parallel directly from newsrooms
-    if (isDomesticRequest) {
-      const domesticSources = [
-        { name: 'خبرگزاری ایسنا (ISNA)', url: 'https://www.isna.ir/rss' },
-        { name: 'خبرگزاری مهر (Mehr)', url: 'https://www.mehrnews.com/rss' },
-        { name: 'تابناک (Tabnak)', url: 'https://www.tabnak.ir/fa/rss/allnews' },
-        { name: 'خبرآنلاین (Khabaronline)', url: 'https://www.khabaronline.ir/rss' }
-      ];
-
-      await Promise.allSettled(domesticSources.map(async (src) => {
-        try {
-          const res = await fetch(src.url, { headers: { 'User-Agent': 'Mozilla/5.0' }, signal: AbortSignal.timeout(3000) });
-          if (!res.ok) return;
-          const xml = await res.text();
-          const regex = /<item>[\s\S]*?<title>(.*?)<\/title>[\s\S]*?<link>(.*?)<\/link>[\s\S]*?<pubDate>(.*?)<\/pubDate>/g;
-          let match;
-          let count = 0;
-          while ((match = regex.exec(xml)) !== null && count < 3) {
-            const title = match[1].replace(/<!\[CDATA\[(.*?)\]\]>/g, '$1').replace(/<[^>]+>/g, '').trim();
-            const link = match[2].trim();
-            const date = match[3].trim();
-            if (title && link) {
-              items.push(`• [تیتر: ${title}] | [نام منبع: ${src.name}] | [لینک خبر: ${link}] | [زمان: ${date}]`);
-              count++;
-            }
-          }
-        } catch (e) {}
-      }));
-    }
-
-    // 2. Fetch Google News RSS for international or topic-specific context
-    const stopWords = [
-      'رو', 'برای', 'من', 'بیار', 'بگو', 'چیست', 'کیست', 'چیه', 'لطفا', 'میشه', 'درباره', 'در مورد',
-      'میخوام', 'بدونم', 'هست', 'جدید', 'آخرین', 'اخبار', 'خبر', 'خبرهای', 'رویداد', 'رویدادهای',
-      'امروز', 'روز', 'لحظه', 'لحظه ای', 'سایت های خبری', 'سایت های', 'چک بکن', 'چک کن', 'news', 'latest'
-    ];
-    let cleaned = query.replace(/[^\p{L}\p{N}\s]/gu, ' ').trim();
-    for (const sw of stopWords) {
-      cleaned = cleaned.replace(new RegExp('\\b' + sw + '\\b', 'gi'), ' ').replace(new RegExp('(^|\\s)' + sw + '($|\\s)', 'gi'), ' ');
-    }
-    cleaned = cleaned.replace(/\s+/g, ' ').trim();
-
-    const isSpecificTopic = cleaned.length >= 2;
-    const rssUrls = isSpecificTopic
-      ? [
-          `https://news.google.com/rss/search?q=${encodeURIComponent(cleaned)}&hl=fa&gl=IR&ceid=IR:fa`,
-          'https://news.google.com/rss?hl=fa&gl=IR&ceid=IR:fa'
-        ]
-      : ['https://news.google.com/rss?hl=fa&gl=IR&ceid=IR:fa'];
-
-    for (const rssUrl of rssUrls) {
-      if (items.length >= 6) break;
-      try {
-        const res = await fetch(rssUrl, {
-          headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' },
-          signal: AbortSignal.timeout(3500)
-        });
-        if (!res.ok) continue;
-
-        const xml = await res.text();
-        const regex = /<item>[\s\S]*?<title>(.*?)<\/title>[\s\S]*?<link>(.*?)<\/link>[\s\S]*?<pubDate>(.*?)<\/pubDate>[\s\S]*?<source[^>]*>(.*?)<\/source>/g;
-        let match;
-        while ((match = regex.exec(xml)) !== null && items.length < 10) {
-          let fullTitle = match[1].replace(/<!\[CDATA\[(.*?)\]\]>/g, '$1').replace(/<[^>]+>/g, '').trim();
-          const date = match[3].trim();
-          const sourceName = match[4].replace(/<!\[CDATA\[(.*?)\]\]>/g, '$1').replace(/<[^>]+>/g, '').trim();
-          
-          if (fullTitle.endsWith(` - ${sourceName}`)) {
-            fullTitle = fullTitle.slice(0, -(sourceName.length + 3)).trim();
-          }
-
-          const cleanSearchQuery = `${fullTitle} ${sourceName || ''}`.trim();
-          const directLink = `https://www.google.com/search?q=${encodeURIComponent(cleanSearchQuery)}`;
-
-          if (fullTitle) {
-            items.push(`• [تیتر: ${fullTitle}] | [نام منبع: ${sourceName || 'خبرگزاری'}] | [لینک خبر: ${directLink}] | [زمان: ${date}]`);
-          }
-        }
-        if (items.length > 0) break;
-      } catch (e) {}
-    }
-
-    if (items.length > 0) {
-      return items.join('\n');
-    }
-  } catch (e) {}
-  return null;
-}
-
-// Helper for Universal Web Search (Programming code, documentation, guides, stackoverflow, general questions - like ChatGPT)
-async function fetchUniversalWebSnippets(query: string): Promise<string | null> {
-  if (!query || query.length < 2) return null;
-  try {
-    const url = 'https://www.bing.com/search?q=' + encodeURIComponent(query);
-    const res = await fetch(url, {
-      headers: {
-        'User-Agent': 'curl/7.81.0',
-        'Accept-Language': 'fa,en-US;q=0.9,en;q=0.8'
-      },
-      signal: AbortSignal.timeout(4500)
-    });
-    if (!res.ok) return null;
-    const html = await res.text();
-    
+class SmartWebAgent {
+  static async processQuery(query: string): Promise<string> {
+    if (!query || query.trim().length < 2) return '';
+    const wordCount = query.trim().split(/\s+/).length;
+    const isConversational = wordCount <= 3 && !query.match(/(چیست|چگونه|چطور|آموزش|ارور|مشکل|چرا|کی|کجا|کد|کدوم|چه|تفاوت|فرق|قیمت|اخبار|خبر|دلار|طلا|ارز|بورس)/i);
+    if (isConversational) return '';
+    const isFinance = query.match(/(دلار|ارز|یورو|پوند|لیر|درهم|تتر|طلا|سکه|بورس|سهام|نفت|بیت کوین|رمز ارز|کریپتو|قیمت روز|نرخ|مظنه)/i);
+    const isNews = query.match(/(اخبار|خبر|رویداد|تیتر|اتفاقات|حوادث)/i);
+    const isShopping = query.match(/(ترب|دیجی کالا|گوشی|موبایل|لپ تاپ|تبلت|هدفون|ایرپاد|یخچال|تلویزیون|خرید|iphone|s24|s25|قیمت)/i) && !isFinance;
+    const isCode = query.match(/(ارور|خطا|کد|جاوا اسکریپت|ریئکت|پایتون|برنامه نویسی|دیتابیس|sql|css|html|error|bug|fix|react|python|js|typescript)/i);
+    let intent = 'General';
+    if (isFinance) intent = 'Finance';
+    else if (isCode) intent = 'Code';
+    else if (isNews) intent = 'News';
+    else if (isShopping) intent = 'Shopping';
+    let searchUrl = 'https://www.bing.com/search?q=' + encodeURIComponent(query);
+    let html = '';
+    try {
+      const res = await fetch(searchUrl, {
+        headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36', 'Accept-Language': 'fa,en-US;q=0.9,en;q=0.8' },
+        signal: AbortSignal.timeout(4500)
+      });
+      if (res.ok) html = await res.text();
+    } catch(e) {}
     const titles = [...html.matchAll(/<h2[^>]*><a[^>]*href="([^"]*)"[^>]*>([\s\S]*?)<\/a><\/h2>/gi)];
     const snippets = [...html.matchAll(/<div class="b_caption[^>]*>([\s\S]*?)<\/div>/gi)];
-    
-    const items: string[] = [];
-    const limit = Math.min(titles.length, snippets.length, 6);
-    let firstUrl = null;
-    
+    let firstUrl: string | null = null;
+    let resultsText = '';
+    const limit = Math.min(titles.length, snippets.length, 5);
     for (let i = 0; i < limit; i++) {
-      let rawUrl = titles[i][1];
+      let rawUrl = titles[i][1].replace(/&amp;/g, '&');
       const uMatch = rawUrl.match(/&u=a1([^&]+)/);
       if (uMatch) {
-        try {
-          rawUrl = Buffer.from(uMatch[1], 'base64').toString('utf8');
-        } catch(e) {}
+        try { rawUrl = Buffer.from(uMatch[1], 'base64').toString('utf8'); } catch(e) {}
       }
       if (i === 0) firstUrl = rawUrl;
-      
-      const title = titles[i][2].replace(/<[^>]+>/g, '').replace(/&nbsp;/g, ' ').replace(/&quot;/g, '"').replace(/&amp;/g, '&').replace(/&#x27;/g, "'").replace(/&#039;/g, "'").replace(/&#0183;/g, "·").trim();
-      const snippet = snippets[i][1].replace(/<[^>]+>/g, '').replace(/&nbsp;/g, ' ').replace(/&quot;/g, '"').replace(/&amp;/g, '&').replace(/&#x27;/g, "'").replace(/&#039;/g, "'").replace(/&#0183;/g, "·").replace(/\s+/g, ' ').trim();
-      
-      if (snippet.length > 10) {
-        items.push(`• [منبع: ${rawUrl}]\n  تیتر: ${title}\n  خلاصه: ${snippet}`);
-      }
+      const title = titles[i][2].replace(/<[^>]+>/g, '').trim();
+      const snippet = snippets[i][1].replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
+      resultsText += '[لینک: ' + rawUrl + ']\nعنوان: ' + title + '\nخلاصه: ' + snippet + '\n\n';
     }
-    
-    // Auto-scrape the first URL to get deep content (useful for prices, weather, exact answers)
-    if (firstUrl) {
+    let deepText = '';
+    if (firstUrl && (intent === 'Finance' || intent === 'News' || intent === 'Code' || intent === 'General')) {
       try {
         const pageRes = await fetch(firstUrl, {
           headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' },
@@ -401,53 +306,28 @@ async function fetchUniversalWebSnippets(query: string): Promise<string | null> 
            let pageHtml = await pageRes.text();
            pageHtml = pageHtml.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, ' ');
            pageHtml = pageHtml.replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, ' ');
-           let pageText = pageHtml.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
-           if (pageText.length > 200) {
-             items.push(`\n--- محتوای استخراج شده از لینک اول ---\n${pageText.substring(0, 3000)}`);
-           }
+           deepText = pageHtml.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim().substring(0, 3000);
         }
       } catch (e) {}
     }
-
-    if (items.length > 0) return items.join('\n\n');
-  } catch (e) {}
-  return null;
-}
-// Helper to fetch live real-time product prices & shopping comparison from Torob API
-async function fetchTorobProducts(query: string): Promise<string | null> {
-  if (!query || query.length < 2) return null;
-  try {
-    const stopWords = ['قیمت', 'خرید', 'ترب', 'دیجی کالا', 'دیجیکالا', 'چنده', 'ارزان', 'تومان', 'فروشگاه', 'مشخصات', 'رو', 'برای', 'من', 'بیار', 'بگو', 'چیست', 'لطفا'];
-    let cleanQuery = query.replace(/[^\p{L}\p{N}\s]/gu, ' ').trim();
-    for (const sw of stopWords) {
-      cleanQuery = cleanQuery.replace(new RegExp('\\b' + sw + '\\b', 'gi'), ' ').replace(new RegExp('(^|\\s)' + sw + '($|\\s)', 'gi'), ' ');
+    let finalPrompt = '\n\n[نتایج زنده جستجوی وب (Smart Web Agent):\n' + resultsText;
+    if (deepText) finalPrompt += '--- محتوای استخراج شده از سایت مرجع ---\n' + deepText + '\n';
+    finalPrompt += ']\n\n';
+    if (intent === 'Finance') {
+      finalPrompt += 'دستورالعمل اکید برای پاسخ‌دهی قیمت‌ها: شما به داده‌های زنده متصل هستید و باید قیمت استخراج شده را بدون هیچ گونه جمله پیش‌فرض یا عذرخواهی اعلام کنید. خروجی را به صورت بولت‌پوینت یا جدول شکیل بنویسید و هرگز نگویید به قیمت‌ها دسترسی ندارید.';
+    } else if (intent === 'News') {
+      finalPrompt += 'دستورالعمل حیاتی قالب‌بندی اخبار: هر خبر باید در یک بلوک نقل‌قول کاملاً مجزا (Card) باشد. حتماً بین بلوک‌های نقل‌قول یک خط خالی، یک خط جداکننده (---) و دوباره یک خط خالی بگذارید تا اخبار در رابط کاربری به هم نچسبند. در خط آخر هر خبر منبع و لینک را ذکر کنید.';
+    } else if (intent === 'Code') {
+      finalPrompt += 'دستورالعمل هوش مصنوعی برای پاسخ فنی: کدهای کامل را در بلوک‌های استاندارد بنویسید. نکات کلیدی و دلایل فنی را شفاف و مرحله‌به‌مرحله توضیح دهید و به منابع معتبر ارجاع دهید.';
+    } else if (intent === 'Shopping') {
+      finalPrompt += 'دستورالعمل نمایش کالا و قیمت: هر کالا را در یک بلوک نقل‌قول جداگانه نمایش دهید تا شبیه کارت‌های محصول شود. عنوان کالا، قیمت استخراج شده و لینک خرید را قید کنید و بین آن‌ها (---) قرار دهید.';
+    } else {
+      finalPrompt += 'دستورالعمل پاسخگویی: با ترکیب پایگاه دانش عمیق خود و مستندات زنده بالا، پاسخی دقیق، جامع و ساختاریافته به زبان فارسی ارائه دهید.';
     }
-    cleanQuery = cleanQuery.replace(/\s+/g, ' ').trim() || query;
-
-    const url = `https://api.torob.com/v4/base-product/search/?size=6&q=${encodeURIComponent(cleanQuery)}`;
-    const res = await fetch(url, {
-      headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' },
-      signal: AbortSignal.timeout(4000)
-    });
-    if (!res.ok) return null;
-    const data = await res.json();
-    if (!data.results || data.results.length === 0) return null;
-
-    const validProducts = (data.results || []).filter((x: any) => !x.is_adv);
-    const targetProducts = validProducts.length > 0 ? validProducts : data.results;
-
-    const items = targetProducts.slice(0, 5).map((p: any) => {
-      const productKey = p.random_key || p.prk;
-      const cleanUrl = productKey
-        ? `https://torob.com/p/${productKey}/`
-        : `https://torob.com/search/?query=${encodeURIComponent(p.name1 || cleanQuery)}`;
-      return `• [نام کالا: ${p.name1}] | [قیمت: ${p.price_text || 'استعلام قیمت'}] | [موجودی: ${p.shop_text || 'در فروشگاه‌های آنلاین'}] | [لینک مقایسه و خرید در ترب: ${cleanUrl}]`;
-    });
-    return items.join('\n');
-  } catch (e) {
-    return null;
+    return finalPrompt;
   }
 }
+
 function normalizeBaseUrl(url?: string, provider?: string): string {
   let clean = (url || '').trim();
   
@@ -1118,98 +998,9 @@ app.post('/api/chat/stream', async (req, res) => {
 
     if (apiConfig?.webSearch && !isDateInquiry) {
       if (userText && userText.trim().length > 1) {
-        const lower = userText.toLowerCase();
-
-        // 1. Currency, Gold, Crypto, and Financial Market inquiries (MUST use Live Web/Financial Intelligence, NOT Torob)
-        const isFinancialOrCurrencyQuery = userText.includes('دلار') || userText.includes('یورو') || userText.includes('ارز') ||
-          userText.includes('تتر') || userText.includes('طلا') || userText.includes('سکه') ||
-          userText.includes('بیت کوین') || userText.includes('رمز ارز') || userText.includes('کریپتو') ||
-          userText.includes('بورس') || userText.includes('سهام') || userText.includes('نفت') ||
-          userText.includes('بنزین') || userText.includes('مسکن') || userText.includes('اجاره');
-
-        // 2. Physical consumer products / ecommerce shopping (Torob)
-        
-        if (isFinancialOrCurrencyQuery) {
-          const universalSnippets = await fetchUniversalWebSnippets(userText);
-          if (universalSnippets) {
-            liveWebContext = `\n\n[اطلاعات زنده استخراج شده از منابع مالی برای سوال کاربر:\n${universalSnippets}\n\nدستورالعمل اکید برای پاسخ‌دهی قیمت‌ها:
-شما به قیمت‌های زنده و لحظه‌ای دسترسی دارید! اطلاعات بالا دقیقاً نرخ امروز بازار هستند که توسط سیستم استخراج شده‌اند. 
-هرگز نگویید به قیمت‌ها دسترسی ندارید! اطلاعات استخراج شده را با اعتماد به نفس کامل در یک جدول مرتب یا بولت‌پوینت ارائه دهید.
-برای هر قیمت، نام ارز/طلا، مبلغ دقیق (با جداکننده هزارگان) و منبع استخراج شده را ذکر کنید.]`;
-          }
-        }
-
-        const isPhysicalShoppingQuery = !isFinancialOrCurrencyQuery && (
-          userText.includes('ترب') || userText.includes('دیجی کالا') || userText.includes('دیجیکالا') ||
-          userText.includes('خرید کالا') || userText.includes('خرید آنلاین') ||
-          userText.includes('گوشی') || userText.includes('موبایل') || userText.includes('لپ تاپ') ||
-          userText.includes('تبلت') || userText.includes('هدفون') || userText.includes('ایرپاد') ||
-          userText.includes('پاوربانک') || userText.includes('ساعت هوشمند') || userText.includes('تلویزیون') ||
-          userText.includes('یخچال') || userText.includes('ps5') || userText.includes('کنسول') ||
-          lower.includes('galaxy') || lower.includes('iphone') || lower.includes('s24') || lower.includes('s25') ||
-          userText.includes('سامسونگ') || userText.includes('شیائومی') || userText.includes('آیفون')
-        );
-        
-        if (isPhysicalShoppingQuery) {
-          const torobResults = await fetchTorobProducts(userText);
-          if (torobResults) {
-            liveWebContext = `\n\n[اطلاعات زنده استعلام و مقایسه قیمت کالاها از موتور جستجوی ترب:\n${torobResults}\n\nدستورالعمل مهم نمایش قیمت و کالاها (ساختار کارتی زیبا و راست‌چین):
-اطلاعات بالا قیمت‌های لحظه‌ای و زنده بازار از موتور جستجوی ترب هستند. لطفاً برای هر کالا یک کارت بسیار تمیز به شکل زیر بنویسید:
-#### 🛍️ **[نام دقیق کالا]**
-> **[قیمت استخراج‌شده: قیمت کالا]**
-> * وضعیت موجودی: [تعداد فروشگاه‌های آنلاین موجود]
-> 
-> *🔍 [مشاهده و مقایسه قیمت‌ها در ترب](لینک مستقیم ترب)*
-
-بین هر کارت یک خط جداکننده (---) بگذارید و هرگز نگویید به قیمت‌ها دسترسی ندارید.]`;
-          }
-        }
-
-        const isNewsQuery = userText.includes('اخبار') || userText.includes('خبر') || userText.includes('رویداد') || userText.includes('تیتر') || userText.includes('اتفاقات');
-
-        if (!liveWebContext && isNewsQuery) {
-          const searchResults = await fetchLiveWebSearch(userText);
-          if (searchResults) {
-            liveWebContext = `\n\n[نتایج زنده جستجوی اینترنت و اخبار برای سوال کاربر:\n${searchResults}\n\nدستورالعمل حیاتی قالب‌بندی اخبار (ساختار ۱ کارت واحد برای هر خبر):
-شما به نتایج زنده وب دسترسی دارید. مهم: برای اینکه اخبار در رابط کاربری به هم نچسبند، **هر خبر باید در یک بلوک نقل‌قول کاملاً مجزا** باشد. حتماً بین بلوک‌های نقل‌قول (خارج از علامت >) یک خط خالی و خط جداکننده (---) و دوباره یک خط خالی بگذارید.
-برای عنوان هر دسته‌بندی موضوعی، دقیقاً از ایموجی متناسب با همان موضوع استفاده کنید:
-- اقتصاد، بازار و تحریم‌ها: 💰 یا 📈
-- ورزش، مسابقات و فوتبال: ⚽ یا 🏆
-- جامعه، شهر و امور اجتماعی: 🏙️ یا 👥
-- سیاست، حقوق، بین‌الملل و قوانین: ⚖️ یا 📜
-- علم، فناوری و هوش مصنوعی: 💻 یا 🤖
-- پزشکی، سلامت و دارویی: 🩺 یا 🔬
-- فرهنگ، هنر، سینما و موسیقی: 🎬 یا 🎭
-
-نمونه ساختار:
-#### [ایموجی متناسب با موضوع] **[عنوان دسته‌بندی موضوعی]**
-> ### 📰 **[تیتر برجسته خبر]**
-> [خلاصه کوتاه و روان از رویداد در یک یا دو جمله]
-> 
-> *📌 منبع: [نام خبرگزاری](لینک خبر) • زمان انتشار: ساعت و تاریخ*
-
-بین هر خبر یک خط جداکننده (---) بگذارید.]`;
-          }
-        }
-
-        const wordCount = userText.trim().split(/\s+/).length;
-        const isConversational = wordCount <= 3 && !isFinancialOrCurrencyQuery && !isPhysicalShoppingQuery && !isNewsQuery && !userText.match(/(چیست|چگونه|چطور|آموزش|ارور|مشکل|چرا|کی|کجا|کد|کدوم|چه|تفاوت|فرق)/i);
-
-        // For programming, technical questions, bug fixing, documentation lookup, tutorials and general knowledge
-        if (!liveWebContext && !isConversational) {
-          const universalSnippets = await fetchUniversalWebSnippets(userText);
-          if (universalSnippets) {
-            liveWebContext = `\n\n[مستندات، راهنماها و نتایج زنده وب مرتبط با سوال کاربر:\n${universalSnippets}\n\nدستورالعمل هوش مصنوعی برای پاسخ‌دهی (مشابه ChatGPT با وب‌سرچ):
-شما یک دستیار هوشمند، مهندس نرم‌افزار ارشد و متخصص مسلط به حل مسائل هستید. با ترکیب پایگاه دانش عمیق خود و مستندات زنده بالا از وب، پاسخی دقیق، جامع و ساختاریافته به زبان فارسی ارائه دهید.
-اگر سوال مربوط به کدنویسی، خطا یا معماری برنامه است:
-- قطعه کدهای کامل و کاربردی را در بلوک‌های کد استاندارد (با ذکر دقیق زبان مانند \`\`\`typescript یا \`\`\`python) بنویسید.
-- نکات کلیدی، دلایل فنی و بهترین الگوها (Best Practices) را به صورت شفاف و مرحله‌به‌مرحله توضیح دهید.
-- در صورت نیاز می‌توانید به لینک مستندات بالا ارجاع دهید.]`;
-          }
-        }
+        liveWebContext = await SmartWebAgent.processQuery(userText);
       }
     }
-
     const baseSystemPrompt = `شما «دستیار هوشمند» هستید؛ متمرکز، دقیق و مسلط به زبان فارسی. پاسخها را به فارسی شیوا، دستهبندیشده و ساختاریافته ارائه دهید. در موضوعات فنی و برنامهنویسی، کدهای استاندارد همراه با توضیحات موجز بنویسید. هرگز خود را با نام پلتفرمهای متفرقه معرفی نکنید.\n\n${timeContext}${liveWebContext}`;
     const systemInstruction = apiConfig?.systemInstruction ? `${apiConfig.systemInstruction}\n\n${timeContext}${liveWebContext}\n\nنکته نگارشی: همیشه اصول، مراحل و لیست‌های شماره‌دار را در خطوط مجزا تفکیک کن.` : baseSystemPrompt;
 
