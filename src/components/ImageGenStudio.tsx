@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { loadSettings } from '../lib/storage';
 import { X, Sparkles, Download, Image as ImageIcon, Send, Sliders, Trash2, Wand2, History, RotateCcw } from 'lucide-react';
 
 interface ImageGenStudioProps {
@@ -16,11 +17,11 @@ interface ImageHistory {
 }
 
 export const IMAGE_ENGINES = [
-  { id: 'midjourney', name: 'Midjourney v6', tag: 'سینمایی و هنری', desc: 'تولید تصاویر بسیار واقع‌گرایانه و هنری با نورپردازی فوق‌العاده' },
-  { id: 'dalle-3', name: 'DALL-E 3 (OpenAI)', tag: 'دقیق و متنی', desc: 'درک فوق‌العاده پرامپت‌های پیچیده و قابلیت درج متن داخل تصویر' },
-  { id: 'stable-diffusion', name: 'Stable Diffusion XL', tag: 'متن‌باز و حرفه‌ای', desc: 'انعطاف‌پذیری بسیار بالا با جزئیات هندسی و تکسچرهای دقیق' },
-  { id: 'flux', name: 'Flux.1 Realism', tag: 'فوق واقع‌گرایانه', desc: 'نسل جدید مدل‌های تولید تصویر با جزئیات چهره و عکاسی بی‌نظیر' },
-  { id: 'pollinations', name: 'Pollinations AI Fast', tag: 'سرعت بالا', desc: 'تولید آنی و رایگان بدون معطلی' },
+  { id: 'flux', name: 'Flux.1 Realism', tag: 'رایگان / طبیعی', desc: 'مدل قدرتمند با خروجی فوق‌العاده واقعی و طبیعی', tier: 'free' },
+  { id: 'flux-anime', name: 'Flux Anime', tag: 'رایگان / انیمه', desc: 'ساخت تصاویر با استایل انیمه و نقاشی دیجیتال', tier: 'free' },
+  { id: 'flux-3d', name: 'Flux 3D', tag: 'رایگان / سه‌بعدی', desc: 'رندرهای خیره‌کننده سه‌بعدی و سینمایی', tier: 'free' },
+  { id: 'turbo', name: 'SDXL Turbo', tag: 'سرعت بالا', desc: 'تولید سریع و آنی تصاویر در کسری از ثانیه', tier: 'free' },
+  { id: 'dalle-3', name: 'DALL-E 3 (OpenAI)', tag: 'ویژه (نیاز به API)', desc: 'دقیق‌ترین هوش مصنوعی با قابلیت درک متون', tier: 'pro' },
 ];
 
 export const STYLE_PRESETS = [
