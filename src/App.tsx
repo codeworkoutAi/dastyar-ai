@@ -792,7 +792,12 @@ export default function App() {
       {/* Image Gen Studio Modal */}
       <ImageGenStudio
         isOpen={isImageStudioOpen}
-        onClose={() => setIsImageStudioOpen(false)}
+        initialPrompt={imageStudioInitial?.prompt}
+        initialEngine={imageStudioInitial?.engine}
+        onClose={() => {
+          setIsImageStudioOpen(false);
+          setImageStudioInitial(null);
+        }}
         onInsertToChat={(promptText, imageUrl) => {
           if (!activeConversation) return;
           const userMessageId = 'msg_user_' + Date.now();
