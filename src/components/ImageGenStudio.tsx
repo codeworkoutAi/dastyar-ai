@@ -39,7 +39,7 @@ const ASPECT_RATIOS = [
   { id: '9:16', name: 'استوری', icon: '▯', w: 'w-4', h: 'h-7' },
 ];
 
-export default function ImageGenStudio({ isOpen, onClose, onInsertToChat }: ImageGenStudioProps) {
+export function ImageGenStudio({ isOpen, onClose, onInsertToChat }: ImageGenStudioProps) {
   const [prompt, setPrompt] = useState('');
   const [aspectRatio, setAspectRatio] = useState('1:1');
   const [engine, setEngine] = useState('flux');
@@ -92,7 +92,7 @@ export default function ImageGenStudio({ isOpen, onClose, onInsertToChat }: Imag
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           prompt,
-          apiKey: settings.providers.google?.apiKey || ''
+          apiKey: settings.providers.gemini?.apiKey || ''
         }),
       });
       const data = await res.json();
