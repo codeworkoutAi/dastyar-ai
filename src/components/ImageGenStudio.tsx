@@ -128,7 +128,7 @@ export default function ImageGenStudio({ isOpen, onClose, onInsertToChat }: Imag
     let finalPrompt = prompt;
     const preset = STYLE_PRESETS.find(s => s.id === selectedStyle);
     if (preset && preset.id !== 'none' && preset.prompt) {
-      finalPrompt = \`\${prompt}, \${preset.prompt}\`;
+      finalPrompt = `${prompt}, ${preset.prompt}`;
     }
 
     try {
@@ -190,7 +190,7 @@ export default function ImageGenStudio({ isOpen, onClose, onInsertToChat }: Imag
             <button onClick={() => setShowHistory(!showHistory)} className="p-2 bg-zinc-100 dark:bg-white/5 rounded-full text-zinc-600 dark:text-zinc-300">
               <History className="w-4 h-4" />
             </button>
-            <button onClick={() => setIsMobileSettingsOpen(!isMobileSettingsOpen)} className={\`p-2 rounded-full transition-colors \${isMobileSettingsOpen ? 'bg-purple-500 text-white' : 'bg-zinc-100 dark:bg-white/5 text-zinc-600 dark:text-zinc-300'}\`}>
+            <button onClick={() => setIsMobileSettingsOpen(!isMobileSettingsOpen)} className={`p-2 rounded-full transition-colors ${isMobileSettingsOpen ? 'bg-purple-500 text-white' : 'bg-zinc-100 dark:bg-white/5 text-zinc-600 dark:text-zinc-300'}`}>
               <Sliders className="w-4 h-4" />
             </button>
             <button onClick={onClose} className="p-2 bg-rose-500/10 text-rose-500 hover:bg-rose-500/20 rounded-full transition-colors">
@@ -205,7 +205,7 @@ export default function ImageGenStudio({ isOpen, onClose, onInsertToChat }: Imag
           {/* Desktop Top Bar (Absolute) */}
           <div className="hidden lg:flex absolute top-4 left-4 right-4 justify-between items-center z-10 pointer-events-none">
             <div className="pointer-events-auto">
-              <button onClick={() => setShowHistory(!showHistory)} className={\`flex items-center gap-2 px-4 py-2 rounded-xl backdrop-blur-md border transition-all \${showHistory ? 'bg-purple-500/90 text-white border-purple-400' : 'bg-white/70 dark:bg-black/50 text-zinc-700 dark:text-zinc-300 border-zinc-200 dark:border-white/10 hover:bg-white dark:hover:bg-black'}\`}>
+              <button onClick={() => setShowHistory(!showHistory)} className={`flex items-center gap-2 px-4 py-2 rounded-xl backdrop-blur-md border transition-all ${showHistory ? 'bg-purple-500/90 text-white border-purple-400' : 'bg-white/70 dark:bg-black/50 text-zinc-700 dark:text-zinc-300 border-zinc-200 dark:border-white/10 hover:bg-white dark:hover:bg-black'}`}>
                 <History className="w-4 h-4" />
                 <span className="text-sm font-bold">گالری من</span>
               </button>
@@ -313,11 +313,11 @@ export default function ImageGenStudio({ isOpen, onClose, onInsertToChat }: Imag
                   <button
                     key={style.id}
                     onClick={() => setSelectedStyle(style.id)}
-                    className={\`shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-bold transition-all border \${
+                    className={`shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-bold transition-all border ${
                       selectedStyle === style.id
                         ? 'bg-purple-500 text-white border-purple-400 shadow-md shadow-purple-500/20'
                         : 'bg-white dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 border-zinc-200 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-700'
-                    }\`}
+                    }`}
                   >
                     <span>{style.icon}</span>
                     <span>{style.name}</span>
@@ -342,7 +342,7 @@ export default function ImageGenStudio({ isOpen, onClose, onInsertToChat }: Imag
                   className="shrink-0 p-3 bg-gradient-to-br from-indigo-500 to-purple-600 hover:from-indigo-400 hover:to-purple-500 text-white rounded-2xl transition-all disabled:opacity-50 disabled:grayscale shadow-md hover:shadow-lg hover:-translate-y-0.5"
                   title="ارتقای جادویی پرامپت"
                 >
-                  <Wand2 className={\`w-5 h-5 \${enhancing ? 'animate-pulse' : ''}\`} />
+                  <Wand2 className={`w-5 h-5 ${enhancing ? 'animate-pulse' : ''}`} />
                 </button>
 
                 <textarea
@@ -372,12 +372,12 @@ export default function ImageGenStudio({ isOpen, onClose, onInsertToChat }: Imag
         </div>
 
         {/* --- SETTINGS SIDEBAR (Left on Desktop, Drawer on Mobile) --- */}
-        <div className={\`
+        <div className={`
           fixed lg:static inset-y-0 left-0 w-[280px] sm:w-[320px] lg:w-80 bg-[#f8f9fa] dark:bg-[#121212] lg:bg-transparent
           border-r border-zinc-200 dark:border-white/10 shadow-2xl lg:shadow-none
           flex flex-col z-[70] transform transition-transform duration-300 ease-out
-          \${isMobileSettingsOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
-        \`}>
+          ${isMobileSettingsOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+        `}>
           
           {/* Sidebar Header */}
           <div className="hidden lg:flex items-center justify-between p-6 border-b border-zinc-200 dark:border-white/10">
@@ -413,13 +413,13 @@ export default function ImageGenStudio({ isOpen, onClose, onInsertToChat }: Imag
                   <button
                     key={ar.id}
                     onClick={() => setAspectRatio(ar.id)}
-                    className={\`flex flex-col items-center justify-center gap-2 p-3 rounded-2xl border transition-all \${
+                    className={`flex flex-col items-center justify-center gap-2 p-3 rounded-2xl border transition-all ${
                       aspectRatio === ar.id 
                         ? 'bg-blue-500/10 border-blue-500 text-blue-600 dark:text-blue-400 shadow-sm'
                         : 'bg-white dark:bg-[#1e1f20] border-zinc-200 dark:border-white/10 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-white/5'
-                    }\`}
+                    }`}
                   >
-                    <div className={\`border-2 rounded-sm flex items-center justify-center \${ar.w} \${ar.h} \${aspectRatio === ar.id ? 'border-current' : 'border-zinc-400 dark:border-zinc-500'}\`}></div>
+                    <div className={`border-2 rounded-sm flex items-center justify-center ${ar.w} ${ar.h} ${aspectRatio === ar.id ? 'border-current' : 'border-zinc-400 dark:border-zinc-500'}`}></div>
                     <span className="text-[10px] font-bold">{ar.name}</span>
                   </button>
                 ))}
@@ -447,7 +447,7 @@ export default function ImageGenStudio({ isOpen, onClose, onInsertToChat }: Imag
                         setEngine(eng.id);
                         if (window.innerWidth < 1024) setIsMobileSettingsOpen(false);
                       }}
-                      className={\`relative flex flex-col items-start p-3 sm:p-3.5 rounded-2xl border transition-all text-right \${
+                      className={`relative flex flex-col items-start p-3 sm:p-3.5 rounded-2xl border transition-all text-right ${
                         isSelected
                           ? eng.tier === 'pro'
                             ? 'bg-amber-50 dark:bg-amber-500/10 border-amber-500 text-amber-700 dark:text-amber-400 shadow-sm'
@@ -455,7 +455,7 @@ export default function ImageGenStudio({ isOpen, onClose, onInsertToChat }: Imag
                           : isLocked
                             ? 'bg-zinc-50 dark:bg-[#1e1f20]/50 border-zinc-200 dark:border-white/5 opacity-60 hover:opacity-80 grayscale'
                             : 'bg-white dark:bg-[#1e1f20] border-zinc-200 dark:border-white/10 hover:border-zinc-300 dark:hover:border-white/20'
-                      }\`}
+                      }`}
                     >
                       {isLocked && (
                         <div className="absolute top-3 left-3 bg-zinc-200 dark:bg-zinc-800 p-1.5 rounded-full text-zinc-500">
@@ -469,16 +469,16 @@ export default function ImageGenStudio({ isOpen, onClose, onInsertToChat }: Imag
                       )}
                       
                       <div className="flex items-center gap-2 mb-1">
-                        <span className={\`font-extrabold text-xs sm:text-sm \${isSelected ? '' : 'text-zinc-700 dark:text-zinc-200'}\`}>{eng.name}</span>
-                        <span className={\`text-[9px] px-1.5 py-0.5 rounded-md font-bold \${
+                        <span className={`font-extrabold text-xs sm:text-sm ${isSelected ? '' : 'text-zinc-700 dark:text-zinc-200'}`}>{eng.name}</span>
+                        <span className={`text-[9px] px-1.5 py-0.5 rounded-md font-bold ${
                           isSelected
                             ? eng.tier === 'pro' ? 'bg-amber-200/50 dark:bg-amber-500/20' : 'bg-emerald-200/50 dark:bg-emerald-500/20'
                             : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500'
-                        }\`}>
+                        }`}>
                           {eng.tag}
                         </span>
                       </div>
-                      <p className={\`text-[9px] sm:text-[10px] leading-relaxed line-clamp-1 \${isSelected ? 'opacity-90' : 'text-zinc-500 dark:text-zinc-400'}\`}>{eng.desc}</p>
+                      <p className={`text-[9px] sm:text-[10px] leading-relaxed line-clamp-1 ${isSelected ? 'opacity-90' : 'text-zinc-500 dark:text-zinc-400'}`}>{eng.desc}</p>
                     </button>
                   );
                 })}
