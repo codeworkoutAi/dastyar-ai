@@ -148,7 +148,7 @@ export const Header: React.FC<HeaderProps> = React.memo(({
 
           {/* Dropdown Menu */}
           {showModelDropdown && (
-            <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 w-64 bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl p-2 z-50 flex flex-col gap-1 overflow-hidden" dir="rtl">
+            <div className="absolute top-full mt-2 right-0 w-64 bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl p-2 z-50 flex flex-col gap-1 overflow-hidden" dir="rtl">
               <button 
                 onClick={() => {
                   onSaveSettings({ ...settings, tools: { ...settings.tools, smartRouting: !settings.tools.smartRouting } });
