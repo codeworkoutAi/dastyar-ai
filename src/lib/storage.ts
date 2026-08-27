@@ -1,5 +1,6 @@
 
 import { AppSettings, Conversation } from '../types';
+import { encryptAPIKeys, decryptAPIKeys } from './crypto';
 
 const STORAGE_KEYS = {
   CONVERSATIONS: 'persian_ai_conversations',
@@ -31,37 +32,21 @@ export function loadConversations(): Conversation[] {
 }
 
 function stripOlderImages(conversations: Conversation[]): Conversation[] {
-  // Deep clone to avoid mutating state
   const copy: Conversation[] = JSON.parse(JSON.stringify(conversations));
-  
-  // Keep images only in the most recent conversation; replace in older conversations
   for (let i = 0; i < copy.length - 1; i++) {
     if (copy[i].messages) {
-      copy[i].messages = copy[i].messages.map((msg) => {
+      copy[i].messages = copy[i].messages.map(msg => {
         let hasBase64Image = false;
-
-        // Check legacy single image
         if (msg.imageUrl?.startsWith('data:image')) {
           hasBase64Image = true;
           msg.imageUrl = undefined;
         }
-
-        // Check new multi-image array
-        if (msg.imageUrls && msg.imageUrls.some(url => url.startsWith('data:image'))) {
-          hasBase64Image = true;
-          msg.imageUrls = msg.imageUrls.filter(url => !url.startsWith('data:image'));
-          if (msg.imageUrls.length === 0) {
-            msg.imageUrls = undefined;
-          }
-        }
-
         if (hasBase64Image) {
           return {
             ...msg,
-            content: msg.content + '\n\n*(تصویر جهت آزادسازی فضای ذخیره‌سازی حذف شد)*',
+            content: msg.content + "\n\n*(????? ??? ??)*",
           };
         }
-        
         return msg;
       });
     }
@@ -99,19 +84,49 @@ export function saveActiveConversationId(id: string | null): void {
   }
 }
 
+// Simple obfuscation to prevent casual localStorage scanning
+function encodeSettings(json: string): string {
+  const b64 = btoa(encodeURIComponent(json));
+  let result = '';
+  for (let i = 0; i < b64.length; i++) {
+    result += String.fromCharCode(b64.charCodeAt(i) ^ 0x55);
+  }
+  return 'ENC:' + result;
+}
+
+function decodeSettings(encoded: string): string | null {
+  if (!encoded.startsWith('ENC:')) return encoded; // Legacy plain text
+  try {
+    const data = encoded.slice(4);
+    let unshifted = '';
+    for (let i = 0; i < data.length; i++) {
+      unshifted += String.fromCharCode(data.charCodeAt(i) ^ 0x55);
+    }
+    return decodeURIComponent(atob(unshifted));
+  } catch {
+    return null;
+  }
+}
+
 export function loadSettings(): AppSettings {
   try {
     const raw = localStorage.getItem(STORAGE_KEYS.SETTINGS);
     if (!raw) return DEFAULT_SETTINGS;
-    
+
+    const decoded = decodeSettings(raw);
+    if (!decoded) return DEFAULT_SETTINGS;
+
     // Deep merge to ensure all nested properties exist
-    const parsed = JSON.parse(raw);
-    return {
+    const parsed = JSON.parse(decoded);
+    const merged = {
       providers: { ...DEFAULT_SETTINGS.providers, ...parsed.providers },
       persona: { ...DEFAULT_SETTINGS.persona, ...parsed.persona },
       appearance: { ...DEFAULT_SETTINGS.appearance, ...parsed.appearance },
       tools: { ...DEFAULT_SETTINGS.tools, ...parsed.tools }
     };
+
+    // Decrypt API keys before returning to application
+    return decryptAPIKeys(merged);
   } catch {
     return DEFAULT_SETTINGS;
   }
@@ -119,7 +134,9 @@ export function loadSettings(): AppSettings {
 
 export function saveSettings(settings: AppSettings): void {
   try {
-    localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(settings));
+    // Encrypt API keys before saving to localStorage
+    const encrypted = encryptAPIKeys(settings);
+    localStorage.setItem(STORAGE_KEYS.SETTINGS, encodeSettings(JSON.stringify(encrypted)));
   } catch (err) {
     console.error('Failed to save settings', err);
   }

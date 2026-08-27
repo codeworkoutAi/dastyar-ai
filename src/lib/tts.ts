@@ -2,7 +2,7 @@
 // Primary Engine: Neural Voice Stream via Server Audio Engine
 // Fallback Engine: Client Web Speech API with Multi-sentence Chunking & Chrome GC Protection
 
-export function extractCleanAnswerForSpeech(rawContent: string): string {
+function extractCleanAnswerForSpeech(rawContent: string): string {
   if (!rawContent || !rawContent.trim()) return '';
 
   let text = rawContent;
@@ -56,7 +56,7 @@ export function extractCleanAnswerForSpeech(rawContent: string): string {
   return text.trim();
 }
 
-export function isPersianSpeechText(text: string): boolean {
+function isPersianSpeechText(text: string): boolean {
   const persianCharMatch = text.match(/[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]/g);
   return !!persianCharMatch && persianCharMatch.length > 0;
 }
@@ -159,29 +159,45 @@ export function speakText(
   return controller;
 }
 
-export function stopAllPlayback() {
+function stopAllPlayback() {
   isGlobalCancelled = true;
+
+  // Cleanup audio element
   if (currentActiveAudio) {
     try {
       currentActiveAudio.pause();
       currentActiveAudio.currentTime = 0;
       currentActiveAudio.src = '';
-    } catch {}
+      // Remove event listeners to prevent memory leaks
+      currentActiveAudio.onplay = null;
+      currentActiveAudio.onended = null;
+      currentActiveAudio.onerror = null;
+    } catch (e) {
+      console.warn('[TTS] Audio cleanup error:', e);
+    }
     currentActiveAudio = null;
   }
 
+  // Revoke blob URL to free memory
   if (currentActiveBlobUrl) {
     try {
       URL.revokeObjectURL(currentActiveBlobUrl);
-    } catch {}
+    } catch (e) {
+      console.warn('[TTS] Blob URL cleanup error:', e);
+    }
     currentActiveBlobUrl = null;
   }
 
+  // Cancel Web Speech API
   if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
     try {
       window.speechSynthesis.cancel();
-    } catch {}
+    } catch (e) {
+      console.warn('[TTS] Speech synthesis cleanup error:', e);
+    }
   }
+
+  // Clear utterances array to prevent memory leaks
   activeUtterances = [];
 }
 

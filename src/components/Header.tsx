@@ -14,32 +14,19 @@ import { AppSettings, Conversation } from '../types';
 import { calculateSessionStats } from '../utils/pricing';
 import { Tooltip } from './Tooltip';
 import { usePWAInstall } from '../lib/usePWAInstall';
+import { useUIStore } from '../store/uiStore';
+import { useSettingsStore } from '../store/settingsStore';
+import { useChatStore } from '../store/chatStore';
 
-interface HeaderProps {
-  sidebarOpen: boolean;
-  setSidebarOpen: (open: boolean) => void;
-  onOpenSettings: () => void;
-  onOpenExport: () => void;
-  onOpenImageStudio: () => void;
-  onOpenUiGuide?: () => void;
-  onSaveSettings: (settings: AppSettings) => void;
-  settings: AppSettings;
-  activeConversation: Conversation | null;
-  conversations?: Conversation[];
-}
 
-export const Header: React.FC<HeaderProps> = React.memo(({
-  sidebarOpen,
-  setSidebarOpen,
-  onOpenSettings,
-  onOpenExport,
-  onOpenImageStudio,
-  onOpenUiGuide,
-  onSaveSettings,
-  settings,
-  activeConversation,
-  conversations = [],
-}) => {
+
+
+export const Header: React.FC = React.memo(() => {
+  const { sidebarOpen, toggleSidebar, setIsSettingsOpen, setIsExportOpen, setIsImageStudioOpen, setIsUiGuideOpen } = useUIStore();
+  const { settings, setSettings } = useSettingsStore();
+  const { activeId, conversations } = useChatStore();
+  const activeConversation = conversations.find((c) => c.id === activeId) || null;
+
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [showModelDropdown, setShowModelDropdown] = useState(false);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
@@ -110,7 +97,7 @@ export const Header: React.FC<HeaderProps> = React.memo(({
         <Tooltip content="منوی گفتگوها">
           <button
             id="sidebar-toggle-btn"
-            onClick={() => setSidebarOpen(!sidebarOpen)}
+            onClick={() => toggleSidebar()}
             className="clay-btn w-11 h-11 flex items-center justify-center text-inherit hover:opacity-90 rounded-xl sm:rounded-2xl shrink-0"
             aria-label="Toggle Sidebar"
           >
@@ -151,7 +138,7 @@ export const Header: React.FC<HeaderProps> = React.memo(({
             <div className="absolute top-full mt-2 right-0 w-64 bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl p-2 z-50 flex flex-col gap-1 overflow-hidden" dir="rtl">
               <button 
                 onClick={() => {
-                  onSaveSettings({ ...settings, tools: { ...settings.tools, smartRouting: !settings.tools.smartRouting } });
+                  setSettings({ ...settings, tools: { ...settings.tools, smartRouting: !settings.tools.smartRouting } });
                   setShowModelDropdown(false);
                 }}
                 className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors cursor-pointer w-full text-right ${settings.tools.smartRouting ? 'bg-indigo-500/10 text-indigo-400' : 'hover:bg-zinc-800 text-zinc-300'}`}
@@ -172,7 +159,7 @@ export const Header: React.FC<HeaderProps> = React.memo(({
                     newSettings.providers.activeProvider = 'custom';
                     if (!newSettings.providers.custom) newSettings.providers.custom = { modelName: '', customHeaders: '', baseUrl: '', apiKey: '' };
                     newSettings.providers.custom.modelName = model;
-                    onSaveSettings(newSettings);
+                    setSettings(newSettings);
                     setShowModelDropdown(false);
                   }}
                   className={`flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition-colors cursor-pointer w-full text-left ${!settings.tools.smartRouting && settings.providers.activeProvider === 'custom' && settings.providers.custom.modelName === model ? 'bg-zinc-800 text-white' : 'hover:bg-zinc-800/60 text-zinc-400'}`}
@@ -187,7 +174,7 @@ export const Header: React.FC<HeaderProps> = React.memo(({
               <button
                 onClick={() => {
                   setShowModelDropdown(false);
-                  onOpenSettings();
+                  setIsSettingsOpen(true);
                 }}
                 className="flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-xs font-medium transition-colors hover:bg-zinc-800 text-zinc-400 cursor-pointer w-full mt-1"
               >
@@ -211,7 +198,7 @@ export const Header: React.FC<HeaderProps> = React.memo(({
             <Tooltip content="خروجی و ذخیره گفتگو">
               <button
                 id="header-export-btn"
-                onClick={onOpenExport}
+                onClick={() => setIsExportOpen(true)}
                 className="clay-btn w-11 h-11 flex items-center justify-center hover:opacity-90 rounded-xl sm:rounded-2xl"
                 aria-label="Export Chat"
               >
@@ -224,7 +211,7 @@ export const Header: React.FC<HeaderProps> = React.memo(({
           <Tooltip content="استودیوی پیشرفته ساخت تصویر (Midjourney, DALL-E, SD, Flux)">
             <button
               id="header-image-studio-btn"
-              onClick={onOpenImageStudio}
+              onClick={() => setIsImageStudioOpen(true)}
               className="clay-btn w-11 lg:w-auto lg:px-3 h-11 flex items-center justify-center hover:opacity-90 gap-1.5 text-purple-400 font-bold text-xs rounded-xl sm:rounded-2xl"
               aria-label="Image Generation Studio"
             >
@@ -234,11 +221,11 @@ export const Header: React.FC<HeaderProps> = React.memo(({
           </Tooltip>
 
           {/* UI Guide button */}
-          {onOpenUiGuide && (
+          {true && (
             <Tooltip content="راهنمای تصویری و نقشه اجزای برنامه (UI Map)">
               <button
                 id="header-ui-guide-btn"
-                onClick={onOpenUiGuide}
+                onClick={() => setIsUiGuideOpen(true)}
                 className="clay-btn w-11 lg:w-auto lg:px-3 h-11 flex items-center justify-center hover:opacity-90 gap-1.5 text-blue-600 dark:text-sky-400 font-bold text-xs rounded-xl sm:rounded-2xl"
                 aria-label="UI Visual Guide"
               >
@@ -253,7 +240,7 @@ export const Header: React.FC<HeaderProps> = React.memo(({
             <Tooltip content={`آمار کل نشست: ${sessionStats.totalTokens.toLocaleString('fa-IR')} توکن • هزینه کل: ~$${sessionStats.totalCostUSDFormatted}`}>
               <button
                 id="header-session-stats-btn"
-                onClick={onOpenSettings}
+                onClick={() => setIsSettingsOpen(true)}
                 className="hidden md:flex items-center gap-1.5 px-3 h-11 clay-btn rounded-xl sm:rounded-2xl text-xs font-mono select-none"
                 aria-label="Session Stats"
               >
@@ -288,7 +275,7 @@ export const Header: React.FC<HeaderProps> = React.memo(({
           <Tooltip content="تنظیمات سیستم (تم، پالت رنگی، مدل‌ها و قلم)">
             <button
               id="header-settings-btn"
-              onClick={onOpenSettings}
+              onClick={() => setIsSettingsOpen(true)}
               className="clay-btn w-11 h-11 flex items-center justify-center hover:opacity-90 relative rounded-xl sm:rounded-2xl"
               aria-label="Open Settings"
             >
@@ -314,13 +301,13 @@ export const Header: React.FC<HeaderProps> = React.memo(({
 
           {showMobileMenu && (
             <div className="absolute top-full mt-2 left-0 w-48 clay-card shadow-2xl z-50 flex flex-col gap-1 p-2 animate-fadeIn border border-subtle" dir="rtl">
-              <button onClick={() => { onOpenImageStudio(); setShowMobileMenu(false); }} className="flex items-center gap-2 p-2 rounded-lg hover:bg-[var(--bg-main)] transition-colors text-right">
+              <button onClick={() => { setIsImageStudioOpen(true); setShowMobileMenu(false); }} className="flex items-center gap-2 p-2 rounded-lg hover:bg-[var(--bg-main)] transition-colors text-right">
                 <StarsMinimalisticBoldDuotoneIcon className="w-4 h-4 text-purple-400" />
                 <span className="text-xs font-bold text-[var(--text-main)]">استودیو تصویر</span>
               </button>
               
               {activeConversation && activeConversation.messages.length > 0 && (
-                <button onClick={() => { onOpenExport(); setShowMobileMenu(false); }} className="flex items-center gap-2 p-2 rounded-lg hover:bg-[var(--bg-main)] transition-colors text-right">
+                <button onClick={() => { setIsExportOpen(true); setShowMobileMenu(false); }} className="flex items-center gap-2 p-2 rounded-lg hover:bg-[var(--bg-main)] transition-colors text-right">
                   <DownloadMinimalisticLineDuotoneIcon className="w-4 h-4 text-emerald-400" />
                   <span className="text-xs font-bold text-[var(--text-main)]">خروجی گفتگو</span>
                 </button>
@@ -333,8 +320,8 @@ export const Header: React.FC<HeaderProps> = React.memo(({
                 </button>
               )}
 
-              {onOpenUiGuide && (
-                <button onClick={() => { onOpenUiGuide(); setShowMobileMenu(false); }} className="flex items-center gap-2 p-2 rounded-lg hover:bg-[var(--bg-main)] transition-colors text-right">
+              {true && (
+                <button onClick={() => { setIsUiGuideOpen(true); setShowMobileMenu(false); }} className="flex items-center gap-2 p-2 rounded-lg hover:bg-[var(--bg-main)] transition-colors text-right">
                   <HelpLineDuotoneIcon className="w-4 h-4 text-sky-400" />
                   <span className="text-xs font-bold text-[var(--text-main)]">نقشه اجزا</span>
                 </button>
@@ -342,7 +329,7 @@ export const Header: React.FC<HeaderProps> = React.memo(({
 
               <div className="h-px bg-[var(--border-color)] opacity-50 my-1" />
 
-              <button onClick={() => { onOpenSettings(); setShowMobileMenu(false); }} className="flex items-center gap-2 p-2 rounded-lg hover:bg-[var(--bg-main)] transition-colors text-right">
+              <button onClick={() => { setIsSettingsOpen(true); setShowMobileMenu(false); }} className="flex items-center gap-2 p-2 rounded-lg hover:bg-[var(--bg-main)] transition-colors text-right">
                 <SettingsMinimalisticLineDuotoneIcon className="w-4 h-4 text-[var(--text-main)]" />
                 <span className="text-xs font-bold text-[var(--text-main)]">تنظیمات پیشرفته</span>
               </button>

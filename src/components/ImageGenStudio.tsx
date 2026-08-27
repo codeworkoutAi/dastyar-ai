@@ -1,3 +1,5 @@
+import { useUIStore } from '../store/uiStore';
+import { useChatStore } from '../store/chatStore';
 import React, { useState, useEffect } from 'react';
 import { 
   X, Sparkles, Download, Image as ImageIcon, Send, Sliders, Trash2, Wand2, 
@@ -6,13 +8,7 @@ import {
 } from 'lucide-react';
 import { loadSettings } from '../lib/storage';
 
-interface ImageGenStudioProps {
-  initialPrompt?: string;
-  initialEngine?: string;
-  isOpen: boolean;
-  onClose: () => void;
-  onInsertToChat?: (prompt: string, imageUrl: string) => void;
-}
+
 
 interface ImageHistory {
   url: string;
@@ -22,7 +18,7 @@ interface ImageHistory {
   timestamp: number;
 }
 
-export const IMAGE_ENGINES = [
+const IMAGE_ENGINES = [
   { id: 'flux', name: 'Flux.1 Realism', tag: 'رایگان', desc: 'خروجی فوق‌العاده واقعی و طبیعی', tier: 'free' },
   { id: 'flux-anime', name: 'Flux Anime', tag: 'رایگان', desc: 'استایل انیمه و نقاشی دیجیتال', tier: 'free' },
   { id: 'flux-3d', name: 'Flux 3D', tag: 'رایگان', desc: 'رندرهای خیره‌کننده سه‌بعدی', tier: 'free' },
@@ -30,7 +26,7 @@ export const IMAGE_ENGINES = [
   { id: 'dalle-3', name: 'DALL-E 3', tag: 'ویژه', desc: 'نیازمند API Key (درک متن و هوش بالا)', tier: 'pro' },
 ];
 
-export const STYLE_PRESETS = [
+const STYLE_PRESETS = [
   { id: 'none', name: 'بدون استایل', icon: '✨', prompt: '' },
   { id: 'photo', name: 'فوتورئال', icon: '📸', prompt: 'highly detailed photorealistic 8k resolution, cinematic lighting, professional photography' },
   { id: 'cinematic', name: 'سینمایی', icon: '🎬', prompt: 'cinematic film still, anamorphic lens, dramatic moody lighting, 35mm photograph' },
@@ -91,7 +87,16 @@ function preloadImage(url: string, timeoutMs = 45000): Promise<string> {
   });
 }
 
-export function ImageGenStudio({ isOpen, onClose, onInsertToChat, initialPrompt, initialEngine }: ImageGenStudioProps) {
+export function ImageGenStudio() {
+  const { isImageStudioOpen: isOpen, setIsImageStudioOpen, imageStudioInitial, setImageStudioInitial } = useUIStore();
+  const { insertImageToChat } = useChatStore();
+  const initialPrompt = imageStudioInitial?.prompt;
+  const initialEngine = imageStudioInitial?.engine;
+  const onClose = () => {
+    setIsImageStudioOpen(false);
+    setImageStudioInitial(null);
+  };
+  const onInsertToChat = insertImageToChat;
   const [prompt, setPrompt] = useState('');
   const [aspectRatio, setAspectRatio] = useState('1:1');
   const [engine, setEngine] = useState('flux');

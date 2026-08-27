@@ -22,35 +22,34 @@ import {
 import { toPersianDigits, isRtlText } from '../lib/persianUtils';
 import { estimateTokenCount } from '../lib/tokenOptimizer';
 import { Tooltip } from './Tooltip';
+import { useUIStore } from '../store/uiStore';
+import { useSettingsStore } from '../store/settingsStore';
+import { useChatStore } from '../store/chatStore';
+
 import { CameraCaptureModal } from './CameraCaptureModal';
 import * as pdfjsLib from 'pdfjs-dist';
 
-// Configure pdfjs worker
 pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`;
 
-interface MessageInputProps {
-  onSendMessage: (text: string, imageUrl?: string, imageUrls?: string[], webSearch?: boolean) => void;
-  isStreaming: boolean;
-  onStopGeneration: () => void;
-  enterToSend: boolean;
-  usePersianDigits: boolean;
-  onVideoAttached?: () => void;
-  defaultWebSearch?: boolean;
-}
 
-export const MessageInput: React.FC<MessageInputProps> = ({
-  onSendMessage,
-  isStreaming,
-  onStopGeneration,
-  enterToSend,
-  usePersianDigits,
-  onVideoAttached,
-  defaultWebSearch = false,
-}) => {
+
+
+export const MessageInput: React.FC = React.memo(() => {
+  const { setVideoNotice } = useUIStore();
+  const { settings } = useSettingsStore();
+  const { isStreaming, stopGeneration, sendMessage } = useChatStore();
+  const enterToSend = settings.tools.enterToSend;
+  const usePersianDigits = settings.appearance.persianNumerals;
+  const defaultWebSearch = settings.tools.webSearch;
+  const onSendMessage = sendMessage;
+  const onStopGeneration = stopGeneration;
+  const onVideoAttached = () => setVideoNotice('Video processing is coming soon!');
+
   const [text, setText] = useState('');
   const [attachments, setAttachments] = useState<{
     id: string; dataUrl: string; mimeType: string; name: string; size: string;
     status: 'processing' | 'ready'; progress: number;
+    extractedText?: string;
   }[]>([]);
   // Backward compat derived values
   const imagePreview = attachments.find(a => a.status === 'ready')?.dataUrl ?? null;
@@ -163,8 +162,8 @@ export const MessageInput: React.FC<MessageInputProps> = ({
   };
 
   // Helper: add attachment with progress animation then mark ready
-  const addAttachmentWithProgress = (id: string, dataUrl: string, mimeType: string, name: string, size: string) => {
-    setAttachments(prev => [...prev, { id, dataUrl, mimeType, name, size, status: 'processing' as const, progress: 0 }]);
+  const addAttachmentWithProgress = (id: string, dataUrl: string, mimeType: string, name: string, size: string, extractedText?: string) => {
+    setAttachments(prev => [...prev, { id, dataUrl, mimeType, name, size, status: 'processing' as const, progress: 0, extractedText }]);
     const steps = 8;
     let step = 0;
     const interval = setInterval(() => {
@@ -197,41 +196,111 @@ export const MessageInput: React.FC<MessageInputProps> = ({
       };
       reader.readAsText(file);
     } 
-    // 2. PDF Documents -> Extract text via PDF.js
+    // 2. PDF Documents -> Render to Images using PDF.js (Supports Scanned PDFs perfectly for Vision models!)
     else if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
-      if (file.size > 10 * 1024 * 1024) {
-        alert('حجم فایل PDF بیش از حد مجاز است (حداکثر ۱۰ مگابایت).');
-        e.target.value = '';
+      // PDF size and page validation
+      const MAX_PDF_SIZE = 50 * 1024 * 1024; // 50MB
+      const MAX_PDF_PAGES = 500; // Maximum pages to process
+
+      if (file.size > MAX_PDF_SIZE) {
+        alert(`❌ حجم فایل PDF بیش از حد مجاز است.\nحداکثر: 50MB\nحجم فایل شما: ${formatFileSize(file.size)}\n\nلطفاً فایل کوچکتری انتخاب کنید.`);
         return;
       }
-      addAttachmentWithProgress(attachmentId, '', file.type, file.name, formatFileSize(file.size));
-      const extractPdfText = async () => {
+
+      const attachmentId = `att_pdf_${Date.now()}`;
+      addAttachmentWithProgress(attachmentId, '', 'application/pdf', file.name, formatFileSize(file.size));
+
+      const processPdfHybrid = async () => {
         try {
           const arrayBuffer = await file.arrayBuffer();
           const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-          let fullText = '';
-          for (let i = 1; i <= pdf.numPages; i++) {
-            const page = await pdf.getPage(i);
-            const textContent = await page.getTextContent();
-            const pageText = textContent.items.map((item: any) => item.str).join(' ');
-            fullText += pageText + '\n';
+          const numPages = pdf.numPages;
+
+          // Validate page count
+          if (numPages > MAX_PDF_PAGES) {
+            alert(`❌ تعداد صفحات PDF بیش از حد مجاز است.\nحداکثر: ${MAX_PDF_PAGES} صفحه\nتعداد صفحات فایل شما: ${numPages}\n\nلطفاً فایل کوچکتری انتخاب کنید یا صفحات موردنظر را استخراج کنید.`);
+            removeAttachment(attachmentId);
+            return;
           }
-          removeAttachment(attachmentId);
-          if (fullText.trim()) {
-            setText((prev) => {
-              const prefix = prev ? `${prev}\n\n` : '';
-              return `${prefix}--- فایل: ${file.name} ---\n${fullText}\n---------------------\n`;
-            });
+
+          let extractedText = '';
+          const maxTextPages = Math.min(numPages, 300); // hard cap at 300 pages to avoid hanging the browser
+
+          // Update progress during extraction
+          for (let i = 1; i <= maxTextPages; i++) {
+             try {
+                const page = await pdf.getPage(i);
+                const textContent = await page.getTextContent();
+                const pageText = textContent.items.map((item: any) => item.str).join(' ');
+                if (pageText.trim()) {
+                   extractedText += `\n--- صفحه ${i} ---\n${pageText}\n`;
+                }
+
+                // Update progress every 10 pages
+                if (i % 10 === 0 || i === maxTextPages) {
+                  const progress = Math.round((i / maxTextPages) * 100);
+                  console.log(`[PDF] Extracted ${i}/${maxTextPages} pages (${progress}%)`);
+                }
+             } catch(e) {
+                console.warn('Error extracting text from page', i, e);
+             }
+          }
+
+          // If extractedText is extremely small (e.g. < 50 chars for the whole book), it's probably a scanned PDF.
+          const isScanned = extractedText.trim().length < 50;
+
+          if (isScanned) {
+            // SCANNED PDF FALLBACK: Render first 4 pages as images
+            const maxPages = Math.min(numPages, 4);
+            if (numPages > 4) {
+               alert(`توجه: این فایل متنی ندارد (اسکن شده است).\nبرای جلوگیری از افت سرعت سیستم، فقط ۴ صفحه اول به عکس تبدیل و ضمیمه شد.`);
+            }
+            for (let i = 1; i <= maxPages; i++) {
+              const page = await pdf.getPage(i);
+              const viewport = page.getViewport({ scale: 1.5 });
+              const canvas = document.createElement('canvas');
+              canvas.width = viewport.width;
+              canvas.height = viewport.height;
+              const ctx = canvas.getContext('2d');
+              if (ctx) {
+                await page.render({ canvasContext: ctx, viewport }).promise;
+                const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+                const pageAttachmentId = `att_pdf_page_${i}_${Date.now()}`;
+                addAttachmentWithProgress(pageAttachmentId, dataUrl, 'image/jpeg', `${file.name} - Page ${i}`, 'Scanned Page');
+              }
+            }
+            removeAttachment(attachmentId);
+            if (!text.trim()) {
+               const extraNote = numPages > 4 ? ` (توجه: این یک فایل اسکن‌شده است و من فقط ۴ صفحه اول را می‌بینم)` : '';
+               setText(`فایل ضمیمه شد: ${file.name}\nلطفاً این صفحات اسکن‌شده را بررسی کن.${extraNote}`);
+            }
           } else {
-            alert('متنی در این فایل PDF یافت نشد.');
+            // TEXT PDF: Render ONLY the first page as a thumbnail/cover, and append the massive text hidden
+            const page1 = await pdf.getPage(1);
+            const viewport = page1.getViewport({ scale: 1.0 }); // Lower res for just a cover thumbnail
+            const canvas = document.createElement('canvas');
+            canvas.width = viewport.width;
+            canvas.height = viewport.height;
+            const ctx = canvas.getContext('2d');
+            if (ctx) {
+              await page1.render({ canvasContext: ctx, viewport }).promise;
+              const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+              // Store extracted text inside this single attachment to be sent later
+              addAttachmentWithProgress(`att_pdf_cover_${Date.now()}`, dataUrl, 'image/jpeg', `${file.name}`, 'PDF Cover', extractedText);
+            }
+            removeAttachment(attachmentId);
+            if (!text.trim()) {
+               const note = numPages > maxTextPages ? ` (${maxTextPages} صفحه اول استخراج شد)` : ` (کل ${numPages} صفحه استخراج شد)`;
+               setText(`فایل متنی استخراج شد: ${file.name}${note}\nلطفاً محتوای کامل این فایل را بررسی کن.`);
+            }
           }
         } catch (err) {
-          console.error('PDF extract error:', err);
-          alert('خطا در استخراج متن فایل PDF.');
+          console.error('PDF processing error:', err);
+          alert('خطا در پردازش فایل PDF.');
           removeAttachment(attachmentId);
         }
       };
-      extractPdfText();
+      processPdfHybrid();
     } 
     // 3. Images -> Compress/Downscale via Canvas (max 1200px, 0.8 quality)
     else if (file.type.startsWith('image/')) {
@@ -488,7 +557,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({
         recognitionRef.current = null;
       };
 
-      recognitionRef.current = recognition;
+      recognition.current = recognition;
       recognition.start();
     } catch (e) {
       console.error('Failed to start speech recognition', e);
@@ -499,7 +568,8 @@ export const MessageInput: React.FC<MessageInputProps> = ({
   };
 
   const handleSend = () => {
-    const readyAttachments = attachments.filter(a => a.status === 'ready' && a.dataUrl);
+    // BUGFIX: Do not filter by status === 'ready' because users might press Enter before the 800ms animation finishes.
+    const readyAttachments = attachments.filter(a => a.dataUrl);
     const hasContent = !!text.trim() || readyAttachments.length > 0;
     if (!hasContent || isStreaming) return;
 
@@ -511,12 +581,18 @@ export const MessageInput: React.FC<MessageInputProps> = ({
     const imageUrls = readyAttachments.map(a => a.dataUrl);
     const firstImageUrl = imageUrls[0] || undefined;
 
-    onSendMessage(
-      text.trim() || 'یک فایل ضمیمه شده است. آن را تحلیل کن.',
-      firstImageUrl,
-      imageUrls.length > 0 ? imageUrls : undefined,
-      webSearchEnabled
-    );
+    let finalMessage = text.trim() || 'لطفاً فایل‌های پیوست شده را بررسی کن.';
+    
+    // Inject any extracted text from hybrid PDF parsing as hidden fileContext
+    let extractedFileContext = '';
+    const extractedTexts = readyAttachments.filter(a => a.extractedText);
+    if (extractedTexts.length > 0) {
+      extractedFileContext = extractedTexts.map(a => `\n--- صفحه/محتوای کامل استخراج شده ---\n${a.extractedText}\n--- پایان محتوای فایل ---`).join('\n');
+    }
+
+    // Pass undefined for webSearch to enable smart auto-detection
+    // Only pass explicit value if user manually toggled it (future feature)
+    sendMessage(finalMessage, firstImageUrl, undefined, extractedFileContext || undefined);
     setText('');
     resetAttachments();
     if (textareaRef.current) {
@@ -733,6 +809,28 @@ export const MessageInput: React.FC<MessageInputProps> = ({
               )}
             </div>
 
+            {/* Voice dictation button - Stable & Fixed Position */}
+            {!isStreaming && (
+              <Tooltip content={isHoldingMic ? 'در حال ضبط ویس...' : isRecording ? 'توقف تایپ صوتی' : 'تایپ صوتی (کلیک) / ضبط ویس (نگه‌داشتن)'}>
+                <button
+                  type="button"
+                  onPointerDown={handlePointerDownMic}
+                  onPointerUp={handlePointerUpMic}
+                  onPointerLeave={handlePointerLeaveMic}
+                  onPointerCancel={handlePointerLeaveMic}
+                  disabled={isStreaming}
+                  className={`w-10 h-10 flex items-center justify-center transition-all rounded-full bg-transparent border-0 outline-none active:scale-95 cursor-pointer ${
+                    isRecording || isHoldingMic
+                      ? 'text-red-500 bg-red-100 dark:bg-red-500/20 ring-2 ring-red-400 animate-pulse shadow-[0_0_12px_rgba(239,68,68,0.4)]'
+                      : 'text-zinc-500 dark:text-slate-400 hover:text-zinc-800 dark:hover:text-slate-200 hover:bg-zinc-200 dark:hover:bg-white/5'
+                  }`}
+                  aria-label="Voice input"
+                >
+                  {isRecording ? <Microphone2BoldDuotoneIcon className="w-5 h-5 text-red-500" /> : <Microphone2LineDuotoneIcon className="w-5 h-5" />}
+                </button>
+              </Tooltip>
+            )}
+
             <Tooltip content={text.startsWith('/image ') ? 'لغو حالت ساخت تصویر' : 'ساخت تصویر با هوش مصنوعی'}>
               <button
                 type="button"
@@ -756,22 +854,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({
               </button>
             </Tooltip>
 
-            {/* Smart Web Search Toggle */}
-            <Tooltip content={webSearchEnabled ? 'جستجوی هوشمند وب فعال است (کلیک برای غیرفعال‌سازی)' : 'جستجوی هوشمند وب غیرفعال است (کلیک برای فعال‌سازی)'}>
-              <button
-                type="button"
-                onClick={() => setWebSearchEnabled(!webSearchEnabled)}
-                disabled={isStreaming}
-                className={`w-10 h-10 hidden xs:flex items-center justify-center transition-all rounded-full bg-transparent border-0 outline-none ${
-                  webSearchEnabled
-                    ? 'text-sky-500 bg-sky-100 dark:bg-sky-500/10 scale-105 opacity-100 shadow-[0_0_8px_rgba(14,165,233,0.3)]'
-                    : 'text-zinc-500 dark:text-slate-400 hover:text-sky-500 hover:bg-zinc-200 dark:hover:bg-white/5 active:scale-95'
-                }`}
-                aria-label="Toggle Web Search"
-              >
-                <Globe className="w-4 h-4" />
-              </button>
-            </Tooltip>
+
 
             <input
               ref={fileInputRef}
@@ -844,26 +927,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({
               </Tooltip>
             )}
 
-            {/* Voice dictation button - Stable & Fixed Position */}
-            {!isStreaming && (
-              <Tooltip content={isHoldingMic ? 'در حال ضبط ویس...' : isRecording ? 'توقف تایپ صوتی' : 'تایپ صوتی (کلیک) / ضبط ویس (نگه‌داشتن)'}>
-                <button
-                  type="button"
-                  onPointerDown={handlePointerDownMic}
-                  onPointerUp={handlePointerUpMic}
-                  onPointerLeave={handlePointerLeaveMic}
-                  disabled={isStreaming}
-                  className={`w-10 h-10 flex items-center justify-center transition-all rounded-full bg-transparent border-0 outline-none active:scale-95 cursor-pointer ${
-                    isRecording || isHoldingMic
-                      ? 'text-red-500 bg-red-100 dark:bg-red-500/20 ring-2 ring-red-400 animate-pulse shadow-[0_0_12px_rgba(239,68,68,0.4)]'
-                      : 'text-zinc-500 dark:text-slate-400 hover:text-zinc-800 dark:hover:text-slate-200 hover:bg-zinc-200 dark:hover:bg-white/5'
-                  }`}
-                  aria-label="Voice input"
-                >
-                  {isRecording ? <Microphone2BoldDuotoneIcon className="w-5 h-5 text-red-500" /> : <Microphone2LineDuotoneIcon className="w-5 h-5" />}
-                </button>
-              </Tooltip>
-            )}
+
 
             {/* Cancel generation button */}
             {isStreaming && (
@@ -935,4 +999,4 @@ export const MessageInput: React.FC<MessageInputProps> = ({
       />
     </div>
   );
-};
+});

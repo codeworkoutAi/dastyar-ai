@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { useUIStore } from '../store/uiStore';
+
 import { 
   X, 
   Layers, 
@@ -13,10 +15,7 @@ import {
   CheckCircle2 
 } from 'lucide-react';
 
-interface UiGuideModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-}
+
 
 interface ComponentZone {
   id: string;
@@ -29,7 +28,9 @@ interface ComponentZone {
   color: string;
 }
 
-export const UiGuideModal: React.FC<UiGuideModalProps> = ({ isOpen, onClose }) => {
+export const UiGuideModal: React.FC = () => {
+  const { isUiGuideOpen: isOpen, setIsUiGuideOpen } = useUIStore();
+  const onClose = () => setIsUiGuideOpen(false);
   const [selectedZone, setSelectedZone] = useState<string>('header');
 
   if (!isOpen) return null;

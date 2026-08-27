@@ -1,3 +1,6 @@
+import { useUIStore } from '../store/uiStore';
+import { useSettingsStore } from '../store/settingsStore';
+import { useChatStore } from '../store/chatStore';
 import React, { useState, useEffect } from 'react';
 import { 
   X, Save, Globe, Cpu, Key, Link as LinkIcon, 
@@ -5,14 +8,7 @@ import {
 } from 'lucide-react';
 import { AppSettings, Conversation, FontFamily, ThemeMode } from '../types';
 
-interface SettingsModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  settings: AppSettings;
-  onSaveSettings: (settings: AppSettings) => void;
-  onImportConversations: (imported: Conversation[]) => void;
-  onClearAllConversations: () => void;
-}
+
 
 type TabType = 'providers' | 'persona' | 'appearance' | 'tools' | 'data';
 
@@ -80,14 +76,15 @@ const SearchableCombobox = ({ value, onChange, options, placeholder, className }
   );
 };
 
-export const SettingsModal: React.FC<SettingsModalProps> = ({
-  isOpen,
-  onClose,
-  settings,
-  onSaveSettings,
-  onImportConversations,
-  onClearAllConversations,
-}) => {
+export const SettingsModal: React.FC = () => {
+  const { isSettingsOpen: isOpen, setIsSettingsOpen } = useUIStore();
+  const { settings, setSettings } = useSettingsStore();
+  const { setConversations, clearAllConversations } = useChatStore();
+  const onClose = () => setIsSettingsOpen(false);
+  const onSaveSettings = setSettings;
+  const onImportConversations = (imported: Conversation[]) => setConversations(imported);
+  const onClearAllConversations = clearAllConversations;
+
   const [activeTab, setActiveTab] = useState<TabType>('providers');
   const [tempSettings, setTempSettings] = useState<AppSettings>(settings);
   

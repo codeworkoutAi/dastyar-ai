@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "@fontsource/estedad/index.css";
+@plugin "@tailwindcss/typography";
 
 @font-face {
   font-family: 'Mikhak';
@@ -402,10 +403,6 @@ code:not(pre code) {
   overflow-wrap: anywhere;
 }
 
-.markdown-body table {
-  direction: ltr !important;
-  text-align: left !important;
-}
 
 .markdown-body pre {
   direction: ltr !important;

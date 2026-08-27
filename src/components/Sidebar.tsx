@@ -23,23 +23,11 @@ import { Conversation } from '../types';
 import { formatPersianRelativeTime, toPersianDigits } from '../lib/persianUtils';
 import { getStorageUsage } from '../lib/storage';
 import { Tooltip } from './Tooltip';
+import { useUIStore } from '../store/uiStore';
+import { useSettingsStore } from '../store/settingsStore';
+import { useChatStore } from '../store/chatStore';
+import { exportToJson } from '../lib/exportUtils';
 
-interface SidebarProps {
-  isOpen: boolean;
-  onClose: () => void;
-  conversations: Conversation[];
-  activeId: string | null;
-  onSelectConversation: (id: string) => void;
-  onNewChat: () => void;
-  onOpenImageStudio: () => void;
-  onOpenCodingAssistant: () => void;
-  onDeleteConversation: (id: string) => void;
-  onRenameConversation: (id: string, newTitle: string) => void;
-  onTogglePin: (id: string) => void;
-  onExportSingle: (conv: Conversation) => void;
-  onClearAll: () => void;
-  usePersianDigits: boolean;
-}
 
 interface GroupedConversations {
   id: 'today' | 'yesterday' | 'last7Days' | 'older';
@@ -47,22 +35,12 @@ interface GroupedConversations {
   items: Conversation[];
 }
 
-export const Sidebar: React.FC<SidebarProps> = React.memo(({
-  isOpen,
-  onClose,
-  conversations,
-  activeId,
-  onSelectConversation,
-  onNewChat,
-  onOpenImageStudio,
-  onOpenCodingAssistant,
-  onDeleteConversation,
-  onRenameConversation,
-  onTogglePin,
-  onExportSingle,
-  onClearAll,
-  usePersianDigits,
-}) => {
+export const Sidebar: React.FC = React.memo(() => {
+  const { sidebarOpen, setSidebarOpen, setIsImageStudioOpen, setIsExportOpen } = useUIStore();
+  const { settings } = useSettingsStore();
+  const { conversations, activeId, setActiveId, createChat, createCodingChat, deleteConversation, updateConversation, clearAllConversations, isStreaming } = useChatStore();
+  const usePersianDigits = settings.appearance.persianNumerals;
+
   const [searchQuery, setSearchQuery] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState('');
@@ -141,7 +119,7 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(({
 
   const handleSaveRename = (id: string) => {
     if (editTitle.trim()) {
-      onRenameConversation(id, editTitle.trim());
+      updateConversation(id, c => ({ ...c, title: editTitle.trim() }));
     }
     setEditingId(null);
   };
@@ -159,9 +137,9 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(({
         id={`conv-item-${conv.id}`}
         onClick={() => {
           if (!isEditing && !isDeleting) {
-            onSelectConversation(conv.id);
+            setActiveId(conv.id);
             if (window.innerWidth < 768) {
-              onClose();
+              setSidebarOpen(false);
             }
           }
         }}
@@ -210,7 +188,7 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(({
               <div className="flex items-center gap-1.5">
                 <button
                   onClick={() => {
-                    onDeleteConversation(conv.id);
+                    deleteConversation(conv.id);
                     setConfirmDeleteId(null);
                   }}
                   className="px-2 py-1 rounded-lg bg-red-600 hover:bg-red-500 text-white font-bold text-[11px] cursor-pointer"
@@ -239,7 +217,7 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(({
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      onTogglePin(conv.id);
+                      updateConversation(conv.id, c => ({ ...c, isPinned: !c.isPinned }));
                     }}
                     className={`p-1.5 rounded-lg transition-all cursor-pointer ${
                       conv.isPinned 
@@ -266,7 +244,7 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(({
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      onExportSingle(conv);
+                      exportToJson([conv]);
                     }}
                     className="p-1.5 rounded-lg opacity-60 hover:opacity-100 hover:bg-white/10 text-zinc-400 hover:text-zinc-200 transition-all cursor-pointer"
                     aria-label="Export conversation"
@@ -311,9 +289,9 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(({
   return (
     <>
       {/* Mobile Backdrop */}
-      {isOpen && (
+      {sidebarOpen && (
         <div
-          onClick={onClose}
+          onClick={() => setSidebarOpen(false)}
           className="fixed inset-0 bg-black/60 backdrop-blur-xs z-30 md:hidden transition-opacity"
           aria-hidden="true"
         />
@@ -324,7 +302,7 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(({
         id="sidebar-panel"
         aria-label="Sidebar Panel"
         className={`fixed md:static inset-y-0 right-0 z-40 w-72 sm:w-80 flex flex-col transition-all duration-200 ease-in-out border-l border-subtle clay-sidebar select-none ${
-          isOpen ? 'translate-x-0' : 'translate-x-full md:translate-x-0 md:w-0 md:overflow-hidden md:border-none'
+          sidebarOpen ? 'translate-x-0' : 'translate-x-full md:translate-x-0 md:w-0 md:overflow-hidden md:border-none'
         }`}
       >
         {/* Top Header & Actions in Sidebar */}
@@ -332,7 +310,7 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(({
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold opacity-70 px-1">تاریخچه گفتگوها</span>
             <button
-              onClick={onClose}
+              onClick={() => setSidebarOpen(false)}
               className="p-1.5 rounded-xl text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 transition-colors md:hidden cursor-pointer"
               aria-label="Close sidebar"
             >
@@ -344,8 +322,8 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(({
           <button
             id="sidebar-new-chat-btn"
             onClick={() => {
-              onNewChat();
-              if (window.innerWidth < 768) onClose();
+              createChat(settings.providers[settings.providers.activeProvider]?.modelName);
+              if (window.innerWidth < 768) setSidebarOpen(false);
             }}
             className="w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-2xl bg-zinc-800 hover:bg-zinc-700 text-zinc-100 font-bold text-xs sm:text-sm transition-all text-right shadow-xs hover:scale-[1.01] active:scale-[0.99] cursor-pointer"
           >
@@ -360,8 +338,8 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(({
             <button
               id="sidebar-image-studio-btn"
               onClick={() => {
-                onOpenImageStudio();
-                if (window.innerWidth < 768) onClose();
+                setIsImageStudioOpen(true);
+                if (window.innerWidth < 768) setSidebarOpen(false);
               }}
               className="flex items-center gap-2 px-2.5 py-2 rounded-xl bg-zinc-800/50 hover:bg-purple-950/30 border border-white/5 text-zinc-200 hover:text-purple-300 text-xs font-semibold transition-all text-right hover:scale-[1.01] active:scale-[0.98] cursor-pointer"
             >
@@ -374,8 +352,8 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(({
             <button
               id="sidebar-code-assistant-btn"
               onClick={() => {
-                onOpenCodingAssistant();
-                if (window.innerWidth < 768) onClose();
+                createCodingChat(settings.providers[settings.providers.activeProvider]?.modelName);
+                if (window.innerWidth < 768) setSidebarOpen(false);
               }}
               className="flex items-center gap-2 px-2.5 py-2 rounded-xl bg-zinc-800/50 hover:bg-emerald-950/30 border border-white/5 text-zinc-200 hover:text-emerald-300 text-xs font-semibold transition-all text-right hover:scale-[1.01] active:scale-[0.98] cursor-pointer"
             >
@@ -502,7 +480,7 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(({
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => {
-                    onClearAll();
+                    clearAllConversations();
                     setShowClearConfirm(false);
                   }}
                   className="flex-1 py-1.5 px-3 rounded-xl bg-red-600 text-white font-bold hover:bg-red-500 transition-colors shadow-md cursor-pointer"

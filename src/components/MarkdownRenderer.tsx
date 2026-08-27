@@ -321,7 +321,7 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = React.memo(({
 
   return (
     <div
-      className={`markdown-body text-inherit leading-relaxed ${isOverallRtl ? 'text-right' : 'text-left'} ${
+      className={`markdown-body prose dark:prose-invert max-w-none prose-p:leading-8 prose-headings:font-bold prose-a:text-blue-500 text-inherit leading-relaxed ${isOverallRtl ? 'text-right' : 'text-left'} ${
         isStreaming ? 'streaming-cursor' : ''
       }`}
       dir={isOverallRtl ? 'rtl' : 'ltr'}
@@ -383,7 +383,7 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = React.memo(({
             const rtl = rawText ? isRtlText(rawText) : isOverallRtl;
             return (
               <p
-                className={`mb-3.5 last:mb-0 leading-7 font-normal ${rtl ? 'text-right' : 'text-left'}`}
+                className={`!mt-0 !mb-3.5 last:!mb-0 leading-7 font-normal ${rtl ? 'text-right' : 'text-left'}`}
                 dir={rtl ? 'rtl' : 'ltr'}
               >
                 {replaceEmojisWithSolarIcons(children, 'body')}
@@ -403,7 +403,7 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = React.memo(({
 
             return (
               <code
-                className="px-1.5 py-0.5 rounded-md bg-black/5 dark:bg-white/10 text-slate-800 dark:text-slate-200 text-[0.88em] font-mono border border-subtle inline mx-1 break-words align-baseline isolate font-medium"
+                className="px-1.5 py-0.5 rounded-md bg-black/5 dark:bg-white/10 text-slate-800 dark:text-slate-200 text-[0.88em] font-mono border border-subtle inline mx-1 break-words align-baseline isolate font-medium before:hidden after:hidden"
                 dir="ltr"
                 {...props}
               >
@@ -418,7 +418,7 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = React.memo(({
             const rtl = rawText ? isRtlText(rawText) : isOverallRtl;
             return (
               <h1
-                className={`text-xl sm:text-2xl font-bold mt-5 mb-3 text-inherit border-b border-subtle pb-2.5 flex items-center gap-2 ${
+                className={`!mt-5 !mb-3 text-xl sm:text-2xl font-bold text-inherit border-b border-subtle pb-2.5 flex items-center gap-2 ${
                   rtl ? 'text-right' : 'text-left'
                 }`}
                 dir={rtl ? 'rtl' : 'ltr'}
@@ -432,7 +432,7 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = React.memo(({
             const rtl = rawText ? isRtlText(rawText) : isOverallRtl;
             return (
               <h2
-                className={`text-lg sm:text-xl font-bold mt-4 mb-2.5 text-inherit border-b border-subtle/50 pb-1.5 ${
+                className={`!mt-4 !mb-2.5 text-lg sm:text-xl font-bold text-inherit border-b border-subtle/50 pb-1.5 ${
                   rtl ? 'text-right' : 'text-left'
                 }`}
                 dir={rtl ? 'rtl' : 'ltr'}
@@ -446,7 +446,7 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = React.memo(({
             const rtl = rawText ? isRtlText(rawText) : isOverallRtl;
             return (
               <h3
-                className={`text-base sm:text-lg font-semibold mt-3.5 mb-2 text-inherit ${
+                className={`!mt-3.5 !mb-2 text-base sm:text-lg font-semibold text-inherit ${
                   rtl ? 'text-right' : 'text-left'
                 }`}
                 dir={rtl ? 'rtl' : 'ltr'}
@@ -460,7 +460,7 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = React.memo(({
             const rtl = rawText ? isRtlText(rawText) : isOverallRtl;
             return (
               <h4
-                className={`text-sm sm:text-base font-semibold mt-3 mb-1.5 text-inherit ${
+                className={`!mt-3 !mb-1.5 text-sm sm:text-base font-semibold text-inherit ${
                   rtl ? 'text-right' : 'text-left'
                 }`}
                 dir={rtl ? 'rtl' : 'ltr'}
@@ -474,8 +474,8 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = React.memo(({
           ul({ children }) {
             return (
               <ul
-                className={`list-disc my-3 space-y-2 text-inherit opacity-95 marker:text-slate-400 dark:marker:text-slate-500 ${
-                  isOverallRtl ? 'pr-6 pl-0 text-right' : 'pl-6 pr-0 text-left'
+                className={`list-disc !my-3 space-y-2 text-inherit opacity-95 marker:text-slate-400 dark:marker:text-slate-500 ${
+                  isOverallRtl ? '!pr-6 !pl-0 text-right' : '!pl-6 !pr-0 text-left'
                 }`}
                 dir={isOverallRtl ? 'rtl' : 'ltr'}
               >
@@ -486,8 +486,8 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = React.memo(({
           ol({ children }) {
             return (
               <ol
-                className={`list-decimal my-3 space-y-2 text-inherit opacity-95 font-normal marker:text-slate-400 dark:marker:text-slate-500 ${
-                  isOverallRtl ? 'pr-6 pl-0 text-right' : 'pl-6 pr-0 text-left'
+                className={`list-decimal !my-3 space-y-2 text-inherit opacity-95 font-normal marker:text-slate-400 dark:marker:text-slate-500 ${
+                  isOverallRtl ? '!pr-6 !pl-0 text-right' : '!pl-6 !pr-0 text-left'
                 }`}
                 dir={isOverallRtl ? 'rtl' : 'ltr'}
               >
@@ -500,7 +500,7 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = React.memo(({
             const rtl = rawText ? isRtlText(rawText) : isOverallRtl;
             return (
               <li
-                className={`leading-7 my-1 ${rtl ? 'text-right' : 'text-left'}`}
+                className={`leading-7 !my-1 !pl-0 ${rtl ? 'text-right' : 'text-left'}`}
                 dir={rtl ? 'rtl' : 'ltr'}
               >
                 {replaceEmojisWithSolarIcons(children, 'body')}
@@ -538,11 +538,13 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = React.memo(({
             );
           },
 
-          // Tables forced to LTR / clean grid for numbers, headers, and code without reversed columns
+          // Tables dynamically adapt direction based on their content (Persian vs English)
           table({ children }) {
+            const rawText = extractNodeText(children);
+            const rtl = rawText ? isRtlText(rawText) : isOverallRtl;
             return (
-              <div className="overflow-x-auto my-4 rounded-xl border border-subtle shadow-xs" dir="ltr">
-                <table className="min-w-full divide-y divide-subtle text-sm text-left font-sans">
+              <div className="overflow-x-auto my-4 rounded-xl border border-subtle shadow-xs" dir={rtl ? 'rtl' : 'ltr'}>
+                <table className={`min-w-full divide-y divide-subtle text-sm font-sans ${rtl ? 'text-right' : 'text-left'}`}>
                   {children}
                 </table>
               </div>
@@ -558,10 +560,10 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = React.memo(({
             return <tr className="hover:bg-black/[0.02] dark:hover:bg-white/[0.02] transition-colors">{children}</tr>;
           },
           th({ children }) {
-            return <th className="px-4 py-2.5 text-left font-bold text-inherit">{replaceEmojisWithSolarIcons(children)}</th>;
+            return <th className="px-4 py-2.5 font-bold text-inherit !text-start">{replaceEmojisWithSolarIcons(children)}</th>;
           },
           td({ children }) {
-            return <td className="px-4 py-2.5 text-left text-inherit opacity-90">{replaceEmojisWithSolarIcons(children)}</td>;
+            return <td className="px-4 py-2.5 text-inherit opacity-90 !text-start">{replaceEmojisWithSolarIcons(children)}</td>;
           },
 
           // Links
@@ -575,6 +577,25 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = React.memo(({
               >
                 {children}
               </a>
+            );
+          },
+
+          // Images (AI Generative or Web)
+          img({ src, alt }) {
+            return (
+              <span className="block w-full max-w-2xl mx-auto my-6 animate-fadeIn">
+                <img
+                  src={src}
+                  alt={alt}
+                  loading="lazy"
+                  className="w-full h-auto object-cover rounded-2xl shadow-lg border border-black/10 dark:border-white/10 transition-transform duration-300 hover:scale-[1.01]"
+                />
+                {alt && (
+                  <span className="block text-center text-[13px] text-zinc-500 dark:text-zinc-400 mt-2.5 italic font-sans opacity-80">
+                    {alt}
+                  </span>
+                )}
+              </span>
             );
           },
 

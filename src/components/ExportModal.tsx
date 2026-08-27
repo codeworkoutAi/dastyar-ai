@@ -18,20 +18,18 @@ import {
 } from '../lib/exportUtils';
 import { formatPersianDateTime } from '../lib/persianUtils';
 import { Tooltip } from './Tooltip';
+import { useUIStore } from '../store/uiStore';
+import { useChatStore } from '../store/chatStore';
 
-interface ExportModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  activeConversation: Conversation | null;
-  allConversations: Conversation[];
-}
 
-export const ExportModal: React.FC<ExportModalProps> = ({
-  isOpen,
-  onClose,
-  activeConversation,
-  allConversations,
-}) => {
+
+
+export const ExportModal: React.FC = () => {
+  const { isExportOpen: isOpen, setIsExportOpen } = useUIStore();
+  const { conversations: allConversations, activeId } = useChatStore();
+  const activeConversation = allConversations.find((c) => c.id === activeId) || null;
+  const onClose = () => setIsExportOpen(false);
+
   const [exportScope, setExportScope] = useState<'current' | 'all'>('current');
   const [selectedFormat, setSelectedFormat] = useState<'markdown' | 'json' | 'txt' | 'print'>('markdown');
   const [copied, setCopied] = useState(false);

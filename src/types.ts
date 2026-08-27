@@ -17,8 +17,8 @@ export interface ChatMessage {
   id: string;
   role: Role;
   content: string;
-  imageUrl?: string;      // backward compat: first image (single attachment)
-  imageUrls?: string[];   // NEW: multiple attachments support
+  fileContext?: string;   // Hidden context for massive file extraction (e.g. 100-page PDF text)
+  imageUrl?: string;      // Single image attachment for manual /image command
   timestamp: number;
   modelUsed?: string;
   isStreaming?: boolean;

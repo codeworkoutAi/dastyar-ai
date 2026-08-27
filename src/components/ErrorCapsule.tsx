@@ -1,24 +1,22 @@
 import React, { useEffect, useState } from 'react';
 import { AlertCircle, RotateCw, Settings, X } from 'lucide-react';
+import { useChatStore } from '../store/chatStore';
+import { useUIStore } from '../store/uiStore';
 
-interface ErrorCapsuleProps {
-  error: {
-    message: string;
-    timestamp: number;
-  } | null;
-  onDismiss: () => void;
-  onRetry: () => void;
-  onOpenSettings?: () => void;
-  durationSeconds?: number;
-}
+export const ErrorCapsule: React.FC = React.memo(() => {
+  const { activeError: error, setActiveError, regenerate } = useChatStore();
+  const { setIsSettingsOpen } = useUIStore();
+  const onDismiss = () => setActiveError(null);
+  const onRetry = () => {
+    setActiveError(null);
+    regenerate();
+  };
+  const onOpenSettings = () => {
+    setActiveError(null);
+    setIsSettingsOpen(true);
+  };
+  const durationSeconds = 15;
 
-export const ErrorCapsule: React.FC<ErrorCapsuleProps> = React.memo(({
-  error,
-  onDismiss,
-  onRetry,
-  onOpenSettings,
-  durationSeconds = 15,
-}) => {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
@@ -57,7 +55,7 @@ export const ErrorCapsule: React.FC<ErrorCapsuleProps> = React.memo(({
             </div>
             <div className="flex-1 min-w-0">
               <h5 className="font-bold text-xs sm:text-[13px] text-zinc-100 mb-1 flex items-center gap-1.5">
-                <span>عدم برقراری ارتباط با مدل هوش مصنوعی</span>
+                <span>خطای برقراری ارتباط با مدل هوش مصنوعی</span>
               </h5>
               <p className="text-[12px] sm:text-[12.5px] text-zinc-300 leading-relaxed break-words font-normal">
                 {error.message}
@@ -73,7 +71,7 @@ export const ErrorCapsule: React.FC<ErrorCapsuleProps> = React.memo(({
               setTimeout(onDismiss, 200);
             }}
             className="text-zinc-400 hover:text-white hover:bg-zinc-800/80 p-1.5 rounded-xl transition-colors cursor-pointer shrink-0 -mt-0.5"
-            title="بستن اعلان"
+            title="بستن پنجره"
           >
             <X className="w-4 h-4" />
           </button>
@@ -82,7 +80,7 @@ export const ErrorCapsule: React.FC<ErrorCapsuleProps> = React.memo(({
         {/* Action Buttons Row */}
         <div className="flex items-center justify-between gap-2 pt-2 border-t border-zinc-800 text-xs">
           <span className="text-[11px] text-zinc-400 font-normal">
-            ⏱️ حذف خودکار (۱۵ ثانیه)
+            ⏳ خودکار بسته می‌شود
           </span>
 
           <div className="flex items-center gap-2 mr-auto">

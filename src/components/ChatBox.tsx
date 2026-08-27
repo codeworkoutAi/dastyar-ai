@@ -28,6 +28,10 @@ import {
 } from 'lucide-react';
 import { ChatMessage, Conversation } from '../types';
 import { MarkdownRenderer } from './MarkdownRenderer';
+import { useUIStore } from '../store/uiStore';
+import { useSettingsStore } from '../store/settingsStore';
+import { useChatStore } from '../store/chatStore';
+
 import { PERSIAN_STARTER_PROMPTS, isRtlText } from '../lib/persianUtils';
 import { Tooltip } from './Tooltip';
 import { speakText, SpeakController } from '../lib/tts';
@@ -39,31 +43,24 @@ const MAGIC_IMAGE_PROMPTS = [
   { id: '3d', title: 'رندر سه‌بعدی کیوت', engine: 'flux-3d', icon: '🧸', desc: 'رندر سه‌بعدی شاهکار به سبک پیکسار. یک اژدهای کوچک و بسیار بامزه که با خوشحالی در حال خوردن یک پیتزای بزرگ است. نورپردازی استودیو.' },
 ];
 
-interface ChatBoxProps {
-  conversation: Conversation | null;
-  isStreaming: boolean;
-  onSendMessage: (text: string) => void;
-  onEditMessage?: (messageId: string, newText: string) => void;
-  onRegenerate: () => void;
-  onDismissError?: (messageId: string) => void;
-  usePersianDigits: boolean;
-  showPerformanceMetrics?: boolean;
-  onToggleMetrics?: (val: boolean) => void;
-  onOpenImageStudio?: (prompt?: string, engine?: string) => void;
-}
 
-export const ChatBox: React.FC<ChatBoxProps> = ({
-  conversation,
-  isStreaming,
-  onSendMessage,
-  onEditMessage,
-  onRegenerate,
-  onDismissError,
-  usePersianDigits,
-  showPerformanceMetrics = true,
-  onToggleMetrics,
-  onOpenImageStudio,
-}) => {
+
+export const ChatBox: React.FC = React.memo(() => {
+  const { setIsImageStudioOpen, setImageStudioInitial } = useUIStore();
+  const { settings, updateSettings } = useSettingsStore();
+  const { conversations, activeId, isStreaming, editMessage, regenerate, setActiveError, sendMessage } = useChatStore();
+  const conversation = conversations.find((c) => c.id === activeId) || null;
+  const usePersianDigits = settings.appearance.persianNumerals;
+  const showPerformanceMetrics = settings.tools.showPerformanceMetrics;
+  const onEditMessage = editMessage;
+  const onRegenerate = regenerate;
+  const onDismissError = () => setActiveError(null);
+  const onToggleMetrics = (val: boolean) => updateSettings((s) => ({ ...s, tools: { ...s.tools, showPerformanceMetrics: val } }));
+  const onOpenImageStudio = (prompt?: string, engine?: string) => {
+    if(prompt) setImageStudioInitial({ prompt, engine: engine || 'pollinations' });
+    setIsImageStudioOpen(true);
+  };
+
   const chatEndRef = useRef<HTMLDivElement | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
   const ttsControllerRef = useRef<SpeakController | null>(null);
@@ -231,7 +228,7 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
             {PERSIAN_STARTER_PROMPTS.map((item) => (
               <button
                 key={item.id}
-                onClick={() => onSendMessage(item.prompt)}
+                onClick={() => sendMessage(item.prompt)}
                 className="clay-card group p-5 text-right flex flex-col justify-between transition-all duration-200 hover:-translate-y-1 hover:shadow-md cursor-pointer"
               >
                 <div className="flex items-center gap-3 mb-3">
@@ -321,7 +318,7 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
                         {onDismissError && (
                           <button
                             type="button"
-                            onClick={() => onDismissError(msg.id)}
+                            onClick={() => setActiveError(null)}
                             className="text-red-400/60 hover:text-red-400 hover:bg-red-500/10 p-1.5 rounded-lg transition-colors cursor-pointer shrink-0"
                             title="بستن پیام خطا"
                           >
@@ -400,7 +397,7 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
                     ) : (
                       <div className="flex flex-col gap-3">
                         {(() => {
-                          const urls = msg.imageUrls && msg.imageUrls.length > 0 ? msg.imageUrls : (msg.imageUrl ? [msg.imageUrl] : []);
+                          const urls = msg.imageUrl ? [msg.imageUrl] : [];
                           if (urls.length === 0) return null;
                           const isMulti = urls.length > 1;
                           return (
@@ -503,27 +500,33 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
                       ) : (
                         <>
                           {msg.imageUrl && (
-                            <div className="rounded-2xl overflow-hidden relative group/media max-w-md border border-zinc-700 bg-black/40 my-2 shadow-xl">
-                              <img src={msg.imageUrl} alt="Generated" className="w-full object-cover max-h-96 transition-transform duration-300 group-hover/media:scale-[1.02]" />
-                              
-                              {/* Floating Media Actions for AI Generated Image */}
-                              <div className="absolute top-2.5 left-2.5 flex items-center gap-1.5 bg-black/60 backdrop-blur-md p-1 rounded-xl opacity-0 group-hover/media:opacity-100 transition-opacity">
-                                <button
-                                  type="button"
-                                  onClick={() => setLightboxMedia({ url: msg.imageUrl!, type: 'image' })}
-                                  className="p-1.5 rounded-lg hover:bg-white/20 text-zinc-300 hover:text-white transition-colors cursor-pointer"
-                                  title="نمایش تمام‌صفحه"
-                                >
-                                  <Maximize2 className="w-4 h-4" />
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => handleDownloadMedia(msg.imageUrl!)}
-                                  className="p-1.5 rounded-lg hover:bg-white/20 text-zinc-300 hover:text-white transition-colors cursor-pointer"
-                                  title="دانلود تصویر"
-                                >
-                                  <Download className="w-4 h-4" />
-                                </button>
+                            <div className="max-w-md my-2">
+                              <div className="rounded-2xl overflow-hidden relative group/media border border-zinc-700 bg-black/40 shadow-xl w-full">
+                                <img
+                                  src={msg.imageUrl}
+                                  alt="Generated"
+                                  className="w-full object-cover max-h-96 transition-transform duration-300 group-hover/media:scale-[1.02]"
+                                />
+
+                                {/* Floating Media Actions for AI Generated Image */}
+                                <div className="absolute top-2.5 left-2.5 flex items-center gap-1.5 bg-black/60 backdrop-blur-md p-1 rounded-xl opacity-0 group-hover/media:opacity-100 transition-opacity">
+                                  <button
+                                    type="button"
+                                    onClick={() => setLightboxMedia({ url: msg.imageUrl!, type: 'image' })}
+                                    className="p-1.5 rounded-lg hover:bg-white/20 text-zinc-300 hover:text-white transition-colors cursor-pointer"
+                                    title="نمایش تمام‌صفحه"
+                                  >
+                                    <Maximize2 className="w-4 h-4" />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleDownloadMedia(msg.imageUrl!)}
+                                    className="p-1.5 rounded-lg hover:bg-white/20 text-zinc-300 hover:text-white transition-colors cursor-pointer"
+                                    title="دانلود تصویر"
+                                  >
+                                    <Download className="w-4 h-4" />
+                                  </button>
+                                </div>
                               </div>
                             </div>
                           )}
@@ -750,5 +753,4 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
       )}
     </div>
   );
-};
-
+});
