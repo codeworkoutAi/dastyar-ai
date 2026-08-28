@@ -42,12 +42,29 @@ export interface Conversation {
 export type ThemeMode = 'light' | 'dark' | 'system';
 export type FontFamily = 'vazir' | 'sahel' | 'estedad' | 'mikhak';
 
+export interface CustomProfile {
+  id: string;
+  name: string;
+  baseUrl: string;
+  apiKey: string;
+  modelName: string;
+  customHeaders: string;
+  latencyMs?: number;
+}
+
 export interface MultiProviderConfig {
   activeProvider: 'gemini' | 'openai' | 'anthropic' | 'custom';
   gemini: { apiKey: string; modelName: string };
   openai: { apiKey: string; modelName: string };
   anthropic: { apiKey: string; modelName: string };
-  custom: { baseUrl: string; apiKey: string; modelName: string; customHeaders: string };
+  custom: { 
+    baseUrl: string; 
+    apiKey: string; 
+    modelName: string; 
+    customHeaders: string;
+    profiles?: CustomProfile[];
+    activeProfileId?: string;
+  };
 }
 
 export interface AppSettings {

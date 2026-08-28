@@ -14,11 +14,11 @@ export const DEFAULT_SETTINGS: AppSettings = {
     gemini: { apiKey: '', modelName: 'gemini-3.1-flash-lite' },
     openai: { apiKey: '', modelName: 'gpt-4o-mini' },
     anthropic: { apiKey: '', modelName: 'claude-3-5-sonnet' },
-    custom: { baseUrl: '', apiKey: '', modelName: '', customHeaders: '' }
+    custom: { baseUrl: '', apiKey: '', modelName: '', customHeaders: '', profiles: [], activeProfileId: '' }
   },
   persona: { systemPrompt: '', tone: 'expert', temperature: 0.7 },
   appearance: { theme: 'dark', font: 'vazir', fontSize: 16, persianNumerals: false, direction: 'rtl', uiLanguage: 'fa' },
-  tools: { webSearch: false, enterToSend: true, soundEnabled: false, showPerformanceMetrics: true, smartRouting: false, routingRoles: { default: '', coding: '', vision: '' } }
+  tools: { webSearch: true, enterToSend: true, soundEnabled: false, showPerformanceMetrics: true, smartRouting: false, routingRoles: { default: '', coding: '', vision: '' } }
 };
 
 export function loadConversations(): Conversation[] {
@@ -124,6 +124,24 @@ export function loadSettings(): AppSettings {
       appearance: { ...DEFAULT_SETTINGS.appearance, ...parsed.appearance },
       tools: { ...DEFAULT_SETTINGS.tools, ...parsed.tools }
     };
+    
+    merged.providers.custom = { ...DEFAULT_SETTINGS.providers.custom, ...(parsed.providers?.custom || {}) };
+
+    // Migrate legacy custom config to a profile if it has a baseUrl but no profiles array
+    if (merged.providers.custom.baseUrl && (!merged.providers.custom.profiles || merged.providers.custom.profiles.length === 0)) {
+      const legacyId = 'profile-' + Date.now().toString(36);
+      merged.providers.custom.profiles = [{
+        id: legacyId,
+        name: 'پروفایل پیش‌فرض',
+        baseUrl: merged.providers.custom.baseUrl,
+        apiKey: merged.providers.custom.apiKey,
+        modelName: merged.providers.custom.modelName,
+        customHeaders: merged.providers.custom.customHeaders,
+      }];
+      merged.providers.custom.activeProfileId = legacyId;
+    } else if (!merged.providers.custom.profiles) {
+      merged.providers.custom.profiles = [];
+    }
 
     // Decrypt API keys before returning to application
     return decryptAPIKeys(merged);

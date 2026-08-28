@@ -444,3 +444,39 @@ export function formatContentsForGemini(messages: any[]) {
 }
 
 export const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+export function pcmToWavBuffer(pcmBuffer: Buffer, sampleRate = 24000, numChannels = 1, bitDepth = 16): Buffer {
+  const byteRate = (sampleRate * numChannels * bitDepth) / 8;
+  const blockAlign = (numChannels * bitDepth) / 8;
+  const dataSize = pcmBuffer.length;
+  const header = Buffer.alloc(44);
+
+  // RIFF identifier
+  header.write('RIFF', 0);
+  // file length minus 8 bytes of RIFF description
+  header.writeUInt32LE(36 + dataSize, 4);
+  // WAVE identifier
+  header.write('WAVE', 8);
+  // format chunk identifier
+  header.write('fmt ', 12);
+  // format chunk length
+  header.writeUInt32LE(16, 16);
+  // sample format (1 is PCM)
+  header.writeUInt16LE(1, 20);
+  // channel count
+  header.writeUInt16LE(numChannels, 22);
+  // sample rate
+  header.writeUInt32LE(sampleRate, 24);
+  // byte rate
+  header.writeUInt32LE(byteRate, 28);
+  // block align
+  header.writeUInt16LE(blockAlign, 32);
+  // bits per sample
+  header.writeUInt16LE(bitDepth, 34);
+  // data chunk identifier
+  header.write('data', 36);
+  // data chunk length
+  header.writeUInt32LE(dataSize, 40);
+
+  return Buffer.concat([header, pcmBuffer]);
+}

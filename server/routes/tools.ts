@@ -1,5 +1,6 @@
 import express from 'express';
-import { isSafeBaseUrl, getGeminiClient, extractCleanErrorMessage, sanitizeErrorMessage, formatContentsForGemini, sleep, getPollinationsImageUrl, translateAndEnhanceImagePrompt, pcmToWavBuffer, normalizeBaseUrl, parseCustomHeaders } from '../services/utils';
+import { Modality } from '@google/genai';
+import { isSafeBaseUrl, getGeminiClient, extractCleanErrorMessage, sanitizeErrorMessage, formatContentsForGemini, sleep, getPollinationsImageUrl, translateAndEnhanceImagePrompt, normalizeBaseUrl, parseCustomHeaders } from '../services/utils';
 import { SmartWebAgent } from '../services/WebSearchAgent';
 
 const router = express.Router();
@@ -27,11 +28,38 @@ router.post('/api/fetch-models', async (req, res) => {
     clearTimeout(timeoutId);
 
     if (!response.ok) {
-      throw new Error(`API returned ${response.status}: ${response.statusText}`);
+      let errText = response.statusText;
+      try {
+        const errJson = await response.json();
+        errText = errJson.error?.message || errJson.message || errText;
+      } catch (e) {}
+      throw new Error(`خطای سرور (${response.status}): ${errText}`);
     }
 
     const data = await response.json();
-    const models = data.data ? data.data.map((m: any) => ({ id: m.id, name: m.name || m.id })) : [];
+    let models = data.data ? data.data.map((m: any) => {
+      const isFree = 
+        m.id.endsWith(':free') || 
+        (m.pricing && m.pricing.prompt === "0" && m.pricing.completion === "0") ||
+        (m.name && m.name.toLowerCase().includes('free'));
+        
+      return { 
+        id: m.id, 
+        name: isFree ? `🎁 ${m.name || m.id} [رایگان]` : (m.name || m.id),
+        isFree
+      };
+    }) : [];
+
+    // Sort free models to the top
+    models.sort((a: any, b: any) => {
+      if (a.isFree && !b.isFree) return -1;
+      if (!a.isFree && b.isFree) return 1;
+      return a.name.localeCompare(b.name);
+    });
+
+    // Remove the temporary isFree flag before sending to client
+    models = models.map(({ isFree, ...rest }: any) => rest);
+
     res.json({ models });
   } catch (err: any) {
     if (err.name === 'AbortError') {

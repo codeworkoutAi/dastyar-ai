@@ -1,0 +1,29 @@
+﻿.gcloudignore
+.git/
+.gitignore
+
+# Dependencies
+node_modules/
+
+# Build artifacts
+dist/
+build/
+dev-dist/
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# OS and IDE files
+.DS_Store
+.vscode/
+.idea/
+.claude/

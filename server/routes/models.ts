@@ -1,5 +1,5 @@
 import express from 'express';
-import { isSafeBaseUrl, getGeminiClient, extractCleanErrorMessage, sanitizeErrorMessage, formatContentsForGemini, sleep, getPollinationsImageUrl, translateAndEnhanceImagePrompt, pcmToWavBuffer, normalizeBaseUrl, parseCustomHeaders } from '../services/utils';
+import { isSafeBaseUrl, getGeminiClient, extractCleanErrorMessage, sanitizeErrorMessage, formatContentsForGemini, sleep, getPollinationsImageUrl, translateAndEnhanceImagePrompt, normalizeBaseUrl, parseCustomHeaders } from '../services/utils';
 import { SmartWebAgent } from '../services/WebSearchAgent';
 import { modelTestRateLimiter } from '../middleware/rateLimiter';
 
@@ -13,7 +13,17 @@ router.get('/api/health', (_req, res) => {
 router.post(['/api/models/test', '/api/ping'], modelTestRateLimiter, async (req, res) => {
   const startTime = Date.now();
   try {
-    const { provider, customBaseUrl, customApiKey, customHeaders, modelName } = req.body;
+    let { provider, customBaseUrl, customApiKey, customHeaders, modelName } = req.body;
+
+    // Auto-detect native official providers from custom profiles based on Base URL
+    if (provider === 'custom' && customBaseUrl) {
+      const bUrl = customBaseUrl.toLowerCase();
+      if (bUrl.includes('anthropic.com')) {
+        provider = 'anthropic';
+      } else if (bUrl.includes('generativelanguage.googleapis.com')) {
+        provider = 'gemini';
+      }
+    }
 
     // Strict SSRF validation
     if (customBaseUrl && !isSafeBaseUrl(customBaseUrl)) {

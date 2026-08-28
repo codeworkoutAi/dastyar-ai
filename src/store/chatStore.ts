@@ -145,8 +145,9 @@ stopGeneration: () => {
     const promptText = isImageGen ? text.trim().replace('/image ', '') : text;
 
     // Smart Auto Web Search: Automatically detect if query needs web assistance
+    const globalWebSearchEnabled = useSettingsStore.getState().settings.tools.webSearch;
     const autoWebDecision = detectWebSearchNeed(promptText);
-    const shouldAutoEnableWebSearch = autoWebDecision.shouldSearch && webSearch === undefined;
+    const shouldAutoEnableWebSearch = globalWebSearchEnabled && autoWebDecision.shouldSearch && webSearch === undefined;
 
     if (shouldAutoEnableWebSearch) {
       console.log(`[AutoWebSearch] Enabled: ${autoWebDecision.reason} (${autoWebDecision.category})`);
@@ -165,6 +166,9 @@ stopGeneration: () => {
       if (autoWebDecision.domains) {
         payloadSettings.tools.webSearchDomains = autoWebDecision.domains;
       }
+    } else {
+      payloadSettings.tools = payloadSettings.tools || {};
+      payloadSettings.tools.webSearch = false; // explicitly disable if auto is off or global is off
     }
 
     let finalModelUsed = (useSettingsStore.getState().settings.providers as any)[useSettingsStore.getState().settings.providers.activeProvider]?.modelName || 'gemini-2.5-pro';
@@ -188,24 +192,35 @@ stopGeneration: () => {
       // Use enhanced smart routing with weighted intent detection
       const intent = detectSmartRoutingIntent(text, !!imageUrl);
 
+      // Helper to apply profile to provider config
+      const applyProviderAndModel = (prov: string, modelOrProfileId: string) => {
+        payloadSettings.providers.activeProvider = prov;
+        if (prov === 'custom' && payloadSettings.providers.custom.profiles) {
+          const profile = payloadSettings.providers.custom.profiles.find((p: any) => p.id === modelOrProfileId);
+          if (profile) {
+            payloadSettings.providers.custom.baseUrl = profile.baseUrl;
+            payloadSettings.providers.custom.apiKey = profile.apiKey;
+            payloadSettings.providers.custom.modelName = profile.modelName;
+            payloadSettings.providers.custom.customHeaders = profile.customHeaders;
+            payloadSettings.providers.custom.activeProfileId = profile.id;
+            return profile.modelName || 'نامشخص';
+          }
+        }
+        if ((payloadSettings.providers as any)[prov]) {
+          (payloadSettings.providers as any)[prov].modelName = modelOrProfileId;
+        }
+        return modelOrProfileId;
+      };
+
       if (intent === 'vision') {
-          payloadSettings.providers.activeProvider = rVisionProv;
-          if ((payloadSettings.providers as any)[rVisionProv]) {
-            (payloadSettings.providers as any)[rVisionProv].modelName = rVision;
-          }
-          finalModelUsed = rVision + ' (هوشمند)';
+          const actualName = applyProviderAndModel(rVisionProv, rVision);
+          finalModelUsed = actualName + ' (هوشمند)';
       } else if (intent === 'coding') {
-          payloadSettings.providers.activeProvider = rCodingProv;
-          if ((payloadSettings.providers as any)[rCodingProv]) {
-            (payloadSettings.providers as any)[rCodingProv].modelName = rCoding;
-          }
-          finalModelUsed = rCoding + ' (هوشمند)';
+          const actualName = applyProviderAndModel(rCodingProv, rCoding);
+          finalModelUsed = actualName + ' (هوشمند)';
       } else {
-          payloadSettings.providers.activeProvider = rDefaultProv;
-          if ((payloadSettings.providers as any)[rDefaultProv]) {
-            (payloadSettings.providers as any)[rDefaultProv].modelName = rDefault;
-          }
-          finalModelUsed = rDefault + ' (هوشمند)';
+          const actualName = applyProviderAndModel(rDefaultProv, rDefault);
+          finalModelUsed = actualName + ' (هوشمند)';
       }
     }
 

@@ -1,5 +1,5 @@
 import express from 'express';
-import { isSafeBaseUrl, getGeminiClient, extractCleanErrorMessage, sanitizeErrorMessage, formatContentsForGemini, sleep, getPollinationsImageUrl, translateAndEnhanceImagePrompt, pcmToWavBuffer, normalizeBaseUrl, parseCustomHeaders } from '../services/utils';
+import { isSafeBaseUrl, getGeminiClient, extractCleanErrorMessage, sanitizeErrorMessage, formatContentsForGemini, sleep, getPollinationsImageUrl, translateAndEnhanceImagePrompt, normalizeBaseUrl, parseCustomHeaders } from '../services/utils';
 import { SmartWebAgent } from '../services/WebSearchAgent';
 import { CachedResponse, responseCache, CACHE_TTL_MS, computeCacheKey, setCachedResponse } from '../services/CacheService';
 
@@ -98,6 +98,34 @@ router.post('/api/chat/stream', async (req, res) => {
     }
 
     let provider = apiConfig?.activeProvider || 'gemini';
+
+    // Auto-detect native official providers from custom profiles based on Base URL
+    if (provider === 'custom' && apiConfig?.custom?.baseUrl) {
+      const bUrl = apiConfig.custom.baseUrl.toLowerCase();
+      if (bUrl.includes('anthropic.com')) {
+        provider = 'anthropic';
+        apiConfig.anthropic = { ...apiConfig.custom };
+      } else if (bUrl.includes('generativelanguage.googleapis.com')) {
+        provider = 'gemini';
+        apiConfig.gemini = { ...apiConfig.custom };
+      }
+    }
+
+    // Benchmark / Safe High-Concurrency Load Simulation Mode
+    if (provider === 'benchmark' || req.headers['x-benchmark-sim'] === 'true' || apiConfig?.model === 'benchmark-simulation') {
+      const sampleWords = [
+        'درود!', 'این', 'یک', 'پاسخ', 'آزمایشی', 'برای', 'سنجش', 'پایداری', 'و', 'تست',
+        'فشار', 'سرور', 'در', 'شرایط', 'بارگذاری', 'سنگین', 'است.', 'ارتباط', 'استریم',
+        'با', 'موفقیت', 'برقرار', 'شد', 'و', 'بسته‌های', 'داده', 'در', 'حال', 'انتقال', 'هستند.'
+      ];
+      for (const word of sampleWords) {
+        if (isEnded) break;
+        sendChunk({ chunk: word + ' ' });
+        await sleep(20);
+      }
+      sendChunk({ done: true, modelUsed: 'benchmark-simulation' });
+      return finishStream();
+    }
 
     // Context window strategy: Keep last 8 recent turns (16 messages = 8 user + 8 assistant)
     // This aligns with frontend's buildOptimizedContext() maxRecentTurns=8

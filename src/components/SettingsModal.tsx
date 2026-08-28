@@ -7,13 +7,12 @@ import {
   UserCircle, Palette, Wrench, AlertCircle, Trash2, Download, Upload, RefreshCcw, Sparkles
 } from 'lucide-react';
 import { AppSettings, Conversation, FontFamily, ThemeMode } from '../types';
-
-
+import { CustomProviderCards } from './CustomProviderCards';
 
 type TabType = 'providers' | 'persona' | 'appearance' | 'tools' | 'data';
 
 // Custom Combobox Component
-const SearchableCombobox = ({ value, onChange, options, placeholder, className }: any) => {
+export const SearchableCombobox = ({ value, onChange, options, placeholder, className }: any) => {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const wrapperRef = React.useRef<HTMLDivElement>(null);
@@ -96,13 +95,25 @@ export const SettingsModal: React.FC = () => {
   });
   const [fetchingModels, setFetchingModels] = useState(false);
 
-  const handleFetchModels = async () => {
+  const handleFetchModels = async (overrideConfig?: any) => {
     const provider = tempSettings.providers.activeProvider;
-    const config = tempSettings.providers[provider] as any;
+    let config = tempSettings.providers[provider] as any;
+    
+    // Use override config if provided (to bypass React state delays)
+    if (overrideConfig) {
+      config = { ...config, ...overrideConfig };
+    }
+    
     const baseUrl = config.baseUrl || (provider === 'gemini' ? 'https://generativelanguage.googleapis.com' : 'https://api.openai.com');
     
+    console.log('[DEBUG] Fetch Models overrideConfig:', overrideConfig);
+    console.log('[DEBUG] Fetch Models config:', config);
+    console.log('[DEBUG] Fetch Models payload:', { baseUrl, apiKey: !!config.apiKey, customHeaders: config.customHeaders });
+
     const startTime = performance.now();
     setFetchingModels(true);
+    setCachedModels([]); // Clear previous models
+    
     try {
        const res = await fetch('/api/fetch-models', {
           method: 'POST',
@@ -245,113 +256,97 @@ export const SettingsModal: React.FC = () => {
                 <div className="flex items-center gap-3 mb-4 sm:mb-6">
                   <div className="p-2 bg-blue-500/10 rounded-lg text-blue-400"><Cpu className="w-5 h-5" /></div>
                   <div>
-                    <h3 className="text-lg font-bold">ارائه‌دهنده فعال</h3>
-                    <p className="text-xs text-zinc-400">مدلی که پیام‌ها به آن ارسال می‌شود.</p>
+                    <h3 className="text-lg font-bold">پروفایل‌های ارائه‌دهندگان (API Profiles)</h3>
+                    <p className="text-xs text-zinc-400">مدیریت کلیدهای دسترسی و انتخاب مدل پیش‌فرض</p>
                   </div>
                 </div>
                 
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 mb-6 sm:mb-8">
-                  <ProviderSelectBox 
-                    title="Gemini" 
-                    active={tempSettings.providers.activeProvider === 'gemini'} 
-                    onClick={() => setTempSettings({...tempSettings, providers: {...tempSettings.providers, activeProvider: 'gemini'}})} 
-                  />
-                  <ProviderSelectBox 
-                    title="OpenAI" 
-                    active={tempSettings.providers.activeProvider === 'openai'} 
-                    onClick={() => setTempSettings({...tempSettings, providers: {...tempSettings.providers, activeProvider: 'openai'}})} 
-                  />
-                  <ProviderSelectBox 
-                    title="Anthropic" 
-                    active={tempSettings.providers.activeProvider === 'anthropic'} 
-                    onClick={() => setTempSettings({...tempSettings, providers: {...tempSettings.providers, activeProvider: 'anthropic'}})} 
-                  />
-                  <ProviderSelectBox 
-                    title="Custom (OpenRouter)" 
-                    active={tempSettings.providers.activeProvider === 'custom'} 
-                    onClick={() => setTempSettings({...tempSettings, providers: {...tempSettings.providers, activeProvider: 'custom'}})} 
+                <div className="grid grid-cols-1 gap-2 sm:gap-3 mb-6 sm:mb-8">
+                  <CustomProviderCards 
+                    tempSettings={tempSettings} 
+                    setTempSettings={setTempSettings} 
+                    cachedModels={cachedModels} 
+                    fetchingModels={fetchingModels} 
+                    handleFetchModels={handleFetchModels} 
+                    fetchError={testResult?.success === false ? testResult.message : null}
                   />
                 </div>
 
-                <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 sm:p-5">
-                  <h4 className="text-md font-bold mb-4 flex items-center gap-2">
-                    تنظیمات {tempSettings.providers.activeProvider.charAt(0).toUpperCase() + tempSettings.providers.activeProvider.slice(1)}
-                  </h4>
-                  
-                  <div className="space-y-4">
-                    {tempSettings.providers.activeProvider === 'custom' && (
-                      <div>
-                        <label className="block text-sm font-medium text-zinc-300 mb-1">آدرس پایه (Base URL)</label>
-                        <div className="relative">
-                          <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-zinc-500"><LinkIcon className="w-4 h-4" /></div>
-                          <input type="text" dir="ltr" value={tempSettings.providers.custom.baseUrl} onChange={(e) => updateProvider('custom', 'baseUrl', e.target.value)} className="w-full bg-zinc-950 border border-zinc-800 rounded-xl py-2.5 pr-10 pl-4 text-sm focus:border-blue-500 outline-none transition-all font-mono" placeholder="https://openrouter.ai/api/v1" />
-                        </div>
-                      </div>
-                    )}
-                    
+                {/* Smart Routing Block (Collapsible) */}
+                <div className="bg-zinc-900/50 border border-zinc-800/50 rounded-2xl p-4 sm:p-5 mt-4 transition-all">
+                  <div className="flex items-center justify-between">
                     <div>
-                      <label className="block text-sm font-medium text-zinc-300 mb-1">کلید دسترسی (API Key)</label>
-                      <div className="relative">
-                        <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-zinc-500"><Key className="w-4 h-4" /></div>
-                        <input type="password" dir="ltr" value={(tempSettings.providers as any)[tempSettings.providers.activeProvider].apiKey} onChange={(e) => updateProvider(tempSettings.providers.activeProvider, 'apiKey', e.target.value)} className="w-full bg-zinc-950 border border-zinc-800 rounded-xl py-2.5 pr-10 pl-4 text-sm focus:border-blue-500 outline-none transition-all font-mono" placeholder="sk-..." />
+                      <div className="font-medium text-sm text-indigo-400 flex items-center gap-2">
+                        <Sparkles className="w-4 h-4" /> مسیریابی هوشمند (Smart Routing)
                       </div>
+                      <div className="text-xs text-zinc-400 mt-1">ارسال پیام‌ها بر اساس نوع محتوا به پروفایل‌های مختلف</div>
                     </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-zinc-300 mb-1">مدل انتخابی (Model)</label>
-                      {tempSettings.providers.activeProvider === 'gemini' ? (
-                        <div className="space-y-2">
-                          <select 
-                            value={['gemini-3.1-flash-lite', 'gemini-2.5-flash', 'gemini-3.1-pro', 'gemini-2.5-pro'].includes(tempSettings.providers.gemini.modelName) ? tempSettings.providers.gemini.modelName : 'custom'} 
-                            onChange={(e) => {
-                              const val = e.target.value;
-                              if (val !== 'custom') {
-                                updateProvider('gemini', 'modelName', val);
-                              } else {
-                                updateProvider('gemini', 'modelName', ''); // Reset to empty for custom entry
-                              }
-                            }}
-                            className="w-full bg-zinc-950 border border-zinc-800 rounded-xl py-2.5 px-3 text-sm outline-none focus:border-blue-500 min-h-[44px]"
-                          >
-                            <option value="gemini-3.1-flash-lite">Gemini 3.1 Flash-Lite (فوق‌سریع و پایدار - پیش‌فرض)</option>
-                            <option value="gemini-2.5-flash">Gemini 2.5 Flash (همه‌فن‌حریف و سریع)</option>
-                            <option value="gemini-3.1-pro">Gemini 3.1 Pro (استدلال پیشرفته و کدنویسی)</option>
-                            <option value="gemini-2.5-pro">Gemini 2.5 Pro (کانتکست طولانی و استدلال بالا)</option>
-                            <option value="custom">سفارشی / مدل دیگر...</option>
-                          </select>
-                          {(!['gemini-3.1-flash-lite', 'gemini-2.5-flash', 'gemini-3.1-pro', 'gemini-2.5-pro'].includes(tempSettings.providers.gemini.modelName)) && (
-                              <div className="flex gap-2">
-                                <div className="relative flex-1">
-                                  <SearchableCombobox value={tempSettings.providers.gemini.modelName} onChange={(val: string) => updateProvider('gemini', 'modelName', val)} options={cachedModels} placeholder="مثال: gemini-3.1-flash-lite" className="w-full bg-zinc-950 border border-zinc-800 rounded-xl py-2.5 px-4 text-sm focus:border-blue-500 outline-none transition-all font-mono min-h-[44px]" />
-                                </div>
-                                <button type="button" onClick={handleFetchModels} disabled={fetchingModels} className="px-3 rounded-xl border border-zinc-700 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 transition-colors flex items-center justify-center shrink-0" title="دریافت مدل‌ها">
-                                  {fetchingModels ? <div className="w-4 h-4 border-2 border-zinc-500 border-t-white rounded-full animate-spin" /> : <RefreshCcw className="w-4 h-4" />}
-                                </button>
-                              </div>
-                            )}
-                        </div>
-                      ) : (
-                          <div className="flex gap-2">
-                            <div className="relative flex-1">
-                              <SearchableCombobox value={(tempSettings.providers as any)[tempSettings.providers.activeProvider].modelName} onChange={(val: string) => updateProvider(tempSettings.providers.activeProvider, 'modelName', val)} options={cachedModels} placeholder="" className="w-full bg-zinc-950 border border-zinc-800 rounded-xl py-2.5 px-4 text-sm focus:border-blue-500 outline-none transition-all font-mono min-h-[44px]" />
-                            </div>
-                            <button type="button" onClick={handleFetchModels} disabled={fetchingModels} className="px-3 rounded-xl border border-zinc-700 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 transition-colors flex items-center justify-center shrink-0" title="دریافت مدل‌ها">
-                              {fetchingModels ? <div className="w-4 h-4 border-2 border-zinc-500 border-t-white rounded-full animate-spin" /> : <RefreshCcw className="w-4 h-4" />}
-                            </button>
-                          </div>
-                      )}
-                    </div>
-
-                    {tempSettings.providers.activeProvider === 'custom' && (
-                      <div>
-                        <label className="block text-sm font-medium text-zinc-300 mb-1">هدرهای سفارشی (JSON)</label>
-                        <textarea dir="ltr" value={tempSettings.providers.custom.customHeaders} onChange={(e) => updateProvider('custom', 'customHeaders', e.target.value)} className="w-full bg-zinc-950 border border-zinc-800 rounded-xl py-2.5 px-4 text-sm focus:border-blue-500 outline-none transition-all font-mono h-24 resize-none" placeholder='{"HTTP-Referer": "https://myapp.com"}' />
-                      </div>
-                    )}
+                    <ToggleSwitch checked={tempSettings.tools.smartRouting} onChange={(v) => setTempSettings({...tempSettings, tools: {...tempSettings.tools, smartRouting: v}})} />
                   </div>
+                  
+                  {tempSettings.tools.smartRouting && (
+                    <div className="pt-5 mt-5 border-t border-zinc-800/50 grid grid-cols-1 gap-4 animate-fadeIn">
+                      {/* Default Model */}
+                      <div>
+                        <label className="block text-xs font-medium text-zinc-300 mb-1.5 flex items-center gap-2">مدل پیش‌فرض (مکالمه عادی)</label>
+                        <select 
+                          value={tempSettings.tools.routingRoles?.default || ''} 
+                          onChange={(e) => setTempSettings({...tempSettings, tools: {...tempSettings.tools, routingRoles: {...(tempSettings.tools.routingRoles || {default:'', coding:'', vision:''}), defaultProvider: 'custom', default: e.target.value}}})} 
+                          className="w-full bg-zinc-950 border border-zinc-800 rounded-lg py-2.5 px-3 text-sm focus:border-indigo-500 outline-none transition-all"
+                          dir="rtl"
+                        >
+                          <option value="">-- انتخاب پروفایل --</option>
+                          {(tempSettings.providers.custom.profiles || []).map(p => {
+                            let domain = 'URL نامشخص';
+                            try { domain = new URL(p.baseUrl).hostname.replace('www.', ''); } catch(e) {}
+                            return <option key={p.id} value={p.id}>{p.name} ({p.modelName || 'بدون مدل'}) ⬅️ {domain}</option>;
+                          })}
+                        </select>
+                      </div>
 
-                  <div className="mt-6 pt-5 border-t border-zinc-800 flex flex-col sm:flex-row gap-4 items-center justify-between">
-                    <button type="button" onClick={() => handleTestConnection(tempSettings.providers.activeProvider)} disabled={testing} className="w-full sm:w-auto px-5 py-2.5 rounded-xl font-medium text-sm border border-zinc-700 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 transition-colors flex items-center justify-center gap-2">
+                      {/* Coding Model */}
+                      <div>
+                        <label className="block text-xs font-medium text-zinc-300 mb-1.5 flex items-center gap-2">مدل تخصصی برنامه‌نویسی</label>
+                        <select 
+                          value={tempSettings.tools.routingRoles?.coding || ''} 
+                          onChange={(e) => setTempSettings({...tempSettings, tools: {...tempSettings.tools, routingRoles: {...(tempSettings.tools.routingRoles || {default:'', coding:'', vision:''}), codingProvider: 'custom', coding: e.target.value}}})} 
+                          className="w-full bg-zinc-950 border border-zinc-800 rounded-lg py-2.5 px-3 text-sm focus:border-indigo-500 outline-none transition-all"
+                          dir="rtl"
+                        >
+                          <option value="">-- انتخاب پروفایل --</option>
+                          {(tempSettings.providers.custom.profiles || []).map(p => {
+                            let domain = 'URL نامشخص';
+                            try { domain = new URL(p.baseUrl).hostname.replace('www.', ''); } catch(e) {}
+                            return <option key={p.id} value={p.id}>{p.name} ({p.modelName || 'بدون مدل'}) ⬅️ {domain}</option>;
+                          })}
+                        </select>
+                      </div>
+
+                      {/* Vision Model */}
+                      <div>
+                        <label className="block text-xs font-medium text-zinc-300 mb-1.5 flex items-center gap-2">مدل پردازش تصویر/فایل (Vision)</label>
+                        <select 
+                          value={tempSettings.tools.routingRoles?.vision || ''} 
+                          onChange={(e) => setTempSettings({...tempSettings, tools: {...tempSettings.tools, routingRoles: {...(tempSettings.tools.routingRoles || {default:'', coding:'', vision:''}), visionProvider: 'custom', vision: e.target.value}}})} 
+                          className="w-full bg-zinc-950 border border-zinc-800 rounded-lg py-2.5 px-3 text-sm focus:border-indigo-500 outline-none transition-all"
+                          dir="rtl"
+                        >
+                          <option value="">-- انتخاب پروفایل --</option>
+                          {(tempSettings.providers.custom.profiles || []).map(p => {
+                            let domain = 'URL نامشخص';
+                            try { domain = new URL(p.baseUrl).hostname.replace('www.', ''); } catch(e) {}
+                            return <option key={p.id} value={p.id}>{p.name} ({p.modelName || 'بدون مدل'}) ⬅️ {domain}</option>;
+                          })}
+                        </select>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 sm:p-5 mt-4">
+
+                  <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
+                    <button type="button" onClick={() => handleTestConnection('custom')} disabled={testing} className="w-full sm:w-auto px-5 py-2.5 rounded-xl font-medium text-sm border border-zinc-700 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 transition-colors flex items-center justify-center gap-2">
                       {testing ? <><div className="w-4 h-4 border-2 border-zinc-500 border-t-white rounded-full animate-spin" /> بررسی ارتباط...</> : <><Globe className="w-4 h-4" /> تست اتصال</>}
                     </button>
                     {testResult && (
@@ -444,7 +439,25 @@ export const SettingsModal: React.FC = () => {
                       <div className="font-medium text-sm">جستجوی زنده وب (Web Search)</div>
                       <div className="text-xs text-zinc-400">جستجوی آنلاین برای اطلاعات به‌روز</div>
                     </div>
-                    <ToggleSwitch checked={tempSettings.tools.webSearch} onChange={(v) => setTempSettings({...tempSettings, tools: {...tempSettings.tools, webSearch: v}})} />
+                    <ToggleSwitch 
+                      checked={tempSettings.tools.webSearch} 
+                      onChange={(v) => {
+                        setTempSettings({...tempSettings, tools: {...tempSettings.tools, webSearch: v}});
+                        const msg = v ? 'امکان جستجو در وب روشن شد' : 'امکان جستجو در وب غیرفعال شد';
+                        // Show a native alert for simplicity, or we can use custom toast if preferred, but alert is robust
+                        // Let's use a small DOM injection for a nice toast if alert is too intrusive, but wait, a simple alert is fine.
+                        // Wait, alert blocks the UI. Let's just create a quick custom toast.
+                        const toast = document.createElement('div');
+                        toast.className = 'fixed bottom-10 left-1/2 transform -translate-x-1/2 bg-zinc-800 text-zinc-200 border border-zinc-700 px-5 py-3 rounded-2xl shadow-xl z-[9999] text-sm animate-fadeIn flex items-center gap-2';
+                        toast.innerHTML = `<span class="${v ? 'text-emerald-400' : 'text-zinc-400'}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4"></path><path d="M12 8h.01"></path></svg></span> ${msg}`;
+                        document.body.appendChild(toast);
+                        setTimeout(() => {
+                          toast.style.opacity = '0';
+                          toast.style.transition = 'opacity 0.5s ease';
+                          setTimeout(() => toast.remove(), 500);
+                        }, 2500);
+                      }} 
+                    />
                   </div>
                   <div className="flex items-center justify-between p-4 bg-zinc-900 border border-zinc-800 rounded-xl">
                     <div>
@@ -454,76 +467,7 @@ export const SettingsModal: React.FC = () => {
                     <ToggleSwitch checked={tempSettings.tools.enterToSend} onChange={(v) => setTempSettings({...tempSettings, tools: {...tempSettings.tools, enterToSend: v}})} />
                   </div>
                   
-                  <div className="p-4 bg-zinc-900 border border-zinc-800 rounded-xl space-y-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <div className="font-medium text-sm text-indigo-400 flex items-center gap-2">
-                          <Sparkles className="w-4 h-4" /> مسیریابی هوشمند (Smart Routing)
-                        </div>
-                        <div className="text-xs text-zinc-400 mt-1">ارسال پیام‌ها بر اساس نوع محتوا به مدل‌های اختصاصی</div>
-                      </div>
-                      <ToggleSwitch checked={tempSettings.tools.smartRouting} onChange={(v) => setTempSettings({...tempSettings, tools: {...tempSettings.tools, smartRouting: v}})} />
-                    </div>
-                    
-                    {tempSettings.tools.smartRouting && (
-                      <div className="pt-4 border-t border-zinc-800 grid grid-cols-1 gap-4 animate-fadeIn">
-                        <div>
-                          <label className="block text-xs font-medium text-zinc-300 mb-1.5">مدل پیش‌فرض (مکالمه عادی)</label>
-                          <div className="flex gap-2">
-                            <select 
-                              value={tempSettings.tools.routingRoles?.defaultProvider || 'custom'} 
-                              onChange={(e) => setTempSettings({...tempSettings, tools: {...tempSettings.tools, routingRoles: {...(tempSettings.tools.routingRoles || {default:'', coding:'', vision:''}), defaultProvider: e.target.value}}})} 
-                              className="w-1/3 bg-zinc-950 border border-zinc-800 rounded-lg py-2 px-3 text-sm focus:border-indigo-500 outline-none transition-all"
-                            >
-                              <option value="custom">Custom</option>
-                              <option value="openai">OpenAI</option>
-                              <option value="anthropic">Claude</option>
-                              <option value="gemini">Gemini</option>
-                            </select>
-                            <div className="flex-1">
-                              <SearchableCombobox value={tempSettings.tools.routingRoles?.default || ''} onChange={(val: string) => setTempSettings({...tempSettings, tools: {...tempSettings.tools, routingRoles: {...(tempSettings.tools.routingRoles || {default:'', coding:'', vision:''}), default: val}}})} options={cachedModels} placeholder="gpt-4o-mini" className="w-full bg-zinc-950 border border-zinc-800 rounded-lg py-2 px-3 text-sm focus:border-indigo-500 outline-none transition-all font-mono" />
-                            </div>
-                          </div>
-                        </div>
-                        <div>
-                          <label className="block text-xs font-medium text-zinc-300 mb-1.5">مدل تخصصی برنامه‌نویسی</label>
-                          <div className="flex gap-2">
-                            <select 
-                              value={tempSettings.tools.routingRoles?.codingProvider || 'custom'} 
-                              onChange={(e) => setTempSettings({...tempSettings, tools: {...tempSettings.tools, routingRoles: {...(tempSettings.tools.routingRoles || {default:'', coding:'', vision:''}), codingProvider: e.target.value}}})} 
-                              className="w-1/3 bg-zinc-950 border border-zinc-800 rounded-lg py-2 px-3 text-sm focus:border-indigo-500 outline-none transition-all"
-                            >
-                              <option value="custom">Custom</option>
-                              <option value="openai">OpenAI</option>
-                              <option value="anthropic">Claude</option>
-                              <option value="gemini">Gemini</option>
-                            </select>
-                            <div className="flex-1">
-                              <SearchableCombobox value={tempSettings.tools.routingRoles?.coding || ''} onChange={(val: string) => setTempSettings({...tempSettings, tools: {...tempSettings.tools, routingRoles: {...(tempSettings.tools.routingRoles || {default:'', coding:'', vision:''}), coding: val}}})} options={cachedModels} placeholder="claude-3-5-sonnet-20240620" className="w-full bg-zinc-950 border border-zinc-800 rounded-lg py-2 px-3 text-sm focus:border-indigo-500 outline-none transition-all font-mono" />
-                            </div>
-                          </div>
-                        </div>
-                        <div>
-                          <label className="block text-xs font-medium text-zinc-300 mb-1.5">مدل پردازش تصویر/فایل (Vision)</label>
-                          <div className="flex gap-2">
-                            <select 
-                              value={tempSettings.tools.routingRoles?.visionProvider || 'custom'} 
-                              onChange={(e) => setTempSettings({...tempSettings, tools: {...tempSettings.tools, routingRoles: {...(tempSettings.tools.routingRoles || {default:'', coding:'', vision:''}), visionProvider: e.target.value}}})} 
-                              className="w-1/3 bg-zinc-950 border border-zinc-800 rounded-lg py-2 px-3 text-sm focus:border-indigo-500 outline-none transition-all"
-                            >
-                              <option value="custom">Custom</option>
-                              <option value="openai">OpenAI</option>
-                              <option value="anthropic">Claude</option>
-                              <option value="gemini">Gemini</option>
-                            </select>
-                            <div className="flex-1">
-                              <SearchableCombobox value={tempSettings.tools.routingRoles?.vision || ''} onChange={(val: string) => setTempSettings({...tempSettings, tools: {...tempSettings.tools, routingRoles: {...(tempSettings.tools.routingRoles || {default:'', coding:'', vision:''}), vision: val}}})} options={cachedModels} placeholder="gemini-1.5-pro" className="w-full bg-zinc-950 border border-zinc-800 rounded-lg py-2 px-3 text-sm focus:border-indigo-500 outline-none transition-all font-mono" />
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
+
 
                   <div className="flex items-center justify-between p-4 bg-zinc-900 border border-zinc-800 rounded-xl">
                     <div>

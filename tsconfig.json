@@ -24,6 +24,6 @@
     "allowImportingTsExtensions": true,
     "noEmit": true
   },
-  "include": ["src/**/*", "server.ts"],
-  "exclude": ["node_modules", "dist", "*.cjs", "*.js", "test_*.js", "patch*.cjs", "patch*.js"]
+  "include": ["src/**/*", "server/**/*"],
+  "exclude": ["node_modules", "dist", "dev-dist"]
 }
