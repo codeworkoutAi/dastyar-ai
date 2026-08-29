@@ -1,33 +1,33 @@
 import React, { useState } from 'react';
 import {
-  AddCircleBoldDuotoneIcon,
-  MinimalisticMagnifierLineDuotoneIcon,
-  PinBoldDuotoneIcon,
-  PinLineDuotoneIcon,
-  TrashBinMinimalisticLineDuotoneIcon,
-  PenLineDuotoneIcon,
-  DownloadMinimalisticLineDuotoneIcon,
-  StarsMinimalisticBoldDuotoneIcon,
-  Code2LineDuotoneIcon,
-  CalendarLineDuotoneIcon,
-  DatabaseLineDuotoneIcon
+  AddCircleBoldIcon,
+  MinimalisticMagnifierLinearIcon,
+  PinBoldIcon,
+  PinLinearIcon,
+  TrashBinMinimalisticLinearIcon,
+  PenLinearIcon,
+  DownloadMinimalisticLinearIcon,
+  StarsMinimalisticBoldIcon,
+  Code2LinearIcon,
+  CalendarLinearIcon,
+  DatabaseLinearIcon,
+  CheckCircleOutlineIcon as Check,
+  CloseOutlineIcon as X,
+  AltArrowDownOutlineIcon as ChevronDown,
+  DangerTriangleOutlineIcon as AlertTriangle,
+  ChatRoundDotsOutlineIcon as MessageSquare,
+  CompassOutlineIcon,
+  HelpLinearIcon,
 } from '@solar-icons/react';
-import { 
-  Check, 
-  X, 
-  ChevronDown,
-  AlertTriangle,
-  MessageSquare
-} from 'lucide-react';
 import { Conversation } from '../types';
 import { formatPersianRelativeTime, toPersianDigits } from '../lib/persianUtils';
 import { getStorageUsage } from '../lib/storage';
+import { calculateSessionStats } from '../utils/pricing';
 import { Tooltip } from './Tooltip';
 import { useUIStore } from '../store/uiStore';
 import { useSettingsStore } from '../store/settingsStore';
 import { useChatStore } from '../store/chatStore';
 import { exportToJson } from '../lib/exportUtils';
-
 
 interface GroupedConversations {
   id: 'today' | 'yesterday' | 'last7Days' | 'older';
@@ -36,7 +36,7 @@ interface GroupedConversations {
 }
 
 export const Sidebar: React.FC = React.memo(() => {
-  const { sidebarOpen, setSidebarOpen, setIsImageStudioOpen, setIsExportOpen } = useUIStore();
+  const { sidebarOpen, setSidebarOpen, setIsImageStudioOpen, setIsExportOpen, setIsExploreOpen, setIsUiGuideOpen } = useUIStore();
   const { settings } = useSettingsStore();
   const { conversations, activeId, setActiveId, createChat, createCodingChat, deleteConversation, updateConversation, clearAllConversations, isStreaming } = useChatStore();
   const usePersianDigits = settings.appearance.persianNumerals;
@@ -110,6 +110,10 @@ export const Sidebar: React.FC = React.memo(() => {
   };
 
   const storageStats = getStorageUsage();
+  
+  const sessionStats = React.useMemo(() => {
+    return calculateSessionStats(conversations || []);
+  }, [conversations]);
 
   const handleStartRename = (e: React.MouseEvent, conv: Conversation) => {
     e.stopPropagation();
@@ -145,8 +149,8 @@ export const Sidebar: React.FC = React.memo(() => {
         }}
         className={`group relative flex flex-col p-2.5 rounded-2xl cursor-pointer transition-all duration-150 border ${
           isActive
-            ? 'bg-zinc-800/80 border-r-2 border-blue-500 text-zinc-100 shadow-xs'
-            : 'hover:bg-zinc-800/40 text-zinc-400 hover:text-zinc-200 border-transparent'
+            ? 'bg-white dark:bg-zinc-800/80 border-r-2 border-blue-500 text-zinc-900 dark:text-zinc-100 shadow-xs'
+            : 'hover:bg-zinc-100 dark:hover:bg-zinc-700/40 text-zinc-700 dark:text-zinc-400 hover:text-zinc-800 dark:text-zinc-200 border-transparent'
         }`}
       >
         <div className="flex items-center justify-between gap-2">
@@ -161,7 +165,7 @@ export const Sidebar: React.FC = React.memo(() => {
                   if (e.key === 'Escape') setEditingId(null);
                 }}
                 autoFocus
-                className="w-full text-xs sm:text-sm px-3 py-1.5 rounded-xl bg-zinc-800 border border-blue-500 text-zinc-100 focus:outline-hidden"
+                className="w-full text-xs sm:text-sm px-3 py-1.5 rounded-xl bg-white dark:bg-zinc-800 border border-blue-500 text-zinc-900 dark:text-zinc-100 focus:outline-hidden"
               />
               <Tooltip content="ذخیره">
                 <button
@@ -175,7 +179,7 @@ export const Sidebar: React.FC = React.memo(() => {
               <Tooltip content="انصراف">
                 <button
                   onClick={() => setEditingId(null)}
-                  className="bg-zinc-700 hover:bg-zinc-600 text-zinc-300 p-1.5 rounded-xl cursor-pointer"
+                  className="bg-zinc-700 hover:bg-zinc-600 text-zinc-700 dark:text-zinc-300 p-1.5 rounded-xl cursor-pointer"
                   aria-label="Cancel rename"
                 >
                   <X className="w-4 h-4" />
@@ -197,7 +201,7 @@ export const Sidebar: React.FC = React.memo(() => {
                 </button>
                 <button
                   onClick={() => setConfirmDeleteId(null)}
-                  className="px-2 py-1 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-[11px] cursor-pointer"
+                  className="px-2 py-1 rounded-lg bg-white dark:bg-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 text-[11px] cursor-pointer"
                 >
                   خیر
                 </button>
@@ -206,7 +210,7 @@ export const Sidebar: React.FC = React.memo(() => {
           ) : (
             <>
               <div className="flex items-center gap-2 overflow-hidden flex-1 min-w-0">
-                <span className={`text-xs sm:text-[13px] truncate ${isActive ? 'font-bold text-zinc-100' : 'text-zinc-300'}`}>
+                <span className={`text-xs sm:text-[13px] truncate ${isActive ? 'font-bold text-zinc-900 dark:text-zinc-100' : 'text-zinc-700 dark:text-zinc-300'}`}>
                   {conv.title}
                 </span>
               </div>
@@ -221,22 +225,22 @@ export const Sidebar: React.FC = React.memo(() => {
                     }}
                     className={`p-1.5 rounded-lg transition-all cursor-pointer ${
                       conv.isPinned 
-                        ? 'text-amber-400 bg-amber-400/15 opacity-100' 
-                        : 'opacity-60 hover:opacity-100 hover:bg-white/10 text-zinc-400 hover:text-zinc-200'
+                        ? 'text-amber-500 dark:text-amber-400 bg-amber-400/15 opacity-100' 
+                        : 'opacity-60 hover:opacity-100 hover:bg-black/5 dark:hover:bg-white/10 text-zinc-700 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200'
                     }`}
                     aria-label="Pin conversation"
                   >
-                    {conv.isPinned ? <PinBoldDuotoneIcon className="w-3.5 h-3.5" /> : <PinLineDuotoneIcon className="w-3.5 h-3.5" />}
+                    {conv.isPinned ? <PinBoldIcon className="w-3.5 h-3.5" /> : <PinLinearIcon className="w-3.5 h-3.5" />}
                   </button>
                 </Tooltip>
 
                 <Tooltip content="ویرایش عنوان">
                   <button
                     onClick={(e) => handleStartRename(e, conv)}
-                    className="p-1.5 rounded-lg opacity-60 hover:opacity-100 hover:bg-white/10 text-zinc-400 hover:text-zinc-200 transition-all cursor-pointer"
+                    className="p-1.5 rounded-lg opacity-60 hover:opacity-100 hover:bg-black/5 dark:hover:bg-white/10 text-zinc-700 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200 transition-all cursor-pointer"
                     aria-label="Rename conversation"
                   >
-                    <PenLineDuotoneIcon className="w-3.5 h-3.5" />
+                    <PenLinearIcon className="w-3.5 h-3.5" />
                   </button>
                 </Tooltip>
 
@@ -246,10 +250,10 @@ export const Sidebar: React.FC = React.memo(() => {
                       e.stopPropagation();
                       exportToJson([conv]);
                     }}
-                    className="p-1.5 rounded-lg opacity-60 hover:opacity-100 hover:bg-white/10 text-zinc-400 hover:text-zinc-200 transition-all cursor-pointer"
+                    className="p-1.5 rounded-lg opacity-60 hover:opacity-100 hover:bg-black/5 dark:hover:bg-white/10 text-zinc-700 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200 transition-all cursor-pointer"
                     aria-label="Export conversation"
                   >
-                    <DownloadMinimalisticLineDuotoneIcon className="w-3.5 h-3.5" />
+                    <DownloadMinimalisticLinearIcon className="w-3.5 h-3.5" />
                   </button>
                 </Tooltip>
 
@@ -259,10 +263,10 @@ export const Sidebar: React.FC = React.memo(() => {
                       e.stopPropagation();
                       setConfirmDeleteId(conv.id);
                     }}
-                    className="p-1.5 rounded-lg opacity-60 hover:opacity-100 hover:bg-red-500/20 text-zinc-400 hover:text-red-400 transition-all cursor-pointer"
+                    className="p-1.5 rounded-lg opacity-60 hover:opacity-100 hover:bg-red-50 dark:hover:bg-red-500/10 text-zinc-700 dark:text-zinc-400 hover:text-red-600 dark:hover:text-red-400 transition-all cursor-pointer"
                     aria-label="Delete conversation"
                   >
-                    <TrashBinMinimalisticLineDuotoneIcon className="w-3.5 h-3.5" />
+                    <TrashBinMinimalisticLinearIcon className="w-3.5 h-3.5" />
                   </button>
                 </Tooltip>
               </div>
@@ -272,12 +276,12 @@ export const Sidebar: React.FC = React.memo(() => {
 
         {/* Date, Time, and Message Count Metadata */}
         {!isEditing && !isDeleting && (
-          <div className="flex items-center justify-between text-[11px] text-zinc-500 dark:text-zinc-400 mt-1.5">
+          <div className="flex items-center justify-between text-[11px] text-zinc-700 dark:text-zinc-400 mt-1.5">
             <span className="flex items-center gap-1">
               <MessageSquare className="w-3 h-3 opacity-60" />
               <span>{formattedMsgCount} پیام</span>
             </span>
-            <span className="shrink-0 font-mono text-[10px]">
+            <span className="shrink-0 font-medium text-[10px]">
               {formatPersianRelativeTime(conv.updatedAt || conv.createdAt, usePersianDigits)}
             </span>
           </div>
@@ -311,7 +315,7 @@ export const Sidebar: React.FC = React.memo(() => {
             <span className="text-xs font-bold opacity-70 px-1">تاریخچه گفتگوها</span>
             <button
               onClick={() => setSidebarOpen(false)}
-              className="p-1.5 rounded-xl text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 transition-colors md:hidden cursor-pointer"
+              className="p-1.5 rounded-xl text-zinc-700 dark:text-zinc-400 hover:text-zinc-900 dark:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors md:hidden cursor-pointer"
               aria-label="Close sidebar"
             >
               <X className="w-4 h-4" />
@@ -325,26 +329,41 @@ export const Sidebar: React.FC = React.memo(() => {
               createChat(settings.providers[settings.providers.activeProvider]?.modelName);
               if (window.innerWidth < 768) setSidebarOpen(false);
             }}
-            className="w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-2xl bg-zinc-800 hover:bg-zinc-700 text-zinc-100 font-bold text-xs sm:text-sm transition-all text-right shadow-xs hover:scale-[1.01] active:scale-[0.99] cursor-pointer"
+            className="w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-2xl bg-white dark:bg-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-700 text-zinc-900 dark:text-zinc-100 font-bold text-xs sm:text-sm transition-all text-right shadow-xs hover:scale-[1.01] active:scale-[0.99] cursor-pointer"
           >
             <div className="w-7 h-7 rounded-xl bg-blue-500/15 text-blue-400 flex items-center justify-center shrink-0">
-              <AddCircleBoldDuotoneIcon className="w-4 h-4" />
+              <AddCircleBoldIcon className="w-4 h-4" />
             </div>
             <span className="flex-1">گفتگوی جدید</span>
           </button>
 
-          {/* 2 & 3: Image Studio and Coding Assistant Buttons */}
+          {/* Action Grid: Explore Hub, Image Studio, Coding Assistant */}
           <div className="grid grid-cols-2 gap-1.5">
+            <button
+              id="sidebar-explore-hub-btn"
+              onClick={() => {
+                setIsExploreOpen(true);
+                if (window.innerWidth < 768) setSidebarOpen(false);
+              }}
+              className="col-span-2 flex items-center gap-2 px-3 py-2 rounded-xl bg-purple-50 dark:bg-purple-500/20 hover:bg-purple-100 dark:hover:bg-purple-500/30 border border-purple-200 dark:border-purple-500/30 text-purple-900 dark:text-purple-200 text-xs font-bold transition-all text-right hover:scale-[1.01] active:scale-[0.98] cursor-pointer"
+            >
+              <div className="w-6 h-6 rounded-lg bg-purple-100 dark:bg-purple-500/20 text-purple-600 dark:text-purple-300 flex items-center justify-center shrink-0">
+                <CompassOutlineIcon className="w-3.5 h-3.5" />
+              </div>
+              <span className="truncate flex-1">کاوش مدل‌ها و بانک ایده‌ها</span>
+              <span className="text-[9px] bg-purple-500/30 text-purple-300 px-1.5 py-0.5 rounded-md font-mono">HUB</span>
+            </button>
+
             <button
               id="sidebar-image-studio-btn"
               onClick={() => {
                 setIsImageStudioOpen(true);
                 if (window.innerWidth < 768) setSidebarOpen(false);
               }}
-              className="flex items-center gap-2 px-2.5 py-2 rounded-xl bg-zinc-800/50 hover:bg-purple-950/30 border border-white/5 text-zinc-200 hover:text-purple-300 text-xs font-semibold transition-all text-right hover:scale-[1.01] active:scale-[0.98] cursor-pointer"
+              className="flex items-center gap-2 px-2.5 py-2 rounded-xl bg-white dark:bg-zinc-800/50 hover:bg-purple-50 dark:hover:bg-purple-950/30 border border-black/5 dark:border-white/5 text-zinc-800 dark:text-zinc-200 hover:text-purple-700 dark:hover:text-purple-300 text-xs font-semibold transition-all text-right hover:scale-[1.01] active:scale-[0.98] cursor-pointer"
             >
-              <div className="w-6 h-6 rounded-lg bg-purple-500/15 text-purple-400 flex items-center justify-center shrink-0">
-                <StarsMinimalisticBoldDuotoneIcon className="w-3.5 h-3.5" />
+              <div className="w-6 h-6 rounded-lg bg-purple-100 dark:bg-purple-500/15 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0">
+                <StarsMinimalisticBoldIcon className="w-3.5 h-3.5" />
               </div>
               <span className="truncate">استودیو تصویر</span>
             </button>
@@ -355,12 +374,27 @@ export const Sidebar: React.FC = React.memo(() => {
                 createCodingChat(settings.providers[settings.providers.activeProvider]?.modelName);
                 if (window.innerWidth < 768) setSidebarOpen(false);
               }}
-              className="flex items-center gap-2 px-2.5 py-2 rounded-xl bg-zinc-800/50 hover:bg-emerald-950/30 border border-white/5 text-zinc-200 hover:text-emerald-300 text-xs font-semibold transition-all text-right hover:scale-[1.01] active:scale-[0.98] cursor-pointer"
+              className="flex items-center gap-2 px-2.5 py-2 rounded-xl bg-white dark:bg-zinc-800/50 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 border border-black/5 dark:border-white/5 text-zinc-800 dark:text-zinc-200 hover:text-emerald-700 dark:hover:text-emerald-300 text-xs font-semibold transition-all text-right hover:scale-[1.01] active:scale-[0.98] cursor-pointer"
             >
-              <div className="w-6 h-6 rounded-lg bg-emerald-500/15 text-emerald-400 flex items-center justify-center shrink-0">
-                <Code2LineDuotoneIcon className="w-3.5 h-3.5" />
+              <div className="w-6 h-6 rounded-lg bg-emerald-100 dark:bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                <Code2LinearIcon className="w-3.5 h-3.5" />
               </div>
               <span className="truncate">دستیار کد</span>
+            </button>
+
+            {/* UI Guide button (نقشه اجزا) */}
+            <button
+              id="sidebar-ui-guide-btn"
+              onClick={() => {
+                setIsUiGuideOpen(true);
+                if (window.innerWidth < 768) setSidebarOpen(false);
+              }}
+              className="col-span-2 flex items-center gap-2 px-3 py-2 rounded-xl bg-white dark:bg-zinc-800/40 hover:bg-sky-50 dark:hover:bg-sky-950/30 border border-black/5 dark:border-white/5 hover:border-sky-200 dark:hover:border-sky-500/30 text-zinc-700 dark:text-zinc-300 hover:text-sky-700 dark:hover:text-sky-300 text-xs font-medium transition-all text-right hover:scale-[1.01] active:scale-[0.98] cursor-pointer"
+            >
+              <div className="w-6 h-6 rounded-lg bg-sky-100 dark:bg-sky-500/15 text-sky-600 dark:text-sky-400 flex items-center justify-center shrink-0">
+                <HelpLinearIcon className="w-3.5 h-3.5" />
+              </div>
+              <span className="truncate flex-1">نقشه و راهنمای تصویری برنامه</span>
             </button>
           </div>
         </div>
@@ -368,19 +402,19 @@ export const Sidebar: React.FC = React.memo(() => {
         {/* Search box */}
         <div className="p-3 pb-1 shrink-0">
           <div className="relative flex items-center">
-            <MinimalisticMagnifierLineDuotoneIcon className="w-4 h-4 text-zinc-400 absolute right-3 pointer-events-none" />
+            <MinimalisticMagnifierLinearIcon className="w-4 h-4 text-zinc-700 dark:text-zinc-400 absolute right-3 pointer-events-none" />
             <input
               id="sidebar-search-input"
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="جستجو در گفتگوها..."
-              className="w-full text-xs pr-9 pl-7 py-2 rounded-xl bg-zinc-800/60 border border-zinc-700/60 text-zinc-100 placeholder:text-zinc-500 focus:outline-hidden focus:ring-1 focus:ring-blue-500/40"
+              className="w-full text-xs pr-9 pl-7 py-2 rounded-xl bg-white dark:bg-zinc-800/60 border border-zinc-300 dark:border-zinc-700/60 text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-700 dark:text-zinc-500 focus:outline-hidden focus:ring-1 focus:ring-blue-500/40"
             />
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery('')}
-                className="absolute left-2.5 p-1 text-zinc-400 hover:text-white cursor-pointer"
+                className="absolute left-2.5 p-1 text-zinc-700 dark:text-zinc-400 hover:text-white cursor-pointer"
                 aria-label="Clear search"
               >
                 <X className="w-3 h-3" />
@@ -396,9 +430,9 @@ export const Sidebar: React.FC = React.memo(() => {
             <div className="space-y-1.5">
               <div className="flex items-center justify-between px-2 py-0.5 text-xs font-bold text-amber-400">
                 <div className="flex items-center gap-1.5">
-                  <PinBoldDuotoneIcon className="w-3.5 h-3.5" />
+                  <PinBoldIcon className="w-3.5 h-3.5" />
                   <span>گفتگوهای سنجاق شده</span>
-                  <span className="text-[10px] font-mono font-normal text-amber-400/90 bg-amber-500/10 px-1.5 py-0.5 rounded-full">
+                  <span className="text-[10px] font-medium text-amber-400/90 bg-amber-500/10 px-1.5 py-0.5 rounded-full">
                     {usePersianDigits ? toPersianDigits(pinnedConversations.length) : pinnedConversations.length}
                   </span>
                 </div>
@@ -419,17 +453,17 @@ export const Sidebar: React.FC = React.memo(() => {
                   <button
                     type="button"
                     onClick={() => toggleGroupCollapse(group.id)}
-                    className="w-full flex items-center justify-between px-2 py-1 rounded-lg text-xs font-bold text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50 transition-colors cursor-pointer select-none group"
+                    className="w-full flex items-center justify-between px-2 py-1 rounded-lg text-xs font-bold text-zinc-700 dark:text-zinc-400 hover:text-zinc-800 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-700/50 transition-colors cursor-pointer select-none group"
                   >
                     <div className="flex items-center gap-1.5">
-                      <CalendarLineDuotoneIcon className="w-3.5 h-3.5 text-zinc-500 group-hover:text-zinc-300" />
+                      <CalendarLinearIcon className="w-3.5 h-3.5 text-zinc-700 dark:text-zinc-500 group-hover:text-zinc-700 dark:text-zinc-300" />
                       <span>{group.label}</span>
-                      <span className="text-[10px] font-mono font-normal text-zinc-400 bg-zinc-800 px-1.5 py-0.2 rounded-full">
+                      <span className="text-[10px] font-medium text-zinc-700 dark:text-zinc-400 bg-white dark:bg-zinc-800 px-1.5 py-0.5 rounded-full">
                         {usePersianDigits ? toPersianDigits(group.items.length) : group.items.length}
                       </span>
                     </div>
                     <ChevronDown 
-                      className={`w-3.5 h-3.5 text-zinc-500 transition-transform duration-200 ${
+                      className={`w-3.5 h-3.5 text-zinc-700 dark:text-zinc-500 transition-transform duration-200 ${
                         isCollapsed ? '-rotate-90' : 'rotate-0'
                       }`} 
                     />
@@ -445,14 +479,14 @@ export const Sidebar: React.FC = React.memo(() => {
               );
             })
           ) : pinnedConversations.length === 0 ? (
-            <div className="text-center py-10 px-4 text-zinc-500">
+            <div className="text-center py-10 px-4 text-zinc-700 dark:text-zinc-500">
               {searchQuery ? (
                 <p className="text-xs">هیچ گفتگویی با عبارت «{searchQuery}» یافت نشد.</p>
               ) : (
                 <div className="space-y-2">
-                  <StarsMinimalisticBoldDuotoneIcon className="w-8 h-8 mx-auto text-blue-400 opacity-60" />
-                  <p className="text-xs font-semibold text-zinc-400">تاریخچه گفتگوها خالی است</p>
-                  <p className="text-[11px] text-zinc-500">یک گفتگوی جدید را آغاز کنید</p>
+                  <StarsMinimalisticBoldIcon className="w-8 h-8 mx-auto text-blue-400 opacity-60" />
+                  <p className="text-xs font-semibold text-zinc-700 dark:text-zinc-400">تاریخچه گفتگوها خالی است</p>
+                  <p className="text-[11px] text-zinc-700 dark:text-zinc-500">یک گفتگوی جدید را آغاز کنید</p>
                 </div>
               )}
             </div>
@@ -460,16 +494,28 @@ export const Sidebar: React.FC = React.memo(() => {
         </div>
 
         {/* Bottom Storage & Clear panel */}
-        <div className="p-3 border-t border-zinc-800/80 bg-zinc-900 shrink-0">
-          <div className="flex items-center justify-between text-[11px] text-zinc-400 mb-2 px-1">
+        <div className="p-3 border-t border-zinc-200 dark:border-zinc-800/80 bg-zinc-50 dark:bg-zinc-900 shrink-0">
+          <div className="flex items-center justify-between text-[11px] text-zinc-700 dark:text-zinc-400 mb-2 px-1">
             <span className="flex items-center gap-1.5">
-              <DatabaseLineDuotoneIcon className="w-3.5 h-3.5 text-blue-400" />
+              <DatabaseLinearIcon className="w-3.5 h-3.5 text-blue-400" />
               <span>حافظه محلی:</span>
             </span>
-            <span className="font-mono text-xs text-zinc-300">
+            <span className="font-medium text-xs text-zinc-700 dark:text-zinc-300">
               {usePersianDigits ? toPersianDigits(storageStats.usedKb) : storageStats.usedKb} KB ({usePersianDigits ? toPersianDigits(storageStats.count) : storageStats.count} گفتگو)
             </span>
           </div>
+
+          {sessionStats.totalTokens > 0 && (
+            <div className="flex items-center justify-between text-[11px] text-zinc-700 dark:text-zinc-400 mb-2 px-1">
+              <span className="flex items-center gap-1.5">
+                <span className="text-amber-400 font-bold text-[13px] leading-none">⚡</span>
+                <span>مصرف کل نشست:</span>
+              </span>
+              <span className="font-medium text-xs text-zinc-700 dark:text-zinc-300" dir="ltr">
+                {sessionStats.totalTokens >= 1000 ? `${(sessionStats.totalTokens / 1000).toFixed(1)}k` : sessionStats.totalTokens} <span className="opacity-40 px-1">•</span> <span className="text-emerald-600 dark:text-emerald-500">~${sessionStats.totalCostUSDFormatted}</span>
+              </span>
+            </div>
+          )}
 
           {showClearConfirm ? (
             <div className="p-2.5 bg-red-950/50 border border-red-800/80 rounded-2xl space-y-2 text-xs shadow-lg">
@@ -489,7 +535,7 @@ export const Sidebar: React.FC = React.memo(() => {
                 </button>
                 <button
                   onClick={() => setShowClearConfirm(false)}
-                  className="py-1.5 px-3 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-300 transition-colors cursor-pointer"
+                  className="py-1.5 px-3 rounded-xl bg-white dark:bg-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 transition-colors cursor-pointer"
                 >
                   انصراف
                 </button>
@@ -499,9 +545,9 @@ export const Sidebar: React.FC = React.memo(() => {
             conversations.length > 0 && (
               <button
                 onClick={() => setShowClearConfirm(true)}
-                className="w-full text-center text-[11px] text-zinc-400 hover:text-red-400 transition-colors py-1.5 flex items-center justify-center gap-1.5 rounded-xl hover:bg-red-500/10 cursor-pointer"
+                className="w-full text-center text-[11px] text-zinc-600 dark:text-zinc-400 hover:text-red-600 dark:hover:text-red-400 transition-colors py-1.5 flex items-center justify-center gap-1.5 rounded-xl hover:bg-red-50 dark:hover:bg-red-500/10 cursor-pointer"
               >
-                <TrashBinMinimalisticLineDuotoneIcon className="w-3.5 h-3.5" />
+                <TrashBinMinimalisticLinearIcon className="w-3.5 h-3.5" />
                 <span>پاک‌سازی تاریخچه گفتگوها</span>
               </button>
             )

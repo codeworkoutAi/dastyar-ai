@@ -1,15 +1,20 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { 
-  HamburgerMenuLineDuotoneIcon, 
-  SettingsMinimalisticLineDuotoneIcon, 
-  DownloadMinimalisticLineDuotoneIcon, 
-  StarsMinimalisticBoldDuotoneIcon, 
-  HelpLineDuotoneIcon, 
-  Code2LineDuotoneIcon, 
-  GlobalLineDuotoneIcon,
-  MenuDotsLineDuotoneIcon
+import {
+  HamburgerMenuLinearIcon,
+  SettingsMinimalisticLinearIcon,
+  DownloadMinimalisticLinearIcon,
+  StarsMinimalisticBoldIcon,
+  Code2LinearIcon,
+  GlobalLinearIcon,
+  MenuDotsLinearIcon,
+  BrainOutlineIcon,
+  ChatRoundDotsOutlineIcon,
+  AltArrowDownOutlineIcon,
+  SmartphoneLinearIcon,
+  DocumentTextOutlineIcon,
+  EyeOutlineIcon,
+  Code2OutlineIcon,
 } from '@solar-icons/react';
-import { Smartphone, MessageSquare, ChevronDown, Brain as BrainIcon } from 'lucide-react';
 import { AppSettings, Conversation } from '../types';
 import { calculateSessionStats } from '../utils/pricing';
 import { Tooltip } from './Tooltip';
@@ -18,20 +23,61 @@ import { useUIStore } from '../store/uiStore';
 import { useSettingsStore } from '../store/settingsStore';
 import { useChatStore } from '../store/chatStore';
 
+const SmartRoutingDiagram = ({ isStreaming, routingState }: { isStreaming: boolean, routingState: 'idle' | 'general' | 'vision' | 'coding' }) => {
+  let statusText = '';
+  if (isStreaming) {
+    if (routingState === 'vision') statusText = 'در حال پردازش تصویر...';
+    else if (routingState === 'coding') statusText = 'در حال تحلیل کد...';
+    else if (routingState === 'general') statusText = 'در حال پردازش متن...';
+  }
 
+  return (
+    <div className="flex items-center gap-2 sm:gap-2.5" dir="ltr">
+      {/* Source Node */}
+      <div className={`relative flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-indigo-500/15 border border-indigo-500/30 transition-all duration-300 ${isStreaming ? '' : 'opacity-70'}`}>
+        <BrainOutlineIcon className="w-5 h-5 sm:w-6 sm:h-6 text-indigo-400" />
+        {isStreaming && <span className="absolute inset-0 rounded-lg sm:rounded-xl border border-indigo-400/50 animate-ping opacity-20" />}
+      </div>
 
+      {/* Connection Path */}
+      <div className="flex items-center h-[2px] w-6 sm:w-10 bg-zinc-200 dark:bg-zinc-800 relative overflow-hidden rounded-full">
+        {isStreaming && <div className="h-full w-full bg-gradient-to-r from-transparent via-indigo-500 to-transparent animate-pulse" />}
+      </div>
+
+      {/* Target Nodes (Horizontal) */}
+      <div className="flex items-center gap-1 sm:gap-1.5 transition-all duration-300">
+        <div className={`w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-indigo-500/15 border border-indigo-500/30 flex items-center justify-center transition-all duration-300 ${isStreaming && routingState === 'general' ? 'scale-110 shadow-[0_0_12px_rgba(99,102,241,0.4)]' : isStreaming ? 'opacity-30 grayscale' : 'opacity-50 grayscale'}`}>
+          <DocumentTextOutlineIcon className={`w-4 h-4 sm:w-5 sm:h-5 text-indigo-400 ${isStreaming && routingState === 'general' ? 'animate-pulse' : ''}`} />
+        </div>
+        <div className={`w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-cyan-500/15 border border-cyan-500/30 flex items-center justify-center transition-all duration-300 ${isStreaming && routingState === 'coding' ? 'scale-110 shadow-[0_0_12px_rgba(6,182,212,0.4)]' : isStreaming ? 'opacity-30 grayscale' : 'opacity-50 grayscale'}`}>
+          <Code2OutlineIcon className={`w-4 h-4 sm:w-5 sm:h-5 text-cyan-400 ${isStreaming && routingState === 'coding' ? 'animate-pulse' : ''}`} />
+        </div>
+        <div className={`w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center transition-all duration-300 ${isStreaming && routingState === 'vision' ? 'scale-110 shadow-[0_0_12px_rgba(16,185,129,0.4)]' : isStreaming ? 'opacity-30 grayscale' : 'opacity-50 grayscale'}`}>
+          <EyeOutlineIcon className={`w-4 h-4 sm:w-5 sm:h-5 text-emerald-400 ${isStreaming && routingState === 'vision' ? 'animate-pulse' : ''}`} />
+        </div>
+      </div>
+      
+      {/* Status Text (Visible only when streaming) */}
+      {statusText && (
+        <div className="ml-1 px-2 py-0.5 rounded-full bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 animate-fadeIn" dir="rtl">
+          <span className="text-[10px] font-medium text-zinc-600 dark:text-zinc-400 whitespace-nowrap">{statusText}</span>
+        </div>
+      )}
+    </div>
+  );
+};
 
 export const Header: React.FC = React.memo(() => {
-  const { sidebarOpen, toggleSidebar, setIsSettingsOpen, setIsExportOpen, setIsImageStudioOpen, setIsUiGuideOpen } = useUIStore();
+  const { sidebarOpen, toggleSidebar, setIsSettingsOpen, setIsExportOpen } = useUIStore();
   const { settings, setSettings } = useSettingsStore();
-  const { activeId, conversations } = useChatStore();
+  const { activeId, conversations, isStreaming, routingState } = useChatStore();
   const activeConversation = conversations.find((c) => c.id === activeId) || null;
 
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [showModelDropdown, setShowModelDropdown] = useState(false);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  
+
   const { isInstallable, install } = usePWAInstall();
 
   useEffect(() => {
@@ -53,45 +99,66 @@ export const Header: React.FC = React.memo(() => {
 
   const getProviderInfo = () => {
     if (settings.tools.smartRouting) {
-      return { 
-        name: 'مسیریابی هوشمند',
-        icon: <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-md sm:rounded-lg bg-indigo-500/15 flex items-center justify-center shrink-0 shadow-md"><BrainIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-indigo-400" /></div> 
+      return {
+        name: <SmartRoutingDiagram isStreaming={isStreaming} routingState={routingState} />,
+        icon: null
       };
     }
     switch (settings.providers.activeProvider) {
-    case 'gemini':
-      return { 
-        name: 'Gemini (Flash)',
-        icon: <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-md sm:rounded-lg gemini-gradient-bg flex items-center justify-center shrink-0 shadow-md"><StarsMinimalisticBoldDuotoneIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white" /></div> 
-      };
-    case 'openai':
-      return { 
-        name: 'OpenAI (GPT)',
-        icon: <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-md sm:rounded-lg bg-emerald-500/15 flex items-center justify-center shrink-0 shadow-md"><Code2LineDuotoneIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-500" /></div> 
-      };
-    case 'anthropic':
-      return { 
-        name: 'Claude (Sonnet)',
-        icon: <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-md sm:rounded-lg bg-amber-500/15 flex items-center justify-center shrink-0 shadow-md"><Code2LineDuotoneIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-500" /></div> 
-      };
-    case 'custom':
-      return { 
-        name: settings.providers.custom.modelName || 'مدل شخصی',
-        icon: <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-md sm:rounded-lg bg-blue-500/15 flex items-center justify-center shrink-0 shadow-md"><GlobalLineDuotoneIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-500" /></div> 
-      };
-    default:
-        return { 
+      case 'gemini':
+        return {
+          name: 'Gemini (Flash)',
+          icon: <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-md sm:rounded-lg gemini-gradient-bg flex items-center justify-center shrink-0 shadow-md"><StarsMinimalisticBoldIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white" /></div>
+        };
+      case 'openai':
+        return {
+          name: 'OpenAI (GPT)',
+          icon: <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-md sm:rounded-lg bg-emerald-500/15 flex items-center justify-center shrink-0 shadow-md"><Code2LinearIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-500" /></div>
+        };
+      case 'anthropic':
+        return {
+          name: 'Claude (Sonnet)',
+          icon: <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-md sm:rounded-lg bg-amber-500/15 flex items-center justify-center shrink-0 shadow-md"><Code2LinearIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-500" /></div>
+        };
+      case 'custom':
+        return {
+          name: settings.providers.custom.modelName || 'مدل شخصی',
+          icon: <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-md sm:rounded-lg bg-blue-500/15 flex items-center justify-center shrink-0 shadow-md"><GlobalLinearIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-500" /></div>
+        };
+      default:
+        return {
           name: 'هوش مصنوعی',
-          icon: <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-md sm:rounded-lg bg-zinc-500/15 flex items-center justify-center shrink-0 shadow-md"><Code2LineDuotoneIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-zinc-500" /></div> 
+          icon: <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-md sm:rounded-lg bg-zinc-500/15 flex items-center justify-center shrink-0 shadow-md"><Code2LinearIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-zinc-700 dark:text-zinc-500" /></div>
         };
     }
   };
 
   const providerInfo = getProviderInfo();
 
+  const dropdownModels = React.useMemo(() => {
+    const roles = settings.tools.routingRoles;
+    const profiles = settings.providers.custom.profiles || [];
+    const getProfileModelName = (id: string) => {
+      const p = profiles.find((x: any) => x.id === id);
+      return p ? (p.modelName || p.name) : id;
+    };
+
+    const list = [];
+    if (roles?.default) list.push({ id: roles.default, name: getProfileModelName(roles.default), icon: <BrainOutlineIcon className="w-4 h-4 shrink-0 text-indigo-400" /> });
+    if (roles?.coding) list.push({ id: roles.coding, name: getProfileModelName(roles.coding), icon: <Code2OutlineIcon className="w-4 h-4 shrink-0 text-cyan-400" /> });
+    if (roles?.vision) list.push({ id: roles.vision, name: getProfileModelName(roles.vision), icon: <EyeOutlineIcon className="w-4 h-4 shrink-0 text-emerald-400" /> });
+
+    if (list.length === 0) {
+      profiles.slice(0, 3).forEach((p: any) => {
+        list.push({ id: p.id, name: p.modelName || p.name, icon: <Code2LinearIcon className="w-4 h-4 shrink-0 text-zinc-700 dark:text-zinc-400" /> });
+      });
+    }
+    return list;
+  }, [settings.tools.routingRoles, settings.providers.custom.profiles]);
+
   return (
     <header className="relative h-16 sm:h-18 px-2.5 sm:px-4 md:px-6 flex items-center justify-between z-20 shrink-0 select-none border-b border-subtle clay-header backdrop-blur-md">
-      
+
       {/* 1. Right Side (Start) - Sidebar Toggle & Chat Title */}
       <div className="flex items-center gap-1.5 sm:gap-3 min-w-0 z-10 w-1/3 justify-start">
         <Tooltip content="منوی گفتگوها">
@@ -101,14 +168,14 @@ export const Header: React.FC = React.memo(() => {
             className="clay-btn w-11 h-11 flex items-center justify-center text-inherit hover:opacity-90 rounded-xl sm:rounded-2xl shrink-0"
             aria-label="Toggle Sidebar"
           >
-            <HamburgerMenuLineDuotoneIcon className="w-4 h-4 sm:w-5 sm:h-5" />
+            <HamburgerMenuLinearIcon className="w-4 h-4 sm:w-5 sm:h-5" />
           </button>
         </Tooltip>
 
         <div className="min-w-0 hidden sm:flex flex-col justify-center">
           <h1 className="font-extrabold text-sm sm:text-base md:text-lg tracking-tight truncate flex items-center gap-1.5">
-            <MessageSquare className="w-4 h-4 opacity-50 hidden md:block" />
-            {activeConversation?.title || 'دستیار هوشمند'}
+            <ChatRoundDotsOutlineIcon className="w-4 h-4 opacity-50 hidden md:block" />
+            دستیارهوشمند
           </h1>
           <p className="text-[10px] sm:text-[11px] opacity-70 truncate">
             پشتیبانی از زبان فارسی با هوش مصنوعی
@@ -118,67 +185,104 @@ export const Header: React.FC = React.memo(() => {
 
       {/* 2. Absolute Center - Interactive Model Label Pill */}
       <div className="absolute inset-0 flex justify-center items-center pointer-events-none z-0">
-        <div className="pointer-events-auto max-w-[50%] sm:max-w-[40%] relative" ref={dropdownRef}>
-          <Tooltip content="تغییر سریع مدل یا باز کردن تنظیمات">
-            <button 
-              onClick={() => setShowModelDropdown(!showModelDropdown)}
-              className="group flex items-center gap-2.5 px-2.5 py-2 sm:px-3 sm:py-2 clay-btn rounded-xl sm:rounded-2xl hover:opacity-90 transition-all min-w-0 shadow-sm"
+        <div className="pointer-events-auto w-56 relative" ref={dropdownRef}>
+          {isStreaming ? (
+            <div
+              className="group flex items-center justify-center gap-2.5 px-2.5 py-2 sm:px-3 sm:py-2 rounded-xl sm:rounded-2xl transition-all w-full"
               dir="ltr"
             >
-              <BrainIcon size={18} className="text-cyan-400 shrink-0" />
-              <span className="font-extrabold text-sm sm:text-base text-[var(--accent-text)] truncate mt-0.5">
-                {providerInfo.name}
-              </span>
-              <ChevronDown className={`w-4 h-4 text-[var(--text-main)] opacity-50 group-hover:opacity-100 transition-all shrink-0 ${showModelDropdown ? 'rotate-180' : ''}`} />
-            </button>
-          </Tooltip>
+              {providerInfo.icon ? (
+                <>
+                  {providerInfo.icon}
+                  <span className="font-extrabold text-sm sm:text-base text-[var(--accent-text)] truncate mt-0.5">
+                    {providerInfo.name}
+                  </span>
+                </>
+              ) : (
+                typeof providerInfo.name === 'string' ? (
+                  <span className="font-extrabold text-sm sm:text-base text-[var(--accent-text)] truncate mt-0.5">
+                    {providerInfo.name}
+                  </span>
+                ) : (
+                  providerInfo.name
+                )
+              )}
+              <AltArrowDownOutlineIcon className="w-3.5 h-3.5 text-[var(--text-main)] opacity-30 shrink-0" />
+            </div>
+          ) : (
+            <Tooltip content="تغییر سریع مدل یا باز کردن تنظیمات" className="w-full">
+              <button
+                onClick={() => setShowModelDropdown(!showModelDropdown)}
+                className="group flex items-center justify-center gap-2.5 px-2.5 py-2 sm:px-3 sm:py-2 clay-btn rounded-xl sm:rounded-2xl hover:opacity-90 transition-all shadow-sm cursor-pointer w-full"
+                dir="ltr"
+              >
+                {providerInfo.icon ? (
+                  <>
+                    {providerInfo.icon}
+                    <span className="font-extrabold text-sm sm:text-base text-[var(--accent-text)] truncate mt-0.5">
+                      {providerInfo.name}
+                    </span>
+                  </>
+                ) : (
+                  typeof providerInfo.name === 'string' ? (
+                    <span className="font-extrabold text-sm sm:text-base text-[var(--accent-text)] truncate mt-0.5">
+                      {providerInfo.name}
+                    </span>
+                  ) : (
+                    providerInfo.name
+                  )
+                )}
+                <AltArrowDownOutlineIcon className={`w-3.5 h-3.5 text-[var(--text-main)] opacity-50 group-hover:opacity-100 transition-all shrink-0 ${showModelDropdown ? 'rotate-180' : ''}`} />
+              </button>
+            </Tooltip>
+          )}
 
           {/* Dropdown Menu */}
           {showModelDropdown && (
-            <div className="absolute top-full mt-2 right-0 w-64 bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl p-2 z-50 flex flex-col gap-1 overflow-hidden" dir="rtl">
-              <button 
+            <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 w-56 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-2xl p-2 z-50 flex flex-col gap-1 overflow-hidden" dir="rtl">
+              <button
                 onClick={() => {
                   setSettings({ ...settings, tools: { ...settings.tools, smartRouting: !settings.tools.smartRouting } });
                   setShowModelDropdown(false);
                 }}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors cursor-pointer w-full text-right ${settings.tools.smartRouting ? 'bg-indigo-500/10 text-indigo-400' : 'hover:bg-zinc-800 text-zinc-300'}`}
+                className={`flex items-center justify-center px-3 py-2.5 rounded-xl text-sm font-medium transition-colors cursor-pointer w-full text-center ${settings.tools.smartRouting ? 'bg-indigo-500/10 text-indigo-400' : 'hover:bg-zinc-100 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300'}`}
               >
-                <BrainIcon className="w-4 h-4 shrink-0" />
                 مسیریابی هوشمند
               </button>
-              
-              <div className="h-px bg-zinc-800 my-1 mx-2" />
-              
+
+              <div className="h-px bg-white dark:bg-zinc-800 my-1 mx-2" />
+
               {/* Models List */}
-              {['gpt-4o-mini', 'claude-3-5-sonnet-20240620', 'gemini-1.5-pro'].map((model) => (
-                <button 
-                  key={model}
+              {dropdownModels.map((model) => (
+                <button
+                  key={model.id}
+                  dir="ltr"
                   onClick={() => {
                     const newSettings = { ...settings };
                     newSettings.tools.smartRouting = false;
                     newSettings.providers.activeProvider = 'custom';
-                    if (!newSettings.providers.custom) newSettings.providers.custom = { modelName: '', customHeaders: '', baseUrl: '', apiKey: '' };
-                    newSettings.providers.custom.modelName = model;
+                    newSettings.providers.custom.activeProfileId = model.id;
                     setSettings(newSettings);
                     setShowModelDropdown(false);
                   }}
-                  className={`flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition-colors cursor-pointer w-full text-left ${!settings.tools.smartRouting && settings.providers.activeProvider === 'custom' && settings.providers.custom.modelName === model ? 'bg-zinc-800 text-white' : 'hover:bg-zinc-800/60 text-zinc-400'}`}
-                  dir="ltr"
+                  className={`flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium transition-colors cursor-pointer w-full text-left ${!settings.tools.smartRouting && settings.providers.activeProvider === 'custom' && settings.providers.custom.activeProfileId === model.id ? 'bg-white dark:bg-zinc-800 text-white' : 'hover:bg-zinc-100 dark:hover:bg-zinc-700/60 text-zinc-700 dark:text-zinc-400'}`}
                 >
-                  <Code2LineDuotoneIcon className="w-4 h-4 shrink-0" />
-                  {model}
+                  {model.icon}
+                  <div className="flex flex-col min-w-0 items-start">
+                    <span className="truncate w-full">{model.name}</span>
+                  </div>
                 </button>
               ))}
-              
-              <div className="h-px bg-zinc-800 my-1 mx-2" />
+
+              <div className="h-px bg-white dark:bg-zinc-800 my-1 mx-2" />
               <button
                 onClick={() => {
                   setShowModelDropdown(false);
                   setIsSettingsOpen(true);
                 }}
-                className="flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-xs font-medium transition-colors hover:bg-zinc-800 text-zinc-400 cursor-pointer w-full mt-1"
+                className="flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-xs font-medium transition-colors hover:bg-zinc-100 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-400 cursor-pointer w-full mt-1"
               >
-                <SettingsMinimalisticLineDuotoneIcon className="w-4 h-4 shrink-0" />
+                <SettingsMinimalisticLinearIcon className="w-4 h-4 shrink-0" />
                 تنظیمات پیشرفته...
               </button>
             </div>
@@ -188,10 +292,9 @@ export const Header: React.FC = React.memo(() => {
 
       {/* 3. Left Side (End) - Tools & Mobile Menu */}
       <div className="flex items-center gap-1 sm:gap-2 md:gap-3 shrink-0 z-10 w-1/3 justify-end">
-        
+
         {/* Desktop View Tools (Hidden on Mobile) */}
         <div className="hidden sm:flex items-center gap-1 sm:gap-2 md:gap-3">
-
 
           {/* Export Button */}
           {activeConversation && activeConversation.messages.length > 0 && (
@@ -199,61 +302,10 @@ export const Header: React.FC = React.memo(() => {
               <button
                 id="header-export-btn"
                 onClick={() => setIsExportOpen(true)}
-                className="clay-btn w-11 h-11 flex items-center justify-center hover:opacity-90 rounded-xl sm:rounded-2xl"
+                className="clay-btn w-11 h-11 flex items-center justify-center hover:opacity-90 rounded-xl sm:rounded-2xl cursor-pointer"
                 aria-label="Export Chat"
               >
-                <DownloadMinimalisticLineDuotoneIcon className="w-4 h-4 sm:w-5 sm:h-5" />
-              </button>
-            </Tooltip>
-          )}
-
-          {/* Image Studio button */}
-          <Tooltip content="استودیوی پیشرفته ساخت تصویر (Midjourney, DALL-E, SD, Flux)">
-            <button
-              id="header-image-studio-btn"
-              onClick={() => setIsImageStudioOpen(true)}
-              className="clay-btn w-11 lg:w-auto lg:px-3 h-11 flex items-center justify-center hover:opacity-90 gap-1.5 text-purple-400 font-bold text-xs rounded-xl sm:rounded-2xl"
-              aria-label="Image Generation Studio"
-            >
-              <StarsMinimalisticBoldDuotoneIcon className="w-4 h-4 sm:w-5 sm:h-5 text-purple-400 animate-pulse" />
-              <span className="hidden lg:inline">استودیوی تصویر</span>
-            </button>
-          </Tooltip>
-
-          {/* UI Guide button */}
-          {true && (
-            <Tooltip content="راهنمای تصویری و نقشه اجزای برنامه (UI Map)">
-              <button
-                id="header-ui-guide-btn"
-                onClick={() => setIsUiGuideOpen(true)}
-                className="clay-btn w-11 lg:w-auto lg:px-3 h-11 flex items-center justify-center hover:opacity-90 gap-1.5 text-blue-600 dark:text-sky-400 font-bold text-xs rounded-xl sm:rounded-2xl"
-                aria-label="UI Visual Guide"
-              >
-                <HelpLineDuotoneIcon className="w-4 h-4 sm:w-5 sm:h-5" />
-                <span className="hidden 2xl:inline">نقشه اجزا</span>
-              </button>
-            </Tooltip>
-          )}
-
-          {/* Live Session Usage Analytics Pill */}
-          {sessionStats.totalTokens > 0 && (
-            <Tooltip content={`آمار کل نشست: ${sessionStats.totalTokens.toLocaleString('fa-IR')} توکن • هزینه کل: ~$${sessionStats.totalCostUSDFormatted}`}>
-              <button
-                id="header-session-stats-btn"
-                onClick={() => setIsSettingsOpen(true)}
-                className="hidden md:flex items-center gap-1.5 px-3 h-11 clay-btn rounded-xl sm:rounded-2xl text-xs font-mono select-none"
-                aria-label="Session Stats"
-              >
-                <span className="text-amber-400 text-sm">⚡</span>
-                <span dir="ltr" className="font-bold text-[var(--text-main)]">
-                  {sessionStats.totalTokens >= 1000 
-                    ? `${(sessionStats.totalTokens / 1000).toFixed(1)}k` 
-                    : sessionStats.totalTokens}
-                </span>
-                <span className="opacity-40">•</span>
-                <span dir="ltr" className="text-emerald-500 font-bold">
-                  ~${sessionStats.totalCostUSDFormatted}
-                </span>
+                <DownloadMinimalisticLinearIcon className="w-4 h-4 sm:w-5 sm:h-5" />
               </button>
             </Tooltip>
           )}
@@ -263,10 +315,10 @@ export const Header: React.FC = React.memo(() => {
             <Tooltip content="نصب برنامه (App)">
               <button
                 onClick={install}
-                className="clay-btn w-11 h-11 flex items-center justify-center hover:opacity-90 rounded-xl sm:rounded-2xl text-blue-500 font-bold"
+                className="clay-btn w-11 h-11 flex items-center justify-center hover:opacity-90 rounded-xl sm:rounded-2xl text-blue-500 font-bold cursor-pointer"
                 aria-label="Install App"
               >
-                <Smartphone className="w-4 h-4 sm:w-5 sm:h-5" />
+                <SmartphoneLinearIcon className="w-4 h-4 sm:w-5 sm:h-5" />
               </button>
             </Tooltip>
           )}
@@ -276,13 +328,10 @@ export const Header: React.FC = React.memo(() => {
             <button
               id="header-settings-btn"
               onClick={() => setIsSettingsOpen(true)}
-              className="clay-btn w-11 h-11 flex items-center justify-center hover:opacity-90 relative rounded-xl sm:rounded-2xl"
+              className="clay-btn w-11 h-11 flex items-center justify-center hover:opacity-90 relative rounded-xl sm:rounded-2xl cursor-pointer"
               aria-label="Open Settings"
             >
-              <SettingsMinimalisticLineDuotoneIcon className="w-4 h-4 sm:w-5 sm:h-5" />
-              {true && (
-                <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-blue-400 rounded-full ring-2 ring-[var(--card-bg)] shadow-[0_0_8px_rgba(59,130,246,0.9)]" />
-              )}
+              <SettingsMinimalisticLinearIcon className="w-4 h-4 sm:w-5 sm:h-5" />
             </button>
           </Tooltip>
         </div>
@@ -292,45 +341,33 @@ export const Header: React.FC = React.memo(() => {
           <Tooltip content="ابزارهای بیشتر">
             <button
               onClick={() => setShowMobileMenu(!showMobileMenu)}
-              className="clay-btn w-11 h-11 flex items-center justify-center hover:opacity-90 rounded-xl"
+              className="clay-btn w-11 h-11 flex items-center justify-center hover:opacity-90 rounded-xl cursor-pointer"
               aria-label="More Options"
             >
-              <MenuDotsLineDuotoneIcon className="w-5 h-5" />
+              <MenuDotsLinearIcon className="w-5 h-5" />
             </button>
           </Tooltip>
 
           {showMobileMenu && (
             <div className="absolute top-full mt-2 left-0 w-48 clay-card shadow-2xl z-50 flex flex-col gap-1 p-2 animate-fadeIn border border-subtle" dir="rtl">
-              <button onClick={() => { setIsImageStudioOpen(true); setShowMobileMenu(false); }} className="flex items-center gap-2 p-2 rounded-lg hover:bg-[var(--bg-main)] transition-colors text-right">
-                <StarsMinimalisticBoldDuotoneIcon className="w-4 h-4 text-purple-400" />
-                <span className="text-xs font-bold text-[var(--text-main)]">استودیو تصویر</span>
-              </button>
-              
               {activeConversation && activeConversation.messages.length > 0 && (
-                <button onClick={() => { setIsExportOpen(true); setShowMobileMenu(false); }} className="flex items-center gap-2 p-2 rounded-lg hover:bg-[var(--bg-main)] transition-colors text-right">
-                  <DownloadMinimalisticLineDuotoneIcon className="w-4 h-4 text-emerald-400" />
+                <button onClick={() => { setIsExportOpen(true); setShowMobileMenu(false); }} className="flex items-center gap-2 p-2 rounded-lg hover:bg-[var(--bg-main)] transition-colors text-right cursor-pointer">
+                  <DownloadMinimalisticLinearIcon className="w-4 h-4 text-emerald-400" />
                   <span className="text-xs font-bold text-[var(--text-main)]">خروجی گفتگو</span>
                 </button>
               )}
 
               {isInstallable && (
-                <button onClick={() => { install(); setShowMobileMenu(false); }} className="flex items-center gap-2 p-2 rounded-lg hover:bg-[var(--bg-main)] transition-colors text-right">
-                  <Smartphone className="w-4 h-4 text-blue-500" />
+                <button onClick={() => { install(); setShowMobileMenu(false); }} className="flex items-center gap-2 p-2 rounded-lg hover:bg-[var(--bg-main)] transition-colors text-right cursor-pointer">
+                  <SmartphoneLinearIcon className="w-4 h-4 text-blue-500" />
                   <span className="text-xs font-bold text-[var(--text-main)]">نصب برنامه</span>
-                </button>
-              )}
-
-              {true && (
-                <button onClick={() => { setIsUiGuideOpen(true); setShowMobileMenu(false); }} className="flex items-center gap-2 p-2 rounded-lg hover:bg-[var(--bg-main)] transition-colors text-right">
-                  <HelpLineDuotoneIcon className="w-4 h-4 text-sky-400" />
-                  <span className="text-xs font-bold text-[var(--text-main)]">نقشه اجزا</span>
                 </button>
               )}
 
               <div className="h-px bg-[var(--border-color)] opacity-50 my-1" />
 
-              <button onClick={() => { setIsSettingsOpen(true); setShowMobileMenu(false); }} className="flex items-center gap-2 p-2 rounded-lg hover:bg-[var(--bg-main)] transition-colors text-right">
-                <SettingsMinimalisticLineDuotoneIcon className="w-4 h-4 text-[var(--text-main)]" />
+              <button onClick={() => { setIsSettingsOpen(true); setShowMobileMenu(false); }} className="flex items-center gap-2 p-2 rounded-lg hover:bg-[var(--bg-main)] transition-colors text-right cursor-pointer">
+                <SettingsMinimalisticLinearIcon className="w-4 h-4 text-[var(--text-main)]" />
                 <span className="text-xs font-bold text-[var(--text-main)]">تنظیمات پیشرفته</span>
               </button>
             </div>

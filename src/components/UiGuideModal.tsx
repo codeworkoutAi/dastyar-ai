@@ -143,7 +143,7 @@ export const UiGuideModal: React.FC = () => {
       <div className="clay-card border-subtle w-[95vw] md:w-full max-w-4xl max-h-[92dvh] flex flex-col rounded-3xl shadow-2xl overflow-hidden bg-[var(--card-bg)] text-[var(--text-main)]">
         
         {/* Modal Header */}
-        <div className="p-4 sm:p-5 border-b border-subtle flex items-center justify-between bg-white/5 dark:bg-black/20 shrink-0">
+        <div className="p-4 sm:p-5 border-b border-subtle flex items-center justify-between bg-black/5 dark:bg-white/5 dark:bg-black/20 shrink-0">
           <div className="flex items-center gap-3">
             <div className="p-2 sm:p-2.5 rounded-2xl bg-gradient-to-tr from-[#4285f4] via-[#9b72cb] to-[#d96570] text-white shadow-md shrink-0">
               <Layout className="w-5 h-5" />
@@ -196,9 +196,9 @@ export const UiGuideModal: React.FC = () => {
                   </span>
                 </div>
                 <div className="flex items-center gap-1.5 text-[10px] text-[var(--text-dim)]">
-                  <span className="px-1.5 py-0.5 rounded bg-white/10">منو</span>
-                  <span className="px-1.5 py-0.5 rounded bg-white/10">عنوان</span>
-                  <span className="px-1.5 py-0.5 rounded bg-white/10">تنظیمات</span>
+                  <span className="px-1.5 py-0.5 rounded bg-black/5 dark:bg-white/10">منو</span>
+                  <span className="px-1.5 py-0.5 rounded bg-black/5 dark:bg-white/10">عنوان</span>
+                  <span className="px-1.5 py-0.5 rounded bg-black/5 dark:bg-white/10">تنظیمات</span>
                 </div>
               </div>
 
@@ -297,10 +297,10 @@ export const UiGuideModal: React.FC = () => {
                   </span>
                 </div>
                 <div className="flex items-center gap-1.5 text-[10px] text-[var(--text-dim)]">
-                  <span className="px-1.5 py-0.5 rounded bg-white/10 flex items-center gap-1">
+                  <span className="px-1.5 py-0.5 rounded bg-black/5 dark:bg-white/10 flex items-center gap-1">
                     <Mic className="w-2.5 h-2.5" /> صدا
                   </span>
-                  <span className="px-1.5 py-0.5 rounded bg-white/10 flex items-center gap-1">
+                  <span className="px-1.5 py-0.5 rounded bg-black/5 dark:bg-white/10 flex items-center gap-1">
                     <ImageIcon className="w-2.5 h-2.5" /> عکس
                   </span>
                   <span className="px-1.5 py-0.5 rounded bg-amber-500/30 font-bold text-amber-800 dark:text-amber-200">
@@ -331,7 +331,7 @@ export const UiGuideModal: React.FC = () => {
           </div>
 
           {/* Right Column (Detailed Breakdown of Selected Component) - 5 cols */}
-          <div className="lg:col-span-5 flex flex-col gap-4 bg-white/5 dark:bg-black/15 p-4 rounded-2xl border border-subtle">
+          <div className="lg:col-span-5 flex flex-col gap-4 bg-black/5 dark:bg-white/5 dark:bg-black/15 p-4 rounded-2xl border border-subtle">
             
             {/* Header of details */}
             <div className="flex flex-col gap-1">
@@ -383,7 +383,7 @@ export const UiGuideModal: React.FC = () => {
         </div>
 
         {/* Modal Footer */}
-        <div className="p-3.5 sm:p-4 border-t border-subtle flex items-center justify-between bg-white/5 dark:bg-black/20 text-xs">
+        <div className="p-3.5 sm:p-4 border-t border-subtle flex items-center justify-between bg-black/5 dark:bg-white/5 dark:bg-black/20 text-xs">
           <span className="opacity-75 text-[11px]">
             همچنین می‌توانید از هر بخش اسکرین‌شات بگیرید یا نام آن را در چت تایپ کنید.
           </span>

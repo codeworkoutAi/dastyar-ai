@@ -1,18 +1,18 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import {
-  PaperclipLineDuotoneIcon,
-  Microphone2BoldDuotoneIcon,
-  Microphone2LineDuotoneIcon,
-  StarsMinimalisticBoldDuotoneIcon,
-  RestartCircleLineDuotoneIcon,
-  CloudUploadLineDuotoneIcon,
-  CameraLineDuotoneIcon,
-  MusicNoteLineDuotoneIcon,
-  VideocameraLineDuotoneIcon,
-  DocumentTextLineDuotoneIcon,
-  CpuBoltLineDuotoneIcon,
-  StopCircleBoldDuotoneIcon
+  PaperclipLinearIcon,
+  Microphone2BoldIcon,
+  Microphone2LinearIcon,
+  StarsMinimalisticBoldIcon,
+  RestartCircleLinearIcon,
+  CloudUploadLinearIcon,
+  CameraLinearIcon,
+  MusicNoteLinearIcon,
+  VideocameraLinearIcon,
+  DocumentTextLinearIcon,
+  CpuBoltLinearIcon,
+  StopCircleBoldIcon
 } from '@solar-icons/react';
 import { 
   ArrowUp, 
@@ -27,6 +27,8 @@ import { useSettingsStore } from '../store/settingsStore';
 import { useChatStore } from '../store/chatStore';
 
 import { CameraCaptureModal } from './CameraCaptureModal';
+import { getModelIntro } from './ChatBox';
+import { getModelDetails } from './CustomProviderCards';
 import * as pdfjsLib from 'pdfjs-dist';
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`;
@@ -37,7 +39,24 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs
 export const MessageInput: React.FC = React.memo(() => {
   const { setVideoNotice } = useUIStore();
   const { settings } = useSettingsStore();
-  const { isStreaming, stopGeneration, sendMessage } = useChatStore();
+  const { isStreaming, stopGeneration, sendMessage, conversations, activeId } = useChatStore();
+  const activeConversation = conversations.find(c => c.id === activeId);
+  const isEmpty = !activeConversation || activeConversation.messages.length === 0;
+
+  const activeProvider = settings.providers.activeProvider;
+  const activeProviderSettings = settings.providers[activeProvider as keyof typeof settings.providers] as any;
+  
+  let activeModel = activeProviderSettings?.modelName || 'default';
+  if (settings.tools.smartRouting) {
+    const profileId = settings.tools.routingRoles?.default;
+    if (profileId) {
+      const profile = settings.providers.custom.profiles?.find((p: any) => p.id === profileId);
+      activeModel = profile?.modelName || profileId;
+    }
+  }
+  
+  const modelDetails = getModelDetails({ id: activeModel });
+  const modelIntro = getModelIntro(activeModel, modelDetails);
   const enterToSend = settings.tools.enterToSend;
   const usePersianDigits = settings.appearance.persianNumerals;
   const defaultWebSearch = settings.tools.webSearch;
@@ -672,8 +691,9 @@ export const MessageInput: React.FC = React.memo(() => {
   }, [text, attachments]);
 
   return (
-    <div className="p-2.5 sm:p-4 md:p-5 bg-[var(--bg-main)]/90 border-t border-subtle backdrop-blur-md shrink-0">
-      <div className="max-w-3xl mx-auto space-y-2">
+    <div className={`p-2.5 sm:p-4 md:p-5 shrink-0 transition-all duration-500 ease-in-out ${isEmpty ? 'w-full max-w-3xl mx-auto' : ''}`}>
+      <div className={`space-y-2 w-full mx-auto ${isEmpty ? '' : 'max-w-3xl'}`}>
+        
         {/* Multi-File Attachment Preview Strip */}
         {attachments.length > 0 && (
           <div className="flex items-end gap-2 overflow-x-auto pb-1 animate-fadeIn scrollbar-thin scrollbar-thumb-zinc-300 dark:scrollbar-thumb-zinc-600">
@@ -687,15 +707,15 @@ export const MessageInput: React.FC = React.memo(() => {
                   <img src={att.dataUrl} alt={att.name} className="w-full h-full object-cover" />
                 ) : att.mimeType.startsWith('audio/') ? (
                   <div className="w-full h-full flex items-center justify-center bg-yellow-500/10">
-                    <MusicNoteLineDuotoneIcon className="w-7 h-7 text-yellow-500" />
+                    <MusicNoteLinearIcon className="w-7 h-7 text-yellow-500" />
                   </div>
                 ) : att.mimeType.startsWith('video/') ? (
                   <div className="w-full h-full flex items-center justify-center bg-purple-500/10">
-                    <VideocameraLineDuotoneIcon className="w-7 h-7 text-purple-400" />
+                    <VideocameraLinearIcon className="w-7 h-7 text-purple-400" />
                   </div>
                 ) : (
                   <div className="w-full h-full flex items-center justify-center bg-blue-500/10">
-                    <DocumentTextLineDuotoneIcon className="w-7 h-7 text-blue-400" />
+                    <DocumentTextLinearIcon className="w-7 h-7 text-blue-400" />
                   </div>
                 )}
 
@@ -763,11 +783,11 @@ export const MessageInput: React.FC = React.memo(() => {
                   className={`w-10 h-10 flex items-center justify-center rounded-full bg-transparent border-0 outline-none transition-all cursor-pointer ${
                     isAttachmentMenuOpen 
                       ? 'text-zinc-900 dark:text-white bg-zinc-200 dark:bg-white/10' 
-                      : 'text-zinc-500 dark:text-slate-400 hover:text-zinc-800 dark:hover:text-slate-200 hover:bg-zinc-200 dark:hover:bg-white/5 active:scale-95'
+                      : 'text-zinc-700 dark:text-zinc-500 dark:text-slate-400 hover:text-zinc-800 dark:hover:text-slate-200 hover:bg-zinc-200 dark:hover:bg-black/5 dark:hover:bg-white/5 active:scale-95'
                   }`}
                   aria-label="Add attachment"
                 >
-                  <PaperclipLineDuotoneIcon className="w-5 h-5 transition-transform duration-200" />
+                  <PaperclipLinearIcon className="w-5 h-5 transition-transform duration-200" />
                 </button>
               </Tooltip>
 
@@ -790,18 +810,18 @@ export const MessageInput: React.FC = React.memo(() => {
                       fileInputRef.current?.click();
                       setIsAttachmentMenuOpen(false);
                     }}
-                    className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-zinc-100 dark:hover:bg-white/10 transition-colors text-right cursor-pointer text-zinc-700 dark:text-slate-200"
+                    className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-zinc-100 dark:hover:bg-black/5 dark:hover:bg-white/10 transition-colors text-right cursor-pointer text-zinc-700 dark:text-slate-200"
                   >
-                    <CloudUploadLineDuotoneIcon className="w-4 h-4 text-emerald-500 dark:text-emerald-400 shrink-0" />
+                    <CloudUploadLinearIcon className="w-4 h-4 text-emerald-500 dark:text-emerald-400 shrink-0" />
                     <span className="text-xs font-medium">بارگذاری فایل</span>
                   </button>
                   
                   <button 
                     type="button"
                     onClick={handleCameraClick}
-                    className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-zinc-100 dark:hover:bg-white/10 transition-colors text-right cursor-pointer text-zinc-700 dark:text-slate-200"
+                    className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-zinc-100 dark:hover:bg-black/5 dark:hover:bg-white/10 transition-colors text-right cursor-pointer text-zinc-700 dark:text-slate-200"
                   >
-                    <CameraLineDuotoneIcon className="w-4 h-4 text-sky-500 dark:text-sky-400 shrink-0" />
+                    <CameraLinearIcon className="w-4 h-4 text-sky-500 dark:text-sky-400 shrink-0" />
                     <span className="text-xs font-medium">دوربین</span>
                   </button>
                 </div>,
@@ -822,11 +842,11 @@ export const MessageInput: React.FC = React.memo(() => {
                   className={`w-10 h-10 flex items-center justify-center transition-all rounded-full bg-transparent border-0 outline-none active:scale-95 cursor-pointer ${
                     isRecording || isHoldingMic
                       ? 'text-red-500 bg-red-100 dark:bg-red-500/20 ring-2 ring-red-400 animate-pulse shadow-[0_0_12px_rgba(239,68,68,0.4)]'
-                      : 'text-zinc-500 dark:text-slate-400 hover:text-zinc-800 dark:hover:text-slate-200 hover:bg-zinc-200 dark:hover:bg-white/5'
+                      : 'text-zinc-700 dark:text-zinc-500 dark:text-slate-400 hover:text-zinc-800 dark:hover:text-slate-200 hover:bg-zinc-200 dark:hover:bg-black/5 dark:hover:bg-white/5'
                   }`}
                   aria-label="Voice input"
                 >
-                  {isRecording ? <Microphone2BoldDuotoneIcon className="w-5 h-5 text-red-500" /> : <Microphone2LineDuotoneIcon className="w-5 h-5" />}
+                  {isRecording ? <Microphone2BoldIcon className="w-5 h-5 text-red-500" /> : <Microphone2LinearIcon className="w-5 h-5" />}
                 </button>
               </Tooltip>
             )}
@@ -846,11 +866,11 @@ export const MessageInput: React.FC = React.memo(() => {
                 className={`w-10 h-10 hidden xs:flex items-center justify-center transition-all rounded-full bg-transparent border-0 outline-none ${
                   text.startsWith('/image ')
                     ? 'text-purple-600 dark:text-purple-400 bg-purple-100 dark:bg-purple-500/10 scale-105 opacity-100'
-                    : 'text-zinc-500 dark:text-slate-400 hover:text-purple-600 dark:hover:text-purple-400 hover:bg-zinc-200 dark:hover:bg-white/5 active:scale-95'
+                    : 'text-zinc-700 dark:text-zinc-500 dark:text-slate-400 hover:text-purple-600 dark:hover:text-purple-400 hover:bg-zinc-200 dark:hover:bg-black/5 dark:hover:bg-white/5 active:scale-95'
                 }`}
                 aria-label="Generate Image"
               >
-                <StarsMinimalisticBoldDuotoneIcon className="w-4 h-4" />
+                <StarsMinimalisticBoldIcon className="w-4 h-4" />
               </button>
             </Tooltip>
 
@@ -881,7 +901,7 @@ export const MessageInput: React.FC = React.memo(() => {
                 <button
                   key={idx}
                   type="button"
-                  className="flex flex-col text-right px-2.5 py-1.5 hover:bg-zinc-100 dark:hover:bg-white/10 rounded-lg transition-colors w-full"
+                  className="flex flex-col text-right px-2.5 py-1.5 hover:bg-zinc-100 dark:hover:bg-black/5 dark:hover:bg-white/10 rounded-lg transition-colors w-full"
                   onClick={() => {
                      const words = text.split(' ');
                      words.pop();
@@ -891,7 +911,7 @@ export const MessageInput: React.FC = React.memo(() => {
                   }}
                 >
                   <span className="font-bold text-[13px] text-sky-500 leading-none mb-1.5" dir="rtl">{c.cmd}</span>
-                  <span className="text-[11px] text-zinc-500 dark:text-zinc-400 line-clamp-1 leading-snug">{c.text}</span>
+                  <span className="text-[11px] text-zinc-700 dark:text-zinc-400 line-clamp-1 leading-snug">{c.text}</span>
                 </button>
               ))}
             </div>
@@ -907,7 +927,7 @@ export const MessageInput: React.FC = React.memo(() => {
             placeholder={isRecording ? 'در حال شنیدن صدای شما... (صحبت کنید یا برای توقف کلیک کنید)' : 'پیام خود را بنویسید...'}
             rows={1}
             disabled={isStreaming}
-            className={`flex-1 w-full max-h-[150px] min-h-[40px] py-2.5 sm:py-3 px-1 sm:px-2 bg-transparent resize-none text-[length:var(--chat-font-size)] [font-family:var(--user-font-family)] text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-500 dark:placeholder:text-zinc-500 border-0 border-none outline-none ring-0 shadow-none focus:ring-0 focus:outline-none focus:border-none focus:shadow-none appearance-none overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden disabled:opacity-60 leading-relaxed ${isRecording ? 'placeholder:text-red-500 dark:placeholder:text-red-400 placeholder:animate-pulse' : ''}`}
+            className={`flex-1 w-full max-h-[150px] min-h-[40px] py-2.5 sm:py-3 px-1 sm:px-2 bg-transparent resize-none text-[length:var(--chat-font-size)] [font-family:var(--user-font-family)] text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-700 dark:text-zinc-500 dark:placeholder:text-zinc-700 dark:text-zinc-500 border-0 border-none outline-none ring-0 shadow-none focus:ring-0 focus:outline-none focus:border-none focus:shadow-none appearance-none overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden disabled:opacity-60 leading-relaxed ${isRecording ? 'placeholder:text-red-500 dark:placeholder:text-red-400 placeholder:animate-pulse' : ''}`}
           />
 
           {/* Left actions (Clear, Mic, Cancel, Send) */}
@@ -919,10 +939,10 @@ export const MessageInput: React.FC = React.memo(() => {
                 <button
                   type="button"
                   onClick={() => setText('')}
-                  className="w-10 h-10 hidden sm:flex items-center justify-center rounded-full text-zinc-400 hover:text-zinc-700 dark:text-zinc-500 dark:hover:text-zinc-300 bg-transparent border-0 outline-none transition-all hover:bg-zinc-200 dark:hover:bg-white/5 active:scale-95 cursor-pointer"
+                  className="w-10 h-10 hidden sm:flex items-center justify-center rounded-full text-zinc-700 dark:text-zinc-400 hover:text-zinc-700 dark:text-zinc-500 dark:hover:text-zinc-700 dark:text-zinc-300 bg-transparent border-0 outline-none transition-all hover:bg-zinc-200 dark:hover:bg-black/5 dark:hover:bg-white/5 active:scale-95 cursor-pointer"
                   aria-label="Clear input"
                 >
-                  <RestartCircleLineDuotoneIcon className="w-4 h-4" />
+                  <RestartCircleLinearIcon className="w-4 h-4" />
                 </button>
               </Tooltip>
             )}
@@ -938,7 +958,7 @@ export const MessageInput: React.FC = React.memo(() => {
                   className="w-10 h-10 flex items-center justify-center transition-all rounded-full text-red-500 hover:bg-red-100 dark:hover:bg-red-500/10 bg-transparent border-0 outline-none animate-pulse cursor-pointer"
                   aria-label="Stop generation"
                 >
-                  <StopCircleBoldDuotoneIcon className="w-4 h-4" />
+                  <StopCircleBoldIcon className="w-4 h-4" />
                 </button>
               </Tooltip>
             )}
@@ -954,7 +974,7 @@ export const MessageInput: React.FC = React.memo(() => {
                   className={`w-10 h-10 flex items-center justify-center transition-all rounded-full border-0 outline-none ${
                     canSend
                       ? 'bg-black dark:bg-white text-white dark:text-black shadow-sm hover:scale-105 active:scale-95 cursor-pointer'
-                      : 'bg-zinc-200 dark:bg-zinc-700/50 text-zinc-400 dark:text-zinc-500 cursor-not-allowed'
+                      : 'bg-zinc-200 dark:bg-zinc-700/50 text-zinc-700 dark:text-zinc-400 dark:text-zinc-500 cursor-not-allowed'
                   }`}
                   aria-label="Send Message"
                 >
@@ -972,10 +992,24 @@ export const MessageInput: React.FC = React.memo(() => {
           </div>
         </div>
 
+        {isEmpty && (
+          <div className="flex justify-center mt-6 mb-2 animate-fadeIn">
+            <div className="flex items-center justify-center gap-2 text-xs text-zinc-700 dark:text-zinc-400 bg-white/50 dark:bg-black/20 border border-zinc-200 dark:border-white/10 px-4 py-2 rounded-2xl backdrop-blur-md shadow-sm">
+              <span>مدل فعال:</span>
+              <span className="font-bold text-purple-600 dark:text-purple-400">{modelIntro.title}</span>
+              {modelDetails.isFree && (
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
+                  رایگان
+                </span>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Footer info: Disclaimer and Token Footprint Estimator */}
-        <div className="flex items-center justify-between flex-wrap gap-2 text-[10px] sm:text-[11px] opacity-75 select-none px-2">
+        <div className={`flex items-center justify-between flex-wrap gap-2 text-[10px] sm:text-[11px] opacity-75 select-none px-2 ${isEmpty ? 'hidden' : ''}`}>
           <div className="flex items-center gap-1.5 min-w-0">
-            <StarsMinimalisticBoldDuotoneIcon className="w-3.5 h-3.5 text-[var(--accent-text)] shrink-0" />
+            <StarsMinimalisticBoldIcon className="w-3.5 h-3.5 text-[var(--accent-text)] shrink-0" />
             <span className="truncate sm:whitespace-normal">پاسخ‌های مدل‌های زبانی را بازبینی کنید. ممکن است خطاهایی وجود داشته باشد.</span>
           </div>
 
@@ -984,7 +1018,7 @@ export const MessageInput: React.FC = React.memo(() => {
               className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md border font-mono text-[10px] select-none transition-colors ${estimatedTokens > 32000 ? 'text-red-600 dark:text-red-400 bg-red-500/10 border-red-500/20' : estimatedTokens > 8000 ? 'text-amber-600 dark:text-amber-400 bg-amber-500/10 border-amber-500/20' : 'text-zinc-700 dark:text-zinc-300 bg-zinc-200/70 dark:bg-zinc-800/80 border-zinc-300/50 dark:border-white/10'}`}
               title="تخمین توکن‌های این پیام بر اساس طول نویسه‌ها و اسناد"
             >
-              <CpuBoltLineDuotoneIcon className={`w-3 h-3 shrink-0 ${estimatedTokens > 32000 ? 'text-red-500' : estimatedTokens > 8000 ? 'text-amber-500' : 'text-sky-500'}`} />
+              <CpuBoltLinearIcon className={`w-3 h-3 shrink-0 ${estimatedTokens > 32000 ? 'text-red-500' : estimatedTokens > 8000 ? 'text-amber-500' : 'text-sky-500'}`} />
               <span>~{usePersianDigits ? toPersianDigits(estimatedTokens) : estimatedTokens} توکن تخمینی</span>
             </div>
           )}

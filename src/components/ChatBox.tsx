@@ -1,54 +1,109 @@
-import React, { useEffect, useRef, useState } from 'react';
 import {
-  CopyLineDuotoneIcon,
-  LikeBoldDuotoneIcon,
-  LikeLineDuotoneIcon,
-  DislikeBoldDuotoneIcon,
-  DislikeLineDuotoneIcon,
-  RestartLineDuotoneIcon,
-  VolumeLoudLineDuotoneIcon,
-  VolumeCrossLineDuotoneIcon,
-  PenLineDuotoneIcon,
-  DownloadMinimalisticLineDuotoneIcon
+  DangerCircleOutlineIcon as AlertCircle,
+  AltArrowDownOutlineIcon as ArrowDown,
+  CheckCircleOutlineIcon as Check,
+  CodeOutlineIcon as Code,
+  CopyLinearIcon,
+  DislikeBoldIcon,
+  DislikeLinearIcon,
+  DownloadOutlineIcon as Download,
+  DownloadMinimalisticLinearIcon,
+  EyeClosedOutlineIcon as EyeOff,
+  DocumentTextOutlineIcon as FileText,
+  LikeBoldIcon,
+  LikeLinearIcon,
+  CheckSquareOutlineIcon as ListChecks,
+  MaximizeSquareOutlineIcon as Maximize2,
+  PenLinearIcon,
+  RestartLinearIcon,
+  RefreshOutlineIcon as RotateCw,
+  StarsMinimalisticBoldIcon as Sparkles,
+  VolumeCrossLinearIcon,
+  VolumeLoudLinearIcon,
+  CloseOutlineIcon as X
 } from '@solar-icons/react';
-import { 
-  Check, 
-  RotateCw, 
-  Sparkles, 
-  ArrowDown, 
-  AlertCircle, 
-  Code, 
-  FileText, 
-  ListChecks, 
-  Loader2, 
-  X, 
-  Download, 
-  Maximize2,
-  EyeOff
-} from 'lucide-react';
-import { ChatMessage, Conversation } from '../types';
-import { MarkdownRenderer } from './MarkdownRenderer';
-import { useUIStore } from '../store/uiStore';
-import { useSettingsStore } from '../store/settingsStore';
+import React, { useEffect, useRef, useState } from 'react';
+import { isRtlText } from '../lib/persianUtils';
+import { SpeakController, speakText } from '../lib/tts';
 import { useChatStore } from '../store/chatStore';
-
-import { PERSIAN_STARTER_PROMPTS, isRtlText } from '../lib/persianUtils';
+import { useSettingsStore } from '../store/settingsStore';
+import { useUIStore } from '../store/uiStore';
+import { ChatMessage } from '../types';
+import { ModelDetails } from './CustomProviderCards';
+import { MarkdownRenderer } from './MarkdownRenderer';
 import { Tooltip } from './Tooltip';
-import { speakText, SpeakController } from '../lib/tts';
-import { Image as ImageIcon } from 'lucide-react';
 
-const MAGIC_IMAGE_PROMPTS = [
-  { id: 'realism', title: 'پرتره فوق‌واقع‌گرایانه', engine: 'flux', icon: '📸', desc: 'عکس ماکرو و فوق‌واقع‌گرایانه از چشم یک گربه جنگلی که انعکاس یک کهکشان پر از ستاره در مردمک آن پیداست. نورپردازی دراماتیک، بافت بی‌نظیر، وضوح 8k.' },
-  { id: 'anime', title: 'انیمه سینمایی', engine: 'flux-anime', icon: '🌸', desc: 'یک شاهکار انیمه‌ای به سبک ماکوتو شینکای. دختری با شمشیر شیشه‌ای روی سقف یک قطار شناور در آسمان. قطره‌های باران و پرتوهای نور خورشید.' },
-  { id: '3d', title: 'رندر سه‌بعدی کیوت', engine: 'flux-3d', icon: '🧸', desc: 'رندر سه‌بعدی شاهکار به سبک پیکسار. یک اژدهای کوچک و بسیار بامزه که با خوشحالی در حال خوردن یک پیتزای بزرگ است. نورپردازی استودیو.' },
-];
+export const getModelIntro = (modelName: string, details: ModelDetails) => {
+  const lower = modelName.toLowerCase();
+  
+  if (lower.includes('lfm') || lower.includes('liquid')) {
+    return {
+      title: 'مدل نوین چندوجهی LFM (Liquid Foundation Model)',
+      bio: 'من مدل هوشمند LFM از شرکت Liquid AI هستم. برای پردازش سریع، انجام محاسبات پویا و عملکرد بهینه در طیف گسترده‌ای از وظایف طراحی شده‌ام.',
+      highlight: 'پاسخ‌دهی سریع و چندمنظوره',
+    };
+  }
+  if (lower.includes('r1') || (details.isReasoning && lower.includes('deepseek'))) {
+    return {
+      title: 'مدل استدلال عمیق DeepSeek R1',
+      bio: 'من مدل تخصصی استدلال DeepSeek R1 هستم. با استفاده از زنجیره تفکر گام‌به‌گام (Chain of Thought)، در حل مسائل پیچیده ریاضی، الگوریتم‌های سنگین و منطق عمیق تخصص دارم.',
+      highlight: 'استدلال عمیق و منطق پیشرفته',
+    };
+  }
+  if (lower.includes('deepseek') || lower.includes('v3')) {
+    return {
+      title: 'دستیار همه‌منظوره DeepSeek V3',
+      bio: 'من مدل پرچمدار DeepSeek V3 هستم؛ دارای تخصص بالا در برنامه‌نویسی، نگارش متون روان فارسی و پاسخ‌دهی به پرسش‌های علمی و عمومی.',
+      highlight: 'برنامه‌نویسی و دانش جامع',
+    };
+  }
+  if (lower.includes('sonnet') || lower.includes('claude-3-5') || lower.includes('claude-3.5') || lower.includes('claude-3.7')) {
+    return {
+      title: 'دستیار ارشد Claude (Anthropic)',
+      bio: 'من مدل Claude هستم؛ با درک عمیق ادبیات فارسی، توانایی استثنایی در کدنویسی، تحلیل اسناد و فایل‌های تصویری در خدمت شما هستم.',
+      highlight: 'نگارش عالی و تحلیل عمیق',
+    };
+  }
+  if (lower.includes('gpt-4o') || lower.includes('chatgpt') || lower.includes('gpt-5') || lower.includes('o3') || lower.includes('o1')) {
+    return {
+      title: 'مدل هوشمند پیشرفته OpenAI',
+      bio: 'من مدل هوش مصنوعی چندوجهی OpenAI هستم؛ بهینه‌سازی‌شده برای تولید کد، حل مسئله، خلاصه‌سازی و درک متن و تصویر.',
+      highlight: 'چندوجهی و حل مسئله',
+    };
+  }
+  if (lower.includes('qwen') && (lower.includes('coder') || details.isCoding)) {
+    return {
+      title: 'توسعه‌دهنده تخصصی Qwen Coder',
+      bio: 'من مدل Qwen Coder هستم؛ آموزش‌دیده بر روی تریلیون‌ها خط کد جهت معماری، ریفکتورینگ و حل چالش‌های برنامه‌نویسی در تمامی زبان‌ها.',
+      highlight: 'برنامه‌نویسی اختصاصی و دیباگ',
+    };
+  }
+  if (lower.includes('llama')) {
+    return {
+      title: 'مدل متن‌باز قدرتمند Meta Llama 3',
+      bio: 'من مدل متن‌باز Llama از شرکت Meta هستم؛ توانمند در مکالمه طبیعی، درک زبان فارسی و پاسخگویی به گستره وسیعی از موضوعات.',
+      highlight: 'زبان طبیعی و درک مفهومی',
+    };
+  }
+  if (lower.includes('gemini') || lower.includes('gemma')) {
+    return {
+      title: 'مدل نسل جدید Google Gemini',
+      bio: 'من مدل چندوجهی Google Gemini هستم؛ مجهز به حافظه طولانی، درک سریع چندرسانه‌ای و سرعت تولید بالا.',
+      highlight: 'حافظه وسیع و سرعت بالا',
+    };
+  }
 
-
+  return {
+    title: details.name || modelName || 'دستیار هوش مصنوعی',
+    bio: details.description || 'آماده پاسخگویی به سوالات، تحلیل متون، کدنویسی و پردازش درخواست‌های شما به زبان فارسی.',
+    highlight: details.tags?.[0]?.label || 'پاسخ‌دهی همه‌منظوره',
+  };
+};
 
 export const ChatBox: React.FC = React.memo(() => {
   const { setIsImageStudioOpen, setImageStudioInitial } = useUIStore();
   const { settings, updateSettings } = useSettingsStore();
-  const { conversations, activeId, isStreaming, editMessage, regenerate, setActiveError, sendMessage } = useChatStore();
+  const { conversations, activeId, isStreaming, editMessage, regenerate, setActiveError } = useChatStore();
   const conversation = conversations.find((c) => c.id === activeId) || null;
   const usePersianDigits = settings.appearance.persianNumerals;
   const showPerformanceMetrics = settings.tools.showPerformanceMetrics;
@@ -56,10 +111,6 @@ export const ChatBox: React.FC = React.memo(() => {
   const onRegenerate = regenerate;
   const onDismissError = () => setActiveError(null);
   const onToggleMetrics = (val: boolean) => updateSettings((s) => ({ ...s, tools: { ...s.tools, showPerformanceMetrics: val } }));
-  const onOpenImageStudio = (prompt?: string, engine?: string) => {
-    if(prompt) setImageStudioInitial({ prompt, engine: engine || 'pollinations' });
-    setIsImageStudioOpen(true);
-  };
 
   const chatEndRef = useRef<HTMLDivElement | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
@@ -188,98 +239,15 @@ export const ChatBox: React.FC = React.memo(() => {
     URL.revokeObjectURL(url);
   };
 
-  const getStarterIcon = (iconName: string) => {
-    switch (iconName) {
-      case 'code':
-        return <Code className="w-5 h-5 gemini-gradient-text" />;
-      case 'file-text':
-        return <FileText className="w-5 h-5 gemini-gradient-text" />;
-      case 'sparkles':
-        return <Sparkles className="w-5 h-5 gemini-gradient-text" />;
-      case 'list-checks':
-        return <ListChecks className="w-5 h-5 gemini-gradient-text" />;
-      default:
-        return <Sparkles className="w-5 h-5 gemini-gradient-text" />;
-    }
-  };
-
   const messages = conversation?.messages || [];
 
   return (
-    <div
-      ref={scrollContainerRef}
-      onScroll={handleScroll}
-      className="flex-1 overflow-y-auto overflow-x-hidden p-4 sm:p-8 space-y-6 relative text-inherit"
-    >
-      {/* Empty State */}
-      {messages.length === 0 && (
-        <div className="min-h-[70dvh] flex flex-col items-center justify-center max-w-2xl mx-auto text-center px-4 py-8">
-          <div className="w-16 h-16 rounded-3xl gemini-gradient-bg flex items-center justify-center text-white shadow-md mb-5">
-            <Sparkles className="w-8 h-8 " />
-          </div>
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-inherit mb-2 tracking-tight">
-            دستیار هوشمند شما
-          </h2>
-          <p className="text-xs sm:text-sm opacity-80 mb-8 max-w-md leading-relaxed">
-            پرسش‌های خود را مطرح کنید، کد بنویسید، متون فارسی را ویرایش کنید یا از پیشنهادات زیر شروع کنید.
-          </p>
-          {/* Starter Prompts Grid - Clay Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full text-right">
-            {PERSIAN_STARTER_PROMPTS.map((item) => (
-              <button
-                key={item.id}
-                onClick={() => sendMessage(item.prompt)}
-                className="clay-card group p-5 text-right flex flex-col justify-between transition-all duration-200 hover:-translate-y-1 hover:shadow-md cursor-pointer"
-              >
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="p-2.5 rounded-2xl gemini-gradient-text group-hover:scale-105 transition-transform">
-                    {getStarterIcon(item.icon)}
-                  </div>
-                  <span className="font-bold text-xs sm:text-sm text-inherit group-hover:gemini-gradient-text">
-                    {item.title}
-                  </span>
-                </div>
-                <p className="text-[12px] opacity-80 group-hover:opacity-100 line-clamp-2 leading-relaxed">
-                  {item.prompt}
-                </p>
-              </button>
-            ))}
-          </div>
-            {/* --- MAGIC IMAGE PROMPTS SECTION --- */}
-            <div className="w-full mt-12 pt-10 border-t border-zinc-200 dark:border-white/10 relative">
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-[#f8f9fa] dark:bg-[#121212] px-4 flex items-center gap-2">
-                <Sparkles className="w-5 h-5 text-purple-500" />
-                <h3 className="font-extrabold text-sm sm:text-base gemini-gradient-text">جادوی تصویرسازی (روی کارت‌ها کلیک کنید)</h3>
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full text-right mt-4">
-                {MAGIC_IMAGE_PROMPTS.map((item) => (
-                  <button
-                    key={item.id}
-                    onClick={() => onOpenImageStudio?.(item.desc, item.engine)}
-                    className="group relative p-5 rounded-3xl text-right flex flex-col justify-between transition-all duration-300 hover:-translate-y-1 cursor-pointer overflow-hidden border border-zinc-200 dark:border-white/10 bg-white/50 dark:bg-black/20 hover:shadow-[0_0_20px_rgba(168,85,247,0.15)] hover:border-purple-500/30"
-                  >
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/10 blur-3xl rounded-full -translate-y-1/2 translate-x-1/2 group-hover:bg-purple-500/20 transition-colors"></div>
-                    
-                    <div className="flex items-center gap-3 mb-3 relative z-10">
-                      <div className="text-2xl group-hover:scale-110 transition-transform origin-bottom-right">
-                        {item.icon}
-                      </div>
-                      <span className="font-bold text-sm text-zinc-800 dark:text-zinc-100 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
-                        {item.title}
-                      </span>
-                    </div>
-                    <p className="text-[11px] opacity-70 group-hover:opacity-90 line-clamp-3 leading-relaxed relative z-10 text-zinc-600 dark:text-zinc-300">
-                      {item.desc}
-                    </p>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-        </div>
-      )}
-
+    <div className="relative flex-1 flex flex-col min-h-0 h-full w-full">
+      <div
+        ref={scrollContainerRef}
+        onScroll={handleScroll}
+        className="flex-1 overflow-y-auto overflow-x-hidden p-4 sm:p-8 space-y-6 text-inherit"
+      >
       {/* Messages List */}
       {messages.length > 0 && (
         <div className="max-w-3xl mx-auto flex flex-col space-y-6 pb-4">
@@ -299,10 +267,10 @@ export const ChatBox: React.FC = React.memo(() => {
                 <div
                   className={`relative chat-message-bubble transition-all text-right ${
                     isUser
-                      ? 'bg-zinc-800 text-zinc-100 rounded-[22px] rounded-bl-[4px] px-5 py-3 shadow-sm'
+                      ? 'bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-[22px] rounded-bl-[4px] px-5 py-3 shadow-sm'
                       : msg.error
                       ? 'border border-red-500/30 rounded-2xl p-4 bg-red-500/5 text-red-400'
-                      : 'text-zinc-200 border-none bg-transparent py-2'
+                      : 'text-zinc-800 dark:text-zinc-200 border-none bg-transparent py-2'
                   }`}
                 >
                   {msg.error ? (
@@ -355,7 +323,7 @@ export const ChatBox: React.FC = React.memo(() => {
                           onChange={(e) => setEditingText(e.target.value)}
                           dir="auto"
                           rows={Math.min(6, Math.max(2, editingText.split('\n').length))}
-                          className="w-full p-3 rounded-2xl bg-zinc-900 border border-zinc-700 text-[length:var(--chat-font-size)] [font-family:var(--user-font-family)] focus:outline-hidden focus:ring-2 focus:ring-blue-500/30 resize-y leading-relaxed font-medium text-zinc-200"
+                          className="w-full p-3 rounded-2xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 text-[length:var(--chat-font-size)] [font-family:var(--user-font-family)] focus:outline-hidden focus:ring-2 focus:ring-blue-500/30 resize-y leading-relaxed font-medium text-zinc-800 dark:text-zinc-200"
                           autoFocus
                           placeholder="ویرایش پیام خود را اینجا بنویسید..."
                           onKeyDown={(e) => {
@@ -374,7 +342,7 @@ export const ChatBox: React.FC = React.memo(() => {
                           <button
                             type="button"
                             onClick={() => setEditingMessageId(null)}
-                            className="px-3 py-1.5 rounded-xl text-xs bg-white/5 hover:bg-white/10 text-zinc-400 font-medium transition-all cursor-pointer"
+                            className="px-3 py-1.5 rounded-xl text-xs bg-black/5 dark:bg-white/5 hover:bg-black/5 dark:hover:bg-white/10 text-zinc-700 dark:text-zinc-400 font-medium transition-all cursor-pointer"
                           >
                             انصراف
                           </button>
@@ -405,8 +373,8 @@ export const ChatBox: React.FC = React.memo(() => {
                               {urls.map((url, i) => {
                                 const isMedia = url.startsWith('data:image/') || url.startsWith('data:video/');
                                 const wrapperClass = (isMulti && isMedia)
-                                  ? "rounded-2xl overflow-hidden relative group/media w-24 h-24 sm:w-28 sm:h-28 border border-zinc-700 bg-black/40 shrink-0 shadow-sm"
-                                  : "rounded-2xl overflow-hidden relative group/media max-w-sm border border-zinc-700 bg-black/40 shadow-sm";
+                                  ? "rounded-2xl overflow-hidden relative group/media w-24 h-24 sm:w-28 sm:h-28 border border-zinc-300 dark:border-zinc-700 bg-black/40 shrink-0 shadow-sm"
+                                  : "rounded-2xl overflow-hidden relative group/media max-w-sm border border-zinc-300 dark:border-zinc-700 bg-black/40 shadow-sm";
                                 const imgClass = (isMulti && isMedia)
                                   ? "w-full h-full object-cover transition-transform duration-300 group-hover/media:scale-[1.1]"
                                   : "w-full object-cover max-h-72 transition-transform duration-300 group-hover/media:scale-[1.02]";
@@ -417,7 +385,7 @@ export const ChatBox: React.FC = React.memo(() => {
                                       <img src={url} alt={`Attached ${i + 1}`} className={imgClass} />
                                     ) : url.startsWith('data:audio/') ? (
                                       <div className="p-4 w-full flex flex-col gap-2">
-                                        <span className="text-sm font-bold px-1 text-zinc-200">فایل صوتی ضمیمه شده</span>
+                                        <span className="text-sm font-bold px-1 text-zinc-800 dark:text-zinc-200">فایل صوتی ضمیمه شده</span>
                                         <audio controls src={url} className="w-full max-w-sm rounded-lg" dir="ltr" />
                                       </div>
                                     ) : url.startsWith('data:video/') ? (
@@ -428,8 +396,8 @@ export const ChatBox: React.FC = React.memo(() => {
                                           <FileText className="w-8 h-8" />
                                         </div>
                                         <div className="flex flex-col text-sm min-w-0">
-                                          <span className="font-bold truncate text-zinc-200">سند ضمیمه شده</span>
-                                          <span className="text-xs opacity-70 truncate text-zinc-400">آماده تحلیل</span>
+                                          <span className="font-bold truncate text-zinc-800 dark:text-zinc-200">سند ضمیمه شده</span>
+                                          <span className="text-xs opacity-70 truncate text-zinc-700 dark:text-zinc-400">آماده تحلیل</span>
                                         </div>
                                       </div>
                                     )}
@@ -439,7 +407,7 @@ export const ChatBox: React.FC = React.memo(() => {
                                         <button
                                           type="button"
                                           onClick={() => setLightboxMedia({ url, type: url.startsWith('data:video/') ? 'video' : 'image' })}
-                                          className="p-1 rounded-lg hover:bg-white/20 text-zinc-300 hover:text-white transition-colors cursor-pointer"
+                                          className="p-1 rounded-lg hover:bg-white/20 text-zinc-700 dark:text-zinc-300 hover:text-white transition-colors cursor-pointer"
                                           title="نمایش تمام‌صفحه"
                                         >
                                           <Maximize2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
@@ -447,7 +415,7 @@ export const ChatBox: React.FC = React.memo(() => {
                                         <button
                                           type="button"
                                           onClick={() => handleDownloadMedia(url, url.startsWith('data:video/'))}
-                                          className="p-1 rounded-lg hover:bg-white/20 text-zinc-300 hover:text-white transition-colors cursor-pointer"
+                                          className="p-1 rounded-lg hover:bg-white/20 text-zinc-700 dark:text-zinc-300 hover:text-white transition-colors cursor-pointer"
                                           title="دانلود"
                                         >
                                           <Download className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
@@ -476,12 +444,12 @@ export const ChatBox: React.FC = React.memo(() => {
                   ) : (
                     <div className="flex flex-col gap-3">
                       {msg.isStreaming && !msg.imageUrl && msg.isImageGen ? (
-                        <div className="flex flex-col items-center justify-center p-6 sm:p-8 my-2 rounded-3xl bg-zinc-900 border border-zinc-800 relative overflow-hidden group max-w-md w-full animate-fadeIn">
+                        <div className="flex flex-col items-center justify-center p-6 sm:p-8 my-2 rounded-3xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 relative overflow-hidden group max-w-md w-full animate-fadeIn">
                           <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent animate-shimmer" />
-                          <div className="relative z-10 w-12 h-12 rounded-2xl bg-zinc-800 flex items-center justify-center shadow-lg mb-4 border border-zinc-700">
+                          <div className="relative z-10 w-12 h-12 rounded-2xl bg-white dark:bg-zinc-800 flex items-center justify-center shadow-lg mb-4 border border-zinc-300 dark:border-zinc-700">
                             <Sparkles className="w-6 h-6 text-sky-400 animate-pulse" />
                           </div>
-                          <h4 className="relative z-10 font-medium text-sm text-zinc-300 mb-1">
+                          <h4 className="relative z-10 font-medium text-sm text-zinc-700 dark:text-zinc-300 mb-1">
                             در حال تولید تصویر...
                           </h4>
                           <div className="relative z-10 flex items-center gap-1.5 mt-2">
@@ -491,17 +459,17 @@ export const ChatBox: React.FC = React.memo(() => {
                           </div>
                         </div>
                       ) : msg.isStreaming && !msg.content ? (
-                        <div className="flex items-center gap-2 p-4 text-zinc-400 animate-pulse">
+                        <div className="flex items-center gap-2 p-4 text-zinc-700 dark:text-zinc-400 animate-pulse">
                           <div className="w-2.5 h-2.5 bg-zinc-500 rounded-full animate-bounce" />
                           <div className="w-2.5 h-2.5 bg-zinc-500 rounded-full animate-bounce [animation-delay:0.2s]" />
                           <div className="w-2.5 h-2.5 bg-zinc-500 rounded-full animate-bounce [animation-delay:0.4s]" />
-                          <span className="text-xs text-zinc-500 mr-2">در حال پردازش و تولید پاسخ...</span>
+                          <span className="text-xs text-zinc-700 dark:text-zinc-500 mr-2">در حال پردازش و تولید پاسخ...</span>
                         </div>
                       ) : (
                         <>
                           {msg.imageUrl && (
                             <div className="max-w-md my-2">
-                              <div className="rounded-2xl overflow-hidden relative group/media border border-zinc-700 bg-black/40 shadow-xl w-full">
+                              <div className="rounded-2xl overflow-hidden relative group/media border border-zinc-300 dark:border-zinc-700 bg-black/40 shadow-xl w-full">
                                 <img
                                   src={msg.imageUrl}
                                   alt="Generated"
@@ -513,7 +481,7 @@ export const ChatBox: React.FC = React.memo(() => {
                                   <button
                                     type="button"
                                     onClick={() => setLightboxMedia({ url: msg.imageUrl!, type: 'image' })}
-                                    className="p-1.5 rounded-lg hover:bg-white/20 text-zinc-300 hover:text-white transition-colors cursor-pointer"
+                                    className="p-1.5 rounded-lg hover:bg-white/20 text-zinc-700 dark:text-zinc-300 hover:text-white transition-colors cursor-pointer"
                                     title="نمایش تمام‌صفحه"
                                   >
                                     <Maximize2 className="w-4 h-4" />
@@ -521,7 +489,7 @@ export const ChatBox: React.FC = React.memo(() => {
                                   <button
                                     type="button"
                                     onClick={() => handleDownloadMedia(msg.imageUrl!)}
-                                    className="p-1.5 rounded-lg hover:bg-white/20 text-zinc-300 hover:text-white transition-colors cursor-pointer"
+                                    className="p-1.5 rounded-lg hover:bg-white/20 text-zinc-700 dark:text-zinc-300 hover:text-white transition-colors cursor-pointer"
                                     title="دانلود تصویر"
                                   >
                                     <Download className="w-4 h-4" />
@@ -544,19 +512,19 @@ export const ChatBox: React.FC = React.memo(() => {
                 </div>
 
                 {/* Single Unified Bottom Row */}
-                <div className="flex items-center justify-between gap-2 mt-2 pt-2 border-t border-zinc-800/40 text-xs text-zinc-400">
+                <div className="flex items-center justify-between gap-2 mt-2 pt-2 border-t border-zinc-200 dark:border-zinc-800/40 text-xs text-zinc-700 dark:text-zinc-400">
                   {/* Right Side: Actions Toolbar */}
-                  <div className="flex items-center gap-1.5 text-zinc-400">
+                  <div className="flex items-center gap-1.5 text-zinc-700 dark:text-zinc-400">
                     {!msg.error && (
                       <Tooltip content={copiedId === msg.id ? 'کپی شد!' : 'کپی'}>
                         <button
                           onClick={() => handleCopyMessage(msg)}
-                          className="p-1.5 rounded-lg text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/80 transition-colors cursor-pointer"
+                          className="p-1.5 rounded-lg text-zinc-700 dark:text-zinc-400 hover:text-zinc-900 dark:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-700/80 transition-colors cursor-pointer"
                         >
                           {copiedId === msg.id ? (
                             <Check className="w-4 h-4 text-emerald-400" />
                           ) : (
-                            <CopyLineDuotoneIcon className="w-4 h-4" />
+                            <CopyLinearIcon className="w-4 h-4" />
                           )}
                         </button>
                       </Tooltip>
@@ -572,10 +540,10 @@ export const ChatBox: React.FC = React.memo(() => {
                           className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
                             editingMessageId === msg.id
                               ? 'text-sky-400 bg-sky-500/15'
-                              : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/80'
+                              : 'text-zinc-700 dark:text-zinc-400 hover:text-zinc-900 dark:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-700/80'
                           }`}
                         >
-                          <PenLineDuotoneIcon className="w-4 h-4" />
+                          <PenLinearIcon className="w-4 h-4" />
                         </button>
                       </Tooltip>
                     )}
@@ -588,15 +556,15 @@ export const ChatBox: React.FC = React.memo(() => {
                             className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
                               speakingId === msg.id || loadingTtsId === msg.id
                                 ? 'text-sky-400 bg-sky-500/15'
-                                : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/80'
+                                : 'text-zinc-700 dark:text-zinc-400 hover:text-zinc-900 dark:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-700/80'
                             }`}
                           >
                             {loadingTtsId === msg.id ? (
-                              <Loader2 className="w-4 h-4 animate-spin" />
+                              <RotateCw className="w-4 h-4 animate-spin" />
                             ) : speakingId === msg.id ? (
-                              <VolumeCrossLineDuotoneIcon className="w-4 h-4 animate-pulse" />
+                              <VolumeCrossLinearIcon className="w-4 h-4 animate-pulse" />
                             ) : (
-                              <VolumeLoudLineDuotoneIcon className="w-4 h-4" />
+                              <VolumeLoudLinearIcon className="w-4 h-4" />
                             )}
                           </button>
                         </Tooltip>
@@ -604,9 +572,9 @@ export const ChatBox: React.FC = React.memo(() => {
                         <Tooltip content="خروجی Markdown">
                           <button
                             onClick={() => handleExportSingleMessage(msg)}
-                            className="p-1.5 rounded-lg text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/80 transition-colors cursor-pointer"
+                            className="p-1.5 rounded-lg text-zinc-700 dark:text-zinc-400 hover:text-zinc-900 dark:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-700/80 transition-colors cursor-pointer"
                           >
-                            <DownloadMinimalisticLineDuotoneIcon className="w-4 h-4" />
+                            <DownloadMinimalisticLinearIcon className="w-4 h-4" />
                           </button>
                         </Tooltip>
 
@@ -616,10 +584,10 @@ export const ChatBox: React.FC = React.memo(() => {
                             className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
                               feedback[msg.id] === 'up'
                                 ? 'text-emerald-400 bg-emerald-500/15'
-                                : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/80'
+                                : 'text-zinc-700 dark:text-zinc-400 hover:text-zinc-900 dark:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-700/80'
                             }`}
                           >
-                            {feedback[msg.id] === 'up' ? <LikeBoldDuotoneIcon className="w-4 h-4 text-emerald-400" /> : <LikeLineDuotoneIcon className="w-4 h-4" />}
+                            {feedback[msg.id] === 'up' ? <LikeBoldIcon className="w-4 h-4 text-emerald-400" /> : <LikeLinearIcon className="w-4 h-4" />}
                           </button>
                         </Tooltip>
 
@@ -629,10 +597,10 @@ export const ChatBox: React.FC = React.memo(() => {
                             className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
                               feedback[msg.id] === 'down'
                                 ? 'text-rose-400 bg-rose-500/15'
-                                : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/80'
+                                : 'text-zinc-700 dark:text-zinc-400 hover:text-zinc-900 dark:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-700/80'
                             }`}
                           >
-                            {feedback[msg.id] === 'down' ? <DislikeBoldDuotoneIcon className="w-4 h-4 text-rose-400" /> : <DislikeLineDuotoneIcon className="w-4 h-4" />}
+                            {feedback[msg.id] === 'down' ? <DislikeBoldIcon className="w-4 h-4 text-rose-400" /> : <DislikeLinearIcon className="w-4 h-4" />}
                           </button>
                         </Tooltip>
 
@@ -640,9 +608,9 @@ export const ChatBox: React.FC = React.memo(() => {
                           <Tooltip content="تولید مجدد پاسخ">
                             <button
                               onClick={onRegenerate}
-                              className="p-1.5 rounded-lg text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/80 transition-colors cursor-pointer"
+                              className="p-1.5 rounded-lg text-zinc-700 dark:text-zinc-400 hover:text-zinc-900 dark:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-700/80 transition-colors cursor-pointer"
                             >
-                              <RestartLineDuotoneIcon className="w-4 h-4" />
+                              <RestartLinearIcon className="w-4 h-4" />
                             </button>
                           </Tooltip>
                         )}
@@ -661,22 +629,22 @@ export const ChatBox: React.FC = React.memo(() => {
                     
                     {!isUser && !msg.error && showPerformanceMetrics && (
                       <div className="flex items-center gap-1.5 flex-wrap">
-                      <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-zinc-900 border border-zinc-800 text-[11px] text-zinc-400">
-                        <span className="text-zinc-500 font-sans">زمان:</span>
-                        <span className="font-mono text-zinc-300" dir="ltr">
+                      <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-[11px] text-zinc-700 dark:text-zinc-400">
+                        <span className="text-zinc-700 dark:text-zinc-500 font-sans">زمان:</span>
+                        <span className="font-mono text-zinc-700 dark:text-zinc-300" dir="ltr">
                           {msg.metrics?.totalTimeMs ? `${(msg.metrics.totalTimeMs / 1000).toFixed(1)}s` : '1.4s'}
                         </span>
                       </div>
 
-                      <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-zinc-900 border border-zinc-800 text-[11px] text-zinc-400">
-                        <span className="text-zinc-500 font-sans">توکن:</span>
-                        <span className="font-mono text-zinc-300" dir="ltr">
+                      <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-[11px] text-zinc-700 dark:text-zinc-400">
+                        <span className="text-zinc-700 dark:text-zinc-500 font-sans">توکن:</span>
+                        <span className="font-mono text-zinc-700 dark:text-zinc-300" dir="ltr">
                           {msg.metrics?.exactTotalTokens || msg.metrics?.approxTokens || 340}
                         </span>
                       </div>
 
-                      <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-zinc-900 border border-zinc-800 text-[11px] text-zinc-400">
-                        <span className="text-zinc-500 font-sans">هزینه:</span>
+                      <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-[11px] text-zinc-700 dark:text-zinc-400">
+                        <span className="text-zinc-700 dark:text-zinc-500 font-sans">هزینه:</span>
                         <span className="font-mono text-emerald-400" dir="ltr">
                           ${msg.metrics?.estimatedCostUSD || '0.00012'}
                         </span>
@@ -687,7 +655,7 @@ export const ChatBox: React.FC = React.memo(() => {
                           <button
                             type="button"
                             onClick={() => onToggleMetrics(false)}
-                            className="p-1 text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/60 rounded transition-colors cursor-pointer"
+                            className="p-1 text-zinc-700 dark:text-zinc-500 hover:text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700/60 rounded transition-colors cursor-pointer"
                             aria-label="مخفیسازی آمار"
                           >
                             <EyeOff className="w-3.5 h-3.5" />
@@ -709,7 +677,7 @@ export const ChatBox: React.FC = React.memo(() => {
       {showScrollBottom && (
         <button
           onClick={() => scrollToBottom(true)}
-          className="fixed bottom-24 left-1/2 -translate-x-1/2 z-20 p-2.5 rounded-full bg-zinc-800 text-zinc-300 shadow-xl border border-zinc-700 transition-all hover:bg-zinc-700 cursor-pointer"
+          className="absolute bottom-4 sm:bottom-8 left-4 sm:left-8 z-20 p-3 rounded-full bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 shadow-xl border border-zinc-300 dark:border-zinc-700 transition-all hover:bg-zinc-100 dark:hover:bg-zinc-700 hover:scale-105 cursor-pointer"
           aria-label="پیمایش به پایین"
         >
           <ArrowDown className="w-4 h-4" />
@@ -723,7 +691,7 @@ export const ChatBox: React.FC = React.memo(() => {
           onClick={() => setLightboxMedia(null)}
         >
           <button 
-            className="absolute top-6 right-6 p-2 rounded-full bg-zinc-800 hover:bg-zinc-700 text-white transition-colors cursor-pointer"
+            className="absolute top-6 right-6 p-2 rounded-full bg-white dark:bg-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-700 text-white transition-colors cursor-pointer"
             onClick={() => setLightboxMedia(null)}
           >
             <X className="w-6 h-6" />
@@ -742,7 +710,7 @@ export const ChatBox: React.FC = React.memo(() => {
             <div className="absolute -bottom-14 left-1/2 -translate-x-1/2 flex items-center gap-3">
               <button
                 onClick={() => handleDownloadMedia(lightboxMedia.url, lightboxMedia.type === 'video')}
-                className="flex items-center gap-2 px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-white rounded-xl shadow-lg border border-zinc-700 transition-colors cursor-pointer text-sm"
+                className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-700 text-white rounded-xl shadow-lg border border-zinc-300 dark:border-zinc-700 transition-colors cursor-pointer text-sm"
               >
                 <Download className="w-4 h-4" />
                 دانلود
@@ -751,6 +719,7 @@ export const ChatBox: React.FC = React.memo(() => {
           </div>
         </div>
       )}
+    </div>
     </div>
   );
 });

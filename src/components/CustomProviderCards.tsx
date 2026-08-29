@@ -1,11 +1,305 @@
-import React, { useState } from 'react';
-import { Plus, Edit2, Trash2, Link as LinkIcon, Key, RefreshCcw, Activity, X, Search } from 'lucide-react';
+import React, { useState, useMemo } from 'react';
+import { AddOutlineIcon, PenOutlineIcon, TrashBinMinimalisticOutlineIcon, LinkOutlineIcon, KeyMinimalisticOutlineIcon, RefreshOutlineIcon, ChartOutlineIcon, CloseOutlineIcon, MagnifierOutlineIcon, DownloadOutlineIcon, BrainOutlineIcon, StarOutlineIcon, CodeOutlineIcon, EyeOutlineIcon, BoltOutlineIcon, StarsOutlineIcon, DocumentTextOutlineIcon, LayersOutlineIcon, CopyOutlineIcon } from '@solar-icons/react';
 import { AppSettings, CustomProfile } from '../types';
+
+export interface ModelCapabilityTag {
+  label: string;
+  type: 'coding' | 'reasoning' | 'vision' | 'fast' | 'creative' | 'free' | 'chat';
+}
+
+export interface ModelDetails {
+  providerLabel: string;
+  isFree: boolean;
+  isRecommended: boolean;
+  isCoding: boolean;
+  isReasoning: boolean;
+  isVision: boolean;
+  isFast: boolean;
+  isCreative: boolean;
+  contextFormatted: string | null;
+  description: string;
+  tags: ModelCapabilityTag[];
+}
+
+export const getModelDetails = (m: { 
+  id: string; 
+  name?: string; 
+  isFree?: boolean; 
+  isVision?: boolean; 
+  isCoding?: boolean;
+  isReasoning?: boolean;
+  isFast?: boolean;
+  contextLength?: number | null;
+  description?: string;
+}): ModelDetails => {
+  const idLower = (m.id || '').toLowerCase();
+  const nameLower = (m.name || '').toLowerCase();
+  const combined = `${idLower} ${nameLower}`;
+
+  // 1. Is Free?
+  const isFree =
+    m.isFree === true ||
+    combined.includes(':free') ||
+    combined.includes('/free') ||
+    combined.includes('free') ||
+    combined.includes('رایگان');
+
+  // 2. Provider Detection
+  let providerLabel = 'سایر';
+  if (combined.includes('claude') || combined.includes('anthropic')) {
+    providerLabel = 'Anthropic';
+  } else if (combined.includes('gpt') || combined.includes('openai') || combined.includes('o1') || combined.includes('o3') || combined.includes('o4') || combined.includes('chatgpt')) {
+    providerLabel = 'OpenAI';
+  } else if (combined.includes('gemini') || combined.includes('gemma') || combined.includes('google')) {
+    providerLabel = 'Google';
+  } else if (combined.includes('deepseek')) {
+    providerLabel = 'DeepSeek';
+  } else if (combined.includes('qwen') || combined.includes('qwq') || combined.includes('alibaba')) {
+    providerLabel = 'Alibaba Qwen';
+  } else if (combined.includes('mistral') || combined.includes('codestral') || combined.includes('pixtral') || combined.includes('devstral') || combined.includes('ministral')) {
+    providerLabel = 'Mistral';
+  } else if (combined.includes('llama') || combined.includes('meta')) {
+    providerLabel = 'Meta';
+  } else if (combined.includes('grok') || combined.includes('xai')) {
+    providerLabel = 'xAI';
+  } else if (combined.includes('glm') || combined.includes('zhipu') || combined.includes('chatglm')) {
+    providerLabel = 'Zhipu AI';
+  } else if (combined.includes('kimi') || combined.includes('moonshot')) {
+    providerLabel = 'Moonshot Kimi';
+  } else if (m.id && m.id.includes('/')) {
+    const p = m.id.split('/')[0];
+    providerLabel = p.charAt(0).toUpperCase() + p.slice(1);
+  }
+
+  // 3. Coding Detection (SOTA Champions + Dedicated Code Models)
+  const isSonnet = combined.includes('sonnet');
+  const isOpus = combined.includes('opus');
+  const isClaudeGeneral = combined.includes('claude');
+  const isGpt4OrBetter = combined.includes('gpt-4') || combined.includes('gpt-5') || combined.includes('o1') || combined.includes('o3') || combined.includes('o4');
+  const isDeepSeekMajor = combined.includes('deepseek-r1') || combined.includes('deepseek-v3') || combined.includes('deepseek-chat') || combined.includes('deepseek-coder');
+  const isQwenCoder = combined.includes('qwen') && (combined.includes('coder') || combined.includes('72b') || combined.includes('32b') || combined.includes('qwq'));
+  const isMistralCode = combined.includes('codestral') || combined.includes('devstral') || combined.includes('large');
+  const isLlamaMajor = combined.includes('llama') && (combined.includes('405b') || combined.includes('70b') || combined.includes('code'));
+  const isGeminiPro = combined.includes('gemini') && (combined.includes('pro') || combined.includes('exp') || combined.includes('thinking'));
+
+  const isCoding = Boolean(
+    m.isCoding === true ||
+    combined.includes('coder') ||
+    combined.includes('code') ||
+    combined.includes('starcoder') ||
+    combined.includes('dev') ||
+    isSonnet ||
+    isOpus ||
+    isGpt4OrBetter ||
+    isDeepSeekMajor ||
+    isQwenCoder ||
+    isMistralCode ||
+    isLlamaMajor ||
+    isGeminiPro
+  );
+
+  // 4. Reasoning & Deep Logic Detection
+  const isReasoning = Boolean(
+    m.isReasoning === true ||
+    combined.includes('deepseek-r1') ||
+    combined.includes('r1') ||
+    combined.includes('o1') ||
+    combined.includes('o3') ||
+    combined.includes('o4') ||
+    combined.includes('reasoner') ||
+    combined.includes('reasoning') ||
+    combined.includes('qwq') ||
+    combined.includes('thinking') ||
+    combined.includes('thought') ||
+    combined.includes('grok-3-think') ||
+    combined.includes('kimi-k1.5') ||
+    combined.includes('kimi-k2') ||
+    isOpus
+  );
+
+  // 5. Vision / Multimodal Detection
+  const isVision = Boolean(
+    m.isVision === true ||
+    isClaudeGeneral ||
+    combined.includes('gpt-4o') ||
+    combined.includes('gpt-4-turbo') ||
+    combined.includes('gpt-4.5') ||
+    combined.includes('gpt-5') ||
+    combined.includes('gemini') ||
+    combined.includes('vision') ||
+    combined.includes('-vl') ||
+    combined.includes('vl-') ||
+    combined.includes('pixtral') ||
+    combined.includes('llava') ||
+    combined.includes('internvl') ||
+    combined.includes('omni') ||
+    combined.includes('glm-4v') ||
+    combined.includes('minicpm-v') ||
+    combined.includes('multimodal')
+  );
+
+  // 6. Fast & Lightweight Detection
+  const isFast = Boolean(
+    m.isFast === true ||
+    combined.includes('haiku') ||
+    combined.includes('flash') ||
+    combined.includes('mini') ||
+    combined.includes('lite') ||
+    combined.includes('turbo') ||
+    combined.includes('8b') ||
+    combined.includes('7b') ||
+    combined.includes('3b') ||
+    combined.includes('1.5b') ||
+    combined.includes('small') ||
+    combined.includes('nemo') ||
+    combined.includes('ministral')
+  );
+
+  // 7. Creative Writing / Narrative
+  const isCreative = Boolean(
+    combined.includes('fable') ||
+    combined.includes('creative') ||
+    combined.includes('story') ||
+    combined.includes('novel') ||
+    combined.includes('roleplay') ||
+    combined.includes('wizard')
+  );
+
+  // 8. Recommended Flag
+  const isRecommended = Boolean(
+    isSonnet ||
+    isOpus ||
+    combined.includes('gpt-4o') ||
+    combined.includes('gpt-5') ||
+    combined.includes('o1') ||
+    combined.includes('o3') ||
+    combined.includes('deepseek-r1') ||
+    combined.includes('deepseek-v3') ||
+    combined.includes('gemini-1.5-pro') ||
+    combined.includes('gemini-2.0-flash') ||
+    combined.includes('gemini-2.5-pro') ||
+    combined.includes('qwen-2.5-coder') ||
+    combined.includes('qwen-2.5-72b') ||
+    combined.includes('codestral')
+  );
+
+  // 9. Context Length Formatting
+  let contextFormatted: string | null = null;
+  if (m.contextLength) {
+    if (m.contextLength >= 1000000) {
+      contextFormatted = `${(m.contextLength / 1000000).toFixed(0)}M`;
+    } else if (m.contextLength >= 1000) {
+      contextFormatted = `${Math.round(m.contextLength / 1000)}K`;
+    }
+  } else if (combined.includes('gemini-1.5') || combined.includes('gemini-2.0') || combined.includes('gemini-2.5') || combined.includes('sonnet-5')) {
+    contextFormatted = '1M-2M';
+  } else if (combined.includes('claude-3-5') || combined.includes('claude-3.5') || combined.includes('claude-3-7') || combined.includes('claude-4') || combined.includes('opus')) {
+    contextFormatted = '200K';
+  } else if (combined.includes('gpt-4o') || combined.includes('gpt-5') || combined.includes('o1') || combined.includes('o3') || combined.includes('llama-3.1') || combined.includes('llama-3.3') || combined.includes('deepseek')) {
+    contextFormatted = '128K';
+  }
+
+  // 10. Accurate Persian Model Descriptions
+  let description = 'پاسخگویی به سوالات، ترجمه و تولید متن روان';
+
+  if (isSonnet) {
+    description = 'قهرمان بلامنازع جهان در برنامه‌نویسی، معماری کد و حل مسائل مهندسی همراه با درک تصویر';
+  } else if (isOpus) {
+    description = 'قدرتمندترین مدل آنتروپیک برای استدلال عمیق دانشگاهی، تحلیل پیچیده و کدنویسی پیشرفته';
+  } else if (combined.includes('haiku')) {
+    description = 'فوق‌العاده پرسرعت و سبک، بهینه برای مکالمات روزمره، خلاصه‌سازی و چت بلادرنگ';
+  } else if (combined.includes('fable')) {
+    description = 'تخصصی برای نگارش خلاق، داستان‌نویسی روان و تولید محتوای داستانی با لحن غنی';
+  } else if (combined.includes('o1') || combined.includes('o3') || combined.includes('o4')) {
+    description = 'تفکر عمیق گام‌به‌گام (Chain-of-Thought)، سرآمد در المپیادهای ریاضی، الگوریتم و منطق';
+  } else if (combined.includes('gpt-4o') || combined.includes('gpt-4.5') || combined.includes('gpt-5')) {
+    description = 'مدل همه‌کاره پرچم‌دار OpenAI، بسیار قدرتمند در برنامه‌نویسی، تحلیل چندوجهی و ابزارها';
+  } else if (combined.includes('gpt-4o-mini') || combined.includes('gpt-3.5')) {
+    description = 'مدل سریع، سبک و اقتصادی برای کارهای روزمره و مکالمات عمومی';
+  } else if (combined.includes('deepseek-r1')) {
+    description = 'مدل انقلابی با قدرت استدلال باز و زنجیره تفکر دقیق در ریاضی، منطق و برنامه‌نویسی';
+  } else if (combined.includes('deepseek-v3') || combined.includes('deepseek-chat')) {
+    description = 'مدل 671B پرچم‌دار با سرعت بسیار بالا، ارزان‌قیمت و توان عالی در برنامه‌نویسی و گفتگو';
+  } else if (combined.includes('deepseek-coder') || combined.includes('codestral') || combined.includes('devstral') || combined.includes('qwen-coder') || combined.includes('qwen-2.5-coder')) {
+    description = 'تخصصی تولید، بازنویسی، تست خودکار و رفع خطای کد در ده‌ها زبان برنامه‌نویسی';
+  } else if (combined.includes('qwq')) {
+    description = 'مدل استدلالی بازمتن علی‌بابا برای حل مسائل پیچیده منطقی و محاسباتی';
+  } else if (combined.includes('qwen-2.5-vl') || combined.includes('pixtral') || combined.includes('llava')) {
+    description = 'بینایی پیشرفته و درک عمیق تصاویر، نمودارهای آماری، جدول‌ها و اسناد فنی';
+  } else if (combined.includes('qwen-2.5') || combined.includes('qwen2.5')) {
+    description = 'تسلط فوق‌العاده بر زبان فارسی، دانش دانشنامه‌ای عمیق و پاسخ‌های جامع و طبیعی';
+  } else if (combined.includes('gemini-1.5-pro') || combined.includes('gemini-2.0-pro') || combined.includes('gemini-2.5-pro')) {
+    description = 'پنجره زمینه عظیم (تا ۲ میلیون توکن)، تحلیل چندوجهی اسناد و ویدیو و کدنویسی سازمانی';
+  } else if (combined.includes('gemini') && (combined.includes('flash') || combined.includes('thinking'))) {
+    description = 'سرعت فوق‌العاده بالا، درک همزمان تصویر و صوت، همراه با تفکر استدلالی پویا';
+  } else if (combined.includes('llama-3.1-405b') || combined.includes('llama-3.3-70b') || combined.includes('llama-3.1-70b')) {
+    description = 'قدرتمندترین غول بازمتن دنیا با حافظه ۱۲۸K، توان کدنویسی بالا و دانش گسترده';
+  } else if (combined.includes('grok')) {
+    description = 'مدل پرچم‌دار xAI با هوش تحلیلی بالا، درک داده‌های بلادرنگ و کدنویسی ممتاز';
+  } else if (combined.includes('glm')) {
+    description = 'مدل پیشرفته Zhipu AI با درک چندزبانه عالی، مهارت‌های چندوجهی و تحلیل متنی قوی';
+  } else if (isReasoning) {
+    description = 'تفکر عمیق تحلیلی، حل مسائل منطقی و محاسبات مرحله‌به‌مرحله';
+  } else if (isCoding) {
+    description = 'تولید، معماری، بررسی و اشکال‌زدایی کدهای نرم‌افزاری تخصصی';
+  } else if (isVision) {
+    description = 'تحلیل و درک چندوجهی تصاویر، اسناد، دیاگرام‌ها و متن';
+  } else if (isFast) {
+    description = 'فوق‌العاده سریع و بهینه برای پردازش بلادرنگ و مکالمه سبک';
+  }
+
+  // 11. Build Visual Tags List
+  const tags: ModelCapabilityTag[] = [];
+
+  if (isCoding) {
+    tags.push({ label: 'برنامه‌نویسی', type: 'coding' });
+  }
+  if (isReasoning) {
+    tags.push({ label: 'استدلالی', type: 'reasoning' });
+  }
+  if (isVision) {
+    tags.push({ label: 'دیداری', type: 'vision' });
+  }
+  if (isFast) {
+    tags.push({ label: 'فوق‌سریع', type: 'fast' });
+  }
+  if (isCreative) {
+    tags.push({ label: 'نگارش خلاق', type: 'creative' });
+  }
+  if (tags.length === 0) {
+    tags.push({ label: 'متنی / عمومی', type: 'chat' });
+  }
+
+  return {
+    providerLabel,
+    isFree,
+    isRecommended,
+    isCoding,
+    isReasoning,
+    isVision,
+    isFast,
+    isCreative,
+    contextFormatted,
+    description,
+    tags,
+  };
+};
 
 interface CustomProviderCardsProps {
   tempSettings: AppSettings;
   setTempSettings: (settings: AppSettings) => void;
-  cachedModels: {id: string, name?: string}[];
+  cachedModels: {
+    id: string; 
+    name?: string; 
+    isFree?: boolean; 
+    provider?: string; 
+    isVision?: boolean; 
+    isCoding?: boolean;
+    isReasoning?: boolean;
+    isFast?: boolean;
+    contextLength?: number | null;
+    description?: string;
+  }[];
   fetchingModels: boolean;
   handleFetchModels: (overrideConfig?: any) => Promise<void>;
   fetchError?: string | null;
@@ -21,7 +315,75 @@ export const CustomProviderCards: React.FC<CustomProviderCardsProps> = ({
 }) => {
   const [editingProfileId, setEditingProfileId] = useState<string | null>(null);
   const [showFetchedList, setShowFetchedList] = useState(false);
-  
+  const [modelSearchQuery, setModelSearchQuery] = useState('');
+  const [filterProvider, setFilterProvider] = useState<string>('all');
+  const [activeTag, setActiveTag] = useState<'all' | 'coding' | 'vision' | 'reasoning' | 'fast' | 'free'>('all');
+
+  const PROVIDER_CATEGORIES = [
+    { id: 'all', label: 'همه سازندگان' },
+    { id: 'anthropic', label: 'Anthropic (کلود)' },
+    { id: 'openai', label: 'OpenAI (GPT/o-series)' },
+    { id: 'deepseek', label: 'DeepSeek' },
+    { id: 'google', label: 'Google (Gemini)' },
+    { id: 'qwen', label: 'Alibaba Qwen' },
+    { id: 'mistral', label: 'Mistral AI' },
+    { id: 'meta', label: 'Meta (Llama)' },
+    { id: 'xai', label: 'xAI (Grok)' },
+    { id: 'zhipu', label: 'Zhipu AI (GLM)' },
+    { id: 'other', label: 'سایر ارائه‌دهندگان' }
+  ];
+
+  const getProviderType = (m: { id: string; name?: string; provider?: string }) => {
+    const meta = getModelDetails(m);
+    const p = meta.providerLabel.toLowerCase();
+    if (p.includes('anthropic')) return 'anthropic';
+    if (p.includes('openai')) return 'openai';
+    if (p.includes('deepseek')) return 'deepseek';
+    if (p.includes('google')) return 'google';
+    if (p.includes('qwen') || p.includes('alibaba')) return 'qwen';
+    if (p.includes('mistral')) return 'mistral';
+    if (p.includes('meta')) return 'meta';
+    if (p.includes('xai') || p.includes('grok')) return 'xai';
+    if (p.includes('zhipu') || p.includes('glm')) return 'zhipu';
+    return 'other';
+  };
+
+  const tagCounts = useMemo(() => {
+    let all = 0, coding = 0, vision = 0, reasoning = 0, fast = 0, free = 0;
+    cachedModels.forEach(m => {
+      all++;
+      const meta = getModelDetails(m);
+      if (meta.isFree) free++;
+      if (meta.isCoding) coding++;
+      if (meta.isVision) vision++;
+      if (meta.isReasoning) reasoning++;
+      if (meta.isFast) fast++;
+    });
+    return { all, coding, vision, reasoning, fast, free };
+  }, [cachedModels]);
+
+  const providerCounts = useMemo(() => {
+    const counts: Record<string, number> = {
+      all: 0, anthropic: 0, openai: 0, deepseek: 0, google: 0, qwen: 0, mistral: 0, meta: 0, xai: 0, zhipu: 0, other: 0
+    };
+
+    const searchStr = modelSearchQuery.toLowerCase();
+    
+    cachedModels
+      .filter(m => (m.id + (m.name || '')).toLowerCase().includes(searchStr))
+      .forEach(m => {
+        counts.all++;
+        const detectedProv = getProviderType(m);
+        if (counts[detectedProv] !== undefined) {
+          counts[detectedProv]++;
+        } else {
+          counts.other++;
+        }
+      });
+
+    return counts;
+  }, [cachedModels, modelSearchQuery]);
+
   const customConfig = tempSettings.providers.custom;
   const profiles = customConfig.profiles || [];
   const activeProfileId = customConfig.activeProfileId || profiles[0]?.id;
@@ -89,6 +451,43 @@ export const CustomProviderCards: React.FC<CustomProviderCardsProps> = ({
     });
   };
 
+  const handleDuplicateProfile = (profile: CustomProfile, e: React.MouseEvent) => {
+    e.stopPropagation();
+    
+    const newId = 'profile-' + Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
+    let baseName = profile.name || 'پروفایل';
+    let newName = '';
+    
+    const copyMatch = baseName.match(/(.*?) \(کپی(?: (\d+))?\)$/);
+    if (copyMatch) {
+      baseName = copyMatch[1];
+      const count = copyMatch[2] ? parseInt(copyMatch[2], 10) + 1 : 2;
+      newName = `${baseName} (کپی ${count})`;
+    } else {
+      newName = `${baseName} (کپی)`;
+    }
+
+    const newProfile: CustomProfile = {
+      ...profile,
+      id: newId,
+      name: newName,
+    };
+    
+    setTempSettings({
+      ...tempSettings,
+      providers: {
+        ...tempSettings.providers,
+        custom: {
+          ...customConfig,
+          profiles: [...profiles, newProfile],
+          activeProfileId: activeProfileId
+        }
+      }
+    });
+    
+    setEditingProfileId(newId);
+  };
+
   const handleSelectActive = (id: string) => {
     const p = profiles.find(x => x.id === id);
     if (!p) return;
@@ -110,6 +509,80 @@ export const CustomProviderCards: React.FC<CustomProviderCardsProps> = ({
 
   const editingProfile = profiles.find(p => p.id === editingProfileId);
 
+  const handleExportModels = () => {
+    if (cachedModels.length === 0) return;
+    const textContent = cachedModels.map((m, i) => {
+      const meta = getModelDetails(m);
+      return `${i + 1}. ${m.name || m.id}\n   شناسه: ${m.id}\n   سازنده: ${meta.providerLabel}\n   قابلیت‌ها: ${meta.tags.map(t => t.label).join('، ')}\n   رایگان: ${meta.isFree ? 'بله' : 'خیر'}\n   توضیح: ${meta.description}`;
+    }).join('\n\n----------------------------------------\n\n');
+
+    const blob = new Blob([textContent], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `ai-models-list-${new Date().toISOString().split('T')[0]}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const filteredModelsList = useMemo(() => {
+    let list = cachedModels.filter(m => {
+      const meta = getModelDetails(m);
+
+      // 1. Search query
+      if (modelSearchQuery.trim()) {
+        const q = modelSearchQuery.toLowerCase().trim();
+        const matchesId = (m.id || '').toLowerCase().includes(q);
+        const matchesName = (m.name || '').toLowerCase().includes(q);
+        const matchesProv = meta.providerLabel.toLowerCase().includes(q);
+        const matchesDesc = meta.description.toLowerCase().includes(q);
+        if (!matchesId && !matchesName && !matchesProv && !matchesDesc) return false;
+      }
+
+      // 2. Provider dropdown
+      if (filterProvider !== 'all') {
+        const detectedProv = getProviderType(m);
+        if (filterProvider === 'other') {
+          const mainProvs = ['anthropic', 'openai', 'deepseek', 'google', 'qwen', 'mistral', 'meta', 'xai', 'zhipu'];
+          if (mainProvs.includes(detectedProv)) return false;
+        } else if (detectedProv !== filterProvider) {
+          return false;
+        }
+      }
+
+      // 3. Category Tag (Multi-Capability Non-exclusive)
+      if (activeTag === 'free') {
+        if (!meta.isFree) return false;
+      } else if (activeTag === 'coding') {
+        if (!meta.isCoding) return false;
+      } else if (activeTag === 'vision') {
+        if (!meta.isVision) return false;
+      } else if (activeTag === 'reasoning') {
+        if (!meta.isReasoning) return false;
+      } else if (activeTag === 'fast') {
+        if (!meta.isFast) return false;
+      }
+
+      return true;
+    });
+
+    // Stable Sort: Recommended first, then Free first, then Alphabetical
+    return list.sort((a, b) => {
+      const metaA = getModelDetails(a);
+      const metaB = getModelDetails(b);
+
+      if (metaA.isRecommended && !metaB.isRecommended) return -1;
+      if (!metaA.isRecommended && metaB.isRecommended) return 1;
+
+      if (metaA.isFree && !metaB.isFree) return -1;
+      if (!metaA.isFree && metaB.isFree) return 1;
+
+      const nameA = a.name || a.id || '';
+      const nameB = b.name || b.id || '';
+      return nameA.localeCompare(nameB, undefined, { sensitivity: 'base' });
+    });
+  }, [cachedModels, modelSearchQuery, filterProvider, activeTag]);
+
   return (
     <div className="space-y-4 w-full">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -121,39 +594,49 @@ export const CustomProviderCards: React.FC<CustomProviderCardsProps> = ({
               onClick={() => handleSelectActive(profile.id)}
               className={`relative cursor-pointer rounded-2xl p-4 border transition-all duration-200 overflow-hidden group ${
                 isActive 
-                  ? 'bg-zinc-800/60 border-zinc-500 shadow-md' 
-                  : 'bg-zinc-950/50 border-zinc-800 hover:border-zinc-700'
+                  ? 'bg-white dark:bg-zinc-800/60 border-zinc-500 shadow-md' 
+                  : 'bg-zinc-50 dark:bg-zinc-950/50 border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:border-zinc-700'
               }`}
             >
-              {isActive && (
-                <div className="absolute top-4 left-4 w-2 h-2 bg-zinc-300 rounded-full shadow-[0_0_8px_rgba(255,255,255,0.8)]" />
-              )}
-              
               <div className="flex justify-between items-start mb-2">
-                <h5 className="font-bold text-zinc-100 text-sm truncate pr-1 pl-6">{profile.name}</h5>
-                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="flex items-center gap-2 max-w-[70%]">
+                  <h5 className="font-bold text-zinc-900 dark:text-zinc-100 text-sm truncate pr-1">{profile.name}</h5>
+                  {isActive && (
+                    <div className="w-2 h-2 shrink-0 bg-zinc-300 rounded-full shadow-[0_0_8px_rgba(255,255,255,0.8)]" title="پروفایل فعال" />
+                  )}
+                </div>
+                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
                   <button 
                     onClick={(e) => { e.stopPropagation(); setEditingProfileId(profile.id); }}
-                    className="p-1.5 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-700 rounded-md transition-colors"
+                    className="p-1.5 text-zinc-700 dark:text-zinc-400 hover:text-zinc-900 dark:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-700 rounded-md transition-colors"
+                    title="ویرایش"
                   >
-                    <Edit2 className="w-3.5 h-3.5" />
+                    <PenOutlineIcon className="w-3.5 h-3.5" />
+                  </button>
+                  <button 
+                    onClick={(e) => handleDuplicateProfile(profile, e)}
+                    className="p-1.5 text-zinc-700 dark:text-zinc-400 hover:text-zinc-900 dark:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-700 rounded-md transition-colors"
+                    title="کپی گرفتن"
+                  >
+                    <CopyOutlineIcon className="w-3.5 h-3.5" />
                   </button>
                   <button 
                     onClick={(e) => handleDeleteProfile(profile.id, e)}
-                    className="p-1.5 text-zinc-400 hover:text-red-400 hover:bg-red-500/10 rounded-md transition-colors"
+                    className="p-1.5 text-zinc-700 dark:text-zinc-400 hover:text-red-400 hover:bg-red-500/10 rounded-md transition-colors"
+                    title="حذف"
                   >
-                    <Trash2 className="w-3.5 h-3.5" />
+                    <TrashBinMinimalisticOutlineIcon className="w-3.5 h-3.5" />
                   </button>
                 </div>
               </div>
               
               <div className="space-y-1.5 mt-3">
-                <div className="flex items-center gap-2 text-xs text-zinc-400 font-mono truncate">
-                  <Activity className="w-3.5 h-3.5 shrink-0" />
-                  <span className="truncate bg-zinc-900 px-1.5 py-0.5 rounded text-[11px]">{profile.modelName || 'بدون مدل'}</span>
+                <div className="flex items-center gap-2 text-xs text-zinc-700 dark:text-zinc-400 font-mono truncate">
+                  <ChartOutlineIcon className="w-3.5 h-3.5 shrink-0" />
+                  <span className="truncate bg-zinc-50 dark:bg-zinc-900 px-1.5 py-0.5 rounded text-[11px]">{profile.modelName || 'بدون مدل'}</span>
                 </div>
-                <div className="flex items-center gap-2 text-xs text-zinc-500 font-mono truncate">
-                  <LinkIcon className="w-3.5 h-3.5 shrink-0" />
+                <div className="flex items-center gap-2 text-xs text-zinc-700 dark:text-zinc-500 font-mono truncate">
+                  <LinkOutlineIcon className="w-3.5 h-3.5 shrink-0" />
                   <span className="truncate" dir="ltr">{profile.baseUrl ? profile.baseUrl.replace(/^https?:\/\//, '') : 'بدون آدرس'}</span>
                 </div>
               </div>
@@ -163,66 +646,66 @@ export const CustomProviderCards: React.FC<CustomProviderCardsProps> = ({
         
         <div 
           onClick={handleCreateNew}
-          className="cursor-pointer rounded-2xl p-4 border border-dashed border-zinc-800 hover:border-zinc-600 bg-zinc-950/30 hover:bg-zinc-900/50 transition-all duration-200 flex flex-col items-center justify-center min-h-[110px] text-zinc-500 hover:text-zinc-300"
+          className="cursor-pointer rounded-2xl p-4 border border-dashed border-zinc-200 dark:border-zinc-800 hover:border-zinc-600 bg-zinc-50 dark:bg-zinc-950/30 hover:bg-zinc-50 dark:bg-zinc-900/50 transition-all duration-200 flex flex-col items-center justify-center min-h-[110px] text-zinc-700 dark:text-zinc-500 hover:text-zinc-700 dark:text-zinc-300"
         >
-          <Plus className="w-6 h-6 mb-2" />
+          <AddOutlineIcon className="w-6 h-6 mb-2" />
           <span className="text-sm font-medium">افزودن ارائه‌دهنده</span>
         </div>
       </div>
 
       {editingProfile && (
-        <div className="mt-4 p-5 rounded-2xl bg-zinc-950 border border-zinc-800 animate-fadeIn">
-          <div className="flex justify-between items-center mb-4 pb-3 border-b border-zinc-800/50">
-            <h5 className="font-bold text-sm text-zinc-100 flex items-center gap-2">
-              <Edit2 className="w-4 h-4" /> ویرایش پروفایل
+        <div className="mt-4 p-5 rounded-2xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 animate-fadeIn">
+          <div className="flex justify-between items-center mb-4 pb-3 border-b border-zinc-200 dark:border-zinc-800/50">
+            <h5 className="font-bold text-sm text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
+              <PenOutlineIcon className="w-4 h-4" /> ویرایش پروفایل
             </h5>
-            <button onClick={() => setEditingProfileId(null)} className="text-xs text-zinc-400 hover:text-zinc-200 px-2 py-1 rounded bg-zinc-900">بستن</button>
+            <button onClick={() => setEditingProfileId(null)} className="text-xs text-zinc-700 dark:text-zinc-400 hover:text-zinc-800 dark:text-zinc-200 px-2 py-1 rounded bg-zinc-50 dark:bg-zinc-900">بستن</button>
           </div>
           
           <div className="space-y-4">
             <div>
-              <label className="block text-xs font-medium text-zinc-400 mb-1">نام پروفایل</label>
+              <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-400 mb-1">نام پروفایل</label>
               <input 
                 type="text" 
                 value={editingProfile.name} 
                 onChange={(e) => handleUpdateProfile(editingProfile.id, { name: e.target.value })} 
-                className="w-full bg-zinc-900 border border-zinc-800 rounded-xl py-2 px-3 text-sm focus:border-zinc-500 outline-none transition-all" 
-                placeholder="مثال: سرور شخصی" 
+                className="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl py-2 px-3 text-sm focus:border-zinc-500 outline-none transition-all" 
+                placeholder="مثال: کلود / اوپن‌ای‌آی سازمانی" 
               />
             </div>
             
             <div>
-              <label className="block text-xs font-medium text-zinc-400 mb-1">آدرس پایه (Base URL)</label>
+              <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-400 mb-1">آدرس پایه (Base URL)</label>
               <div className="relative">
-                <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-zinc-500"><LinkIcon className="w-4 h-4" /></div>
+                <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-zinc-700 dark:text-zinc-500"><LinkOutlineIcon className="w-4 h-4" /></div>
                 <input 
                   type="text" 
                   dir="ltr" 
                   value={editingProfile.baseUrl} 
                   onChange={(e) => handleUpdateProfile(editingProfile.id, { baseUrl: e.target.value })} 
-                  className="w-full bg-zinc-900 border border-zinc-800 rounded-xl py-2 pr-9 pl-3 text-sm focus:border-zinc-500 outline-none transition-all font-mono" 
-                  placeholder="https://api.openai.com/v1" 
+                  className="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl py-2 pr-9 pl-3 text-sm focus:border-zinc-500 outline-none transition-all font-mono" 
+                  placeholder="https://api.openai.com/v1 یا https://openrouter.ai/api/v1" 
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-zinc-400 mb-1">کلید دسترسی (API Key)</label>
+              <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-400 mb-1">کلید دسترسی (API Key)</label>
               <div className="relative">
-                <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-zinc-500"><Key className="w-4 h-4" /></div>
+                <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-zinc-700 dark:text-zinc-500"><KeyMinimalisticOutlineIcon className="w-4 h-4" /></div>
                 <input 
                   type="password" 
                   dir="ltr" 
                   value={editingProfile.apiKey} 
                   onChange={(e) => handleUpdateProfile(editingProfile.id, { apiKey: e.target.value })} 
-                  className="w-full bg-zinc-900 border border-zinc-800 rounded-xl py-2 pr-9 pl-3 text-sm focus:border-zinc-500 outline-none transition-all font-mono" 
+                  className="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl py-2 pr-9 pl-3 text-sm focus:border-zinc-500 outline-none transition-all font-mono" 
                   placeholder="sk-..." 
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-zinc-400 mb-1">مدل انتخابی (Model)</label>
+              <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-400 mb-1">مدل انتخابی (Model)</label>
               <div className="flex gap-2">
                 <div className="relative flex-1">
                   <input 
@@ -230,8 +713,8 @@ export const CustomProviderCards: React.FC<CustomProviderCardsProps> = ({
                     dir="ltr"
                     value={editingProfile.modelName} 
                     onChange={(e) => handleUpdateProfile(editingProfile.id, { modelName: e.target.value })} 
-                    className="w-full bg-zinc-900 border border-zinc-800 rounded-xl py-2 px-3 text-sm focus:border-zinc-500 outline-none transition-all font-mono" 
-                    placeholder="e.g. anthropic/claude-3-opus"
+                    className="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl py-2 px-3 text-sm focus:border-zinc-500 outline-none transition-all font-mono" 
+                    placeholder="e.g. anthropic/claude-sonnet-5 or openai/gpt-4o"
                   />
                 </div>
                 <button 
@@ -242,44 +725,258 @@ export const CustomProviderCards: React.FC<CustomProviderCardsProps> = ({
                     setShowFetchedList(true);
                   }} 
                   disabled={fetchingModels} 
-                  className="px-3 rounded-xl border border-zinc-700 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 transition-colors flex items-center justify-center shrink-0 min-w-[40px]" 
-                  title="دریافت لیست مدل‌ها (متنی)"
+                  className="px-3 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 transition-colors flex items-center justify-center shrink-0 min-w-[40px]" 
+                  title="دریافت لیست هوشمند مدل‌ها از سرور"
                 >
-                  {fetchingModels ? <div className="w-4 h-4 border-2 border-zinc-500 border-t-zinc-200 rounded-full animate-spin" /> : <RefreshCcw className="w-4 h-4" />}
+                  {fetchingModels ? <div className="w-4 h-4 border-2 border-zinc-500 border-t-zinc-200 rounded-full animate-spin" /> : <RefreshOutlineIcon className="w-4 h-4" />}
                 </button>
               </div>
             </div>
 
-            {/* Read-only Text Area for Fetched Models (Collapsible) */}
+            {/* Fetched Models List (Collapsible with Search) */}
             {showFetchedList && (
-              <div className="animate-fadeIn bg-zinc-900/50 border border-zinc-800/50 rounded-xl p-3">
+              <div className="animate-fadeIn bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800/50 rounded-xl p-3">
                 <details className="group" open>
-                  <summary className="flex items-center justify-between text-xs font-medium text-indigo-400 cursor-pointer select-none outline-none">
+                  <summary className="flex items-center justify-between text-xs font-medium text-indigo-400 cursor-pointer select-none outline-none mb-2">
                     <span className="flex items-center gap-2">
-                      <RefreshCcw className="w-3.5 h-3.5" /> لیست مدل‌های دریافت‌شده
+                      <RefreshOutlineIcon className="w-3.5 h-3.5" /> لیست مدل‌های دریافت‌شده ({cachedModels.length})
                     </span>
-                    <span className="text-zinc-500 group-open:rotate-180 transition-transform">▼</span>
+                    <div className="flex items-center gap-3">
+                      <button 
+                        type="button" 
+                        onClick={(e) => { e.preventDefault(); handleExportModels(); }}
+                        disabled={cachedModels.length === 0}
+                        className="flex items-center gap-1.5 px-2 py-1 rounded bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        title="خروجی گرفتن از کل لیست به صورت فایل متنی با مشخصات کامل"
+                      >
+                        <DownloadOutlineIcon className="w-3 h-3" /> <span className="text-[10px]">خروجی لیست</span>
+                      </button>
+                      <span className="text-zinc-700 dark:text-zinc-500 group-open:rotate-180 transition-transform">▼</span>
+                    </div>
                   </summary>
-                  <div className="pt-3 mt-3 border-t border-zinc-800/50">
-                    <textarea 
-                      readOnly
-                      dir="ltr"
-                      className={`w-full bg-zinc-950 border ${fetchError ? 'border-red-900/50 text-red-400' : 'border-zinc-800 text-zinc-300'} rounded-lg py-2 px-3 text-xs outline-none font-mono h-40 resize-y`}
-                      value={fetchingModels ? 'در حال دریافت اطلاعات از سرور...' : (cachedModels.length > 0 ? cachedModels.map((m, i) => `${i + 1}. ${m.name}\n   ID: ${m.id}`).join('\n\n') : (fetchError || 'هیچ مدلی یافت نشد. لطفاً آدرس و کلید API را بررسی کنید.'))}
-                    />
-                    <div className="text-[10px] text-zinc-500 mt-2">آیدی مدل مورد نظر را از کادر بالا کپی کرده و در فیلد مدل بنویسید.</div>
+                  <div className="pt-2 border-t border-zinc-200 dark:border-zinc-800/50">
+                    <div className="flex gap-2 mb-2 mt-1">
+                      <div className="relative flex-1">
+                        <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-zinc-700 dark:text-zinc-500">
+                          <MagnifierOutlineIcon className="w-3.5 h-3.5" />
+                        </div>
+                        <input
+                          type="text"
+                          placeholder="جستجوی مدل (نام، قابلیت، سازنده، کاربرد)..."
+                          value={modelSearchQuery}
+                          onChange={(e) => setModelSearchQuery(e.target.value)}
+                          className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg py-1.5 pr-9 pl-3 text-xs focus:border-indigo-500/50 outline-none transition-all text-zinc-700 dark:text-zinc-300"
+                        />
+                      </div>
+                      
+                      <select
+                        value={filterProvider}
+                        onChange={(e) => setFilterProvider(e.target.value)}
+                        className="bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg py-1.5 px-2 text-xs focus:border-indigo-500/50 outline-none transition-all text-zinc-700 dark:text-zinc-400"
+                        dir="rtl"
+                      >
+                        {PROVIDER_CATEGORIES.map(cat => (
+                          <option key={cat.id} value={cat.id}>{cat.label} ({providerCounts[cat.id] || 0})</option>
+                        ))}
+                      </select>
+                    </div>
+                    
+                    {/* Multi-Capability Interactive Filter Tags */}
+                    {cachedModels.length > 0 && (
+                      <div className="flex flex-wrap items-center gap-1.5 mb-3" dir="rtl">
+                        <button 
+                          type="button"
+                          onClick={() => setActiveTag('all')}
+                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-medium cursor-pointer transition-colors border select-none ${
+                            activeTag === 'all' 
+                              ? 'bg-zinc-700 text-zinc-900 dark:text-zinc-100 border-zinc-500 shadow-sm' 
+                              : 'bg-zinc-50 dark:bg-zinc-900 text-zinc-700 dark:text-zinc-400 border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:border-zinc-700'
+                          }`}
+                        >
+                          <LayersOutlineIcon className="w-3.5 h-3.5" /> همه مدل‌ها ({tagCounts.all})
+                        </button>
+                        <button 
+                          type="button"
+                          onClick={() => setActiveTag(activeTag === 'coding' ? 'all' : 'coding')}
+                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-medium cursor-pointer transition-colors border select-none ${
+                            activeTag === 'coding' 
+                              ? 'bg-cyan-500/25 text-cyan-300 border-cyan-500/40 shadow-sm' 
+                              : 'bg-zinc-50 dark:bg-zinc-900 text-zinc-700 dark:text-zinc-400 border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:border-zinc-700'
+                          }`}
+                        >
+                          <CodeOutlineIcon className="w-3.5 h-3.5" /> برنامه‌نویسی ({tagCounts.coding})
+                        </button>
+                        <button 
+                          type="button"
+                          onClick={() => setActiveTag(activeTag === 'vision' ? 'all' : 'vision')}
+                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-medium cursor-pointer transition-colors border select-none ${
+                            activeTag === 'vision' 
+                              ? 'bg-amber-500/25 text-amber-300 border-amber-500/40 shadow-sm' 
+                              : 'bg-zinc-50 dark:bg-zinc-900 text-zinc-700 dark:text-zinc-400 border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:border-zinc-700'
+                          }`}
+                        >
+                          <EyeOutlineIcon className="w-3.5 h-3.5" /> دیداری و تصویر ({tagCounts.vision})
+                        </button>
+                        <button 
+                          type="button"
+                          onClick={() => setActiveTag(activeTag === 'reasoning' ? 'all' : 'reasoning')}
+                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-medium cursor-pointer transition-colors border select-none ${
+                            activeTag === 'reasoning' 
+                              ? 'bg-purple-500/25 text-purple-300 border-purple-500/40 shadow-sm' 
+                              : 'bg-zinc-50 dark:bg-zinc-900 text-zinc-700 dark:text-zinc-400 border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:border-zinc-700'
+                          }`}
+                        >
+                          <BrainOutlineIcon className="w-3.5 h-3.5" /> استدلال و تفکر ({tagCounts.reasoning})
+                        </button>
+                        <button 
+                          type="button"
+                          onClick={() => setActiveTag(activeTag === 'fast' ? 'all' : 'fast')}
+                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-medium cursor-pointer transition-colors border select-none ${
+                            activeTag === 'fast' 
+                              ? 'bg-emerald-500/25 text-emerald-300 border-emerald-500/40 shadow-sm' 
+                              : 'bg-zinc-50 dark:bg-zinc-900 text-zinc-700 dark:text-zinc-400 border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:border-zinc-700'
+                          }`}
+                        >
+                          <BoltOutlineIcon className="w-3.5 h-3.5" /> سریع و سبک ({tagCounts.fast})
+                        </button>
+                        <button 
+                          type="button"
+                          onClick={() => setActiveTag(activeTag === 'free' ? 'all' : 'free')}
+                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-medium cursor-pointer transition-colors border select-none ${
+                            activeTag === 'free' 
+                              ? 'bg-emerald-500/25 text-emerald-300 border-emerald-500/40 shadow-sm' 
+                              : 'bg-zinc-50 dark:bg-zinc-900 text-zinc-700 dark:text-zinc-400 border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:border-zinc-700'
+                          }`}
+                        >
+                          <StarsOutlineIcon className="w-3.5 h-3.5" /> رایگان ({tagCounts.free})
+                        </button>
+                      </div>
+                    )}
+
+                    <div className="max-h-64 overflow-y-auto pr-1 space-y-1.5 custom-scrollbar" dir="rtl">
+                      {fetchingModels ? (
+                        <div className="text-xs text-zinc-700 dark:text-zinc-400 text-center py-6">در حال دریافت و تحلیل هوشمند مدل‌ها از سرور...</div>
+                      ) : (
+                        <>
+                          {fetchError && (
+                            <div className="text-xs text-red-400 text-center py-4 mb-2 bg-red-500/10 border border-red-500/20 rounded-xl">{fetchError}</div>
+                          )}
+                          {cachedModels.length === 0 && !fetchError ? (
+                            <div className="text-xs text-zinc-700 dark:text-zinc-400 text-center py-6">هیچ مدلی یافت نشد. دکمه بروزرسانی را بزنید.</div>
+                          ) : filteredModelsList.length === 0 && cachedModels.length > 0 ? (
+                            <div className="text-xs text-zinc-700 dark:text-zinc-500 text-center py-6">هیچ مدلی با فیلترها یا عبارت جستجوی فعلی یافت نشد.</div>
+                          ) : (
+                            filteredModelsList.map((m) => {
+                              const meta = getModelDetails(m);
+                          const isSelected = editingProfile.modelName === m.id;
+
+                          return (
+                            <div 
+                              key={m.id}
+                              onClick={() => handleUpdateProfile(editingProfile.id, { modelName: m.id })}
+                              className={`p-2.5 rounded-xl border transition-all cursor-pointer flex flex-col gap-1.5 ${
+                                isSelected 
+                                  ? 'border-indigo-500 bg-indigo-500/10 shadow-sm ring-1 ring-indigo-500/50' 
+                                  : 'border-zinc-200 dark:border-zinc-800/60 bg-zinc-50 dark:bg-zinc-950/70 hover:border-zinc-300 dark:border-zinc-700 hover:bg-zinc-50 dark:bg-zinc-900/60'
+                              }`}
+                            >
+                              {/* Top Row: Name + Star + Badges */}
+                              <div className="flex items-center justify-between gap-2">
+                                <div className="flex items-center gap-2 truncate">
+                                  <span className="text-xs text-zinc-900 dark:text-zinc-100 font-bold truncate">
+                                    {m.name || m.id}
+                                  </span>
+                                  {meta.isRecommended && (
+                                    <span className="flex items-center gap-1 bg-amber-500/15 text-amber-400 border border-amber-500/30 text-[9px] px-1.5 py-0.5 rounded font-medium shrink-0">
+                                      <StarOutlineIcon className="w-2.5 h-2.5 fill-amber-400" /> پیشنهادی
+                                    </span>
+                                  )}
+                                  {meta.contextFormatted && (
+                                    <span className="bg-indigo-500/10 text-indigo-300 border border-indigo-500/25 text-[9px] px-1.5 py-0.5 rounded font-mono shrink-0">
+                                      {meta.contextFormatted}
+                                    </span>
+                                  )}
+                                </div>
+                                
+                                {/* Capability Badges (Multi-tag) */}
+                                <div className="flex items-center gap-1 shrink-0 flex-wrap justify-end">
+                                  {meta.isFree && (
+                                    <span className="flex items-center gap-1 bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 text-[9px] px-1.5 py-0.5 rounded font-medium">
+                                      <StarsOutlineIcon className="w-2.5 h-2.5" /> رایگان
+                                    </span>
+                                  )}
+                                  {meta.tags.map((t, idx) => {
+                                    if (t.type === 'coding') {
+                                      return (
+                                        <span key={idx} className="flex items-center gap-1 bg-cyan-500/15 text-cyan-400 border border-cyan-500/30 text-[9px] px-1.5 py-0.5 rounded font-medium">
+                                          <CodeOutlineIcon className="w-2.5 h-2.5" /> {t.label}
+                                        </span>
+                                      );
+                                    }
+                                    if (t.type === 'reasoning') {
+                                      return (
+                                        <span key={idx} className="flex items-center gap-1 bg-purple-500/15 text-purple-400 border border-purple-500/30 text-[9px] px-1.5 py-0.5 rounded font-medium">
+                                          <BrainOutlineIcon className="w-2.5 h-2.5" /> {t.label}
+                                        </span>
+                                      );
+                                    }
+                                    if (t.type === 'vision') {
+                                      return (
+                                        <span key={idx} className="flex items-center gap-1 bg-amber-500/15 text-amber-400 border border-amber-500/30 text-[9px] px-1.5 py-0.5 rounded font-medium">
+                                          <EyeOutlineIcon className="w-2.5 h-2.5" /> {t.label}
+                                        </span>
+                                      );
+                                    }
+                                    if (t.type === 'fast') {
+                                      return (
+                                        <span key={idx} className="flex items-center gap-1 bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 text-[9px] px-1.5 py-0.5 rounded font-medium">
+                                          <BoltOutlineIcon className="w-2.5 h-2.5" /> {t.label}
+                                        </span>
+                                      );
+                                    }
+                                    if (t.type === 'creative') {
+                                      return (
+                                        <span key={idx} className="flex items-center gap-1 bg-rose-500/15 text-rose-400 border border-rose-500/30 text-[9px] px-1.5 py-0.5 rounded font-medium">
+                                          <StarsOutlineIcon className="w-2.5 h-2.5" /> {t.label}
+                                        </span>
+                                      );
+                                    }
+                                    return (
+                                      <span key={idx} className="flex items-center gap-1 bg-blue-500/10 text-blue-400 border border-blue-500/20 text-[9px] px-1.5 py-0.5 rounded font-medium">
+                                        <DocumentTextOutlineIcon className="w-2.5 h-2.5" /> {t.label}
+                                      </span>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+
+                              {/* Bottom Row: Description + Technical ID */}
+                              <div className="flex items-center justify-between text-[11px] text-zinc-700 dark:text-zinc-400 pt-0.5">
+                                <span className="text-zinc-700 dark:text-zinc-400 truncate text-[11px] leading-relaxed">{meta.description}</span>
+                                <span className="font-mono text-[10px] text-zinc-700 dark:text-zinc-500 truncate mr-2 bg-zinc-50 dark:bg-zinc-900 px-1.5 py-0.5 rounded border border-zinc-200 dark:border-zinc-800/60 shrink-0" dir="ltr">
+                                  {m.id}
+                                </span>
+                              </div>
+                            </div>
+                          );
+                        })
+                      )}
+                        </>
+                      )}
+                    </div>
+                    <div className="text-[10px] text-zinc-700 dark:text-zinc-500 mt-2.5 text-center">برای انتخاب مدل روی آن کلیک کنید.</div>
                   </div>
                 </details>
               </div>
             )}
 
             <div>
-              <label className="block text-xs font-medium text-zinc-400 mb-1">هدرهای سفارشی (JSON)</label>
+              <label className="block text-xs font-medium text-zinc-700 dark:text-zinc-400 mb-1">هدرهای سفارشی (JSON)</label>
               <textarea 
                 dir="ltr" 
                 value={editingProfile.customHeaders} 
                 onChange={(e) => handleUpdateProfile(editingProfile.id, { customHeaders: e.target.value })} 
-                className="w-full bg-zinc-900 border border-zinc-800 rounded-xl py-2 px-3 text-sm focus:border-zinc-500 outline-none transition-all font-mono h-20 resize-none" 
+                className="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl py-2 px-3 text-sm focus:border-zinc-500 outline-none transition-all font-mono h-20 resize-none" 
                 placeholder='{"HTTP-Referer": "https://myapp.com"}' 
               />
             </div>
@@ -299,3 +996,4 @@ export const CustomProviderCards: React.FC<CustomProviderCardsProps> = ({
     </div>
   );
 };
+

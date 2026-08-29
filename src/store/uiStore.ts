@@ -6,6 +6,7 @@ interface UIState {
   isExportOpen: boolean;
   isImageStudioOpen: boolean;
   isUiGuideOpen: boolean;
+  isExploreOpen: boolean;
   videoNotice: string | null;
   metricsNotice: string | null;
   imageStudioInitial: { prompt: string; engine: string } | null;
@@ -16,6 +17,7 @@ interface UIState {
   setIsExportOpen: (open: boolean) => void;
   setIsImageStudioOpen: (open: boolean) => void;
   setIsUiGuideOpen: (open: boolean) => void;
+  setIsExploreOpen: (open: boolean) => void;
   setVideoNotice: (notice: string | null) => void;
   setMetricsNotice: (notice: string | null) => void;
   setImageStudioInitial: (initial: { prompt: string; engine: string } | null) => void;
@@ -27,6 +29,7 @@ export const useUIStore = create<UIState>((set) => ({
   isExportOpen: false,
   isImageStudioOpen: false,
   isUiGuideOpen: false,
+  isExploreOpen: false,
   videoNotice: null,
   metricsNotice: null,
   imageStudioInitial: null,
@@ -37,6 +40,7 @@ export const useUIStore = create<UIState>((set) => ({
   setIsExportOpen: (open) => set({ isExportOpen: open }),
   setIsImageStudioOpen: (open) => set({ isImageStudioOpen: open }),
   setIsUiGuideOpen: (open) => set({ isUiGuideOpen: open }),
+  setIsExploreOpen: (open) => set({ isExploreOpen: open }),
   setVideoNotice: (notice) => set({ videoNotice: notice }),
   setMetricsNotice: (notice) => set({ metricsNotice: notice }),
   setImageStudioInitial: (initial) => set({ imageStudioInitial: initial }),

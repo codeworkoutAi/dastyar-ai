@@ -10,7 +10,11 @@ router.post('/api/fetch-models', async (req, res) => {
     const { baseUrl, apiKey, customHeaders } = req.body;
     if (!baseUrl) return res.status(400).json({ error: 'Base URL is required' });
 
-    const headers: any = { 'Content-Type': 'application/json' };
+    const headers: any = { 
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+    };
     if (apiKey) headers['Authorization'] = `Bearer ${apiKey}`;
     if (customHeaders) {
       try {
@@ -27,6 +31,15 @@ router.post('/api/fetch-models', async (req, res) => {
     const response = await fetch(endpoint, { headers, signal: controller.signal });
     clearTimeout(timeoutId);
 
+    const contentType = response.headers.get('content-type') || '';
+    if (!contentType.includes('application/json')) {
+      const text = await response.text();
+      if (text.includes('<html') || text.includes('captcha')) {
+        throw new Error(`سرویس‌دهنده شما را بلاک کرده است (WAF/Captcha). لطفاً URL صحیح API را بررسی کنید.`);
+      }
+      throw new Error(`سرویس‌دهنده پاسخ نامعتبر (غیر JSON) ارسال کرد. URL را بررسی کنید.`);
+    }
+
     if (!response.ok) {
       let errText = response.statusText;
       try {
@@ -38,27 +51,144 @@ router.post('/api/fetch-models', async (req, res) => {
 
     const data = await response.json();
     let models = data.data ? data.data.map((m: any) => {
+      const idStr = String(m.id || '').toLowerCase();
+      const nameStr = String(m.name || '').toLowerCase();
+      const combined = `${idStr} ${nameStr}`;
+
       const isFree = 
-        m.id.endsWith(':free') || 
+        idStr.endsWith(':free') || 
+        idStr.includes('/free') ||
         (m.pricing && m.pricing.prompt === "0" && m.pricing.completion === "0") ||
-        (m.name && m.name.toLowerCase().includes('free'));
+        nameStr.includes('free') ||
+        combined.includes('رایگان');
         
+      let provider = 'سایر';
+      if (m.id && m.id.includes('/')) {
+        const p = m.id.split('/')[0];
+        provider = p.charAt(0).toUpperCase() + p.slice(1);
+      } else if (combined.includes('claude') || combined.includes('anthropic')) {
+        provider = 'Anthropic';
+      } else if (combined.includes('gpt') || combined.includes('openai') || combined.includes('o1') || combined.includes('o3') || combined.includes('o4')) {
+        provider = 'OpenAI';
+      } else if (combined.includes('gemini') || combined.includes('gemma') || combined.includes('google')) {
+        provider = 'Google';
+      } else if (combined.includes('deepseek')) {
+        provider = 'DeepSeek';
+      } else if (combined.includes('qwen') || combined.includes('qwq') || combined.includes('alibaba')) {
+        provider = 'Alibaba Qwen';
+      } else if (combined.includes('mistral') || combined.includes('codestral') || combined.includes('pixtral') || combined.includes('devstral')) {
+        provider = 'Mistral';
+      } else if (combined.includes('llama') || combined.includes('meta')) {
+        provider = 'Meta';
+      } else if (combined.includes('grok') || combined.includes('xai')) {
+        provider = 'xAI';
+      } else if (combined.includes('glm') || combined.includes('zhipu')) {
+        provider = 'Zhipu AI';
+      }
+
+      // Determine capabilities
+      const modalityStr = (m.architecture?.modality || '').toLowerCase();
+      const inputMods: string[] = Array.isArray(m.architecture?.input_modalities) ? m.architecture.input_modalities : [];
+
+      const isReasoning = Boolean(
+        combined.includes('deepseek-r1') ||
+        combined.includes('r1') ||
+        combined.includes('o1') ||
+        combined.includes('o3') ||
+        combined.includes('o4') ||
+        combined.includes('reasoner') ||
+        combined.includes('reasoning') ||
+        combined.includes('qwq') ||
+        combined.includes('thinking') ||
+        combined.includes('thought') ||
+        combined.includes('grok-3-think') ||
+        combined.includes('opus') ||
+        (m.supported_parameters && m.supported_parameters.includes('reasoning'))
+      );
+      
+      const isVision = Boolean(
+        inputMods.includes('image') ||
+        modalityStr.includes('image') || 
+        modalityStr.includes('multimodal') ||
+        combined.includes('vision') || 
+        combined.includes('-vl') || 
+        combined.includes('vl-') || 
+        combined.includes('pixtral') ||
+        combined.includes('llava') ||
+        combined.includes('internvl') ||
+        combined.includes('gpt-4o') ||
+        combined.includes('gpt-4-turbo') ||
+        combined.includes('gpt-4.5') ||
+        combined.includes('gpt-5') ||
+        combined.includes('claude') ||
+        combined.includes('gemini') ||
+        combined.includes('omni') ||
+        combined.includes('glm-4v')
+      );
+
+      const isCoding = Boolean(
+        combined.includes('coder') || 
+        combined.includes('code') || 
+        combined.includes('codestral') || 
+        combined.includes('devstral') ||
+        combined.includes('deepseek-coder') ||
+        combined.includes('qwen-coder') ||
+        combined.includes('starcoder') ||
+        combined.includes('dev') ||
+        combined.includes('sonnet') ||
+        combined.includes('opus') ||
+        combined.includes('claude') ||
+        combined.includes('gpt-4o') ||
+        combined.includes('gpt-4.5') ||
+        combined.includes('gpt-5') ||
+        combined.includes('o1') ||
+        combined.includes('o3') ||
+        combined.includes('o4') ||
+        combined.includes('deepseek-v3') ||
+        combined.includes('deepseek-chat') ||
+        combined.includes('deepseek-r1') ||
+        combined.includes('grok') ||
+        (m.benchmarks && m.benchmarks.artificial_analysis && m.benchmarks.artificial_analysis.coding_index > 50)
+      );
+
+      const isFast = Boolean(
+        combined.includes('haiku') ||
+        combined.includes('flash') ||
+        combined.includes('mini') ||
+        combined.includes('lite') ||
+        combined.includes('turbo') ||
+        combined.includes('8b') ||
+        combined.includes('7b') ||
+        combined.includes('3b') ||
+        combined.includes('1.5b') ||
+        combined.includes('small') ||
+        combined.includes('nemo')
+      );
+
+      const contextLength = m.context_length || m.top_provider?.context_length || null;
+
       return { 
         id: m.id, 
         name: isFree ? `🎁 ${m.name || m.id} [رایگان]` : (m.name || m.id),
-        isFree
+        isFree: Boolean(isFree),
+        provider,
+        isReasoning,
+        isVision,
+        isCoding,
+        isFast,
+        contextLength,
+        description: m.description || undefined
       };
     }) : [];
 
-    // Sort free models to the top
+    // Sort free models to the top, then alphabetically
     models.sort((a: any, b: any) => {
       if (a.isFree && !b.isFree) return -1;
       if (!a.isFree && b.isFree) return 1;
-      return a.name.localeCompare(b.name);
+      const strA = String(a.name || a.id || '');
+      const strB = String(b.name || b.id || '');
+      return strA.localeCompare(strB, undefined, { sensitivity: 'base' });
     });
-
-    // Remove the temporary isFree flag before sending to client
-    models = models.map(({ isFree, ...rest }: any) => rest);
 
     res.json({ models });
   } catch (err: any) {

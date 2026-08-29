@@ -16,11 +16,13 @@ interface ChatState {
   activeId: string | null;
   activeError: { message: string; timestamp: number } | null;
   isStreaming: boolean;
+  routingState: 'idle' | 'general' | 'vision' | 'coding';
   
   setConversations: (conversations: Conversation[]) => void;
   setActiveId: (id: string | null) => void;
   setActiveError: (error: { message: string; timestamp: number } | null) => void;
   setIsStreaming: (isStreaming: boolean) => void;
+  setRoutingState: (state: 'idle' | 'general' | 'vision' | 'coding') => void;
   
   addConversation: (conv: Conversation) => void;
   updateConversation: (id: string, updater: (conv: Conversation) => Conversation) => void;
@@ -41,6 +43,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
   activeId: loadActiveConversationId(),
   activeError: null,
   isStreaming: false,
+  routingState: 'idle',
 
   setConversations: (conversations) => {
     saveConversations(conversations);
@@ -54,6 +57,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
 
   setActiveError: (error) => set({ activeError: error }),
   setIsStreaming: (isStreaming) => set({ isStreaming }),
+  setRoutingState: (routingState) => set({ routingState }),
 
   addConversation: (conv) => {
     const newConvs = [conv, ...get().conversations];
@@ -92,7 +96,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
 
   createCodingChat: (modelName) => {
     const newConv = createNewConversation(modelName);
-    newConv.title = 'O_O3OUOO O O"OU+O U.U??OU+U^UOO3UO';
+    newConv.title = 'دستیار برنامه‌نویسی';
     const welcomeMsg: ChatMessage = {
       id: 'msg_code_' + Date.now(),
       role: 'assistant' as any,
@@ -111,7 +115,7 @@ stopGeneration: () => {
       abortController.abort();
       abortController = null;
     }
-    set({ isStreaming: false });
+    set({ isStreaming: false, routingState: 'idle' });
 
     // Turn off get().isStreaming on active message
     if (get().activeId) {
@@ -191,6 +195,7 @@ stopGeneration: () => {
 
       // Use enhanced smart routing with weighted intent detection
       const intent = detectSmartRoutingIntent(text, !!imageUrl);
+      get().setRoutingState(intent);
 
       // Helper to apply profile to provider config
       const applyProviderAndModel = (prov: string, modelOrProfileId: string) => {
@@ -222,6 +227,8 @@ stopGeneration: () => {
           const actualName = applyProviderAndModel(rDefaultProv, rDefault);
           finalModelUsed = actualName + ' (هوشمند)';
       }
+    } else {
+      get().setRoutingState('general');
     }
 
     const userMessage: ChatMessage = {
@@ -302,7 +309,7 @@ stopGeneration: () => {
             });
             return { ...c, messages: updatedMessages };
           }) });
-        set({ isStreaming: false });
+        set({ isStreaming: false, routingState: 'idle' });
         return;
       }
 
@@ -386,6 +393,17 @@ stopGeneration: () => {
                   firstTokenTime = performance.now();
                 }
                 accumulatedContent += data.chunk;
+
+                // Update UI incrementally
+                set({ conversations: get().conversations.map((c) => {
+                    if (c.id !== targetConv!.id) return c;
+                    const msgs = c.messages.map((m) =>
+                      m.id === assistantMessageId
+                        ? { ...m, content: accumulatedContent }
+                        : m
+                    );
+                    return { ...c, messages: msgs };
+                  }) });
               }
 
               if (data.usage) {
@@ -519,7 +537,7 @@ stopGeneration: () => {
           }) });
       }
     } finally {
-      set({ isStreaming: false });
+      set({ isStreaming: false, routingState: 'idle' });
       abortController = null;
     }
   },
@@ -589,3 +607,10 @@ stopGeneration: () => {
     }, 50);
   }
 }));
+
+// Global Subscriber: Automatically persist conversations to localStorage whenever they change
+useChatStore.subscribe((state, prevState) => {
+  if (prevState && state.conversations !== prevState.conversations) {
+    saveConversations(state.conversations);
+  }
+});

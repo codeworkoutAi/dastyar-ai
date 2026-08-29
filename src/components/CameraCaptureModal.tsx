@@ -354,7 +354,7 @@ export const CameraCaptureModal: React.FC<CameraCaptureModalProps> = ({
         className="relative w-full max-w-lg bg-[#1e1f20] border border-[#333333] rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[92dvh] sm:max-h-[88dvh] text-slate-100 mx-auto my-auto"
       >
         {/* Header */}
-        <div className="shrink-0 flex items-center justify-between px-4 sm:px-5 py-3 border-b border-white/10 bg-white/[0.02]">
+        <div className="shrink-0 flex items-center justify-between px-4 sm:px-5 py-3 border-b border-black/10 dark:border-white/10 bg-white/[0.02]">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-lg bg-sky-500/20 text-sky-400 flex items-center justify-center shrink-0">
               <Camera className="w-4 h-4" />
@@ -363,7 +363,7 @@ export const CameraCaptureModal: React.FC<CameraCaptureModalProps> = ({
               <h3 className="text-sm font-bold text-white flex items-center gap-2">
                 ثبت تصویر با دوربین
                 {actualResolution && !capturedImage && (
-                  <span className="text-[10px] font-normal px-2 py-0.5 rounded-full bg-white/10 text-sky-300 font-mono" dir="ltr">
+                  <span className="text-[10px] font-normal px-2 py-0.5 rounded-full bg-black/5 dark:bg-white/10 text-sky-300 font-mono" dir="ltr">
                     {actualResolution.width}×{actualResolution.height}
                   </span>
                 )}
@@ -380,7 +380,7 @@ export const CameraCaptureModal: React.FC<CameraCaptureModalProps> = ({
                 className={`px-2.5 py-1.5 rounded-lg text-xs flex items-center gap-1.5 transition-all cursor-pointer ${
                   isSettingsOpen
                     ? 'bg-sky-500/20 text-sky-400 border border-sky-500/30'
-                    : 'bg-white/5 text-slate-300 hover:text-white hover:bg-white/10 border border-white/10'
+                    : 'bg-black/5 dark:bg-white/5 text-slate-300 hover:text-white hover:bg-black/5 dark:hover:bg-white/10 border border-black/10 dark:border-white/10'
                 }`}
                 title="تنظیمات رزولوشن و کیفیت"
                 aria-label="تنظیمات رزولوشن"
@@ -392,7 +392,7 @@ export const CameraCaptureModal: React.FC<CameraCaptureModalProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-white hover:bg-white/10 transition-all cursor-pointer"
+              className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-white hover:bg-black/5 dark:hover:bg-white/10 transition-all cursor-pointer"
               aria-label="بستن"
             >
               <X className="w-5 h-5" />
@@ -402,7 +402,7 @@ export const CameraCaptureModal: React.FC<CameraCaptureModalProps> = ({
 
         {/* Quality & Resolution Selector Tray */}
         {isSettingsOpen && !capturedImage && (
-          <div className="shrink-0 p-3 bg-black/50 border-b border-white/10 text-xs animate-fadeIn">
+          <div className="shrink-0 p-3 bg-black/50 border-b border-black/10 dark:border-white/10 text-xs animate-fadeIn">
             <div className="flex items-center justify-between mb-2">
               <span className="text-slate-300 font-medium flex items-center gap-1.5">
                 <Sparkles className="w-3.5 h-3.5 text-sky-400" />
@@ -421,7 +421,7 @@ export const CameraCaptureModal: React.FC<CameraCaptureModalProps> = ({
                     className={`px-2.5 py-2 rounded-xl text-right transition-all flex flex-col gap-0.5 cursor-pointer border ${
                       isSelected
                         ? 'bg-sky-500/20 border-sky-500/50 text-white shadow-sm'
-                        : 'bg-[#2a2b2d] border-white/5 text-slate-300 hover:bg-white/10 hover:border-white/15'
+                        : 'bg-[#2a2b2d] border-black/5 dark:border-white/5 text-slate-300 hover:bg-black/5 dark:hover:bg-white/10 hover:border-white/15'
                     }`}
                   >
                     <span className={`font-bold text-[11px] ${isSelected ? 'text-sky-300' : 'text-slate-200'}`}>
@@ -437,13 +437,13 @@ export const CameraCaptureModal: React.FC<CameraCaptureModalProps> = ({
 
         {/* Device selector bar (if multiple cameras exist) */}
         {devices.length > 1 && !capturedImage && (
-          <div className="shrink-0 px-4 py-2 border-b border-white/5 bg-black/40 flex items-center gap-2 text-xs">
+          <div className="shrink-0 px-4 py-2 border-b border-black/5 dark:border-white/5 bg-black/40 flex items-center gap-2 text-xs">
             <Video className="w-3.5 h-3.5 text-sky-400 shrink-0" />
             <span className="text-slate-400 shrink-0">منبع تصویر:</span>
             <select
               value={selectedDeviceId}
               onChange={(e) => handleDeviceChange(e.target.value)}
-              className="w-full bg-[#2a2b2d] text-slate-200 border border-white/10 rounded-lg px-2.5 py-1 text-xs outline-none focus:border-sky-500 cursor-pointer"
+              className="w-full bg-[#2a2b2d] text-slate-200 border border-black/10 dark:border-white/10 rounded-lg px-2.5 py-1 text-xs outline-none focus:border-sky-500 cursor-pointer"
             >
               {devices.map((d) => (
                 <option key={d.deviceId} value={d.deviceId}>
@@ -473,7 +473,7 @@ export const CameraCaptureModal: React.FC<CameraCaptureModalProps> = ({
                 <button
                   type="button"
                   onClick={() => startCamera(facingMode, selectedDeviceId || undefined, resolutionPreset)}
-                  className="px-3.5 py-1.5 text-xs font-medium bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer"
+                  className="px-3.5 py-1.5 text-xs font-medium bg-black/5 dark:bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer"
                 >
                   <RefreshCw className="w-3.5 h-3.5" />
                   تلاش مجدد
@@ -538,12 +538,12 @@ export const CameraCaptureModal: React.FC<CameraCaptureModalProps> = ({
         />
 
         {/* Footer Actions */}
-        <div className="shrink-0 p-3 sm:p-4 border-t border-white/10 bg-[#1e1f20] flex items-center justify-between gap-2">
+        <div className="shrink-0 p-3 sm:p-4 border-t border-black/10 dark:border-white/10 bg-[#1e1f20] flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <button
               type="button"
               onClick={onClose}
-              className="px-3.5 py-2 rounded-xl text-xs font-medium text-slate-300 hover:text-white hover:bg-white/10 transition-all cursor-pointer"
+              className="px-3.5 py-2 rounded-xl text-xs font-medium text-slate-300 hover:text-white hover:bg-black/5 dark:hover:bg-white/10 transition-all cursor-pointer"
             >
               انصراف
             </button>
@@ -551,7 +551,7 @@ export const CameraCaptureModal: React.FC<CameraCaptureModalProps> = ({
               <button
                 type="button"
                 onClick={() => fileFallbackInputRef.current?.click()}
-                className="px-3 py-2 rounded-xl text-xs text-slate-400 hover:text-slate-200 hover:bg-white/5 transition-all flex items-center gap-1.5 cursor-pointer"
+                className="px-3 py-2 rounded-xl text-xs text-slate-400 hover:text-slate-200 hover:bg-black/5 dark:hover:bg-white/5 transition-all flex items-center gap-1.5 cursor-pointer"
                 title="بارگذاری مستقیم عکس"
               >
                 <ImageIcon className="w-3.5 h-3.5" />
@@ -565,7 +565,7 @@ export const CameraCaptureModal: React.FC<CameraCaptureModalProps> = ({
               <button
                 type="button"
                 onClick={handleRetake}
-                className="px-3.5 py-2 rounded-xl text-xs font-medium bg-white/10 hover:bg-white/20 text-slate-200 transition-all flex items-center gap-1.5 cursor-pointer"
+                className="px-3.5 py-2 rounded-xl text-xs font-medium bg-black/5 dark:bg-white/10 hover:bg-white/20 text-slate-200 transition-all flex items-center gap-1.5 cursor-pointer"
               >
                 <RefreshCw className="w-3.5 h-3.5" />
                 عکس مجدد

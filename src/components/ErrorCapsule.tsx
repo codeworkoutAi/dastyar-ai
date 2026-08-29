@@ -43,7 +43,7 @@ export const ErrorCapsule: React.FC = React.memo(() => {
       }`}
     >
       <div
-        className={`pointer-events-auto w-full max-w-sm sm:max-w-md relative overflow-hidden rounded-2xl bg-zinc-900/95 dark:bg-zinc-900/95 border border-zinc-700/80 text-zinc-100 shadow-2xl backdrop-blur-2xl p-4 sm:p-4.5 flex flex-col gap-3.5 transition-all duration-300 transform ${
+        className={`pointer-events-auto w-full max-w-sm sm:max-w-md relative overflow-hidden rounded-2xl bg-zinc-50 dark:bg-zinc-900/95 dark:bg-zinc-900/95 border border-zinc-300 dark:border-zinc-700/80 text-zinc-900 dark:text-zinc-100 shadow-2xl backdrop-blur-2xl p-4 sm:p-4.5 flex flex-col gap-3.5 transition-all duration-300 transform ${
           visible ? 'scale-100 translate-y-0' : 'scale-95 translate-y-2'
         }`}
       >
@@ -54,10 +54,10 @@ export const ErrorCapsule: React.FC = React.memo(() => {
               <AlertCircle className="w-4 h-4 text-rose-400" />
             </div>
             <div className="flex-1 min-w-0">
-              <h5 className="font-bold text-xs sm:text-[13px] text-zinc-100 mb-1 flex items-center gap-1.5">
+              <h5 className="font-bold text-xs sm:text-[13px] text-zinc-900 dark:text-zinc-100 mb-1 flex items-center gap-1.5">
                 <span>خطای برقراری ارتباط با مدل هوش مصنوعی</span>
               </h5>
-              <p className="text-[12px] sm:text-[12.5px] text-zinc-300 leading-relaxed break-words font-normal">
+              <p className="text-[12px] sm:text-[12.5px] text-zinc-700 dark:text-zinc-300 leading-relaxed break-words font-normal">
                 {error.message}
               </p>
             </div>
@@ -70,7 +70,7 @@ export const ErrorCapsule: React.FC = React.memo(() => {
               setVisible(false);
               setTimeout(onDismiss, 200);
             }}
-            className="text-zinc-400 hover:text-white hover:bg-zinc-800/80 p-1.5 rounded-xl transition-colors cursor-pointer shrink-0 -mt-0.5"
+            className="text-zinc-700 dark:text-zinc-400 hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-700/80 p-1.5 rounded-xl transition-colors cursor-pointer shrink-0 -mt-0.5"
             title="بستن پنجره"
           >
             <X className="w-4 h-4" />
@@ -78,8 +78,8 @@ export const ErrorCapsule: React.FC = React.memo(() => {
         </div>
 
         {/* Action Buttons Row */}
-        <div className="flex items-center justify-between gap-2 pt-2 border-t border-zinc-800 text-xs">
-          <span className="text-[11px] text-zinc-400 font-normal">
+        <div className="flex items-center justify-between gap-2 pt-2 border-t border-zinc-200 dark:border-zinc-800 text-xs">
+          <span className="text-[11px] text-zinc-700 dark:text-zinc-400 font-normal">
             ⏳ خودکار بسته می‌شود
           </span>
 
@@ -88,9 +88,9 @@ export const ErrorCapsule: React.FC = React.memo(() => {
               <button
                 type="button"
                 onClick={onOpenSettings}
-                className="bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs px-3 py-1.5 rounded-xl flex items-center gap-1.5 font-medium cursor-pointer transition-all border border-zinc-700 active:scale-95 shadow-xs"
+                className="bg-white dark:bg-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 text-xs px-3 py-1.5 rounded-xl flex items-center gap-1.5 font-medium cursor-pointer transition-all border border-zinc-300 dark:border-zinc-700 active:scale-95 shadow-xs"
               >
-                <Settings className="w-3.5 h-3.5 text-zinc-400" />
+                <Settings className="w-3.5 h-3.5 text-zinc-700 dark:text-zinc-400" />
                 <span>تنظیمات مدل</span>
               </button>
             )}
@@ -98,7 +98,7 @@ export const ErrorCapsule: React.FC = React.memo(() => {
             <button
               type="button"
               onClick={onRetry}
-              className="bg-zinc-800 hover:bg-zinc-700 text-rose-400 hover:text-rose-300 text-xs px-3.5 py-1.5 rounded-xl flex items-center gap-1.5 font-medium cursor-pointer transition-all border border-rose-500/30 active:scale-95 shadow-xs"
+              className="bg-white dark:bg-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-700 text-rose-400 hover:text-rose-300 text-xs px-3.5 py-1.5 rounded-xl flex items-center gap-1.5 font-medium cursor-pointer transition-all border border-rose-500/30 active:scale-95 shadow-xs"
             >
               <RotateCw className="w-3.5 h-3.5" />
               <span>تلاش مجدد</span>
@@ -107,7 +107,7 @@ export const ErrorCapsule: React.FC = React.memo(() => {
         </div>
 
         {/* 15-second shrinking countdown bar */}
-        <div className="w-full bg-zinc-800/80 h-1 rounded-full overflow-hidden absolute bottom-0 left-0 right-0">
+        <div className="w-full bg-white dark:bg-zinc-800/80 h-1 rounded-full overflow-hidden absolute bottom-0 left-0 right-0">
           <div
             className="bg-rose-500/60 h-full rounded-full animate-error-progress"
             style={{ animationDuration: `${durationSeconds}s` }}

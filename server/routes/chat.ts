@@ -36,7 +36,7 @@ router.post('/api/chat/stream', async (req, res) => {
       if (!res.writableEnded && !res.destroyed) {
         res.end();
       }
-    } catch {}
+    } catch { }
   };
 
   const sendChunk = (data: {
@@ -162,7 +162,7 @@ router.post('/api/chat/stream', async (req, res) => {
       timeZone: 'Asia/Tehran',
     }).format(now);
     const enNumeric = `${now.getFullYear()}/${String(now.getMonth() + 1).padStart(2, '0')}/${String(now.getDate()).padStart(2, '0')}`;
-    
+
     const islamicParts = new Intl.DateTimeFormat('fa-IR-u-ca-islamic-umalqura', {
       weekday: 'long',
       day: 'numeric',
@@ -225,8 +225,7 @@ router.post('/api/chat/stream', async (req, res) => {
 > ---
 > 
 > 📌 **مناسبت‌های رسمی و تاریخی امروز:**
-> * 🌸 ولادت حضرت رسول اکرم (ص) به روایت اهل سنت و آغاز هفته وحدت
-> * 📜 سالروز اشغال ایران توسط قوای متفقین در جریان جنگ جهانی دوم (سال ۱۳۲۰)]`;
+> *(لطفاً در صورتی که به اینترنت دسترسی دارید یا مناسبت‌های امروز را می‌دانید، آنها را با ایموجی لیست کنید؛ در غیر این صورت بنویسید: بدون جستجوی زنده در اینترنت، جزئیات مناسبت‌های امروز در دسترس نیست)*]`;
     }
 
     if (apiConfig?.webSearch && !isDateInquiry) {
@@ -238,8 +237,22 @@ router.post('/api/chat/stream', async (req, res) => {
     } else {
       console.log('[Backend] Web search disabled. apiConfig.webSearch:', apiConfig?.webSearch, 'isDateInquiry:', isDateInquiry);
     }
-    const baseSystemPrompt = `شما «دستیار هوشمند» هستید؛ متمرکز، دقیق و مسلط به زبان فارسی. پاسخها را به فارسی شیوا، دستهبندیشده و ساختاریافته ارائه دهید. در موضوعات فنی و برنامهنویسی، کدهای استاندارد همراه با توضیحات موجز بنویسید. هرگز خود را با نام پلتفرمهای متفرقه معرفی نکنید.\n\n${timeContext}${liveWebContext}`;
-    const systemInstruction = apiConfig?.systemInstruction ? `${apiConfig.systemInstruction}\n\n${timeContext}${liveWebContext}\n\nنکته نگارشی: همیشه اصول، مراحل و لیست‌های شماره‌دار را در خطوط مجزا تفکیک کن.` : baseSystemPrompt;
+    const baseSystemPrompt = `شما «دستیار هوشمند» هستید؛ متمرکز، دقیق و مسلط به زبان فارسی. پاسخها را به فارسی شیوا، دستهبندیشده و ساختاریافته ارائه دهید. در موضوعات فنی و برنامهنویسی، کدهای استاندارد همراه با توضیحات موجز بنویسید. هرگز خود را با نام پلتفرمهای متفرقه معرفی نکنید.\n\n${timeContext}`;
+    const systemInstruction = apiConfig?.systemInstruction ? `${apiConfig.systemInstruction}\n\n${timeContext}\n\nنکته نگارشی: همیشه اصول، مراحل و لیست‌های شماره‌دار را در خطوط مجزا تفکیک کن.` : baseSystemPrompt;
+
+    // Inject liveWebContext into the LAST user message instead of system prompt
+    // This ensures that models (especially via OpenRouter/Custom providers) don't ignore it.
+    if (liveWebContext && prunedMessages.length > 0) {
+      const lastMsgIndex = prunedMessages.map((m: any) => m.role).lastIndexOf('user');
+      if (lastMsgIndex !== -1) {
+        if (isDateInquiry) {
+          prunedMessages[lastMsgIndex].content = `${prunedMessages[lastMsgIndex].content}\n\n${liveWebContext}`;
+        } else {
+          const webSearchWrapper = `\n\n<web_search_results>\n${liveWebContext}\n</web_search_results>\n\n<instructions>\nپاسخ خود را دقیقاً و منحصراً بر اساس اطلاعات داخل تگ بالا ارائه بده. این اطلاعات از اینترنت جستجو شده و از دانش قبلی تو جدیدتر است.\n</instructions>`;
+          prunedMessages[lastMsgIndex].content = `${prunedMessages[lastMsgIndex].content}${webSearchWrapper}`;
+        }
+      }
+    }
 
     // Check In-Memory Cache for normalized query
     const cacheKey = computeCacheKey(prunedMessages, apiConfig?.[provider]?.modelName || 'default', systemInstruction);
@@ -287,7 +300,7 @@ router.post('/api/chat/stream', async (req, res) => {
           try {
             const streamConfig: any = {
               tools: apiConfig?.webSearch ? [{ googleSearch: {} }] : undefined,
-              systemInstruction: (apiConfig?.webSearch && liveWebContext) ? systemInstruction.replace(liveWebContext, '') : systemInstruction,
+              systemInstruction: systemInstruction,
               temperature: typeof apiConfig?.temperature === 'number' ? apiConfig.temperature : 0.7,
               topP: 0.8,
               topK: 40,
@@ -335,7 +348,7 @@ router.post('/api/chat/stream', async (req, res) => {
                   const inner = typeof jsonParsed.action_input === 'string' ? JSON.parse(jsonParsed.action_input) : jsonParsed.action_input;
                   if (inner.prompt) targetImagePrompt = inner.prompt;
                 }
-              } catch (e) {}
+              } catch (e) { }
 
               if (!targetImagePrompt) {
                 targetImagePrompt = lastUserMsg
@@ -360,7 +373,7 @@ router.post('/api/chat/stream', async (req, res) => {
                 chunk: fullText,
                 usage: geminiUsage,
                 imageUrl: generatedImageUrl,
-                
+
                 timestamp: Date.now(),
               });
             }
@@ -399,15 +412,15 @@ router.post('/api/chat/stream', async (req, res) => {
 
       if (!streamedSuccessfully) {
         if (!hasSentAnyChunk) {
-           const errMsg = lastError ? extractCleanErrorMessage(lastError) : 'مدل هوش مصنوعی در دسترس نیست';
-           let frontendMsg = '⚠️ خطا در ارتباط با مدل.';
-           if (errMsg.includes('quota') || errMsg.includes('resource_exhausted')) {
-             frontendMsg = '⚠️ محدودیت استفاده (Quota) به پایان رسیده است. لطفا کلید API معتبر وارد کنید.';
-           } else if (errMsg.includes('503')) {
-             frontendMsg = '⚠️ مدل هوش مصنوعی در حال حاضر با ترافیک بالا مواجه است (۵۰۳). لطفاً چند لحظه دیگر دوباره تلاش کنید.';
-           } else {
-             frontendMsg = `⚠️ خطا: ${errMsg}`;
-           }
+          const errMsg = lastError ? extractCleanErrorMessage(lastError) : 'مدل هوش مصنوعی در دسترس نیست';
+          let frontendMsg = '⚠️ خطا در ارتباط با مدل.';
+          if (errMsg.includes('quota') || errMsg.includes('resource_exhausted')) {
+            frontendMsg = '⚠️ محدودیت استفاده (Quota) به پایان رسیده است. لطفا کلید API معتبر وارد کنید.';
+          } else if (errMsg.includes('503')) {
+            frontendMsg = '⚠️ مدل هوش مصنوعی در حال حاضر با ترافیک بالا مواجه است (۵۰۳). لطفاً چند لحظه دیگر دوباره تلاش کنید.';
+          } else {
+            frontendMsg = `⚠️ خطا: ${errMsg}`;
+          }
           sendChunk({
             error: frontendMsg,
           });
@@ -435,7 +448,7 @@ router.post('/api/chat/stream', async (req, res) => {
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',
       };
-      
+
       if (apiConfig?.[provider]?.apiKey) {
         if (provider === 'anthropic') {
           headers['x-api-key'] = String(apiConfig[provider].apiKey).trim();
@@ -512,9 +525,9 @@ router.post('/api/chat/stream', async (req, res) => {
       ];
 
       if (hasUnsupportedMediaInCurrentTurn) {
-         sendChunk({ error: 'این مدل فقط از متن و تصویر پشتیبانی می‌کند. لطفاً برای تحلیل مستقیم فایل صوتی یا ویدیویی از مدل‌های Gemini استفاده نمایید.' });
-         sendChunk({ done: true });
-         return finishStream();
+        sendChunk({ error: 'این مدل فقط از متن و تصویر پشتیبانی می‌کند. لطفاً برای تحلیل مستقیم فایل صوتی یا ویدیویی از مدل‌های Gemini استفاده نمایید.' });
+        sendChunk({ done: true });
+        return finishStream();
       }
 
       let model = apiConfig?.[provider]?.modelName;
@@ -535,7 +548,8 @@ router.post('/api/chat/stream', async (req, res) => {
             messages: formattedMessages,
             temperature: 0.7,
             top_p: 0.8,
-            max_tokens: typeof apiConfig?.maxTokens === 'number' && apiConfig.maxTokens > 0 ? apiConfig.maxTokens : 1024,
+            max_tokens: typeof apiConfig?.maxTokens === 'number' && apiConfig.maxTokens > 0 ? apiConfig.maxTokens : 16384,
+            max_completion_tokens: typeof apiConfig?.maxTokens === 'number' && apiConfig.maxTokens > 0 ? apiConfig.maxTokens : 16384,
             stream: true,
             stream_options: { include_usage: true },
           }),
@@ -550,7 +564,7 @@ router.post('/api/chat/stream', async (req, res) => {
       if (!response.ok) {
         let errorText = '';
         try {
-           errorText = await response.text();
+          errorText = await response.text();
         } catch { }
         sendChunk({ error: sanitizeErrorMessage(errorText || `Status ${response.status}`) });
         sendChunk({ done: true });
@@ -643,7 +657,7 @@ router.post('/api/chat/stream', async (req, res) => {
                 fullAccumulatedCustom += contentChunk;
                 sendChunk({ chunk: contentChunk });
               }
-            } catch {}
+            } catch { }
           }
         }
       }

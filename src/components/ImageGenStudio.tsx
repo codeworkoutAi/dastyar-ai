@@ -1,12 +1,21 @@
-import { useUIStore } from '../store/uiStore';
-import { useChatStore } from '../store/chatStore';
-import React, { useState, useEffect } from 'react';
-import { 
-  X, Sparkles, Download, Image as ImageIcon, Send, Sliders, Trash2, Wand2, 
-  History, RotateCcw, AlertTriangle, Check, Copy, Search, ArrowRight, Eye, RefreshCw,
-  Grid2X2, Grid3X3, LayoutGrid
+import {
+  AlertTriangle,
+  ArrowRight,
+  Check, Copy,
+  Download,
+  History,
+  Image as ImageIcon,
+  RotateCcw,
+  Search,
+  Send, Sliders,
+  Sparkles,
+  Trash2, Wand2,
+  X
 } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
 import { loadSettings } from '../lib/storage';
+import { useChatStore } from '../store/chatStore';
+import { useUIStore } from '../store/uiStore';
 
 
 
@@ -382,7 +391,7 @@ export function ImageGenStudio() {
               
               {/* Visual Aspect Ratios */}
               <div className="space-y-4">
-                <label className="text-xs font-bold text-zinc-500 dark:text-zinc-400 flex items-center gap-2">
+                <label className="text-xs font-bold text-zinc-700 dark:text-zinc-400 flex items-center gap-2">
                   <div className="w-1.5 h-1.5 rounded-full bg-blue-500"></div> ابعاد تصویر
                 </label>
                 <div className="grid grid-cols-3 gap-2">
@@ -393,7 +402,7 @@ export function ImageGenStudio() {
                       className={`flex flex-col items-center justify-center gap-2 p-3 rounded-2xl border transition-all cursor-pointer ${
                         aspectRatio === ar.id 
                           ? 'bg-blue-500/10 border-blue-500 text-blue-600 dark:text-blue-400 shadow-sm'
-                          : 'bg-white dark:bg-[#1e1f20] border-zinc-200 dark:border-white/10 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-white/5'
+                          : 'bg-white dark:bg-[#1e1f20] border-zinc-200 dark:border-white/10 text-zinc-700 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-black/5 dark:hover:bg-white/5'
                       }`}
                     >
                       <div className={`border-2 rounded-sm flex items-center justify-center ${ar.w} ${ar.h} ${aspectRatio === ar.id ? 'border-current' : 'border-zinc-400 dark:border-zinc-500'}`}></div>
@@ -405,7 +414,7 @@ export function ImageGenStudio() {
 
               {/* Model Engines */}
               <div className="space-y-4">
-                <label className="text-xs font-bold text-zinc-500 dark:text-zinc-400 flex items-center gap-2">
+                <label className="text-xs font-bold text-zinc-700 dark:text-zinc-400 flex items-center gap-2">
                   <div className="w-1.5 h-1.5 rounded-full bg-emerald-500"></div> موتور پردازش
                 </label>
                 <div className="flex flex-col gap-2">
@@ -435,7 +444,7 @@ export function ImageGenStudio() {
                         }`}
                       >
                         {isLocked && (
-                          <div className="absolute top-3.5 left-3 bg-zinc-200 dark:bg-zinc-800 p-1.5 rounded-full text-zinc-500">
+                          <div className="absolute top-3.5 left-3 bg-zinc-200 dark:bg-zinc-800 p-1.5 rounded-full text-zinc-700 dark:text-zinc-500">
                             <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
                           </div>
                         )}
@@ -450,12 +459,12 @@ export function ImageGenStudio() {
                           <span className={`text-[9px] px-1.5 py-0.5 rounded-md font-bold ${
                             isSelected
                               ? eng.tier === 'pro' ? 'bg-amber-200/50 dark:bg-amber-500/20' : 'bg-emerald-200/50 dark:bg-emerald-500/20'
-                              : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500'
+                              : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-500'
                         }`}>
                             {eng.tag}
                           </span>
                         </div>
-                        <p className={`text-[9px] sm:text-[10px] leading-relaxed line-clamp-1 ${isSelected ? 'opacity-90' : 'text-zinc-500 dark:text-zinc-400'}`}>{eng.desc}</p>
+                        <p className={`text-[9px] sm:text-[10px] leading-relaxed line-clamp-1 ${isSelected ? 'opacity-90' : 'text-zinc-700 dark:text-zinc-400'}`}>{eng.desc}</p>
                       </button>
                     );
                   })}
@@ -521,7 +530,7 @@ export function ImageGenStudio() {
                     <span>بازگشت به استودیو</span>
                   </button>
                   
-                  <div className="hidden md:flex items-center gap-2 text-zinc-500 dark:text-zinc-400 text-xs font-bold">
+                  <div className="hidden md:flex items-center gap-2 text-zinc-700 dark:text-zinc-400 text-xs font-bold">
                     <span className="w-1.5 h-1.5 rounded-full bg-purple-500"></span>
                     <span>{history.length} اثر ذخیره‌شده</span>
                   </div>
@@ -537,7 +546,7 @@ export function ImageGenStudio() {
                       className={`px-2 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
                         gridDensity === 'compact'
                           ? 'bg-purple-600 text-white shadow-xs'
-                          : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200'
+                          : 'text-zinc-700 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-800 dark:text-zinc-200'
                       }`}
                       title="نمایش ریز (تراکم بالا)"
                     >
@@ -548,7 +557,7 @@ export function ImageGenStudio() {
                       className={`px-2 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
                         gridDensity === 'medium'
                           ? 'bg-purple-600 text-white shadow-xs'
-                          : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200'
+                          : 'text-zinc-700 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-800 dark:text-zinc-200'
                       }`}
                       title="نمایش استاندارد (متوسط)"
                     >
@@ -559,7 +568,7 @@ export function ImageGenStudio() {
                       className={`px-2 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
                         gridDensity === 'large'
                           ? 'bg-purple-600 text-white shadow-xs'
-                          : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200'
+                          : 'text-zinc-700 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-800 dark:text-zinc-200'
                       }`}
                       title="نمایش بزرگ (با جزئیات)"
                     >
@@ -569,16 +578,16 @@ export function ImageGenStudio() {
 
                   {/* Search input */}
                   <div className="relative flex-1 sm:w-52">
-                    <Search className="w-3.5 h-3.5 text-zinc-400 absolute right-3 top-1/2 -translate-y-1/2" />
+                    <Search className="w-3.5 h-3.5 text-zinc-700 dark:text-zinc-400 absolute right-3 top-1/2 -translate-y-1/2" />
                     <input 
                       type="text" 
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       placeholder="جستجو در پرامپت‌ها..." 
-                      className="w-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-white/10 rounded-xl pr-8 pl-3 py-1.5 text-xs text-zinc-800 dark:text-zinc-200 placeholder:text-zinc-400 outline-none focus:border-purple-500 transition-colors"
+                      className="w-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-white/10 rounded-xl pr-8 pl-3 py-1.5 text-xs text-zinc-800 dark:text-zinc-200 placeholder:text-zinc-700 dark:text-zinc-400 outline-none focus:border-purple-500 transition-colors"
                     />
                     {searchQuery && (
-                      <button onClick={() => setSearchQuery('')} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-200">
+                      <button onClick={() => setSearchQuery('')} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-zinc-700 dark:text-zinc-400 hover:text-zinc-800 dark:text-zinc-200">
                         <X className="w-3.5 h-3.5" />
                       </button>
                     )}
@@ -604,7 +613,7 @@ export function ImageGenStudio() {
                   className={`px-3 py-1 rounded-full text-xs font-bold transition-all shrink-0 border cursor-pointer ${
                     selectedFilter === 'all'
                       ? 'bg-purple-600 text-white border-purple-500 shadow-sm'
-                      : 'bg-white/60 dark:bg-zinc-900/60 text-zinc-600 dark:text-zinc-400 border-zinc-200 dark:border-white/10 hover:bg-white dark:hover:bg-zinc-800'
+                      : 'bg-white/60 dark:bg-zinc-900/60 text-zinc-700 dark:text-zinc-400 border-zinc-200 dark:border-white/10 hover:bg-white dark:hover:bg-zinc-100 dark:hover:bg-zinc-700'
                   }`}
                 >
                   همه مدل‌ها ({history.length})
@@ -619,7 +628,7 @@ export function ImageGenStudio() {
                       className={`px-3 py-1 rounded-full text-xs font-bold transition-all shrink-0 border flex items-center gap-1.5 cursor-pointer ${
                         selectedFilter === eng.id
                           ? 'bg-purple-600 text-white border-purple-500 shadow-sm'
-                          : 'bg-white/60 dark:bg-zinc-900/60 text-zinc-600 dark:text-zinc-400 border-zinc-200 dark:border-white/10 hover:bg-white dark:hover:bg-zinc-800'
+                          : 'bg-white/60 dark:bg-zinc-900/60 text-zinc-700 dark:text-zinc-400 border-zinc-200 dark:border-white/10 hover:bg-white dark:hover:bg-zinc-100 dark:hover:bg-zinc-700'
                       }`}
                     >
                       <span>{eng.name}</span>
@@ -638,13 +647,13 @@ export function ImageGenStudio() {
               <div className="w-full max-w-6xl h-full flex flex-col animate-fadeIn">
                 {filteredHistory.length === 0 ? (
                   <div className="flex-1 flex flex-col items-center justify-center py-20 text-center opacity-60">
-                    <div className="w-16 h-16 rounded-full bg-zinc-200 dark:bg-zinc-800 flex items-center justify-center mb-4 text-zinc-400">
+                    <div className="w-16 h-16 rounded-full bg-zinc-200 dark:bg-zinc-800 flex items-center justify-center mb-4 text-zinc-700 dark:text-zinc-400">
                       <ImageIcon className="w-8 h-8" />
                     </div>
                     <p className="font-bold text-sm sm:text-base text-zinc-700 dark:text-zinc-300">
                       {searchQuery || selectedFilter !== 'all' ? 'هیچ تصویری با این فیلتر یافت نشد.' : 'گالری تصاویر شما در حال حاضر خالی است.'}
                     </p>
-                    <p className="text-xs text-zinc-500 mt-1">تصاویری که در استودیو خلق می‌کنید به صورت خودکار در اینجا ذخیره می‌شوند.</p>
+                    <p className="text-xs text-zinc-700 dark:text-zinc-500 mt-1">تصاویری که در استودیو خلق می‌کنید به صورت خودکار در اینجا ذخیره می‌شوند.</p>
                   </div>
                 ) : (
                   <div className={`${getGridClasses()} pb-12 transition-all duration-300`}>
@@ -667,7 +676,7 @@ export function ImageGenStudio() {
                           
                           {/* Permanent Badges (Corner Tags) */}
                           <div className="absolute top-2.5 right-2.5 flex items-center gap-1.5 z-10 pointer-events-none">
-                            <span className="text-[10px] font-bold text-white bg-black/60 backdrop-blur-md px-2 py-0.5 rounded-lg border border-white/10 shadow-sm">
+                            <span className="text-[10px] font-bold text-white bg-black/60 backdrop-blur-md px-2 py-0.5 rounded-lg border border-black/10 dark:border-white/10 shadow-sm">
                               {engineInfo?.name || item.engine}
                             </span>
                           </div>
@@ -779,7 +788,7 @@ export function ImageGenStudio() {
               /* --- EMPTY CANVAS STATE --- */
               <div className="text-center opacity-40 flex flex-col items-center mt-10">
                 <div className="w-20 h-20 sm:w-24 sm:h-24 mb-6 rounded-full bg-zinc-200 dark:bg-zinc-800 flex items-center justify-center">
-                  <ImageIcon className="w-10 h-10 text-zinc-400" />
+                  <ImageIcon className="w-10 h-10 text-zinc-700 dark:text-zinc-400" />
                 </div>
                 <h3 className="text-xl sm:text-2xl font-extrabold text-zinc-800 dark:text-white mb-2 tracking-tight">بوم خالی شما</h3>
                 <p className="text-xs sm:text-sm max-w-sm mx-auto leading-relaxed px-4">
@@ -837,7 +846,7 @@ export function ImageGenStudio() {
                   value={prompt}
                   onChange={(e) => setPrompt(e.target.value)}
                   placeholder="توصیف تصویر (فارسی یا انگلیسی)..."
-                  className="flex-1 bg-transparent border-none outline-none focus:ring-0 focus:outline-none resize-none text-sm lg:text-base py-2.5 px-3 max-h-24 sm:max-h-32 min-h-[44px] custom-scrollbar placeholder:text-zinc-400 dark:placeholder:text-zinc-500 text-zinc-800 dark:text-zinc-100"
+                  className="flex-1 bg-transparent border-none outline-none focus:ring-0 focus:outline-none resize-none text-sm lg:text-base py-2.5 px-3 max-h-24 sm:max-h-32 min-h-[44px] custom-scrollbar placeholder:text-zinc-700 dark:text-zinc-400 dark:placeholder:text-zinc-700 dark:text-zinc-500 text-zinc-800 dark:text-zinc-100"
                   rows={Math.min(3, prompt.split('\n').length || 1)}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' && !e.shiftKey) {
@@ -876,7 +885,7 @@ export function ImageGenStudio() {
           onClick={() => setSelectedDetailImage(null)}
         >
           <div 
-            className="bg-[#18181b] border border-white/10 w-full max-w-4xl max-h-[92vh] rounded-3xl overflow-hidden shadow-2xl flex flex-col md:flex-row text-right animate-scaleIn"
+            className="bg-[#18181b] border border-black/10 dark:border-white/10 w-full max-w-4xl max-h-[92vh] rounded-3xl overflow-hidden shadow-2xl flex flex-col md:flex-row text-right animate-scaleIn"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Left Side: Large Image Preview */}
@@ -889,22 +898,22 @@ export function ImageGenStudio() {
             </div>
 
             {/* Right Side: Metadata & Action Controls */}
-            <div className="w-full md:w-80 lg:w-96 p-5 sm:p-6 flex flex-col justify-between border-t md:border-t-0 md:border-r border-white/10 overflow-y-auto custom-scrollbar max-h-[45vh] md:max-h-[85vh]">
+            <div className="w-full md:w-80 lg:w-96 p-5 sm:p-6 flex flex-col justify-between border-t md:border-t-0 md:border-r border-black/10 dark:border-white/10 overflow-y-auto custom-scrollbar max-h-[45vh] md:max-h-[85vh]">
               <div className="space-y-4">
                 
                 {/* Top Bar with Close Button */}
-                <div className="flex items-center justify-between pb-3 border-b border-white/10">
+                <div className="flex items-center justify-between pb-3 border-b border-black/10 dark:border-white/10">
                   <div className="flex items-center gap-2">
                     <span className="text-xs font-bold text-purple-400 bg-purple-500/10 px-2.5 py-1 rounded-lg border border-purple-500/20">
                       {IMAGE_ENGINES.find(e => e.id === selectedDetailImage.engine)?.name || selectedDetailImage.engine}
                     </span>
-                    <span className="text-[11px] text-zinc-400">
+                    <span className="text-[11px] text-zinc-700 dark:text-zinc-400">
                       {getRelativeTime(selectedDetailImage.timestamp)}
                     </span>
                   </div>
                   <button 
                     onClick={() => setSelectedDetailImage(null)}
-                    className="p-1.5 text-zinc-400 hover:text-white rounded-full hover:bg-white/10 transition-colors cursor-pointer"
+                    className="p-1.5 text-zinc-700 dark:text-zinc-400 hover:text-white rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors cursor-pointer"
                   >
                     <X className="w-5 h-5" />
                   </button>
@@ -913,7 +922,7 @@ export function ImageGenStudio() {
                 {/* Prompt Text with Copy Button */}
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <label className="text-xs font-bold text-zinc-400">پرامپت استفاده‌شده:</label>
+                    <label className="text-xs font-bold text-zinc-700 dark:text-zinc-400">پرامپت استفاده‌شده:</label>
                     <button
                       onClick={() => copyPromptText(selectedDetailImage.prompt, 'modal_prompt')}
                       className="flex items-center gap-1 text-[11px] font-bold text-purple-400 hover:text-purple-300 cursor-pointer"
@@ -931,7 +940,7 @@ export function ImageGenStudio() {
                       )}
                     </button>
                   </div>
-                  <div className="p-3.5 rounded-2xl bg-black/40 border border-white/5 text-zinc-200 text-xs sm:text-sm leading-relaxed max-h-36 overflow-y-auto custom-scrollbar select-text font-sans">
+                  <div className="p-3.5 rounded-2xl bg-black/40 border border-black/5 dark:border-white/5 text-zinc-800 dark:text-zinc-200 text-xs sm:text-sm leading-relaxed max-h-36 overflow-y-auto custom-scrollbar select-text font-sans">
                     {selectedDetailImage.prompt}
                   </div>
                 </div>
@@ -942,7 +951,7 @@ export function ImageGenStudio() {
                     <label className="text-[11px] font-bold text-indigo-400 flex items-center gap-1">
                       <Wand2 className="w-3 h-3" /> پرامپت ارتقایافته:
                     </label>
-                    <p className="text-[11px] text-zinc-400 bg-black/20 p-2.5 rounded-xl border border-white/5 line-clamp-3">
+                    <p className="text-[11px] text-zinc-700 dark:text-zinc-400 bg-black/20 p-2.5 rounded-xl border border-black/5 dark:border-white/5 line-clamp-3">
                       {selectedDetailImage.enhancedPrompt}
                     </p>
                   </div>
@@ -950,7 +959,7 @@ export function ImageGenStudio() {
               </div>
 
               {/* Primary Action Buttons */}
-              <div className="space-y-2.5 pt-6 mt-4 border-t border-white/10">
+              <div className="space-y-2.5 pt-6 mt-4 border-t border-black/10 dark:border-white/10">
                 {/* Remix in Studio */}
                 <button
                   onClick={() => remixPrompt(selectedDetailImage)}
@@ -968,7 +977,7 @@ export function ImageGenStudio() {
                       setSelectedDetailImage(null);
                       onClose();
                     }}
-                    className="w-full flex items-center justify-center gap-2 py-2.5 rounded-2xl bg-white/10 hover:bg-white/20 text-zinc-100 text-sm font-bold transition-colors cursor-pointer border border-white/5"
+                    className="w-full flex items-center justify-center gap-2 py-2.5 rounded-2xl bg-black/5 dark:bg-white/10 hover:bg-white/20 text-zinc-900 dark:text-zinc-100 text-sm font-bold transition-colors cursor-pointer border border-black/5 dark:border-white/5"
                   >
                     <Send className="w-4 h-4" />
                     <span>ارسال به گفتگوی چت</span>
@@ -982,7 +991,7 @@ export function ImageGenStudio() {
                     download="persian-ai-image.png"
                     target="_blank"
                     rel="noreferrer"
-                    className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-2xl bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-bold transition-colors border border-white/5 cursor-pointer"
+                    className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-2xl bg-white dark:bg-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 text-xs font-bold transition-colors border border-black/5 dark:border-white/5 cursor-pointer"
                   >
                     <Download className="w-3.5 h-3.5" />
                     <span>دانلود فایل</span>

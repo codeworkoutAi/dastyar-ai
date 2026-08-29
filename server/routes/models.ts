@@ -107,6 +107,8 @@ router.post(['/api/models/test', '/api/ping'], modelTestRateLimiter, async (req,
       const endpoint = provider === 'anthropic' ? `${baseUrl}/messages` : `${baseUrl}/chat/completions`;
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
       };
       
       if (apiKey) {
@@ -161,13 +163,17 @@ router.post(['/api/models/test', '/api/ping'], modelTestRateLimiter, async (req,
         });
       }
 
-      if (!response.ok) {
+      const contentType = response.headers.get('content-type') || '';
+      if (!response.ok || !contentType.includes('application/json')) {
         const errorText = await response.text();
         const status = response.status;
         let statusType: string = 'unknown_error';
         let errorMsg = '';
 
-        if (status === 401) {
+        if (!contentType.includes('application/json') && (errorText.includes('<html') || errorText.includes('captcha'))) {
+          statusType = 'network_error';
+          errorMsg = 'سرویس‌دهنده شما را بلاک کرده است (WAF/Captcha). لطفاً URL صحیح API را بررسی کنید.';
+        } else if (status === 401) {
           statusType = 'auth_error';
           errorMsg = 'کلید API نامعتبر است (401 Unauthorized)';
         } else if (status === 403) {
@@ -178,7 +184,7 @@ router.post(['/api/models/test', '/api/ping'], modelTestRateLimiter, async (req,
           errorMsg = 'مدل انتخابی در سرور یافت نشد (404 Not Found)';
         } else if (status === 429) {
           statusType = 'rate_limit';
-          errorMsg = 'سقف استفاده تکمیل شده است (429 Rate Limit)';
+          errorMsg = 'موجودی کلید API شما تمام شده یا محدودیت درخواست (Rate Limit) دارید. لطفاً پنل ارائه‌دهنده هوش مصنوعی خود را بررسی و شارژ کنید.';
         } else {
           statusType = 'network_error';
           errorMsg = `خطا در اتصال (${status}): ${sanitizeErrorMessage(errorText)}`;
@@ -223,9 +229,5 @@ router.post(['/api/models/test', '/api/ping'], modelTestRateLimiter, async (req,
   }
 });
 
-// Helper to format and normalize messages for Gemini API
-
-
-// 3. Streaming Chat endpoint
-
 export default router;
+

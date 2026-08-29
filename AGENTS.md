@@ -6,7 +6,7 @@ Welcome, AI Agent! If you are reading this, you are working on the **Persian AI 
 Persian AI Chatbox is a highly polished, full-stack AI chat interface designed specifically for Persian-speaking users. It acts as a bridge to Gemini models (and others) providing real-time streaming, voice interactions, and deep file/image analysis within a strictly RTL, Persian-localized UI.
 
 ## 🛠 Tech Stack
-- **Frontend**: React 18, Vite, TypeScript, Tailwind CSS, Lucide React (for icons).
+- **Frontend**: React 19, Vite, TypeScript, Tailwind CSS, Lucide React (for icons), and a custom CSS design system.
 - **Backend**: Express (Node.js) acting as an API proxy to secure API keys.
 - **Build System**: Vite handles frontend building; `esbuild` bundles the Express server into `dist/server.cjs` for production.
 
@@ -14,7 +14,7 @@ Persian AI Chatbox is a highly polished, full-stack AI chat interface designed s
 
 ### 1. Persian-First UI & UX
 - **Layout**: Strictly Right-to-Left (RTL). 
-- **Typography**: Uses the `Vazirmatn` font family.
+- **Typography**: Uses the `Vazirmatn` and `Mikhak` font families.
 - **Language**: All UI text, error messages, and placeholders MUST be in fluent Persian.
 - **Features**: Includes a toggle for Persian numerals (`toPersianDigits`) and TTS/Speech Recognition tuned for the Persian language (`fa-IR`).
 
@@ -35,7 +35,7 @@ Persian AI Chatbox is a highly polished, full-stack AI chat interface designed s
 1. **Preserve the Build Script**: The `server.ts` handles both API routes and Vite middleware in dev, and serves static files in prod. Never break the `npm run build` logic defined in `package.json`.
 2. **Never Expose API Keys**: All interactions with external AI providers MUST route through `server.ts`. Never call external AI APIs directly from the React frontend.
 3. **No Unrequested Features**: Stick strictly to the user's prompt. Do not add unrequested pages, sidebars, or databases unless explicitly asked.
-4. **Tailwind Only**: Use Tailwind utility classes for all styling. Do not introduce CSS modules or external CSS files (except the global `index.css`).
+4. **Styling Approach**: Use Tailwind utility classes for layout and simple styling. A custom CSS design system is present in `index.css` for complex UI components; utilize existing CSS variables and classes from there where appropriate. Do not introduce CSS modules or new external CSS files.
 5. **Robust Error Handling**: Any new API route or feature must handle failures gracefully and return user-friendly Persian error messages.
 
 *End of instructions.*
