@@ -16,8 +16,7 @@ import {
 } from '@solar-icons/react';
 import { 
   ArrowUp, 
-  X,
-  Globe
+  X
 } from 'lucide-react';
 import { toPersianDigits, isRtlText } from '../lib/persianUtils';
 import { estimateTokenCount } from '../lib/tokenOptimizer';
@@ -59,8 +58,6 @@ export const MessageInput: React.FC = React.memo(() => {
   const modelIntro = getModelIntro(activeModel, modelDetails);
   const enterToSend = settings.tools.enterToSend;
   const usePersianDigits = settings.appearance.persianNumerals;
-  const defaultWebSearch = settings.tools.webSearch;
-  const onSendMessage = sendMessage;
   const onStopGeneration = stopGeneration;
   const onVideoAttached = () => setVideoNotice('Video processing is coming soon!');
 
@@ -76,12 +73,9 @@ export const MessageInput: React.FC = React.memo(() => {
   const [isAttachmentMenuOpen, setIsAttachmentMenuOpen] = useState(false);
   const [isCameraModalOpen, setIsCameraModalOpen] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
-  const [webSearchEnabled, setWebSearchEnabled] = useState(defaultWebSearch);
+  const [showImageEngineModal, setShowImageEngineModal] = useState(false);
+  const [pendingImagePrompt, setPendingImagePrompt] = useState('');
   
-  useEffect(() => {
-    setWebSearchEnabled(defaultWebSearch);
-  }, [defaultWebSearch]);
-
   const [sentHistory, setSentHistory] = useState<string[]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
   const [slashMenuOpen, setSlashMenuOpen] = useState(false);
@@ -602,6 +596,12 @@ export const MessageInput: React.FC = React.memo(() => {
 
     let finalMessage = text.trim() || 'لطفاً فایل‌های پیوست شده را بررسی کن.';
     
+    if (finalMessage.startsWith('/image ') || finalMessage.startsWith('/تصویر ')) {
+      setPendingImagePrompt(finalMessage);
+      setShowImageEngineModal(true);
+      return;
+    }
+
     // Inject any extracted text from hybrid PDF parsing as hidden fileContext
     let extractedFileContext = '';
     const extractedTexts = readyAttachments.filter(a => a.extractedText);
@@ -689,6 +689,13 @@ export const MessageInput: React.FC = React.memo(() => {
     const mediaTokens = attachments.length * 300;
     return estimateTokenCount(text, false) + mediaTokens;
   }, [text, attachments]);
+
+  const confirmImageGen = (engine: string) => {
+    setShowImageEngineModal(false);
+    sendMessage(pendingImagePrompt, undefined, undefined, undefined, engine);
+    setText('');
+    setPendingImagePrompt('');
+  };
 
   return (
     <div className={`p-2.5 sm:p-4 md:p-5 shrink-0 transition-all duration-500 ease-in-out ${isEmpty ? 'w-full max-w-3xl mx-auto' : ''}`}>
@@ -1031,6 +1038,54 @@ export const MessageInput: React.FC = React.memo(() => {
         onClose={() => setIsCameraModalOpen(false)}
         onCapture={handleCameraModalCapture}
       />
+      {showImageEngineModal && createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in" onClick={() => setShowImageEngineModal(false)}>
+          <div className="bg-[#1e1e1e] border border-white/10 rounded-2xl p-5 w-full max-w-sm shadow-2xl flex flex-col gap-3 relative" onClick={e => e.stopPropagation()} dir="rtl">
+            <button onClick={() => setShowImageEngineModal(false)} className="absolute top-3 left-3 p-1.5 rounded-full hover:bg-white/10 text-white/70 hover:text-white transition-colors">
+              <X size={18} />
+            </button>
+            
+            <h3 className="text-white text-base font-bold pr-1">انتخاب هوش مصنوعی تصویرساز</h3>
+            <p className="text-gray-400 text-xs pr-1 -mt-2">برای تولید این تصویر از کدام موتور استفاده شود؟</p>
+            
+            <div className="flex flex-col gap-2 mt-1">
+              <button 
+                onClick={() => confirmImageGen('flux')}
+                className="flex items-center justify-between p-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 hover:border-blue-500/30 transition-all text-right group"
+              >
+                <div>
+                  <div className="text-white font-medium text-sm flex items-center gap-1.5">Flux.1 Realism <StarsMinimalisticBoldIcon className="text-blue-400 opacity-0 group-hover:opacity-100 transition-opacity" size={14} /></div>
+                  <div className="text-[10px] text-gray-400 mt-0.5">رایگان و سریع - کیفیت عالی</div>
+                </div>
+                <span className="px-1.5 py-0.5 bg-green-500/10 text-green-400 text-[9px] font-bold rounded-full border border-green-500/20">رایگان</span>
+              </button>
+
+              <button 
+                onClick={() => confirmImageGen('dalle-3')}
+                className="flex items-center justify-between p-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 hover:border-amber-500/30 transition-all text-right group"
+              >
+                <div>
+                  <div className="text-white font-medium text-sm flex items-center gap-1.5">DALL-E 3 <StarsMinimalisticBoldIcon className="text-amber-400 opacity-0 group-hover:opacity-100 transition-opacity" size={14} /></div>
+                  <div className="text-[10px] text-gray-400 mt-0.5">هوش بالا - نیازمند API OpenAI</div>
+                </div>
+                <span className="px-1.5 py-0.5 bg-amber-500/10 text-amber-400 text-[9px] font-bold rounded-full border border-amber-500/20">وی‌آی‌پی</span>
+              </button>
+
+              <button 
+                onClick={() => confirmImageGen('imagen-3')}
+                className="flex items-center justify-between p-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 hover:border-blue-500/30 transition-all text-right group"
+              >
+                <div>
+                  <div className="text-white font-medium text-sm flex items-center gap-1.5">Imagen 3 (Gemini) <StarsMinimalisticBoldIcon className="text-blue-400 opacity-0 group-hover:opacity-100 transition-opacity" size={14} /></div>
+                  <div className="text-[10px] text-gray-400 mt-0.5">کیفیت استودیو گوگل - نیازمند API</div>
+                </div>
+                <span className="px-1.5 py-0.5 bg-blue-500/10 text-blue-400 text-[9px] font-bold rounded-full border border-blue-500/20">رسمی گوگل</span>
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
     </div>
   );
 });

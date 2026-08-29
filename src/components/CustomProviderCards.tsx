@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { AddOutlineIcon, PenOutlineIcon, TrashBinMinimalisticOutlineIcon, LinkOutlineIcon, KeyMinimalisticOutlineIcon, RefreshOutlineIcon, ChartOutlineIcon, CloseOutlineIcon, MagnifierOutlineIcon, DownloadOutlineIcon, BrainOutlineIcon, StarOutlineIcon, CodeOutlineIcon, EyeOutlineIcon, BoltOutlineIcon, StarsOutlineIcon, DocumentTextOutlineIcon, LayersOutlineIcon, CopyOutlineIcon } from '@solar-icons/react';
+import { AddOutlineIcon, PenOutlineIcon, TrashBinMinimalisticOutlineIcon, LinkOutlineIcon, KeyMinimalisticOutlineIcon, RefreshOutlineIcon, ChartOutlineIcon, MagnifierOutlineIcon, DownloadOutlineIcon, BrainOutlineIcon, StarOutlineIcon, CodeOutlineIcon, EyeOutlineIcon, BoltOutlineIcon, StarsOutlineIcon, DocumentTextOutlineIcon, LayersOutlineIcon, CopyOutlineIcon } from '@solar-icons/react';
 import { AppSettings, CustomProfile } from '../types';
 
 export interface ModelCapabilityTag {

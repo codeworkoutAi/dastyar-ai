@@ -86,11 +86,11 @@ export function detectSmartRoutingIntent(text: string, hasImageAttachment: boole
   console.log('[SmartRouting] Weights:', weights, 'Text:', text.substring(0, 50));
 
   // Decision logic with thresholds
-  if (weights.vision > 5 || (hasImageAttachment && weights.vision > 0)) {
+  if (weights.vision >= 5 || (hasImageAttachment && weights.vision > 0)) {
     return 'vision';
   }
 
-  if (weights.coding > 5) {
+  if (weights.coding >= 5) {
     return 'coding';
   }
 

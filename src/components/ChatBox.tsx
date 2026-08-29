@@ -2,7 +2,6 @@ import {
   DangerCircleOutlineIcon as AlertCircle,
   AltArrowDownOutlineIcon as ArrowDown,
   CheckCircleOutlineIcon as Check,
-  CodeOutlineIcon as Code,
   CopyLinearIcon,
   DislikeBoldIcon,
   DislikeLinearIcon,
@@ -12,7 +11,6 @@ import {
   DocumentTextOutlineIcon as FileText,
   LikeBoldIcon,
   LikeLinearIcon,
-  CheckSquareOutlineIcon as ListChecks,
   MaximizeSquareOutlineIcon as Maximize2,
   PenLinearIcon,
   RestartLinearIcon,
@@ -27,7 +25,7 @@ import { isRtlText } from '../lib/persianUtils';
 import { SpeakController, speakText } from '../lib/tts';
 import { useChatStore } from '../store/chatStore';
 import { useSettingsStore } from '../store/settingsStore';
-import { useUIStore } from '../store/uiStore';
+
 import { ChatMessage } from '../types';
 import { ModelDetails } from './CustomProviderCards';
 import { MarkdownRenderer } from './MarkdownRenderer';
@@ -94,14 +92,13 @@ export const getModelIntro = (modelName: string, details: ModelDetails) => {
   }
 
   return {
-    title: details.name || modelName || 'دستیار هوش مصنوعی',
+    title: details.providerLabel || modelName || 'دستیار هوش مصنوعی',
     bio: details.description || 'آماده پاسخگویی به سوالات، تحلیل متون، کدنویسی و پردازش درخواست‌های شما به زبان فارسی.',
     highlight: details.tags?.[0]?.label || 'پاسخ‌دهی همه‌منظوره',
   };
 };
 
 export const ChatBox: React.FC = React.memo(() => {
-  const { setIsImageStudioOpen, setImageStudioInitial } = useUIStore();
   const { settings, updateSettings } = useSettingsStore();
   const { conversations, activeId, isStreaming, editMessage, regenerate, setActiveError } = useChatStore();
   const conversation = conversations.find((c) => c.id === activeId) || null;

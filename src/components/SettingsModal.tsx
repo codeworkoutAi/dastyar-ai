@@ -2,7 +2,7 @@ import { useUIStore } from '../store/uiStore';
 import { useSettingsStore } from '../store/settingsStore';
 import { useChatStore } from '../store/chatStore';
 import React, { useState, useEffect } from 'react';
-import { CloseOutlineIcon, DisketteOutlineIcon, GlobalOutlineIcon, CpuOutlineIcon, KeyMinimalisticOutlineIcon, LinkOutlineIcon, UserCircleOutlineIcon, PaletteOutlineIcon, SettingsOutlineIcon, InfoCircleOutlineIcon, TrashBinMinimalisticOutlineIcon, DownloadOutlineIcon, UploadOutlineIcon, RefreshOutlineIcon, StarsOutlineIcon } from '@solar-icons/react';
+import { CloseOutlineIcon, DisketteOutlineIcon, GlobalOutlineIcon, CpuOutlineIcon, UserCircleOutlineIcon, PaletteOutlineIcon, SettingsOutlineIcon, InfoCircleOutlineIcon, TrashBinMinimalisticOutlineIcon, DownloadOutlineIcon, UploadOutlineIcon, StarsOutlineIcon } from '@solar-icons/react';
 import { AppSettings, Conversation, FontFamily, ThemeMode, CustomProfile } from '../types';
 import { CustomProviderCards, getModelDetails } from './CustomProviderCards';
 import { EyeOutlineIcon, CodeOutlineIcon, BrainOutlineIcon } from '@solar-icons/react';
@@ -394,7 +394,7 @@ export const SettingsModal: React.FC = () => {
 
     const visMeta = getProfileMeta(visP);
     const codMeta = getProfileMeta(codP);
-    const defMeta = getProfileMeta(defP);
+
 
     const feedback = [];
 
@@ -483,18 +483,7 @@ export const SettingsModal: React.FC = () => {
     onClose();
   };
 
-  const updateProvider = (provider: 'gemini' | 'openai' | 'anthropic' | 'custom', field: string, value: string) => {
-    setTempSettings({
-      ...tempSettings,
-      providers: {
-        ...tempSettings.providers,
-        [provider]: {
-          ...tempSettings.providers[provider],
-          [field]: value
-        }
-      }
-    });
-  };
+
 
   return (
     <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5" dir="rtl" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
@@ -871,14 +860,7 @@ const TabButton = ({ active, onClick, icon, label }: { active: boolean, onClick:
   </button>
 );
 
-const ProviderSelectBox = ({ title, active, onClick }: { title: string, active: boolean, onClick: () => void }) => (
-  <button
-    onClick={onClick}
-    className={`p-2 sm:p-3 rounded-xl border text-center transition-all ${active ? 'bg-blue-600/10 border-blue-500 text-blue-400 shadow-sm' : 'bg-zinc-50 dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-700 hover:border-zinc-300 dark:border-zinc-700'}`}
-  >
-    <div className="text-xs sm:text-sm font-bold truncate">{title}</div>
-  </button>
-);
+
 
 const ToggleSwitch = ({ checked, onChange }: { checked: boolean, onChange: (v: boolean) => void }) => (
   <button

@@ -1,6 +1,5 @@
 import express from 'express';
-import { isSafeBaseUrl, getGeminiClient, extractCleanErrorMessage, sanitizeErrorMessage, formatContentsForGemini, sleep, getPollinationsImageUrl, translateAndEnhanceImagePrompt, normalizeBaseUrl, parseCustomHeaders } from '../services/utils';
-import { SmartWebAgent } from '../services/WebSearchAgent';
+import { isSafeBaseUrl, getGeminiClient, extractCleanErrorMessage, sanitizeErrorMessage, normalizeBaseUrl, parseCustomHeaders } from '../services/utils';
 import { modelTestRateLimiter } from '../middleware/rateLimiter';
 
 const router = express.Router();

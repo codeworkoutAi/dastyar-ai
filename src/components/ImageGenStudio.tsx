@@ -33,6 +33,7 @@ const IMAGE_ENGINES = [
   { id: 'flux-3d', name: 'Flux 3D', tag: 'رایگان', desc: 'رندرهای خیره‌کننده سه‌بعدی', tier: 'free' },
   { id: 'turbo', name: 'SDXL Turbo', tag: 'آنی', desc: 'تولید سریع تصاویر', tier: 'free' },
   { id: 'dalle-3', name: 'DALL-E 3', tag: 'ویژه', desc: 'نیازمند API Key (درک متن و هوش بالا)', tier: 'pro' },
+  { id: 'imagen-3', name: 'Imagen 3 (Gemini)', tag: 'رسمی', desc: 'نیازمند API Key جمنای (کیفیت استودیو گوگل)', tier: 'pro' },
 ];
 
 const STYLE_PRESETS = [
@@ -268,7 +269,8 @@ export function ImageGenStudio() {
           prompt: finalPrompt,
           aspectRatio,
           engine,
-          apiKey: engine === 'dalle-3' ? settings.providers.openai?.apiKey : undefined,
+          apiKey: engine === 'dalle-3' ? settings.providers.openai?.apiKey : engine === 'imagen-3' ? settings.providers.gemini?.apiKey : undefined,
+          settings,
         }),
       });
 

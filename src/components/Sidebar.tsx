@@ -8,7 +8,6 @@ import {
   PenLinearIcon,
   DownloadMinimalisticLinearIcon,
   StarsMinimalisticBoldIcon,
-  Code2LinearIcon,
   CalendarLinearIcon,
   DatabaseLinearIcon,
   CheckCircleOutlineIcon as Check,
@@ -24,6 +23,7 @@ import { formatPersianRelativeTime, toPersianDigits } from '../lib/persianUtils'
 import { getStorageUsage } from '../lib/storage';
 import { calculateSessionStats } from '../utils/pricing';
 import { Tooltip } from './Tooltip';
+import { SuggestionsSandbox } from './SuggestionsSandbox';
 import { useUIStore } from '../store/uiStore';
 import { useSettingsStore } from '../store/settingsStore';
 import { useChatStore } from '../store/chatStore';
@@ -36,9 +36,9 @@ interface GroupedConversations {
 }
 
 export const Sidebar: React.FC = React.memo(() => {
-  const { sidebarOpen, setSidebarOpen, setIsImageStudioOpen, setIsExportOpen, setIsExploreOpen, setIsUiGuideOpen } = useUIStore();
+  const { sidebarOpen, setSidebarOpen, setIsImageStudioOpen, setIsExploreOpen, setIsUiGuideOpen } = useUIStore();
   const { settings } = useSettingsStore();
-  const { conversations, activeId, setActiveId, createChat, createCodingChat, deleteConversation, updateConversation, clearAllConversations, isStreaming } = useChatStore();
+  const { conversations, activeId, setActiveId, createChat, deleteConversation, updateConversation, clearAllConversations } = useChatStore();
   const usePersianDigits = settings.appearance.persianNumerals;
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -360,7 +360,7 @@ export const Sidebar: React.FC = React.memo(() => {
                 setIsImageStudioOpen(true);
                 if (window.innerWidth < 768) setSidebarOpen(false);
               }}
-              className="flex items-center gap-2 px-2.5 py-2 rounded-xl bg-white dark:bg-zinc-800/50 hover:bg-purple-50 dark:hover:bg-purple-950/30 border border-black/5 dark:border-white/5 text-zinc-800 dark:text-zinc-200 hover:text-purple-700 dark:hover:text-purple-300 text-xs font-semibold transition-all text-right hover:scale-[1.01] active:scale-[0.98] cursor-pointer"
+              className="col-span-2 flex items-center gap-2 px-2.5 py-2 rounded-xl bg-white dark:bg-zinc-800/50 hover:bg-purple-50 dark:hover:bg-purple-950/30 border border-black/5 dark:border-white/5 text-zinc-800 dark:text-zinc-200 hover:text-purple-700 dark:hover:text-purple-300 text-xs font-semibold transition-all text-right hover:scale-[1.01] active:scale-[0.98] cursor-pointer"
             >
               <div className="w-6 h-6 rounded-lg bg-purple-100 dark:bg-purple-500/15 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0">
                 <StarsMinimalisticBoldIcon className="w-3.5 h-3.5" />
@@ -368,19 +368,7 @@ export const Sidebar: React.FC = React.memo(() => {
               <span className="truncate">استودیو تصویر</span>
             </button>
 
-            <button
-              id="sidebar-code-assistant-btn"
-              onClick={() => {
-                createCodingChat(settings.providers[settings.providers.activeProvider]?.modelName);
-                if (window.innerWidth < 768) setSidebarOpen(false);
-              }}
-              className="flex items-center gap-2 px-2.5 py-2 rounded-xl bg-white dark:bg-zinc-800/50 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 border border-black/5 dark:border-white/5 text-zinc-800 dark:text-zinc-200 hover:text-emerald-700 dark:hover:text-emerald-300 text-xs font-semibold transition-all text-right hover:scale-[1.01] active:scale-[0.98] cursor-pointer"
-            >
-              <div className="w-6 h-6 rounded-lg bg-emerald-100 dark:bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
-                <Code2LinearIcon className="w-3.5 h-3.5" />
-              </div>
-              <span className="truncate">دستیار کد</span>
-            </button>
+
 
             {/* UI Guide button (نقشه اجزا) */}
             <button
@@ -396,6 +384,10 @@ export const Sidebar: React.FC = React.memo(() => {
               </div>
               <span className="truncate flex-1">نقشه و راهنمای تصویری برنامه</span>
             </button>
+          </div>
+          
+          <div className="px-1 mt-3">
+            <SuggestionsSandbox />
           </div>
         </div>
 

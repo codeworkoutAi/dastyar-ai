@@ -1,9 +1,6 @@
 import express from 'express';
 import path from 'path';
 import dotenv from 'dotenv';
-import rateLimit from 'express-rate-limit';
-import crypto from 'crypto';
-import { GoogleGenAI, Modality } from '@google/genai';
 
 dotenv.config();
 
@@ -52,7 +49,7 @@ async function start() {
     });
   }
 
-  app.listen(PORT, '0.0.0.0', () => {
+  app.listen(Number(PORT), '0.0.0.0', () => {
     console.log(`Persian AI Chatbox Server running on http://localhost:${PORT}`);
   });
 }

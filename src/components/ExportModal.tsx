@@ -9,7 +9,7 @@ import {
   Check, 
   Layers
 } from 'lucide-react';
-import { Conversation } from '../types';
+
 import { 
   exportConversationToMarkdown, 
   exportConversationToText, 

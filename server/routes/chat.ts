@@ -1,7 +1,7 @@
 import express from 'express';
 import { isSafeBaseUrl, getGeminiClient, extractCleanErrorMessage, sanitizeErrorMessage, formatContentsForGemini, sleep, getPollinationsImageUrl, translateAndEnhanceImagePrompt, normalizeBaseUrl, parseCustomHeaders } from '../services/utils';
 import { SmartWebAgent } from '../services/WebSearchAgent';
-import { CachedResponse, responseCache, CACHE_TTL_MS, computeCacheKey, setCachedResponse } from '../services/CacheService';
+import { responseCache, CACHE_TTL_MS, computeCacheKey, setCachedResponse } from '../services/CacheService';
 
 const router = express.Router();
 

@@ -15,8 +15,7 @@ import {
   EyeOutlineIcon,
   Code2OutlineIcon,
 } from '@solar-icons/react';
-import { AppSettings, Conversation } from '../types';
-import { calculateSessionStats } from '../utils/pricing';
+
 import { Tooltip } from './Tooltip';
 import { usePWAInstall } from '../lib/usePWAInstall';
 import { useUIStore } from '../store/uiStore';
@@ -68,7 +67,7 @@ const SmartRoutingDiagram = ({ isStreaming, routingState }: { isStreaming: boole
 };
 
 export const Header: React.FC = React.memo(() => {
-  const { sidebarOpen, toggleSidebar, setIsSettingsOpen, setIsExportOpen } = useUIStore();
+  const { toggleSidebar, setIsSettingsOpen, setIsExportOpen } = useUIStore();
   const { settings, setSettings } = useSettingsStore();
   const { activeId, conversations, isStreaming, routingState } = useChatStore();
   const activeConversation = conversations.find((c) => c.id === activeId) || null;
@@ -93,9 +92,6 @@ export const Header: React.FC = React.memo(() => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const sessionStats = React.useMemo(() => {
-    return calculateSessionStats(conversations || (activeConversation ? [activeConversation] : []));
-  }, [conversations, activeConversation]);
 
   const getProviderInfo = () => {
     if (settings.tools.smartRouting) {

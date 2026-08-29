@@ -9,7 +9,7 @@ import { useSettingsStore } from './settingsStore';
 import { buildOptimizedContext } from '../lib/tokenOptimizer';
 
 let abortController: AbortController | null = null;
-const errorTimers = new Map<string, NodeJS.Timeout>();
+
 
 interface ChatState {
   conversations: Conversation[];
@@ -32,7 +32,7 @@ interface ChatState {
   createCodingChat: (modelName?: string) => void;
 
   stopGeneration: () => void;
-  sendMessage: (text: string, imageUrl?: string, webSearch?: boolean, fileContext?: string) => Promise<void>;
+  sendMessage: (text: string, imageUrl?: string, webSearch?: boolean, fileContext?: string, imageEngine?: string) => Promise<void>;
   regenerate: () => void;
   editMessage: (messageId: string, newText: string) => void;
   insertImageToChat: (prompt: string, imageUrl: string) => void;
@@ -130,7 +130,7 @@ stopGeneration: () => {
   },
 
   // Send Message & Stream Response
-  sendMessage: async (text: string, imageUrl?: string, webSearch?: boolean, fileContext?: string) => {
+  sendMessage: async (text: string, imageUrl?: string, webSearch?: boolean, fileContext?: string, imageEngine?: string) => {
     if ((!text.trim() && !imageUrl) || get().isStreaming) return;
     set({ activeError: null });
 
@@ -177,55 +177,59 @@ stopGeneration: () => {
 
     let finalModelUsed = (useSettingsStore.getState().settings.providers as any)[useSettingsStore.getState().settings.providers.activeProvider]?.modelName || 'gemini-2.5-pro';
 
-    if (useSettingsStore.getState().settings.tools.smartRouting && !isImageGen) {
-      const activeProv = useSettingsStore.getState().settings.providers.activeProvider || 'gemini';
-      const roles = useSettingsStore.getState().settings.tools.routingRoles || {} as any;
-
-      const rVisionProv = roles.visionProvider || activeProv;
-      const rCodingProv = roles.codingProvider || activeProv;
-      const rDefaultProv = roles.defaultProvider || activeProv;
-
-      const defaultModelName = (useSettingsStore.getState().settings.providers as any)[activeProv]?.modelName || 'gemini-2.5-pro';
-      const defaultVisionModel = activeProv === 'gemini' ? 'gemini-2.5-pro' : (roles.vision || defaultModelName);
-      const defaultCodingModel = activeProv === 'gemini' ? 'gemini-2.5-pro' : (roles.coding || defaultModelName);
-
-      const rVision = roles.vision || defaultVisionModel;
-      const rCoding = roles.coding || defaultCodingModel;
-      const rDefault = roles.default || defaultModelName;
-
-      // Use enhanced smart routing with weighted intent detection
-      const intent = detectSmartRoutingIntent(text, !!imageUrl);
-      get().setRoutingState(intent);
-
-      // Helper to apply profile to provider config
-      const applyProviderAndModel = (prov: string, modelOrProfileId: string) => {
-        payloadSettings.providers.activeProvider = prov;
-        if (prov === 'custom' && payloadSettings.providers.custom.profiles) {
-          const profile = payloadSettings.providers.custom.profiles.find((p: any) => p.id === modelOrProfileId);
-          if (profile) {
-            payloadSettings.providers.custom.baseUrl = profile.baseUrl;
-            payloadSettings.providers.custom.apiKey = profile.apiKey;
-            payloadSettings.providers.custom.modelName = profile.modelName;
-            payloadSettings.providers.custom.customHeaders = profile.customHeaders;
-            payloadSettings.providers.custom.activeProfileId = profile.id;
-            return profile.modelName || 'نامشخص';
-          }
-        }
-        if ((payloadSettings.providers as any)[prov]) {
-          (payloadSettings.providers as any)[prov].modelName = modelOrProfileId;
-        }
-        return modelOrProfileId;
-      };
-
-      if (intent === 'vision') {
-          const actualName = applyProviderAndModel(rVisionProv, rVision);
-          finalModelUsed = actualName + ' (هوشمند)';
-      } else if (intent === 'coding') {
-          const actualName = applyProviderAndModel(rCodingProv, rCoding);
-          finalModelUsed = actualName + ' (هوشمند)';
+    if (useSettingsStore.getState().settings.tools.smartRouting) {
+      if (isImageGen) {
+        get().setRoutingState('vision');
       } else {
-          const actualName = applyProviderAndModel(rDefaultProv, rDefault);
-          finalModelUsed = actualName + ' (هوشمند)';
+        const activeProv = useSettingsStore.getState().settings.providers.activeProvider || 'gemini';
+        const roles = useSettingsStore.getState().settings.tools.routingRoles || {} as any;
+
+        const rVisionProv = roles.visionProvider || activeProv;
+        const rCodingProv = roles.codingProvider || activeProv;
+        const rDefaultProv = roles.defaultProvider || activeProv;
+
+        const defaultModelName = (useSettingsStore.getState().settings.providers as any)[activeProv]?.modelName || 'gemini-2.5-pro';
+        const defaultVisionModel = activeProv === 'gemini' ? 'gemini-2.5-pro' : (roles.vision || defaultModelName);
+        const defaultCodingModel = activeProv === 'gemini' ? 'gemini-2.5-pro' : (roles.coding || defaultModelName);
+
+        const rVision = roles.vision || defaultVisionModel;
+        const rCoding = roles.coding || defaultCodingModel;
+        const rDefault = roles.default || defaultModelName;
+
+        // Use enhanced smart routing with weighted intent detection
+        const intent = detectSmartRoutingIntent(text, !!imageUrl);
+        get().setRoutingState(intent);
+
+        // Helper to apply profile to provider config
+        const applyProviderAndModel = (prov: string, modelOrProfileId: string) => {
+          payloadSettings.providers.activeProvider = prov;
+          if (prov === 'custom' && payloadSettings.providers.custom.profiles) {
+            const profile = payloadSettings.providers.custom.profiles.find((p: any) => p.id === modelOrProfileId);
+            if (profile) {
+              payloadSettings.providers.custom.baseUrl = profile.baseUrl;
+              payloadSettings.providers.custom.apiKey = profile.apiKey;
+              payloadSettings.providers.custom.modelName = profile.modelName;
+              payloadSettings.providers.custom.customHeaders = profile.customHeaders;
+              payloadSettings.providers.custom.activeProfileId = profile.id;
+              return profile.modelName || 'نامشخص';
+            }
+          }
+          if ((payloadSettings.providers as any)[prov]) {
+            (payloadSettings.providers as any)[prov].modelName = modelOrProfileId;
+          }
+          return modelOrProfileId;
+        };
+
+        if (intent === 'vision') {
+            const actualName = applyProviderAndModel(rVisionProv, rVision);
+            finalModelUsed = actualName + ' (هوشمند)';
+        } else if (intent === 'coding') {
+            const actualName = applyProviderAndModel(rCodingProv, rCoding);
+            finalModelUsed = actualName + ' (هوشمند)';
+        } else {
+            const actualName = applyProviderAndModel(rDefaultProv, rDefault);
+            finalModelUsed = actualName + ' (هوشمند)';
+        }
       }
     } else {
       get().setRoutingState('general');
@@ -240,15 +244,15 @@ stopGeneration: () => {
       timestamp: Date.now(),
     };
 
-    const assistantMessage: ChatMessage = {
-      id: assistantMessageId,
-      role: 'assistant' as any,
-      content: isImageGen ? 'در حال ساخت تصویر با هوش مصنوعی...' : '',
-      timestamp: Date.now(),
-      modelUsed: isImageGen ? 'image-generation' : finalModelUsed,
-      isStreaming: true,
-      isImageGen,
-    };
+      const assistantMessage: ChatMessage = {
+        id: assistantMessageId,
+        role: 'assistant' as any,
+        content: isImageGen ? 'در حال ساخت تصویر با هوش مصنوعی...' : '',
+        timestamp: Date.now(),
+        modelUsed: isImageGen ? (imageEngine ? `image-generation: ${imageEngine}` : 'image-generation') : finalModelUsed,
+        isStreaming: true,
+        isImageGen,
+      };
 
     // Auto-update conversation title if it's the first message
     const isFirstMessage = targetConv.messages.length === 0 || targetConv.title === 'گفتگوی جدید';
@@ -280,7 +284,12 @@ stopGeneration: () => {
         const res = await fetch('/api/generate-image', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ prompt: promptText, settings: payloadSettings }),
+          body: JSON.stringify({ 
+            prompt: promptText, 
+            settings: payloadSettings,
+            engine: imageEngine,
+            apiKey: imageEngine === 'dalle-3' ? payloadSettings.providers.openai?.apiKey : imageEngine === 'imagen-3' ? payloadSettings.providers.gemini?.apiKey : undefined 
+          }),
           signal: controller.signal,
         });
         const data = await res.json();

@@ -1,4 +1,4 @@
-import { GoogleGenAI, Modality } from '@google/genai';
+import { GoogleGenAI } from '@google/genai';
 
 const FORBIDDEN_HOSTNAMES = new Set([
   'localhost',
@@ -140,12 +140,18 @@ export function getPollinationsImageUrl(prompt: string, aspectRatio = '1:1', eng
 
 
 // Helper to translate and enhance image prompts into professional English prompts
-export async function translateAndEnhanceImagePrompt(rawPrompt: string): Promise<string> {
+export async function translateAndEnhanceImagePrompt(rawPrompt: string, apiKey?: string): Promise<string> {
   try {
-    const ai = getGeminiClient();
+    const ai = getGeminiClient(apiKey);
     const response = await ai.models.generateContent({
-      model: 'gemini-3.1-flash-lite',
-      contents: `You are an expert AI art prompt engineer and master translator. Convert the following user request into a detailed, highly descriptive, flawless English image generation prompt optimized for Flux / Midjourney. Ensure high anatomical accuracy, crisp details, zero artifacts, perfect lighting, 8k resolution, and professional composition. Return ONLY the English prompt text, nothing else, no quotes, no markdown, no explanation. User request: "${rawPrompt}"`,
+      model: 'gemini-1.5-flash',
+      contents: `You are an expert AI art prompt engineer, editor, and master translator. The user has sent a request for an image generation in Persian.
+This Persian text might be colloquial, lazy, misspelled, or have words out of order (Lazy Persian).
+Step 1: First, act as a strict editor and understand the true intent and correct the Persian internally in your mind (fix spelling, grammar, and intent).
+Step 2: Convert that corrected intent into a highly detailed, highly descriptive, flawless English image generation prompt optimized for Midjourney / Flux. Ensure high anatomical accuracy, crisp details, perfect lighting, 8k resolution, and professional composition.
+Return ONLY the final English prompt text, nothing else, no quotes, no explanation.
+
+User request: "${rawPrompt}"`,
     });
     const enhanced = response.text?.trim();
     if (enhanced && enhanced.length > 3) {
@@ -158,23 +164,7 @@ export async function translateAndEnhanceImagePrompt(rawPrompt: string): Promise
   return `${rawPrompt}, highly detailed, 8k resolution, photorealistic, professional lighting, crisp focus, zero artifacts`;
 }
 
-function extractImagePrompt(text: string): string | null {
-  if (!text) return null;
-  try {
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
-    if (jsonMatch) {
-      const parsed = JSON.parse(jsonMatch[0]);
-      if (parsed.action_input?.prompt) return parsed.action_input.prompt;
-      if (parsed.prompt) return parsed.prompt;
-    }
-  } catch (e) {}
 
-  if (text.includes('dalle.text2im') || text.includes('action_input')) {
-    const promptMatch = text.match(/"prompt"\s*:\s*"([^"]+)"/);
-    if (promptMatch) return promptMatch[1];
-  }
-  return null;
-}
 
 // Helper to fetch live real-time web search results (Domestic Persian Feeds + Google News RSS / Web)
 

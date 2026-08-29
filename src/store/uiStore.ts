@@ -10,6 +10,7 @@ interface UIState {
   videoNotice: string | null;
   metricsNotice: string | null;
   imageStudioInitial: { prompt: string; engine: string } | null;
+  simulatedPrompt: string | null;
 
   setSidebarOpen: (open: boolean) => void;
   toggleSidebar: () => void;
@@ -21,6 +22,7 @@ interface UIState {
   setVideoNotice: (notice: string | null) => void;
   setMetricsNotice: (notice: string | null) => void;
   setImageStudioInitial: (initial: { prompt: string; engine: string } | null) => void;
+  setSimulatedPrompt: (prompt: string | null) => void;
 }
 
 export const useUIStore = create<UIState>((set) => ({
@@ -33,6 +35,7 @@ export const useUIStore = create<UIState>((set) => ({
   videoNotice: null,
   metricsNotice: null,
   imageStudioInitial: null,
+  simulatedPrompt: null,
 
   setSidebarOpen: (open) => set({ sidebarOpen: open }),
   toggleSidebar: () => set((state) => ({ sidebarOpen: !state.sidebarOpen })),
@@ -44,4 +47,5 @@ export const useUIStore = create<UIState>((set) => ({
   setVideoNotice: (notice) => set({ videoNotice: notice }),
   setMetricsNotice: (notice) => set({ metricsNotice: notice }),
   setImageStudioInitial: (initial) => set({ imageStudioInitial: initial }),
+  setSimulatedPrompt: (prompt) => set({ simulatedPrompt: prompt }),
 }));

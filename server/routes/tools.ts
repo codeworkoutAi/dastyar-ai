@@ -1,7 +1,6 @@
 import express from 'express';
 import { Modality } from '@google/genai';
-import { isSafeBaseUrl, getGeminiClient, extractCleanErrorMessage, sanitizeErrorMessage, formatContentsForGemini, sleep, getPollinationsImageUrl, translateAndEnhanceImagePrompt, normalizeBaseUrl, parseCustomHeaders } from '../services/utils';
-import { SmartWebAgent } from '../services/WebSearchAgent';
+import { getGeminiClient, sanitizeErrorMessage, getPollinationsImageUrl, translateAndEnhanceImagePrompt } from '../services/utils';
 
 const router = express.Router();
 
@@ -203,7 +202,7 @@ router.post('/api/fetch-models', async (req, res) => {
 // 4. Image Generation endpoint
 router.post('/api/generate-image', async (req, res) => {
   try {
-    const { prompt, aspectRatio = '1:1', negativePrompt } = req.body;
+    const { prompt, aspectRatio = '1:1', negativePrompt, engine, apiKey, settings } = req.body;
     if (!prompt) {
       console.warn('[ImageGen API] ❌ Error: Missing prompt');
       return res.status(400).json({ error: 'دستور ساخت تصویر الزامی است.' });
@@ -214,8 +213,45 @@ router.post('/api/generate-image', async (req, res) => {
       fullPrompt += ` --no ${negativePrompt}`;
     }
 
-    const enhancedPrompt = await translateAndEnhanceImagePrompt(fullPrompt);
-    const imageUrl = getPollinationsImageUrl(enhancedPrompt, aspectRatio);
+    const enhancedPrompt = await translateAndEnhanceImagePrompt(fullPrompt, settings?.providers?.gemini?.apiKey || apiKey);
+
+    if (engine === 'dalle-3') {
+      const openAiKey = apiKey || settings?.providers?.openai?.apiKey;
+      if (!openAiKey) throw new Error('کلید API برای OpenAI تنظیم نشده است.');
+      
+      const response = await fetch('https://api.openai.com/v1/images/generations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${openAiKey}` },
+        body: JSON.stringify({
+          model: 'dall-e-3',
+          prompt: enhancedPrompt,
+          n: 1,
+          size: '1024x1024',
+        })
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error?.message || 'خطا در DALL-E 3');
+      return res.json({ imageUrl: data.data[0].url, enhancedPrompt });
+    }
+
+    if (engine === 'imagen-3') {
+      const geminiKey = apiKey || settings?.providers?.gemini?.apiKey;
+      if (!geminiKey) throw new Error('کلید API برای جمنای تنظیم نشده است.');
+      
+      const ai = getGeminiClient(geminiKey);
+      const response = await ai.models.generateImages({
+        model: 'imagen-3.0-generate-001',
+        prompt: enhancedPrompt,
+        config: { numberOfImages: 1, aspectRatio: aspectRatio as any }
+      });
+      if (response.generatedImages && response.generatedImages[0].image.imageBytes) {
+        const base64 = response.generatedImages[0].image.imageBytes;
+        return res.json({ imageUrl: `data:image/jpeg;base64,${base64}`, enhancedPrompt });
+      }
+      throw new Error('خطا در دریافت تصویر از Imagen 3');
+    }
+
+    const imageUrl = getPollinationsImageUrl(enhancedPrompt, aspectRatio, engine);
     console.log('[ImageGen API] ✅ Image generated successfully URL:', imageUrl);
     res.json({ imageUrl, enhancedPrompt });
   } catch (err: any) {
