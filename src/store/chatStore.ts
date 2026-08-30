@@ -1,7 +1,6 @@
 import { estimateTokenCount, calculateEstimatedCostUSD, formatCostUSD } from '../utils/pricing';
 import { formatPersianErrorMessage } from '../lib/persianUtils';
-import { detectSmartRoutingIntent } from '../lib/smartRouting';
-import { detectWebSearchNeed } from '../lib/autoWebSearch';
+
 import { create } from 'zustand';
 import { Conversation, ChatMessage } from '../types';
 import { loadConversations, saveConversations, loadActiveConversationId, saveActiveConversationId, createNewConversation } from '../lib/storage';

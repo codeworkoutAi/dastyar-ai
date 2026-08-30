@@ -28,10 +28,12 @@ app.use(express.urlencoded({ limit: '50mb', extended: true }));
 import modelsRouter from './routes/models';
 import chatRouter from './routes/chat';
 import toolsRouter from './routes/tools';
+import intentRouter from './routes/intent';
 
 app.use('/', modelsRouter);
 app.use('/', chatRouter);
 app.use('/', toolsRouter);
+app.use('/', intentRouter);
 
 async function start() {
   if (process.env.NODE_ENV !== 'production') {
