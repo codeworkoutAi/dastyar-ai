@@ -321,7 +321,7 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = React.memo(({
 
   return (
     <div
-      className={`markdown-body prose dark:prose-invert max-w-none prose-p:my-1.5 prose-p:leading-7 prose-headings:mt-4 prose-headings:mb-2 prose-headings:font-bold prose-ul:my-1.5 prose-ol:my-1.5 prose-li:my-0.5 prose-table:my-2 prose-pre:my-2 prose-blockquote:my-2 prose-hr:my-3 prose-hr:border-zinc-200 dark:prose-hr:border-zinc-800/50 prose-a:text-blue-500 text-inherit leading-snug ${isOverallRtl ? 'text-right' : 'text-left'} ${
+      className={`markdown-body prose dark:prose-invert max-w-none prose-p:my-1.5 prose-p:leading-7 prose-headings:mt-4 prose-headings:mb-2 prose-headings:font-bold prose-h1:text-xl prose-h2:text-lg prose-h3:text-base prose-ul:my-1.5 prose-ol:my-1.5 prose-li:my-0.5 prose-table:my-2 prose-pre:my-2 prose-blockquote:my-2 prose-hr:my-3 prose-hr:border-zinc-200 dark:prose-hr:border-zinc-800/50 prose-a:text-blue-500 text-inherit leading-snug ${isOverallRtl ? 'text-right' : 'text-left'} ${
         isStreaming ? 'streaming-cursor' : ''
       }`}
       dir={isOverallRtl ? 'rtl' : 'ltr'}
