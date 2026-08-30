@@ -19,6 +19,20 @@ function appendDebugLog(logData: any) {
 
 const router = express.Router();
 
+router.get('/api/debug/logs', (req, res) => {
+  try {
+    const logPath = path.resolve(process.cwd(), 'chat_debug_log.txt');
+    if (fs.existsSync(logPath)) {
+      res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+      const stream = fs.createReadStream(logPath);
+      return stream.pipe(res);
+    }
+    return res.status(404).send('فایل لاگ هنوز ایجاد نشده است یا پیامی ارسال نگردیده.');
+  } catch (err: any) {
+    return res.status(500).send('خطا در خواندن فایل لاگ: ' + err.message);
+  }
+});
+
 router.post('/api/chat/stream', async (req, res) => {
   // Setup SSE headers
   res.setHeader('Content-Type', 'text/event-stream');
