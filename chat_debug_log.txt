@@ -1,5 +1,4 @@
-
-
+# Chat Debug Log (آخرین ۱۰ مکالمه ثبت شده)
 ========================================
 [۱۴۰۵/۶/۸, ۱۱:۵۷:۱۴]
 {
@@ -38,4 +37,36 @@
   "userQuery": "قیمت دلار و سکه",
   "webSearchContext": "\n\n[نتایج جستجوی زنده وب (Smart Web Agent):\n[لینک: https://www.goldpriceconverter.com/gold-price/iran]\nعنوان: www.goldpriceconverter.com/gold-price/iran\nخلاصه: Live gold price in Iran in IRR — 24K, 22K, 21K and 18K rates per gram, ounce and more, updated through the day.\n\n[لینک: https://www.arzbin.com/]\nعنوان: www.arzbin.com\nخلاصه: Track live Iran exchange rates, gold and coin prices, crypto prices, market briefs, analysis, Toman converters, and daily market movement in one dashboard.\n\n[لینک: https://www.tgju.org/currency]\nعنوان: www.tgju.org/currency\nخلاصه: نرخ فعلی : 2,360,300 بالاترین قیمت روز : 2,370,500 پایین ترین قیمت روز : 2,354,700 بیشترین مقدار نوسان روز : - درصد بیشترین نوسان روز : - نرخ بازگشایی بازار : - زمان ثبت آخرین نرخ : ۲ شهریور نرخ روز گذشته : 2,360,300 درصد تغییر نسبت به روز گذشته ...\n\n[لینک: https://goldpricez.com/ir]\nعنوان: goldpricez.com/ir\nخلاصه: Get the latest market data for Iran: real-time gold, silver, oil and Bitcoin prices, plus IRR exchange rates. Use our converter and calculators to stay on top of local trends.\n\n[لینک: https://www.livepriceofgold.com/iran-gold-price.html]\nعنوان: www.livepriceofgold.com/iran-gold-price.html\nخلاصه: Gold Price in Iran Today: per oz 6,122,205,846.75 Iranian rials. Gold price in Iran today&#x27;s latest current live gold rates in Iran. The most current gold price in Iranian rial 24,22,18,14,10,6 carat\n\n]\n\n\n[داده‌های زنده و قطعی بازار]\nقیمت لحظه‌ای دلار آزاد (معادل تتر): ۲۰۵٬۶۵۱ تومان (منبع قطعی: والکس)\nدستورالعمل هوشمند: شما یک تحلیل‌گر ارشد مالی هستید. قیمت‌ها را مستقیماً از [داده‌های زنده و قطعی بازار] بخوانید و به صورت عدد مشخص اعلام کنید.",
   "generatedResponse": "- **دلار آزاد (معادل تتر): ۲۰۵٬۶۵۱ تومان**\n\nبرای **قیمت سکه** در اطلاعاتی که فرستادید، **عدد قطعی و مستقیم** درج نشده است.  \nاگر بخواهی، می‌توانم از همان نتایج جست‌وجو، **قیمت سکه امامی / بهار آزادی / نیم‌سکه / ربع‌سکه** را هم استخراج و مرتب کنم."
+}
+
+========================================
+[۱۴۰۵/۶/۸, ۱۲:۳۰:۵۶]
+{
+  "provider": "custom",
+  "model": "gpt-5.4-mini",
+  "userQuery": "آب و هوای ساری",
+  "searchDebug": {
+    "originalQuery": "آب و هوای ساری",
+    "translatedQuery": "آب و هوای ساری",
+    "translatedBy": "none (raw query)",
+    "resultsCount": 10
+  },
+  "webSearchContext": "\n\n[نتایج جستجوی زنده وب (Smart Web Agent):\n[لینک: https://www.delgarm.com/weather/390/sari/mazandaran]\nعنوان: www.delgarm.com/weather/390/sari/mazandaran\nخلاصه: هوای ساری / Sari ,مازندران - هم اکنون غالباً ابری و داغ با دمای 34° سانتی‌گراد , رطوبت: 65% - باد 11.1 k/h و منتظر یک رعد و برق شدید باشید از دوشنبه بعد از ظهر - پیش بینی آب و هوای 16 روزه ساری\n\n[لینک: https://hesabchy.ir/map/weather-forecast/mazandaran/sari-iran]\nعنوان: hesabchy.ir/map/weather-forecast/mazandaran/sari-iran\nخلاصه: پیش‌بینی آب و هوای ساری امروز در حال حاضر، وضعیت آب و هوای ساری (استان مازندران) ابری است. دمای فعلی 29 درجه سانتی‌گراد و احساس دما 32 درجه می‌باشد.\n\n[لینک: https://www.accuweather.com/fa/ir/sari/210584/10-day-weather-forecast/210584]\nعنوان: www.accuweather.com/fa/ir/sari/210584/10-day-weather-forecast/210584\nخلاصه: Know what&#x27;s coming with AccuWeather&#x27;s extended daily forecasts for ساری, مازندران, ایران. Up to 90 days of daily highs, lows, and precipitation chances.\n\n[لینک: https://www.accuweather.com/fa/ir/sari/210584/hourly-weather-forecast/210584]\nعنوان: www.accuweather.com/fa/ir/sari/210584/hourly-weather-forecast/210584\nخلاصه: Hourly weather forecast in ساری, مازندران, ایران. Check current conditions in ساری, مازندران, ایران with radar, hourly, and more.\n\n[لینک: https://rasanika.com/weather/o1/%D8%B3%D8%A7%D8%B1%DB%8C]\nعنوان: rasanika.com/weather/o1/ساری\nخلاصه: وضعیت آب و هوای ساری، مازندران را به‌صورت ساعتی و روزانه مشاهده کنید. پیش‌بینی هوای 14 روز آینده همراه با کیفیت و شاخص آلودگی هوا، اشعه فرابنفش، دما، بارش،…\n\n]\n\nدستورالعمل هوشمند: شما یک کارشناس هواشناسی هستید. وضعیت آب و هوا، دما و شرایط جوی را به صورت دقیق و کاربردی به کاربر اعلام کنید.",
+  "generatedResponse": "وضعیت آب‌وهوای **ساری** در حال حاضر:\n\n- **آسمان:** غالباً ابری\n- **دما:** حدود **34 درجه سانتی‌گراد**\n- **رطوبت:** **65٪**\n- **باد:** حدود **11.1 کیلومتر بر ساعت**\n- **نکته:** احتمال **رعد و برق شدید از دوشنبه بعدازظهر** وجود دارد.\n\nهمچنین در یک منبع دیگر، وضعیت فعلی ساری **ابری** با دمای **29 درجه** و **احساس دمای 32 درجه** گزارش شده است."
+}
+
+========================================
+[۱۴۰۵/۶/۸, ۱۲:۳۱:۲۳]
+{
+  "provider": "custom",
+  "model": "gpt-5.4-mini",
+  "userQuery": "اب و هوای ساری 7 روز",
+  "searchDebug": {
+    "originalQuery": "آب و هوای ساری",
+    "translatedQuery": "آب و هوای ساری",
+    "translatedBy": "none (raw query)",
+    "resultsCount": 10
+  },
+  "webSearchContext": "None",
+  "generatedResponse": "برنامه‌ی **آب‌وهوای ۷ روزهٔ ساری** را در حال حاضر به‌صورت **دقیق و لحظه‌ای** نمی‌توانم تضمین کنم، چون به داده‌ی زندهٔ پیش‌بینی دسترسی مستقیم ندارم.  \nاما می‌توانم یکی از این دو کار را انجام دهم:\n\n### 1) اگر بخواهید، من:\n- **پیش‌بینی ۷ روزه را به‌صورت الگو/فرمت استاندارد** برایتان آماده می‌کنم تا فقط داده‌ها را جایگذاری کنید.\n- یا **با ذکر منبع مدنظر شما** (مثلاً Weather.com، AccuWeather، یا سازمان هواشناسی) خروجی را برایتان **خوانا و خلاصه** تنظیم می‌کنم.\n\n### 2) اگر هدف شما فقط یک برآورد کلی است:\nدر **اواخر تابستان ساری** معمولاً:\n- **روزها گرم و شرجی**\n- **شب‌ها کمی خنک‌تر**\n- احتمال **رگبار و ناپایداری محلی** به‌ویژه در برخی روزها\n\nاگر دوست دارید، من همین الان برایتان یک **جدول ۷ روزهٔ فارسی و مرتب** می‌سازم که به‌صورت نمونه این‌طور باشد:\n\n| روز | وضعیت | بیشینه | کمینه | احتمال بارش |\n|---|---|---:|---:|---:|\n| شنبه | ... | ... | ... | ... |\n| یکشنبه | ... | ... | ... | ... |\n\nاگر خواستید، فقط بگویید: **«جدول ۷ روزه ساری را بده»**."
 }

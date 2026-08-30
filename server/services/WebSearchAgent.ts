@@ -98,16 +98,15 @@ export class SmartWebAgent {
     // ==========================================
     let searchQuery = query;
     let translationError = false;
+    const provider = apiConfig?.activeProvider || 'gemini';
+    let usedThirdParty = false;
+    
     try {
       const prompt = `You are an expert search engine query optimizer. The user has provided a search intent in Persian: "${query}"
 The user's Persian text might be colloquial, lazy, misspelled, incomplete, or grammatically incorrect.
 Step 1: First, deduce the true intent and correct the Persian internally.
 Step 2: Convert that corrected intent into a highly optimized, precise search query (just keywords, no fluff). Use Persian keywords unless it is a purely technical/programming question where English keywords yield better results.
 Return ONLY the optimized search query, nothing else, no quotes.`;
-
-      const provider = apiConfig?.activeProvider || 'gemini';
-      
-      let usedThirdParty = false;
 
       // 1. If active provider is a third-party (not gemini) and has a key, prioritize it.
       if (provider !== 'gemini' && apiConfig?.[provider]?.apiKey && apiConfig?.[provider]?.baseUrl) {
