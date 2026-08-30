@@ -2,6 +2,20 @@ import express from 'express';
 import { isSafeBaseUrl, getGeminiClient, extractCleanErrorMessage, sanitizeErrorMessage, formatContentsForGemini, sleep, getPollinationsImageUrl, translateAndEnhanceImagePrompt, normalizeBaseUrl, parseCustomHeaders } from '../services/utils';
 import { SmartWebAgent } from '../services/WebSearchAgent';
 import { responseCache, CACHE_TTL_MS, computeCacheKey, setCachedResponse } from '../services/CacheService';
+import fs from 'fs';
+import path from 'path';
+
+function appendDebugLog(logData: any) {
+  try {
+    const logPath = path.resolve(process.cwd(), 'chat_debug_log.txt');
+    const timestamp = new Date().toLocaleString('fa-IR', { timeZone: 'Asia/Tehran' }) || new Date().toISOString();
+    const logEntry = `\n\n========================================\n[${timestamp}]\n${JSON.stringify(logData, null, 2)}`;
+    fs.appendFileSync(logPath, logEntry, 'utf-8');
+  } catch (err) {
+    console.error('Failed to write debug log', err);
+  }
+}
+
 
 const router = express.Router();
 
@@ -376,6 +390,14 @@ router.post('/api/chat/stream', async (req, res) => {
 
                 timestamp: Date.now(),
               });
+              appendDebugLog({
+                provider: 'gemini',
+                model: candidate,
+                userQuery: userText,
+                webSearchContext: liveWebContext ? liveWebContext : 'None',
+                generatedResponse: fullText,
+                imagePrompt: targetImagePrompt || 'None'
+              });
             }
 
             streamedSuccessfully = true;
@@ -668,6 +690,13 @@ router.post('/api/chat/stream', async (req, res) => {
           chunk: fullAccumulatedCustom,
           usage: openaiUsage,
           timestamp: Date.now(),
+        });
+        appendDebugLog({
+          provider: provider,
+          model: model,
+          userQuery: userText,
+          webSearchContext: liveWebContext ? liveWebContext : 'None',
+          generatedResponse: fullAccumulatedCustom
         });
       }
 
