@@ -248,8 +248,8 @@ stopGeneration: () => {
       if (!isImageGen && (smartRoutingEnabled || (globalWebSearchEnabled && webSearch === undefined))) {
         try {
           const intentContextMsgs = buildOptimizedContext(
-            updatedMessages.slice(0, -1),
-            { content: '', imageUrl: '', fileContext: '' },
+            targetConv.messages,
+            { content: promptText, imageUrl: '', fileContext: '' },
             { maxRecentTurns: 4 }
           );
           const routerRes = await fetch('/api/chat/detect-intent', {
