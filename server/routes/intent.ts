@@ -39,14 +39,21 @@ router.post('/api/chat/detect-intent', async (req, res) => {
       return res.json({ webSearch: false, intent: 'general' });
     }
 
-    const systemPrompt = `You are a strict JSON-only intent detection router.
-Read the user's latest message and determine:
-1. "webSearch": Does this require live internet data, news, current weather, up-to-date prices, recent events, or information that changes frequently? (true/false)
-2. "intent": Is this primarily a coding/programming task ("coding"), an image analysis task ("vision"), or general chat ("general")?
+    const systemPrompt = `You are a highly accurate AI router. Output ONLY a raw JSON object.
+Schema: {"webSearch": boolean, "intent": "coding" | "vision" | "general"}
 
-Respond ONLY with a valid JSON object matching this schema:
-{"webSearch": boolean, "intent": "coding" | "vision" | "general"}
-Do not wrap it in markdown block quotes. Just the raw JSON.`;
+Rules for "webSearch" (Definitive Triggers):
+- Set to TRUE if the user asks for: live internet data, recent news, current weather, up-to-date prices, recent events, deep research on specific topics, fact-checking, or writing comprehensive articles about trends (e.g. "AI in 2025/2026", "history of...").
+- Set to FALSE if the request is a simple greeting, basic math, pure coding without needing external library documentation, or summarizing/translating text provided by the user.
+
+Examples:
+- "قیمت دلار چنده؟" -> {"webSearch": true, "intent": "general"}
+- "یک مقاله درباره آینده برنامه‌نویسی با هوش مصنوعی بنویس" -> {"webSearch": true, "intent": "general"}
+- "سلام، حالت چطوره؟" -> {"webSearch": false, "intent": "general"}
+- "کد ریکت برای دکمه بنویس" -> {"webSearch": false, "intent": "coding"}
+- "آب و هوای تهران" -> {"webSearch": true, "intent": "general"}
+
+Do not wrap in markdown. Raw JSON only.`;
 
     const promptText = `User Message: "${userText}"`;
 
