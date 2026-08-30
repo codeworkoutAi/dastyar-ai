@@ -13,6 +13,8 @@ export class SmartWebAgent {
   /**
    * Exponential backoff retry helper with jitter
    */
+  public static lastSearchDebug: any = null;
+
   private static async retryWithBackoff<T>(
     fn: () => Promise<T>,
     retries: number = this.MAX_RETRIES,
@@ -53,7 +55,7 @@ export class SmartWebAgent {
     // ==========================================
     // 1. Skip List (Prevent unnecessary searches)
     // ==========================================
-    const isConversationalOrSkip = query.match(/(ترجمه|معنی کلمه|به انگلیسی|به فارسی|تلفظ|ایده بده|انشا بنویس|خلاصه کن|تایپ کن|نامه بنویس|تولید محتوا|متن تبلیغاتی|کپشن|بنویس|create|بساز|تابع|class|کلاس|component|کامپوننت|کد|دیباگ|چرا ارور|مشکل این کد|refactor|بررسی کد|explain|توضیح|what is|چیست|الگوریتم|data structure|ساختمان داده|مفهوم|hi|hello|سلام|صبح بخیر|عصر بخیر|چطوری|خوبی|ممنون|مرسی|تشکر|خداحافظ)/i);
+    const isConversationalOrSkip = query.match(/(ترجمه|معنی کلمه|منبعت چی بود|از کجا آوردی|از کجا گرفتی|داده از کجا|لینکت چیه|سورس|source|به انگلیسی|به فارسی|تلفظ|ایده بده|انشا بنویس|خلاصه کن|تایپ کن|نامه بنویس|تولید محتوا|متن تبلیغاتی|کپشن|بنویس|create|بساز|تابع|class|کلاس|component|کامپوننت|کد|دیباگ|چرا ارور|مشکل این کد|refactor|بررسی کد|explain|توضیح|what is|چیست|الگوریتم|data structure|ساختمان داده|مفهوم|hi|hello|سلام|صبح بخیر|عصر بخیر|چطوری|خوبی|ممنون|مرسی|تشکر|خداحافظ)/i);
     
     // Also skip very short conversational queries unless they ask for something specific like price or weather
     const wordCount = query.trim().split(/\s+/).length;
@@ -211,8 +213,35 @@ Return ONLY the English search query, nothing else, no quotes.`;
       return '';
     }
 
-    const titles = [...html.matchAll(/<a class="result__url" href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/gi)];
-    const snippets = [...html.matchAll(/<a class="result__snippet[^>]*>([\s\S]*?)<\/a>/gi)];
+    let titles = [...html.matchAll(/<a class="result__url" href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/gi)];
+    let snippets = [...html.matchAll(/<a class="result__snippet[^>]*>([\s\S]*?)<\/a>/gi)];
+
+    // Fallback: If English search returned 0 results, retry with raw Persian query!
+    if (titles.length === 0 && searchQuery !== query) {
+      console.log(`[WebSearch] English query returned 0 results, falling back to raw Persian query: "${query}"`);
+      const fallbackUrl = 'https://html.duckduckgo.com/html/?q=' + encodeURIComponent(query);
+      try {
+        const fallbackRes = await fetch(fallbackUrl, {
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36',
+            'Accept-Language': 'fa,en-US;q=0.9,en;q=0.8'
+          },
+          signal: AbortSignal.timeout(this.TIMEOUT_MAIN)
+        });
+        if (fallbackRes.ok) {
+          const fallbackHtml = await fallbackRes.text();
+          titles = [...fallbackHtml.matchAll(/<a class="result__url" href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/gi)];
+          snippets = [...fallbackHtml.matchAll(/<a class="result__snippet[^>]*>([\s\S]*?)<\/a>/gi)];
+        }
+      } catch (err) {}
+    }
+
+    this.lastSearchDebug = {
+      originalQuery: query,
+      translatedQuery: searchQuery,
+      translatedBy: searchQuery !== query ? (usedThirdParty ? provider : 'gemini') : 'none (raw query)',
+      resultsCount: Math.min(titles.length, snippets.length)
+    };
 
     let firstUrl: string | null = null;
     let resultsText = '';

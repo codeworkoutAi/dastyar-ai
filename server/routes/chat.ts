@@ -408,6 +408,7 @@ router.post('/api/chat/stream', async (req, res) => {
                 provider: 'gemini',
                 model: candidate,
                 userQuery: userText,
+                searchDebug: SmartWebAgent.lastSearchDebug,
                 webSearchContext: liveWebContext ? liveWebContext : 'None',
                 generatedResponse: fullText,
                 imagePrompt: targetImagePrompt || 'None'
@@ -709,6 +710,7 @@ router.post('/api/chat/stream', async (req, res) => {
           provider: provider,
           model: model,
           userQuery: userText,
+          searchDebug: SmartWebAgent.lastSearchDebug,
           webSearchContext: liveWebContext ? liveWebContext : 'None',
           generatedResponse: fullAccumulatedCustom
         });
