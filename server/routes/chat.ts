@@ -228,10 +228,15 @@ router.post('/api/chat/stream', async (req, res) => {
     }
 
     if (apiConfig?.webSearch && !isDateInquiry) {
-      console.log('[Backend] Web search enabled, executing SmartWebAgent...');
+      console.log('[Backend] Web search enabled...');
       if (userText && userText.trim().length > 1) {
-        liveWebContext = await SmartWebAgent.processQuery(userText, settings?.tools?.webSearchDomains, apiConfig);
-        console.log('[Backend] Web search result length:', liveWebContext?.length || 0);
+        if (provider === 'gemini') {
+           console.log('[Backend] Using Gemini Native Google Search Grounding. Skipping DuckDuckGo scraper to avoid IP blocks.');
+        } else {
+           console.log('[Backend] Executing SmartWebAgent (DuckDuckGo)...');
+           liveWebContext = await SmartWebAgent.processQuery(userText, settings?.tools?.webSearchDomains, apiConfig);
+           console.log('[Backend] Web search result length:', liveWebContext?.length || 0);
+        }
       }
     } else {
       console.log('[Backend] Web search disabled. apiConfig.webSearch:', apiConfig?.webSearch, 'isDateInquiry:', isDateInquiry);
