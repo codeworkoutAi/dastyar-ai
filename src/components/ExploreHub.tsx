@@ -400,12 +400,11 @@ export const ExploreHub: React.FC = () => {
                 <h4 className="text-xs font-bold text-zinc-700 dark:text-zinc-400 mb-3 px-1 flex items-center gap-1.5"><StarsOutlineIcon className="w-4 h-4 text-emerald-500" /> مدل‌های عمومی و رایگان (بدون نیاز به کلید):</h4>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
                   {[
-                    { id: 'gemini-1.5-flash', provider: 'gemini', name: 'Gemini 1.5 Flash', tag: 'عمومی و سریع', isVision: true, isReasoning: false, isCoding: false, isFree: true, isFast: true },
+                    { id: 'gemini-1.5-flash', provider: 'custom', name: 'Gemini 1.5 Flash', tag: 'عمومی و سریع', baseUrl: 'https://generativelanguage.googleapis.com', isVision: true, isReasoning: false, isCoding: false, isFree: true, isFast: true },
                     { id: 'llama3-70b-8192', provider: 'custom', name: 'Llama 3 70B', tag: 'قدرتمند (Groq)', baseUrl: 'https://api.groq.com/openai/v1', isVision: false, isReasoning: false, isCoding: true, isFree: true, isFast: true },
                     { id: 'llama3-8b-8192', provider: 'custom', name: 'Llama 3 8B', tag: 'فوق سریع (Groq)', baseUrl: 'https://api.groq.com/openai/v1', isVision: false, isReasoning: false, isCoding: false, isFree: true, isFast: true }
                   ].map((fm) => {
-                    const isSelected = (fm.provider === 'gemini' && activeProvider === 'gemini' && settings.providers.gemini?.modelName === fm.id) ||
-                                       (fm.provider === 'custom' && activeProvider === 'custom' && activeCustomProfile?.modelName === fm.id);
+                    const isSelected = (fm.provider === 'custom' && activeProvider === 'custom' && activeCustomProfile?.modelName === fm.id);
                     return (
                       <div
                         key={fm.id}
