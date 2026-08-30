@@ -105,8 +105,54 @@ Return ONLY the English search query, nothing else, no quotes.`;
 
       const provider = apiConfig?.activeProvider || 'gemini';
       
-      if (provider === 'gemini' || process.env.GEMINI_API_KEY || apiConfig?.gemini?.apiKey) {
-        // Use official Google GenAI SDK if possible
+      let usedThirdParty = false;
+
+      // 1. If active provider is a third-party (not gemini) and has a key, prioritize it.
+      if (provider !== 'gemini' && apiConfig?.[provider]?.apiKey && apiConfig?.[provider]?.baseUrl) {
+        try {
+          const apiKey = apiConfig[provider].apiKey;
+          const baseUrl = apiConfig[provider].baseUrl.replace(/\/$/, '');
+          const model = provider === 'openrouter' ? 'google/gemini-1.5-flash' : (apiConfig[provider].modelName || 'gpt-3.5-turbo');
+          
+          const headers: any = {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${apiKey}`
+          };
+          if (provider === 'openrouter') {
+            headers['HTTP-Referer'] = 'https://ai.studio';
+            headers['X-Title'] = 'Persian AI Chatbox';
+          }
+          if (provider === 'anthropic') {
+             headers['x-api-key'] = apiKey;
+             headers['anthropic-version'] = '2023-06-01';
+             delete headers['Authorization'];
+          }
+
+          const res = await fetch(`${baseUrl}/chat/completions`, {
+            method: 'POST',
+            headers,
+            body: JSON.stringify({
+              model: model,
+              messages: [{ role: 'user', content: prompt }],
+              temperature: 0.1,
+              max_tokens: 30
+            }),
+            signal: AbortSignal.timeout(this.TIMEOUT_API)
+          });
+          
+          if (res.ok) {
+             const json = await res.json();
+             const enhancedQuery = json.choices?.[0]?.message?.content?.trim();
+             if (enhancedQuery && enhancedQuery.length > 2) searchQuery = enhancedQuery;
+          }
+          usedThirdParty = true;
+        } catch(e) {
+          console.warn(`[WebSearch] Third-party translation via ${provider} failed, falling back...`);
+        }
+      }
+      
+      // 2. If it was gemini, OR third-party failed, try official Gemini SDK if key exists
+      if (searchQuery === query && (provider === 'gemini' || !usedThirdParty) && (process.env.GEMINI_API_KEY || apiConfig?.gemini?.apiKey)) {
         try {
           const { getGeminiClient } = await import('./utils');
           const ai = getGeminiClient(apiConfig?.gemini?.apiKey);
@@ -117,48 +163,7 @@ Return ONLY the English search query, nothing else, no quotes.`;
           const enhancedQuery = response.text?.trim();
           if (enhancedQuery && enhancedQuery.length > 2) searchQuery = enhancedQuery;
         } catch(geminiErr) {
-          // If gemini fails (e.g. no key), fall through to generic fetch if available
-          if (!apiConfig?.[provider]?.apiKey) throw geminiErr;
-        }
-      } 
-      
-      // If we didn't translate yet, and we have a custom OpenAI-compatible provider (like OpenRouter)
-      if (searchQuery === query && apiConfig?.[provider]?.apiKey && apiConfig?.[provider]?.baseUrl) {
-        const apiKey = apiConfig[provider].apiKey;
-        const baseUrl = apiConfig[provider].baseUrl.replace(/\/$/, '');
-        // Use a fast/cheap model for translation if possible, else use the active model
-        const model = provider === 'openrouter' ? 'google/gemini-1.5-flash' : (apiConfig[provider].modelName || 'gpt-3.5-turbo');
-        
-        const headers: any = {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`
-        };
-        if (provider === 'openrouter') {
-          headers['HTTP-Referer'] = 'https://ai.studio';
-          headers['X-Title'] = 'Persian AI Chatbox';
-        }
-        if (provider === 'anthropic') {
-           headers['x-api-key'] = apiKey;
-           headers['anthropic-version'] = '2023-06-01';
-           delete headers['Authorization'];
-        }
-
-        const res = await fetch(`${baseUrl}/chat/completions`, {
-          method: 'POST',
-          headers,
-          body: JSON.stringify({
-            model: model,
-            messages: [{ role: 'user', content: prompt }],
-            temperature: 0.1,
-            max_tokens: 30
-          }),
-          signal: AbortSignal.timeout(this.TIMEOUT_API)
-        });
-        
-        if (res.ok) {
-           const json = await res.json();
-           const enhancedQuery = json.choices?.[0]?.message?.content?.trim();
-           if (enhancedQuery && enhancedQuery.length > 2) searchQuery = enhancedQuery;
+          // Ignore error and fall through
         }
       }
       
