@@ -195,6 +195,41 @@ export const ExploreHub: React.FC = () => {
     }));
   };
 
+  const handleSelectFreeModel = (modelId: string, providerId: 'gemini' | 'custom', title: string, baseUrl?: string) => {
+    updateSettings((s) => {
+      const newSettings = { ...s };
+      newSettings.tools.smartRouting = false;
+
+      if (providerId === 'gemini') {
+        newSettings.providers.activeProvider = 'gemini';
+        if (!newSettings.providers.gemini) newSettings.providers.gemini = { apiKey: '', modelName: modelId };
+        newSettings.providers.gemini.modelName = modelId;
+        // Don't overwrite apiKey if they have one, just in case, but usually this is for users without one
+      } else {
+        newSettings.providers.activeProvider = 'custom';
+        const profileId = `free_${modelId}`;
+        const existingProfileIndex = newSettings.providers.custom.profiles.findIndex(p => p.id === profileId);
+        
+        const profile = {
+          id: profileId,
+          name: title,
+          modelName: modelId,
+          baseUrl: baseUrl || 'https://api.groq.com/openai/v1',
+          apiKey: '', // Backend will inject
+          customHeaders: ''
+        };
+
+        if (existingProfileIndex >= 0) {
+          newSettings.providers.custom.profiles[existingProfileIndex] = profile;
+        } else {
+          newSettings.providers.custom.profiles.push(profile);
+        }
+        newSettings.providers.custom.activeProfileId = profileId;
+      }
+      return newSettings;
+    });
+  };
+
   const handleUsePrompt = (promptText: string) => {
     setIsExploreOpen(false);
     createChat();
@@ -357,6 +392,52 @@ export const ExploreHub: React.FC = () => {
                       </span>
                     )}
                   </div>
+                </div>
+              </div>
+
+              {/* Free Default Models */}
+              <div>
+                <h4 className="text-xs font-bold text-zinc-700 dark:text-zinc-400 mb-3 px-1 flex items-center gap-1.5"><StarsOutlineIcon className="w-4 h-4 text-emerald-500" /> مدل‌های عمومی و رایگان (بدون نیاز به کلید):</h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
+                  {[
+                    { id: 'gemini-1.5-flash', provider: 'gemini', name: 'Gemini 1.5 Flash', tag: 'عمومی و سریع', isVision: true, isReasoning: false, isCoding: false, isFree: true, isFast: true },
+                    { id: 'llama3-70b-8192', provider: 'custom', name: 'Llama 3 70B', tag: 'قدرتمند (Groq)', baseUrl: 'https://api.groq.com/openai/v1', isVision: false, isReasoning: false, isCoding: true, isFree: true, isFast: true },
+                    { id: 'llama3-8b-8192', provider: 'custom', name: 'Llama 3 8B', tag: 'فوق سریع (Groq)', baseUrl: 'https://api.groq.com/openai/v1', isVision: false, isReasoning: false, isCoding: false, isFree: true, isFast: true }
+                  ].map((fm) => {
+                    const isSelected = (fm.provider === 'gemini' && activeProvider === 'gemini' && settings.providers.gemini?.modelName === fm.id) ||
+                                       (fm.provider === 'custom' && activeProvider === 'custom' && activeCustomProfile?.modelName === fm.id);
+                    return (
+                      <div
+                        key={fm.id}
+                        onClick={() => handleSelectFreeModel(fm.id, fm.provider as any, fm.name, fm.baseUrl)}
+                        className={`p-4 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between ${
+                          isSelected
+                            ? 'bg-emerald-950/20 border-emerald-500/50 shadow-md'
+                            : 'bg-zinc-50 dark:bg-zinc-900/50 hover:bg-zinc-50 dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800/80 hover:border-zinc-300 dark:border-zinc-700'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center gap-2">
+                            <span className="font-bold text-sm text-zinc-800 dark:text-zinc-200">{fm.name}</span>
+                            {isSelected && (
+                              <span className="text-[10px] bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded-full border border-emerald-500/30 font-bold">
+                                فعال
+                              </span>
+                            )}
+                          </div>
+                          <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded-md">رایگان</span>
+                        </div>
+                        <div className="text-[11px] text-zinc-700 dark:text-zinc-400 font-mono truncate mb-3" dir="ltr">
+                          {fm.id}
+                        </div>
+                        <div className="flex flex-wrap items-center gap-1.5 pt-2 border-t border-zinc-200 dark:border-zinc-800/60">
+                          <span className="text-[10px] px-2 py-0.5 rounded-lg bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300">{fm.tag}</span>
+                          {fm.isVision && <span className="text-[10px] px-2 py-0.5 rounded-lg bg-amber-500/15 text-amber-500">بینایی 👀</span>}
+                          {fm.isCoding && <span className="text-[10px] px-2 py-0.5 rounded-lg bg-cyan-500/15 text-cyan-500">کدنویسی 💻</span>}
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
 

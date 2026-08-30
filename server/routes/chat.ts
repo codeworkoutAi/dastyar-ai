@@ -275,8 +275,17 @@ router.post('/api/chat/stream', async (req, res) => {
     }
 
     if (provider === 'gemini') {
-      const ai = getGeminiClient(apiConfig?.[provider]?.apiKey, false); // Do NOT fallback to env master key for chat generation
+      let userKey = apiConfig?.[provider]?.apiKey;
       let modelName = apiConfig?.[provider]?.modelName || 'gemini-3.1-flash-lite';
+
+      // Secure Backend Injection for Default Free Models
+      if (!userKey || String(userKey).trim() === '') {
+        if (modelName === 'gemini-1.5-flash' || modelName === 'gemini-2.0-flash-exp' || modelName === 'gemini-2.5-flash') {
+          userKey = process.env.DEFAULT_GEMINI_KEY;
+        }
+      }
+
+      const ai = getGeminiClient(userKey, false); // Do NOT fallback to env master key for chat generation
 
       // Format messages for Gemini API using robust helper on pruned history
       const formattedContents = formatContentsForGemini(prunedMessages);
@@ -459,6 +468,15 @@ router.post('/api/chat/stream', async (req, res) => {
           headers['anthropic-version'] = '2023-06-01';
         } else {
           headers['Authorization'] = `Bearer ${String(apiConfig[provider]?.apiKey).trim()}`;
+        }
+      } else {
+        // Secure Backend Injection for Default Free Models (Groq / OpenRouter)
+        const requestedModel = apiConfig?.[provider]?.modelName || '';
+        if (provider === 'custom') {
+          const allowedGroqModels = ['llama3-8b-8192', 'llama3-70b-8192', 'mixtral-8x7b-32768', 'gemma2-9b-it'];
+          if (allowedGroqModels.includes(requestedModel.toLowerCase()) && process.env.DEFAULT_GROQ_KEY) {
+            headers['Authorization'] = `Bearer ${process.env.DEFAULT_GROQ_KEY}`;
+          }
         }
       }
 
