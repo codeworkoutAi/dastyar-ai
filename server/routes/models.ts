@@ -34,9 +34,17 @@ router.post(['/api/models/test', '/api/ping'], modelTestRateLimiter, async (req,
     }
 
     if (provider === 'gemini') {
-      const apiKey = customApiKey ? String(customApiKey).trim() : undefined;
-      const ai = getGeminiClient(apiKey, false); // Forbid fallback to env for validation
+      let apiKey = customApiKey ? String(customApiKey).trim() : undefined;
       const targetModel = modelName || 'gemini-3.1-flash-lite';
+
+      // Secure Backend Injection for Default Free Models during test
+      if (!apiKey) {
+        if (targetModel === 'gemini-1.5-flash' || targetModel === 'gemini-2.0-flash-exp' || targetModel === 'gemini-2.5-flash') {
+          apiKey = process.env.DEFAULT_GEMINI_KEY;
+        }
+      }
+
+      const ai = getGeminiClient(apiKey, false); // Forbid fallback to env for validation unless explicitly injected above
       
       const testCandidates = [
         targetModel,
@@ -94,7 +102,26 @@ router.post(['/api/models/test', '/api/ping'], modelTestRateLimiter, async (req,
         });
       }
 
-      const apiKey = customApiKey ? String(customApiKey).trim() : '';
+      let apiKey = customApiKey ? String(customApiKey).trim() : '';
+
+      let model = modelName;
+      if (!model) {
+        if (provider === 'deepseek') model = 'deepseek-chat';
+        else if (provider === 'openai') model = 'gpt-4o-mini';
+        else if (provider === 'openrouter') model = 'meta-llama/llama-3.3-70b-instruct';
+        else model = 'gpt-4o-mini';
+      }
+
+      // Secure Backend Injection for Default Free Models during test
+      if (!apiKey && provider === 'custom') {
+        const bUrl = baseUrl.toLowerCase();
+        if (bUrl.includes('api.groq.com')) {
+          if (model === 'llama3-8b-8192' || model === 'llama3-70b-8192' || model === 'mixtral-8x7b-32768' || model === 'gemma2-9b-it') {
+            apiKey = process.env.DEFAULT_GROQ_KEY || '';
+          }
+        }
+      }
+
       if (!apiKey && provider !== 'custom') {
         return res.status(400).json({ 
           success: false, 
@@ -128,13 +155,7 @@ router.post(['/api/models/test', '/api/ping'], modelTestRateLimiter, async (req,
       const userHeaders = parseCustomHeaders(customHeaders);
       Object.assign(headers, userHeaders);
 
-      let model = modelName;
-      if (!model) {
-        if (provider === 'deepseek') model = 'deepseek-chat';
-        else if (provider === 'openai') model = 'gpt-4o-mini';
-        else if (provider === 'openrouter') model = 'meta-llama/llama-3.3-70b-instruct';
-        else model = 'gpt-4o-mini';
-      }
+      // model assignment moved up
 
       let response: Response;
       try {
