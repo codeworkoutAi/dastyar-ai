@@ -47,7 +47,7 @@ export class SmartWebAgent {
     return null;
   }
 
-  static async processQuery(query: string, trustedDomains?: string[], apiKey?: string): Promise<string> {
+  static async processQuery(query: string, trustedDomains?: string[], apiConfig?: any): Promise<string> {
     if (!query || query.trim().length < 2) return '';
 
     // ==========================================
@@ -92,32 +92,82 @@ export class SmartWebAgent {
     }
 
     // ==========================================
-    // 2.5 Translate & Enhance Query via Gemini
+    // 2.5 Translate & Enhance Query via Active Provider
     // ==========================================
     let searchQuery = query;
-    let geminiError = false;
+    let translationError = false;
     try {
-      const { getGeminiClient } = await import('./utils');
-      const ai = getGeminiClient(apiKey);
       const prompt = `You are an expert search engine query optimizer. The user has provided a search intent in Persian: "${query}"
 The user's Persian text might be colloquial, lazy, misspelled, incomplete, or grammatically incorrect.
 Step 1: First, deduce the true intent and correct the Persian internally.
 Step 2: Convert that corrected intent into a highly optimized, precise English search query (just keywords, no fluff). 
 Return ONLY the English search query, nothing else, no quotes.`;
+
+      const provider = apiConfig?.activeProvider || 'gemini';
       
-      const response = await ai.models.generateContent({
-        model: 'gemini-1.5-flash',
-        contents: prompt,
-      });
+      if (provider === 'gemini' || process.env.GEMINI_API_KEY || apiConfig?.gemini?.apiKey) {
+        // Use official Google GenAI SDK if possible
+        try {
+          const { getGeminiClient } = await import('./utils');
+          const ai = getGeminiClient(apiConfig?.gemini?.apiKey);
+          const response = await ai.models.generateContent({
+            model: 'gemini-1.5-flash',
+            contents: prompt,
+          });
+          const enhancedQuery = response.text?.trim();
+          if (enhancedQuery && enhancedQuery.length > 2) searchQuery = enhancedQuery;
+        } catch(geminiErr) {
+          // If gemini fails (e.g. no key), fall through to generic fetch if available
+          if (!apiConfig?.[provider]?.apiKey) throw geminiErr;
+        }
+      } 
       
-      const enhancedQuery = response.text?.trim();
-      if (enhancedQuery && enhancedQuery.length > 2) {
-        console.log(`[WebSearch] Gemini translated query: "${query}" -> "${enhancedQuery}"`);
-        searchQuery = enhancedQuery;
+      // If we didn't translate yet, and we have a custom OpenAI-compatible provider (like OpenRouter)
+      if (searchQuery === query && apiConfig?.[provider]?.apiKey && apiConfig?.[provider]?.baseUrl) {
+        const apiKey = apiConfig[provider].apiKey;
+        const baseUrl = apiConfig[provider].baseUrl.replace(/\/$/, '');
+        // Use a fast/cheap model for translation if possible, else use the active model
+        const model = provider === 'openrouter' ? 'google/gemini-1.5-flash' : (apiConfig[provider].modelName || 'gpt-3.5-turbo');
+        
+        const headers: any = {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiKey}`
+        };
+        if (provider === 'openrouter') {
+          headers['HTTP-Referer'] = 'https://ai.studio';
+          headers['X-Title'] = 'Persian AI Chatbox';
+        }
+        if (provider === 'anthropic') {
+           headers['x-api-key'] = apiKey;
+           headers['anthropic-version'] = '2023-06-01';
+           delete headers['Authorization'];
+        }
+
+        const res = await fetch(`${baseUrl}/chat/completions`, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({
+            model: model,
+            messages: [{ role: 'user', content: prompt }],
+            temperature: 0.1,
+            max_tokens: 30
+          }),
+          signal: AbortSignal.timeout(this.TIMEOUT_API)
+        });
+        
+        if (res.ok) {
+           const json = await res.json();
+           const enhancedQuery = json.choices?.[0]?.message?.content?.trim();
+           if (enhancedQuery && enhancedQuery.length > 2) searchQuery = enhancedQuery;
+        }
+      }
+      
+      if (searchQuery !== query) {
+        console.log(`[WebSearch] Translated query: "${query}" -> "${searchQuery}"`);
       }
     } catch (e: any) {
-      console.warn('[WebSearch] Failed to translate query with Gemini, falling back to raw query:', e.message);
-      geminiError = true;
+      console.warn('[WebSearch] Failed to translate query, falling back to raw query:', e.message);
+      translationError = true;
     }
 
     // Build search query with domain prioritization for specific intents
