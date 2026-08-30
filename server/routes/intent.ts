@@ -73,7 +73,7 @@ Do not wrap in markdown. Raw JSON only.`;
       });
       
       const text = response.text || '';
-      return res.json(parseLLMJsonResponse(text));
+      return res.json(parseLLMJsonResponse(text, userText));
 
     } else {
       // DeepSeek / OpenAI / Custom
@@ -155,7 +155,7 @@ Do not wrap in markdown. Raw JSON only.`;
         text = data.choices?.[0]?.message?.content || '';
       }
 
-      return res.json(parseLLMJsonResponse(text));
+      return res.json(parseLLMJsonResponse(text, userText));
     }
   } catch (err) {
     console.error('[Intent Router] Error:', err);
@@ -163,7 +163,7 @@ Do not wrap in markdown. Raw JSON only.`;
   }
 });
 
-function parseLLMJsonResponse(text: string) {
+function parseLLMJsonResponse(text: string, userText: string) {
   let cleanText = text.trim();
   if (cleanText.startsWith('\`\`\`json')) {
     cleanText = cleanText.replace(/^\`\`\`json/, '').replace(/\`\`\`$/, '').trim();
@@ -171,15 +171,20 @@ function parseLLMJsonResponse(text: string) {
     cleanText = cleanText.replace(/^\`\`\`/, '').replace(/\`\`\`$/, '').trim();
   }
 
+  // DEFINITIVE SOLUTION: Hybrid Heuristics Override
+  // To bypass unpredictable free LLM models, we enforce a definitive regex fallback.
+  const definitiveWebSearchTriggers = /اخبار|خبر|قیمت|آب و هوا|آب‌وهوا|مقاله|تحقیق|درباره|سرچ|جستجو|امروز|تاریخ|جدیدترین|آپدیت|به روز|به‌روز/i;
+  const isDefinitiveWebSearch = definitiveWebSearchTriggers.test(userText);
+
   try {
     const parsed = JSON.parse(cleanText);
     return {
-      webSearch: !!parsed.webSearch,
+      webSearch: isDefinitiveWebSearch || !!parsed.webSearch,
       intent: ['coding', 'vision', 'general'].includes(parsed.intent) ? parsed.intent : 'general'
     };
   } catch (e) {
     console.error('[Intent Router] Failed to parse JSON:', text);
-    return { webSearch: false, intent: 'general' };
+    return { webSearch: isDefinitiveWebSearch, intent: 'general' };
   }
 }
 
