@@ -9,13 +9,34 @@ function appendDebugLog(logData: any) {
   try {
     const logPath = path.resolve(process.cwd(), 'chat_debug_log.txt');
     const timestamp = new Date().toLocaleString('fa-IR', { timeZone: 'Asia/Tehran' }) || new Date().toISOString();
-    const logEntry = `\n\n========================================\n[${timestamp}]\n${JSON.stringify(logData, null, 2)}`;
-    fs.appendFileSync(logPath, logEntry, 'utf-8');
+    const newEntry = `[${timestamp}]\n${JSON.stringify(logData, null, 2)}`;
+    
+    let entries: string[] = [];
+    if (fs.existsSync(logPath)) {
+      const existing = fs.readFileSync(logPath, 'utf-8');
+      // Split by header divider and filter out comments
+      entries = existing
+        .split(/========================================\r?\n/)
+        .map(e => e.trim())
+        .filter(e => e.length > 0 && !e.startsWith('#'));
+    }
+    
+    entries.push(newEntry);
+    
+    // Auto-prune: Keep only the most recent 10 entries to prevent file bloat
+    const MAX_ENTRIES = 10;
+    if (entries.length > MAX_ENTRIES) {
+      entries = entries.slice(entries.length - MAX_ENTRIES);
+    }
+    
+    const finalContent = '# Chat Debug Log (آخرین ۱۰ مکالمه ثبت شده)\n' +
+      entries.map(e => `========================================\n${e}`).join('\n\n') + '\n';
+      
+    fs.writeFileSync(logPath, finalContent, 'utf-8');
   } catch (err) {
     console.error('Failed to write debug log', err);
   }
 }
-
 
 const router = express.Router();
 
@@ -30,6 +51,16 @@ router.get('/api/debug/logs', (req, res) => {
     return res.status(404).send('فایل لاگ هنوز ایجاد نشده است یا پیامی ارسال نگردیده.');
   } catch (err: any) {
     return res.status(500).send('خطا در خواندن فایل لاگ: ' + err.message);
+  }
+});
+
+router.get('/api/debug/logs/clear', (req, res) => {
+  try {
+    const logPath = path.resolve(process.cwd(), 'chat_debug_log.txt');
+    fs.writeFileSync(logPath, '# Chat Debug Log (پاکسازی شد)\n========================================\n', 'utf-8');
+    return res.send('فایل لاگ با موفقیت پاکسازی شد.');
+  } catch (err: any) {
+    return res.status(500).send('خطا در پاکسازی: ' + err.message);
   }
 });
 
