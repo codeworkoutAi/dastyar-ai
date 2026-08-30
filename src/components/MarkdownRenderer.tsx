@@ -197,7 +197,7 @@ function replaceEmojisWithSolarIcons(node: React.ReactNode, context: IconContext
     // Size mappings per context
     let sizeClass = 'w-[1.05em] h-[1.05em] drop-shadow-xs mx-0.5';
     if (context === 'heading') {
-      sizeClass = 'w-[1.25em] h-[1.25em] drop-shadow-sm mx-1';
+      sizeClass = 'w-[0.9em] h-[0.9em] drop-shadow-sm mx-1.5 mb-0.5';
     } else if (context === 'meta' || context === 'badge') {
       sizeClass = 'w-[0.7em] h-[0.7em] max-w-[12px] max-h-[12px] opacity-75 mx-0.5 align-baseline';
     }
