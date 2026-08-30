@@ -231,7 +231,7 @@ router.post('/api/chat/stream', async (req, res) => {
     if (apiConfig?.webSearch && !isDateInquiry) {
       console.log('[Backend] Web search enabled, executing SmartWebAgent...');
       if (userText && userText.trim().length > 1) {
-        liveWebContext = await SmartWebAgent.processQuery(userText, settings?.tools?.webSearchDomains);
+        liveWebContext = await SmartWebAgent.processQuery(userText, settings?.tools?.webSearchDomains, apiConfig?.gemini?.apiKey);
         console.log('[Backend] Web search result length:', liveWebContext?.length || 0);
       }
     } else {

@@ -47,7 +47,7 @@ export class SmartWebAgent {
     return null;
   }
 
-  static async processQuery(query: string, trustedDomains?: string[]): Promise<string> {
+  static async processQuery(query: string, trustedDomains?: string[], apiKey?: string): Promise<string> {
     if (!query || query.trim().length < 2) return '';
 
     // ==========================================
@@ -91,12 +91,39 @@ export class SmartWebAgent {
       console.log('[WebSearch] Prioritizing domains:', trustedDomains.slice(0, 3).join(', '));
     }
 
-    // Build search query with domain prioritization for specific intents
+    // ==========================================
+    // 2.5 Translate & Enhance Query via Gemini
+    // ==========================================
     let searchQuery = query;
+    let geminiError = false;
+    try {
+      const { getGeminiClient } = await import('./utils');
+      const ai = getGeminiClient(apiKey);
+      const prompt = `You are an expert search engine query optimizer. The user has provided a search intent in Persian: "${query}"
+The user's Persian text might be colloquial, lazy, misspelled, incomplete, or grammatically incorrect.
+Step 1: First, deduce the true intent and correct the Persian internally.
+Step 2: Convert that corrected intent into a highly optimized, precise English search query (just keywords, no fluff). 
+Return ONLY the English search query, nothing else, no quotes.`;
+      
+      const response = await ai.models.generateContent({
+        model: 'gemini-1.5-flash',
+        contents: prompt,
+      });
+      
+      const enhancedQuery = response.text?.trim();
+      if (enhancedQuery && enhancedQuery.length > 2) {
+        console.log(`[WebSearch] Gemini translated query: "${query}" -> "${enhancedQuery}"`);
+        searchQuery = enhancedQuery;
+      }
+    } catch (e: any) {
+      console.warn('[WebSearch] Failed to translate query with Gemini, falling back to raw query:', e.message);
+      geminiError = true;
+    }
+
+    // Build search query with domain prioritization for specific intents
     if (trustedDomains && trustedDomains.length > 0 && (intent === 'Programming' || intent === 'TechReviews' || intent === 'Academic')) {
-      // Add site: operator to prioritize trusted domains
       const domainQuery = trustedDomains.slice(0, 3).map(d => `site:${d}`).join(' OR ');
-      searchQuery = `${query} (${domainQuery})`;
+      searchQuery = `${searchQuery} (${domainQuery})`;
     }
 
     // ==========================================
