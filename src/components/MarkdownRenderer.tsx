@@ -632,9 +632,7 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = React.memo(({
           },
 
           // Divider
-          hr() {
-            return <hr className="my-4 border-subtle" />;
-          },
+          hr: () => null,
         }}
       >
         {processedContent}
