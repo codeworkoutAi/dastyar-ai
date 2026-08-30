@@ -247,7 +247,7 @@ router.post('/api/chat/stream', async (req, res) => {
         if (isDateInquiry) {
           prunedMessages[lastMsgIndex].content = `${prunedMessages[lastMsgIndex].content}\n\n${liveWebContext}`;
         } else {
-          const webSearchWrapper = `\n\n<web_search_results>\n${liveWebContext}\n</web_search_results>\n\n<instructions>\nپاسخ خود را دقیقاً و منحصراً بر اساس اطلاعات داخل تگ بالا ارائه بده. این اطلاعات از اینترنت جستجو شده و از دانش قبلی تو جدیدتر است.\n</instructions>`;
+          const webSearchWrapper = `\n\n<web_search_results>\n${liveWebContext}\n</web_search_results>\n\n<instructions>\nاخطار مهم: پاسخ خود را دقیقاً و منحصراً بر اساس اطلاعات داخل تگ بالا ارائه بده. تو موظفی تمام اعداد، آمار و جزئیات دقیق (مانند دما، رطوبت، سرعت باد، قیمت‌ها، تاریخ‌ها و پیش‌بینی‌ها) را به طور کامل از متن استخراج و گزارش کنی. حق خلاصه‌سازیِ داده‌های مهم را نداری و باید یک گزارش جامع و ساختاریافته ارائه دهی.\n</instructions>`;
           prunedMessages[lastMsgIndex].content = `${prunedMessages[lastMsgIndex].content}${webSearchWrapper}`;
         }
       }

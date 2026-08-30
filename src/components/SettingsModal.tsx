@@ -648,6 +648,22 @@ export const SettingsModal: React.FC = () => {
                   )}
                 </div>
 
+                <div className="mt-4 p-4 rounded-xl border relative flex flex-col gap-2 bg-amber-500/10 border-amber-500/20 text-amber-500 dark:text-amber-400">
+                  <div className="flex items-start gap-3">
+                    <div className="shrink-0 pt-0.5">
+                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <div className="text-sm font-bold mb-1">راهنمای انتخاب مدل هوش مصنوعی</div>
+                      <div className="text-xs font-medium leading-relaxed opacity-90">
+                        مدل‌های سبک (مانند Mini یا Flash) سرعت بسیار بالایی دارند، اما ممکن است در تحلیل داده‌های پیچیده اینترنت (مثل آب و هوا یا آمار) بخش‌هایی از جزئیات را نادیده بگیرند. برای اطمینان از دریافت پاسخ‌ها و تحلیل‌های عمیق، کامل و دقیق، استفاده از مدل‌های پیشرفته (مانند Pro، Plus یا Ultra) پیشنهاد می‌شود.
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
                 <div className="bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-4 sm:p-5 mt-4">
 
                   <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
