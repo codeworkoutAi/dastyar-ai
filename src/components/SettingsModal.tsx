@@ -308,6 +308,13 @@ export const SettingsModal: React.FC = () => {
     const provider = tempSettings.providers.activeProvider;
     let config = tempSettings.providers[provider] as any;
 
+    if (provider === 'custom') {
+      const activeProfile = config.profiles?.find((p: any) => p.id === config.activeProfileId);
+      if (activeProfile) {
+        config = activeProfile;
+      }
+    }
+
     // Use override config if provided (to bypass React state delays)
     if (overrideConfig) {
       config = { ...config, ...overrideConfig };
@@ -453,7 +460,13 @@ export const SettingsModal: React.FC = () => {
     setTesting(true);
     setTestResult(null);
     try {
-      const configObj = (tempSettings.providers[provider] as any) || {};
+      let configObj = (tempSettings.providers[provider] as any) || {};
+      if (provider === 'custom') {
+        const activeProfile = configObj.profiles?.find((p: any) => p.id === configObj.activeProfileId);
+        if (activeProfile) {
+          configObj = activeProfile;
+        }
+      }
       const res = await fetch('/api/ping', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
