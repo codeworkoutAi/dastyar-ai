@@ -275,7 +275,7 @@ router.post('/api/chat/stream', async (req, res) => {
     }
 
     if (provider === 'gemini') {
-      const ai = getGeminiClient(apiConfig?.[provider]?.apiKey);
+      const ai = getGeminiClient(apiConfig?.[provider]?.apiKey, false); // Do NOT fallback to env master key for chat generation
       let modelName = apiConfig?.[provider]?.modelName || 'gemini-3.1-flash-lite';
 
       // Format messages for Gemini API using robust helper on pruned history

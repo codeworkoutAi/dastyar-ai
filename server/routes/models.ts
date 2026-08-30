@@ -35,7 +35,7 @@ router.post(['/api/models/test', '/api/ping'], modelTestRateLimiter, async (req,
 
     if (provider === 'gemini') {
       const apiKey = customApiKey ? String(customApiKey).trim() : undefined;
-      const ai = getGeminiClient(apiKey);
+      const ai = getGeminiClient(apiKey, false); // Forbid fallback to env for validation
       const targetModel = modelName || 'gemini-3.1-flash-lite';
       
       const testCandidates = [
