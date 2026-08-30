@@ -278,10 +278,11 @@ function formatInlineListsAndPrinciples(text: string): string {
   // 3. Detect inline sequence of numbered items like "... ۱. متن اول ۲. متن دوم ۳. متن سوم" on the same line
   const lines = tempText.split('\n');
   const formattedLines = lines.map((line) => {
-    // If line has multiple numbered items on the same line (e.g. "۱. ... ۲. ...")
-    const matchCount = (line.match(/[ \t]+[۰-۹0-9]+[\.\-\)]\s+/g) || []).length;
-    if (matchCount >= 1 && /[۰-۹0-9]+[\.\-\)]/.test(line)) {
-      return line.replace(/([ \t]+)([۰-۹0-9]+[\.\-\)]\s+)/g, '\n\n$2');
+    // Only split if the numbered item is preceded by actual text, NOT just spaces or blockquote marks
+    // We avoid matching "^> 1." or "^ 1."
+    const matchCount = (line.match(/(?<=[^\s>][ \t]+)([۰-۹0-9]+[\.\-\)]\s+)/g) || []).length;
+    if (matchCount >= 1) {
+      return line.replace(/(?<=[^\s>][ \t]+)([۰-۹0-9]+[\.\-\)]\s+)/g, '\n\n$1');
     }
     return line;
   });
@@ -410,6 +411,21 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = React.memo(({
 
             if (!inline) {
               if (!codeString.trim()) return null; // Prevent completely empty block rendering
+              
+              if (language === 'reasoning') {
+                  return (
+                      <details className="my-4 rounded-xl border border-subtle bg-black/5 dark:bg-white/5 overflow-hidden group">
+                          <summary className="cursor-pointer px-4 py-3 font-medium select-none flex items-center gap-2 hover:bg-black/5 dark:hover:bg-white/5 transition-colors list-none [&::-webkit-details-marker]:hidden">
+                              <span className="text-lg">🧠</span>
+                              <span className="text-[14px] text-zinc-700 dark:text-zinc-300">فرآیند استدلال هوش مصنوعی (برای مشاهده کلیک کنید)</span>
+                          </summary>
+                          <div className="p-4 border-t border-subtle text-[13px] opacity-80 leading-relaxed font-mono whitespace-pre-wrap max-h-[400px] overflow-y-auto" dir="rtl">
+                              {codeString}
+                          </div>
+                      </details>
+                  );
+              }
+              
               return <CodeBlock language={language} code={codeString} />;
             }
 

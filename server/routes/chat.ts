@@ -625,18 +625,18 @@ router.post('/api/chat/stream', async (req, res) => {
               if (reasoningChunk) {
                 if (!isReasoningPhase) {
                   isReasoningPhase = true;
-                  const reasonPrefix = '> 🧠 *استدلال عمیق DeepSeek R1:*\n> ';
+                  const reasonPrefix = '```reasoning\n';
                   fullAccumulatedCustom += reasonPrefix;
                   sendChunk({ chunk: reasonPrefix });
                 }
-                const formattedReason = reasoningChunk.replace(/\n/g, '\n> ');
-                fullAccumulatedCustom += formattedReason;
-                sendChunk({ chunk: formattedReason });
+                fullAccumulatedCustom += reasoningChunk;
+                sendChunk({ chunk: reasoningChunk });
               } else if (contentChunk) {
                 if (isReasoningPhase) {
                   isReasoningPhase = false;
-                  fullAccumulatedCustom += '\n\n---\n\n';
-                  sendChunk({ chunk: '\n\n---\n\n' });
+                  const reasonSuffix = '\n```\n\n';
+                  fullAccumulatedCustom += reasonSuffix;
+                  sendChunk({ chunk: reasonSuffix });
                 }
                 fullAccumulatedCustom += contentChunk;
                 sendChunk({ chunk: contentChunk });
