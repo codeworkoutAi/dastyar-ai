@@ -295,9 +295,9 @@ function formatInlineListsAndPrinciples(text: string): string {
   // 5. Strip empty indented lines (just spaces/tabs) to prevent hallucinated empty code blocks
   tempText = tempText.replace(/^[ \t]+$/gm, '');
 
-  // 6. Remove redundant horizontal rules (---) that appear immediately after reasoning blocks
+  // 6. Remove redundant horizontal rules (---, ***, ___) that appear immediately after reasoning blocks
   // to prevent double lines (the details box border + the hr) and excessive vertical spacing.
-  tempText = tempText.replace(/__CODE_BLOCK_(\d+)__\s*\n*---\n*/g, '__CODE_BLOCK_$1__\n\n');
+  tempText = tempText.replace(/__CODE_BLOCK_(\d+)__\s*[-*_]{3,}\s*/g, '__CODE_BLOCK_$1__\n\n');
 
   // Restore code blocks
   return tempText.replace(/__CODE_BLOCK_(\d+)__/g, (_, index) => codeBlocks[Number(index)] || '');
