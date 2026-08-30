@@ -13,7 +13,6 @@ export class SmartWebAgent {
   /**
    * Exponential backoff retry helper with jitter
    */
-  public static lastSearchDebug: any = null;
 
   private static async retryWithBackoff<T>(
     fn: () => Promise<T>,
@@ -235,12 +234,6 @@ Return ONLY the optimized search query, nothing else, no quotes.`;
       } catch (err) {}
     }
 
-    this.lastSearchDebug = {
-      originalQuery: query,
-      translatedQuery: searchQuery,
-      translatedBy: searchQuery !== query ? (usedThirdParty ? provider : 'gemini') : 'none (raw query)',
-      resultsCount: Math.min(titles.length, snippets.length)
-    };
 
     let firstUrl: string | null = null;
     let resultsText = '';
