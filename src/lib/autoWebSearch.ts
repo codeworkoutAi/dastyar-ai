@@ -42,7 +42,7 @@ export function detectWebSearchNeed(query: string): WebSearchDecision {
   }
 
   // 3. Dynamic procedural detection: Time-sensitive, live data, or factual questions
-  const requiresLiveInformation = /(امروز|الان|جدیدترین|آخرین|قیمت|نرخ|نتیجه|اخبار|خبر|آب و هوا|هواشناسی|امسال|ساعت|now|today|latest|current|price|news|weather|time)/i.test(lowerQuery);
+  const requiresLiveInformation = /(امروز|الان|جدیدترین|آخرین|قیمت|نرخ|نتیجه|اخبار|خبر|آب و هوا|هواشناسی|امسال|ساعت|به روز|به‌روز|بروز|آپدیت|جدید|تازه|now|today|latest|current|price|news|weather|time|update)/i.test(lowerQuery);
   
   const isQuestion = /(چیست|کیست|کجاست|چرا|چگونه|چطور|چه|کی|کجا|چند|آیا|what|who|where|when|why|how)/i.test(lowerQuery) || lowerQuery.includes('؟') || lowerQuery.includes('?');
 

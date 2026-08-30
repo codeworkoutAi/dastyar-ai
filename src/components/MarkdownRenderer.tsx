@@ -288,6 +288,9 @@ function formatInlineListsAndPrinciples(text: string): string {
 
   tempText = formattedLines.join('\n');
 
+  // 4. Strip hallucinated HTML tags (like <div/>, <*div align="left">, </span>) outside of code blocks
+  tempText = tempText.replace(/<\/?\*?(div|span|html|body|main|center)[^>]*>/gi, '');
+
   // Restore code blocks
   return tempText.replace(/__CODE_BLOCK_(\d+)__/g, (_, index) => codeBlocks[Number(index)] || '');
 }
