@@ -100,9 +100,9 @@ export class SmartWebAgent {
     }
 
     // ==========================================
-    // 3. Fetch Web Results (Bing)
+    // 3. Fetch Web Results (DuckDuckGo)
     // ==========================================
-    const searchUrl = 'https://www.bing.com/search?q=' + encodeURIComponent(searchQuery);
+    const searchUrl = 'https://html.duckduckgo.com/html/?q=' + encodeURIComponent(searchQuery);
     const html = await this.retryWithBackoff(
       async () => {
         const res = await fetch(searchUrl, {
@@ -114,37 +114,36 @@ export class SmartWebAgent {
         });
 
         if (!res.ok) {
-          throw new Error(`Bing search returned ${res.status}`);
+          throw new Error(`DuckDuckGo search returned ${res.status}`);
         }
 
         return await res.text();
       },
       this.MAX_RETRIES,
       this.INITIAL_RETRY_DELAY,
-      'Bing search'
+      'DuckDuckGo search'
     );
 
     if (!html) {
-      console.warn('[WebSearch] Bing search failed, returning empty');
+      console.warn('[WebSearch] DuckDuckGo search failed, returning empty');
       return '';
     }
 
-    const titles = [...html.matchAll(/<h2[^>]*><a[^>]*href="([^"]*)"[^>]*>([\s\S]*?)<\/a><\/h2>/gi)];
-    const snippets = [...html.matchAll(/<div class="b_caption[^>]*>([\s\S]*?)<\/div>/gi)];
+    const titles = [...html.matchAll(/<a class="result__url" href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/gi)];
+    const snippets = [...html.matchAll(/<a class="result__snippet[^>]*>([\s\S]*?)<\/a>/gi)];
 
     let firstUrl: string | null = null;
     let resultsText = '';
     const limit = Math.min(titles.length, snippets.length, 5);
 
     for (let i = 0; i < limit; i++) {
-      let rawUrl = titles[i][1].replace(/&amp;/g, '&');
-      if (rawUrl.includes('aclick') || rawUrl.includes('adurl')) continue;
+      let rawUrl = titles[i][1];
 
-      const uMatch = rawUrl.match(/&u=a1([^&]+)/);
-      if (uMatch) {
+      // DuckDuckGo redirects urls, extract real url if present
+      if (rawUrl.startsWith('//duckduckgo.com/l/?uddg=')) {
         try {
-          rawUrl = Buffer.from(uMatch[1], 'base64').toString('utf8');
-        } catch (e) {}
+          rawUrl = decodeURIComponent(rawUrl.split('uddg=')[1].split('&')[0]);
+        } catch(e) {}
       }
 
       if (!firstUrl) firstUrl = rawUrl;
