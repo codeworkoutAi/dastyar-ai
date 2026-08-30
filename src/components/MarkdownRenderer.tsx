@@ -288,8 +288,11 @@ function formatInlineListsAndPrinciples(text: string): string {
 
   tempText = formattedLines.join('\n');
 
-  // 4. Strip hallucinated HTML tags (like <div/>, <*div align="left">, </span>) outside of code blocks
-  tempText = tempText.replace(/<\/?\*?(div|span|html|body|main|center)[^>]*>/gi, '');
+  // 4. Strip hallucinated HTML tags and system prompt tags outside of code blocks
+  tempText = tempText.replace(/<\/?\*?(div|span|html|body|main|center|web_search_results|instructions)[^>]*>/gi, '');
+
+  // 5. Strip empty indented lines (just spaces/tabs) to prevent hallucinated empty code blocks
+  tempText = tempText.replace(/^[ \t]+$/gm, '');
 
   // Restore code blocks
   return tempText.replace(/__CODE_BLOCK_(\d+)__/g, (_, index) => codeBlocks[Number(index)] || '');
@@ -394,13 +397,19 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = React.memo(({
             );
           },
 
+          // Prevent default prose-pre from double-wrapping our CodeBlock or creating empty gray boxes
+          pre({ children }) {
+            return <>{children}</>;
+          },
+
           // Code blocks with syntax copy header & react-syntax-highlighter
           code({ node, inline, className, children, ...props }: any) {
             const match = /language-(\w+)/.exec(className || '');
             const language = match ? match[1] : '';
             const codeString = String(children).replace(/\n$/, '');
 
-            if (!inline && (match || codeString.includes('\n'))) {
+            if (!inline) {
+              if (!codeString.trim()) return null; // Prevent completely empty block rendering
               return <CodeBlock language={language} code={codeString} />;
             }
 
