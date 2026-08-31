@@ -37,5 +37,7 @@ Persian AI Chatbox is a highly polished, full-stack AI chat interface designed s
 3. **No Unrequested Features**: Stick strictly to the user's prompt. Do not add unrequested pages, sidebars, or databases unless explicitly asked.
 4. **Styling Approach**: Use Tailwind utility classes for layout and simple styling. A custom CSS design system is present in `index.css` for complex UI components; utilize existing CSS variables and classes from there where appropriate. Do not introduce CSS modules or new external CSS files.
 5. **Robust Error Handling**: Any new API route or feature must handle failures gracefully and return user-friendly Persian error messages.
+6. **Web Search Global Toggle (KILL-SWITCH)**: The Global Web Search toggle in settings is a strict KILL-SWITCH. If disabled, NO web search must occur, even if Smart Routing detects the need for it. Never bypass this manual setting (refer to `chatStore.ts`).
+7. **Markdown Rendering Stability**: When preprocessing `<think>` tags in `MarkdownRenderer.tsx`, ensure the resulting code blocks are wrapped in double newlines (`\n\n\`\`\`reasoning\n...\n\`\`\`\n\n`). Failing to do so causes HTML nesting errors (`<pre>` inside `<p>`) and crashes the React DOM entirely.
 
 *End of instructions.*
