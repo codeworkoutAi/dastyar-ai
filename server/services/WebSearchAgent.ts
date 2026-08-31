@@ -110,7 +110,7 @@ Step 2: Convert that corrected intent into a highly optimized, precise search qu
 Return ONLY the optimized search query, nothing else, no quotes.`;
 
       // 1. If active provider is a third-party (not gemini) and has a key, prioritize it.
-      if (provider !== 'gemini' && apiConfig?.[provider]?.apiKey && apiConfig?.[provider]?.baseUrl) {
+      if (provider !== 'gemini' && provider !== 'custom' && apiConfig?.[provider]?.apiKey && apiConfig?.[provider]?.baseUrl) {
         try {
           const apiKey = apiConfig[provider].apiKey;
           const baseUrl = apiConfig[provider].baseUrl.replace(/\/$/, '');
@@ -241,7 +241,8 @@ Return ONLY the optimized search query, nothing else, no quotes.`;
 
     let firstUrl: string | null = null;
     let resultsText = '';
-    const limit = Math.min(titles.length, snippets.length, 5);
+    let validCount = 0;
+    const limit = Math.min(titles.length, snippets.length);
 
     for (let i = 0; i < limit; i++) {
       let rawUrl = titles[i][1].replace(/&amp;/g, '&');
@@ -254,11 +255,19 @@ Return ONLY the optimized search query, nothing else, no quotes.`;
         } catch (e) {}
       }
 
+      // Skip common ads/spam networks if they slip through
+      if (rawUrl.includes('amazon.') || rawUrl.includes('booking.') || rawUrl.includes('aliexpress.')) {
+        continue;
+      }
+
       if (!firstUrl) firstUrl = rawUrl;
       const title = titles[i][2].replace(/<[^>]+>/g, '').trim();
       const snippet = snippets[i][1].replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
       resultsText += `[لینک: ${rawUrl}]\nعنوان: ${title}\nخلاصه: ${snippet}\n\n`;
+      validCount++;
+      if (validCount >= 5) break;
     }
+
 
     // ==========================================
     // 4. Deep Scrape (For specific intents where detail is needed)
