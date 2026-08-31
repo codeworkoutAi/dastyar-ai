@@ -38,11 +38,11 @@ export const DEFAULT_SETTINGS: AppSettings = {
           customHeaders: ''
         },
         {
-          id: 'default-gemini-1-5-flash',
-          name: 'Gemini 1.5 Flash (رایگان)',
+          id: 'default-gemini-3-1-flash-lite',
+          name: 'Gemini 3.1 Flash Lite (رایگان)',
           baseUrl: 'https://generativelanguage.googleapis.com/v1beta/openai',
           apiKey: '',
-          modelName: 'gemini-1.5-flash',
+          modelName: 'gemini-3.1-flash-lite',
           customHeaders: ''
         }
       ] 
@@ -59,7 +59,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
     routingRoles: { 
       default: 'default-groq-qwen-27b', 
       coding: 'default-groq-gpt-oss-120b', 
-      vision: 'default-gemini-1-5-flash' 
+      vision: 'default-gemini-3-1-flash-lite' 
     } 
   }
 };

@@ -112,7 +112,7 @@ Return ONLY the optimized search query, nothing else, no quotes.`;
         try {
           const apiKey = apiConfig[provider].apiKey;
           const baseUrl = apiConfig[provider].baseUrl.replace(/\/$/, '');
-          const model = provider === 'openrouter' ? 'google/gemini-1.5-flash' : (apiConfig[provider].modelName || 'gpt-3.5-turbo');
+          const model = provider === 'openrouter' ? 'google/gemini-3.1-flash-lite' : (apiConfig[provider].modelName || 'gpt-3.5-turbo');
           
           const headers: any = {
             'Content-Type': 'application/json',
@@ -157,7 +157,7 @@ Return ONLY the optimized search query, nothing else, no quotes.`;
           const { getGeminiClient } = await import('./utils');
           const ai = getGeminiClient(apiConfig?.gemini?.apiKey);
           const response = await ai.models.generateContent({
-            model: 'gemini-1.5-flash',
+            model: 'gemini-3.1-flash-lite',
             contents: prompt,
           });
           const enhancedQuery = response.text?.trim();

@@ -39,7 +39,7 @@ router.post(['/api/models/test', '/api/ping'], modelTestRateLimiter, async (req,
 
       // Secure Backend Injection for Default Free Models during test
       if (!apiKey) {
-        if (targetModel === 'gemini-1.5-flash' || targetModel === 'gemini-2.0-flash-exp' || targetModel === 'gemini-2.5-flash') {
+        if (targetModel === 'gemini-3.1-flash-lite' || targetModel === 'gemini-2.0-flash-exp' || targetModel === 'gemini-2.5-flash') {
           apiKey = process.env.DEFAULT_GEMINI_KEY || process.env.GEMINI_API_KEY;
         }
       }

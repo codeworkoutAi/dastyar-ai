@@ -147,7 +147,7 @@ export async function translateAndEnhanceImagePrompt(rawPrompt: string, apiKey?:
   try {
     const ai = getGeminiClient(apiKey);
     const response = await ai.models.generateContent({
-      model: 'gemini-1.5-flash',
+      model: 'gemini-3.1-flash-lite',
       contents: `You are an expert AI art prompt engineer, editor, and master translator. The user has sent a request for an image generation in Persian.
 This Persian text might be colloquial, lazy, misspelled, or have words out of order (Lazy Persian).
 Step 1: First, act as a strict editor and understand the true intent and correct the Persian internally in your mind (fix spelling, grammar, and intent).

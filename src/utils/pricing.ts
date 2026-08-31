@@ -16,7 +16,6 @@ export const MODEL_PRICING_RATES: Record<string, ModelPricing> = {
   'gemini-2.5-flash': { inputPer1M: 0.075, outputPer1M: 0.30, label: 'Gemini 2.5 Flash' },
   'gemini-2.5-flash-lite': { inputPer1M: 0.075, outputPer1M: 0.30, label: 'Gemini 2.5 Flash Lite' },
   'gemini-2.5-pro': { inputPer1M: 1.25, outputPer1M: 5.00, label: 'Gemini 2.5 Pro' },
-  'gemini-1.5-flash': { inputPer1M: 0.075, outputPer1M: 0.30, label: 'Gemini 1.5 Flash' },
   'gemini-1.5-flash-8b': { inputPer1M: 0.0375, outputPer1M: 0.15, label: 'Gemini 1.5 Flash-8B' },
   'gemini-1.5-pro': { inputPer1M: 1.25, outputPer1M: 5.00, label: 'Gemini 1.5 Pro' },
   'gemini-flash': { inputPer1M: 0.075, outputPer1M: 0.30, label: 'Gemini Flash' },

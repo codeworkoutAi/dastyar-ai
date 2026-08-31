@@ -280,7 +280,7 @@ router.post('/api/chat/stream', async (req, res) => {
 
       // Secure Backend Injection for Default Free Models
       if (!userKey || userKey.trim() === '') {
-        if (modelName === 'gemini-1.5-flash' || modelName === 'gemini-2.0-flash-exp' || modelName === 'gemini-2.5-flash') {
+        if (modelName === 'gemini-3.1-flash-lite' || modelName === 'gemini-2.0-flash-exp' || modelName === 'gemini-2.5-flash') {
           userKey = process.env.DEFAULT_GEMINI_KEY || process.env.GEMINI_API_KEY;
         }
       }
