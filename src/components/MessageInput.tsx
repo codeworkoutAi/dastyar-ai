@@ -934,7 +934,7 @@ export const MessageInput: React.FC = React.memo(() => {
             placeholder={isRecording ? 'در حال شنیدن صدای شما... (صحبت کنید یا برای توقف کلیک کنید)' : 'پیام خود را بنویسید...'}
             rows={1}
             disabled={isStreaming}
-            className={`flex-1 w-full max-h-[150px] min-h-[40px] py-2.5 sm:py-3 px-1 sm:px-2 bg-transparent resize-none text-[length:var(--chat-font-size)] [font-family:var(--user-font-family)] text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-700 dark:text-zinc-500 dark:placeholder:text-zinc-700 dark:text-zinc-500 border-0 border-none outline-none ring-0 shadow-none focus:ring-0 focus:outline-none focus:border-none focus:shadow-none appearance-none overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden disabled:opacity-60 leading-relaxed ${isRecording ? 'placeholder:text-red-500 dark:placeholder:text-red-400 placeholder:animate-pulse' : ''}`}
+            className={`flex-1 w-full max-h-[150px] min-h-[40px] py-2.5 sm:py-3 px-1 sm:px-2 bg-transparent resize-none text-[length:var(--chat-font-size)] [font-family:var(--user-font-family)] text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-300 border-0 border-none outline-none ring-0 shadow-none focus:ring-0 focus:outline-none focus:border-none focus:shadow-none appearance-none overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden disabled:opacity-60 leading-relaxed ${isRecording ? 'placeholder:text-red-500 dark:placeholder:text-red-400 placeholder:animate-pulse' : ''}`}
           />
 
           {/* Left actions (Clear, Mic, Cancel, Send) */}

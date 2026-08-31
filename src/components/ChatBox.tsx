@@ -508,159 +508,164 @@ export const ChatBox: React.FC = React.memo(() => {
                   )}
                 </div>
 
-                {/* Single Unified Bottom Row */}
-                <div className="flex items-center justify-between gap-2 mt-2 pt-2 border-t border-zinc-200 dark:border-zinc-800/40 text-xs text-zinc-700 dark:text-zinc-400">
-                  {/* Right Side: Actions Toolbar */}
-                  <div className="flex items-center gap-1.5 text-zinc-700 dark:text-zinc-400">
-                    {!msg.error && (
-                      <Tooltip content={copiedId === msg.id ? 'کپی شد!' : 'کپی'}>
-                        <button
-                          onClick={() => handleCopyMessage(msg)}
-                          className="p-1.5 rounded-lg text-zinc-700 dark:text-zinc-400 hover:text-zinc-900 dark:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-700/80 transition-colors cursor-pointer"
-                        >
-                          {copiedId === msg.id ? (
-                            <Check className="w-4 h-4 text-emerald-400" />
-                          ) : (
-                            <CopyLinearIcon className="w-4 h-4" />
+                {/* Single Unified Bottom Container */}
+                <div className="flex flex-col gap-2 mt-2 pt-2 border-t border-zinc-200 dark:border-zinc-800/40 text-xs text-zinc-700 dark:text-zinc-400">
+                  
+                  {/* Row 1 (Stats): Model Badge + Time + Token + Cost in a clean unified row */}
+                  {!isUser && !msg.error && (msg.modelUsed || showPerformanceMetrics) && (
+                    <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap text-[10px] sm:text-[11px] text-zinc-700 dark:text-zinc-400">
+                      {msg.modelUsed && (
+                        <div className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-blue-500/10 border border-blue-500/20 text-blue-400 font-mono select-none" title="مدل پردازش‌کننده">
+                          <Sparkles className="w-3 h-3" />
+                          <span dir="ltr">{msg.modelUsed.replace(' (Auto)', '')}</span>
+                        </div>
+                      )}
+
+                      {showPerformanceMetrics && (
+                        <>
+                          <div className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
+                            <span className="text-zinc-500 font-sans">زمان:</span>
+                            <span className="font-mono text-zinc-700 dark:text-zinc-300" dir="ltr">
+                              {msg.metrics?.totalTimeMs ? `${(msg.metrics.totalTimeMs / 1000).toFixed(1)}s` : '1.4s'}
+                            </span>
+                          </div>
+
+                          <div className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
+                            <span className="text-zinc-500 font-sans">توکن:</span>
+                            <span className="font-mono text-zinc-700 dark:text-zinc-300" dir="ltr">
+                              {msg.metrics?.exactTotalTokens || msg.metrics?.approxTokens || 340}
+                            </span>
+                          </div>
+
+                          <div className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
+                            <span className="text-zinc-500 font-sans">هزینه:</span>
+                            <span className="font-mono text-emerald-400" dir="ltr">
+                              ${msg.metrics?.estimatedCostUSD || '0.00012'}
+                            </span>
+                          </div>
+
+                          {onToggleMetrics && (
+                            <Tooltip content="مخفیسازی آمار">
+                              <button
+                                type="button"
+                                onClick={() => onToggleMetrics(false)}
+                                className="p-1 text-zinc-500 hover:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded transition-colors cursor-pointer mr-auto"
+                                aria-label="مخفیسازی آمار"
+                              >
+                                <EyeOff className="w-3.5 h-3.5" />
+                              </button>
+                            </Tooltip>
                           )}
-                        </button>
-                      </Tooltip>
-                    )}
+                        </>
+                      )}
+                    </div>
+                  )}
 
-                    {isUser && !isStreaming && (
-                      <Tooltip content="ویرایش و ارسال مجدد">
-                        <button
-                          onClick={() => {
-                            setEditingMessageId(msg.id);
-                            setEditingText(msg.content);
-                          }}
-                          className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
-                            editingMessageId === msg.id
-                              ? 'text-sky-400 bg-sky-500/15'
-                              : 'text-zinc-700 dark:text-zinc-400 hover:text-zinc-900 dark:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-700/80'
-                          }`}
-                        >
-                          <PenLinearIcon className="w-4 h-4" />
-                        </button>
-                      </Tooltip>
-                    )}
-
-                    {!isUser && !msg.error && (
-                      <>
-                        <Tooltip content={loadingTtsId === msg.id ? 'در حال آماده‌سازی صوت...' : speakingId === msg.id ? 'توقف خوانش' : 'خواندن صوتی'}>
+                  {/* Row 2 (Actions): Copy, Audio, Download, Like, Dislike, Regenerate */}
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-1.5 text-zinc-700 dark:text-zinc-400">
+                      {!msg.error && (
+                        <Tooltip content={copiedId === msg.id ? 'کپی شد!' : 'کپی'}>
                           <button
-                            onClick={() => handleToggleSpeak(msg)}
+                            onClick={() => handleCopyMessage(msg)}
+                            className="p-1.5 rounded-lg text-zinc-700 dark:text-zinc-400 hover:text-zinc-900 dark:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-700/80 transition-colors cursor-pointer"
+                          >
+                            {copiedId === msg.id ? (
+                              <Check className="w-4 h-4 text-emerald-400" />
+                            ) : (
+                              <CopyLinearIcon className="w-4 h-4" />
+                            )}
+                          </button>
+                        </Tooltip>
+                      )}
+
+                      {isUser && !isStreaming && (
+                        <Tooltip content="ویرایش و ارسال مجدد">
+                          <button
+                            onClick={() => {
+                              setEditingMessageId(msg.id);
+                              setEditingText(msg.content);
+                            }}
                             className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
-                              speakingId === msg.id || loadingTtsId === msg.id
+                              editingMessageId === msg.id
                                 ? 'text-sky-400 bg-sky-500/15'
                                 : 'text-zinc-700 dark:text-zinc-400 hover:text-zinc-900 dark:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-700/80'
                             }`}
                           >
-                            {loadingTtsId === msg.id ? (
-                              <RotateCw className="w-4 h-4 animate-spin" />
-                            ) : speakingId === msg.id ? (
-                              <VolumeCrossLinearIcon className="w-4 h-4 animate-pulse" />
-                            ) : (
-                              <VolumeLoudLinearIcon className="w-4 h-4" />
-                            )}
-                          </button>
-                        </Tooltip>
-
-                        <Tooltip content="خروجی Markdown">
-                          <button
-                            onClick={() => handleExportSingleMessage(msg)}
-                            className="p-1.5 rounded-lg text-zinc-700 dark:text-zinc-400 hover:text-zinc-900 dark:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-700/80 transition-colors cursor-pointer"
-                          >
-                            <DownloadMinimalisticLinearIcon className="w-4 h-4" />
-                          </button>
-                        </Tooltip>
-
-                        <Tooltip content="پاسخ خوب بود">
-                          <button
-                            onClick={() => handleFeedback(msg.id, 'up')}
-                            className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
-                              feedback[msg.id] === 'up'
-                                ? 'text-emerald-400 bg-emerald-500/15'
-                                : 'text-zinc-700 dark:text-zinc-400 hover:text-zinc-900 dark:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-700/80'
-                            }`}
-                          >
-                            {feedback[msg.id] === 'up' ? <LikeBoldIcon className="w-4 h-4 text-emerald-400" /> : <LikeLinearIcon className="w-4 h-4" />}
-                          </button>
-                        </Tooltip>
-
-                        <Tooltip content="پاسخ بد بود">
-                          <button
-                            onClick={() => handleFeedback(msg.id, 'down')}
-                            className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
-                              feedback[msg.id] === 'down'
-                                ? 'text-rose-400 bg-rose-500/15'
-                                : 'text-zinc-700 dark:text-zinc-400 hover:text-zinc-900 dark:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-700/80'
-                            }`}
-                          >
-                            {feedback[msg.id] === 'down' ? <DislikeBoldIcon className="w-4 h-4 text-rose-400" /> : <DislikeLinearIcon className="w-4 h-4" />}
-                          </button>
-                        </Tooltip>
-
-                        {!isStreaming && (
-                          <Tooltip content="تولید مجدد پاسخ">
-                            <button
-                              onClick={onRegenerate}
-                              className="p-1.5 rounded-lg text-zinc-700 dark:text-zinc-400 hover:text-zinc-900 dark:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-700/80 transition-colors cursor-pointer"
-                            >
-                              <RestartLinearIcon className="w-4 h-4" />
-                            </button>
-                          </Tooltip>
-                        )}
-                      </>
-                    )}
-                  </div>
-
-                  {/* Left Side: Metrics Badges + Model Badge + Eye Button */}
-                  <div className="flex items-center gap-1.5 flex-wrap justify-end mr-auto">
-                    {!isUser && msg.modelUsed && !msg.error && (
-                      <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-blue-500/10 border border-blue-500/20 text-[10px] sm:text-[11px] text-blue-400 font-mono select-none" title="مدل پردازش‌کننده">
-                        <Sparkles className="w-3 h-3" />
-                        <span dir="ltr">{msg.modelUsed.replace(' (Auto)', '')}</span>
-                      </div>
-                    )}
-                    
-                    {!isUser && !msg.error && showPerformanceMetrics && (
-                      <div className="flex items-center gap-1.5 flex-wrap">
-                      <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-[11px] text-zinc-700 dark:text-zinc-400">
-                        <span className="text-zinc-700 dark:text-zinc-500 font-sans">زمان:</span>
-                        <span className="font-mono text-zinc-700 dark:text-zinc-300" dir="ltr">
-                          {msg.metrics?.totalTimeMs ? `${(msg.metrics.totalTimeMs / 1000).toFixed(1)}s` : '1.4s'}
-                        </span>
-                      </div>
-
-                      <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-[11px] text-zinc-700 dark:text-zinc-400">
-                        <span className="text-zinc-700 dark:text-zinc-500 font-sans">توکن:</span>
-                        <span className="font-mono text-zinc-700 dark:text-zinc-300" dir="ltr">
-                          {msg.metrics?.exactTotalTokens || msg.metrics?.approxTokens || 340}
-                        </span>
-                      </div>
-
-                      <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-[11px] text-zinc-700 dark:text-zinc-400">
-                        <span className="text-zinc-700 dark:text-zinc-500 font-sans">هزینه:</span>
-                        <span className="font-mono text-emerald-400" dir="ltr">
-                          ${msg.metrics?.estimatedCostUSD || '0.00012'}
-                        </span>
-                      </div>
-
-                      {onToggleMetrics && (
-                        <Tooltip content="مخفیسازی آمار">
-                          <button
-                            type="button"
-                            onClick={() => onToggleMetrics(false)}
-                            className="p-1 text-zinc-700 dark:text-zinc-500 hover:text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700/60 rounded transition-colors cursor-pointer"
-                            aria-label="مخفیسازی آمار"
-                          >
-                            <EyeOff className="w-3.5 h-3.5" />
+                            <PenLinearIcon className="w-4 h-4" />
                           </button>
                         </Tooltip>
                       )}
+
+                      {!isUser && !msg.error && (
+                        <>
+                          <Tooltip content={loadingTtsId === msg.id ? 'در حال آماده‌سازی صوت...' : speakingId === msg.id ? 'توقف خوانش' : 'خواندن صوتی'}>
+                            <button
+                              onClick={() => handleToggleSpeak(msg)}
+                              className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
+                                speakingId === msg.id || loadingTtsId === msg.id
+                                  ? 'text-sky-400 bg-sky-500/15'
+                                  : 'text-zinc-700 dark:text-zinc-400 hover:text-zinc-900 dark:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-700/80'
+                              }`}
+                            >
+                              {loadingTtsId === msg.id ? (
+                                <RotateCw className="w-4 h-4 animate-spin" />
+                              ) : speakingId === msg.id ? (
+                                <VolumeCrossLinearIcon className="w-4 h-4 animate-pulse" />
+                              ) : (
+                                <VolumeLoudLinearIcon className="w-4 h-4" />
+                              )}
+                            </button>
+                          </Tooltip>
+
+                          <Tooltip content="خروجی Markdown">
+                            <button
+                              onClick={() => handleExportSingleMessage(msg)}
+                              className="p-1.5 rounded-lg text-zinc-700 dark:text-zinc-400 hover:text-zinc-900 dark:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-700/80 transition-colors cursor-pointer"
+                            >
+                              <DownloadMinimalisticLinearIcon className="w-4 h-4" />
+                            </button>
+                          </Tooltip>
+
+                          <Tooltip content="پاسخ خوب بود">
+                            <button
+                              onClick={() => handleFeedback(msg.id, 'up')}
+                              className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
+                                feedback[msg.id] === 'up'
+                                  ? 'text-emerald-400 bg-emerald-500/15'
+                                  : 'text-zinc-700 dark:text-zinc-400 hover:text-zinc-900 dark:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-700/80'
+                              }`}
+                            >
+                              {feedback[msg.id] === 'up' ? <LikeBoldIcon className="w-4 h-4 text-emerald-400" /> : <LikeLinearIcon className="w-4 h-4" />}
+                            </button>
+                          </Tooltip>
+
+                          <Tooltip content="پاسخ بد بود">
+                            <button
+                              onClick={() => handleFeedback(msg.id, 'down')}
+                              className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
+                                feedback[msg.id] === 'down'
+                                  ? 'text-rose-400 bg-rose-500/15'
+                                  : 'text-zinc-700 dark:text-zinc-400 hover:text-zinc-900 dark:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-700/80'
+                              }`}
+                            >
+                              {feedback[msg.id] === 'down' ? <DislikeBoldIcon className="w-4 h-4 text-rose-400" /> : <DislikeLinearIcon className="w-4 h-4" />}
+                            </button>
+                          </Tooltip>
+
+                          {!isStreaming && (
+                            <Tooltip content="تولید مجدد پاسخ">
+                              <button
+                                onClick={onRegenerate}
+                                className="p-1.5 rounded-lg text-zinc-700 dark:text-zinc-400 hover:text-zinc-900 dark:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-700/80 transition-colors cursor-pointer"
+                              >
+                                <RestartLinearIcon className="w-4 h-4" />
+                              </button>
+                            </Tooltip>
+                          )}
+                        </>
+                      )}
                     </div>
-                  )}
                   </div>
                 </div>
               </div>
