@@ -148,7 +148,21 @@ stopGeneration: () => {
     const promptText = isImageGen ? text.trim().replace('/image ', '') : text;
 
     let payloadSettings = JSON.parse(JSON.stringify(useSettingsStore.getState().settings));
-    let finalModelUsed = (useSettingsStore.getState().settings.providers as any)[useSettingsStore.getState().settings.providers.activeProvider]?.modelName || 'gemini-2.5-pro';
+    
+    // Unpack active custom profile so backend (intent & chat) gets the correct baseUrl and modelName
+    if (payloadSettings.providers.activeProvider === 'custom' && payloadSettings.providers.custom?.profiles) {
+      const activeProfile = payloadSettings.providers.custom.profiles.find(
+        (p: any) => p.id === payloadSettings.providers.custom.activeProfileId
+      );
+      if (activeProfile) {
+        payloadSettings.providers.custom.baseUrl = activeProfile.baseUrl;
+        payloadSettings.providers.custom.apiKey = activeProfile.apiKey;
+        payloadSettings.providers.custom.modelName = activeProfile.modelName;
+        payloadSettings.providers.custom.customHeaders = activeProfile.customHeaders;
+      }
+    }
+
+    let finalModelUsed = (payloadSettings.providers as any)[payloadSettings.providers.activeProvider]?.modelName || 'gemini-2.5-pro';
 
     const userMessage: ChatMessage = {
       id: userMessageId,
@@ -342,7 +356,7 @@ stopGeneration: () => {
               ? { ...m, modelUsed: isImageGen ? (imageEngine ? `image-generation: ${imageEngine}` : 'image-generation') : finalModelUsed }
               : m
           );
-          return { ...c, messages: msgs, modelUsed: (useSettingsStore.getState().settings.providers as any)[payloadSettings.providers.activeProvider]?.modelName };
+          return { ...c, messages: msgs, modelUsed: (payloadSettings.providers as any)[payloadSettings.providers.activeProvider]?.modelName };
         }) });
 
       // Build optimized sliding context window:
