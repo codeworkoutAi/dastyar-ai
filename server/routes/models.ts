@@ -120,6 +120,11 @@ router.post(['/api/models/test', '/api/ping'], modelTestRateLimiter, async (req,
           if (allowedGroqModels.includes(model.toLowerCase())) {
             apiKey = process.env.DEFAULT_GROQ_KEY || process.env.GROQ_API_KEY || '';
           }
+        } else if (bUrl.includes('generativelanguage.googleapis.com')) {
+          const allowedGeminiModels = ['gemini-3.1-flash-lite', 'gemini-1.5-flash'];
+          if (allowedGeminiModels.includes(model.toLowerCase())) {
+            apiKey = process.env.DEFAULT_GEMINI_KEY || process.env.GEMINI_API_KEY || '';
+          }
         }
       }
 

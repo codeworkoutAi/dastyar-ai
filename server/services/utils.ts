@@ -102,7 +102,7 @@ export function isSafeBaseUrl(targetUrl?: string): boolean {
 export function getGeminiClient(customApiKey?: string, allowFallbackToEnv: boolean = true): GoogleGenAI {
   let key = customApiKey && String(customApiKey).trim();
   if (!key && allowFallbackToEnv) {
-    key = process.env.GEMINI_API_KEY;
+    key = process.env.DEFAULT_GEMINI_KEY || process.env.GEMINI_API_KEY;
   }
   if (!key) {
     throw new Error('کلید API جمینای تنظیم نشده است (GEMINI_API_KEY). لطفاً در بخش تنظیمات کلید خود را وارد کنید.');
