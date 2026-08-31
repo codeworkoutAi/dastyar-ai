@@ -185,9 +185,10 @@ Return ONLY the optimized search query, nothing else, no quotes.`;
     }
 
     // ==========================================
-    // 3. Fetch Web Results (DuckDuckGo)
     // ==========================================
-    const searchUrl = 'https://html.duckduckgo.com/html/?q=' + encodeURIComponent(searchQuery);
+    // 3. Fetch Web Results (Bing)
+    // ==========================================
+    const searchUrl = 'https://www.bing.com/search?q=' + encodeURIComponent(searchQuery);
     const html = await this.retryWithBackoff(
       async () => {
         const res = await fetch(searchUrl, {
@@ -199,28 +200,28 @@ Return ONLY the optimized search query, nothing else, no quotes.`;
         });
 
         if (!res.ok) {
-          throw new Error(`DuckDuckGo search returned ${res.status}`);
+          throw new Error(`Bing search returned ${res.status}`);
         }
 
         return await res.text();
       },
       this.MAX_RETRIES,
       this.INITIAL_RETRY_DELAY,
-      'DuckDuckGo search'
+      'Bing search'
     );
 
     if (!html) {
-      console.warn('[WebSearch] DuckDuckGo search failed, returning empty');
+      console.warn('[WebSearch] Bing search failed, returning empty');
       return '';
     }
 
-    let titles = [...html.matchAll(/<a class="result__url" href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/gi)];
-    let snippets = [...html.matchAll(/<a class="result__snippet[^>]*>([\s\S]*?)<\/a>/gi)];
+    let titles = [...html.matchAll(/<h2[^>]*><a[^>]*href="([^"]*)"[^>]*>([\s\S]*?)<\/a><\/h2>/gi)];
+    let snippets = [...html.matchAll(/<div class="b_caption[^>]*>([\s\S]*?)<\/div>/gi)];
 
     // Fallback: If English search returned 0 results, retry with raw Persian query!
     if (titles.length === 0 && searchQuery !== query) {
       console.log(`[WebSearch] English query returned 0 results, falling back to raw Persian query: "${query}"`);
-      const fallbackUrl = 'https://html.duckduckgo.com/html/?q=' + encodeURIComponent(query);
+      const fallbackUrl = 'https://www.bing.com/search?q=' + encodeURIComponent(query);
       try {
         const fallbackRes = await fetch(fallbackUrl, {
           headers: {
@@ -231,8 +232,8 @@ Return ONLY the optimized search query, nothing else, no quotes.`;
         });
         if (fallbackRes.ok) {
           const fallbackHtml = await fallbackRes.text();
-          titles = [...fallbackHtml.matchAll(/<a class="result__url" href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/gi)];
-          snippets = [...fallbackHtml.matchAll(/<a class="result__snippet[^>]*>([\s\S]*?)<\/a>/gi)];
+          titles = [...fallbackHtml.matchAll(/<h2[^>]*><a[^>]*href="([^"]*)"[^>]*>([\s\S]*?)<\/a><\/h2>/gi)];
+          snippets = [...fallbackHtml.matchAll(/<div class="b_caption[^>]*>([\s\S]*?)<\/div>/gi)];
         }
       } catch (err) {}
     }
@@ -243,13 +244,14 @@ Return ONLY the optimized search query, nothing else, no quotes.`;
     const limit = Math.min(titles.length, snippets.length, 5);
 
     for (let i = 0; i < limit; i++) {
-      let rawUrl = titles[i][1];
+      let rawUrl = titles[i][1].replace(/&amp;/g, '&');
+      if (rawUrl.includes('aclick') || rawUrl.includes('adurl')) continue;
 
-      // DuckDuckGo redirects urls, extract real url if present
-      if (rawUrl.startsWith('//duckduckgo.com/l/?uddg=')) {
+      const uMatch = rawUrl.match(/&u=a1([^&]+)/);
+      if (uMatch) {
         try {
-          rawUrl = decodeURIComponent(rawUrl.split('uddg=')[1].split('&')[0]);
-        } catch(e) {}
+          rawUrl = Buffer.from(uMatch[1], 'base64').toString('utf8');
+        } catch (e) {}
       }
 
       if (!firstUrl) firstUrl = rawUrl;
