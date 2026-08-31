@@ -277,7 +277,7 @@ stopGeneration: () => {
       if (webSearch !== undefined) {
         payloadSettings.tools = payloadSettings.tools || {};
         payloadSettings.tools.webSearch = webSearch;
-      } else if (detectedWebSearch) {
+      } else if (globalWebSearchEnabled && detectedWebSearch) {
         payloadSettings.tools = payloadSettings.tools || {};
         payloadSettings.tools.webSearch = true;
       } else {

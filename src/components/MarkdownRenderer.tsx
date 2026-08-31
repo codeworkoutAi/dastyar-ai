@@ -259,7 +259,7 @@ function formatInlineListsAndPrinciples(text: string): string {
 
   // 0. Pre-process <think> tags into ```reasoning code blocks (handles unclosed tags during streaming)
   let tempText = text.replace(/<think>([\s\S]*?)(<\/think>|$)/gi, (match, content) => {
-    return `\n\`\`\`reasoning\n${content.trim()}\n\`\`\`\n`;
+    return `\n\n\`\`\`reasoning\n${content.trim()}\n\`\`\`\n\n`;
   });
 
   // Separate code blocks to avoid formatting inside code
