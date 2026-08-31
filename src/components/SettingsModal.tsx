@@ -482,7 +482,7 @@ export const SettingsModal: React.FC = () => {
           customBaseUrl: configObj.baseUrl,
           customApiKey: configObj.apiKey,
           customHeaders: configObj.customHeaders,
-          modelName: configObj.modelName
+          targetModel: configObj.modelName
         })
       });
       const data = await res.json();

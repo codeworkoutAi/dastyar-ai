@@ -98,6 +98,20 @@ Do not wrap in markdown. Raw JSON only.`;
         } else {
           headers['Authorization'] = `Bearer ${String(apiConfig[provider]?.apiKey).trim()}`;
         }
+      } else {
+        if (provider === 'custom') {
+          const requestedModel = apiConfig?.[provider]?.modelName || '';
+          const allowedGroqModels = ['qwen/qwen3.6-27b', 'openai/gpt-oss-120b', 'qwen/qwen3.8-27b', 'openai/gpt-oss-20b', 'allam-2-7b', 'groq/compound'];
+          const allowedGeminiModels = ['gemini-3.1-flash-lite', 'gemini-1.5-flash'];
+          const groqKey = process.env.DEFAULT_GROQ_KEY || process.env.GROQ_API_KEY;
+          const geminiKey = process.env.DEFAULT_GEMINI_KEY || process.env.GEMINI_API_KEY;
+          
+          if (allowedGroqModels.includes(requestedModel.toLowerCase()) && groqKey) {
+            headers['Authorization'] = `Bearer ${groqKey}`;
+          } else if (allowedGeminiModels.includes(requestedModel.toLowerCase()) && geminiKey) {
+            headers['Authorization'] = `Bearer ${geminiKey}`;
+          }
+        }
       }
 
       if (provider === 'openrouter') {
