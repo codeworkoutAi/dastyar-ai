@@ -155,7 +155,8 @@ Return ONLY the optimized search query, nothing else, no quotes.`;
       if (searchQuery === query && (provider === 'gemini' || !usedThirdParty) && (process.env.GEMINI_API_KEY || apiConfig?.gemini?.apiKey)) {
         try {
           const { getGeminiClient } = await import('./utils');
-          const ai = getGeminiClient(apiConfig?.gemini?.apiKey);
+          // Use the paid backend key (GEMINI_API_KEY) exclusively for intermediary translation
+          const ai = getGeminiClient(apiConfig?.gemini?.apiKey || process.env.GEMINI_API_KEY);
           const response = await ai.models.generateContent({
             model: 'gemini-3.1-flash-lite',
             contents: prompt,
