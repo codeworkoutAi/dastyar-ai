@@ -23,18 +23,18 @@ export const DEFAULT_SETTINGS: AppSettings = {
       profiles: [
         {
           id: 'default-groq-llama-3-8b',
-          name: 'Llama 3 8B (رایگان)',
+          name: 'Llama 3.1 8B (رایگان)',
           baseUrl: 'https://api.groq.com/openai/v1',
           apiKey: '',
-          modelName: 'llama3-8b-8192',
+          modelName: 'llama-3.1-8b-instant',
           customHeaders: ''
         },
         {
           id: 'default-groq-llama-3-70b',
-          name: 'Llama 3 70B (رایگان)',
+          name: 'Llama 3.1 70B (رایگان)',
           baseUrl: 'https://api.groq.com/openai/v1',
           apiKey: '',
-          modelName: 'llama3-70b-8192',
+          modelName: 'llama-3.1-70b-versatile',
           customHeaders: ''
         },
         {
