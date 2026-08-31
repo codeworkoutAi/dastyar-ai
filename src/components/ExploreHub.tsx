@@ -401,8 +401,8 @@ export const ExploreHub: React.FC = () => {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
                   {[
                     { id: 'gemini-1.5-flash', provider: 'custom', name: 'Gemini 1.5 Flash', tag: 'عمومی و سریع', baseUrl: 'https://generativelanguage.googleapis.com', isVision: true, isReasoning: false, isCoding: false, isFree: true, isFast: true },
-                    { id: 'llama3-70b-8192', provider: 'custom', name: 'Llama 3 70B', tag: 'قدرتمند (Groq)', baseUrl: 'https://api.groq.com/openai/v1', isVision: false, isReasoning: false, isCoding: true, isFree: true, isFast: true },
-                    { id: 'llama3-8b-8192', provider: 'custom', name: 'Llama 3 8B', tag: 'فوق سریع (Groq)', baseUrl: 'https://api.groq.com/openai/v1', isVision: false, isReasoning: false, isCoding: false, isFree: true, isFast: true }
+                    { id: 'openai/gpt-oss-120b', provider: 'custom', name: 'GPT OSS 120B', tag: 'قدرتمند (Groq)', baseUrl: 'https://api.groq.com/openai/v1', isVision: false, isReasoning: false, isCoding: true, isFree: true, isFast: true },
+                    { id: 'qwen/qwen3.6-27b', provider: 'custom', name: 'Qwen 3.6 27B', tag: 'فوق سریع (Groq)', baseUrl: 'https://api.groq.com/openai/v1', isVision: false, isReasoning: false, isCoding: false, isFree: true, isFast: true }
                   ].map((fm) => {
                     const isSelected = (fm.provider === 'custom' && activeProvider === 'custom' && activeCustomProfile?.modelName === fm.id);
                     return (

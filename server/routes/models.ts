@@ -116,7 +116,7 @@ router.post(['/api/models/test', '/api/ping'], modelTestRateLimiter, async (req,
       if (!apiKey && provider === 'custom') {
         const bUrl = baseUrl.toLowerCase();
         if (bUrl.includes('api.groq.com')) {
-          const allowedGroqModels = ['llama-3.1-8b-instant', 'llama-3.1-70b-versatile', 'llama3-8b-8192', 'llama3-70b-8192', 'mixtral-8x7b-32768', 'gemma2-9b-it'];
+          const allowedGroqModels = ['qwen/qwen3.6-27b', 'openai/gpt-oss-120b', 'qwen/qwen3.8-27b', 'openai/gpt-oss-20b', 'allam-2-7b', 'groq/compound'];
           if (allowedGroqModels.includes(model.toLowerCase())) {
             apiKey = process.env.DEFAULT_GROQ_KEY || process.env.GROQ_API_KEY || '';
           }

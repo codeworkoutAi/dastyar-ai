@@ -19,22 +19,22 @@ export const DEFAULT_SETTINGS: AppSettings = {
       apiKey: '', 
       modelName: '', 
       customHeaders: '', 
-      activeProfileId: 'default-groq-llama-3-8b',
+      activeProfileId: 'default-groq-qwen-27b',
       profiles: [
         {
-          id: 'default-groq-llama-3-8b',
-          name: 'Llama 3.1 8B (رایگان)',
+          id: 'default-groq-qwen-27b',
+          name: 'Qwen 3.6 27B (رایگان)',
           baseUrl: 'https://api.groq.com/openai/v1',
           apiKey: '',
-          modelName: 'llama-3.1-8b-instant',
+          modelName: 'qwen/qwen3.6-27b',
           customHeaders: ''
         },
         {
-          id: 'default-groq-llama-3-70b',
-          name: 'Llama 3.1 70B (رایگان)',
+          id: 'default-groq-gpt-oss-120b',
+          name: 'GPT OSS 120B (رایگان)',
           baseUrl: 'https://api.groq.com/openai/v1',
           apiKey: '',
-          modelName: 'llama-3.1-70b-versatile',
+          modelName: 'openai/gpt-oss-120b',
           customHeaders: ''
         },
         {
@@ -57,8 +57,8 @@ export const DEFAULT_SETTINGS: AppSettings = {
     showPerformanceMetrics: true, 
     smartRouting: true, 
     routingRoles: { 
-      default: 'default-groq-llama-3-8b', 
-      coding: 'default-groq-llama-3-70b', 
+      default: 'default-groq-qwen-27b', 
+      coding: 'default-groq-gpt-oss-120b', 
       vision: 'default-gemini-1-5-flash' 
     } 
   }

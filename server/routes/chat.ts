@@ -473,7 +473,7 @@ router.post('/api/chat/stream', async (req, res) => {
         // Secure Backend Injection for Default Free Models (Groq / OpenRouter)
         const requestedModel = apiConfig?.[provider]?.modelName || '';
         if (provider === 'custom') {
-          const allowedGroqModels = ['llama-3.1-8b-instant', 'llama-3.1-70b-versatile', 'llama3-8b-8192', 'llama3-70b-8192', 'mixtral-8x7b-32768', 'gemma2-9b-it'];
+          const allowedGroqModels = ['qwen/qwen3.6-27b', 'openai/gpt-oss-120b', 'qwen/qwen3.8-27b', 'openai/gpt-oss-20b', 'allam-2-7b', 'groq/compound'];
           const groqKey = process.env.DEFAULT_GROQ_KEY || process.env.GROQ_API_KEY;
           if (allowedGroqModels.includes(requestedModel.toLowerCase()) && groqKey) {
             headers['Authorization'] = `Bearer ${groqKey}`;
