@@ -10,15 +10,58 @@ const STORAGE_KEYS = {
 
 export const DEFAULT_SETTINGS: AppSettings = {
   providers: {
-    activeProvider: 'gemini',
+    activeProvider: 'custom',
     gemini: { apiKey: '', modelName: 'gemini-3.1-flash-lite' },
     openai: { apiKey: '', modelName: 'gpt-4o-mini' },
     anthropic: { apiKey: '', modelName: 'claude-3-5-sonnet' },
-    custom: { baseUrl: '', apiKey: '', modelName: '', customHeaders: '', profiles: [], activeProfileId: '' }
+    custom: { 
+      baseUrl: '', 
+      apiKey: '', 
+      modelName: '', 
+      customHeaders: '', 
+      activeProfileId: 'default-groq-llama-3-8b',
+      profiles: [
+        {
+          id: 'default-groq-llama-3-8b',
+          name: 'Llama 3 8B (رایگان)',
+          baseUrl: 'https://api.groq.com/openai/v1',
+          apiKey: '',
+          modelName: 'llama3-8b-8192',
+          customHeaders: ''
+        },
+        {
+          id: 'default-groq-llama-3-70b',
+          name: 'Llama 3 70B (رایگان)',
+          baseUrl: 'https://api.groq.com/openai/v1',
+          apiKey: '',
+          modelName: 'llama3-70b-8192',
+          customHeaders: ''
+        },
+        {
+          id: 'default-gemini-1-5-flash',
+          name: 'Gemini 1.5 Flash (رایگان)',
+          baseUrl: 'https://generativelanguage.googleapis.com/v1beta/openai',
+          apiKey: '',
+          modelName: 'gemini-1.5-flash',
+          customHeaders: ''
+        }
+      ] 
+    }
   },
   persona: { systemPrompt: '', tone: 'expert', temperature: 0.7 },
   appearance: { theme: 'dark', font: 'vazir', fontSize: 16, persianNumerals: false, direction: 'rtl', uiLanguage: 'fa' },
-  tools: { webSearch: true, enterToSend: true, soundEnabled: false, showPerformanceMetrics: true, smartRouting: false, routingRoles: { default: '', coding: '', vision: '' } }
+  tools: { 
+    webSearch: true, 
+    enterToSend: true, 
+    soundEnabled: false, 
+    showPerformanceMetrics: true, 
+    smartRouting: true, 
+    routingRoles: { 
+      default: 'default-groq-llama-3-8b', 
+      coding: 'default-groq-llama-3-70b', 
+      vision: 'default-gemini-1-5-flash' 
+    } 
+  }
 };
 
 export function loadConversations(): Conversation[] {
