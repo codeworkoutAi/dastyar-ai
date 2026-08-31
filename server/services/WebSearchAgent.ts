@@ -56,11 +56,13 @@ export class SmartWebAgent {
     // ==========================================
     const isConversationalOrSkip = query.match(/(ترجمه|معنی کلمه|منبعت چی بود|از کجا آوردی|از کجا گرفتی|داده از کجا|لینکت چیه|سورس|source|به انگلیسی|به فارسی|تلفظ|ایده بده|انشا بنویس|خلاصه کن|تایپ کن|نامه بنویس|تولید محتوا|متن تبلیغاتی|کپشن|بنویس|create|بساز|تابع|class|کلاس|component|کامپوننت|کد|دیباگ|چرا ارور|مشکل این کد|refactor|بررسی کد|explain|توضیح|what is|چیست|الگوریتم|data structure|ساختمان داده|مفهوم|hi|hello|سلام|صبح بخیر|عصر بخیر|چطوری|خوبی|ممنون|مرسی|تشکر|خداحافظ)/i);
     
+    const hasHighPriorityWebKeyword = query.match(/(دلار|طلا|سکه|بیت‌کوین|تتر|قیمت|یورو|پوند|بورس|خبر|اخبار|امروز|فوری|هوا|باران|نتیجه بازی|فوتبال|بازی|اذان|تعطیلی|محرم)/i);
+
     // Also skip very short conversational queries unless they ask for something specific like price or weather
     const wordCount = query.trim().split(/\s+/).length;
-    const isShortGeneral = wordCount <= 3 && !query.match(/(دلار|طلا|سکه|بیت‌کوین|تتر|قیمت|یورو|پوند|بورس|خبر|اخبار|امروز|فوری|هوا|باران|نتیجه بازی|فوتبال|بازی|اذان|تعطیلی|محرم)/i);
+    const isShortGeneral = wordCount <= 3 && !hasHighPriorityWebKeyword;
 
-    if (isConversationalOrSkip || isShortGeneral) {
+    if ((isConversationalOrSkip && !hasHighPriorityWebKeyword) || isShortGeneral) {
       console.log('[WebSearch] Skipping web search for non-factual or conversational query.');
       return '';
     }
