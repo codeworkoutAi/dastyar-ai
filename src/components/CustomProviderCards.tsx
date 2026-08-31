@@ -755,24 +755,24 @@ export const CustomProviderCards: React.FC<CustomProviderCardsProps> = ({
                     </div>
                   </summary>
                   <div className="pt-2 border-t border-zinc-200 dark:border-zinc-800/50">
-                    <div className="flex gap-2 mb-2 mt-1">
+                    <div className="flex flex-col sm:flex-row gap-2 mb-2.5 mt-1">
                       <div className="relative flex-1">
                         <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-zinc-700 dark:text-zinc-500">
                           <MagnifierOutlineIcon className="w-3.5 h-3.5" />
                         </div>
                         <input
                           type="text"
-                          placeholder="جستجوی مدل (نام، قابلیت، سازنده، کاربرد)..."
+                          placeholder="جستجوی مدل (نام، قابلیت، سازنده)..."
                           value={modelSearchQuery}
                           onChange={(e) => setModelSearchQuery(e.target.value)}
-                          className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg py-1.5 pr-9 pl-3 text-xs focus:border-indigo-500/50 outline-none transition-all text-zinc-700 dark:text-zinc-300"
+                          className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl py-2 sm:py-1.5 pr-9 pl-3 text-xs focus:border-indigo-500/50 outline-none transition-all text-zinc-700 dark:text-zinc-300"
                         />
                       </div>
                       
                       <select
                         value={filterProvider}
                         onChange={(e) => setFilterProvider(e.target.value)}
-                        className="bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg py-1.5 px-2 text-xs focus:border-indigo-500/50 outline-none transition-all text-zinc-700 dark:text-zinc-400"
+                        className="bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl py-2 sm:py-1.5 px-3 text-xs focus:border-indigo-500/50 outline-none transition-all text-zinc-700 dark:text-zinc-400 font-medium"
                         dir="rtl"
                       >
                         {PROVIDER_CATEGORIES.map(cat => (
@@ -781,74 +781,74 @@ export const CustomProviderCards: React.FC<CustomProviderCardsProps> = ({
                       </select>
                     </div>
                     
-                    {/* Multi-Capability Interactive Filter Tags */}
+                    {/* Multi-Capability Interactive Filter Tags - 2 Columns on Mobile */}
                     {cachedModels.length > 0 && (
-                      <div className="flex flex-wrap items-center gap-1.5 mb-3" dir="rtl">
+                      <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-1.5 mb-3" dir="rtl">
                         <button 
                           type="button"
                           onClick={() => setActiveTag('all')}
-                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-medium cursor-pointer transition-colors border select-none ${
+                          className={`flex items-center justify-center sm:justify-start gap-1.5 px-2.5 sm:px-3 py-2 sm:py-1.5 rounded-xl sm:rounded-full text-[11px] font-medium cursor-pointer transition-colors border select-none w-full sm:w-auto truncate ${
                             activeTag === 'all' 
                               ? 'bg-zinc-700 text-zinc-900 dark:text-zinc-100 border-zinc-500 shadow-sm' 
                               : 'bg-zinc-50 dark:bg-zinc-900 text-zinc-700 dark:text-zinc-400 border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:border-zinc-700'
                           }`}
                         >
-                          <LayersOutlineIcon className="w-3.5 h-3.5" /> همه مدل‌ها ({tagCounts.all})
+                          <LayersOutlineIcon className="w-3.5 h-3.5 shrink-0" /> <span className="truncate">همه مدل‌ها ({tagCounts.all})</span>
                         </button>
                         <button 
                           type="button"
                           onClick={() => setActiveTag(activeTag === 'coding' ? 'all' : 'coding')}
-                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-medium cursor-pointer transition-colors border select-none ${
+                          className={`flex items-center justify-center sm:justify-start gap-1.5 px-2.5 sm:px-3 py-2 sm:py-1.5 rounded-xl sm:rounded-full text-[11px] font-medium cursor-pointer transition-colors border select-none w-full sm:w-auto truncate ${
                             activeTag === 'coding' 
                               ? 'bg-cyan-500/25 text-cyan-300 border-cyan-500/40 shadow-sm' 
                               : 'bg-zinc-50 dark:bg-zinc-900 text-zinc-700 dark:text-zinc-400 border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:border-zinc-700'
                           }`}
                         >
-                          <CodeOutlineIcon className="w-3.5 h-3.5" /> برنامه‌نویسی ({tagCounts.coding})
+                          <CodeOutlineIcon className="w-3.5 h-3.5 shrink-0" /> <span className="truncate">برنامه‌نویسی ({tagCounts.coding})</span>
                         </button>
                         <button 
                           type="button"
                           onClick={() => setActiveTag(activeTag === 'vision' ? 'all' : 'vision')}
-                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-medium cursor-pointer transition-colors border select-none ${
+                          className={`flex items-center justify-center sm:justify-start gap-1.5 px-2.5 sm:px-3 py-2 sm:py-1.5 rounded-xl sm:rounded-full text-[11px] font-medium cursor-pointer transition-colors border select-none w-full sm:w-auto truncate ${
                             activeTag === 'vision' 
                               ? 'bg-amber-500/25 text-amber-300 border-amber-500/40 shadow-sm' 
                               : 'bg-zinc-50 dark:bg-zinc-900 text-zinc-700 dark:text-zinc-400 border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:border-zinc-700'
                           }`}
                         >
-                          <EyeOutlineIcon className="w-3.5 h-3.5" /> دیداری و تصویر ({tagCounts.vision})
+                          <EyeOutlineIcon className="w-3.5 h-3.5 shrink-0" /> <span className="truncate">دیداری و تصویر ({tagCounts.vision})</span>
                         </button>
                         <button 
                           type="button"
                           onClick={() => setActiveTag(activeTag === 'reasoning' ? 'all' : 'reasoning')}
-                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-medium cursor-pointer transition-colors border select-none ${
+                          className={`flex items-center justify-center sm:justify-start gap-1.5 px-2.5 sm:px-3 py-2 sm:py-1.5 rounded-xl sm:rounded-full text-[11px] font-medium cursor-pointer transition-colors border select-none w-full sm:w-auto truncate ${
                             activeTag === 'reasoning' 
                               ? 'bg-purple-500/25 text-purple-300 border-purple-500/40 shadow-sm' 
                               : 'bg-zinc-50 dark:bg-zinc-900 text-zinc-700 dark:text-zinc-400 border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:border-zinc-700'
                           }`}
                         >
-                          <BrainOutlineIcon className="w-3.5 h-3.5" /> استدلال و تفکر ({tagCounts.reasoning})
+                          <BrainOutlineIcon className="w-3.5 h-3.5 shrink-0" /> <span className="truncate">استدلال و تفکر ({tagCounts.reasoning})</span>
                         </button>
                         <button 
                           type="button"
                           onClick={() => setActiveTag(activeTag === 'fast' ? 'all' : 'fast')}
-                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-medium cursor-pointer transition-colors border select-none ${
+                          className={`flex items-center justify-center sm:justify-start gap-1.5 px-2.5 sm:px-3 py-2 sm:py-1.5 rounded-xl sm:rounded-full text-[11px] font-medium cursor-pointer transition-colors border select-none w-full sm:w-auto truncate ${
                             activeTag === 'fast' 
                               ? 'bg-emerald-500/25 text-emerald-300 border-emerald-500/40 shadow-sm' 
                               : 'bg-zinc-50 dark:bg-zinc-900 text-zinc-700 dark:text-zinc-400 border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:border-zinc-700'
                           }`}
                         >
-                          <BoltOutlineIcon className="w-3.5 h-3.5" /> سریع و سبک ({tagCounts.fast})
+                          <BoltOutlineIcon className="w-3.5 h-3.5 shrink-0" /> <span className="truncate">سریع و سبک ({tagCounts.fast})</span>
                         </button>
                         <button 
                           type="button"
                           onClick={() => setActiveTag(activeTag === 'free' ? 'all' : 'free')}
-                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-medium cursor-pointer transition-colors border select-none ${
+                          className={`flex items-center justify-center sm:justify-start gap-1.5 px-2.5 sm:px-3 py-2 sm:py-1.5 rounded-xl sm:rounded-full text-[11px] font-medium cursor-pointer transition-colors border select-none w-full sm:w-auto truncate ${
                             activeTag === 'free' 
                               ? 'bg-emerald-500/25 text-emerald-300 border-emerald-500/40 shadow-sm' 
                               : 'bg-zinc-50 dark:bg-zinc-900 text-zinc-700 dark:text-zinc-400 border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:border-zinc-700'
                           }`}
                         >
-                          <StarsOutlineIcon className="w-3.5 h-3.5" /> رایگان ({tagCounts.free})
+                          <StarsOutlineIcon className="w-3.5 h-3.5 shrink-0" /> <span className="truncate">رایگان ({tagCounts.free})</span>
                         </button>
                       </div>
                     )}

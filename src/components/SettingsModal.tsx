@@ -506,15 +506,20 @@ export const SettingsModal: React.FC = () => {
 
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5" dir="rtl">
-      <div className="w-[95vw] md:w-full max-w-4xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-3xl shadow-2xl flex flex-col sm:flex-row overflow-hidden text-zinc-900 dark:text-zinc-100 h-[85dvh] sm:h-auto sm:max-h-[85dvh]">
+    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-5" dir="rtl">
+      <div className="w-full sm:w-[95vw] md:w-full max-w-4xl bg-zinc-50 dark:bg-zinc-950 border-0 sm:border border-zinc-200 dark:border-zinc-800 rounded-t-3xl sm:rounded-3xl shadow-2xl flex flex-col sm:flex-row overflow-hidden text-zinc-900 dark:text-zinc-100 h-[92dvh] sm:h-auto sm:max-h-[85dvh]">
 
         {/* Sidebar Tabs */}
-        <div className="w-full sm:w-64 bg-zinc-50 dark:bg-zinc-900 border-l border-zinc-200 dark:border-zinc-800 flex flex-col shrink-0">
-          <div className="p-5 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between">
-            <h2 className="text-xl font-bold">تنظیمات سیستم</h2>
-            <button onClick={onClose} className="sm:hidden p-2 hover:bg-zinc-100 dark:hover:bg-zinc-700 rounded-full">
-              <CloseOutlineIcon className="w-5 h-5 text-zinc-700 dark:text-zinc-400" />
+        <div className="w-full sm:w-64 bg-zinc-50 dark:bg-zinc-900 border-b sm:border-b-0 sm:border-l border-zinc-200 dark:border-zinc-800 flex flex-col shrink-0">
+          <div className="px-4 py-3 sm:p-5 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="p-1.5 bg-blue-500/10 rounded-lg text-blue-400">
+                <SettingsOutlineIcon className="w-4 h-4 sm:w-5 sm:h-5" />
+              </div>
+              <h2 className="text-sm sm:text-lg font-bold text-zinc-900 dark:text-zinc-100">تنظیمات سیستم</h2>
+            </div>
+            <button onClick={onClose} className="sm:hidden p-1.5 hover:bg-zinc-100 dark:hover:bg-zinc-700 rounded-full text-zinc-700 dark:text-zinc-400">
+              <CloseOutlineIcon className="w-5 h-5" />
             </button>
           </div>
           <div className="flex-1 overflow-y-auto flex sm:flex-col sm:p-3 p-2 gap-2 sm:gap-1 overflow-x-auto">
@@ -528,7 +533,7 @@ export const SettingsModal: React.FC = () => {
 
         {/* Main Content Area */}
         <div className="flex-1 flex flex-col overflow-hidden bg-zinc-50 dark:bg-zinc-950">
-          <div className="flex-1 overflow-y-auto p-4 sm:p-8">
+          <div className="flex-1 overflow-y-auto p-3.5 sm:p-8">
 
             {activeTab === 'providers' && (
               <div className="space-y-6 sm:space-y-8 animate-fadeIn">
