@@ -215,39 +215,21 @@ Return ONLY the optimized search query, nothing else, no quotes.`;
       return '';
     }
 
-    let titles = [...html.matchAll(/<h2[^>]*><a[^>]*href="([^"]*)"[^>]*>([\s\S]*?)<\/a><\/h2>/gi)];
-    let snippets = [...html.matchAll(/<div class="b_caption[^>]*>([\s\S]*?)<\/div>/gi)];
-
-    // Fallback: If English search returned 0 results, retry with raw Persian query!
-    if (titles.length === 0 && searchQuery !== query) {
-      console.log(`[WebSearch] English query returned 0 results, falling back to raw Persian query: "${query}"`);
-      const fallbackUrl = 'https://www.bing.com/search?q=' + encodeURIComponent(query);
-      try {
-        const fallbackRes = await fetch(fallbackUrl, {
-          headers: {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36',
-            'Accept-Language': 'fa,en-US;q=0.9,en;q=0.8'
-          },
-          signal: AbortSignal.timeout(this.TIMEOUT_MAIN)
-        });
-        if (fallbackRes.ok) {
-          const fallbackHtml = await fallbackRes.text();
-          titles = [...fallbackHtml.matchAll(/<h2[^>]*><a[^>]*href="([^"]*)"[^>]*>([\s\S]*?)<\/a><\/h2>/gi)];
-          snippets = [...fallbackHtml.matchAll(/<div class="b_caption[^>]*>([\s\S]*?)<\/div>/gi)];
-        }
-      } catch (err) {}
-    }
-
-
+    // Extract only organic search results (b_algo) and completely ignore ads (b_ad)
+    let algos = [...html.matchAll(/<li[^>]*class="[^"]*b_algo[^"]*"[^>]*>([\s\S]*?)<\/li>/gi)];
+    
     let firstUrl: string | null = null;
     let resultsText = '';
     let validCount = 0;
-    const limit = Math.min(titles.length, snippets.length);
 
-    for (let i = 0; i < limit; i++) {
-      let rawUrl = titles[i][1].replace(/&amp;/g, '&');
-      if (rawUrl.includes('aclick') || rawUrl.includes('adurl')) continue;
-
+    for (let i = 0; i < algos.length; i++) {
+      let titleMatch = algos[i][1].match(/<h2[^>]*><a[^>]*href="([^"]*)"[^>]*>([\s\S]*?)<\/a><\/h2>/i);
+      let snippetMatch = algos[i][1].match(/<div class="b_caption[^>]*>([\s\S]*?)<\/div>/i) || algos[i][1].match(/<p[^>]*>([\s\S]*?)<\/p>/i);
+      
+      if (!titleMatch) continue;
+      
+      let rawUrl = titleMatch[1].replace(/&amp;/g, '&');
+      
       const uMatch = rawUrl.match(/&u=a1([^&]+)/);
       if (uMatch) {
         try {
@@ -261,8 +243,9 @@ Return ONLY the optimized search query, nothing else, no quotes.`;
       }
 
       if (!firstUrl) firstUrl = rawUrl;
-      const title = titles[i][2].replace(/<[^>]+>/g, '').trim();
-      const snippet = snippets[i][1].replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
+      const title = titleMatch[2].replace(/<[^>]+>/g, '').trim();
+      const snippet = snippetMatch ? snippetMatch[1].replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim() : '';
+      
       resultsText += `[لینک: ${rawUrl}]\nعنوان: ${title}\nخلاصه: ${snippet}\n\n`;
       validCount++;
       if (validCount >= 5) break;
