@@ -282,6 +282,13 @@ export const SettingsModal: React.FC = () => {
   const onImportConversations = (imported: Conversation[]) => setConversations(imported);
   const onClearAllConversations = clearAllConversations;
 
+  const onFactoryReset = () => {
+    if (window.confirm('آیا مطمئن هستید که می‌خواهید تمام تنظیمات و پروفایل‌ها به حالت اولیه بازگردد؟ این عملیات غیرقابل بازگشت است و تاریخچه چت‌های شما حفظ می‌شود، اما تنظیمات API پاک می‌شود.')) {
+      localStorage.removeItem('fa-chatbox-settings');
+      window.location.reload();
+    }
+  };
+
   const [activeTab, setActiveTab] = useState<TabType>('providers');
   const [tempSettings, setTempSettings] = useState<AppSettings>(settings);
 
@@ -857,6 +864,14 @@ export const SettingsModal: React.FC = () => {
                     <div className="text-right">
                       <div className="font-medium text-sm text-red-400">پاک‌سازی تاریخچه گفتگوها</div>
                       <div className="text-xs text-red-500/70">این عملیات غیرقابل بازگشت است</div>
+                    </div>
+                  </button>
+
+                  <button onClick={onFactoryReset} className="w-full p-4 bg-red-950/30 border border-red-900/50 hover:bg-red-900/20 rounded-xl flex items-center gap-3 transition-colors text-red-400 mt-3">
+                    <div className="p-2 bg-red-500/10 rounded-lg"><SettingsOutlineIcon className="w-5 h-5" /></div>
+                    <div className="text-right">
+                      <div className="font-medium text-sm text-red-400">بازگردانی تنظیمات اولیه (Factory Reset)</div>
+                      <div className="text-xs text-red-500/70">همه تنظیمات مرورگر شما پاک شده و به حالت پیش‌فرض بازمی‌گردد</div>
                     </div>
                   </button>
                 </div>
