@@ -14,6 +14,7 @@ import {
   DocumentTextOutlineIcon,
   EyeOutlineIcon,
   Code2OutlineIcon,
+  StarsOutlineIcon,
 } from '@solar-icons/react';
 
 import { Tooltip } from './Tooltip';
@@ -21,68 +22,15 @@ import { usePWAInstall } from '../lib/usePWAInstall';
 import { useUIStore } from '../store/uiStore';
 import { useSettingsStore } from '../store/settingsStore';
 import { useChatStore } from '../store/chatStore';
+import { SmartRoutingAnimation } from './ChatBox';
 
-const SmartRoutingDiagram = ({ isStreaming, routingState }: { isStreaming: boolean, routingState: 'idle' | 'general' | 'vision' | 'coding' }) => {
-  let statusText = '';
-  if (isStreaming) {
-    if (routingState === 'vision') statusText = 'پردازش تصویر...';
-    else if (routingState === 'coding') statusText = 'تحلیل کد...';
-    else if (routingState === 'general') statusText = 'پردازش متن...';
-    else statusText = 'در حال پاسخ...';
-  }
-
+export const SmartRoutingBadge: React.FC<{ isStreaming: boolean }> = ({ isStreaming }) => {
   return (
-    <div className="flex items-center gap-1.5 sm:gap-2 max-w-full overflow-hidden select-none" dir="ltr">
-      {/* Source Node */}
-      <div className={`relative flex items-center justify-center w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-indigo-500/15 border border-indigo-500/30 shrink-0 transition-all duration-300 ${isStreaming ? 'scale-105' : 'opacity-80'}`}>
-        <BrainOutlineIcon className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-indigo-400" />
-        {isStreaming && <span className="absolute inset-0 rounded-lg border border-indigo-400/50 animate-ping opacity-25" />}
-      </div>
-
-      {/* Connection Path */}
-      <div className="flex items-center h-[2px] w-2.5 sm:w-6 bg-zinc-300 dark:bg-zinc-700 relative overflow-hidden rounded-full shrink-0">
-        {isStreaming && <div className="h-full w-full bg-gradient-to-r from-transparent via-indigo-500 to-transparent animate-pulse" />}
-      </div>
-
-      {/* Target Nodes (Horizontal) */}
-      <div className="flex items-center gap-1 shrink-0">
-        <div className={`w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-indigo-500/15 border border-indigo-500/30 flex items-center justify-center transition-all duration-300 ${
-          isStreaming && routingState === 'general'
-            ? 'scale-110 shadow-[0_0_10px_rgba(99,102,241,0.5)] border-indigo-400'
-            : isStreaming
-            ? 'hidden sm:flex opacity-25 grayscale'
-            : 'flex opacity-50 grayscale'
-        }`}>
-          <DocumentTextOutlineIcon className={`w-3.5 h-3.5 text-indigo-400 ${isStreaming && routingState === 'general' ? 'animate-pulse' : ''}`} />
-        </div>
-
-        <div className={`w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-cyan-500/15 border border-cyan-500/30 flex items-center justify-center transition-all duration-300 ${
-          isStreaming && routingState === 'coding'
-            ? 'scale-110 shadow-[0_0_10px_rgba(6,182,212,0.5)] border-cyan-400'
-            : isStreaming
-            ? 'hidden sm:flex opacity-25 grayscale'
-            : 'flex opacity-50 grayscale'
-        }`}>
-          <Code2OutlineIcon className={`w-3.5 h-3.5 text-cyan-400 ${isStreaming && routingState === 'coding' ? 'animate-pulse' : ''}`} />
-        </div>
-
-        <div className={`w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center transition-all duration-300 ${
-          isStreaming && routingState === 'vision'
-            ? 'scale-110 shadow-[0_0_10px_rgba(16,185,129,0.5)] border-emerald-400'
-            : isStreaming
-            ? 'hidden sm:flex opacity-25 grayscale'
-            : 'flex opacity-50 grayscale'
-        }`}>
-          <EyeOutlineIcon className={`w-3.5 h-3.5 text-emerald-400 ${isStreaming && routingState === 'vision' ? 'animate-pulse' : ''}`} />
-        </div>
-      </div>
-      
-      {/* Status Text (Visible when streaming) */}
-      {statusText && (
-        <div className="px-2 py-0.5 rounded-full bg-zinc-200/80 dark:bg-zinc-800/80 border border-zinc-300 dark:border-zinc-700 shrink-0 animate-fadeIn" dir="rtl">
-          <span className="text-[10px] font-medium text-zinc-700 dark:text-zinc-300 whitespace-nowrap">{statusText}</span>
-        </div>
-      )}
+    <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-purple-500/10 dark:bg-purple-500/10 border border-purple-200 dark:border-purple-500/20 shadow-[0_0_10px_rgba(124,58,237,0.05)] dark:shadow-[0_0_10px_rgba(168,85,247,0.1)] transition-all">
+      <StarsOutlineIcon className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400 animate-[spin_4s_linear_infinite]" />
+      <span className="text-[10px] sm:text-xs font-bold routing-glow-text tracking-wide animate-routing-text-breathe whitespace-nowrap">
+        مسیریابی هوشمند
+      </span>
     </div>
   );
 };
@@ -117,7 +65,7 @@ export const Header: React.FC = React.memo(() => {
   const getProviderInfo = () => {
     if (settings.tools.smartRouting) {
       return {
-        name: <SmartRoutingDiagram isStreaming={isStreaming} routingState={routingState} />,
+        name: <SmartRoutingBadge isStreaming={isStreaming} />,
         icon: null
       };
     }
@@ -173,37 +121,46 @@ export const Header: React.FC = React.memo(() => {
     return list;
   }, [settings.tools.routingRoles, settings.providers.custom.profiles]);
 
+  const isAnimating = isStreaming && settings.tools.smartRouting && routingState !== 'idle';
+
   return (
-    <header className="relative h-16 sm:h-18 px-2.5 sm:px-4 md:px-6 flex items-center justify-between z-20 shrink-0 select-none border-b border-subtle clay-header backdrop-blur-md">
+    <header className="relative flex items-center justify-center z-20 shrink-0 select-none border-b border-subtle clay-header backdrop-blur-md h-16 sm:h-18">
+      
+      {/* -------------------- Original Header Content -------------------- */}
+      <div className={`absolute inset-0 px-2.5 sm:px-4 md:px-6 flex items-center justify-between w-full h-full transition-all duration-500 ease-out ${isAnimating ? 'opacity-0 scale-95 pointer-events-none' : 'opacity-100 scale-100 pointer-events-auto'}`}>
 
-      {/* 1. Right Side (Start) - Sidebar Toggle & Chat Title */}
-      <div className="flex items-center gap-1.5 sm:gap-3 min-w-0 z-10 w-1/3 justify-start">
-        <Tooltip content="منوی گفتگوها">
-          <button
-            id="sidebar-toggle-btn"
-            onClick={() => toggleSidebar()}
-            className="clay-btn w-11 h-11 flex items-center justify-center text-inherit hover:opacity-90 rounded-xl sm:rounded-2xl shrink-0"
-            aria-label="Toggle Sidebar"
-          >
-            <HamburgerMenuLinearIcon className="w-4 h-4 sm:w-5 sm:h-5" />
-          </button>
-        </Tooltip>
+        {/* 1. Right Side (Start) - Sidebar Toggle & Chat Title */}
+        <div className="flex items-center gap-1.5 sm:gap-3 min-w-0 z-10 w-1/3 justify-start">
+          <Tooltip content="منوی گفتگوها">
+            <button
+              id="sidebar-toggle-btn"
+              onClick={() => toggleSidebar()}
+              className="clay-btn w-11 h-11 flex items-center justify-center text-inherit hover:opacity-90 rounded-xl sm:rounded-2xl shrink-0"
+              aria-label="Toggle Sidebar"
+            >
+              <HamburgerMenuLinearIcon className="w-4 h-4 sm:w-5 sm:h-5" />
+            </button>
+          </Tooltip>
 
-        <div className="min-w-0 hidden sm:flex flex-col justify-center">
-          <h1 className="font-extrabold text-sm sm:text-base md:text-lg tracking-tight truncate flex items-center gap-1.5">
-            <ChatRoundDotsOutlineIcon className="w-4 h-4 opacity-50 hidden md:block" />
-            دستیارهوشمند
-          </h1>
-          <p className="text-[10px] sm:text-[11px] opacity-70 truncate">
-            پشتیبانی از زبان فارسی با هوش مصنوعی
-          </p>
+          <div className="min-w-0 hidden sm:flex flex-col justify-center">
+            <h1 className="font-extrabold text-sm sm:text-base md:text-lg tracking-tight truncate flex items-center gap-1.5">
+              <ChatRoundDotsOutlineIcon className="w-4 h-4 opacity-50 hidden md:block" />
+              دستیارهوشمند
+            </h1>
+            <p className="text-[10px] sm:text-[11px] opacity-70 truncate">
+              پشتیبانی از زبان فارسی با هوش مصنوعی
+            </p>
+          </div>
         </div>
-      </div>
 
       {/* 2. Absolute Center - Interactive Model Label Pill */}
-      <div className="absolute inset-0 flex justify-center items-center pointer-events-none z-0">
+      <div className="absolute inset-0 flex justify-center items-center pointer-events-none z-40">
         <div className="pointer-events-auto min-w-[120px] max-w-[280px] sm:max-w-sm w-auto relative flex justify-center" ref={dropdownRef}>
-          {isStreaming ? (
+          {isStreaming && settings.tools.smartRouting ? (
+            <div className="flex items-center justify-center transition-all w-full" dir="ltr">
+              {providerInfo.name}
+            </div>
+          ) : isStreaming ? (
             <div
               className="group flex items-center justify-center gap-2.5 px-2.5 py-2 sm:px-3 sm:py-2 rounded-xl sm:rounded-2xl transition-all w-full"
               dir="ltr"
@@ -390,6 +347,14 @@ export const Header: React.FC = React.memo(() => {
             </div>
           )}
         </div>
+        </div>
+      </div>
+
+      {/* -------------------- Animation Content -------------------- */}
+      <div className={`absolute inset-0 w-full h-full flex items-center justify-center px-4 transition-all duration-500 delay-100 ${isAnimating ? 'opacity-100 scale-100 pointer-events-auto' : 'opacity-0 scale-105 pointer-events-none'}`}>
+         <div className="w-full h-full max-w-4xl flex items-center justify-center">
+            <SmartRoutingAnimation routingState={isStreaming ? routingState : null} />
+         </div>
       </div>
     </header>
   );

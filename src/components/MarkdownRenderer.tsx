@@ -74,117 +74,117 @@ interface MarkdownRendererProps {
 // Universal Solar Icon mapping for common emojis
 const EMOJI_TO_SOLAR_ICON: Record<string, { icon: React.ComponentType<{ className?: string }>; color: string }> = {
   // Economy & Finance
-  '💰': { icon: WalletBoldDuotoneIcon, color: 'text-amber-400' },
-  '💵': { icon: WalletBoldDuotoneIcon, color: 'text-emerald-400' },
-  '🪙': { icon: WalletBoldDuotoneIcon, color: 'text-yellow-400' },
-  '💳': { icon: Card2BoldDuotoneIcon, color: 'text-sky-400' },
-  '📈': { icon: ChartBoldDuotoneIcon, color: 'text-emerald-400' },
-  '📉': { icon: ChartBoldDuotoneIcon, color: 'text-rose-400' },
-  '📊': { icon: ChartBoldDuotoneIcon, color: 'text-teal-400' },
+  '💰': { icon: WalletBoldDuotoneIcon, color: 'text-zinc-500 dark:text-zinc-400' },
+  '💵': { icon: WalletBoldDuotoneIcon, color: 'text-zinc-500 dark:text-zinc-400' },
+  '🪙': { icon: WalletBoldDuotoneIcon, color: 'text-zinc-500 dark:text-zinc-400' },
+  '💳': { icon: Card2BoldDuotoneIcon, color: 'text-zinc-500 dark:text-zinc-400' },
+  '📈': { icon: ChartBoldDuotoneIcon, color: 'text-zinc-500 dark:text-zinc-400' },
+  '📉': { icon: ChartBoldDuotoneIcon, color: 'text-zinc-500 dark:text-zinc-400' },
+  '📊': { icon: ChartBoldDuotoneIcon, color: 'text-zinc-500 dark:text-zinc-400' },
   // Sports & Entertainment
-  '⚽': { icon: CupBoldDuotoneIcon, color: 'text-emerald-400' },
-  '🏀': { icon: CupBoldDuotoneIcon, color: 'text-amber-500' },
-  '🏐': { icon: CupBoldDuotoneIcon, color: 'text-sky-400' },
-  '🎾': { icon: CupBoldDuotoneIcon, color: 'text-lime-400' },
-  '🏆': { icon: MedalStarBoldDuotoneIcon, color: 'text-amber-300' },
-  '🥇': { icon: MedalStarBoldDuotoneIcon, color: 'text-amber-400' },
-  '🎮': { icon: GamepadBoldDuotoneIcon, color: 'text-purple-400' },
+  '⚽': { icon: CupBoldDuotoneIcon, color: 'text-zinc-500 dark:text-zinc-400' },
+  '🏀': { icon: CupBoldDuotoneIcon, color: 'text-zinc-500 dark:text-zinc-400' },
+  '🏐': { icon: CupBoldDuotoneIcon, color: 'text-zinc-500 dark:text-zinc-400' },
+  '🎾': { icon: CupBoldDuotoneIcon, color: 'text-zinc-500 dark:text-zinc-400' },
+  '🏆': { icon: MedalStarBoldDuotoneIcon, color: 'text-zinc-500 dark:text-zinc-400' },
+  '🥇': { icon: MedalStarBoldDuotoneIcon, color: 'text-zinc-500 dark:text-zinc-400' },
+  '🎮': { icon: GamepadBoldDuotoneIcon, color: 'text-zinc-500 dark:text-zinc-400' },
   // Society, City & People
-  '🏙️': { icon: CityBoldDuotoneIcon, color: 'text-teal-400' },
-  '🌆': { icon: CityBoldDuotoneIcon, color: 'text-amber-400' },
-  '🏢': { icon: BuildingsBoldDuotoneIcon, color: 'text-sky-400' },
-  '🏛️': { icon: BuildingsBoldDuotoneIcon, color: 'text-amber-400' },
-  '🏛': { icon: BuildingsBoldDuotoneIcon, color: 'text-amber-400' },
-  '👥': { icon: UsersGroupRoundedBoldDuotoneIcon, color: 'text-indigo-400' },
+  '🏙️': { icon: CityBoldDuotoneIcon, color: 'text-zinc-500 dark:text-zinc-400' },
+  '🌆': { icon: CityBoldDuotoneIcon, color: 'text-zinc-500 dark:text-zinc-400' },
+  '🏢': { icon: BuildingsBoldDuotoneIcon, color: 'text-zinc-500 dark:text-zinc-400' },
+  '🏛️': { icon: BuildingsBoldDuotoneIcon, color: 'text-zinc-500 dark:text-zinc-400' },
+  '🏛': { icon: BuildingsBoldDuotoneIcon, color: 'text-zinc-500 dark:text-zinc-400' },
+  '👥': { icon: UsersGroupRoundedBoldDuotoneIcon, color: 'text-zinc-500 dark:text-zinc-400' },
   // Politics, Law & Judiciary
-  '⚖️': { icon: ScaleBoldDuotoneIcon, color: 'text-purple-400' },
-  '📜': { icon: DiplomaBoldDuotoneIcon, color: 'text-amber-200' },
-  '📄': { icon: NotesBoldDuotoneIcon, color: 'text-slate-300' },
-  '📝': { icon: NotesBoldDuotoneIcon, color: 'text-blue-400' },
+  '⚖️': { icon: ScaleBoldDuotoneIcon, color: 'text-zinc-500 dark:text-zinc-400' },
+  '📜': { icon: DiplomaBoldDuotoneIcon, color: 'text-zinc-500 dark:text-zinc-400' },
+  '📄': { icon: NotesBoldDuotoneIcon, color: 'text-zinc-500 dark:text-zinc-400' },
+  '📝': { icon: NotesBoldDuotoneIcon, color: 'text-zinc-500 dark:text-zinc-400' },
   // Science, Health & Medicine
-  '🔬': { icon: TestTubeBoldDuotoneIcon, color: 'text-emerald-400' },
-  '🧪': { icon: TestTubeBoldDuotoneIcon, color: 'text-teal-400' },
-  '🩺': { icon: MedicalKitBoldDuotoneIcon, color: 'text-rose-400' },
-  '🏥': { icon: MedicalKitBoldDuotoneIcon, color: 'text-rose-500' },
-  '💊': { icon: MedicalKitBoldDuotoneIcon, color: 'text-pink-400' },
-  '🧬': { icon: TestTubeBoldDuotoneIcon, color: 'text-purple-400' },
+  '🔬': { icon: TestTubeBoldDuotoneIcon, color: 'text-zinc-500 dark:text-zinc-400' },
+  '🧪': { icon: TestTubeBoldDuotoneIcon, color: 'text-zinc-500 dark:text-zinc-400' },
+  '🩺': { icon: MedicalKitBoldDuotoneIcon, color: 'text-zinc-500 dark:text-zinc-400' },
+  '🏥': { icon: MedicalKitBoldDuotoneIcon, color: 'text-zinc-500 dark:text-zinc-400' },
+  '💊': { icon: MedicalKitBoldDuotoneIcon, color: 'text-zinc-500 dark:text-zinc-400' },
+  '🧬': { icon: TestTubeBoldDuotoneIcon, color: 'text-zinc-500 dark:text-zinc-400' },
   // Culture, Art, Cinema & Music
-  '🎭': { icon: MasksBoldDuotoneIcon, color: 'text-pink-400' },
-  '🎬': { icon: ClapperboardBoldDuotoneIcon, color: 'text-purple-400' },
-  '🎨': { icon: CameraBoldDuotoneIcon, color: 'text-amber-400' },
-  '🎵': { icon: MusicNoteBoldDuotoneIcon, color: 'text-sky-400' },
-  '📻': { icon: VolumeLoudBoldDuotoneIcon, color: 'text-indigo-400' },
-  '📺': { icon: ClapperboardBoldDuotoneIcon, color: 'text-sky-400' },
-  '🎥': { icon: CameraBoldDuotoneIcon, color: 'text-rose-400' },
+  '🎭': { icon: MasksBoldDuotoneIcon, color: 'text-zinc-500 dark:text-zinc-400' },
+  '🎬': { icon: ClapperboardBoldDuotoneIcon, color: 'text-zinc-500 dark:text-zinc-400' },
+  '🎨': { icon: CameraBoldDuotoneIcon, color: 'text-zinc-500 dark:text-zinc-400' },
+  '🎵': { icon: MusicNoteBoldDuotoneIcon, color: 'text-zinc-500 dark:text-zinc-400' },
+  '📻': { icon: VolumeLoudBoldDuotoneIcon, color: 'text-zinc-500 dark:text-zinc-400' },
+  '📺': { icon: ClapperboardBoldDuotoneIcon, color: 'text-zinc-500 dark:text-zinc-400' },
+  '🎥': { icon: CameraBoldDuotoneIcon, color: 'text-zinc-500 dark:text-zinc-400' },
   // News, Sources, Media & Links
-  '📣': { icon: VolumeLoudBoldDuotoneIcon, color: 'text-rose-400' },
-  '📢': { icon: VolumeLoudBoldDuotoneIcon, color: 'text-rose-400' },
-  '📰': { icon: DocumentTextBoldDuotoneIcon, color: 'text-sky-400' },
-  '🗞️': { icon: DocumentTextBoldDuotoneIcon, color: 'text-sky-400' },
-  '🗞': { icon: DocumentTextBoldDuotoneIcon, color: 'text-sky-400' },
-  '🏷️': { icon: TagPriceBoldDuotoneIcon, color: 'text-teal-400' },
-  '🏷': { icon: TagBoldDuotoneIcon, color: 'text-teal-400' },
-  '🔗': { icon: LinkBoldDuotoneIcon, color: 'text-blue-400' },
-  '🔔': { icon: BellBoldDuotoneIcon, color: 'text-amber-400' },
+  '📣': { icon: VolumeLoudBoldDuotoneIcon, color: 'text-zinc-500 dark:text-zinc-400' },
+  '📢': { icon: VolumeLoudBoldDuotoneIcon, color: 'text-zinc-500 dark:text-zinc-400' },
+  '📰': { icon: DocumentTextBoldDuotoneIcon, color: 'text-zinc-500 dark:text-zinc-400' },
+  '🗞️': { icon: DocumentTextBoldDuotoneIcon, color: 'text-zinc-500 dark:text-zinc-400' },
+  '🗞': { icon: DocumentTextBoldDuotoneIcon, color: 'text-zinc-500 dark:text-zinc-400' },
+  '🏷️': { icon: TagPriceBoldDuotoneIcon, color: 'text-zinc-500 dark:text-zinc-400' },
+  '🏷': { icon: TagBoldDuotoneIcon, color: 'text-zinc-500 dark:text-zinc-400' },
+  '🔗': { icon: LinkBoldDuotoneIcon, color: 'text-zinc-500 dark:text-zinc-400' },
+  '🔔': { icon: BellBoldDuotoneIcon, color: 'text-zinc-500 dark:text-zinc-400' },
   // Calendar & Dates
-  '📅': { icon: CalendarBoldDuotoneIcon, color: 'text-sky-400' },
-  '🗓️': { icon: CalendarBoldDuotoneIcon, color: 'text-sky-400' },
-  '🗓': { icon: CalendarBoldDuotoneIcon, color: 'text-sky-400' },
-  '☀️': { icon: SunBoldDuotoneIcon, color: 'text-amber-400' },
-  '🌞': { icon: SunBoldDuotoneIcon, color: 'text-amber-400' },
-  '🌙': { icon: MoonStarsBoldDuotoneIcon, color: 'text-amber-300' },
-  '🌘': { icon: MoonStarsBoldDuotoneIcon, color: 'text-amber-300' },
-  '🌍': { icon: GlobalBoldDuotoneIcon, color: 'text-teal-400' },
-  '🌐': { icon: GlobalBoldDuotoneIcon, color: 'text-teal-400' },
-  '🌎': { icon: GlobalBoldDuotoneIcon, color: 'text-teal-400' },
-  '🌏': { icon: GlobalBoldDuotoneIcon, color: 'text-teal-400' },
+  '📅': { icon: CalendarBoldDuotoneIcon, color: 'text-zinc-500 dark:text-zinc-400' },
+  '🗓️': { icon: CalendarBoldDuotoneIcon, color: 'text-zinc-500 dark:text-zinc-400' },
+  '🗓': { icon: CalendarBoldDuotoneIcon, color: 'text-zinc-500 dark:text-zinc-400' },
+  '☀️': { icon: SunBoldDuotoneIcon, color: 'text-zinc-500 dark:text-zinc-400' },
+  '🌞': { icon: SunBoldDuotoneIcon, color: 'text-zinc-500 dark:text-zinc-400' },
+  '🌙': { icon: MoonStarsBoldDuotoneIcon, color: 'text-zinc-500 dark:text-zinc-400' },
+  '🌘': { icon: MoonStarsBoldDuotoneIcon, color: 'text-zinc-500 dark:text-zinc-400' },
+  '🌍': { icon: GlobalBoldDuotoneIcon, color: 'text-zinc-500 dark:text-zinc-400' },
+  '🌐': { icon: GlobalBoldDuotoneIcon, color: 'text-zinc-500 dark:text-zinc-400' },
+  '🌎': { icon: GlobalBoldDuotoneIcon, color: 'text-zinc-500 dark:text-zinc-400' },
+  '🌏': { icon: GlobalBoldDuotoneIcon, color: 'text-zinc-500 dark:text-zinc-400' },
   // Pins & Flowers
-  '📌': { icon: PinBoldDuotoneIcon, color: 'text-rose-400' },
-  '📍': { icon: PinBoldDuotoneIcon, color: 'text-rose-400' },
-  '🌸': { icon: StarsMinimalisticBoldDuotoneIcon, color: 'text-pink-400' },
-  '🌺': { icon: StarsMinimalisticBoldDuotoneIcon, color: 'text-pink-400' },
-  '🌹': { icon: StarsMinimalisticBoldDuotoneIcon, color: 'text-rose-400' },
-  '🌷': { icon: StarsMinimalisticBoldDuotoneIcon, color: 'text-pink-400' },
+  '📌': { icon: PinBoldDuotoneIcon, color: 'text-zinc-500 dark:text-zinc-400' },
+  '📍': { icon: PinBoldDuotoneIcon, color: 'text-zinc-500 dark:text-zinc-400' },
+  '🌸': { icon: StarsMinimalisticBoldDuotoneIcon, color: 'text-zinc-500 dark:text-zinc-400' },
+  '🌺': { icon: StarsMinimalisticBoldDuotoneIcon, color: 'text-zinc-500 dark:text-zinc-400' },
+  '🌹': { icon: StarsMinimalisticBoldDuotoneIcon, color: 'text-zinc-500 dark:text-zinc-400' },
+  '🌷': { icon: StarsMinimalisticBoldDuotoneIcon, color: 'text-zinc-500 dark:text-zinc-400' },
   // Ideas, Tech & Coding
-  '💡': { icon: LightbulbBoldDuotoneIcon, color: 'text-yellow-400' },
-  '⚡': { icon: CpuBoltBoldDuotoneIcon, color: 'text-sky-400' },
-  '✨': { icon: StarsMinimalisticBoldDuotoneIcon, color: 'text-purple-400' },
-  '🌟': { icon: StarsMinimalisticBoldDuotoneIcon, color: 'text-amber-300' },
-  '⭐': { icon: StarsMinimalisticBoldDuotoneIcon, color: 'text-amber-400' },
-  '💻': { icon: Code2BoldDuotoneIcon, color: 'text-emerald-400' },
-  '🖥️': { icon: Code2BoldDuotoneIcon, color: 'text-emerald-400' },
-  '🤖': { icon: CpuBoltBoldDuotoneIcon, color: 'text-purple-400' },
-  '🚀': { icon: RocketBoldDuotoneIcon, color: 'text-purple-400' },
-  '🛡️': { icon: ShieldCheckBoldDuotoneIcon, color: 'text-emerald-400' },
-  '🛡': { icon: ShieldCheckBoldDuotoneIcon, color: 'text-emerald-400' },
-  '🔍': { icon: MinimalisticMagnifierBoldDuotoneIcon, color: 'text-sky-400' },
-  '🔎': { icon: MinimalisticMagnifierBoldDuotoneIcon, color: 'text-sky-400' },
-  '📁': { icon: FolderBoldDuotoneIcon, color: 'text-amber-400' },
-  '📂': { icon: FolderBoldDuotoneIcon, color: 'text-amber-400' },
+  '💡': { icon: LightbulbBoldDuotoneIcon, color: 'text-zinc-500 dark:text-zinc-400' },
+  '⚡': { icon: CpuBoltBoldDuotoneIcon, color: 'text-zinc-500 dark:text-zinc-400' },
+  '✨': { icon: StarsMinimalisticBoldDuotoneIcon, color: 'text-zinc-500 dark:text-zinc-400' },
+  '🌟': { icon: StarsMinimalisticBoldDuotoneIcon, color: 'text-zinc-500 dark:text-zinc-400' },
+  '⭐': { icon: StarsMinimalisticBoldDuotoneIcon, color: 'text-zinc-500 dark:text-zinc-400' },
+  '💻': { icon: Code2BoldDuotoneIcon, color: 'text-zinc-500 dark:text-zinc-400' },
+  '🖥️': { icon: Code2BoldDuotoneIcon, color: 'text-zinc-500 dark:text-zinc-400' },
+  '🤖': { icon: CpuBoltBoldDuotoneIcon, color: 'text-zinc-500 dark:text-zinc-400' },
+  '🚀': { icon: RocketBoldDuotoneIcon, color: 'text-zinc-500 dark:text-zinc-400' },
+  '🛡️': { icon: ShieldCheckBoldDuotoneIcon, color: 'text-zinc-500 dark:text-zinc-400' },
+  '🛡': { icon: ShieldCheckBoldDuotoneIcon, color: 'text-zinc-500 dark:text-zinc-400' },
+  '🔍': { icon: MinimalisticMagnifierBoldDuotoneIcon, color: 'text-zinc-500 dark:text-zinc-400' },
+  '🔎': { icon: MinimalisticMagnifierBoldDuotoneIcon, color: 'text-zinc-500 dark:text-zinc-400' },
+  '📁': { icon: FolderBoldDuotoneIcon, color: 'text-zinc-500 dark:text-zinc-400' },
+  '📂': { icon: FolderBoldDuotoneIcon, color: 'text-zinc-500 dark:text-zinc-400' },
   // Time
-  '⏰': { icon: ClockCircleBoldDuotoneIcon, color: 'text-blue-400' },
-  '⏱️': { icon: ClockCircleBoldDuotoneIcon, color: 'text-blue-400' },
-  '⏳': { icon: ClockCircleBoldDuotoneIcon, color: 'text-amber-400' },
-  '⌛': { icon: ClockCircleBoldDuotoneIcon, color: 'text-amber-400' },
+  '⏰': { icon: ClockCircleBoldDuotoneIcon, color: 'text-zinc-500 dark:text-zinc-400' },
+  '⏱️': { icon: ClockCircleBoldDuotoneIcon, color: 'text-zinc-500 dark:text-zinc-400' },
+  '⏳': { icon: ClockCircleBoldDuotoneIcon, color: 'text-zinc-500 dark:text-zinc-400' },
+  '⌛': { icon: ClockCircleBoldDuotoneIcon, color: 'text-zinc-500 dark:text-zinc-400' },
   // Security & Chat
-  '🔒': { icon: LockKeyholeBoldDuotoneIcon, color: 'text-emerald-400' },
-  '🔓': { icon: LockKeyholeBoldDuotoneIcon, color: 'text-amber-400' },
-  '🔑': { icon: LockKeyholeBoldDuotoneIcon, color: 'text-amber-400' },
-  '💬': { icon: ChatRoundBoldDuotoneIcon, color: 'text-blue-400' },
-  '🗨️': { icon: ChatRoundBoldDuotoneIcon, color: 'text-blue-400' },
-  '❤️': { icon: HeartBoldDuotoneIcon, color: 'text-rose-500' },
+  '🔒': { icon: LockKeyholeBoldDuotoneIcon, color: 'text-zinc-500 dark:text-zinc-400' },
+  '🔓': { icon: LockKeyholeBoldDuotoneIcon, color: 'text-zinc-500 dark:text-zinc-400' },
+  '🔑': { icon: LockKeyholeBoldDuotoneIcon, color: 'text-zinc-500 dark:text-zinc-400' },
+  '💬': { icon: ChatRoundBoldDuotoneIcon, color: 'text-zinc-500 dark:text-zinc-400' },
+  '🗨️': { icon: ChatRoundBoldDuotoneIcon, color: 'text-zinc-500 dark:text-zinc-400' },
+  '❤️': { icon: HeartBoldDuotoneIcon, color: 'text-zinc-500 dark:text-zinc-400' },
   // Statuses
-  '✅': { icon: CheckCircleBoldDuotoneIcon, color: 'text-emerald-400' },
-  '✔️': { icon: CheckCircleBoldDuotoneIcon, color: 'text-emerald-400' },
-  '❌': { icon: CloseCircleBoldDuotoneIcon, color: 'text-rose-400' },
-  '❎': { icon: CloseCircleBoldDuotoneIcon, color: 'text-rose-400' },
-  '⚠️': { icon: DangerTriangleBoldDuotoneIcon, color: 'text-amber-400' },
-  '🚨': { icon: DangerTriangleBoldDuotoneIcon, color: 'text-rose-500' },
-  'ℹ️': { icon: InfoCircleBoldDuotoneIcon, color: 'text-sky-400' },
-  'ℹ': { icon: InfoCircleBoldDuotoneIcon, color: 'text-sky-400' }
+  '✅': { icon: CheckCircleBoldDuotoneIcon, color: 'text-zinc-500 dark:text-zinc-400' },
+  '✔️': { icon: CheckCircleBoldDuotoneIcon, color: 'text-zinc-500 dark:text-zinc-400' },
+  '❌': { icon: CloseCircleBoldDuotoneIcon, color: 'text-zinc-500 dark:text-zinc-400' },
+  '❎': { icon: CloseCircleBoldDuotoneIcon, color: 'text-zinc-500 dark:text-zinc-400' },
+  '⚠️': { icon: DangerTriangleBoldDuotoneIcon, color: 'text-zinc-500 dark:text-zinc-400' },
+  '🚨': { icon: DangerTriangleBoldDuotoneIcon, color: 'text-zinc-500 dark:text-zinc-400' },
+  'ℹ️': { icon: InfoCircleBoldDuotoneIcon, color: 'text-zinc-500 dark:text-zinc-400' },
+  'ℹ': { icon: InfoCircleBoldDuotoneIcon, color: 'text-zinc-500 dark:text-zinc-400' }
 };
 
-const EMOJI_REGEX = /(💰|💵|🪙|💳|📈|📉|📊|⚽|🏀|🏐|🎾|🏆|🥇|🎮|🏛️|🏛|🏙️|🌆|🏢|👥|🔬|🧪|🩺|🏥|💊|🧬|🎭|🎬|🎨|🎵|📻|📺|🎥|💻|🖥️|🤖|⚡|💡|🚀|🛡️|🛡|🔒|🔓|🔑|📣|📢|📰|🗞️|🗞|🏷️|🏷|🔗|🔔|📅|🗓️|🗓|☀️|🌞|🌙|🌘|🌍|🌐|🌎|🌏|📌|📍|📜|📄|📝|🌸|🌺|🌹|🌷|✨|🌟|⭐|🔍|🔎|📁|📂|⏰|⏱️|⏳|⌛|💬|🗨️|❤️|✅|✔️|❌|❎|⚠️|🚨|ℹ️|ℹ)/u;
+const EMOJI_REGEX = /([\p{Emoji_Presentation}\p{Extended_Pictographic}])/gu;
 
 type IconContext = 'heading' | 'body' | 'meta' | 'badge';
 
@@ -194,12 +194,13 @@ function replaceEmojisWithSolarIcons(node: React.ReactNode, context: IconContext
     const parts = node.split(EMOJI_REGEX);
     if (parts.length === 1) return node;
 
+    // CRITICAL: DO NOT add colors. User prefers MONOCHROME and SMALL icons.
     // Size mappings per context
-    let sizeClass = 'w-[1.05em] h-[1.05em] drop-shadow-xs mx-0.5';
+    let sizeClass = 'w-4 h-4 drop-shadow-none mx-0.5 opacity-60 grayscale';
     if (context === 'heading') {
-      sizeClass = 'w-[0.9em] h-[0.9em] drop-shadow-sm mx-1.5 mb-0.5';
+      sizeClass = 'w-4 h-4 sm:w-5 sm:h-5 drop-shadow-none mx-1.5 mb-0.5 opacity-60 grayscale';
     } else if (context === 'meta' || context === 'badge') {
-      sizeClass = 'w-[0.7em] h-[0.7em] max-w-[12px] max-h-[12px] opacity-75 mx-0.5 align-baseline';
+      sizeClass = 'w-3 h-3 max-w-[12px] max-h-[12px] opacity-50 mx-0.5 align-baseline grayscale';
     }
 
     return parts.map((part, index) => {
@@ -208,7 +209,15 @@ function replaceEmojisWithSolarIcons(node: React.ReactNode, context: IconContext
         const IconComponent = match.icon;
         return (
           <span key={index} className="inline-flex items-center align-middle select-none pointer-events-none transition-transform hover:scale-110">
-            <IconComponent className={`${sizeClass} ${match.color}`} />
+            {/* FORCE MONOCHROME: Overriding match.color with text-zinc-500 */}
+            <IconComponent className={`${sizeClass} text-zinc-500 dark:text-zinc-400`} />
+          </span>
+        );
+      } else if (/^[\p{Emoji_Presentation}\p{Extended_Pictographic}]$/u.test(part)) {
+        // Native Emojis that aren't in the Solar Icon map: Force them to be small & grayscale
+        return (
+          <span key={index} className="inline-block grayscale opacity-75 text-[0.85em] align-baseline mx-0.5">
+            {part}
           </span>
         );
       }
@@ -432,7 +441,10 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = React.memo(({
                               <span className="text-lg">🧠</span>
                               <span className="text-[14px] text-zinc-700 dark:text-zinc-300">فرآیند استدلال هوش مصنوعی (برای مشاهده کلیک کنید)</span>
                           </summary>
-                          <div className="p-4 border-t border-subtle text-[13px] opacity-80 leading-relaxed font-mono whitespace-pre-wrap max-h-[400px] overflow-y-auto" dir="rtl">
+                          <div 
+                              className="p-4 border-t border-subtle text-[13px] opacity-80 leading-relaxed font-mono whitespace-pre-wrap max-h-[400px] overflow-y-auto" 
+                              style={{ unicodeBidi: 'plaintext', textAlign: 'start' }}
+                          >
                               {codeString}
                           </div>
                       </details>

@@ -1,3 +1,5 @@
+@import url('https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.0.0/Vazirmatn-font-face.css');
+@import url('https://cdn.jsdelivr.net/gh/rastikerdar/sahel-font@v3.4.0/dist/font-face.css');
 @import "tailwindcss";
 @import "@fontsource/estedad/index.css";
 @plugin "@tailwindcss/typography";
@@ -513,5 +515,330 @@ img.emoji {
   filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.15));
 }
 
+/* ==================== SMART ROUTING DENDRITE ANIMATIONS ==================== */
+.routing-dendrite-svg {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    z-index: 1;
+    pointer-events: none;
+}
+.routing-node {
+    z-index: 10;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s;
+}
+@keyframes routing-text-breathe {
+    0% { opacity: 0.8; }
+    100% { opacity: 1; }
+}
+.animate-routing-text-breathe {
+    animation: routing-text-breathe 2s ease-in-out infinite alternate;
+}
+@keyframes routing-pulse-fire {
+    0% { stroke-dashoffset: 350; opacity: 0; }
+    10% { opacity: 1; }
+    50% { stroke-dashoffset: 0; opacity: 1; }
+    90% { opacity: 1; }
+    100% { stroke-dashoffset: -350; opacity: 0; }
+}
+
+/* DARK MODE */
+.dark .routing-neuron-active {
+    color: #d8b4fe;
+    animation: dark-neuron-breathe 2.5s ease-in-out infinite alternate;
+    box-shadow: inset 0 0 15px rgba(192, 132, 252, 0.1);
+    background-color: #09090b;
+}
+@keyframes dark-neuron-breathe {
+    0% { transform: scale(1); filter: drop-shadow(0 0 8px rgba(192, 132, 252, 0.4)); }
+    100% { transform: scale(1.15); filter: drop-shadow(0 0 25px rgba(216, 180, 254, 0.8)); }
+}
+.dark .routing-dendrite-pulse-glow {
+    stroke: #d8b4fe;
+    stroke-width: 6;
+    fill: none;
+    stroke-linecap: round;
+    stroke-dasharray: 200;
+    stroke-dashoffset: 350;
+    animation: routing-pulse-fire 3.5s infinite ease-out;
+    filter: drop-shadow(0 0 10px #c084fc) blur(3px);
+    opacity: 0.6;
+}
+.dark .routing-dendrite-pulse-core {
+    stroke: #ffffff;
+    stroke-width: 1.5;
+    fill: none;
+    stroke-linecap: round;
+    stroke-dasharray: 200;
+    stroke-dashoffset: 350;
+    animation: routing-pulse-fire 3.5s infinite ease-out;
+    filter: drop-shadow(0 0 4px #ffffff) drop-shadow(0 0 8px #d8b4fe);
+}
+.dark .routing-base-path { stroke: rgba(255,255,255,0.04); }
+.dark .routing-node-inactive { background-color: #09090b; color: #52525b; }
+.dark .routing-glow-text {
+    color: #d8b4fe;
+    text-shadow: 0 0 12px rgba(192, 132, 252, 0.5);
+}
+
+/* LIGHT MODE */
+:root:not(.dark) .routing-neuron-active {
+    color: #6d28d9;
+    animation: light-neuron-breathe 2.5s ease-in-out infinite alternate;
+    box-shadow: inset 0 0 15px rgba(109, 40, 217, 0.05);
+    background-color: #ffffff;
+}
+@keyframes light-neuron-breathe {
+    0% { transform: scale(1); filter: drop-shadow(0 0 8px rgba(109, 40, 217, 0.3)); }
+    100% { transform: scale(1.15); filter: drop-shadow(0 0 20px rgba(109, 40, 217, 0.6)); }
+}
+:root:not(.dark) .routing-dendrite-pulse-glow {
+    stroke: #7c3aed;
+    stroke-width: 6;
+    fill: none;
+    stroke-linecap: round;
+    stroke-dasharray: 200;
+    stroke-dashoffset: 350;
+    animation: routing-pulse-fire 3.5s infinite ease-out;
+    filter: drop-shadow(0 0 8px rgba(124, 58, 237, 0.5)) blur(2px);
+    opacity: 0.7;
+}
+:root:not(.dark) .routing-dendrite-pulse-core {
+    stroke: #4c1d95;
+    stroke-width: 1.5;
+    fill: none;
+    stroke-linecap: round;
+    stroke-dasharray: 200;
+    stroke-dashoffset: 350;
+    animation: routing-pulse-fire 3.5s infinite ease-out;
+    filter: drop-shadow(0 0 2px #4c1d95);
+}
+:root:not(.dark) .routing-base-path { stroke: rgba(0,0,0,0.06); }
+:root:not(.dark) .routing-node-inactive { background-color: #ffffff; color: #94a3b8; }
+.markdown-body h4, 
+.markdown-body h5, 
+.markdown-body h6, 
+.markdown-body li {
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  line-height: 1.8;
+}
+
+.markdown-body code {
+  word-wrap: break-word;
+  overflow-wrap: anywhere;
+}
 
 
+.markdown-body pre,
+.prose pre,
+pre {
+  direction: ltr !important;
+  text-align: left !important;
+  unicode-bidi: isolate;
+  background-color: transparent !important;
+  background: transparent !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+/* Eliminate all internal borders and scrollbar lines inside message input */
+#chat-message-input,
+#chat-message-input:focus,
+#chat-message-input:focus-visible {
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+#chat-message-input::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+@keyframes errorProgress {
+  from {
+    width: 100%;
+  }
+  to {
+    width: 0%;
+  }
+}
+
+.animate-error-progress {
+  animation: errorProgress 15s linear forwards;
+}
+
+/* Modern Icon Micro-interactions */
+svg.lucide,
+.lucide {
+  stroke-width: 1.65px;
+  vector-effect: non-scaling-stroke;
+}
+
+svg {
+  transition: transform 0.18s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.18s ease, color 0.18s ease;
+}
+
+button:hover > svg,
+button:hover svg {
+  transform: scale(1.06);
+}
+
+button:active > svg,
+button:active svg {
+  transform: scale(0.94);
+}
+
+/* Modern Vector Twemoji in Chat Messages */
+img.twemoji-img,
+img.emoji {
+  display: inline-block !important;
+  width: 1.25em !important;
+  height: 1.25em !important;
+  vertical-align: -0.22em !important;
+  margin: 0 0.18em !important;
+  pointer-events: none !important;
+  user-select: none !important;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.15));
+}
+
+/* ==================== SMART ROUTING DENDRITE ANIMATIONS ==================== */
+.routing-dendrite-svg {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    z-index: 1;
+    pointer-events: none;
+}
+.routing-node {
+    z-index: 10;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s;
+}
+@keyframes routing-text-breathe {
+    0% { opacity: 0.8; }
+    100% { opacity: 1; }
+}
+.animate-routing-text-breathe {
+    animation: routing-text-breathe 2s ease-in-out infinite alternate;
+}
+@keyframes routing-pulse-fire {
+    0% { stroke-dashoffset: 350; opacity: 0; }
+    10% { opacity: 1; }
+    50% { stroke-dashoffset: 0; opacity: 1; }
+    90% { opacity: 1; }
+    100% { stroke-dashoffset: -350; opacity: 0; }
+}
+
+/* DARK MODE */
+.dark .routing-neuron-active {
+    color: #d8b4fe;
+    animation: dark-neuron-breathe 2.5s ease-in-out infinite alternate;
+    box-shadow: inset 0 0 15px rgba(192, 132, 252, 0.1);
+    background-color: #09090b;
+}
+@keyframes dark-neuron-breathe {
+    0% { transform: scale(1); filter: drop-shadow(0 0 8px rgba(192, 132, 252, 0.4)); }
+    100% { transform: scale(1.15); filter: drop-shadow(0 0 25px rgba(216, 180, 254, 0.8)); }
+}
+.dark .routing-dendrite-pulse-glow {
+    stroke: #d8b4fe;
+    stroke-width: 6;
+    fill: none;
+    stroke-linecap: round;
+    stroke-dasharray: 200;
+    stroke-dashoffset: 350;
+    animation: routing-pulse-fire 3.5s infinite ease-out;
+    filter: drop-shadow(0 0 10px #c084fc) blur(3px);
+    opacity: 0.6;
+}
+.dark .routing-dendrite-pulse-core {
+    stroke: #ffffff;
+    stroke-width: 1.5;
+    fill: none;
+    stroke-linecap: round;
+    stroke-dasharray: 200;
+    stroke-dashoffset: 350;
+    animation: routing-pulse-fire 3.5s infinite ease-out;
+    filter: drop-shadow(0 0 4px #ffffff) drop-shadow(0 0 8px #d8b4fe);
+}
+.dark .routing-base-path { stroke: rgba(255,255,255,0.04); }
+.dark .routing-node-inactive { background-color: #09090b; color: #52525b; }
+.dark .routing-glow-text {
+    color: #d8b4fe;
+    text-shadow: 0 0 12px rgba(192, 132, 252, 0.5);
+}
+
+/* LIGHT MODE */
+:root:not(.dark) .routing-neuron-active {
+    color: #6d28d9;
+    animation: light-neuron-breathe 2.5s ease-in-out infinite alternate;
+    box-shadow: inset 0 0 15px rgba(109, 40, 217, 0.05);
+    background-color: #ffffff;
+}
+@keyframes light-neuron-breathe {
+    0% { transform: scale(1); filter: drop-shadow(0 0 8px rgba(109, 40, 217, 0.3)); }
+    100% { transform: scale(1.15); filter: drop-shadow(0 0 20px rgba(109, 40, 217, 0.6)); }
+}
+:root:not(.dark) .routing-dendrite-pulse-glow {
+    stroke: #7c3aed;
+    stroke-width: 6;
+    fill: none;
+    stroke-linecap: round;
+    stroke-dasharray: 200;
+    stroke-dashoffset: 350;
+    animation: routing-pulse-fire 3.5s infinite ease-out;
+    filter: drop-shadow(0 0 8px rgba(124, 58, 237, 0.5)) blur(2px);
+    opacity: 0.7;
+}
+:root:not(.dark) .routing-dendrite-pulse-core {
+    stroke: #4c1d95;
+    stroke-width: 1.5;
+    fill: none;
+    stroke-linecap: round;
+    stroke-dasharray: 200;
+    stroke-dashoffset: 350;
+    animation: routing-pulse-fire 3.5s infinite ease-out;
+    filter: drop-shadow(0 0 2px #4c1d95);
+}
+:root:not(.dark) .routing-base-path { stroke: rgba(0,0,0,0.06); }
+:root:not(.dark) .routing-node-inactive { background-color: #ffffff; color: #94a3b8; }
+:root:not(.dark) .routing-glow-text {
+    color: #6d28d9;
+    text-shadow: 0 0 10px rgba(124, 58, 237, 0.3);
+}
+
+@keyframes fiberOpticRTL {
+  0% { transform: translateX(100%); }
+  100% { transform: translateX(-100%); }
+}
+.animate-fiber-rtl {
+  animation: fiberOpticRTL 1.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+@keyframes fiberOpticLTR {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(200%); }
+}
+.animate-fiber-ltr {
+  animation: fiberOpticLTR 1.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+@keyframes fillLineLTR {
+  0% { width: 0%; opacity: 0; }
+  1% { opacity: 1; }
+  100% { width: 100%; opacity: 1; }
+}
+.animate-fill-line-ltr {
+  animation: fillLineLTR 0.4s ease-out forwards;
+}

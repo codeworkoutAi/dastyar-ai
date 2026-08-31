@@ -162,6 +162,12 @@ stopGeneration: () => {
       }
     }
 
+    // Enforce minimal emoji usage via system prompt injection
+    const antiEmojiRule = "\n\nCRITICAL RULE: DO NOT use emojis in your response under any circumstances, unless absolutely necessary for formatting a list. Maintain a highly professional and clean text structure.";
+    if (payloadSettings.persona) {
+      payloadSettings.persona.systemPrompt = (payloadSettings.persona.systemPrompt || '') + antiEmojiRule;
+    }
+
     let finalModelUsed = (payloadSettings.providers as any)[payloadSettings.providers.activeProvider]?.modelName || 'gemini-2.5-pro';
 
     const userMessage: ChatMessage = {

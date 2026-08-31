@@ -775,6 +775,19 @@ export const MessageInput: React.FC = React.memo(() => {
           </div>
         )}
 
+        {/* Token Estimator (Moved to top-left) */}
+        {(text.trim() || imagePreview || attachedFileMeta) && (
+          <div className="flex justify-end w-full px-2" dir="rtl">
+            <div 
+              className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md border font-mono text-[10px] select-none transition-colors ${estimatedTokens > 32000 ? 'text-red-600 dark:text-red-400 bg-red-500/10 border-red-500/20' : estimatedTokens > 8000 ? 'text-amber-600 dark:text-amber-400 bg-amber-500/10 border-amber-500/20' : 'text-zinc-700 dark:text-zinc-300 bg-zinc-200/70 dark:bg-zinc-800/80 border-zinc-300/50 dark:border-white/10'}`}
+              title="تخمین توکن‌های این پیام بر اساس طول نویسه‌ها و اسناد"
+            >
+              <CpuBoltLinearIcon className={`w-3 h-3 shrink-0 ${estimatedTokens > 32000 ? 'text-red-500' : estimatedTokens > 8000 ? 'text-amber-500' : 'text-sky-500'}`} />
+              <span>~{usePersianDigits ? toPersianDigits(estimatedTokens) : estimatedTokens} توکن تخمینی</span>
+            </div>
+          </div>
+        )}
+
         {/* Input Frame */}
         <div className={`relative flex items-end gap-2 sm:gap-3 bg-zinc-100 dark:bg-zinc-800/90 rounded-[32px] p-1.5 sm:p-2 shadow-sm border border-zinc-200 dark:border-white/5 transition-all focus-within:ring-2 focus-within:ring-white/10 ${isStreaming ? 'opacity-80' : ''}`}>
           
@@ -1013,22 +1026,12 @@ export const MessageInput: React.FC = React.memo(() => {
           </div>
         )}
 
-        {/* Footer info: Disclaimer and Token Footprint Estimator */}
-        <div className={`flex items-center justify-between flex-wrap gap-2 text-[10px] sm:text-[11px] opacity-75 select-none px-2 ${isEmpty ? 'hidden' : ''}`}>
+        {/* Footer info: Disclaimer */}
+        <div className={`flex items-center justify-center flex-wrap gap-2 text-[10px] sm:text-[11px] opacity-75 select-none px-2 ${isEmpty ? 'hidden' : ''}`}>
           <div className="flex items-center gap-1.5 min-w-0">
             <StarsMinimalisticBoldIcon className="w-3.5 h-3.5 text-[var(--accent-text)] shrink-0" />
             <span className="truncate sm:whitespace-normal">پاسخ‌های مدل‌های زبانی را بازبینی کنید. ممکن است خطاهایی وجود داشته باشد.</span>
           </div>
-
-          {(text.trim() || imagePreview || attachedFileMeta) && (
-            <div 
-              className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md border font-mono text-[10px] select-none transition-colors ${estimatedTokens > 32000 ? 'text-red-600 dark:text-red-400 bg-red-500/10 border-red-500/20' : estimatedTokens > 8000 ? 'text-amber-600 dark:text-amber-400 bg-amber-500/10 border-amber-500/20' : 'text-zinc-700 dark:text-zinc-300 bg-zinc-200/70 dark:bg-zinc-800/80 border-zinc-300/50 dark:border-white/10'}`}
-              title="تخمین توکن‌های این پیام بر اساس طول نویسه‌ها و اسناد"
-            >
-              <CpuBoltLinearIcon className={`w-3 h-3 shrink-0 ${estimatedTokens > 32000 ? 'text-red-500' : estimatedTokens > 8000 ? 'text-amber-500' : 'text-sky-500'}`} />
-              <span>~{usePersianDigits ? toPersianDigits(estimatedTokens) : estimatedTokens} توکن تخمینی</span>
-            </div>
-          )}
         </div>
       </div>
 

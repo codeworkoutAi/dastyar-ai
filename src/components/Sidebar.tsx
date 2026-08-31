@@ -147,10 +147,10 @@ export const Sidebar: React.FC = React.memo(() => {
             }
           }
         }}
-        className={`group relative flex flex-col p-2.5 rounded-2xl cursor-pointer transition-all duration-150 border ${
+        className={`group relative flex flex-col p-2.5 rounded-2xl cursor-pointer transition-all duration-150 border-transparent ${
           isActive
-            ? 'bg-white dark:bg-zinc-800/80 border-r-2 border-blue-500 text-zinc-900 dark:text-zinc-100 shadow-xs'
-            : 'hover:bg-zinc-100 dark:hover:bg-zinc-700/40 text-zinc-700 dark:text-zinc-400 hover:text-zinc-800 dark:text-zinc-200 border-transparent'
+            ? 'bg-blue-50 dark:bg-blue-500/10 border-l-2 border-l-blue-500 text-zinc-900 dark:text-zinc-100 shadow-[inset_2px_0_0_0_rgba(59,130,246,0.5)]'
+            : 'hover:bg-zinc-100 dark:hover:bg-zinc-700/40 text-zinc-700 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200'
         }`}
       >
         <div className="flex items-center justify-between gap-2">
@@ -345,13 +345,13 @@ export const Sidebar: React.FC = React.memo(() => {
                 setIsExploreOpen(true);
                 if (window.innerWidth < 768) setSidebarOpen(false);
               }}
-              className="col-span-2 flex items-center gap-2 px-3 py-2 rounded-xl bg-purple-50 dark:bg-purple-500/20 hover:bg-purple-100 dark:hover:bg-purple-500/30 border border-purple-200 dark:border-purple-500/30 text-purple-900 dark:text-purple-200 text-xs font-bold transition-all text-right hover:scale-[1.01] active:scale-[0.98] cursor-pointer"
+              className="col-span-2 flex items-center gap-2 px-3 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-900/50 hover:bg-zinc-100 dark:hover:bg-zinc-800 border border-transparent text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-zinc-100 text-xs font-semibold transition-all text-right hover:scale-[1.01] active:scale-[0.98] cursor-pointer"
             >
-              <div className="w-6 h-6 rounded-lg bg-purple-100 dark:bg-purple-500/20 text-purple-600 dark:text-purple-300 flex items-center justify-center shrink-0">
+              <div className="w-6 h-6 rounded-lg bg-purple-100 dark:bg-purple-500/20 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0">
                 <CompassOutlineIcon className="w-3.5 h-3.5" />
               </div>
               <span className="truncate flex-1">کاوش مدل‌ها و بانک ایده‌ها</span>
-              <span className="text-[9px] bg-purple-500/30 text-purple-300 px-1.5 py-0.5 rounded-md font-mono">HUB</span>
+              <span className="text-[9px] bg-zinc-200 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 px-1.5 py-0.5 rounded-md font-mono">HUB</span>
             </button>
 
             <button
@@ -360,7 +360,7 @@ export const Sidebar: React.FC = React.memo(() => {
                 setIsImageStudioOpen(true);
                 if (window.innerWidth < 768) setSidebarOpen(false);
               }}
-              className="col-span-2 flex items-center gap-2 px-2.5 py-2 rounded-xl bg-white dark:bg-zinc-800/50 hover:bg-purple-50 dark:hover:bg-purple-950/30 border border-black/5 dark:border-white/5 text-zinc-800 dark:text-zinc-200 hover:text-purple-700 dark:hover:text-purple-300 text-xs font-semibold transition-all text-right hover:scale-[1.01] active:scale-[0.98] cursor-pointer"
+              className="col-span-2 flex items-center gap-2 px-2.5 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-900/50 hover:bg-zinc-100 dark:hover:bg-zinc-800 border border-transparent text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-zinc-100 text-xs font-semibold transition-all text-right hover:scale-[1.01] active:scale-[0.98] cursor-pointer"
             >
               <div className="w-6 h-6 rounded-lg bg-purple-100 dark:bg-purple-500/15 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0">
                 <StarsMinimalisticBoldIcon className="w-3.5 h-3.5" />
@@ -377,7 +377,7 @@ export const Sidebar: React.FC = React.memo(() => {
                 setIsUiGuideOpen(true);
                 if (window.innerWidth < 768) setSidebarOpen(false);
               }}
-              className="col-span-2 flex items-center gap-2 px-3 py-2 rounded-xl bg-white dark:bg-zinc-800/40 hover:bg-sky-50 dark:hover:bg-sky-950/30 border border-black/5 dark:border-white/5 hover:border-sky-200 dark:hover:border-sky-500/30 text-zinc-700 dark:text-zinc-300 hover:text-sky-700 dark:hover:text-sky-300 text-xs font-medium transition-all text-right hover:scale-[1.01] active:scale-[0.98] cursor-pointer"
+              className="col-span-2 flex items-center gap-2 px-3 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-900/50 hover:bg-zinc-100 dark:hover:bg-zinc-800 border border-transparent text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-zinc-100 text-xs font-semibold transition-all text-right hover:scale-[1.01] active:scale-[0.98] cursor-pointer"
             >
               <div className="w-6 h-6 rounded-lg bg-sky-100 dark:bg-sky-500/15 text-sky-600 dark:text-sky-400 flex items-center justify-center shrink-0">
                 <HelpLinearIcon className="w-3.5 h-3.5" />

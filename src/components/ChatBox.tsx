@@ -8,6 +8,7 @@ import {
   DownloadOutlineIcon as Download,
   DownloadMinimalisticLinearIcon,
   EyeClosedOutlineIcon as EyeOff,
+  EyeOutlineIcon as Eye,
   DocumentTextOutlineIcon as FileText,
   LikeBoldIcon,
   LikeLinearIcon,
@@ -18,7 +19,10 @@ import {
   StarsMinimalisticBoldIcon as Sparkles,
   VolumeCrossLinearIcon,
   VolumeLoudLinearIcon,
-  CloseOutlineIcon as X
+  CloseOutlineIcon as X,
+  Code2OutlineIcon,
+  StarsOutlineIcon,
+  BrainOutlineIcon
 } from '@solar-icons/react';
 import React, { useEffect, useRef, useState } from 'react';
 import { isRtlText } from '../lib/persianUtils';
@@ -98,9 +102,78 @@ export const getModelIntro = (modelName: string, details: ModelDetails) => {
   };
 };
 
+export const SmartRoutingAnimation: React.FC<{ routingState: 'general' | 'coding' | 'vision' | null }> = ({ routingState }) => {
+  const { settings } = useSettingsStore();
+  const roles = settings.tools.routingRoles || {};
+  const profiles = settings.providers.custom.profiles || [];
+  const activeProv = settings.providers.activeProvider || 'gemini';
+  const defaultModelName = (settings.providers as any)[activeProv]?.modelName || 'gemini-2.5-pro';
+
+  const getModelName = (id?: string, fallback?: string) => {
+    if (!id) return fallback || defaultModelName;
+    const p = profiles.find((x: any) => x.id === id);
+    return p ? (p.modelName || p.name) : id;
+  };
+
+  const modelGeneral = getModelName(roles.default);
+  const modelCoding = getModelName(roles.coding, activeProv === 'gemini' ? 'gemini-2.5-pro' : undefined);
+  const modelVision = getModelName(roles.vision, activeProv === 'gemini' ? 'gemini-2.5-pro' : undefined);
+
+  let activeModel = modelGeneral;
+  let ActiveIcon = FileText;
+  let activeGlowColor = 'zinc';
+  
+  if (routingState === 'coding') {
+    activeModel = modelCoding;
+    ActiveIcon = Code2OutlineIcon;
+    activeGlowColor = 'zinc';
+  } else if (routingState === 'vision') {
+    activeModel = modelVision;
+    ActiveIcon = Eye;
+    activeGlowColor = 'zinc';
+  }
+
+  // The animation will only fully light up if routingState is not null.
+  // The user requested LTR (Left-to-Right) layout for this specific component.
+  return (
+    <div className="w-full flex justify-between items-center relative fade-in-up select-none h-full max-w-xl mx-auto" dir="ltr">
+      
+      {/* 1. Source Node (Brain) - Left Side */}
+      <div className={`w-6 h-6 sm:w-8 sm:h-8 z-20 shrink-0 flex items-center justify-center transition-all duration-500 relative ${routingState ? 'text-zinc-700 dark:text-zinc-300' : 'opacity-40 grayscale'}`}>
+        <BrainOutlineIcon className="w-full h-full" />
+      </div>
+
+      {/* Connection Line 1 (Brain to Modality) */}
+      <div className="flex-1 h-[1.5px] mx-2 sm:mx-4 relative bg-zinc-200/40 dark:bg-zinc-800/40 rounded-full shrink min-w-[30px] flex justify-start">
+        {routingState && (
+          <div className="h-full bg-zinc-500 dark:bg-zinc-400 rounded-full animate-fill-line-ltr w-0" />
+        )}
+      </div>
+
+      {/* 2. Modality Node (Center) */}
+      <div className={`w-6 h-6 sm:w-8 sm:h-8 z-20 shrink-0 flex items-center justify-center transition-all duration-500 delay-100 relative ${routingState ? 'scale-110 text-zinc-700 dark:text-zinc-300' : 'opacity-40 grayscale'}`}>
+        <ActiveIcon className="w-full h-full" />
+      </div>
+
+      {/* Connection Line 2 (Modality to Model) */}
+      <div className="flex-1 h-[1.5px] mx-2 sm:mx-4 relative bg-zinc-200/40 dark:bg-zinc-800/40 rounded-full shrink min-w-[30px] flex justify-start">
+        {routingState && (
+          <div className="h-full bg-zinc-500 dark:bg-zinc-400 rounded-full animate-fill-line-ltr w-0" style={{ animationDelay: '0.4s' }} />
+        )}
+      </div>
+
+      {/* 3. Target Model Node (Right Side) */}
+      <div className={`h-6 sm:h-8 px-2 sm:px-3 z-20 shrink-0 flex items-center justify-center transition-all duration-500 delay-300 relative ${routingState ? 'scale-105 text-zinc-700 dark:text-zinc-300' : 'opacity-40 grayscale'}`}>
+        <span className="font-extrabold text-[9px] sm:text-[10px] font-['Vazirmatn'] uppercase tracking-wider relative z-10">{activeModel}</span>
+      </div>
+
+    </div>
+  );
+};
+
 export const ChatBox: React.FC = React.memo(() => {
   const { settings, updateSettings } = useSettingsStore();
-  const { conversations, activeId, isStreaming, editMessage, regenerate, setActiveError } = useChatStore();
+  const { conversations, activeId, isStreaming, routingState, editMessage, regenerate, setActiveError } = useChatStore();
   const conversation = conversations.find((c) => c.id === activeId) || null;
   const usePersianDigits = settings.appearance.persianNumerals;
   const showPerformanceMetrics = settings.tools.showPerformanceMetrics;
@@ -243,12 +316,12 @@ export const ChatBox: React.FC = React.memo(() => {
       <div
         ref={scrollContainerRef}
         onScroll={handleScroll}
-        className="flex-1 overflow-y-auto overflow-x-hidden p-4 sm:p-8 space-y-6 text-inherit"
+        className="flex-1 overflow-y-auto overflow-x-hidden p-4 sm:p-8 text-inherit relative z-10 flex flex-col"
       >
       {/* Messages List */}
       {messages.length > 0 && (
-        <div className="max-w-3xl mx-auto flex flex-col space-y-6 pb-4">
-          {messages.map((msg) => {
+        <div className="max-w-3xl mx-auto flex flex-col space-y-6 pb-4 w-full pt-4">
+          {messages.map((msg, index) => {
             const isUser = msg.role === 'user';
 
             return (
@@ -509,55 +582,40 @@ export const ChatBox: React.FC = React.memo(() => {
                 </div>
 
                 {/* Single Unified Bottom Container */}
-                <div className="flex flex-col gap-2 mt-2 pt-2 border-t border-zinc-200 dark:border-zinc-800/40 text-xs text-zinc-700 dark:text-zinc-400">
+                <div className="flex flex-col mt-1.5 pt-1.5 border-t border-zinc-200 dark:border-zinc-800/40 text-xs text-zinc-700 dark:text-zinc-400">
                   
-                  {/* Row 1 (Stats): Model Badge + Time + Token + Cost in a clean unified row */}
+                  {/* Row 1 (Stats Slider) */}
                   {!isUser && !msg.error && (msg.modelUsed || showPerformanceMetrics) && (
-                    <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap text-[10px] sm:text-[11px] text-zinc-700 dark:text-zinc-400">
-                      {msg.modelUsed && (
-                        <div className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-blue-500/10 border border-blue-500/20 text-blue-400 font-mono select-none" title="مدل پردازش‌کننده">
-                          <Sparkles className="w-3 h-3" />
-                          <span dir="ltr">{msg.modelUsed.replace(' (Auto)', '')}</span>
+                    <div className={`overflow-hidden transition-all duration-300 ease-in-out ${showPerformanceMetrics ? 'max-h-12 opacity-100 mb-1' : 'max-h-0 opacity-0 mb-0'}`}>
+                      <div className="flex items-center gap-1.5 flex-nowrap overflow-x-auto [scrollbar-width:none] whitespace-nowrap text-[10px] sm:text-[11px] text-zinc-700 dark:text-zinc-400 pb-1">
+                        {msg.modelUsed && (
+                          <div className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-blue-500/10 border border-blue-500/20 text-blue-400 font-mono select-none shrink-0" title="مدل پردازش‌کننده">
+                            <Sparkles className="w-3 h-3" />
+                            <span dir="ltr">{msg.modelUsed.replace(' (Auto)', '')}</span>
+                          </div>
+                        )}
+
+                        <div className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shrink-0">
+                          <span className="text-zinc-500 font-sans">زمان:</span>
+                          <span className="font-mono text-zinc-700 dark:text-zinc-300" dir="ltr">
+                            {msg.metrics?.totalTimeMs ? `${(msg.metrics.totalTimeMs / 1000).toFixed(1)}s` : '1.4s'}
+                          </span>
                         </div>
-                      )}
 
-                      {showPerformanceMetrics && (
-                        <>
-                          <div className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
-                            <span className="text-zinc-500 font-sans">زمان:</span>
-                            <span className="font-mono text-zinc-700 dark:text-zinc-300" dir="ltr">
-                              {msg.metrics?.totalTimeMs ? `${(msg.metrics.totalTimeMs / 1000).toFixed(1)}s` : '1.4s'}
-                            </span>
-                          </div>
+                        <div className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shrink-0">
+                          <span className="text-zinc-500 font-sans">توکن:</span>
+                          <span className="font-mono text-zinc-700 dark:text-zinc-300" dir="ltr">
+                            {msg.metrics?.exactTotalTokens || msg.metrics?.approxTokens || 340}
+                          </span>
+                        </div>
 
-                          <div className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
-                            <span className="text-zinc-500 font-sans">توکن:</span>
-                            <span className="font-mono text-zinc-700 dark:text-zinc-300" dir="ltr">
-                              {msg.metrics?.exactTotalTokens || msg.metrics?.approxTokens || 340}
-                            </span>
-                          </div>
-
-                          <div className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
-                            <span className="text-zinc-500 font-sans">هزینه:</span>
-                            <span className="font-mono text-emerald-400" dir="ltr">
-                              ${msg.metrics?.estimatedCostUSD || '0.00012'}
-                            </span>
-                          </div>
-
-                          {onToggleMetrics && (
-                            <Tooltip content="مخفیسازی آمار">
-                              <button
-                                type="button"
-                                onClick={() => onToggleMetrics(false)}
-                                className="p-1 text-zinc-500 hover:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded transition-colors cursor-pointer mr-auto"
-                                aria-label="مخفیسازی آمار"
-                              >
-                                <EyeOff className="w-3.5 h-3.5" />
-                              </button>
-                            </Tooltip>
-                          )}
-                        </>
-                      )}
+                        <div className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shrink-0">
+                          <span className="text-zinc-500 font-sans">هزینه:</span>
+                          <span className="font-mono text-emerald-400" dir="ltr">
+                            ${msg.metrics?.estimatedCostUSD || '0.00012'}
+                          </span>
+                        </div>
+                      </div>
                     </div>
                   )}
 
@@ -666,6 +724,19 @@ export const ChatBox: React.FC = React.memo(() => {
                         </>
                       )}
                     </div>
+                    
+                    {!isUser && !msg.error && onToggleMetrics && (
+                      <Tooltip content={showPerformanceMetrics ? "مخفی‌سازی آمار" : "نمایش آمار"}>
+                        <button
+                          type="button"
+                          onClick={() => onToggleMetrics(!showPerformanceMetrics)}
+                          className="p-1.5 text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700/80 rounded-lg transition-colors cursor-pointer mr-auto shrink-0"
+                          aria-label="تغییر وضعیت نمایش آمار"
+                        >
+                          {showPerformanceMetrics ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        </button>
+                      </Tooltip>
+                    )}
                   </div>
                 </div>
               </div>

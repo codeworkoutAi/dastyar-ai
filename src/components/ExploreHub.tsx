@@ -283,7 +283,7 @@ export const ExploreHub: React.FC = () => {
             onClick={() => setActiveTab('models')}
             className={`px-4 py-2 rounded-2xl text-xs sm:text-sm font-bold flex items-center gap-2 transition-all cursor-pointer ${
               activeTab === 'models'
-                ? 'bg-purple-600 text-white shadow-md shadow-purple-600/30'
+                ? 'bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400'
                 : 'text-zinc-700 dark:text-zinc-400 hover:text-zinc-800 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-700/50'
             }`}
           >
@@ -296,7 +296,7 @@ export const ExploreHub: React.FC = () => {
             onClick={() => setActiveTab('prompts')}
             className={`px-4 py-2 rounded-2xl text-xs sm:text-sm font-bold flex items-center gap-2 transition-all cursor-pointer ${
               activeTab === 'prompts'
-                ? 'bg-purple-600 text-white shadow-md shadow-purple-600/30'
+                ? 'bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400'
                 : 'text-zinc-700 dark:text-zinc-400 hover:text-zinc-800 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-700/50'
             }`}
           >
@@ -309,7 +309,7 @@ export const ExploreHub: React.FC = () => {
             onClick={() => setActiveTab('images')}
             className={`px-4 py-2 rounded-2xl text-xs sm:text-sm font-bold flex items-center gap-2 transition-all cursor-pointer ${
               activeTab === 'images'
-                ? 'bg-purple-600 text-white shadow-md shadow-purple-600/30'
+                ? 'bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400'
                 : 'text-zinc-700 dark:text-zinc-400 hover:text-zinc-800 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-700/50'
             }`}
           >
@@ -324,7 +324,7 @@ export const ExploreHub: React.FC = () => {
           {activeTab === 'models' && (
             <div className="space-y-6">
               {/* Active Model Spotlight */}
-              <div className="p-6 rounded-3xl bg-gradient-to-b from-purple-950/40 via-zinc-900/80 to-zinc-900/90 border border-purple-500/30 shadow-xl relative overflow-hidden">
+              <div className="p-6 rounded-3xl bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-indigo-950/40 dark:via-zinc-900/80 dark:to-zinc-900/90 border border-indigo-100 dark:border-indigo-500/20 shadow-xl relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-64 h-64 bg-purple-500/15 blur-3xl rounded-full -translate-y-1/2 translate-x-1/2 pointer-events-none" />
 
                 <div className="relative z-10">
@@ -343,7 +343,7 @@ export const ExploreHub: React.FC = () => {
 
                     <div className="flex-1 min-w-0">
                       <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 mb-1.5">
-                        <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30">
+                        <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-500/30">
                           مدل جاری
                         </span>
                         <h3 className="text-lg font-black text-zinc-900 dark:text-zinc-100 tracking-tight">
@@ -353,7 +353,7 @@ export const ExploreHub: React.FC = () => {
                           {currentDetails.providerLabel}
                         </span>
                         {currentDetails.isFree && (
-                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400">
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-500/15 border border-emerald-200 dark:border-emerald-500/30 text-emerald-600 dark:text-emerald-400">
                             🎁 رایگان
                           </span>
                         )}
@@ -411,7 +411,7 @@ export const ExploreHub: React.FC = () => {
                         onClick={() => handleSelectFreeModel(fm.id, fm.provider as any, fm.name, fm.baseUrl)}
                         className={`p-4 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between ${
                           isSelected
-                            ? 'bg-emerald-950/20 border-emerald-500/50 shadow-md'
+                            ? 'bg-white dark:bg-zinc-900 border-indigo-500 dark:border-indigo-500 shadow-md shadow-indigo-500/10'
                             : 'bg-zinc-50 dark:bg-zinc-900/50 hover:bg-zinc-50 dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800/80 hover:border-zinc-300 dark:border-zinc-700'
                         }`}
                       >
@@ -419,7 +419,7 @@ export const ExploreHub: React.FC = () => {
                           <div className="flex items-center gap-2">
                             <span className="font-bold text-sm text-zinc-800 dark:text-zinc-200">{fm.name}</span>
                             {isSelected && (
-                              <span className="text-[10px] bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded-full border border-emerald-500/30 font-bold">
+                              <span className="text-[10px] bg-indigo-50 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 px-2 py-0.5 rounded-full border border-indigo-200 dark:border-indigo-500/30 font-bold">
                                 فعال
                               </span>
                             )}
@@ -454,7 +454,7 @@ export const ExploreHub: React.FC = () => {
                         onClick={() => handleSelectProfile(profile.id)}
                         className={`p-4 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between ${
                           isSelected
-                            ? 'bg-purple-950/20 border-purple-500/50 shadow-md'
+                            ? 'bg-white dark:bg-zinc-900 border-indigo-500 dark:border-indigo-500 shadow-md shadow-indigo-500/10'
                             : 'bg-zinc-50 dark:bg-zinc-900/50 hover:bg-zinc-50 dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800/80 hover:border-zinc-300 dark:border-zinc-700'
                         }`}
                       >
@@ -462,7 +462,7 @@ export const ExploreHub: React.FC = () => {
                           <div className="flex items-center gap-2">
                             <span className="font-bold text-sm text-zinc-800 dark:text-zinc-200">{profile.name}</span>
                             {isSelected && (
-                              <span className="text-[10px] bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded-full border border-purple-500/30 font-bold">
+                              <span className="text-[10px] bg-indigo-50 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 px-2 py-0.5 rounded-full border border-indigo-200 dark:border-indigo-500/30 font-bold">
                                 فعال
                               </span>
                             )}
