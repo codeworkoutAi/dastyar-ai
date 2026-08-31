@@ -562,19 +562,30 @@ router.post('/api/chat/stream', async (req, res) => {
 
       let response: any;
       try {
+        const requestBody: any = {
+          model,
+          messages: formattedMessages,
+          temperature: 0.7,
+          top_p: 0.8,
+          stream: true,
+          stream_options: { include_usage: true },
+        };
+
+        // Safe max_tokens calculation: Use user setting, otherwise default to 4096 for Groq to prevent errors, or 8192 for others
+        const isGroq = endpoint.includes('api.groq.com');
+        const safeDefaultTokens = isGroq ? 4096 : 8192;
+        requestBody.max_tokens = typeof apiConfig?.maxTokens === 'number' && apiConfig.maxTokens > 0 ? apiConfig.maxTokens : safeDefaultTokens;
+
+        if (endpoint.includes('api.openai.com')) {
+          // OpenAI officially supports max_completion_tokens
+          requestBody.max_completion_tokens = requestBody.max_tokens;
+          delete requestBody.max_tokens;
+        }
+
         response = await fetch(endpoint, {
           method: 'POST',
           headers,
-          body: JSON.stringify({
-            model,
-            messages: formattedMessages,
-            temperature: 0.7,
-            top_p: 0.8,
-            max_tokens: typeof apiConfig?.maxTokens === 'number' && apiConfig.maxTokens > 0 ? apiConfig.maxTokens : 16384,
-            max_completion_tokens: typeof apiConfig?.maxTokens === 'number' && apiConfig.maxTokens > 0 ? apiConfig.maxTokens : 16384,
-            stream: true,
-            stream_options: { include_usage: true },
-          }),
+          body: JSON.stringify(requestBody),
         });
       } catch (fetchErr: any) {
         console.error('Fetch error to custom endpoint:', fetchErr);
