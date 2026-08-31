@@ -284,7 +284,7 @@ export const SettingsModal: React.FC = () => {
 
   const onFactoryReset = () => {
     if (window.confirm('آیا مطمئن هستید که می‌خواهید تمام تنظیمات و پروفایل‌ها به حالت اولیه بازگردد؟ این عملیات غیرقابل بازگشت است و تاریخچه چت‌های شما حفظ می‌شود، اما تنظیمات API پاک می‌شود.')) {
-      localStorage.removeItem('fa-chatbox-settings');
+      localStorage.removeItem('persian_ai_settings_v2');
       window.location.reload();
     }
   };
