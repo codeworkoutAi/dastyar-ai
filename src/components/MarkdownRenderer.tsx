@@ -413,12 +413,16 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = React.memo(({
           },
 
           // Code blocks with syntax copy header & react-syntax-highlighter
-          code({ node, inline, className, children, ...props }: any) {
+          code({ node, className, children, ...props }: any) {
             const match = /language-(\w+)/.exec(className || '');
             const language = match ? match[1] : '';
             const codeString = String(children).replace(/\n$/, '');
 
-            if (!inline) {
+            // In react-markdown v10+, the 'inline' prop is removed.
+            // We deduce block mode by checking for a language class or multiline content.
+            const isBlock = match || codeString.includes('\n');
+
+            if (isBlock) {
               if (!codeString.trim()) return null; // Prevent completely empty block rendering
               
               if (language === 'reasoning') {
