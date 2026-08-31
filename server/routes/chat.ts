@@ -279,9 +279,9 @@ router.post('/api/chat/stream', async (req, res) => {
       let modelName = apiConfig?.[provider]?.modelName || 'gemini-3.1-flash-lite';
 
       // Secure Backend Injection for Default Free Models
-      if (!userKey || String(userKey).trim() === '') {
+      if (!userKey || userKey.trim() === '') {
         if (modelName === 'gemini-1.5-flash' || modelName === 'gemini-2.0-flash-exp' || modelName === 'gemini-2.5-flash') {
-          userKey = process.env.DEFAULT_GEMINI_KEY;
+          userKey = process.env.DEFAULT_GEMINI_KEY || process.env.GEMINI_API_KEY;
         }
       }
 
@@ -474,8 +474,9 @@ router.post('/api/chat/stream', async (req, res) => {
         const requestedModel = apiConfig?.[provider]?.modelName || '';
         if (provider === 'custom') {
           const allowedGroqModels = ['llama3-8b-8192', 'llama3-70b-8192', 'mixtral-8x7b-32768', 'gemma2-9b-it'];
-          if (allowedGroqModels.includes(requestedModel.toLowerCase()) && process.env.DEFAULT_GROQ_KEY) {
-            headers['Authorization'] = `Bearer ${process.env.DEFAULT_GROQ_KEY}`;
+          const groqKey = process.env.DEFAULT_GROQ_KEY || process.env.GROQ_API_KEY;
+          if (allowedGroqModels.includes(requestedModel.toLowerCase()) && groqKey) {
+            headers['Authorization'] = `Bearer ${groqKey}`;
           }
         }
       }
