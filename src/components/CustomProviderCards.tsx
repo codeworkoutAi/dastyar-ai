@@ -605,24 +605,24 @@ export const CustomProviderCards: React.FC<CustomProviderCardsProps> = ({
                     <div className="w-2 h-2 shrink-0 bg-zinc-300 rounded-full shadow-[0_0_8px_rgba(255,255,255,0.8)]" title="پروفایل فعال" />
                   )}
                 </div>
-                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                <div className="flex gap-1 opacity-100 sm:opacity-75 sm:group-hover:opacity-100 transition-opacity shrink-0">
                   <button 
                     onClick={(e) => { e.stopPropagation(); setEditingProfileId(profile.id); }}
-                    className="p-1.5 text-zinc-700 dark:text-zinc-400 hover:text-zinc-900 dark:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-700 rounded-md transition-colors"
+                    className="p-1.5 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-200 dark:hover:bg-zinc-700/60 rounded-lg transition-colors"
                     title="ویرایش"
                   >
                     <PenOutlineIcon className="w-3.5 h-3.5" />
                   </button>
                   <button 
                     onClick={(e) => handleDuplicateProfile(profile, e)}
-                    className="p-1.5 text-zinc-700 dark:text-zinc-400 hover:text-zinc-900 dark:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-700 rounded-md transition-colors"
+                    className="p-1.5 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-200 dark:hover:bg-zinc-700/60 rounded-lg transition-colors"
                     title="کپی گرفتن"
                   >
                     <CopyOutlineIcon className="w-3.5 h-3.5" />
                   </button>
                   <button 
                     onClick={(e) => handleDeleteProfile(profile.id, e)}
-                    className="p-1.5 text-zinc-700 dark:text-zinc-400 hover:text-red-400 hover:bg-red-500/10 rounded-md transition-colors"
+                    className="p-1.5 text-zinc-600 dark:text-zinc-400 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
                     title="حذف"
                   >
                     <TrashBinMinimalisticOutlineIcon className="w-3.5 h-3.5" />

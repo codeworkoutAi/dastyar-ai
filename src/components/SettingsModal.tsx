@@ -78,7 +78,7 @@ export const VisualRoleSelect: React.FC<VisualRoleSelectProps> = ({
   };
 
   return (
-    <div ref={containerRef} className="relative w-full">
+    <div ref={containerRef} className={`relative w-full ${isOpen ? 'z-[60]' : 'z-10'}`}>
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
@@ -133,7 +133,7 @@ export const VisualRoleSelect: React.FC<VisualRoleSelectProps> = ({
       </button>
 
       {isOpen && (
-        <div className="absolute z-50 w-full mt-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 rounded-2xl shadow-2xl max-h-72 overflow-y-auto p-1.5 animate-fadeIn space-y-1">
+        <div className="absolute z-[70] w-full mt-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 rounded-2xl shadow-2xl max-h-72 overflow-y-auto p-1.5 animate-fadeIn space-y-1">
           <div className="px-3 py-1.5 text-[11px] text-zinc-700 dark:text-zinc-400 border-b border-zinc-200 dark:border-zinc-800/80 font-medium flex items-center justify-between">
             <span>پروفایل‌های موجود ({profiles.length})</span>
             <span className="text-zinc-700 dark:text-zinc-400">مرتب‌شده بر اساس سازگاری با نقش</span>
@@ -506,7 +506,7 @@ export const SettingsModal: React.FC = () => {
 
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5" dir="rtl" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5" dir="rtl">
       <div className="w-[95vw] md:w-full max-w-4xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-3xl shadow-2xl flex flex-col sm:flex-row overflow-hidden text-zinc-900 dark:text-zinc-100 h-[85dvh] sm:h-auto sm:max-h-[85dvh]">
 
         {/* Sidebar Tabs */}
@@ -572,9 +572,9 @@ export const SettingsModal: React.FC = () => {
 
                   {isSmartRoutingExpanded && (
                     <>
-                      <div className="pt-5 mt-5 border-t border-zinc-200 dark:border-zinc-800/50 grid grid-cols-1 gap-4 animate-fadeIn">
+                      <div className="pt-5 mt-5 border-t border-zinc-200 dark:border-zinc-800/50 grid grid-cols-1 gap-4 animate-fadeIn relative z-20">
                         {/* Default Model */}
-                        <div>
+                        <div className="relative z-30">
                           <label className="block text-xs font-medium text-zinc-700 dark:text-zinc-300 mb-1.5 flex items-center gap-2">
                             <span>مدل پیش‌فرض (مکالمه عمومی و سریع)</span>
                           </label>
@@ -598,7 +598,7 @@ export const SettingsModal: React.FC = () => {
                         </div>
 
                         {/* Coding Model */}
-                        <div>
+                        <div className="relative z-20">
                           <label className="block text-xs font-medium text-zinc-700 dark:text-zinc-300 mb-1.5 flex items-center gap-2">
                             <span>مدل تخصصی برنامه‌نویسی (Coding Expert)</span>
                           </label>
@@ -622,7 +622,7 @@ export const SettingsModal: React.FC = () => {
                         </div>
 
                         {/* Vision Model */}
-                        <div>
+                        <div className="relative z-10">
                           <label className="block text-xs font-medium text-zinc-700 dark:text-zinc-300 mb-1.5 flex items-center gap-2">
                             <span>مدل پردازش تصویر و اسناد چندوجهی (Vision)</span>
                           </label>
@@ -668,7 +668,7 @@ export const SettingsModal: React.FC = () => {
                   )}
                 </div>
 
-                <div className="mt-4 p-4 rounded-xl border relative flex flex-col gap-2 bg-amber-500/10 border-amber-500/20 text-amber-500 dark:text-amber-400">
+                <div className="mt-4 p-4 rounded-xl border flex flex-col gap-2 bg-amber-500/10 border-amber-500/20 text-amber-500 dark:text-amber-400 z-0">
                   <div className="flex items-start gap-3">
                     <div className="shrink-0 pt-0.5">
                       <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">

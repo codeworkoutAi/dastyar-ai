@@ -40,18 +40,26 @@ router.post('/api/chat/detect-intent', async (req, res) => {
     }
 
     const systemPrompt = `You are a highly accurate AI router. Output ONLY a raw JSON object.
-Schema: {"webSearch": boolean, "intent": "coding" | "vision" | "general"}
+Schema: {"webSearch": boolean, "tool": "none" | "weather" | "currency" | "digikala", "intent": "coding" | "vision" | "general"}
+
+Rules for "tool":
+- "weather": if the user asks for the current weather, temperature, or climate of a city.
+- "currency": if the user asks for the current price of Dollar, Euro, Gold (طلا), or Coin (سکه).
+- "digikala": if the user provides a Digikala link (digikala.com) or a DKP (product ID), or explicitly asks for the price/details of a product on Digikala.
+- "none": if neither of the above apply.
 
 Rules for "webSearch" (Definitive Triggers):
-- Set to TRUE if the user asks for: live internet data, recent news, current weather, up-to-date prices, recent events, deep research on specific topics, fact-checking, or writing comprehensive articles about trends (e.g. "AI in 2025/2026", "history of...").
-- Set to FALSE if the request is a simple greeting, basic math, pure coding without needing external library documentation, or summarizing/translating text provided by the user.
+- Set to TRUE if the user asks for: live internet data, recent news, up-to-date prices (other than currency/gold/digikala), recent events, deep research on specific topics, fact-checking, or writing comprehensive articles about trends.
+- Set to FALSE if a specific "tool" is selected (like weather, currency, or digikala).
+- Set to FALSE if the request is a simple greeting, basic math, pure coding, or summarizing text provided by the user.
 
 Examples:
-- "قیمت دلار چنده؟" -> {"webSearch": true, "intent": "general"}
-- "یک مقاله درباره آینده برنامه‌نویسی با هوش مصنوعی بنویس" -> {"webSearch": true, "intent": "general"}
-- "سلام، حالت چطوره؟" -> {"webSearch": false, "intent": "general"}
-- "کد ریکت برای دکمه بنویس" -> {"webSearch": false, "intent": "coding"}
-- "آب و هوای تهران" -> {"webSearch": true, "intent": "general"}
+- "قیمت دلار چنده؟" -> {"webSearch": false, "tool": "currency", "intent": "general"}
+- "یک مقاله درباره آینده هوش مصنوعی بنویس" -> {"webSearch": true, "tool": "none", "intent": "general"}
+- "آب و هوای تهران" -> {"webSearch": false, "tool": "weather", "intent": "general"}
+- "قیمت این محصول دیجی کالا https://www.digikala.com/product/dkp-12345/" -> {"webSearch": false, "tool": "digikala", "intent": "general"}
+- "سلام" -> {"webSearch": false, "tool": "none", "intent": "general"}
+- "کد ریکت بنویس" -> {"webSearch": false, "tool": "none", "intent": "coding"}
 
 Do not wrap in markdown. Raw JSON only.`;
 
@@ -188,17 +196,35 @@ function parseLLMJsonResponse(text: string, userText: string) {
   // DEFINITIVE SOLUTION: Hybrid Heuristics Override
   // To bypass unpredictable free LLM models, we enforce a definitive regex fallback.
   const definitiveWebSearchTriggers = /اخبار|خبر|قیمت|آب و هوا|آب‌وهوا|مقاله|تحقیق|درباره|سرچ|جستجو|امروز|تاریخ|جدیدترین|آپدیت|به روز|به‌روز/i;
-  const isDefinitiveWebSearch = definitiveWebSearchTriggers.test(userText);
+  let isDefinitiveWebSearch = definitiveWebSearchTriggers.test(userText);
+  let heuristicTool = 'none';
+
+  if (/آب و هوا|آب‌وهوا|دما|هوا/i.test(userText)) {
+    heuristicTool = 'weather';
+    isDefinitiveWebSearch = false; // Override web search if specific tool is matched
+  } else if (/دلار|ارز|سکه|طلا|یورو/i.test(userText) && /قیمت/i.test(userText)) {
+    heuristicTool = 'currency';
+    isDefinitiveWebSearch = false; // Override web search if specific tool is matched
+  } else if (/دیجی‌کالا|دیجی کالا|digikala\.com|dkp-/i.test(userText)) {
+    heuristicTool = 'digikala';
+    isDefinitiveWebSearch = false;
+  }
 
   try {
     const parsed = JSON.parse(cleanText);
+    const resolvedTool = (parsed.tool && parsed.tool !== 'none') ? parsed.tool : heuristicTool;
     return {
-      webSearch: isDefinitiveWebSearch || !!parsed.webSearch,
+      webSearch: resolvedTool === 'none' ? (isDefinitiveWebSearch || !!parsed.webSearch) : false,
+      tool: resolvedTool,
       intent: ['coding', 'vision', 'general'].includes(parsed.intent) ? parsed.intent : 'general'
     };
   } catch (e) {
     console.error('[Intent Router] Failed to parse JSON:', text);
-    return { webSearch: isDefinitiveWebSearch, intent: 'general' };
+    return { 
+      webSearch: heuristicTool === 'none' ? isDefinitiveWebSearch : false, 
+      tool: heuristicTool, 
+      intent: 'general' 
+    };
   }
 }
 

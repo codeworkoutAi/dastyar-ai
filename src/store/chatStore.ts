@@ -257,6 +257,7 @@ stopGeneration: () => {
       
       let detectedIntent = 'general';
       let detectedWebSearch = false;
+      let detectedTool = 'none';
 
       // Only call router if it's not an image gen AND (webSearch is auto or smartRouting is on)
       if (!isImageGen && (smartRoutingEnabled || (globalWebSearchEnabled && webSearch === undefined))) {
@@ -279,6 +280,7 @@ stopGeneration: () => {
             const routerData = await routerRes.json();
             detectedIntent = routerData.intent || 'general';
             detectedWebSearch = !!routerData.webSearch;
+            detectedTool = routerData.tool || 'none';
           }
         } catch (err) {
           console.warn('[LLM Router] Failed to detect intent:', err);
@@ -287,15 +289,15 @@ stopGeneration: () => {
         detectedIntent = 'vision';
       }
 
-      // Apply web search setting: explicit user override > auto-detection > default off
+      // Apply web search & tool setting
+      payloadSettings.tools = payloadSettings.tools || {};
+      payloadSettings.tools.activeTool = detectedTool;
+
       if (webSearch !== undefined) {
-        payloadSettings.tools = payloadSettings.tools || {};
         payloadSettings.tools.webSearch = webSearch;
       } else if (globalWebSearchEnabled && detectedWebSearch) {
-        payloadSettings.tools = payloadSettings.tools || {};
         payloadSettings.tools.webSearch = true;
       } else {
-        payloadSettings.tools = payloadSettings.tools || {};
         payloadSettings.tools.webSearch = false;
       }
 

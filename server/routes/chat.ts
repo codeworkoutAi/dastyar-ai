@@ -1,6 +1,7 @@
 import express from 'express';
 import { isSafeBaseUrl, getGeminiClient, extractCleanErrorMessage, sanitizeErrorMessage, formatContentsForGemini, sleep, getPollinationsImageUrl, translateAndEnhanceImagePrompt, normalizeBaseUrl, parseCustomHeaders } from '../services/utils';
 import { SmartWebAgent } from '../services/WebSearchAgent';
+import { ToolsAgent } from '../services/ToolsAgent';
 import { responseCache, CACHE_TTL_MS, computeCacheKey, setCachedResponse } from '../services/CacheService';
 const router = express.Router();
 
@@ -227,19 +228,32 @@ router.post('/api/chat/stream', async (req, res) => {
 > *(لطفاً در صورتی که به اینترنت دسترسی دارید یا مناسبت‌های امروز را می‌دانید، آنها را با ایموجی لیست کنید؛ در غیر این صورت بنویسید: بدون جستجوی زنده در اینترنت، جزئیات مناسبت‌های امروز در دسترس نیست)*]`;
     }
 
-    if (apiConfig?.webSearch && !isDateInquiry) {
-      console.log('[Backend] Web search enabled...');
-      if (userText && userText.trim().length > 1) {
-        if (provider === 'gemini') {
-           console.log('[Backend] Using Gemini Native Google Search Grounding. Skipping DuckDuckGo scraper to avoid IP blocks.');
-        } else {
-           console.log('[Backend] Executing SmartWebAgent (DuckDuckGo)...');
-           liveWebContext = await SmartWebAgent.processQuery(userText, settings?.tools?.webSearchDomains, apiConfig);
-           console.log('[Backend] Web search result length:', liveWebContext?.length || 0);
+    const activeTool = settings?.tools?.activeTool;
+
+    if (!isDateInquiry) {
+      if (activeTool === 'weather') {
+        console.log('[Backend] Executing Weather Tool...');
+        liveWebContext = await ToolsAgent.getWeather(userText);
+      } else if (activeTool === 'currency') {
+        console.log('[Backend] Executing Currency Tool...');
+        liveWebContext = await ToolsAgent.getCurrency();
+      } else if (activeTool === 'digikala') {
+        console.log('[Backend] Executing Digikala Tool...');
+        liveWebContext = await ToolsAgent.getDigikalaProduct(userText);
+      } else if (apiConfig?.webSearch) {
+        console.log('[Backend] Web search enabled...');
+        if (userText && userText.trim().length > 1) {
+          if (provider === 'gemini') {
+             console.log('[Backend] Using Gemini Native Google Search Grounding. Skipping DuckDuckGo scraper to avoid IP blocks.');
+          } else {
+             console.log('[Backend] Executing SmartWebAgent (DuckDuckGo)...');
+             liveWebContext = await SmartWebAgent.processQuery(userText, settings?.tools?.webSearchDomains, apiConfig);
+             console.log('[Backend] Web search result length:', liveWebContext?.length || 0);
+          }
         }
+      } else {
+        console.log('[Backend] Web search & tools disabled.');
       }
-    } else {
-      console.log('[Backend] Web search disabled. apiConfig.webSearch:', apiConfig?.webSearch, 'isDateInquiry:', isDateInquiry);
     }
     const baseSystemPrompt = `شما «دستیار هوشمند» هستید؛ متمرکز، دقیق و مسلط به زبان فارسی. پاسخ‌ها را به فارسی شیوا، دسته‌بندی‌شده و ساختاریافته ارائه دهید. در موضوعات فنی و برنامه‌نویسی، کدهای استاندارد همراه با توضیحات موجز بنویسید. هرگز خود را با نام پلتفرم‌های متفرقه معرفی نکنید.\n\n${timeContext}`;
     const systemInstruction = apiConfig?.systemInstruction ? `${apiConfig.systemInstruction}\n\n${timeContext}\n\nنکته نگارشی: همیشه اصول، مراحل و لیست‌های شماره‌دار را در خطوط مجزا تفکیک کن. حتماً اصول نگارش فارسی و **نیم‌فاصله‌ها** را رعایت کن (مثلاً: می‌رود، برنامه‌نویسی، بخش‌ها).` : `${baseSystemPrompt}\n\nنکته نگارشی: حتماً اصول نگارش فارسی و **نیم‌فاصله‌ها** (Zero-Width Non-Joiner) را با دقت تمام رعایت کن (مثال: می‌رود، برنامه‌نویسی، دسته‌بندی‌شده، کتاب‌ها).`;
@@ -252,7 +266,7 @@ router.post('/api/chat/stream', async (req, res) => {
         if (isDateInquiry) {
           prunedMessages[lastMsgIndex].content = `${prunedMessages[lastMsgIndex].content}\n\n${liveWebContext}`;
         } else {
-          const webSearchWrapper = `\n\n<web_search_results>\n${liveWebContext}\n</web_search_results>\n\n<instructions>\nاخطار مهم: پاسخ خود را دقیقاً و منحصراً بر اساس اطلاعات داخل تگ بالا ارائه بده. تو موظفی تمام اعداد، آمار و جزئیات دقیق (مانند دما، رطوبت، سرعت باد، قیمت‌ها، تاریخ‌ها و پیش‌بینی‌ها) را به طور کامل از متن استخراج و گزارش کنی. حق خلاصه‌سازیِ داده‌های مهم را نداری و باید یک گزارش جامع و ساختاریافته ارائه دهی.\n</instructions>`;
+          const webSearchWrapper = `\n\n<context_data>\n${liveWebContext}\n</context_data>\n\n<instructions>\nاخطار مهم: پاسخ خود را دقیقاً و منحصراً بر اساس اطلاعات داخل تگ بالا ارائه بده. تو موظفی تمام داده‌ها، اعداد، آمار و جزئیات مرتبط با درخواست کاربر را به طور کامل از متن بالا استخراج و گزارش کنی. از اضافه کردن اطلاعات از پیش‌آموخته خودت که در متن بالا نیست اکیداً خودداری کن.\n</instructions>`;
           prunedMessages[lastMsgIndex].content = `${prunedMessages[lastMsgIndex].content}${webSearchWrapper}`;
         }
       }
