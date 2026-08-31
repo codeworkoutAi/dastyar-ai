@@ -144,6 +144,9 @@ router.post(['/api/models/test', '/api/ping'], modelTestRateLimiter, async (req,
         } else {
           headers['Authorization'] = `Bearer ${apiKey}`;
         }
+      } else if (provider !== 'anthropic') {
+        // Some proxies require Authorization header even if empty
+        headers['Authorization'] = `Bearer dummy_key`;
       }
 
       if (provider === 'openrouter') {
@@ -170,7 +173,8 @@ router.post(['/api/models/test', '/api/ping'], modelTestRateLimiter, async (req,
           } : {
             model,
             messages: [{ role: 'user', content: 'Say "connected" in Persian (متصل شد)' }],
-            max_tokens: 15,
+            temperature: 0.7,
+            top_p: 0.8
           }),
 
         });
