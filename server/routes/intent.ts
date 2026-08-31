@@ -164,7 +164,7 @@ Do not wrap in markdown. Raw JSON only.`;
 });
 
 function parseLLMJsonResponse(text: string, userText: string) {
-  let cleanText = text.trim();
+  let cleanText = text.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
   if (cleanText.startsWith('\`\`\`json')) {
     cleanText = cleanText.replace(/^\`\`\`json/, '').replace(/\`\`\`$/, '').trim();
   } else if (cleanText.startsWith('\`\`\`')) {

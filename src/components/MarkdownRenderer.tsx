@@ -257,9 +257,14 @@ function extractNodeText(node: React.ReactNode): string {
 function formatInlineListsAndPrinciples(text: string): string {
   if (!text) return '';
 
+  // 0. Pre-process <think> tags into ```reasoning code blocks (handles unclosed tags during streaming)
+  let tempText = text.replace(/<think>([\s\S]*?)(<\/think>|$)/gi, (match, content) => {
+    return `\n\`\`\`reasoning\n${content.trim()}\n\`\`\`\n`;
+  });
+
   // Separate code blocks to avoid formatting inside code
   const codeBlocks: string[] = [];
-  let tempText = text.replace(/```[\s\S]*?```|`[^`]+`/g, (match) => {
+  tempText = tempText.replace(/```[\s\S]*?```|`[^`]+`/g, (match) => {
     codeBlocks.push(match);
     return `__CODE_BLOCK_${codeBlocks.length - 1}__`;
   });
