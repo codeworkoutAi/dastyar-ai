@@ -1,0 +1,35 @@
+﻿{
+  "tech_and_dev": [
+    "stackoverflow.com",
+    "github.com",
+    "developer.mozilla.org",
+    "geeksforgeeks.org",
+    "zoomit.ir",
+    "digiato.com"
+  ],
+  "academic_and_science": [
+    "wikipedia.org",
+    "nature.com",
+    "arxiv.org",
+    "sciencedirect.com",
+    "sid.ir"
+  ],
+  "finance_and_crypto": [
+    "investopedia.com",
+    "bloomberg.com",
+    "coingecko.com",
+    "tgju.org",
+    "arzdigital.com"
+  ],
+  "health": [
+    "ncbi.nlm.nih.gov",
+    "who.int",
+    "mayoclinic.org",
+    "darmankade.com"
+  ],
+  "general_news": [
+    "apnews.com",
+    "reuters.com",
+    "isna.ir"
+  ]
+}
