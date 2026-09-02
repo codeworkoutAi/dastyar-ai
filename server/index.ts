@@ -29,11 +29,19 @@ import modelsRouter from './routes/models';
 import chatRouter from './routes/chat';
 import toolsRouter from './routes/tools';
 import intentRouter from './routes/intent';
+import authRouter from './routes/auth';
+import adminRouter from './routes/admin';
+
+import { initializeSchema } from './db/schema';
+// Initialize SQLite tables
+initializeSchema();
 
 app.use('/', modelsRouter);
 app.use('/', chatRouter);
 app.use('/', toolsRouter);
 app.use('/', intentRouter);
+app.use('/api/auth', authRouter);
+app.use('/api/admin', adminRouter);
 
 async function start() {
   if (process.env.NODE_ENV !== 'production') {

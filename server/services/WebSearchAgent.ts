@@ -3,6 +3,19 @@
 /**
  * SmartWebAgent with enhanced error handling, retry logic, and graceful degradation
  */
+
+let proxyDispatcher: any = undefined;
+try {
+  const proxyUrl = process.env.HTTPS_PROXY || process.env.HTTP_PROXY;
+  if (proxyUrl) {
+    const { ProxyAgent } = require('undici');
+    proxyDispatcher = new ProxyAgent(proxyUrl);
+    console.log(`[WebSearch] Initialized ProxyAgent with ${proxyUrl}`);
+  }
+} catch (e) {
+  // undici might not be available
+}
+
 export class SmartWebAgent {
   private static readonly MAX_RETRIES = 3;
   private static readonly INITIAL_RETRY_DELAY = 500; // ms
@@ -137,7 +150,7 @@ Return ONLY the optimized search query, nothing else, no quotes.`;
               model: model,
               messages: [{ role: 'user', content: prompt }],
               temperature: 0.1,
-              max_tokens: 30
+              max_tokens: 800
             }),
             signal: AbortSignal.timeout(this.TIMEOUT_API)
           });
@@ -185,70 +198,102 @@ Return ONLY the optimized search query, nothing else, no quotes.`;
     }
 
     // ==========================================
+    // 3. Fetch Web Results (Smart Fallback: Bing -> DuckDuckGo)
     // ==========================================
-    // 3. Fetch Web Results (Bing)
-    // ==========================================
-    const searchUrl = 'https://www.bing.com/search?q=' + encodeURIComponent(searchQuery);
-    const html = await this.retryWithBackoff(
-      async () => {
-        const res = await fetch(searchUrl, {
-          headers: {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36',
-            'Accept-Language': 'fa,en-US;q=0.9,en;q=0.8'
-          },
-          signal: AbortSignal.timeout(this.TIMEOUT_MAIN)
-        });
-
-        if (!res.ok) {
-          throw new Error(`Bing search returned ${res.status}`);
-        }
-
-        return await res.text();
-      },
-      this.MAX_RETRIES,
-      this.INITIAL_RETRY_DELAY,
-      'Bing search'
-    );
-
-    if (!html) {
-      console.warn('[WebSearch] Bing search failed, returning empty');
-      return '';
-    }
-
-    // Extract only organic search results (b_algo) and completely ignore ads (b_ad)
-    let algos = [...html.matchAll(/<li[^>]*class="[^"]*b_algo[^"]*"[^>]*>([\s\S]*?)<\/li>/gi)];
-    
     let firstUrl: string | null = null;
     let resultsText = '';
     let validCount = 0;
 
-    for (let i = 0; i < algos.length; i++) {
-      let titleMatch = algos[i][1].match(/<h2[^>]*><a[^>]*href="([^"]*)"[^>]*>([\s\S]*?)<\/a><\/h2>/i);
-      let snippetMatch = algos[i][1].match(/<div class="b_caption[^>]*>([\s\S]*?)<\/div>/i) || algos[i][1].match(/<p[^>]*>([\s\S]*?)<\/p>/i);
-      
-      if (!titleMatch) continue;
-      
-      let rawUrl = titleMatch[1].replace(/&amp;/g, '&');
-      
-      const uMatch = rawUrl.match(/&u=a1([^&]+)/);
-      if (uMatch) {
-        try {
-          rawUrl = Buffer.from(uMatch[1], 'base64').toString('utf8');
-        } catch (e) {}
-      }
+    const fetchOpts: any = {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36',
+        'Accept-Language': 'fa,en-US;q=0.9,en;q=0.8'
+      },
+      signal: AbortSignal.timeout(this.TIMEOUT_MAIN)
+    };
 
-      // Skip common ads/spam networks if they slip through
-      if (rawUrl.includes('amazon.') || rawUrl.includes('booking.') || rawUrl.includes('aliexpress.')) {
-        continue;
-      }
+    if (proxyDispatcher) fetchOpts.dispatcher = proxyDispatcher;
 
-      if (!firstUrl) firstUrl = rawUrl;
-      const title = titleMatch[2].replace(/<[^>]+>/g, '').trim();
-      const snippet = snippetMatch ? snippetMatch[1].replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim() : '';
-      
-      resultsText += `[لینک: ${rawUrl}]\nعنوان: ${title}\nخلاصه: ${snippet}\n\n`;
-      validCount++;
-      if (validCount >= 5) break;
+    // --- ENGINE 1: Bing ---
+    try {
+      const bingUrl = 'https://www.bing.com/search?q=' + encodeURIComponent(searchQuery);
+      const html = await this.retryWithBackoff(
+        async () => {
+          const res = await fetch(bingUrl, fetchOpts);
+          if (!res.ok) throw new Error(`Bing returned ${res.status}`);
+          return await res.text();
+        },
+        2, this.INITIAL_RETRY_DELAY, 'Bing search'
+      );
+
+      if (html) {
+        let algos = [...html.matchAll(/<li[^>]*class="[^"]*b_algo[^"]*"[^>]*>([\s\S]*?)<\/li>/gi)];
+        for (let i = 0; i < algos.length; i++) {
+          let titleMatch = algos[i][1].match(/<h2[^>]*><a[^>]*href="([^"]*)"[^>]*>([\s\S]*?)<\/a><\/h2>/i);
+          let snippetMatch = algos[i][1].match(/<div class="b_caption[^>]*>([\s\S]*?)<\/div>/i) || algos[i][1].match(/<p[^>]*>([\s\S]*?)<\/p>/i);
+          if (!titleMatch) continue;
+          let rawUrl = titleMatch[1].replace(/&amp;/g, '&');
+          const uMatch = rawUrl.match(/&u=a1([^&]+)/);
+          if (uMatch) {
+            try { rawUrl = Buffer.from(uMatch[1], 'base64').toString('utf8'); } catch (e) {}
+          }
+          if (rawUrl.includes('amazon.') || rawUrl.includes('booking.') || rawUrl.includes('aliexpress.')) continue;
+          if (!firstUrl) firstUrl = rawUrl;
+          const title = titleMatch[2].replace(/<[^>]+>/g, '').trim();
+          const snippet = snippetMatch ? snippetMatch[1].replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim() : '';
+          resultsText += `[لینک: ${rawUrl}]\nعنوان: ${title}\nخلاصه: ${snippet}\n\n`;
+          validCount++;
+          if (validCount >= 5) break;
+        }
+      }
+    } catch (e: any) {
+      console.warn('[WebSearch] Bing failed entirely:', e.message);
+    }
+
+    // --- ENGINE 2: DuckDuckGo (Fallback) ---
+    if (validCount === 0) {
+      console.log('[WebSearch] Fallback to DuckDuckGo...');
+      try {
+        // kl=ir-fa forces DuckDuckGo to search in Iran/Persian context, ignoring the VPN's physical location (e.g., Germany)
+        const ddgUrl = 'https://html.duckduckgo.com/html/?kl=ir-fa&q=' + encodeURIComponent(searchQuery);
+        const html = await this.retryWithBackoff(
+          async () => {
+            const res = await fetch(ddgUrl, fetchOpts);
+            if (!res.ok) throw new Error(`DuckDuckGo returned ${res.status}`);
+            return await res.text();
+          },
+          2, this.INITIAL_RETRY_DELAY, 'DuckDuckGo search'
+        );
+
+        if (html) {
+          const titles = [...html.matchAll(/<a class="result__url" href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/gi)];
+          const snippets = [...html.matchAll(/<a class="result__snippet[^>]*>([\s\S]*?)<\/a>/gi)];
+          const limit = Math.min(titles.length, snippets.length, 5);
+
+          for (let i = 0; i < limit; i++) {
+            let rawUrl = titles[i][1].replace(/&amp;/g, '&');
+            if (rawUrl.includes('aclick') || rawUrl.includes('adurl')) continue;
+            
+            const uMatch = rawUrl.match(/uddg=([^&]+)/);
+            if (uMatch) {
+              try { rawUrl = decodeURIComponent(uMatch[1]); } catch (e) {}
+            }
+            if (!firstUrl) firstUrl = rawUrl;
+            const title = titles[i][2].replace(/<[^>]+>/g, '').trim();
+            const snippet = snippets[i][1].replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
+            resultsText += `[لینک: ${rawUrl}]\nعنوان: ${title}\nخلاصه: ${snippet}\n\n`;
+            validCount++;
+            if (validCount >= 5) break;
+          }
+        }
+      } catch (e: any) {
+        console.warn('[WebSearch] DuckDuckGo failed entirely:', e.message);
+      }
+    }
+
+    if (validCount === 0) {
+      console.warn('[WebSearch] All search engines failed.');
+      return '';
     }
 
 
@@ -256,7 +301,7 @@ Return ONLY the optimized search query, nothing else, no quotes.`;
     // 4. Deep Scrape (For specific intents where detail is needed)
     // ==========================================
     let deepText = '';
-    const deepScrapeIntents = ['Finance', 'News', 'Programming', 'Academic', 'Law', 'Health', 'General'];
+    const deepScrapeIntents = ['Finance', 'Programming', 'Academic', 'Law', 'Health'];
     if (firstUrl && deepScrapeIntents.includes(intent)) {
       const pageHtml = await this.retryWithBackoff(
         async () => {

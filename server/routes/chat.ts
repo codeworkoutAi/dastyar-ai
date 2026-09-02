@@ -1,6 +1,6 @@
 import express from 'express';
 import { isSafeBaseUrl, getGeminiClient, extractCleanErrorMessage, sanitizeErrorMessage, formatContentsForGemini, sleep, getPollinationsImageUrl, translateAndEnhanceImagePrompt, normalizeBaseUrl, parseCustomHeaders } from '../services/utils';
-import { SmartWebAgent } from '../services/WebSearchAgent';
+import { GoogleGroundingAgent } from '../services/GoogleGroundingAgent';
 import { ToolsAgent } from '../services/ToolsAgent';
 import { responseCache, CACHE_TTL_MS, computeCacheKey, setCachedResponse } from '../services/CacheService';
 const router = express.Router();
@@ -241,15 +241,10 @@ router.post('/api/chat/stream', async (req, res) => {
         console.log('[Backend] Executing Digikala Tool...');
         liveWebContext = await ToolsAgent.getDigikalaProduct(userText);
       } else if (apiConfig?.webSearch) {
-        console.log('[Backend] Web search enabled...');
         if (userText && userText.trim().length > 1) {
-          if (provider === 'gemini') {
-             console.log('[Backend] Using Gemini Native Google Search Grounding. Skipping DuckDuckGo scraper to avoid IP blocks.');
-          } else {
-             console.log('[Backend] Executing SmartWebAgent (DuckDuckGo)...');
-             liveWebContext = await SmartWebAgent.processQuery(userText, settings?.tools?.webSearchDomains, apiConfig);
-             console.log('[Backend] Web search result length:', liveWebContext?.length || 0);
-          }
+          console.log('[Backend] Executing Google Grounding Agent (Universal RAG for all providers)...');
+          liveWebContext = await GoogleGroundingAgent.search(userText);
+          console.log('[Backend] Google Grounding result length:', liveWebContext?.length || 0);
         }
       } else {
         console.log('[Backend] Web search & tools disabled.');
@@ -326,7 +321,7 @@ router.post('/api/chat/stream', async (req, res) => {
           attempts++;
           try {
             const streamConfig: any = {
-              tools: apiConfig?.webSearch ? [{ googleSearch: {} }] : undefined,
+              // No native googleSearch here — we use GoogleGroundingAgent (RAG) to support ALL providers universally
               systemInstruction: systemInstruction,
               temperature: typeof apiConfig?.temperature === 'number' ? apiConfig.temperature : 0.7,
               topP: 0.8,
@@ -491,7 +486,7 @@ router.post('/api/chat/stream', async (req, res) => {
           const allowedGeminiModels = ['gemini-3.1-flash-lite', 'gemini-1.5-flash'];
           const groqKey = process.env.DEFAULT_GROQ_KEY || process.env.GROQ_API_KEY;
           const geminiKey = process.env.DEFAULT_GEMINI_KEY || process.env.GEMINI_API_KEY;
-          
+
           if (allowedGroqModels.includes(requestedModel.toLowerCase()) && groqKey) {
             headers['Authorization'] = `Bearer ${groqKey}`;
           } else if (allowedGeminiModels.includes(requestedModel.toLowerCase()) && geminiKey) {

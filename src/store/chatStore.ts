@@ -295,6 +295,19 @@ stopGeneration: () => {
         detectedIntent = 'vision';
       }
 
+      if (detectedIntent === 'blocked') {
+        const rejectionMsg = '🚫 به عنوان یک دستیار تخصصی برنامه‌نویسی، من مجاز به پاسخگویی به سوالات نامرتبط یا نامناسب نیستم. لطفاً فقط در حوزه تکنولوژی و کدنویسی سوال بفرمایید.';
+        set({ conversations: get().conversations.map(c => 
+          c.id === targetConv!.id ? {
+            ...c,
+            messages: c.messages.map(m => m.id === assistantMessageId ? { ...m, content: rejectionMsg } : m)
+          } : c
+        ), isGenerating: false });
+        get().setRoutingState('general');
+        saveConversations();
+        return;
+      }
+
       // Apply web search & tool setting
       payloadSettings.tools = payloadSettings.tools || {};
       payloadSettings.tools.activeTool = detectedTool;

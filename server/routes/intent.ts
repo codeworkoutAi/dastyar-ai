@@ -40,7 +40,11 @@ router.post('/api/chat/detect-intent', async (req, res) => {
     }
 
     const systemPrompt = `You are a highly accurate AI router. Output ONLY a raw JSON object.
-Schema: {"webSearch": boolean, "tool": "none" | "weather" | "currency" | "digikala", "intent": "coding" | "vision" | "general"}
+Schema: {"webSearch": boolean, "tool": "none" | "weather" | "currency" | "digikala", "intent": "coding" | "vision" | "general" | "blocked"}
+
+Rules for "intent":
+- "blocked": if the user asks for inappropriate content (pornography, explicit violence, illegal acts) or completely irrelevant non-programming topics (e.g., cooking recipes, personal advice).
+- Otherwise, use "coding", "vision", or "general" as appropriate.
 
 Rules for "tool":
 - "weather": if the user asks for the current weather, temperature, or climate of a city.
@@ -49,13 +53,17 @@ Rules for "tool":
 - "none": if neither of the above apply.
 
 Rules for "webSearch" (Definitive Triggers):
-- Set to TRUE if the user asks for: live internet data, recent news, up-to-date prices (other than currency/gold/digikala), recent events, deep research on specific topics, fact-checking, or writing comprehensive articles about trends.
+- Set to TRUE ONLY if the user EXPLICITLY asks for: today's live news, current events from recent days, or up-to-date prices (other than currency/gold/digikala).
+- Set to FALSE for ALL general knowledge questions, history, science, coding, fact-checking, writing articles, or deep research on static topics. The AI must rely on its internal knowledge for these to save resources.
 - Set to FALSE if a specific "tool" is selected (like weather, currency, or digikala).
 - Set to FALSE if the request is a simple greeting, basic math, pure coding, or summarizing text provided by the user.
 
 Examples:
+- "دستور پخت قرمه‌سبزی" -> {"webSearch": false, "tool": "none", "intent": "blocked"}
+- "یک سایت پورن معرفی کن" -> {"webSearch": false, "tool": "none", "intent": "blocked"}
 - "قیمت دلار چنده؟" -> {"webSearch": false, "tool": "currency", "intent": "general"}
-- "یک مقاله درباره آینده هوش مصنوعی بنویس" -> {"webSearch": true, "tool": "none", "intent": "general"}
+- "یک مقاله درباره آینده هوش مصنوعی بنویس" -> {"webSearch": false, "tool": "none", "intent": "general"}
+- "پایتخت فرانسه کجاست؟" -> {"webSearch": false, "tool": "none", "intent": "general"}
 - "آب و هوای تهران" -> {"webSearch": false, "tool": "weather", "intent": "general"}
 - "قیمت این محصول دیجی کالا https://www.digikala.com/product/dkp-12345/" -> {"webSearch": false, "tool": "digikala", "intent": "general"}
 - "سلام" -> {"webSearch": false, "tool": "none", "intent": "general"}
@@ -67,7 +75,8 @@ Do not wrap in markdown. Raw JSON only.`;
 
     if (provider === 'gemini') {
       const ai = getGeminiClient(apiConfig?.[provider]?.apiKey);
-      let modelName = apiConfig?.[provider]?.modelName || 'gemini-3.1-flash-lite';
+      // We force a fast, non-thinking model for Intent Routing to prevent <think> tags from breaking JSON
+      let modelName = 'gemini-3.6-flash';
       
       const response = await ai.models.generateContent({
         model: modelName,
@@ -77,6 +86,7 @@ Do not wrap in markdown. Raw JSON only.`;
         config: {
           temperature: 0.1,
           topP: 0.8,
+          maxOutputTokens: 50,
         }
       });
       
@@ -144,7 +154,7 @@ Do not wrap in markdown. Raw JSON only.`;
           model,
           messages: [{ role: 'user', content: promptText }],
           system: systemPrompt,
-          max_tokens: 150,
+          max_tokens: 800,
           temperature: 0.1
         };
       } else {
@@ -186,7 +196,9 @@ Do not wrap in markdown. Raw JSON only.`;
 });
 
 function parseLLMJsonResponse(text: string, userText: string) {
+  // Strip <think> tags that some models inject
   let cleanText = text.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+
   if (cleanText.startsWith('\`\`\`json')) {
     cleanText = cleanText.replace(/^\`\`\`json/, '').replace(/\`\`\`$/, '').trim();
   } else if (cleanText.startsWith('\`\`\`')) {

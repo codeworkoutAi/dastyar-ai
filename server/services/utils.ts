@@ -20,7 +20,7 @@ export function isSafeBaseUrl(targetUrl?: string): boolean {
       urlToParse = 'https://' + urlToParse;
     }
     const parsed = new URL(urlToParse);
-    
+
     // Strictly enforce HTTPS protocol for all outbound custom API calls
     if (parsed.protocol !== 'https:') {
       return false;
@@ -132,7 +132,7 @@ export function getPollinationsImageUrl(prompt: string, aspectRatio = '1:1', eng
   let dimW = 1024, dimH = 1024;
   if (aspectRatio === '16:9') { dimW = 1024; dimH = 576; }
   else if (aspectRatio === '9:16') { dimW = 576; dimH = 1024; }
-  
+
   let modelParam = 'flux';
   if (engine === 'turbo') modelParam = 'turbo';
   else if (engine === 'flux-anime') modelParam = 'flux-anime';
@@ -175,7 +175,7 @@ User request: "${rawPrompt}"`,
 
 export function normalizeBaseUrl(url?: string, provider?: string): string {
   let clean = (url || '').trim();
-  
+
   if (provider === 'deepseek') {
     if (!clean) return 'https://api.deepseek.com';
   } else if (provider === 'openai') {
@@ -275,7 +275,7 @@ export function sanitizeErrorMessage(err: any): string {
   const rawMsg = extractCleanErrorMessage(err);
   const msg = rawMsg || (typeof err === 'string' ? err : err.message || '');
   const lower = msg.toLowerCase();
-  
+
   // Location / Region Restriction & Sanctions
   if (
     lower.includes('location is not supported') ||
@@ -294,7 +294,7 @@ export function sanitizeErrorMessage(err: any): string {
   if (msg.includes('Insufficient Balance') || msg.includes('insufficient_quota') || msg.includes('402')) {
     return 'موجودی یا اعتبار حساب کاربری شما کافی نیست (Insufficient Balance). لطفاً حساب خود را در پورتال ارائه‌دهنده بررسی و شارژ فرمایید.';
   }
-  
+
   // 401 / Unauthorized & Invalid API Key
   if (msg.includes('Authentication Fails') || msg.includes('Invalid API Key') || msg.includes('invalid_api_key') || msg.includes('401') || msg.includes('Unauthorized')) {
     return 'کلید دسترسی (API Key) نامعتبر است یا اشتباه وارد شده است (کد ۴۰۱). لطفاً کلید معتبر خود را در بخش تنظیمات وارد کنید.';

@@ -17,12 +17,15 @@ import {
   ChatRoundDotsOutlineIcon as MessageSquare,
   CompassOutlineIcon,
   HelpLinearIcon,
+  ShopLinearIcon,
 } from '@solar-icons/react';
 import { Conversation } from '../types';
 import { formatPersianRelativeTime, toPersianDigits } from '../lib/persianUtils';
 import { getStorageUsage } from '../lib/storage';
 import { calculateSessionStats } from '../utils/pricing';
 import { Tooltip } from './Tooltip';
+import { useAuthStore } from '../store/authStore';
+import { User, LogOut } from 'lucide-react';
 import { SuggestionsSandbox } from './SuggestionsSandbox';
 import { useUIStore } from '../store/uiStore';
 import { useSettingsStore } from '../store/settingsStore';
@@ -36,9 +39,11 @@ interface GroupedConversations {
 }
 
 export const Sidebar: React.FC = React.memo(() => {
-  const { sidebarOpen, setSidebarOpen, setIsImageStudioOpen, setIsExploreOpen, setIsUiGuideOpen } = useUIStore();
+  const { sidebarOpen, setSidebarOpen, setIsImageStudioOpen, setIsExploreOpen, setIsUiGuideOpen, setIsAdminOpen } = useUIStore();
   const { settings } = useSettingsStore();
   const { conversations, activeId, setActiveId, createChat, deleteConversation, updateConversation, clearAllConversations } = useChatStore();
+  
+  const { user, isAuthenticated, logout, setAuthModalOpen } = useAuthStore();
   const usePersianDigits = settings.appearance.persianNumerals;
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -339,6 +344,21 @@ export const Sidebar: React.FC = React.memo(() => {
 
           {/* Action Grid: Explore Hub, Image Studio, Coding Assistant */}
           <div className="grid grid-cols-2 gap-1.5">
+            {user?.role === 'admin' && (
+              <button
+                onClick={() => {
+                  setIsAdminOpen(true);
+                  if (window.innerWidth < 768) setSidebarOpen(false);
+                }}
+                className="col-span-2 flex items-center gap-2 px-3 py-2 rounded-xl bg-zinc-900 dark:bg-zinc-100 hover:bg-zinc-800 dark:hover:bg-zinc-200 text-white dark:text-zinc-900 text-xs font-semibold transition-all text-right hover:scale-[1.01] active:scale-[0.98] cursor-pointer"
+              >
+                <div className="w-6 h-6 rounded-lg bg-white/20 dark:bg-black/10 flex items-center justify-center shrink-0">
+                  <ShopLinearIcon className="w-3.5 h-3.5" />
+                </div>
+                <span className="truncate flex-1">پنل مدیریت سیستم</span>
+              </button>
+            )}
+
             <button
               id="sidebar-explore-hub-btn"
               onClick={() => {
@@ -510,7 +530,7 @@ export const Sidebar: React.FC = React.memo(() => {
           )}
 
           {showClearConfirm ? (
-            <div className="p-2.5 bg-red-950/50 border border-red-800/80 rounded-2xl space-y-2 text-xs shadow-lg">
+            <div className="p-2.5 bg-red-950/50 border border-red-800/80 rounded-2xl space-y-2 text-xs shadow-lg mb-2">
               <div className="flex items-center gap-1.5 text-red-400 font-bold">
                 <AlertTriangle className="w-4 h-4" />
                 <span>حذف تمام تاریخچه؟</span>
@@ -537,13 +557,60 @@ export const Sidebar: React.FC = React.memo(() => {
             conversations.length > 0 && (
               <button
                 onClick={() => setShowClearConfirm(true)}
-                className="w-full text-center text-[11px] text-zinc-600 dark:text-zinc-400 hover:text-red-600 dark:hover:text-red-400 transition-colors py-1.5 flex items-center justify-center gap-1.5 rounded-xl hover:bg-red-50 dark:hover:bg-red-500/10 cursor-pointer"
+                className="w-full text-center text-[11px] text-zinc-600 dark:text-zinc-400 hover:text-red-600 dark:hover:text-red-400 transition-colors py-1.5 flex items-center justify-center gap-1.5 rounded-xl hover:bg-red-50 dark:hover:bg-red-500/10 cursor-pointer mb-2"
               >
                 <TrashBinMinimalisticLinearIcon className="w-3.5 h-3.5" />
                 <span>پاک‌سازی تاریخچه گفتگوها</span>
               </button>
             )
           )}
+
+          <div className="pt-2 border-t border-zinc-200 dark:border-zinc-800">
+            {isAuthenticated ? (
+              <div className="flex items-center justify-between p-2 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/50">
+                <div className="flex items-center gap-3 overflow-hidden">
+                  <img 
+                    src={user?.avatar || `https://source.boringavatars.com/beam/120/${user?.phone || user?.email || 'default'}?colors=264653,2a9d8f,e9c46a,f4a261,e76f51`} 
+                    alt="Avatar" 
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.onerror = null;
+                      const letter = user?.name?.charAt(0).toUpperCase() || (user?.phone ? user.phone.slice(-2) : user?.email?.charAt(0).toUpperCase() || 'U');
+                      target.src = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><rect width="100" height="100" fill="%232563eb"/><text x="50%" y="54%" fill="white" font-size="45" font-weight="bold" font-family="Tahoma, sans-serif" dominant-baseline="middle" text-anchor="middle">${letter}</text></svg>`;
+                    }}
+                    className="w-9 h-9 rounded-full bg-white dark:bg-zinc-800 shadow-sm object-cover shrink-0" 
+                  />
+                  <div className="flex flex-col min-w-0">
+                    <span className="text-sm font-bold text-zinc-900 dark:text-zinc-100 truncate" dir={user?.name ? 'rtl' : 'ltr'}>
+                      {user?.name || user?.phone || user?.email}
+                    </span>
+                    <span className="text-[10px] text-zinc-500 dark:text-zinc-400 font-medium">{user?.role === 'admin' ? 'مدیر سیستم' : 'کاربر عادی'}</span>
+                  </div>
+                </div>
+                <button
+                  onClick={logout}
+                  className="p-1.5 text-red-500 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg transition-colors"
+                  title="خروج"
+                >
+                  <LogOut size={16} />
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => setAuthModalOpen(true)}
+                className="w-full flex items-center justify-between p-2 rounded-xl bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-700/50 transition-colors cursor-pointer group"
+              >
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                    <User className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                  </div>
+                  <span className="text-xs font-bold text-zinc-700 dark:text-zinc-300 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                    ورود / ثبت‌نام
+                  </span>
+                </div>
+              </button>
+            )}
+          </div>
         </div>
       </aside>
     </>

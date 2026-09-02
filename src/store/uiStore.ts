@@ -11,6 +11,7 @@ interface UIState {
   metricsNotice: string | null;
   imageStudioInitial: { prompt: string; engine: string } | null;
   simulatedPrompt: string | null;
+  isAdminOpen: boolean;
 
   setSidebarOpen: (open: boolean) => void;
   toggleSidebar: () => void;
@@ -23,6 +24,7 @@ interface UIState {
   setMetricsNotice: (notice: string | null) => void;
   setImageStudioInitial: (initial: { prompt: string; engine: string } | null) => void;
   setSimulatedPrompt: (prompt: string | null) => void;
+  setIsAdminOpen: (open: boolean) => void;
 }
 
 export const useUIStore = create<UIState>((set) => ({
@@ -36,6 +38,7 @@ export const useUIStore = create<UIState>((set) => ({
   metricsNotice: null,
   imageStudioInitial: null,
   simulatedPrompt: null,
+  isAdminOpen: false,
 
   setSidebarOpen: (open) => set({ sidebarOpen: open }),
   toggleSidebar: () => set((state) => ({ sidebarOpen: !state.sidebarOpen })),
@@ -48,4 +51,5 @@ export const useUIStore = create<UIState>((set) => ({
   setMetricsNotice: (notice) => set({ metricsNotice: notice }),
   setImageStudioInitial: (initial) => set({ imageStudioInitial: initial }),
   setSimulatedPrompt: (prompt) => set({ simulatedPrompt: prompt }),
+  setIsAdminOpen: (open) => set({ isAdminOpen: open }),
 }));

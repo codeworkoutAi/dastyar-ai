@@ -10,21 +10,38 @@ import { UiGuideModal } from './components/UiGuideModal';
 import { ExploreHub } from './components/ExploreHub';
 import { ErrorCapsule } from './components/ErrorCapsule';
 import { ReloadPrompt } from './components/ReloadPrompt';
+import AuthModal from './components/AuthModal';
+import { AdminModal } from './components/AdminModal';
 import { InfoCircleBoldIcon } from '@solar-icons/react';
 import { useUIStore } from './store/uiStore';
 import { useSettingsStore } from './store/settingsStore';
 import { useChatStore } from './store/chatStore';
+import { useAuthStore } from './store/authStore';
 
 export default function App() {
   const { videoNotice, metricsNotice } = useUIStore();
   const { settings, systemIsDark } = useSettingsStore();
   const { conversations, activeId } = useChatStore();
+  const checkAuth = useAuthStore(state => state.checkAuth);
+  const setAuthModalOpen = useAuthStore(state => state.setAuthModalOpen);
 
   const isDarkMode = settings.appearance.theme === 'dark' || (settings.appearance.theme === 'system' && systemIsDark);
   const direction = settings.appearance.direction === 'auto' ? (settings.appearance.uiLanguage === 'fa' ? 'rtl' : 'ltr') : settings.appearance.direction;
 
   const activeConversation = conversations.find(c => c.id === activeId);
   const isEmpty = !activeConversation || activeConversation.messages.length === 0;
+
+  useEffect(() => {
+    checkAuth();
+
+    // Listen for custom event to open auth modal
+    const handleOpenAuth = () => setAuthModalOpen(true);
+    window.addEventListener('open-auth-modal', handleOpenAuth);
+    
+    return () => {
+      window.removeEventListener('open-auth-modal', handleOpenAuth);
+    };
+  }, [checkAuth, setAuthModalOpen]);
 
   useEffect(() => {
     const root = document.documentElement;
@@ -76,6 +93,8 @@ export default function App() {
       <ExportModal />
       <ImageGenStudio />
       <UiGuideModal />
+      <AuthModal />
+      <AdminModal />
       <ReloadPrompt />
     </div>
   );
