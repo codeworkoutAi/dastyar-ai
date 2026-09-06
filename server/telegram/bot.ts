@@ -180,7 +180,7 @@ async function sendStoreShowcase(ctx: any, page: number = 0, isEdit: boolean = f
 
   // Main Menu Handlers
   bot.hears(['🛍 محصولات هوش مصنوعی', '🛍 فروشگاه محصولات', 'فروشگاه'], async (ctx) => {
-    await sendStoreShowcase(ctx, false);
+    await sendStoreShowcase(ctx, 0, false);
   });
 
   bot.hears(['🌐 فروشگاه وب‌سایت', '🌐 فروشگاه سایت', 'فروشگاه سایت'], (ctx) => {
@@ -291,11 +291,11 @@ async function sendStoreShowcase(ctx: any, page: number = 0, isEdit: boolean = f
 
       const categoryName = product.category === 'api' ? 'کلید API' : product.category === 'account' ? 'اکانت پرمیوم' : 'پکیج آموزشی';
 
-      const caption = `${RLM}📦 **${product.title}**\n` +
-                      `${RLM}🏷 **دسته:** ${categoryName}\n\n` +
-                      `${RLM}📝 **توضیحات:**\n${product.description || 'توضیحی ثبت نشده است.'}\n\n` +
-                      `${RLM}💰 **قیمت:** ${priceFa} تومان\n` +
-                      `${RLM}📊 **موجودی:** ${stockText}`;
+      const caption = `${RLM}📦 <b>${product.title}</b>\n` +
+                      `${RLM}🏷 <b>دسته:</b> ${categoryName}\n\n` +
+                      `${RLM}📝 <b>توضیحات:</b>\n${product.description || 'توضیحی ثبت نشده است.'}\n\n` +
+                      `${RLM}💰 <b>قیمت:</b> ${priceFa} تومان\n` +
+                      `${RLM}📊 <b>موجودی:</b> ${stockText}`;
 
       const buyButton = isOutOfStock
         ? [Markup.button.callback('❌ این محصول در حال حاضر ناموجود است', 'noop')]
@@ -311,7 +311,7 @@ async function sendStoreShowcase(ctx: any, page: number = 0, isEdit: boolean = f
       await ctx.deleteMessage().catch(() => {});
       await ctx.replyWithPhoto(photoSource, {
         caption,
-        parse_mode: 'Markdown',
+        parse_mode: 'HTML',
         reply_markup: {
           inline_keyboard: keyboard
         }
