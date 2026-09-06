@@ -126,10 +126,10 @@ async function sendStoreShowcase(ctx: any, page: number = 0, isEdit: boolean = f
       : 'نامحدود ♾';
     const catText = p.category === 'api' ? 'کلید API' : p.category === 'account' ? 'اکانت پرمیوم' : 'پکیج آموزشی';
 
-    const caption = `${RLM}🏪 **ویترین فروشگاه محصولات**\n\n` +
-                    `${RLM}📦 **${p.title}**\n` +
-                    `${RLM}🏷 **دسته:** ${catText}  |  📊 **موجودی:** ${stockText}\n` +
-                    `${RLM}💰 **قیمت:** **${priceFa} تومان**\n\n` +
+    const caption = `${RLM}🏪 <b>ویترین فروشگاه محصولات</b>\n\n` +
+                    `${RLM}📦 <b>${p.title}</b>\n` +
+                    `${RLM}🏷 <b>دسته:</b> ${catText}  |  📊 <b>موجودی:</b> ${stockText}\n` +
+                    `${RLM}💰 <b>قیمت:</b> <b>${priceFa} تومان</b>\n\n` +
                     `${RLM}محصول ${page + 1} از ${products.length}`;
 
     const buyButton = isOutOfStock
@@ -150,7 +150,7 @@ async function sendStoreShowcase(ctx: any, page: number = 0, isEdit: boolean = f
     if (isEdit) {
       try {
         await ctx.editMessageMedia(
-          { type: 'photo', media: photoSource, caption, parse_mode: 'Markdown' },
+          { type: 'photo', media: photoSource, caption, parse_mode: 'HTML' },
           { reply_markup: { inline_keyboard: keyboard } }
         );
       } catch (editErr) {
@@ -162,12 +162,12 @@ async function sendStoreShowcase(ctx: any, page: number = 0, isEdit: boolean = f
       try {
         await ctx.replyWithPhoto(photoSource, {
           caption,
-          parse_mode: 'Markdown',
+          parse_mode: 'HTML',
           reply_markup: { inline_keyboard: keyboard }
         });
       } catch (photoErr) {
         await ctx.reply(caption, {
-          parse_mode: 'Markdown',
+          parse_mode: 'HTML',
           reply_markup: { inline_keyboard: keyboard }
         });
       }
@@ -186,10 +186,10 @@ async function sendStoreShowcase(ctx: any, page: number = 0, isEdit: boolean = f
   bot.hears(['🌐 فروشگاه وب‌سایت', '🌐 فروشگاه سایت', 'فروشگاه سایت'], (ctx) => {
     const siteUrl = getWebsiteUrl();
     ctx.reply(
-      `${RLM}🏪 **فروشگاه آنلاین وب‌سایت**\n\n` +
+      `${RLM}🏪 <b>فروشگاه آنلاین وب‌سایت</b>\n\n` +
       `${RLM}برای مشاهده تمامی محصولات، پکیج‌ها و خرید مستقیم از طریق وب‌سایت، روی دکمه زیر کلیک کنید:`,
       {
-        parse_mode: 'Markdown',
+        parse_mode: 'HTML',
         reply_markup: {
           inline_keyboard: [
             [Markup.button.url('🌐 ورود مستقیم به فروشگاه سایت', `${siteUrl}/store`)]
@@ -202,10 +202,10 @@ async function sendStoreShowcase(ctx: any, page: number = 0, isEdit: boolean = f
   bot.hears(['📰 وبلاگ و آموزش‌ها', '📰 وبلاگ سایت', 'وبلاگ'], (ctx) => {
     const siteUrl = getWebsiteUrl();
     ctx.reply(
-      `${RLM}📰 **وبلاگ و مجله تخصصی هوش مصنوعی**\n\n` +
+      `${RLM}📰 <b>وبلاگ و مجله تخصصی هوش مصنوعی</b>\n\n` +
       `${RLM}برای مطالعه جدیدترین مقالات، اخبار و آموزش‌های کاربردی هوش مصنوعی، روی دکمه زیر کلیک کنید:`,
       {
-        parse_mode: 'Markdown',
+        parse_mode: 'HTML',
         reply_markup: {
           inline_keyboard: [
             [Markup.button.url('📖 ورود به وبلاگ و مقالات', `${siteUrl}/blog`)]
