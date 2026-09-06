@@ -42,7 +42,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
   const [error, setError] = useState<string | null>(null);
 
   // Tabs state
-  const [activeTab, setActiveTab] = useState<'products' | 'orders' | 'news'>('products');
+  const [activeTab, setActiveTab] = useState<'products' | 'orders' | 'news' | 'settings'>('products');
   const [orders, setOrders] = useState<any[]>([]);
   const [ordersLoading, setOrdersLoading] = useState(false);
 
@@ -571,12 +571,58 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
             >
               اخبار و وبلاگ
             </button>
+            <button
+              onClick={() => setActiveTab('settings')}
+              className={`pb-3 text-sm font-bold border-b-2 transition-colors ${
+                activeTab === 'settings' ? 'border-blue-600 text-blue-600 dark:border-blue-500 dark:text-blue-400' : 'border-transparent text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200'
+              }`}
+            >
+              تنظیمات سیستم
+            </button>
           </div>
         </div>
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-4 sm:p-6 custom-scrollbar bg-zinc-50 dark:bg-black/20" ref={formRef}>
-          {activeTab === 'products' ? (
+          {activeTab === 'settings' ? (
+            <div className="flex flex-col gap-6 animate-fadeIn">
+              <div className="bg-white dark:bg-zinc-800/50 p-6 rounded-2xl border border-zinc-200 dark:border-zinc-700/50">
+                <h3 className="text-lg font-bold text-red-600 dark:text-red-400 mb-2 flex items-center gap-2">
+                  <AlertCircle className="w-5 h-5" />
+                  منطقه خطر (Danger Zone)
+                </h3>
+                <p className="text-sm text-zinc-600 dark:text-zinc-400 mb-6 leading-relaxed">
+                  با کلیک روی دکمه زیر، تمامی اطلاعات دیتابیس (شامل محصولات، سفارشات، لایسنس‌ها و غیره) به جز حساب کاربری فعلی شما پاک خواهد شد. این عملیات غیرقابل بازگشت است و مخصوص تست سیستم می‌باشد.
+                </p>
+                
+                <button
+                  onClick={async () => {
+                    if (window.confirm('آیا از پاک کردن کل دیتابیس مطمئن هستید؟ این عملیات غیرقابل بازگشت است!')) {
+                      try {
+                        const res = await fetch('/api/admin/reset-database', {
+                          method: 'POST',
+                          headers: { 'Authorization': `Bearer ${token}` }
+                        });
+                        const data = await res.json();
+                        if (res.ok) {
+                          alert('دیتابیس با موفقیت صفر شد. صفحه رفرش می‌شود.');
+                          window.location.reload();
+                        } else {
+                          alert(data.error || 'خطا در ریست دیتابیس');
+                        }
+                      } catch (e) {
+                        alert('خطا در ارتباط با سرور');
+                      }
+                    }
+                  }}
+                  className="px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl font-bold text-sm transition-colors flex items-center justify-center gap-2 max-w-xs shadow-lg shadow-red-600/20"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  پاکسازی کامل دیتابیس
+                </button>
+              </div>
+            </div>
+          ) : activeTab === 'products' ? (
           <div>
           {selectedProductForLicenses ? (
             // License Manager View

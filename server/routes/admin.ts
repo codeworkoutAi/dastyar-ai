@@ -433,4 +433,31 @@ router.delete('/orders/:id', (req, res) => {
   }
 });
 
+// POST /api/admin/reset-database
+router.post('/reset-database', (req, res) => {
+  try {
+    db.exec('BEGIN EXCLUSIVE TRANSACTION');
+    
+    // Delete all data from all tables (schema remains)
+    const tables = ['products', 'licenses', 'orders', 'news', 'otps', 'conversations'];
+    
+    for (const table of tables) {
+      db.exec(`DELETE FROM ${table}`);
+    }
+    
+    // For users, delete everyone EXCEPT the current admin requesting the reset
+    const adminId = (req as any).user.id;
+    db.prepare('DELETE FROM users WHERE id != ?').run(adminId);
+    
+    
+
+    db.exec('COMMIT');
+    res.json({ success: true, message: 'دیتابیس با موفقیت پاک شد.' });
+  } catch (error) {
+    db.exec('ROLLBACK');
+    console.error('[Admin API] Error resetting database:', error);
+    res.status(500).json({ error: 'خطا در پاک کردن دیتابیس' });
+  }
+});
+
 export default router;
