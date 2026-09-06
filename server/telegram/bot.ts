@@ -491,7 +491,9 @@ async function sendStoreShowcase(ctx: any, isEdit: boolean = false) {
 
     // Check if the sender is admin replying to a support message
     const ADMIN_ID = process.env.TELEGRAM_ADMIN_ID || '';
-    if (ADMIN_ID && tgId === ADMIN_ID && ctx.message.reply_to_message) {
+    const isAdminChat = ctx.chat.id.toString() === ADMIN_ID;
+
+    if (ADMIN_ID && isAdminChat && ctx.message.reply_to_message) {
       const targetUserId = adminMessageMap.get(ctx.message.reply_to_message.message_id);
       if (targetUserId) {
         try {
@@ -502,6 +504,11 @@ async function sendStoreShowcase(ctx: any, isEdit: boolean = false) {
           return ctx.reply('❌ ارسال پاسخ ناموفق بود (ممکن است کاربر ربات را بلاک کرده باشد).');
         }
       }
+    }
+
+    // If this is an admin group (not a private chat), ignore other text messages so the bot doesn't spam or forward them
+    if (isAdminChat && ctx.chat.type !== 'private') {
+      return;
     }
 
     if (pendingCheckouts.has(tgId)) {
