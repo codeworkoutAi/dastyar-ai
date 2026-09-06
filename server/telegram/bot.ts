@@ -97,7 +97,7 @@ function getProductPhotoSource(p: any): any {
   return 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&auto=format&fit=crop&q=80';
 }
 
-async function sendStoreShowcase(ctx: any, isEdit: boolean = false) {
+async function sendStoreShowcase(ctx: any, page: number = 0, isEdit: boolean = false) {
   try {
     const products = db.prepare(`
       SELECT p.*, COUNT(CASE WHEN l.status = 'available' THEN 1 END) as stock
@@ -109,63 +109,72 @@ async function sendStoreShowcase(ctx: any, isEdit: boolean = false) {
 
     if (products.length === 0) {
       const emptyMsg = 'در حال حاضر محصولی در فروشگاه موجود نیست.';
-      if (isEdit) await ctx.editMessageText(emptyMsg);
+      if (isEdit) await ctx.editMessageText(emptyMsg).catch(() => {});
       else await ctx.reply(emptyMsg);
       return;
     }
 
-    if (isEdit) {
-      try {
-        await ctx.deleteMessage().catch(() => {});
-      } catch (_) {}
+    // Ensure page is within bounds
+    if (page < 0) page = products.length - 1;
+    if (page >= products.length) page = 0;
+
+    const p = products[page];
+    const priceFa = Number(p.price || 0).toLocaleString('fa-IR');
+    const isOutOfStock = p.category !== 'package' && (p.stock || 0) <= 0;
+    const stockText = p.category !== 'package' 
+      ? (p.stock > 0 ? `${Number(p.stock).toLocaleString('fa-IR')} عدد موجود` : 'اتمام موجودی ❌') 
+      : 'نامحدود ♾';
+    const catText = p.category === 'api' ? 'کلید API' : p.category === 'account' ? 'اکانت پرمیوم' : 'پکیج آموزشی';
+
+    const caption = `${RLM}🏪 **ویترین فروشگاه محصولات**\n\n` +
+                    `${RLM}📦 **${p.title}**\n` +
+                    `${RLM}🏷 **دسته:** ${catText}  |  📊 **موجودی:** ${stockText}\n` +
+                    `${RLM}💰 **قیمت:** **${priceFa} تومان**\n\n` +
+                    `${RLM}محصول ${page + 1} از ${products.length}`;
+
+    const buyButton = isOutOfStock
+      ? [Markup.button.callback('❌ این محصول ناموجود است', 'noop')]
+      : [Markup.button.callback('💳 خرید و دریافت لایسنس', `buy_${p.id}`)];
+
+    const keyboard = [buyButton];
+
+    if (products.length > 1) {
+      keyboard.push([
+        Markup.button.callback('➡️ بعدی', `store_page_${(page + 1) % products.length}`),
+        Markup.button.callback('⬅️ قبلی', `store_page_${(page - 1 + products.length) % products.length}`)
+      ]);
     }
 
-    await ctx.reply(
-      `${RLM}🏪 **ویترین فروشگاه محصولات هوش مصنوعی**\n` +
-      `${RLM}برای خرید هر محصول، دکمه خرید زیر آن را لمس کنید:`,
-      { parse_mode: 'Markdown' }
-    );
+    const photoSource = getProductPhotoSource(p);
 
-    for (const p of products) {
-      const priceFa = Number(p.price || 0).toLocaleString('fa-IR');
-      const isOutOfStock = p.category !== 'package' && (p.stock || 0) <= 0;
-      const stockText = p.category !== 'package' 
-        ? (p.stock > 0 ? `${Number(p.stock).toLocaleString('fa-IR')} عدد موجود` : 'اتمام موجودی ❌') 
-        : 'نامحدود ♾';
-      const catText = p.category === 'api' ? 'کلید API' : p.category === 'account' ? 'اکانت پرمیوم' : 'پکیج آموزشی';
-
-      const caption = `${RLM}📦 **${p.title}**\n` +
-                      `${RLM}🏷 **دسته:** ${catText}  |  📊 **موجودی:** ${stockText}\n` +
-                      `${RLM}💰 **قیمت:** **${priceFa} تومان**`;
-
-      const buyButton = isOutOfStock
-        ? [Markup.button.callback('❌ این محصول ناموجود است', 'noop')]
-        : [Markup.button.callback('💳 خرید و دریافت لایسنس', `buy_${p.id}`)];
-
-      const photoSource = getProductPhotoSource(p);
-
+    if (isEdit) {
+      try {
+        await ctx.editMessageMedia(
+          { type: 'photo', media: photoSource, caption, parse_mode: 'Markdown' },
+          { reply_markup: { inline_keyboard: keyboard } }
+        );
+      } catch (editErr) {
+        // If edit fails (e.g. same content), just ignore or re-send
+        // But usually it's fine unless they click the same button
+      }
+      ctx.answerCbQuery().catch(() => {});
+    } else {
       try {
         await ctx.replyWithPhoto(photoSource, {
           caption,
           parse_mode: 'Markdown',
-          reply_markup: {
-            inline_keyboard: [buyButton]
-          }
+          reply_markup: { inline_keyboard: keyboard }
         });
       } catch (photoErr) {
         await ctx.reply(caption, {
           parse_mode: 'Markdown',
-          reply_markup: {
-            inline_keyboard: [buyButton]
-          }
+          reply_markup: { inline_keyboard: keyboard }
         });
       }
     }
-
-    if (isEdit) ctx.answerCbQuery().catch(() => {});
   } catch (err) {
     console.error('[Telegram] Store showcase error:', err);
-    ctx.reply('خطا در بارگذاری فروشگاه.');
+    ctx.reply('خطا در بارگذاری فروشگاه.').catch(() => {});
   }
 }
 
@@ -316,12 +325,16 @@ async function sendStoreShowcase(ctx: any, isEdit: boolean = false) {
 
   // No-op for indicator buttons
   bot.action('noop', (ctx) => {
-    ctx.answerCbQuery();
+    ctx.answerCbQuery().catch(() => {});
   });
 
   bot.action('back_to_store', async (ctx) => {
-    await ctx.deleteMessage().catch(() => {});
-    await sendStoreShowcase(ctx, false);
+    await sendStoreShowcase(ctx, 0, true);
+  });
+
+  bot.action(/store_page_(\d+)/, async (ctx) => {
+    const page = parseInt(ctx.match[1], 10);
+    await sendStoreShowcase(ctx, page, true);
   });
 
   // Buy Product (Create Order & Send Payment Link)
