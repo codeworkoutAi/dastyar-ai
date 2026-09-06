@@ -172,9 +172,9 @@ async function sendStoreShowcase(ctx: any, page: number = 0, isEdit: boolean = f
         });
       }
     }
-  } catch (err) {
+  } catch (err: any) {
     console.error('[Telegram] Store showcase error:', err);
-    ctx.reply('خطا در بارگذاری فروشگاه.').catch(() => {});
+    ctx.reply('خطا در بارگذاری فروشگاه: ' + (err.message || err)).catch(() => {});
   }
 }
 
