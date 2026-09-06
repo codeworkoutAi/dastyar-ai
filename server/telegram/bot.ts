@@ -481,6 +481,10 @@ async function sendStoreShowcase(ctx: any, isEdit: boolean = false) {
     }
   });
 
+  bot.command('chatid', (ctx) => {
+    ctx.reply(`آیدی این چت/گروه:\n\`${ctx.chat.id}\``, { parse_mode: 'Markdown' });
+  });
+
   bot.on('message', async (ctx: any) => {
     const tgId = ctx.from?.id.toString();
     if (!tgId) return;
