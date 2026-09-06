@@ -72,6 +72,24 @@ export function startTelegramBot() {
     });
   });
 
+  // Temporary command to reset admin password for users without shell access
+  bot.command('resetadmin', async (ctx) => {
+    try {
+      const bcrypt = await import('bcryptjs');
+      const salt = bcrypt.genSaltSync(10);
+      const passwordHash = bcrypt.hashSync('admin123', salt);
+      const stmt = db.prepare(`UPDATE users SET passwordHash = ? WHERE role = 'admin'`);
+      const info = stmt.run(passwordHash);
+      if (info.changes > 0) {
+        ctx.reply('✅ رمز عبور ادمین با موفقیت روی سایت ریست شد!\n🔑 رمز جدید شما: admin123');
+      } else {
+        ctx.reply('❌ اکانت ادمینی یافت نشد!');
+      }
+    } catch (err: any) {
+      ctx.reply('خطا: ' + err.message);
+    }
+  });
+
 const RLM = '\u200F';
 
 function getWebsiteUrl(): string {
