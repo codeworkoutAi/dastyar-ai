@@ -545,8 +545,23 @@ export const MessageInput: React.FC = React.memo(() => {
 
       recognition.onresult = (event: any) => {
         let currentTranscript = '';
+        
         for (let i = 0; i < event.results.length; ++i) {
-          currentTranscript += event.results[i][0].transcript;
+          const t = event.results[i][0].transcript.trim();
+          if (!t) continue;
+
+          // Smart combiner: check if the new transcript ALREADY contains the current one.
+          // This fixes the notorious Android Chrome bug where results are cumulative instead of chunked.
+          const cleanT = t.replace(/\s+/g, '');
+          const cleanCurrent = currentTranscript.replace(/\s+/g, '');
+
+          if (cleanT.startsWith(cleanCurrent)) {
+            // Cumulative result (Android), so we replace to avoid duplication
+            currentTranscript = t;
+          } else {
+            // Chunked result (Desktop), so we append
+            currentTranscript = currentTranscript ? currentTranscript + ' ' + t : t;
+          }
         }
 
         // Clean up spaces
