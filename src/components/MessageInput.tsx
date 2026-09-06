@@ -535,36 +535,25 @@ export const MessageInput: React.FC = React.memo(() => {
       baseTextRef.current = text;
       const recognition = new SpeechRecognition();
       recognition.lang = 'fa-IR';
+      recognition.lang = 'fa-IR';
       recognition.continuous = true;
       recognition.interimResults = true;
 
-      let finalSoFar = '';
-
       recognition.onstart = () => {
         setIsRecording(true);
-        finalSoFar = '';
       };
 
       recognition.onresult = (event: any) => {
-        let interim = '';
-        let final = '';
-
+        let currentTranscript = '';
         for (let i = 0; i < event.results.length; ++i) {
-          const transcript = event.results[i][0].transcript;
-          if (event.results[i].isFinal) {
-            final += transcript + ' ';
-          } else {
-            interim += transcript;
-          }
+          currentTranscript += event.results[i][0].transcript;
         }
 
-        if (final) {
-          finalSoFar = final;
-        }
+        // Clean up spaces
+        currentTranscript = currentTranscript.replace(/\s+/g, ' ').trim();
 
-        const currentSpoken = (finalSoFar || interim).trim();
-        const sep = baseTextRef.current && !baseTextRef.current.endsWith(' ') && currentSpoken ? ' ' : '';
-        const combined = baseTextRef.current ? `${baseTextRef.current}${sep}${currentSpoken}` : currentSpoken;
+        const sep = baseTextRef.current && !baseTextRef.current.endsWith(' ') && currentTranscript ? ' ' : '';
+        const combined = baseTextRef.current ? `${baseTextRef.current}${sep}${currentTranscript}` : currentTranscript;
         setText(combined);
       };
 
@@ -582,7 +571,7 @@ export const MessageInput: React.FC = React.memo(() => {
         recognitionRef.current = null;
       };
 
-      recognition.current = recognition;
+      recognitionRef.current = recognition;
       recognition.start();
     } catch (e) {
       console.error('Failed to start speech recognition', e);
