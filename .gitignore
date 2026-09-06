@@ -46,3 +46,9 @@ Thumbs.db
 .vscode/
 .idea/
 .claude/
+
+# Database files
+server/data/*.db
+server/data/*.sqlite
+server/data/*.db-wal
+server/data/*.db-shm
