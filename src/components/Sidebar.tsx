@@ -26,6 +26,7 @@ import { calculateSessionStats } from '../utils/pricing';
 import { Tooltip } from './Tooltip';
 import { useAuthStore } from '../store/authStore';
 import { User, LogOut } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { SuggestionsSandbox } from './SuggestionsSandbox';
 import { useUIStore } from '../store/uiStore';
 import { useSettingsStore } from '../store/settingsStore';
@@ -353,11 +354,37 @@ export const Sidebar: React.FC = React.memo(() => {
                 className="col-span-2 flex items-center gap-2 px-3 py-2 rounded-xl bg-zinc-900 dark:bg-zinc-100 hover:bg-zinc-800 dark:hover:bg-zinc-200 text-white dark:text-zinc-900 text-xs font-semibold transition-all text-right hover:scale-[1.01] active:scale-[0.98] cursor-pointer"
               >
                 <div className="w-6 h-6 rounded-lg bg-white/20 dark:bg-black/10 flex items-center justify-center shrink-0">
-                  <ShopLinearIcon className="w-3.5 h-3.5" />
+                  <PinBoldIcon className="w-3.5 h-3.5" />
                 </div>
-                <span className="truncate flex-1">پنل مدیریت سیستم</span>
+                <span className="truncate flex-1">تنظیمات سیستم (ادمین چت)</span>
               </button>
             )}
+
+            <Link
+              to="/store"
+              onClick={() => {
+                if (window.innerWidth < 768) setSidebarOpen(false);
+              }}
+              className="col-span-1 flex items-center gap-2 px-2.5 py-2 rounded-xl bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/40 border border-transparent text-blue-700 dark:text-blue-300 text-xs font-semibold transition-all text-right hover:scale-[1.01] active:scale-[0.98] cursor-pointer"
+            >
+              <div className="w-6 h-6 rounded-lg bg-blue-100 dark:bg-blue-500/20 flex items-center justify-center shrink-0">
+                <ShopLinearIcon className="w-3.5 h-3.5" />
+              </div>
+              <span className="truncate">فروشگاه</span>
+            </Link>
+
+            <Link
+              to="/blog"
+              onClick={() => {
+                if (window.innerWidth < 768) setSidebarOpen(false);
+              }}
+              className="col-span-1 flex items-center gap-2 px-2.5 py-2 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 border border-transparent text-emerald-700 dark:text-emerald-300 text-xs font-semibold transition-all text-right hover:scale-[1.01] active:scale-[0.98] cursor-pointer"
+            >
+              <div className="w-6 h-6 rounded-lg bg-emerald-100 dark:bg-emerald-500/20 flex items-center justify-center shrink-0">
+                <PenLinearIcon className="w-3.5 h-3.5" />
+              </div>
+              <span className="truncate">وبلاگ</span>
+            </Link>
 
             <button
               id="sidebar-explore-hub-btn"

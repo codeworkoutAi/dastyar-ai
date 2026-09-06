@@ -23,6 +23,7 @@ import { useUIStore } from '../store/uiStore';
 import { useSettingsStore } from '../store/settingsStore';
 import { useChatStore } from '../store/chatStore';
 import { SmartRoutingAnimation } from './ChatBox';
+import { ThemeToggle } from './ThemeToggle';
 
 export const SmartRoutingBadge: React.FC<{ isStreaming: boolean }> = ({ isStreaming }) => {
   return (
@@ -297,6 +298,9 @@ export const Header: React.FC = React.memo(() => {
             </Tooltip>
           )}
 
+          {/* Theme Toggle Button */}
+          <ThemeToggle variant="clay" />
+
           {/* Settings button */}
           <Tooltip content="تنظیمات سیستم (تم، پالت رنگی، مدل‌ها و قلم)">
             <button
@@ -311,11 +315,14 @@ export const Header: React.FC = React.memo(() => {
         </div>
 
         {/* Mobile Dropdown Menu (Visible on Mobile) */}
-        <div className="sm:hidden relative" ref={mobileMenuRef}>
+        <div className="sm:hidden flex items-center gap-1.5" ref={mobileMenuRef}>
+          {/* Quick Theme Toggle on Mobile */}
+          <ThemeToggle variant="clay" className="!w-10 !h-10 !rounded-xl" />
+
           <Tooltip content="ابزارهای بیشتر">
             <button
               onClick={() => setShowMobileMenu(!showMobileMenu)}
-              className="clay-btn w-11 h-11 flex items-center justify-center hover:opacity-90 rounded-xl cursor-pointer"
+              className="clay-btn w-10 h-10 flex items-center justify-center hover:opacity-90 rounded-xl cursor-pointer"
               aria-label="More Options"
             >
               <MenuDotsLinearIcon className="w-5 h-5" />

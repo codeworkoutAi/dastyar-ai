@@ -27,3 +27,11 @@ export function requireAuth(req: AuthRequest, res: Response, next: NextFunction)
     return res.status(403).json({ error: 'Forbidden: Invalid or expired token' });
   }
 }
+
+export function requireAdmin(req: AuthRequest, res: Response, next: NextFunction) {
+  // We assume requireAuth is called before this, so req.user exists
+  if (req.user?.role !== 'admin') {
+    return res.status(403).json({ error: 'عدم دسترسی. این بخش فقط برای مدیران است.' });
+  }
+  next();
+}

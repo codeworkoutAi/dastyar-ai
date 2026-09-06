@@ -18,6 +18,7 @@ import {
   ArrowUp, 
   X
 } from 'lucide-react';
+import { useSearchParams } from 'react-router-dom';
 import { toPersianDigits, isRtlText } from '../lib/persianUtils';
 import { estimateTokenCount } from '../lib/tokenOptimizer';
 import { Tooltip } from './Tooltip';
@@ -61,7 +62,18 @@ export const MessageInput: React.FC = React.memo(() => {
   const onStopGeneration = stopGeneration;
   const onVideoAttached = () => setVideoNotice('Video processing is coming soon!');
 
+  const [searchParams, setSearchParams] = useSearchParams();
   const [text, setText] = useState('');
+
+  // Auto-fill prompt from URL (from Tag Archive links)
+  useEffect(() => {
+    const promptParam = searchParams.get('prompt');
+    if (promptParam) {
+      setText(promptParam);
+      searchParams.delete('prompt');
+      setSearchParams(searchParams, { replace: true });
+    }
+  }, [searchParams, setSearchParams]);
   const [attachments, setAttachments] = useState<{
     id: string; dataUrl: string; mimeType: string; name: string; size: string;
     status: 'processing' | 'ready'; progress: number;

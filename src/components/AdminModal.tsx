@@ -5,13 +5,36 @@ import {
   AddSquareOutlineIcon,
   BoxLinearIcon
 } from '@solar-icons/react';
-import { Edit2, Trash2, Key, ArrowRight } from 'lucide-react';
-import { useUIStore } from '../store/uiStore';
+import { 
+  Edit2, 
+  Trash2, 
+  Key, 
+  ArrowRight,
+  Check,
+  X,
+  Eye,
+  Copy,
+  CheckCircle2,
+  XCircle,
+  Search,
+  AlertCircle,
+  RefreshCw,
+  Clock,
+  Package,
+  User,
+  Phone,
+  Mail,
+  ExternalLink
+} from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import { toEnglishDigits } from '../lib/persianUtils';
 
-export const AdminModal: React.FC = () => {
-  const { isAdminOpen, setIsAdminOpen } = useUIStore();
+interface AdminModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
   const { token, user } = useAuthStore();
   
   const [products, setProducts] = useState<any[]>([]);
@@ -19,9 +42,20 @@ export const AdminModal: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   // Tabs state
-  const [activeTab, setActiveTab] = useState<'products' | 'orders'>('products');
+  const [activeTab, setActiveTab] = useState<'products' | 'orders' | 'news'>('products');
   const [orders, setOrders] = useState<any[]>([]);
   const [ordersLoading, setOrdersLoading] = useState(false);
+
+  // Orders management state
+  const [orderSearch, setOrderSearch] = useState('');
+  const [orderStatusFilter, setOrderStatusFilter] = useState<'all' | 'pending' | 'success' | 'failed'>('all');
+  const [selectedOrder, setSelectedOrder] = useState<any>(null);
+  const [orderActionLoadingId, setOrderActionLoadingId] = useState<string | null>(null);
+  const [customLicenseInput, setCustomLicenseInput] = useState('');
+  const [orderFeedback, setOrderFeedback] = useState<{ type: 'success' | 'warning' | 'error'; text: string } | null>(null);
+  const [copiedOrderId, setCopiedOrderId] = useState<string | null>(null);
+  const [copiedKeyText, setCopiedKeyText] = useState<string | null>(null);
+  const [orderToDelete, setOrderToDelete] = useState<string | null>(null);
 
   // New product form state
   const [isAdding, setIsAdding] = useState(false);
@@ -30,7 +64,9 @@ export const AdminModal: React.FC = () => {
   const [price, setPrice] = useState('');
   const [category, setCategory] = useState('account');
   const [description, setDescription] = useState('');
+  const [longDescription, setLongDescription] = useState('');
   const [image, setImage] = useState<string>('');
+  const [bannerImage, setBannerImage] = useState<string>('');
 
   // Licenses state
   const [selectedProductForLicenses, setSelectedProductForLicenses] = useState<any>(null);
@@ -38,28 +74,39 @@ export const AdminModal: React.FC = () => {
   const [newLicensesText, setNewLicensesText] = useState('');
   const [licensesLoading, setLicensesLoading] = useState(false);
 
+  // News state
+  const [news, setNews] = useState<any[]>([]);
+  const [newsLoading, setNewsLoading] = useState(false);
+  const [newsTitle, setNewsTitle] = useState('');
+  const [newsContent, setNewsContent] = useState('');
+  const [newsImage, setNewsImage] = useState<string>('');
+  const [isAddingNews, setIsAddingNews] = useState(false);
+
   const formRef = useRef<HTMLDivElement>(null);
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>, type: 'image' | 'banner' = 'image') => {
     const file = e.target.files?.[0];
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setImage(reader.result as string);
+        if (type === 'image') setImage(reader.result as string);
+        else setBannerImage(reader.result as string);
       };
       reader.readAsDataURL(file);
     }
   };
 
   useEffect(() => {
-    if (isAdminOpen && token && user?.role === 'admin') {
+    if (isOpen && token && user?.role === 'admin') {
       if (activeTab === 'products') {
         fetchProducts();
       } else if (activeTab === 'orders') {
         fetchOrders();
+      } else if (activeTab === 'news') {
+        fetchNews();
       }
     }
-  }, [isAdminOpen, token, user, activeTab]);
+  }, [isOpen, token, user, activeTab]);
 
   const fetchOrders = async () => {
     try {
@@ -78,6 +125,118 @@ export const AdminModal: React.FC = () => {
     }
   };
 
+  const handleUpdateOrderStatus = async (orderId: string, status: 'success' | 'failed' | 'pending') => {
+    try {
+      setOrderActionLoadingId(orderId);
+      setOrderFeedback(null);
+      const res = await fetch(`/api/admin/orders/${orderId}/status`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ status })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'خطا در بروزرسانی وضعیت سفارش');
+
+      if (data.warning) {
+        setOrderFeedback({ type: 'warning', text: data.warning });
+      } else {
+        setOrderFeedback({ 
+          type: 'success', 
+          text: status === 'success' 
+            ? 'سفارش تایید شد و لایسنس به صورت خودکار تخصیص یافت.' 
+            : status === 'failed' 
+            ? 'سفارش رد شد و در صورت وجود لایسنس، به انبار بازگشت.' 
+            : 'وضعیت سفارش به حالت در انتظار تغییر یافت.' 
+        });
+      }
+
+      await fetchOrders();
+      if (selectedOrder && selectedOrder.id === orderId) {
+        const updated = await fetch(`/api/admin/orders/${orderId}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        }).then(r => r.json());
+        setSelectedOrder(updated);
+      }
+    } catch (err: any) {
+      setOrderFeedback({ type: 'error', text: err.message || 'خطای سرور' });
+    } finally {
+      setOrderActionLoadingId(null);
+    }
+  };
+
+  const handleAssignLicense = async (orderId: string) => {
+    if (!customLicenseInput.trim()) {
+      setOrderFeedback({ type: 'error', text: 'لطفاً کلید یا متن لایسنس را وارد کنید.' });
+      return;
+    }
+    try {
+      setOrderActionLoadingId(orderId);
+      setOrderFeedback(null);
+      const res = await fetch(`/api/admin/orders/${orderId}/assign-license`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ licenseKey: customLicenseInput.trim() })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'خطا در تخصیص لایسنس');
+
+      setOrderFeedback({ type: 'success', text: 'لایسنس با موفقیت به سفارش اختصاص داده شد و سفارش تایید شد.' });
+      setCustomLicenseInput('');
+      await fetchOrders();
+      const updated = await fetch(`/api/admin/orders/${orderId}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      }).then(r => r.json());
+      setSelectedOrder(updated);
+    } catch (err: any) {
+      setOrderFeedback({ type: 'error', text: err.message || 'خطا در تخصیص لایسنس' });
+    } finally {
+      setOrderActionLoadingId(null);
+    }
+  };
+
+  const executeDeleteOrder = async () => {
+    if (!orderToDelete) return;
+    const orderId = orderToDelete;
+    try {
+      setOrderActionLoadingId(orderId);
+      setOrderFeedback(null);
+      const res = await fetch(`/api/admin/orders/${orderId}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'خطا در حذف سفارش');
+
+      setOrderFeedback({ type: 'success', text: 'سفارش با موفقیت حذف شد.' });
+      if (selectedOrder?.id === orderId) {
+        setSelectedOrder(null);
+      }
+      setOrderToDelete(null);
+      await fetchOrders();
+    } catch (err: any) {
+      setOrderFeedback({ type: 'error', text: err.message || 'خطا در حذف سفارش' });
+    } finally {
+      setOrderActionLoadingId(null);
+    }
+  };
+
+  const copyToClipboard = (text: string, type: 'id' | 'key', idKey: string) => {
+    navigator.clipboard.writeText(text);
+    if (type === 'id') {
+      setCopiedOrderId(idKey);
+      setTimeout(() => setCopiedOrderId(null), 2000);
+    } else {
+      setCopiedKeyText(idKey);
+      setTimeout(() => setCopiedKeyText(null), 2000);
+    }
+  };
+
   const fetchProducts = async () => {
     try {
       setLoading(true);
@@ -92,6 +251,86 @@ export const AdminModal: React.FC = () => {
       setError(err.message || 'خطای سرور');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchNews = async () => {
+    try {
+      setNewsLoading(true);
+      setError(null);
+      const res = await fetch('/api/news');
+      if (!res.ok) throw new Error('خطا در دریافت اخبار');
+      const data = await res.json();
+      setNews(data);
+    } catch (err: any) {
+      setError(err.message || 'خطای سرور');
+    } finally {
+      setNewsLoading(false);
+    }
+  };
+
+  const handleAddNews = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newsTitle || !newsContent) {
+      setError('عنوان و متن خبر اجباری است');
+      return;
+    }
+    
+    try {
+      setError(null);
+      setNewsLoading(true);
+      const res = await fetch('/api/news', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}` 
+        },
+        body: JSON.stringify({
+          title: newsTitle,
+          content: newsContent,
+          image: newsImage
+        })
+      });
+      
+      if (!res.ok) throw new Error('خطا در انتشار خبر');
+      
+      setNewsTitle('');
+      setNewsContent('');
+      setNewsImage('');
+      setIsAddingNews(false);
+      
+      fetchNews();
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setNewsLoading(false);
+    }
+  };
+
+  const handleDeleteNews = async (id: number) => {
+    if (!window.confirm('آیا از حذف این خبر مطمئن هستید؟')) return;
+    try {
+      setNewsLoading(true);
+      const res = await fetch(`/api/news/${id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (!res.ok) throw new Error('خطا در حذف خبر');
+      fetchNews();
+    } catch (err: any) {
+      setError(err.message);
+      setNewsLoading(false);
+    }
+  };
+
+  const handleNewsImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setNewsImage(reader.result as string);
+      };
+      reader.readAsDataURL(file);
     }
   };
 
@@ -118,7 +357,9 @@ export const AdminModal: React.FC = () => {
           price: parseInt(toEnglishDigits(price).replace(/\D/g, ''), 10),
           category,
           description,
-          image
+          longDescription,
+          image,
+          bannerImage
         })
       });
       
@@ -130,7 +371,9 @@ export const AdminModal: React.FC = () => {
       setTitle('');
       setPrice('');
       setDescription('');
+      setLongDescription('');
       setImage('');
+      setBannerImage('');
       setCategory('account');
       setIsAdding(false);
       setEditingProductId(null);
@@ -145,8 +388,10 @@ export const AdminModal: React.FC = () => {
     setTitle(p.title);
     setPrice(String(p.price));
     setDescription(p.description || '');
+    setLongDescription(p.longDescription || '');
     setCategory(p.category);
     setImage(p.image || '');
+    setBannerImage(p.bannerImage || '');
     setEditingProductId(p.id);
     setIsAdding(true);
     setTimeout(() => {
@@ -250,13 +495,12 @@ export const AdminModal: React.FC = () => {
     }
   };
 
-  if (!isAdminOpen || user?.role !== 'admin') return null;
+  if (!isOpen || user?.role !== 'admin') return null;
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-2 sm:p-4">
       <div 
         className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-fadeIn"
-        onClick={() => setIsAdminOpen(false)}
       />
       <div className="relative w-full w-[95vw] max-w-6xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl shadow-2xl overflow-hidden flex flex-col h-[90vh] md:h-[85vh] animate-slideUpScale">
         
@@ -272,16 +516,20 @@ export const AdminModal: React.FC = () => {
                   پنل مدیریت فروشگاه
                 </h2>
                 <p className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 mt-0.5">
-                  مدیریت محصولات، اکانت‌ها و لایسنس‌ها
+                  مدیریت محصولات، اکانت‌ها، سفارشات و لایسنس‌ها
                 </p>
               </div>
             </div>
-            <button
-              onClick={() => setIsAdminOpen(false)}
-              className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-500 transition-colors"
-            >
-              <CloseCircleOutlineIcon className="w-6 h-6" />
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={onClose}
+                className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-red-50 hover:bg-red-100 dark:bg-red-950/40 dark:hover:bg-red-900/50 text-red-600 dark:text-red-400 font-bold text-xs transition-all shadow-sm active:scale-95 border border-red-200/80 dark:border-red-800/60"
+                title="بستن پنل و بازگشت به محیط چت"
+              >
+                <X className="w-4 h-4" />
+                <span>خروج از مدیریت</span>
+              </button>
+            </div>
           </div>
           
           {/* Tabs */}
@@ -296,11 +544,24 @@ export const AdminModal: React.FC = () => {
             </button>
             <button
               onClick={() => setActiveTab('orders')}
-              className={`pb-3 text-sm font-bold border-b-2 transition-colors ${
+              className={`pb-3 text-sm font-bold border-b-2 transition-colors flex items-center gap-2 ${
                 activeTab === 'orders' ? 'border-blue-600 text-blue-600 dark:border-blue-500 dark:text-blue-400' : 'border-transparent text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200'
               }`}
             >
-              سفارشات
+              <span>سفارشات</span>
+              {orders.filter(o => o.paymentStatus === 'pending').length > 0 && (
+                <span className="px-1.5 py-0.5 text-[10px] font-black rounded-full bg-amber-500 text-white animate-pulse">
+                  {orders.filter(o => o.paymentStatus === 'pending').length}
+                </span>
+              )}
+            </button>
+            <button
+              onClick={() => setActiveTab('news')}
+              className={`pb-3 text-sm font-bold border-b-2 transition-colors ${
+                activeTab === 'news' ? 'border-blue-600 text-blue-600 dark:border-blue-500 dark:text-blue-400' : 'border-transparent text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200'
+              }`}
+            >
+              اخبار و وبلاگ
             </button>
           </div>
         </div>
@@ -419,8 +680,10 @@ export const AdminModal: React.FC = () => {
                   setTitle('');
                   setPrice('');
                   setDescription('');
+                  setLongDescription('');
                   setCategory('account');
                   setImage('');
+                  setBannerImage('');
                 } else {
                   setIsAdding(true);
                 }
@@ -480,34 +743,56 @@ export const AdminModal: React.FC = () => {
                 </div>
 
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-bold text-zinc-600 dark:text-zinc-400">توضیحات کوتاه</label>
+                  <label className="text-xs font-bold text-zinc-600 dark:text-zinc-400">توضیحات کوتاه (کارت محصول)</label>
                   <textarea 
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                     className="w-full px-4 py-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/50 focus:border-zinc-400 dark:focus:border-zinc-500 focus:ring-1 focus:ring-zinc-400 dark:focus:ring-zinc-500 text-sm outline-none transition-all min-h-[80px]"
-                    placeholder="امکانات این محصول..."
+                    placeholder="نمایش مختصر روی کارت فروشگاه..."
                   />
                 </div>
 
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-bold text-zinc-600 dark:text-zinc-400">تصویر محصول (اختیاری)</label>
-                  <div className="flex items-center gap-4">
-                    <label className="flex-1 px-4 py-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/50 text-sm cursor-pointer hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors text-center text-zinc-600 dark:text-zinc-400">
-                      <span>انتخاب تصویر</span>
-                      <input type="file" accept="image/*" className="hidden" onChange={handleImageChange} />
-                    </label>
-                    {image && (
-                      <div className="relative w-12 h-12 rounded-lg overflow-hidden border border-zinc-200 dark:border-zinc-700 shrink-0">
-                        <img src={image} alt="Preview" className="w-full h-full object-cover" />
-                        <button 
-                          type="button" 
-                          onClick={() => setImage('')} 
-                          className="absolute top-0 right-0 bg-red-500 text-white w-4 h-4 flex items-center justify-center rounded-bl-lg text-[10px]"
-                        >
-                          ✕
-                        </button>
-                      </div>
-                    )}
+                  <label className="text-xs font-bold text-zinc-600 dark:text-zinc-400">توضیحات کامل (پاپ‌آپ)</label>
+                  <textarea 
+                    value={longDescription}
+                    onChange={(e) => setLongDescription(e.target.value)}
+                    className="w-full px-4 py-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/50 focus:border-zinc-400 dark:focus:border-zinc-500 focus:ring-1 focus:ring-zinc-400 dark:focus:ring-zinc-500 text-sm outline-none transition-all min-h-[150px]"
+                    placeholder="توضیحات کامل محصول که در پاپ‌آپ نمایش داده می‌شود..."
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-bold text-zinc-600 dark:text-zinc-400">تصویر محصول (مربعی)</label>
+                    <div className="flex items-center gap-4">
+                      <label className="flex-1 px-4 py-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/50 text-sm cursor-pointer hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors text-center text-zinc-600 dark:text-zinc-400">
+                        <span>{image ? 'تغییر تصویر' : 'انتخاب تصویر'}</span>
+                        <input type="file" accept="image/*" className="hidden" onChange={(e) => handleImageChange(e, 'image')} />
+                      </label>
+                      {image && (
+                        <div className="relative w-12 h-12 rounded-lg overflow-hidden border border-zinc-200 dark:border-zinc-700 shrink-0">
+                          <img src={image} alt="Preview" className="w-full h-full object-cover" />
+                          <button type="button" onClick={() => setImage('')} className="absolute top-0 right-0 bg-red-500 text-white w-4 h-4 flex items-center justify-center rounded-bl-lg text-[10px]">✕</button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-bold text-zinc-600 dark:text-zinc-400">تصویر بنر (عریض - اختیاری)</label>
+                    <div className="flex items-center gap-4">
+                      <label className="flex-1 px-4 py-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/50 text-sm cursor-pointer hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors text-center text-zinc-600 dark:text-zinc-400">
+                        <span>{bannerImage ? 'تغییر بنر' : 'انتخاب بنر'}</span>
+                        <input type="file" accept="image/*" className="hidden" onChange={(e) => handleImageChange(e, 'banner')} />
+                      </label>
+                      {bannerImage && (
+                        <div className="relative w-12 h-12 rounded-lg overflow-hidden border border-zinc-200 dark:border-zinc-700 shrink-0">
+                          <img src={bannerImage} alt="Preview" className="w-full h-full object-cover" />
+                          <button type="button" onClick={() => setBannerImage('')} className="absolute top-0 right-0 bg-red-500 text-white w-4 h-4 flex items-center justify-center rounded-bl-lg text-[10px]">✕</button>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
 
@@ -607,56 +892,724 @@ export const AdminModal: React.FC = () => {
           </div>
           )}
           </div>
-          ) : (
-            // Orders View
+          ) : activeTab === 'news' ? (
             <div className="flex flex-col h-full animate-fadeIn">
-              <h3 className="text-lg font-bold text-zinc-800 dark:text-zinc-200 mb-6">سفارشات اخیر</h3>
-              
-              {ordersLoading ? (
-                <div className="flex items-center justify-center h-48">
-                  <div className="w-8 h-8 border-2 border-zinc-200 dark:border-zinc-800 border-t-blue-600 rounded-full animate-spin" />
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+                <h3 className="text-lg font-bold text-zinc-800 dark:text-zinc-200">مدیریت اخبار و مقالات</h3>
+                <button 
+                  onClick={() => setIsAddingNews(!isAddingNews)}
+                  className="flex items-center gap-2 px-4 py-2 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 text-sm font-bold rounded-xl hover:opacity-90 transition-opacity"
+                >
+                  <AddSquareOutlineIcon className="w-4 h-4" />
+                  {isAddingNews ? 'انصراف' : 'انتشار خبر جدید'}
+                </button>
+              </div>
+
+              {error && (
+                <div className="mb-6 p-4 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-900/50 text-red-600 dark:text-red-400 text-sm font-bold">
+                  {error}
                 </div>
-              ) : orders.length === 0 ? (
-                <div className="flex flex-col items-center justify-center h-48 gap-4 opacity-50">
-                  <ShopLinearIcon className="w-12 h-12" />
-                  <span className="text-sm font-bold">هیچ سفارشی یافت نشد.</span>
+              )}
+
+              {isAddingNews && (
+                <div className="mb-8 p-6 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-sm">
+                  <form onSubmit={handleAddNews} className="flex flex-col gap-5">
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-bold text-zinc-600 dark:text-zinc-400">عنوان خبر</label>
+                      <input 
+                        type="text" 
+                        value={newsTitle}
+                        onChange={(e) => setNewsTitle(e.target.value)}
+                        className="w-full px-4 py-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/50 focus:border-zinc-400 outline-none transition-all"
+                      />
+                    </div>
+                    
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-bold text-zinc-600 dark:text-zinc-400">متن کامل خبر (پشتیبانی از پاراگراف‌بندی)</label>
+                      <textarea 
+                        value={newsContent}
+                        onChange={(e) => setNewsContent(e.target.value)}
+                        className="w-full px-4 py-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/50 focus:border-zinc-400 outline-none transition-all min-h-[150px]"
+                      />
+                    </div>
+
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-bold text-zinc-600 dark:text-zinc-400">کاور خبر (اختیاری)</label>
+                      <div className="flex items-center gap-4">
+                        <label className="flex-1 px-4 py-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/50 text-sm cursor-pointer text-center">
+                          <span>انتخاب تصویر</span>
+                          <input type="file" accept="image/*" className="hidden" onChange={handleNewsImageChange} />
+                        </label>
+                        {newsImage && (
+                          <div className="relative w-12 h-12 rounded-lg overflow-hidden shrink-0">
+                            <img src={newsImage} className="w-full h-full object-cover" />
+                            <button type="button" onClick={() => setNewsImage('')} className="absolute top-0 right-0 bg-red-500 text-white w-4 h-4 flex items-center justify-center text-[10px]">✕</button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex justify-end pt-2">
+                      <button type="submit" disabled={newsLoading} className="px-6 py-2.5 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition-colors disabled:opacity-50">
+                        {newsLoading ? 'در حال ارسال به تلگرام...' : 'انتشار خبر در سایت و تلگرام'}
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              )}
+
+              {newsLoading && !isAddingNews ? (
+                <div className="flex items-center justify-center h-48">
+                  <div className="w-8 h-8 border-2 border-zinc-200 border-t-blue-600 rounded-full animate-spin" />
+                </div>
+              ) : news.length === 0 ? (
+                <div className="flex flex-col items-center justify-center h-48 opacity-50">
+                  <span className="text-sm font-bold">هیچ خبری ثبت نشده است.</span>
                 </div>
               ) : (
-                <div className="overflow-x-auto">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {news.map(n => (
+                    <div key={n.id} className="flex flex-col bg-white dark:bg-zinc-800 rounded-2xl border border-zinc-200 dark:border-zinc-700 overflow-hidden relative">
+                      <div className="absolute top-2 left-2 z-10">
+                        <button onClick={() => handleDeleteNews(n.id)} className="p-1.5 bg-white/80 dark:bg-black/50 text-red-500 rounded-lg backdrop-blur-sm">
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                      {n.image && <img src={n.image} className="w-full h-32 object-cover" />}
+                      <div className="p-4 flex-1 flex flex-col">
+                        <h4 className="font-bold mb-2 line-clamp-1">{n.title}</h4>
+                        <p className="text-xs text-zinc-500 line-clamp-2">{n.content}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          ) : (
+            // Orders View
+            <div className="flex flex-col h-full animate-fadeIn space-y-6">
+              {/* Orders Header & Actions Bar */}
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                  <h3 className="text-lg font-bold text-zinc-800 dark:text-zinc-200">مدیریت و تایید سفارشات</h3>
+                  <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
+                    بررسی فاکتورها، تایید دستی پرداخت، و تخصیص خودکار یا دستی لایسنس به خریداران
+                  </p>
+                </div>
+                
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={fetchOrders}
+                    disabled={ordersLoading}
+                    className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-xs font-bold text-zinc-700 dark:text-zinc-300 transition-colors shrink-0 disabled:opacity-50 shadow-sm"
+                    title="بروزرسانی لیست سفارشات"
+                  >
+                    <RefreshCw className={`w-3.5 h-3.5 ${ordersLoading ? 'animate-spin' : ''}`} />
+                    <span>بروزرسانی لیست</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Feedback Alert */}
+              {orderFeedback && (
+                <div className={`p-4 rounded-2xl flex items-center justify-between gap-3 text-sm font-bold animate-slideUpScale ${
+                  orderFeedback.type === 'success' ? 'bg-emerald-50 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800' :
+                  orderFeedback.type === 'warning' ? 'bg-amber-50 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300 border border-amber-200 dark:border-amber-800' :
+                  'bg-red-50 text-red-800 dark:bg-red-950/40 dark:text-red-300 border border-red-200 dark:border-red-800'
+                }`}>
+                  <div className="flex items-center gap-2.5">
+                    {orderFeedback.type === 'success' ? <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" /> :
+                     orderFeedback.type === 'warning' ? <AlertCircle className="w-5 h-5 text-amber-600 shrink-0" /> :
+                     <XCircle className="w-5 h-5 text-red-600 shrink-0" />}
+                    <span>{orderFeedback.text}</span>
+                  </div>
+                  <button 
+                    onClick={() => setOrderFeedback(null)} 
+                    className="p-1 hover:bg-black/5 dark:hover:bg-white/10 rounded-lg text-xs"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
+
+              {/* Filters & Search Bar */}
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-white dark:bg-zinc-900 p-3 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm">
+                <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
+                  <button
+                    onClick={() => setOrderStatusFilter('all')}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 ${
+                      orderStatusFilter === 'all'
+                        ? 'bg-zinc-900 text-white dark:bg-white dark:text-zinc-900 shadow-sm'
+                        : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800'
+                    }`}
+                  >
+                    همه ({orders.length})
+                  </button>
+                  <button
+                    onClick={() => setOrderStatusFilter('pending')}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 flex items-center gap-1.5 ${
+                      orderStatusFilter === 'pending'
+                        ? 'bg-amber-500 text-white shadow-sm'
+                        : 'text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/30'
+                    }`}
+                  >
+                    <span>در انتظار تایید</span>
+                    {orders.filter(o => o.paymentStatus === 'pending').length > 0 && (
+                      <span className="px-1.5 py-0.2 bg-amber-600 text-white text-[10px] rounded-full">
+                        {orders.filter(o => o.paymentStatus === 'pending').length}
+                      </span>
+                    )}
+                  </button>
+                  <button
+                    onClick={() => setOrderStatusFilter('success')}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 ${
+                      orderStatusFilter === 'success'
+                        ? 'bg-emerald-600 text-white shadow-sm'
+                        : 'text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/30'
+                    }`}
+                  >
+                    موفق ({orders.filter(o => o.paymentStatus === 'success').length})
+                  </button>
+                  <button
+                    onClick={() => setOrderStatusFilter('failed')}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 ${
+                      orderStatusFilter === 'failed'
+                        ? 'bg-red-600 text-white shadow-sm'
+                        : 'text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30'
+                    }`}
+                  >
+                    ناموفق / لغو ({orders.filter(o => o.paymentStatus === 'failed').length})
+                  </button>
+                </div>
+
+                <div className="relative min-w-[220px]">
+                  <Search className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400" />
+                  <input
+                    type="text"
+                    value={orderSearch}
+                    onChange={(e) => setOrderSearch(e.target.value)}
+                    placeholder="جستجوی سفارش، خریدار، محصول..."
+                    className="w-full pr-9 pl-4 py-1.5 text-xs rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/60 focus:border-blue-500 focus:outline-none transition-all placeholder:text-zinc-400"
+                  />
+                  {orderSearch && (
+                    <button
+                      onClick={() => setOrderSearch('')}
+                      className="absolute left-2.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 text-xs"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Table / Empty State */}
+              {ordersLoading ? (
+                <div className="flex flex-col items-center justify-center h-64 bg-white dark:bg-zinc-900 rounded-3xl border border-zinc-200 dark:border-zinc-800">
+                  <div className="w-8 h-8 border-2 border-zinc-200 dark:border-zinc-800 border-t-blue-600 rounded-full animate-spin mb-3" />
+                  <span className="text-xs text-zinc-500">در حال دریافت لیست سفارشات...</span>
+                </div>
+              ) : orders.length === 0 ? (
+                <div className="flex flex-col items-center justify-center h-64 gap-4 opacity-50 bg-white dark:bg-zinc-900 rounded-3xl border border-zinc-200 dark:border-zinc-800">
+                  <ShopLinearIcon className="w-12 h-12 text-zinc-400" />
+                  <span className="text-sm font-bold text-zinc-600 dark:text-zinc-400">هیچ سفارشی ثبت نشده است.</span>
+                </div>
+              ) : (
+                <div className="overflow-x-auto rounded-3xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-sm custom-scrollbar">
                   <table className="w-full text-sm text-right">
-                    <thead className="text-xs text-zinc-500 bg-zinc-100/50 dark:bg-zinc-800/50">
+                    <thead className="text-xs font-bold text-zinc-500 bg-zinc-100/70 dark:bg-zinc-800/60 border-b border-zinc-200 dark:border-zinc-800">
                       <tr>
-                        <th className="px-4 py-3 rounded-tr-xl">شماره سفارش</th>
-                        <th className="px-4 py-3">خریدار</th>
-                        <th className="px-4 py-3">محصول</th>
-                        <th className="px-4 py-3">مبلغ (تومان)</th>
-                        <th className="px-4 py-3">وضعیت</th>
-                        <th className="px-4 py-3 rounded-tl-xl">تاریخ</th>
+                        <th className="px-4 py-3.5 rounded-tr-2xl">شماره سفارش</th>
+                        <th className="px-4 py-3.5">خریدار</th>
+                        <th className="px-4 py-3.5">محصول</th>
+                        <th className="px-4 py-3.5">مبلغ</th>
+                        <th className="px-4 py-3.5">وضعیت پرداخت</th>
+                        <th className="px-4 py-3.5">لایسنس / دسترسی</th>
+                        <th className="px-4 py-3.5">تاریخ</th>
+                        <th className="px-4 py-3.5 text-center rounded-tl-2xl">عملیات مدیریت</th>
                       </tr>
                     </thead>
-                    <tbody>
-                      {orders.map((o: any) => (
-                        <tr key={o.id} className="border-b border-zinc-100 dark:border-zinc-800/50 hover:bg-zinc-50 dark:hover:bg-zinc-800/30 transition-colors">
-                          <td className="px-4 py-3 font-mono text-xs">{o.id.substring(0, 8)}...</td>
-                          <td className="px-4 py-3 font-medium">{o.userPhone || o.userEmail || o.userName}</td>
-                          <td className="px-4 py-3 text-zinc-600 dark:text-zinc-300">{o.productTitle}</td>
-                          <td className="px-4 py-3 font-bold">{o.amount.toLocaleString()}</td>
-                          <td className="px-4 py-3">
-                            <span className={`px-2.5 py-1 text-[10px] font-bold rounded-lg ${
-                              o.paymentStatus === 'success' ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30' :
-                              o.paymentStatus === 'failed' ? 'bg-red-50 text-red-600 dark:bg-red-900/30' :
-                              'bg-amber-50 text-amber-600 dark:bg-amber-900/30'
-                            }`}>
-                              {o.paymentStatus === 'success' ? 'موفق' : o.paymentStatus === 'failed' ? 'ناموفق' : 'در انتظار'}
-                            </span>
-                          </td>
-                          <td className="px-4 py-3 text-xs text-zinc-500 dark:text-zinc-400" dir="ltr">
-                            {new Date(o.createdAt).toLocaleDateString('fa-IR')}
-                          </td>
-                        </tr>
-                      ))}
+                    <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800/50">
+                      {orders
+                        .filter((o: any) => {
+                          if (orderStatusFilter !== 'all' && o.paymentStatus !== orderStatusFilter) return false;
+                          if (orderSearch.trim()) {
+                            const q = orderSearch.toLowerCase();
+                            const idM = o.id?.toLowerCase().includes(q);
+                            const userM = (o.userPhone || o.userEmail || o.userName || '').toLowerCase().includes(q);
+                            const prodM = (o.productTitle || '').toLowerCase().includes(q);
+                            const keyM = (o.licenseKey || '').toLowerCase().includes(q);
+                            return idM || userM || prodM || keyM;
+                          }
+                          return true;
+                        })
+                        .map((o: any) => {
+                          const isProcessing = orderActionLoadingId === o.id;
+                          return (
+                            <tr 
+                              key={o.id} 
+                              className={`hover:bg-zinc-50/80 dark:hover:bg-zinc-800/40 transition-colors ${
+                                o.paymentStatus === 'pending' ? 'bg-amber-50/30 dark:bg-amber-950/10' : ''
+                              }`}
+                            >
+                              {/* Order ID */}
+                              <td className="px-4 py-3.5">
+                                <div className="flex items-center gap-1.5 font-mono text-xs font-bold text-zinc-700 dark:text-zinc-300">
+                                  <span>{o.id}</span>
+                                  <button
+                                    onClick={() => copyToClipboard(o.id, 'id', o.id)}
+                                    className="p-1 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded text-zinc-400 hover:text-zinc-600 transition-colors"
+                                    title="کپی شناسه سفارش"
+                                  >
+                                    {copiedOrderId === o.id ? (
+                                      <Check className="w-3 h-3 text-emerald-600" />
+                                    ) : (
+                                      <Copy className="w-3 h-3" />
+                                    )}
+                                  </button>
+                                </div>
+                              </td>
+
+                              {/* Buyer Info */}
+                              <td className="px-4 py-3.5">
+                                <div className="flex flex-col">
+                                  <span className="font-bold text-zinc-900 dark:text-zinc-100 text-xs">
+                                    {o.userName || 'کاربر'}
+                                  </span>
+                                  <span className="text-[11px] text-zinc-500 dark:text-zinc-400 dir-ltr text-right truncate max-w-[150px]">
+                                    {o.userPhone || o.userEmail || 'فاقد شماره/ایمیل'}
+                                  </span>
+                                </div>
+                              </td>
+
+                              {/* Product Info */}
+                              <td className="px-4 py-3.5">
+                                <div className="flex flex-col">
+                                  <span className="font-medium text-xs text-zinc-900 dark:text-zinc-100 truncate max-w-[160px]" title={o.productTitle}>
+                                    {o.productTitle}
+                                  </span>
+                                  <span className="text-[10px] text-blue-600 dark:text-blue-400 font-semibold">
+                                    {o.productCategory === 'package' ? 'پکیج دانلودی' : o.productCategory === 'api' ? 'کلید API' : 'اکانت پرمیوم'}
+                                  </span>
+                                </div>
+                              </td>
+
+                              {/* Amount */}
+                              <td className="px-4 py-3.5 whitespace-nowrap">
+                                <span className="font-bold text-xs text-zinc-900 dark:text-zinc-100">
+                                  {Number(o.amount).toLocaleString()}
+                                </span>
+                                <span className="text-[10px] text-zinc-500 mr-1">تومان</span>
+                              </td>
+
+                              {/* Status Badge */}
+                              <td className="px-4 py-3.5 whitespace-nowrap">
+                                <span className={`inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold rounded-lg ${
+                                  o.paymentStatus === 'success' 
+                                    ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300' 
+                                    : o.paymentStatus === 'failed' 
+                                    ? 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300' 
+                                    : 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300 ring-1 ring-amber-400/50 animate-pulse'
+                                }`}>
+                                  {o.paymentStatus === 'success' ? (
+                                    <>
+                                      <CheckCircle2 className="w-3 h-3" />
+                                      موفق
+                                    </>
+                                  ) : o.paymentStatus === 'failed' ? (
+                                    <>
+                                      <XCircle className="w-3 h-3" />
+                                      ناموفق
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Clock className="w-3 h-3" />
+                                      در انتظار تایید
+                                    </>
+                                  )}
+                                </span>
+                              </td>
+
+                              {/* License / Delivery Status */}
+                              <td className="px-4 py-3.5">
+                                {o.productCategory === 'package' ? (
+                                  <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400">
+                                    پکیج دانلودی
+                                  </span>
+                                ) : o.licenseKey ? (
+                                  <div className="flex items-center gap-1 max-w-[170px] bg-zinc-100 dark:bg-zinc-800 p-1 px-2 rounded-lg border border-zinc-200 dark:border-zinc-700">
+                                    <span className="font-mono text-[11px] text-zinc-800 dark:text-zinc-200 truncate dir-ltr flex-1" title={o.licenseKey}>
+                                      {o.licenseKey}
+                                    </span>
+                                    <button
+                                      onClick={() => copyToClipboard(o.licenseKey, 'key', o.id)}
+                                      className="text-zinc-400 hover:text-blue-600 transition-colors p-0.5"
+                                      title="کپی لایسنس"
+                                    >
+                                      {copiedKeyText === o.id ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
+                                    </button>
+                                  </div>
+                                ) : o.paymentStatus === 'success' ? (
+                                  <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-red-100 text-red-700 dark:bg-red-950/50 dark:text-red-400" title="موجودی تمام شده است">
+                                    فاقد لایسنس (انبار خالی)
+                                  </span>
+                                ) : (
+                                  <span className="text-[10px] text-zinc-400">
+                                    در انتظار پرداخت
+                                  </span>
+                                )}
+                              </td>
+
+                              {/* Date */}
+                              <td className="px-4 py-3.5 text-[11px] text-zinc-500 dark:text-zinc-400 whitespace-nowrap" dir="ltr">
+                                {new Date(o.createdAt).toLocaleDateString('fa-IR', {
+                                  month: 'numeric',
+                                  day: 'numeric',
+                                  hour: '2-digit',
+                                  minute: '2-digit'
+                                })}
+                              </td>
+
+                              {/* Actions */}
+                              <td className="px-4 py-3.5 text-center whitespace-nowrap">
+                                <div className="flex items-center justify-center gap-1.5">
+                                  {/* Quick Approve Button for Pending Orders */}
+                                  {o.paymentStatus === 'pending' && (
+                                    <button
+                                      type="button"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleUpdateOrderStatus(o.id, 'success');
+                                      }}
+                                      disabled={isProcessing}
+                                      className="flex items-center gap-1 px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-all shadow-sm active:scale-95 disabled:opacity-50"
+                                      title="تایید سفارش و تخصیص خودکار لایسنس"
+                                    >
+                                      {isProcessing ? (
+                                        <div className="w-3.5 h-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                                      ) : (
+                                        <Check className="w-3.5 h-3.5" />
+                                      )}
+                                      <span>تایید</span>
+                                    </button>
+                                  )}
+
+                                  {/* Quick Reject Button for Pending Orders */}
+                                  {o.paymentStatus === 'pending' && (
+                                    <button
+                                      type="button"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleUpdateOrderStatus(o.id, 'failed');
+                                      }}
+                                      disabled={isProcessing}
+                                      className="flex items-center gap-1 px-2.5 py-1.5 bg-zinc-200 dark:bg-zinc-800 hover:bg-red-100 hover:text-red-700 dark:hover:bg-red-950/40 dark:hover:text-red-400 text-zinc-700 dark:text-zinc-300 rounded-xl text-xs font-bold transition-all active:scale-95 disabled:opacity-50"
+                                      title="رد کردن یا لغو سفارش"
+                                    >
+                                      <X className="w-3.5 h-3.5" />
+                                      <span>رد</span>
+                                    </button>
+                                  )}
+
+                                  {/* View Details / Manual Edit */}
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setSelectedOrder(o);
+                                    }}
+                                    className="p-1.5 hover:bg-blue-50 dark:hover:bg-blue-900/30 text-zinc-500 hover:text-blue-600 dark:hover:text-blue-400 rounded-xl transition-colors"
+                                    title="مشاهده جزئیات و مدیریت لایسنس"
+                                  >
+                                    <Eye className="w-4 h-4" />
+                                  </button>
+
+                                  {/* Delete Order */}
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setOrderToDelete(o.id);
+                                    }}
+                                    disabled={isProcessing}
+                                    className="p-1.5 hover:bg-red-50 dark:hover:bg-red-900/30 text-zinc-400 hover:text-red-600 dark:hover:text-red-400 rounded-xl transition-colors disabled:opacity-50"
+                                    title="حذف سفارش"
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })}
                     </tbody>
                   </table>
+                </div>
+              )}
+
+              {/* Order Details Modal */}
+              {selectedOrder && (
+                <div className="fixed inset-0 z-[120] flex items-center justify-center p-3 sm:p-4 animate-fadeIn">
+                  <div 
+                    className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+                    onClick={() => setSelectedOrder(null)}
+                  />
+                  
+                  <div className="relative w-full max-w-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-slideUpScale">
+                    {/* Modal Header */}
+                    <div className="flex items-center justify-between p-5 border-b border-zinc-100 dark:border-zinc-800 shrink-0">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-9 h-9 rounded-xl bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center">
+                          <Package className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <h4 className="font-bold text-zinc-900 dark:text-zinc-100 text-sm">
+                            جزئیات سفارش <span className="font-mono text-blue-600 dark:text-blue-400">{selectedOrder.id}</span>
+                          </h4>
+                          <span className="text-[11px] text-zinc-500 dark:text-zinc-400">
+                            {new Date(selectedOrder.createdAt).toLocaleDateString('fa-IR', {
+                              year: 'numeric',
+                              month: 'long',
+                              day: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })}
+                          </span>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => setSelectedOrder(null)}
+                        className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-500 transition-colors"
+                      >
+                        <X className="w-5 h-5" />
+                      </button>
+                    </div>
+
+                    {/* Modal Content */}
+                    <div className="p-5 overflow-y-auto custom-scrollbar space-y-5">
+                      {/* Summary Cards */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        {/* Buyer Info */}
+                        <div className="p-3.5 rounded-2xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200/80 dark:border-zinc-700/50 flex flex-col gap-1.5">
+                          <span className="text-[11px] font-bold text-zinc-500 flex items-center gap-1">
+                            <User className="w-3.5 h-3.5" />
+                            مشخصات مشتری
+                          </span>
+                          <span className="font-bold text-sm text-zinc-900 dark:text-zinc-100">
+                            {selectedOrder.userName || 'کاربر بدون نام'}
+                          </span>
+                          <div className="text-xs text-zinc-600 dark:text-zinc-300 font-mono dir-ltr text-right truncate">
+                            {selectedOrder.userPhone || selectedOrder.userEmail || 'فاقد ایمیل یا شماره'}
+                          </div>
+                        </div>
+
+                        {/* Product & Price Info */}
+                        <div className="p-3.5 rounded-2xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200/80 dark:border-zinc-700/50 flex flex-col gap-1.5">
+                          <span className="text-[11px] font-bold text-zinc-500 flex items-center gap-1">
+                            <ShopLinearIcon className="w-3.5 h-3.5" />
+                            محصول و مبلغ
+                          </span>
+                          <span className="font-bold text-sm text-zinc-900 dark:text-zinc-100 truncate">
+                            {selectedOrder.productTitle}
+                          </span>
+                          <span className="text-xs font-black text-emerald-600 dark:text-emerald-400">
+                            {Number(selectedOrder.amount).toLocaleString()} تومان
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Status Management */}
+                      <div className="p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-800/40 border border-zinc-200/80 dark:border-zinc-700/50 space-y-2.5">
+                        <label className="text-xs font-bold text-zinc-700 dark:text-zinc-300 block">
+                          تغییر وضعیت پرداخت این سفارش:
+                        </label>
+                        <div className="grid grid-cols-3 gap-2">
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleUpdateOrderStatus(selectedOrder.id, 'success');
+                            }}
+                            disabled={orderActionLoadingId === selectedOrder.id}
+                            className={`py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${
+                              selectedOrder.paymentStatus === 'success'
+                                ? 'bg-emerald-600 text-white shadow-md'
+                                : 'bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 hover:text-emerald-600'
+                            }`}
+                          >
+                            <CheckCircle2 className="w-4 h-4" />
+                            <span>موفق (تایید)</span>
+                          </button>
+                          
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleUpdateOrderStatus(selectedOrder.id, 'pending');
+                            }}
+                            disabled={orderActionLoadingId === selectedOrder.id}
+                            className={`py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${
+                              selectedOrder.paymentStatus === 'pending'
+                                ? 'bg-amber-500 text-white shadow-md'
+                                : 'bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700 hover:bg-amber-50 dark:hover:bg-amber-950/30 hover:text-amber-600'
+                            }`}
+                          >
+                            <Clock className="w-4 h-4" />
+                            <span>در انتظار</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleUpdateOrderStatus(selectedOrder.id, 'failed');
+                            }}
+                            disabled={orderActionLoadingId === selectedOrder.id}
+                            className={`py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${
+                              selectedOrder.paymentStatus === 'failed'
+                                ? 'bg-red-600 text-white shadow-md'
+                                : 'bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700 hover:bg-red-50 dark:hover:bg-red-950/30 hover:text-red-600'
+                            }`}
+                          >
+                            <XCircle className="w-4 h-4" />
+                            <span>رد / لغو</span>
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* License Management Section (if not package) */}
+                      {selectedOrder.productCategory !== 'package' && (
+                        <div className="p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-800/40 border border-zinc-200/80 dark:border-zinc-700/50 space-y-3">
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-bold text-zinc-800 dark:text-zinc-200 flex items-center gap-1.5">
+                              <Key className="w-4 h-4 text-blue-600" />
+                              لایسنس متصل به سفارش
+                            </span>
+                            <span className="text-[11px] text-zinc-500 dark:text-zinc-400">
+                              موجودی آزاد انبار: <span className="font-bold text-blue-600">{selectedOrder.availableStock ?? 0}</span> عدد
+                            </span>
+                          </div>
+
+                          {selectedOrder.licenseKey ? (
+                            <div className="p-3 bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-700 space-y-2">
+                              <div className="flex items-center justify-between text-[11px] text-zinc-500">
+                                <span>کلید تحویل داده شده به کاربر:</span>
+                                <button
+                                  onClick={() => copyToClipboard(selectedOrder.licenseKey, 'key', 'modal')}
+                                  className="text-blue-600 dark:text-blue-400 font-bold hover:underline flex items-center gap-1 text-xs"
+                                >
+                                  {copiedKeyText === 'modal' ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                                  {copiedKeyText === 'modal' ? 'کپی شد!' : 'کپی کلید'}
+                                </button>
+                              </div>
+                              <div className="p-2.5 bg-zinc-50 dark:bg-zinc-800/70 rounded-lg font-mono text-xs text-zinc-800 dark:text-zinc-200 dir-ltr break-all select-all">
+                                {selectedOrder.licenseKey}
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="p-3 bg-amber-50 dark:bg-amber-950/30 rounded-xl border border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-300 text-xs">
+                              هنوز لایسنسی به این سفارش تخصیص نیافته است.
+                            </div>
+                          )}
+
+                          {/* Manual License Form */}
+                          <div className="pt-2 border-t border-zinc-200/60 dark:border-zinc-700/60 space-y-2">
+                            <label className="text-[11px] font-bold text-zinc-600 dark:text-zinc-400 block">
+                              تخصیص یا جایگزینی دستی لایسنس برای این سفارش:
+                            </label>
+                            <div className="flex gap-2">
+                              <input
+                                type="text"
+                                value={customLicenseInput}
+                                onChange={(e) => setCustomLicenseInput(e.target.value)}
+                                placeholder="کلید لایسنس جدید را وارد کنید..."
+                                className="flex-1 px-3 py-2 text-xs font-mono rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 focus:border-blue-500 focus:outline-none"
+                                dir="ltr"
+                              />
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleAssignLicense(selectedOrder.id);
+                                }}
+                                disabled={orderActionLoadingId === selectedOrder.id || !customLicenseInput.trim()}
+                                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-colors disabled:opacity-50 shrink-0"
+                              >
+                                ثبت و تخصیص
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Modal Footer */}
+                    <div className="p-4 border-t border-zinc-100 dark:border-zinc-800 flex items-center justify-end shrink-0">
+                      <button
+                        onClick={() => setSelectedOrder(null)}
+                        className="px-5 py-2 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 rounded-xl text-xs font-bold transition-colors"
+                      >
+                        بستن
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Delete Order Confirmation Dialog */}
+              {orderToDelete && (
+                <div className="fixed inset-0 z-[130] flex items-center justify-center p-4 animate-fadeIn">
+                  <div 
+                    className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setOrderToDelete(null);
+                    }}
+                  />
+                  
+                  <div 
+                    className="relative w-full max-w-sm bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl shadow-2xl p-6 flex flex-col items-center text-center animate-slideUpScale"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <div className="w-12 h-12 rounded-2xl bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 flex items-center justify-center mb-4">
+                      <Trash2 className="w-6 h-6" />
+                    </div>
+                    
+                    <h4 className="text-base font-bold text-zinc-900 dark:text-zinc-100 mb-2">
+                      حذف سفارش
+                    </h4>
+                    
+                    <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed mb-6">
+                      آیا از حذف کامل سفارش <span className="font-mono font-bold text-zinc-800 dark:text-zinc-200">{orderToDelete}</span> اطمینان دارید؟
+                      <br />
+                      (در صورت موفق بودن سفارش، لایسنس به انبار آزاد می‌شود)
+                    </p>
+                    
+                    <div className="flex items-center gap-3 w-full">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setOrderToDelete(null);
+                        }}
+                        className="flex-1 py-2.5 px-4 rounded-xl text-xs font-bold bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 transition-colors"
+                      >
+                        انصراف
+                      </button>
+                      
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          executeDeleteOrder();
+                        }}
+                        disabled={orderActionLoadingId === orderToDelete}
+                        className="flex-1 py-2.5 px-4 rounded-xl text-xs font-bold bg-red-600 hover:bg-red-700 text-white transition-colors flex items-center justify-center gap-1.5 shadow-sm shadow-red-600/20 disabled:opacity-50"
+                      >
+                        {orderActionLoadingId === orderToDelete ? (
+                          <div className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                        ) : (
+                          'بله، حذف کن'
+                        )}
+                      </button>
+                    </div>
+                  </div>
                 </div>
               )}
             </div>

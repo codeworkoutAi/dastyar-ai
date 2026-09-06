@@ -12,6 +12,8 @@ interface UIState {
   imageStudioInitial: { prompt: string; engine: string } | null;
   simulatedPrompt: string | null;
   isAdminOpen: boolean;
+  isAboutOpen: boolean;
+  isContactOpen: boolean;
 
   setSidebarOpen: (open: boolean) => void;
   toggleSidebar: () => void;
@@ -25,6 +27,8 @@ interface UIState {
   setImageStudioInitial: (initial: { prompt: string; engine: string } | null) => void;
   setSimulatedPrompt: (prompt: string | null) => void;
   setIsAdminOpen: (open: boolean) => void;
+  setIsAboutOpen: (open: boolean) => void;
+  setIsContactOpen: (open: boolean) => void;
 }
 
 export const useUIStore = create<UIState>((set) => ({
@@ -39,6 +43,8 @@ export const useUIStore = create<UIState>((set) => ({
   imageStudioInitial: null,
   simulatedPrompt: null,
   isAdminOpen: false,
+  isAboutOpen: false,
+  isContactOpen: false,
 
   setSidebarOpen: (open) => set({ sidebarOpen: open }),
   toggleSidebar: () => set((state) => ({ sidebarOpen: !state.sidebarOpen })),
@@ -52,4 +58,6 @@ export const useUIStore = create<UIState>((set) => ({
   setImageStudioInitial: (initial) => set({ imageStudioInitial: initial }),
   setSimulatedPrompt: (prompt) => set({ simulatedPrompt: prompt }),
   setIsAdminOpen: (open) => set({ isAdminOpen: open }),
+  setIsAboutOpen: (open) => set({ isAboutOpen: open }),
+  setIsContactOpen: (open) => set({ isContactOpen: open }),
 }));

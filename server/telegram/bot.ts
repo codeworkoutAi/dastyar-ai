@@ -1,0 +1,432 @@
+import { Telegraf, Markup } from 'telegraf';
+import db from '../db/database';
+import { HttpsProxyAgent } from 'https-proxy-agent';
+import { SocksProxyAgent } from 'socks-proxy-agent';
+
+export let bot: Telegraf<any> | null = null;
+
+export function startTelegramBot() {
+  const token = process.env.TELEGRAM_BOT_TOKEN;
+  
+  if (!token) {
+    console.log('[Telegram] TELEGRAM_BOT_TOKEN not provided, bot is disabled.');
+    return;
+  }
+
+  const proxyUrl = process.env.PROXY_URL || 'socks://127.0.0.1:1080';
+  let agent;
+  if (proxyUrl) {
+    console.log(`[Telegram] Using proxy: ${proxyUrl}`);
+    if (proxyUrl.startsWith('socks')) {
+      agent = new SocksProxyAgent(proxyUrl);
+    } else {
+      agent = new HttpsProxyAgent(proxyUrl);
+    }
+  }
+
+  bot = new Telegraf(token, {
+    telegram: {
+      agent: agent
+    }
+  });
+
+  // Start Command
+  bot.start(async (ctx) => {
+    const tgId = ctx.from.id.toString();
+    const name = ctx.from.first_name || 'کاربر';
+
+    // Register or get user
+    let user = db.prepare('SELECT * FROM users WHERE telegramId = ?').get(tgId) as any;
+    if (!user) {
+      const email = `tg_${tgId}@telegram.local`; // Dummy email to bypass sqlite limitations if any
+      const insertStmt = db.prepare('INSERT INTO users (telegramId, email, name, role) VALUES (?, ?, ?, ?)');
+      const info = insertStmt.run(tgId, email, name, 'user');
+      user = { id: info.lastInsertRowid, telegramId: tgId, name };
+    }
+
+    const welcomeMsg = 
+      `${RLM}🌟 **سلام ${name} عزیز، به دستیار هوشمند خوش آمدید!**\n\n` +
+      `${RLM}مرجع تخصصی خدمات و دسترسی به برترین ابزارها و مدل‌های هوش مصنوعی.\n\n` +
+      `${RLM}📌 **امکانات در دسترس شما:**\n` +
+      `${RLM}🛍 **محصولات هوش مصنوعی:** مشاهده و خرید آنی اکانت، لایسنس و کلید API\n` +
+      `${RLM}💬 **چت هوشمند:** گفتگو با قوی‌ترین مدل‌های هوش مصنوعی در وب‌سایت\n` +
+      `${RLM}🌐 **فروشگاه وب‌سایت:** دسترسی به فروشگاه کامل در وب‌سایت\n` +
+      `${RLM}📰 **وبلاگ و آموزش‌ها:** جدیدترین مقالات، آموزش‌ها و اخبار هوش مصنوعی\n\n` +
+      `${RLM}👇 برای شروع یکی از گزینه‌های زیر را انتخاب کنید:`;
+
+    await ctx.reply(welcomeMsg, {
+      parse_mode: 'Markdown',
+      reply_markup: {
+        keyboard: [
+          [{ text: '🛍 محصولات هوش مصنوعی' }, { text: '💬 چت با هوش مصنوعی' }],
+          [{ text: '🌐 فروشگاه وب‌سایت' }, { text: '📰 وبلاگ و آموزش‌ها' }],
+          [{ text: '📢 عضویت در کانال ما' }]
+        ],
+        resize_keyboard: true
+      }
+    });
+  });
+
+const RLM = '\u200F';
+
+function getWebsiteUrl(): string {
+  const envUrl = (process.env.WEBSITE_URL || process.env.WEB_URL || process.env.APP_URL || '').trim();
+  if (envUrl && envUrl.startsWith('http') && !envUrl.includes('MY_APP_URL')) {
+    return envUrl.replace(/\/$/, '');
+  }
+  return 'http://localhost:3000';
+}
+
+function getProductPhotoSource(p: any): any {
+  // Prioritize square 1:1 image so all Telegram card photos are uniform and consistent
+  const img = p.image || p.bannerImage;
+  if (img && typeof img === 'string') {
+    if (img.startsWith('http://') || img.startsWith('https://')) {
+      return img;
+    }
+    if (img.startsWith('data:image/')) {
+      const base64Data = img.replace(/^data:image\/\w+;base64,/, '');
+      return { source: Buffer.from(base64Data, 'base64') };
+    }
+  }
+  return 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&auto=format&fit=crop&q=80';
+}
+
+async function sendStoreShowcase(ctx: any, isEdit: boolean = false) {
+  try {
+    const products = db.prepare(`
+      SELECT p.*, COUNT(CASE WHEN l.status = 'available' THEN 1 END) as stock
+      FROM products p 
+      LEFT JOIN licenses l ON p.id = l.productId
+      GROUP BY p.id
+      ORDER BY p.id DESC
+    `).all() as any[];
+
+    if (products.length === 0) {
+      const emptyMsg = 'در حال حاضر محصولی در فروشگاه موجود نیست.';
+      if (isEdit) await ctx.editMessageText(emptyMsg);
+      else await ctx.reply(emptyMsg);
+      return;
+    }
+
+    if (isEdit) {
+      try {
+        await ctx.deleteMessage().catch(() => {});
+      } catch (_) {}
+    }
+
+    await ctx.reply(
+      `${RLM}🏪 **ویترین فروشگاه محصولات هوش مصنوعی**\n` +
+      `${RLM}برای خرید هر محصول، دکمه خرید زیر آن را لمس کنید:`,
+      { parse_mode: 'Markdown' }
+    );
+
+    for (const p of products) {
+      const priceFa = Number(p.price || 0).toLocaleString('fa-IR');
+      const isOutOfStock = p.category !== 'package' && (p.stock || 0) <= 0;
+      const stockText = p.category !== 'package' 
+        ? (p.stock > 0 ? `${Number(p.stock).toLocaleString('fa-IR')} عدد موجود` : 'اتمام موجودی ❌') 
+        : 'نامحدود ♾';
+      const catText = p.category === 'api' ? 'کلید API' : p.category === 'account' ? 'اکانت پرمیوم' : 'پکیج آموزشی';
+
+      const caption = `${RLM}📦 **${p.title}**\n` +
+                      `${RLM}🏷 **دسته:** ${catText}  |  📊 **موجودی:** ${stockText}\n` +
+                      `${RLM}💰 **قیمت:** **${priceFa} تومان**`;
+
+      const buyButton = isOutOfStock
+        ? [Markup.button.callback('❌ این محصول ناموجود است', 'noop')]
+        : [Markup.button.callback('💳 خرید و دریافت لایسنس', `buy_${p.id}`)];
+
+      const photoSource = getProductPhotoSource(p);
+
+      try {
+        await ctx.replyWithPhoto(photoSource, {
+          caption,
+          parse_mode: 'Markdown',
+          reply_markup: {
+            inline_keyboard: [buyButton]
+          }
+        });
+      } catch (photoErr) {
+        await ctx.reply(caption, {
+          parse_mode: 'Markdown',
+          reply_markup: {
+            inline_keyboard: [buyButton]
+          }
+        });
+      }
+    }
+
+    if (isEdit) ctx.answerCbQuery().catch(() => {});
+  } catch (err) {
+    console.error('[Telegram] Store showcase error:', err);
+    ctx.reply('خطا در بارگذاری فروشگاه.');
+  }
+}
+
+  // Main Menu Handlers
+  bot.hears(['🛍 محصولات هوش مصنوعی', '🛍 فروشگاه محصولات', 'فروشگاه'], async (ctx) => {
+    await sendStoreShowcase(ctx, false);
+  });
+
+  bot.hears(['🌐 فروشگاه وب‌سایت', '🌐 فروشگاه سایت', 'فروشگاه سایت'], (ctx) => {
+    const siteUrl = getWebsiteUrl();
+    ctx.reply(
+      `${RLM}🏪 **فروشگاه آنلاین وب‌سایت**\n\n` +
+      `${RLM}برای مشاهده تمامی محصولات، پکیج‌ها و خرید مستقیم از طریق وب‌سایت، روی دکمه زیر کلیک کنید:`,
+      {
+        parse_mode: 'Markdown',
+        reply_markup: {
+          inline_keyboard: [
+            [Markup.button.url('🌐 ورود مستقیم به فروشگاه سایت', `${siteUrl}/store`)]
+          ]
+        }
+      }
+    );
+  });
+
+  bot.hears(['📰 وبلاگ و آموزش‌ها', '📰 وبلاگ سایت', 'وبلاگ'], (ctx) => {
+    const siteUrl = getWebsiteUrl();
+    ctx.reply(
+      `${RLM}📰 **وبلاگ و مجله تخصصی هوش مصنوعی**\n\n` +
+      `${RLM}برای مطالعه جدیدترین مقالات، اخبار و آموزش‌های کاربردی هوش مصنوعی، روی دکمه زیر کلیک کنید:`,
+      {
+        parse_mode: 'Markdown',
+        reply_markup: {
+          inline_keyboard: [
+            [Markup.button.url('📖 ورود به وبلاگ و مقالات', `${siteUrl}/blog`)]
+          ]
+        }
+      }
+    );
+  });
+
+  bot.hears('📢 عضویت در کانال ما', (ctx) => {
+    const channel = process.env.TELEGRAM_CHANNEL_ID || '@MyChannel';
+    const channelLink = channel.startsWith('@') ? `https://t.me/${channel.substring(1)}` : channel;
+    
+    ctx.reply(`برای اطلاع از آخرین اخبار، مقالات و اطلاعیه‌ها، به کانال رسمی ما بپیوندید:\n\n${channelLink}`, {
+      reply_markup: {
+        inline_keyboard: [
+          [Markup.button.url('عضویت در کانال', channelLink)]
+        ]
+      }
+    });
+  });
+
+  bot.hears('💬 چت با هوش مصنوعی', (ctx) => {
+    ctx.reply('برای استفاده از چت هوشمند، باید لایسنس فعال داشته باشید. از بخش "فروشگاه" یک لایسنس تهیه کنید.');
+  });
+
+  // Show individual product details when clicked from grid
+  bot.action(/show_prod_(\d+)/, async (ctx) => {
+    const productId = ctx.match[1];
+    try {
+      const product = db.prepare(`
+        SELECT p.*, COUNT(CASE WHEN l.status = 'available' THEN 1 END) as stock
+        FROM products p 
+        LEFT JOIN licenses l ON p.id = l.productId
+        WHERE p.id = ?
+        GROUP BY p.id
+      `).get(productId) as any;
+
+      if (!product) return ctx.answerCbQuery('محصول پیدا نشد!');
+
+      const priceFa = Number(product.price || 0).toLocaleString('fa-IR');
+      const isOutOfStock = product.category !== 'package' && (product.stock || 0) <= 0;
+      const stockText = product.category !== 'package' 
+        ? (product.stock > 0 ? `${product.stock.toLocaleString('fa-IR')} عدد موجود` : 'ناموجود ❌') 
+        : 'نامحدود (پکیج)';
+
+      const categoryName = product.category === 'api' ? 'کلید API' : product.category === 'account' ? 'اکانت پرمیوم' : 'پکیج آموزشی';
+
+      const caption = `${RLM}📦 **${product.title}**\n` +
+                      `${RLM}🏷 **دسته:** ${categoryName}\n\n` +
+                      `${RLM}📝 **توضیحات:**\n${product.description || 'توضیحی ثبت نشده است.'}\n\n` +
+                      `${RLM}💰 **قیمت:** ${priceFa} تومان\n` +
+                      `${RLM}📊 **موجودی:** ${stockText}`;
+
+      const buyButton = isOutOfStock
+        ? [Markup.button.callback('❌ این محصول در حال حاضر ناموجود است', 'noop')]
+        : [Markup.button.callback('💳 خرید و دریافت فاکتور', `buy_${product.id}`)];
+
+      const keyboard = [
+        buyButton,
+        [Markup.button.callback('🔙 بازگشت به ویترین فروشگاه', 'back_to_store')]
+      ];
+
+      const photoSource = getProductPhotoSource(product);
+
+      await ctx.deleteMessage().catch(() => {});
+      await ctx.replyWithPhoto(photoSource, {
+        caption,
+        parse_mode: 'Markdown',
+        reply_markup: {
+          inline_keyboard: keyboard
+        }
+      });
+      ctx.answerCbQuery();
+    } catch (err) {
+      console.error('[Telegram] Show product error:', err);
+      ctx.answerCbQuery('خطا در نمایش محصول!');
+    }
+  });
+
+  // No-op for indicator buttons
+  bot.action('noop', (ctx) => {
+    ctx.answerCbQuery();
+  });
+
+  bot.action('back_to_store', async (ctx) => {
+    await ctx.deleteMessage().catch(() => {});
+    await sendStoreShowcase(ctx, false);
+  });
+
+  // Buy Product (Create Order & Send Payment Link)
+  bot.action(/buy_(\d+)/, async (ctx) => {
+    const productId = ctx.match[1];
+    const tgId = ctx.from?.id.toString();
+    
+    if (!tgId) return ctx.answerCbQuery('خطا در شناسایی کاربر!');
+
+    try {
+      const user = db.prepare('SELECT id FROM users WHERE telegramId = ?').get(tgId) as any;
+      if (!user) return ctx.answerCbQuery('لطفا ابتدا ربات را /start کنید.');
+
+      const product = db.prepare(`
+        SELECT p.*, COUNT(CASE WHEN l.status = 'available' THEN 1 END) as stock
+        FROM products p 
+        LEFT JOIN licenses l ON p.id = l.productId
+        WHERE p.id = ?
+        GROUP BY p.id
+      `).get(productId) as any;
+
+      if (!product) return ctx.answerCbQuery('محصول پیدا نشد!');
+      if (product.category !== 'package' && product.stock <= 0) {
+        return ctx.answerCbQuery('موجودی محصول به اتمام رسیده است.', { show_alert: true });
+      }
+
+      // Create Order
+      const orderId = 'ORD-' + Math.random().toString(36).substring(2, 10).toUpperCase();
+      const insertStmt = db.prepare(`
+        INSERT INTO orders (id, userId, productId, amount, paymentStatus) 
+        VALUES (?, ?, ?, ?, 'pending')
+      `);
+      insertStmt.run(orderId, user.id, product.id, product.price);
+
+      // Determine environment URL (Render, Production, or Localhost)
+      const rawUrl = (process.env.WEB_URL || process.env.APP_URL || '').trim();
+      const isOnlineUrl = Boolean(
+        rawUrl &&
+        (rawUrl.startsWith('http://') || rawUrl.startsWith('https://')) &&
+        !rawUrl.includes('localhost') &&
+        !rawUrl.includes('127.0.0.1') &&
+        !rawUrl.includes('MY_APP_URL')
+      );
+
+      const priceFa = Number(product.price || 0).toLocaleString('fa-IR');
+      const invoiceText = `${RLM}🧾 **فاکتور خرید محصول**\n\n` +
+                          `${RLM}📦 **محصول:** ${product.title}\n` +
+                          `${RLM}🔢 **شماره سفارش:** \`${orderId}\`\n` +
+                          `${RLM}💰 **مبلغ قابل پرداخت:** ${priceFa} تومان\n\n` +
+                          (isOnlineUrl 
+                            ? `جهت پرداخت، روی دکمه درگاه پرداخت کلیک کنید:` 
+                            : `جهت ثبت فاکتور و ارسال به پنل مدیریت برای بررسی و تأیید، روی دکمه زیر بزنید:`);
+
+      const keyboardButtons: any[] = [];
+
+      if (isOnlineUrl) {
+        const cleanBaseUrl = rawUrl.replace(/\/$/, '');
+        const paymentUrl = `${cleanBaseUrl}/api/store/mock-payment?orderId=${orderId}`;
+        keyboardButtons.push([Markup.button.url('💳 انتقال به درگاه پرداخت', paymentUrl)]);
+      } else {
+        // Local/Direct request submission button
+        keyboardButtons.push([Markup.button.callback('📤 ثبت و ارسال به مدیریت جهت تأیید', `submit_order_${orderId}`)]);
+      }
+      keyboardButtons.push([Markup.button.callback('🔙 بازگشت به فروشگاه', 'back_to_store')]);
+
+      try {
+        await ctx.reply(invoiceText, {
+          parse_mode: 'Markdown',
+          reply_markup: {
+            inline_keyboard: keyboardButtons
+          }
+        });
+      } catch (sendError) {
+        // Fallback in case Telegram rejects URL button
+        console.warn('[Telegram] Falling back to text invoice due to:', sendError);
+        await ctx.reply(invoiceText, {
+          parse_mode: 'Markdown',
+          reply_markup: {
+            inline_keyboard: [
+              [Markup.button.callback('📤 ثبت و ارسال به مدیریت جهت تأیید', `submit_order_${orderId}`)],
+              [Markup.button.callback('🔙 بازگشت به فروشگاه', 'back_to_store')]
+            ]
+          }
+        });
+      }
+      
+      ctx.answerCbQuery();
+    } catch (err) {
+      console.error('[Telegram] Buy error:', err);
+      ctx.answerCbQuery('خطا در صدور فاکتور!');
+    }
+  });
+
+  // Handler for submitting order for admin approval (both submit_order and simpay)
+  bot.action(/(?:submit_order|simpay)_(.+)/, async (ctx) => {
+    const orderId = ctx.match[1];
+    try {
+      const order = db.prepare(`
+        SELECT o.*, p.title as productTitle, p.price as productPrice 
+        FROM orders o 
+        LEFT JOIN products p ON o.productId = p.id 
+        WHERE o.id = ?
+      `).get(orderId) as any;
+
+      if (!order) {
+        return ctx.answerCbQuery('سفارش یافت نشد!');
+      }
+
+      if (order.paymentStatus === 'success') {
+        return ctx.answerCbQuery('این سفارش قبلاً تایید شده است.');
+      }
+
+      const priceFa = Number(order.productPrice || 0).toLocaleString('fa-IR');
+      const pendingMsg = `${RLM}⏳ **درخواست خرید شما با موفقیت ثبت شد.**\n\n` +
+                         `${RLM}📦 **محصول:** ${order.productTitle || 'سفارش شما'}\n` +
+                         `${RLM}🔢 **شماره سفارش:** \`${orderId}\`\n` +
+                         `${RLM}💰 **مبلغ:** ${priceFa} تومان\n` +
+                         `${RLM}📋 **وضعیت:** 🟡 **در انتظار تأیید مدیریت**\n\n` +
+                         `💡 *سفارش شما در سیستم ثبت شد و برای مدیریت ارسال گردید. به محض بررسی و تأیید توسط ادمین در پنل، کد لایسنس به صورت خودکار در همین چت تلگرام برای شما ارسال خواهد شد.*`;
+
+      await ctx.editMessageText(pendingMsg, {
+        parse_mode: 'Markdown',
+        reply_markup: {
+          inline_keyboard: [
+            [Markup.button.callback('🛍 بازگشت به فروشگاه', 'back_to_store')]
+          ]
+        }
+      });
+
+      ctx.answerCbQuery('درخواست شما برای بررسی مدیریت ثبت شد ✅');
+    } catch (err) {
+      console.error('[Telegram] Submit order error:', err);
+      ctx.answerCbQuery('خطا در ثبت درخواست!');
+    }
+  });
+
+  bot.launch().then(() => {
+    console.log('[Telegram] Bot started successfully');
+  }).catch(err => {
+    console.error('[Telegram] Bot failed to start:', err);
+  });
+
+  // Enable graceful stop
+  process.once('SIGINT', () => {
+    try { bot?.stop('SIGINT'); } catch(e) {}
+  });
+  process.once('SIGTERM', () => {
+    try { bot?.stop('SIGTERM'); } catch(e) {}
+  });
+}

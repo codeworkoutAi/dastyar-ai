@@ -471,7 +471,7 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = React.memo(({
             const rtl = rawText ? isRtlText(rawText) : isOverallRtl;
             return (
               <h1
-                className={`!mt-5 !mb-3 text-xl sm:text-2xl font-bold text-inherit border-b border-subtle pb-2.5 flex items-center gap-2 ${
+                className={`!mt-3.5 !mb-2 text-base sm:text-lg font-bold text-inherit border-b border-subtle pb-1.5 flex items-center gap-2 ${
                   rtl ? 'text-right' : 'text-left'
                 }`}
                 dir={rtl ? 'rtl' : 'ltr'}
@@ -485,7 +485,7 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = React.memo(({
             const rtl = rawText ? isRtlText(rawText) : isOverallRtl;
             return (
               <h2
-                className={`!mt-4 !mb-2.5 text-lg sm:text-xl font-bold text-inherit border-b border-subtle/50 pb-1.5 ${
+                className={`!mt-3 !mb-2 text-sm sm:text-base font-bold text-inherit border-b border-subtle/50 pb-1 ${
                   rtl ? 'text-right' : 'text-left'
                 }`}
                 dir={rtl ? 'rtl' : 'ltr'}

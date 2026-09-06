@@ -1,6 +1,7 @@
 import express from 'express';
 import db from '../db/database';
 import { requireAuth } from '../middleware/auth';
+import { bot } from '../telegram/bot';
 
 const router = express.Router();
 
@@ -35,14 +36,14 @@ router.get('/products', (req, res) => {
 // POST /api/admin/products
 router.post('/products', (req, res) => {
   try {
-    const { title, description, price, category, image } = req.body;
+    const { title, description, longDescription, price, category, image, bannerImage } = req.body;
     
     if (!title || price === undefined || price === null || !category) {
       return res.status(400).json({ error: 'عنوان، قیمت و دسته‌بندی الزامی است.' });
     }
 
-    const stmt = db.prepare('INSERT INTO products (title, description, price, category, image) VALUES (?, ?, ?, ?, ?)');
-    const info = stmt.run(title, description || '', price, category, image || null);
+    const stmt = db.prepare('INSERT INTO products (title, description, longDescription, price, category, image, bannerImage) VALUES (?, ?, ?, ?, ?, ?, ?)');
+    const info = stmt.run(title, description || '', longDescription || '', price, category, image || null, bannerImage || null);
 
     const newProduct = db.prepare('SELECT * FROM products WHERE id = ?').get(info.lastInsertRowid);
     res.status(201).json(newProduct);
@@ -56,7 +57,7 @@ router.post('/products', (req, res) => {
 router.put('/products/:id', (req, res) => {
   try {
     const { id } = req.params;
-    const { title, description, price, category, image } = req.body;
+    const { title, description, longDescription, price, category, image, bannerImage } = req.body;
     
     if (!title || price === undefined || price === null || !category) {
       return res.status(400).json({ error: 'عنوان، قیمت و دسته‌بندی الزامی است.' });
@@ -67,8 +68,8 @@ router.put('/products/:id', (req, res) => {
       return res.status(404).json({ error: 'محصول یافت نشد.' });
     }
 
-    const stmt = db.prepare('UPDATE products SET title = ?, description = ?, price = ?, category = ?, image = ? WHERE id = ?');
-    stmt.run(title, description || '', price, category, image || null, id);
+    const stmt = db.prepare('UPDATE products SET title = ?, description = ?, longDescription = ?, price = ?, category = ?, image = ?, bannerImage = ? WHERE id = ?');
+    stmt.run(title, description || '', longDescription || '', price, category, image || null, bannerImage || null, id);
 
     const updatedProduct = db.prepare('SELECT * FROM products WHERE id = ?').get(id);
     res.json(updatedProduct);
@@ -181,10 +182,13 @@ router.get('/orders', (req, res) => {
     const orders = db.prepare(`
       SELECT o.*, 
              u.phone as userPhone, u.email as userEmail, u.name as userName,
-             p.title as productTitle, p.category as productCategory
+             p.title as productTitle, p.category as productCategory,
+             l.key as licenseKey,
+             (SELECT COUNT(*) FROM licenses WHERE productId = o.productId AND status = 'available') as availableStock
       FROM orders o
       LEFT JOIN users u ON o.userId = u.id
       LEFT JOIN products p ON o.productId = p.id
+      LEFT JOIN licenses l ON o.licenseId = l.id
       ORDER BY o.createdAt DESC
     `).all();
     res.json(orders);
@@ -202,7 +206,8 @@ router.get('/orders/:id', (req, res) => {
       SELECT o.*, 
              u.phone as userPhone, u.email as userEmail, u.name as userName,
              p.title as productTitle, p.category as productCategory, p.price as productPrice,
-             l.key as licenseKey
+             l.key as licenseKey,
+             (SELECT COUNT(*) FROM licenses WHERE productId = o.productId AND status = 'available') as availableStock
       FROM orders o
       LEFT JOIN users u ON o.userId = u.id
       LEFT JOIN products p ON o.productId = p.id
@@ -221,6 +226,42 @@ router.get('/orders/:id', (req, res) => {
   }
 });
 
+function notifyTelegramOrderSuccess(orderId: string, licenseId: number | bigint | null) {
+  try {
+    if (!bot) return;
+    const orderInfo = db.prepare(`
+      SELECT o.*, u.telegramId, p.title as productTitle
+      FROM orders o
+      LEFT JOIN users u ON o.userId = u.id
+      LEFT JOIN products p ON o.productId = p.id
+      WHERE o.id = ?
+    `).get(orderId) as any;
+
+    if (orderInfo?.telegramId) {
+      const RLM = '\u200F';
+      let msg = `${RLM}🎉 **سفارش شما با موفقیت توسط مدیریت تأیید شد!**\n\n` +
+                `${RLM}📦 **محصول:** ${orderInfo.productTitle || 'سفارش شما'}\n` +
+                `${RLM}🔢 **شماره سفارش:** \`${orderId}\`\n\n`;
+
+      const activeLicenseId = licenseId || orderInfo.licenseId;
+      if (activeLicenseId) {
+        const lic = db.prepare('SELECT key FROM licenses WHERE id = ?').get(activeLicenseId) as any;
+        if (lic?.key) {
+          msg += `${RLM}🔑 **کد لایسنس شما:**\n\`${lic.key}\`\n\n💡 *این لایسنس برای شما ثبت شده و در پنل وب‌سایت در بخش «خریدهای من» نیز در دسترس است.*`;
+        }
+      } else {
+        msg += `${RLM}✅ سفارش شما تایید و فعال شد.`;
+      }
+
+      bot.telegram.sendMessage(orderInfo.telegramId, msg, { parse_mode: 'Markdown' }).catch((e: any) => {
+        console.error('[Admin API] Failed to send Telegram delivery message:', e);
+      });
+    }
+  } catch (err) {
+    console.error('[Admin API] Telegram notification error:', err);
+  }
+}
+
 // PUT /api/admin/orders/:id/status
 router.put('/orders/:id/status', (req, res) => {
   try {
@@ -231,16 +272,147 @@ router.put('/orders/:id/status', (req, res) => {
       return res.status(400).json({ error: 'وضعیت نامعتبر است.' });
     }
 
-    const checkStmt = db.prepare('SELECT id FROM orders WHERE id = ?');
-    if (!checkStmt.get(id)) {
+    db.exec('BEGIN EXCLUSIVE TRANSACTION');
+
+    const orderStmt = db.prepare(`
+      SELECT o.*, p.category as productCategory 
+      FROM orders o 
+      LEFT JOIN products p ON o.productId = p.id 
+      WHERE o.id = ?
+    `);
+    const order = orderStmt.get(id) as any;
+
+    if (!order) {
+      db.exec('ROLLBACK');
       return res.status(404).json({ error: 'سفارش یافت نشد.' });
     }
 
-    db.prepare('UPDATE orders SET paymentStatus = ? WHERE id = ?').run(status, id);
-    res.json({ success: true, message: 'وضعیت سفارش بروزرسانی شد.' });
+    let licenseId = order.licenseId;
+    let warning: string | null = null;
+
+    if (status === 'success') {
+      // If marking success and it's a license/account product and doesn't have a license yet:
+      if (order.productCategory !== 'package' && !licenseId) {
+        const availLicense = db.prepare(
+          'SELECT id, key FROM licenses WHERE productId = ? AND status = ? LIMIT 1'
+        ).get(order.productId, 'available') as any;
+
+        if (availLicense) {
+          licenseId = availLicense.id;
+          db.prepare('UPDATE licenses SET status = ? WHERE id = ?').run('sold', licenseId);
+        } else {
+          warning = 'سفارش به حالت موفق تغییر یافت، اما موجودی لایسنس این محصول خالی است و لایسنسی تخصیص داده نشد.';
+        }
+      }
+    } else if (status === 'failed' || status === 'pending') {
+      // If status reverted from success to failed or pending, release the license back
+      if (licenseId) {
+        db.prepare('UPDATE licenses SET status = ? WHERE id = ?').run('available', licenseId);
+        licenseId = null;
+      }
+    }
+
+    db.prepare('UPDATE orders SET paymentStatus = ?, licenseId = ? WHERE id = ?')
+      .run(status, licenseId, id);
+
+    db.exec('COMMIT');
+
+    // Send Telegram delivery notification if approved
+    if (status === 'success') {
+      notifyTelegramOrderSuccess(id, licenseId);
+    }
+
+    res.json({ 
+      success: true, 
+      message: 'وضعیت سفارش بروزرسانی شد.',
+      paymentStatus: status,
+      licenseId,
+      warning
+    });
   } catch (error) {
+    db.exec('ROLLBACK');
     console.error('[Admin API] Error updating order status:', error);
     res.status(500).json({ error: 'خطا در بروزرسانی سفارش' });
+  }
+});
+
+// POST /api/admin/orders/:id/assign-license
+router.post('/orders/:id/assign-license', (req, res) => {
+  try {
+    const { id } = req.params;
+    const { licenseKey, licenseId: providedLicenseId } = req.body;
+
+    if (!licenseKey && !providedLicenseId) {
+      return res.status(400).json({ error: 'کلید لایسنس یا شناسه لایسنس الزامی است.' });
+    }
+
+    db.exec('BEGIN EXCLUSIVE TRANSACTION');
+
+    const order = db.prepare('SELECT * FROM orders WHERE id = ?').get(id) as any;
+    if (!order) {
+      db.exec('ROLLBACK');
+      return res.status(404).json({ error: 'سفارش یافت نشد.' });
+    }
+
+    // Release old license if already had one
+    if (order.licenseId) {
+      db.prepare('UPDATE licenses SET status = ? WHERE id = ?').run('available', order.licenseId);
+    }
+
+    let finalLicenseId: number | bigint = providedLicenseId;
+
+    if (licenseKey && !providedLicenseId) {
+      // Insert new custom license and mark as sold
+      const insertResult = db.prepare(
+        'INSERT INTO licenses (productId, key, status) VALUES (?, ?, ?)'
+      ).run(order.productId, licenseKey.trim(), 'sold');
+      finalLicenseId = insertResult.lastInsertRowid;
+    } else if (providedLicenseId) {
+      db.prepare('UPDATE licenses SET status = ? WHERE id = ?').run('sold', providedLicenseId);
+    }
+
+    db.prepare('UPDATE orders SET paymentStatus = ?, licenseId = ? WHERE id = ?')
+      .run('success', finalLicenseId, id);
+
+    db.exec('COMMIT');
+
+    // Notify Telegram buyer
+    notifyTelegramOrderSuccess(id, finalLicenseId);
+
+    res.json({ success: true, message: 'لایسنس با موفقیت به سفارش تخصیص یافت و سفارش تایید شد.', licenseId: finalLicenseId });
+  } catch (error) {
+    db.exec('ROLLBACK');
+    console.error('[Admin API] Error assigning license:', error);
+    res.status(500).json({ error: 'خطا در تخصیص لایسنس' });
+  }
+});
+
+// DELETE /api/admin/orders/:id
+router.delete('/orders/:id', (req, res) => {
+  try {
+    const { id } = req.params;
+    db.exec('BEGIN EXCLUSIVE TRANSACTION');
+
+    const order = db.prepare('SELECT * FROM orders WHERE id = ?').get(id) as any;
+    if (!order) {
+      db.exec('ROLLBACK');
+      return res.status(404).json({ error: 'سفارش یافت نشد.' });
+    }
+
+    // If order had a license and was success, release the license
+    if (order.licenseId && order.paymentStatus === 'success') {
+      db.prepare('UPDATE licenses SET status = ? WHERE id = ?').run('available', order.licenseId);
+    }
+
+    db.prepare('DELETE FROM orders WHERE id = ?').run(id);
+
+    db.exec('COMMIT');
+
+    res.json({ success: true, message: 'سفارش با موفقیت حذف شد.' });
+  } catch (error) {
+    db.exec('ROLLBACK');
+    console.error('[Admin API] Error deleting order:', error);
+    res.status(500).json({ error: 'خطا در حذف سفارش' });
   }
 });
 

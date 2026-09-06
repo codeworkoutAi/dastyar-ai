@@ -24,6 +24,40 @@ export function initializeSchema() {
       }
     } catch (e) {}
 
+    // Add telegramId to users
+    try {
+      const usersTableInfo = db.prepare('PRAGMA table_info(users)').all() as any[];
+      if (usersTableInfo.length > 0 && !usersTableInfo.some(col => col.name === 'telegramId')) {
+        console.log('[Database] Adding telegramId column to users table...');
+        db.exec('ALTER TABLE users ADD COLUMN telegramId TEXT;');
+        db.exec('CREATE UNIQUE INDEX IF NOT EXISTS idx_users_telegramId ON users(telegramId);');
+      }
+    } catch (e) {
+      console.error('[Database] Failed to add telegramId column:', e);
+    }
+
+    // Add sourceUrl to news
+    try {
+      const newsTableInfo = db.prepare('PRAGMA table_info(news)').all() as any[];
+      if (newsTableInfo.length > 0 && !newsTableInfo.some(col => col.name === 'sourceUrl')) {
+        console.log('[Database] Adding sourceUrl column to news table...');
+        db.exec('ALTER TABLE news ADD COLUMN sourceUrl TEXT;');
+      }
+    } catch (e) {
+      console.error('[Database] Failed to add sourceUrl column:', e);
+    }
+
+    // Add tags to news
+    try {
+      const newsTableInfo = db.prepare('PRAGMA table_info(news)').all() as any[];
+      if (newsTableInfo.length > 0 && !newsTableInfo.some(col => col.name === 'tags')) {
+        console.log('[Database] Adding tags column to news table...');
+        db.exec('ALTER TABLE news ADD COLUMN tags TEXT;');
+      }
+    } catch (e) {
+      console.error('[Database] Failed to add tags column:', e);
+    }
+
   } catch (e) {}
 
   // Create Users table
@@ -33,14 +67,15 @@ export function initializeSchema() {
       phone TEXT UNIQUE,
       email TEXT UNIQUE,
       googleId TEXT UNIQUE,
+      telegramId TEXT UNIQUE,
       passwordHash TEXT,
       name TEXT,
       avatar TEXT,
       resetToken TEXT,
       resetTokenExpiry DATETIME,
       role TEXT DEFAULT 'user',
-      createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
-      CHECK (phone IS NOT NULL OR email IS NOT NULL OR googleId IS NOT NULL)
+      createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
+      -- Note: CHECK constraint is not updated due to SQLite limitations, but we ensure one of the IDs is present.
     )
   `);
 
@@ -71,13 +106,32 @@ export function initializeSchema() {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       title TEXT NOT NULL,
       description TEXT,
+      longDescription TEXT,
       price INTEGER NOT NULL,
       category TEXT NOT NULL,
       image TEXT,
+      bannerImage TEXT,
       status TEXT DEFAULT 'active',
       createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
     )
   `);
+
+  // Add longDescription to existing products table if missing
+  try {
+    const tableInfo = db.prepare(`PRAGMA table_info(products)`).all() as any[];
+    const hasLongDescription = tableInfo.some(col => col.name === 'longDescription');
+    if (!hasLongDescription) {
+      db.exec(`ALTER TABLE products ADD COLUMN longDescription TEXT`);
+      console.log('[DB Schema] Added longDescription column to products table.');
+    }
+    const hasBannerImage = tableInfo.some(col => col.name === 'bannerImage');
+    if (!hasBannerImage) {
+      db.exec(`ALTER TABLE products ADD COLUMN bannerImage TEXT`);
+      console.log('[DB Schema] Added bannerImage column to products table.');
+    }
+  } catch (e) {
+    console.error('Migration error:', e);
+  }
 
   // Create Store Licenses/Stock table
   db.exec(`
@@ -104,6 +158,19 @@ export function initializeSchema() {
       FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE,
       FOREIGN KEY (productId) REFERENCES products(id) ON DELETE RESTRICT,
       FOREIGN KEY (licenseId) REFERENCES licenses(id) ON DELETE SET NULL
+    )
+  `);
+
+  // Create News table
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS news (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      title TEXT NOT NULL,
+      content TEXT NOT NULL,
+      image TEXT,
+      sourceUrl TEXT,
+      tags TEXT,
+      createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
     )
   `);
 

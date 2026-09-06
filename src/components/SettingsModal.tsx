@@ -1,6 +1,7 @@
 import { useUIStore } from '../store/uiStore';
 import { useSettingsStore } from '../store/settingsStore';
 import { useChatStore } from '../store/chatStore';
+import { useAuthStore } from '../store/authStore';
 import React, { useState, useEffect } from 'react';
 import { CloseOutlineIcon, DisketteOutlineIcon, GlobalOutlineIcon, CpuOutlineIcon, UserCircleOutlineIcon, PaletteOutlineIcon, SettingsOutlineIcon, InfoCircleOutlineIcon, TrashBinMinimalisticOutlineIcon, DownloadOutlineIcon, UploadOutlineIcon, StarsOutlineIcon } from '@solar-icons/react';
 import { AppSettings, Conversation, FontFamily, ThemeMode, CustomProfile } from '../types';
