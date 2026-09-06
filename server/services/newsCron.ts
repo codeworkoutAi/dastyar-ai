@@ -161,10 +161,11 @@ Example: {"title": "عنوان جذاب فارسی", "content": "متن کامل
 }
 
 export function initNewsCron() {
-  // Schedule to run every 5 minutes for testing
-  // Schedule to run at 10:00 and 20:00 every day
+  // Schedule to run at 10:00 and 20:00 every day (Tehran Time)
   cron.schedule('0 10,20 * * *', () => {
     fetchAndProcessNews();
+  }, {
+    timezone: 'Asia/Tehran'
   });
-  console.log('[NewsCron] Scheduled AI News fetcher initialized for 10:00 and 20:00 every day.');
+  console.log('[NewsCron] Scheduled AI News fetcher initialized for 10:00 and 20:00 Tehran time.');
 }
