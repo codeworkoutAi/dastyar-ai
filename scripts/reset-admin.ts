@@ -18,10 +18,10 @@ try {
     
     // Create an admin if none exists
     const insertStmt = db.prepare(`
-      INSERT INTO users (email, name, passwordHash, role, provider)
-      VALUES (?, ?, ?, ?, ?)
+      INSERT INTO users (email, name, passwordHash, role)
+      VALUES (?, ?, ?, ?)
     `);
-    insertStmt.run('admin@admin.com', 'Admin', passwordHash, 'admin', 'local');
+    insertStmt.run('admin@admin.com', 'Admin', passwordHash, 'admin');
     
     console.log('✅ Created default admin account.');
     console.log('✉️ Email: admin@admin.com');
