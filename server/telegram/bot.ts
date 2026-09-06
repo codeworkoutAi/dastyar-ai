@@ -235,7 +235,9 @@ async function sendStoreShowcase(ctx: any, page: number = 0, isEdit: boolean = f
   bot.hears('☎️ ارتباط با پشتیبانی', (ctx) => {
     const tgId = ctx.from?.id.toString();
     if (!tgId) return;
-    activeSupportUsers.add(tgId);
+    try {
+      db.prepare("UPDATE users SET botState = 'support' WHERE telegramId = ?").run(tgId);
+    } catch(e) {}
     ctx.reply(
       `${RLM}🎧 **ارتباط با پشتیبانی**\n\n` +
       `${RLM}شما به بخش پشتیبانی متصل شدید. لطفاً سوال یا مشکل خود را به صورت پیام متنی، صوتی و یا تصویر ارسال کنید.\n` +
@@ -255,7 +257,11 @@ async function sendStoreShowcase(ctx: any, page: number = 0, isEdit: boolean = f
 
   bot.hears('❌ پایان پشتیبانی', (ctx) => {
     const tgId = ctx.from?.id.toString();
-    if (tgId) activeSupportUsers.delete(tgId);
+    if (tgId) {
+      try {
+        db.prepare("UPDATE users SET botState = 'normal' WHERE telegramId = ?").run(tgId);
+      } catch(e) {}
+    }
     
     ctx.reply('شما از حالت پشتیبانی خارج شدید. چطور می‌توانم کمکتان کنم؟', {
       reply_markup: {
@@ -565,7 +571,15 @@ async function sendStoreShowcase(ctx: any, page: number = 0, isEdit: boolean = f
     }
 
     // Check if user is in support mode
-    if (activeSupportUsers.has(tgId)) {
+    let isSupport = false;
+    try {
+      const u = db.prepare('SELECT botState FROM users WHERE telegramId = ?').get(tgId) as any;
+      if (u && u.botState === 'support') {
+        isSupport = true;
+      }
+    } catch (e) {}
+
+    if (isSupport) {
       const ADMIN_ID = process.env.TELEGRAM_ADMIN_ID || '';
       if (!ADMIN_ID) {
         return ctx.reply('سیستم پشتیبانی در حال حاضر فعال نیست.');

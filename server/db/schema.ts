@@ -58,6 +58,17 @@ export function initializeSchema() {
       console.error('[Database] Failed to add tags column:', e);
     }
 
+    // Add botState to users for Telegram persistent state
+    try {
+      const usersTableInfo = db.prepare('PRAGMA table_info(users)').all() as any[];
+      if (usersTableInfo.length > 0 && !usersTableInfo.some(col => col.name === 'botState')) {
+        console.log('[Database] Adding botState column to users table...');
+        db.exec("ALTER TABLE users ADD COLUMN botState TEXT DEFAULT 'normal';");
+      }
+    } catch (e) {
+      console.error('[Database] Failed to add botState column:', e);
+    }
+
   } catch (e) {}
 
   // Create Users table
@@ -74,6 +85,7 @@ export function initializeSchema() {
       resetToken TEXT,
       resetTokenExpiry DATETIME,
       role TEXT DEFAULT 'user',
+      botState TEXT DEFAULT 'normal',
       createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
       -- Note: CHECK constraint is not updated due to SQLite limitations, but we ensure one of the IDs is present.
     )
