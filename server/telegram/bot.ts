@@ -13,7 +13,7 @@ export function startTelegramBot() {
     return;
   }
 
-  const proxyUrl = process.env.PROXY_URL || 'socks://127.0.0.1:1080';
+  const proxyUrl = (process.env.PROXY_URL || '').trim();
   let agent;
   if (proxyUrl) {
     console.log(`[Telegram] Using proxy: ${proxyUrl}`);
@@ -22,6 +22,8 @@ export function startTelegramBot() {
     } else {
       agent = new HttpsProxyAgent(proxyUrl);
     }
+  } else {
+    console.log('[Telegram] No proxy configured, connecting directly.');
   }
 
   bot = new Telegraf(token, {
