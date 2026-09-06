@@ -42,7 +42,7 @@ export const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({ produc
         {/* Close Button */}
         <button 
           onClick={onClose}
-          className="absolute top-4 left-4 z-10 p-2 bg-white/80 dark:bg-zinc-800/80 hover:bg-white dark:hover:bg-zinc-700 backdrop-blur-md rounded-full text-zinc-600 dark:text-zinc-300 transition-colors shadow-sm"
+          className="absolute top-4 left-4 z-50 p-2 bg-white/80 dark:bg-zinc-800/80 hover:bg-white dark:hover:bg-zinc-700 backdrop-blur-md rounded-full text-zinc-600 dark:text-zinc-300 transition-colors shadow-sm"
         >
           <X className="w-5 h-5" />
         </button>
