@@ -5,6 +5,8 @@ import { SocksProxyAgent } from 'socks-proxy-agent';
 
 export let bot: Telegraf<any> | null = null;
 const pendingCheckouts = new Map<string, string>(); // tgId -> productId
+const activeSupportUsers = new Set<string>(); // Users currently in support mode
+const adminMessageMap = new Map<number, string>(); // Maps admin message IDs to user telegram IDs
 
 export function startTelegramBot() {
   const token = process.env.TELEGRAM_BOT_TOKEN;
@@ -63,7 +65,7 @@ export function startTelegramBot() {
         keyboard: [
           [{ text: '🛍 محصولات هوش مصنوعی' }, { text: '💬 چت با هوش مصنوعی' }],
           [{ text: '🌐 فروشگاه وب‌سایت' }, { text: '📰 وبلاگ و آموزش‌ها' }],
-          [{ text: '📢 عضویت در کانال ما' }]
+          [{ text: '📢 عضویت در کانال ما' }, { text: '☎️ ارتباط با پشتیبانی' }]
         ],
         resize_keyboard: true
       }
@@ -219,6 +221,43 @@ async function sendStoreShowcase(ctx: any, isEdit: boolean = false) {
 
   bot.hears('💬 چت با هوش مصنوعی', (ctx) => {
     ctx.reply('برای استفاده از چت هوشمند، باید لایسنس فعال داشته باشید. از بخش "فروشگاه" یک لایسنس تهیه کنید.');
+  });
+
+  bot.hears('☎️ ارتباط با پشتیبانی', (ctx) => {
+    const tgId = ctx.from?.id.toString();
+    if (!tgId) return;
+    activeSupportUsers.add(tgId);
+    ctx.reply(
+      `${RLM}🎧 **ارتباط با پشتیبانی**\n\n` +
+      `${RLM}شما به بخش پشتیبانی متصل شدید. لطفاً سوال یا مشکل خود را به صورت پیام متنی، صوتی و یا تصویر ارسال کنید.\n` +
+      `${RLM}مدیریت در اسرع وقت پاسخگوی شما خواهد بود.\n\n` +
+      `${RLM}برای خروج از حالت پشتیبانی، روی دکمه زیر کلیک کنید.`, 
+      {
+        parse_mode: 'Markdown',
+        reply_markup: {
+          keyboard: [
+            [{ text: '❌ پایان پشتیبانی' }]
+          ],
+          resize_keyboard: true
+        }
+      }
+    );
+  });
+
+  bot.hears('❌ پایان پشتیبانی', (ctx) => {
+    const tgId = ctx.from?.id.toString();
+    if (tgId) activeSupportUsers.delete(tgId);
+    
+    ctx.reply('شما از حالت پشتیبانی خارج شدید. چطور می‌توانم کمکتان کنم؟', {
+      reply_markup: {
+        keyboard: [
+          [{ text: '🛍 محصولات هوش مصنوعی' }, { text: '💬 چت با هوش مصنوعی' }],
+          [{ text: '🌐 فروشگاه وب‌سایت' }, { text: '📰 وبلاگ و آموزش‌ها' }],
+          [{ text: '📢 عضویت در کانال ما' }, { text: '☎️ ارتباط با پشتیبانی' }]
+        ],
+        resize_keyboard: true
+      }
+    });
   });
 
   // Show individual product details when clicked from grid
@@ -446,6 +485,21 @@ async function sendStoreShowcase(ctx: any, isEdit: boolean = false) {
     const tgId = ctx.from?.id.toString();
     if (!tgId) return;
 
+    // Check if the sender is admin replying to a support message
+    const ADMIN_ID = process.env.TELEGRAM_ADMIN_ID || '';
+    if (ADMIN_ID && tgId === ADMIN_ID && ctx.message.reply_to_message) {
+      const targetUserId = adminMessageMap.get(ctx.message.reply_to_message.message_id);
+      if (targetUserId) {
+        try {
+          await ctx.telegram.copyMessage(targetUserId, ctx.chat.id, ctx.message.message_id);
+          return ctx.reply('✅ پاسخ شما به کاربر ارسال شد.', { reply_to_message_id: ctx.message.message_id });
+        } catch (err) {
+          console.error('[Telegram] Failed to send reply to user:', err);
+          return ctx.reply('❌ ارسال پاسخ ناموفق بود (ممکن است کاربر ربات را بلاک کرده باشد).');
+        }
+      }
+    }
+
     if (pendingCheckouts.has(tgId)) {
       const productId = pendingCheckouts.get(tgId);
       const contactText = ctx.message.text || '';
@@ -486,6 +540,27 @@ async function sendStoreShowcase(ctx: any, isEdit: boolean = false) {
       return;
     }
 
+    // Check if user is in support mode
+    if (activeSupportUsers.has(tgId)) {
+      const ADMIN_ID = process.env.TELEGRAM_ADMIN_ID || '';
+      if (!ADMIN_ID) {
+        return ctx.reply('سیستم پشتیبانی در حال حاضر فعال نیست.');
+      }
+      try {
+        const header = await ctx.telegram.sendMessage(ADMIN_ID, `📩 **پیام جدید از پشتیبانی**\n👤 کاربر: ${ctx.from?.first_name || 'ناشناس'}\n🆔 آیدی: \`${tgId}\``, { parse_mode: 'Markdown' });
+        const forwarded = await ctx.telegram.copyMessage(ADMIN_ID, ctx.chat.id, ctx.message.message_id);
+        
+        // Map both the header and the forwarded message to the user
+        adminMessageMap.set(header.message_id, tgId);
+        adminMessageMap.set(forwarded.message_id, tgId);
+
+        return ctx.reply('✅ پیام شما برای مدیریت ارسال شد. منتظر پاسخ بمانید.');
+      } catch (err) {
+        console.error('[Telegram] Failed to forward support message:', err);
+        return ctx.reply('❌ خطا در ارتباط با سیستم پشتیبانی.');
+      }
+    }
+
     // Default message handler for users who didn't press start or sent random text
     const text = ctx.message.text || '';
     if (text && !text.startsWith('/')) {
@@ -500,7 +575,8 @@ async function sendStoreShowcase(ctx: any, isEdit: boolean = false) {
           keyboard: [
             ['🛍 محصولات هوش مصنوعی'],
             ['🌐 فروشگاه وب‌سایت', '📰 وبلاگ و آموزش‌ها'],
-            ['💬 چت با هوش مصنوعی', '📢 عضویت در کانال ما']
+            ['💬 چت با هوش مصنوعی', '📢 عضویت در کانال ما'],
+            ['☎️ ارتباط با پشتیبانی']
           ],
           resize_keyboard: true
         }
