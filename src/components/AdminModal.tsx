@@ -42,9 +42,13 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
   const [error, setError] = useState<string | null>(null);
 
   // Tabs state
-  const [activeTab, setActiveTab] = useState<'products' | 'orders' | 'news' | 'settings'>('products');
+  const [activeTab, setActiveTab] = useState<'products' | 'orders' | 'users' | 'news' | 'settings'>('products');
   const [orders, setOrders] = useState<any[]>([]);
   const [ordersLoading, setOrdersLoading] = useState(false);
+
+  // Users state
+  const [users, setUsers] = useState<any[]>([]);
+  const [usersLoading, setUsersLoading] = useState(false);
 
   // Orders management state
   const [orderSearch, setOrderSearch] = useState('');
@@ -104,11 +108,48 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
         fetchProducts();
       } else if (activeTab === 'orders') {
         fetchOrders();
+      } else if (activeTab === 'users') {
+        fetchUsers();
       } else if (activeTab === 'news') {
         fetchNews();
       }
     }
   }, [isOpen, token, user, activeTab]);
+
+  const fetchUsers = async () => {
+    try {
+      setUsersLoading(true);
+      setError(null);
+      const res = await fetch('/api/admin/users', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (!res.ok) throw new Error('خطا در دریافت کاربران');
+      const data = await res.json();
+      setUsers(data);
+    } catch (err: any) {
+      setError(err.message || 'خطای سرور');
+    } finally {
+      setUsersLoading(false);
+    }
+  };
+
+  const handleDeleteUser = async (userId: string) => {
+    if (!confirm('آیا از حذف این کاربر اطمینان دارید؟ این عمل غیرقابل بازگشت است.')) return;
+    try {
+      setError(null);
+      const res = await fetch(`/api/admin/users/${userId}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || 'خطا در حذف کاربر');
+      }
+      fetchUsers();
+    } catch (err: any) {
+      setError(err.message || 'خطای سرور');
+    }
+  };
 
   const fetchOrders = async () => {
     try {
@@ -564,6 +605,14 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
               )}
             </button>
             <button
+              onClick={() => setActiveTab('users')}
+              className={`pb-3 text-sm font-bold border-b-2 transition-colors ${
+                activeTab === 'users' ? 'border-blue-600 text-blue-600 dark:border-blue-500 dark:text-blue-400' : 'border-transparent text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200'
+              }`}
+            >
+              کاربران
+            </button>
+            <button
               onClick={() => setActiveTab('news')}
               className={`pb-3 text-sm font-bold border-b-2 transition-colors ${
                 activeTab === 'news' ? 'border-blue-600 text-blue-600 dark:border-blue-500 dark:text-blue-400' : 'border-transparent text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200'
@@ -584,7 +633,112 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-4 sm:p-6 custom-scrollbar bg-zinc-50 dark:bg-black/20" ref={formRef}>
-          {activeTab === 'settings' ? (
+          {activeTab === 'users' ? (
+            <div className="flex flex-col gap-6 animate-fadeIn">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-bold text-zinc-800 dark:text-zinc-200 flex items-center gap-2">
+                  <User className="w-5 h-5 text-blue-600" />
+                  مدیریت کاربران
+                </h3>
+                <button
+                  onClick={fetchUsers}
+                  disabled={usersLoading}
+                  className="p-2 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-300 rounded-xl hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors"
+                  title="بروزرسانی لیست"
+                >
+                  <RefreshCw className={`w-4 h-4 ${usersLoading ? 'animate-spin' : ''}`} />
+                </button>
+              </div>
+
+              {error && (
+                <div className="p-4 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-2xl text-sm font-bold border border-red-200 dark:border-red-800/50 flex items-center gap-2">
+                  <AlertCircle className="w-5 h-5" />
+                  {error}
+                </div>
+              )}
+
+              <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl shadow-sm overflow-hidden flex flex-col">
+                <div className="overflow-x-auto min-h-[400px]">
+                  <table className="w-full text-right text-sm">
+                    <thead>
+                      <tr className="bg-zinc-50 dark:bg-zinc-800/50 text-zinc-500 dark:text-zinc-400 border-b border-zinc-200 dark:border-zinc-700">
+                        <th className="py-4 px-6 font-bold whitespace-nowrap">شناسه</th>
+                        <th className="py-4 px-6 font-bold whitespace-nowrap">کاربر</th>
+                        <th className="py-4 px-6 font-bold whitespace-nowrap">تماس</th>
+                        <th className="py-4 px-6 font-bold whitespace-nowrap">ربات تلگرام</th>
+                        <th className="py-4 px-6 font-bold whitespace-nowrap">نقش</th>
+                        <th className="py-4 px-6 font-bold whitespace-nowrap">تاریخ ثبت‌نام</th>
+                        <th className="py-4 px-6 font-bold whitespace-nowrap text-center">عملیات</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800/50">
+                      {users.length > 0 ? (
+                        users.map((u) => (
+                          <tr key={u.id} className="hover:bg-zinc-50 dark:hover:bg-zinc-800/20 transition-colors">
+                            <td className="py-4 px-6 font-mono text-zinc-500">{u.id}</td>
+                            <td className="py-4 px-6">
+                              <div className="font-bold text-zinc-800 dark:text-zinc-200">{u.name || 'نامشخص'}</div>
+                            </td>
+                            <td className="py-4 px-6">
+                              <div className="flex flex-col gap-1 text-xs text-zinc-600 dark:text-zinc-400">
+                                {u.email && <div className="flex items-center gap-1.5"><Mail className="w-3.5 h-3.5" /> <span className="dir-ltr">{u.email}</span></div>}
+                                {u.phone && <div className="flex items-center gap-1.5"><Phone className="w-3.5 h-3.5" /> <span className="dir-ltr">{u.phone}</span></div>}
+                                {!u.email && !u.phone && <span className="text-zinc-400">ثبت نشده</span>}
+                              </div>
+                            </td>
+                            <td className="py-4 px-6">
+                              {u.telegramId ? (
+                                <div className="flex flex-col gap-1">
+                                  <span className="text-xs font-mono text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 px-2 py-0.5 rounded-md inline-block w-fit">
+                                    {u.telegramId}
+                                  </span>
+                                  <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full w-fit ${u.botState === 'support' ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400' : 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400'}`}>
+                                    {u.botState === 'support' ? 'در حال پشتیبانی' : 'عادی'}
+                                  </span>
+                                </div>
+                              ) : (
+                                <span className="text-xs text-zinc-400">ندارد</span>
+                              )}
+                            </td>
+                            <td className="py-4 px-6">
+                              <span className={`px-2 py-1 rounded-full text-xs font-bold ${
+                                u.role === 'admin' 
+                                  ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-400' 
+                                  : 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400'
+                              }`}>
+                                {u.role === 'admin' ? 'مدیر' : 'کاربر'}
+                              </span>
+                            </td>
+                            <td className="py-4 px-6 text-xs text-zinc-500">
+                              {new Date(u.createdAt).toLocaleDateString('fa-IR')}
+                            </td>
+                            <td className="py-4 px-6">
+                              <div className="flex items-center justify-center">
+                                <button
+                                  onClick={() => handleDeleteUser(u.id)}
+                                  disabled={u.id === user?.id}
+                                  className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-xl transition-colors disabled:opacity-30"
+                                  title={u.id === user?.id ? "شما نمی‌توانید اکانت خودتان را حذف کنید" : "حذف کاربر"}
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan={7} className="py-12 text-center text-zinc-500">
+                            {usersLoading ? 'در حال دریافت اطلاعات...' : 'هیچ کاربری یافت نشد.'}
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          ) : activeTab === 'settings' ? (
             <div className="flex flex-col gap-6 animate-fadeIn">
               <div className="bg-white dark:bg-zinc-800/50 p-6 rounded-2xl border border-zinc-200 dark:border-zinc-700/50">
                 <h3 className="text-lg font-bold text-red-600 dark:text-red-400 mb-2 flex items-center gap-2">

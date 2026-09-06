@@ -461,4 +461,40 @@ router.post('/reset-database', (req, res) => {
   }
 });
 
+// GET /api/admin/users
+router.get('/users', (req, res) => {
+  try {
+    const users = db.prepare('SELECT id, name, email, phone, telegramId, role, botState, createdAt FROM users ORDER BY id DESC').all();
+    res.json(users);
+  } catch (error) {
+    console.error('[Admin API] Error fetching users:', error);
+    res.status(500).json({ error: 'خطا در دریافت لیست کاربران' });
+  }
+});
+
+// DELETE /api/admin/users/:id
+router.delete('/users/:id', (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    // Prevent deleting the currently logged-in admin
+    const adminId = (req as any).user.id;
+    if (parseInt(id) === adminId) {
+      return res.status(403).json({ error: 'شما نمی‌توانید اکانت خودتان را حذف کنید.' });
+    }
+
+    const checkStmt = db.prepare('SELECT id FROM users WHERE id = ?');
+    if (!checkStmt.get(id)) {
+      return res.status(404).json({ error: 'کاربر یافت نشد.' });
+    }
+
+    db.prepare('DELETE FROM users WHERE id = ?').run(id);
+
+    res.json({ success: true, message: 'کاربر با موفقیت حذف شد.' });
+  } catch (error) {
+    console.error('[Admin API] Error deleting user:', error);
+    res.status(500).json({ error: 'خطا در حذف کاربر' });
+  }
+});
+
 export default router;
