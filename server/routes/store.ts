@@ -234,4 +234,59 @@ router.get('/purchases', requireAuth, (req: any, res) => {
   }
 });
 
+// POST /api/store/redeem
+router.post('/redeem', requireAuth, (req: any, res) => {
+  try {
+    const { licenseKey } = req.body;
+    const userId = req.user.id;
+
+    if (!licenseKey || typeof licenseKey !== 'string') {
+      return res.status(400).json({ error: 'کد لایسنس نامعتبر است' });
+    }
+
+    // Find the license
+    const license = db.prepare('SELECT * FROM licenses WHERE key = ?').get(licenseKey.trim()) as any;
+    if (!license) {
+      return res.status(404).json({ error: 'لایسنس یافت نشد' });
+    }
+
+    // Find the associated order if any
+    const order = db.prepare("SELECT * FROM orders WHERE licenseId = ? AND paymentStatus = 'success'").get(license.id) as any;
+
+    if (order) {
+      if (order.userId === userId) {
+        return res.status(400).json({ error: 'این لایسنس قبلاً در حساب شما ثبت شده است' });
+      }
+      // Transfer the order to this user (they are linking their purchase to their web account)
+      db.prepare('UPDATE orders SET userId = ? WHERE id = ?').run(userId, order.id);
+      return res.json({ message: 'لایسنس با موفقیت به حساب شما متصل شد' });
+    } else {
+      // If it's an 'available' license that was never sold (e.g. admin gave it directly)
+      if (license.status === 'available') {
+        const product = db.prepare('SELECT * FROM products WHERE id = ?').get(license.productId) as any;
+        const orderId = 'RDM-' + Math.random().toString(36).substring(2, 10).toUpperCase();
+        
+        db.exec('BEGIN EXCLUSIVE TRANSACTION');
+        try {
+          db.prepare('UPDATE licenses SET status = ? WHERE id = ?').run('sold', license.id);
+          db.prepare(`
+            INSERT INTO orders (id, userId, productId, licenseId, amount, paymentStatus) 
+            VALUES (?, ?, ?, ?, ?, 'success')
+          `).run(orderId, userId, license.productId, product ? product.price : 0);
+          db.exec('COMMIT');
+          return res.json({ message: 'لایسنس با موفقیت فعال و در حساب شما ثبت شد' });
+        } catch (err) {
+          db.exec('ROLLBACK');
+          throw err;
+        }
+      } else {
+        return res.status(400).json({ error: 'وضعیت لایسنس نامشخص است یا لایسنس معتبر نیست.' });
+      }
+    }
+  } catch (error) {
+    console.error('[Store API] Error redeeming license:', error);
+    res.status(500).json({ error: 'خطای سرور در فعال‌سازی کد' });
+  }
+});
+
 export default router;

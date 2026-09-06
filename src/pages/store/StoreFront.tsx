@@ -15,6 +15,10 @@ const VaultSection = () => {
   const [error, setError] = useState('');
   const [copiedKey, setCopiedKey] = useState('');
 
+  const [redeemCode, setRedeemCode] = useState('');
+  const [isRedeeming, setIsRedeeming] = useState(false);
+  const [redeemMessage, setRedeemMessage] = useState<{type: 'error' | 'success', text: string} | null>(null);
+
   useEffect(() => {
     if (!token) {
       setLoading(false);
@@ -39,6 +43,40 @@ const VaultSection = () => {
     setTimeout(() => setCopiedKey(''), 2000);
   };
 
+  const handleRedeem = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!redeemCode.trim()) return;
+    try {
+      setIsRedeeming(true);
+      setRedeemMessage(null);
+      const res = await fetch('/api/store/redeem', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ licenseKey: redeemCode.trim() })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'خطا در فعال‌سازی کد');
+      
+      setRedeemMessage({ type: 'success', text: data.message });
+      setRedeemCode('');
+      
+      // Refresh purchases
+      const purchasesRes = await fetch('/api/store/purchases', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const purchasesData = await purchasesRes.json();
+      setPurchases(purchasesData);
+      
+    } catch (err: any) {
+      setRedeemMessage({ type: 'error', text: err.message });
+    } finally {
+      setIsRedeeming(false);
+    }
+  };
+
   if (loading) return <div className="flex justify-center p-12"><div className="w-8 h-8 border-2 border-zinc-200 dark:border-zinc-800 border-t-blue-500 rounded-full animate-spin"></div></div>;
   
   if (error) return (
@@ -51,6 +89,42 @@ const VaultSection = () => {
 
   return (
     <div className="space-y-6 animate-fadeIn">
+      {/* Redeem Section */}
+      <div className="p-6 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl shadow-sm">
+        <h3 className="font-bold text-lg mb-2 text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
+          <Key className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+          ردیم کد (فعال‌سازی لایسنس)
+        </h3>
+        <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-4">
+          اگر کد لایسنس را از طریق ربات تلگرام یا پشتیبانی دریافت کرده‌اید، آن را در کادر زیر وارد کنید تا به حساب شما متصل شود.
+        </p>
+        <form onSubmit={handleRedeem} className="flex flex-col sm:flex-row gap-3">
+          <input 
+            type="text" 
+            value={redeemCode}
+            onChange={(e) => setRedeemCode(e.target.value)}
+            placeholder="مثال: AAAA-BBBB-CCCC"
+            dir="ltr"
+            className="flex-1 px-4 py-3 rounded-xl bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all text-sm font-mono"
+          />
+          <button 
+            type="submit" 
+            disabled={isRedeeming || !redeemCode.trim()}
+            className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-bold transition-all disabled:opacity-50 shadow-sm shrink-0"
+          >
+            {isRedeeming ? 'در حال بررسی...' : 'فعال‌سازی'}
+          </button>
+        </form>
+        {redeemMessage && (
+          <div className={`mt-4 p-3 rounded-xl text-sm font-bold flex items-center gap-2 ${redeemMessage.type === 'success' ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800' : 'bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-400 border border-red-200 dark:border-red-800'}`}>
+            {redeemMessage.type === 'success' ? <CheckCircle2 size={16} /> : <XCircle size={16} />}
+            {redeemMessage.text}
+          </div>
+        )}
+      </div>
+
+      <h3 className="font-bold text-lg pt-4 text-zinc-900 dark:text-zinc-100">تاریخچه خریدها</h3>
+
       {purchases.length === 0 ? (
         <div className="flex flex-col items-center justify-center h-48 opacity-50 bg-white dark:bg-zinc-900/50 rounded-3xl border border-zinc-200 dark:border-zinc-800">
           <Package className="w-12 h-12 mb-3 text-zinc-400" />

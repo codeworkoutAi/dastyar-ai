@@ -36,14 +36,14 @@ router.get('/products', (req, res) => {
 // POST /api/admin/products
 router.post('/products', (req, res) => {
   try {
-    const { title, description, longDescription, price, category, image, bannerImage } = req.body;
+    const { title, description, longDescription, price, category, image, bannerImage, baseUrl, deliveryGuide } = req.body;
     
     if (!title || price === undefined || price === null || !category) {
       return res.status(400).json({ error: 'عنوان، قیمت و دسته‌بندی الزامی است.' });
     }
 
-    const stmt = db.prepare('INSERT INTO products (title, description, longDescription, price, category, image, bannerImage) VALUES (?, ?, ?, ?, ?, ?, ?)');
-    const info = stmt.run(title, description || '', longDescription || '', price, category, image || null, bannerImage || null);
+    const stmt = db.prepare('INSERT INTO products (title, description, longDescription, price, category, image, bannerImage, baseUrl, deliveryGuide) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)');
+    const info = stmt.run(title, description || '', longDescription || '', price, category, image || null, bannerImage || null, baseUrl || null, deliveryGuide || null);
 
     const newProduct = db.prepare('SELECT * FROM products WHERE id = ?').get(info.lastInsertRowid);
     res.status(201).json(newProduct);
@@ -57,7 +57,7 @@ router.post('/products', (req, res) => {
 router.put('/products/:id', (req, res) => {
   try {
     const { id } = req.params;
-    const { title, description, longDescription, price, category, image, bannerImage } = req.body;
+    const { title, description, longDescription, price, category, image, bannerImage, baseUrl, deliveryGuide } = req.body;
     
     if (!title || price === undefined || price === null || !category) {
       return res.status(400).json({ error: 'عنوان، قیمت و دسته‌بندی الزامی است.' });
@@ -68,8 +68,8 @@ router.put('/products/:id', (req, res) => {
       return res.status(404).json({ error: 'محصول یافت نشد.' });
     }
 
-    const stmt = db.prepare('UPDATE products SET title = ?, description = ?, longDescription = ?, price = ?, category = ?, image = ?, bannerImage = ? WHERE id = ?');
-    stmt.run(title, description || '', longDescription || '', price, category, image || null, bannerImage || null, id);
+    const stmt = db.prepare('UPDATE products SET title = ?, description = ?, longDescription = ?, price = ?, category = ?, image = ?, bannerImage = ?, baseUrl = ?, deliveryGuide = ? WHERE id = ?');
+    stmt.run(title, description || '', longDescription || '', price, category, image || null, bannerImage || null, baseUrl || null, deliveryGuide || null, id);
 
     const updatedProduct = db.prepare('SELECT * FROM products WHERE id = ?').get(id);
     res.json(updatedProduct);
@@ -230,7 +230,7 @@ function notifyTelegramOrderSuccess(orderId: string, licenseId: number | bigint 
   try {
     if (!bot) return;
     const orderInfo = db.prepare(`
-      SELECT o.*, u.telegramId, p.title as productTitle
+      SELECT o.*, u.telegramId, p.title as productTitle, p.baseUrl, p.deliveryGuide
       FROM orders o
       LEFT JOIN users u ON o.userId = u.id
       LEFT JOIN products p ON o.productId = p.id
@@ -247,10 +247,27 @@ function notifyTelegramOrderSuccess(orderId: string, licenseId: number | bigint 
       if (activeLicenseId) {
         const lic = db.prepare('SELECT key FROM licenses WHERE id = ?').get(activeLicenseId) as any;
         if (lic?.key) {
-          msg += `${RLM}🔑 **کد لایسنس شما:**\n\`${lic.key}\`\n\n💡 *این لایسنس برای شما ثبت شده و در پنل وب‌سایت در بخش «خریدهای من» نیز در دسترس است.*`;
+          msg += `${RLM}🔑 **کد لایسنس شما:**\n\`${lic.key}\`\n\n`;
+          
+          if (orderInfo.baseUrl) {
+            let cleanBaseUrl = orderInfo.baseUrl.replace(/\/$/, '');
+            msg += `${RLM}🔗 **راهنمای استفاده از API:**\n` +
+                   `جهت استفاده از سرویس، می‌توانید از نمونه کد cURL زیر استفاده کنید:\n\n` +
+                   `\`\`\`bash\ncurl -X POST ${cleanBaseUrl} \\\n` +
+                   `-H "Authorization: Bearer ${lic.key}"\n\`\`\`\n\n`;
+          }
+          
+          if (orderInfo.deliveryGuide) {
+            msg += `${RLM}📖 **راهنمای تحویل:**\n${orderInfo.deliveryGuide}\n\n`;
+          }
+
+          msg += `💡 *این لایسنس برای شما ثبت شده و در صورت نیاز از طریق وب‌سایت در بخش «ردیم کد» نیز قابل استفاده است.*`;
         }
       } else {
-        msg += `${RLM}✅ سفارش شما تایید و فعال شد.`;
+        msg += `${RLM}✅ سفارش شما تایید و فعال شد.\n\n`;
+        if (orderInfo.deliveryGuide) {
+          msg += `${RLM}📖 **راهنمای تحویل:**\n${orderInfo.deliveryGuide}\n\n`;
+        }
       }
 
       bot.telegram.sendMessage(orderInfo.telegramId, msg, { parse_mode: 'Markdown' }).catch((e: any) => {

@@ -4,6 +4,7 @@ import { HttpsProxyAgent } from 'https-proxy-agent';
 import { SocksProxyAgent } from 'socks-proxy-agent';
 
 export let bot: Telegraf<any> | null = null;
+const pendingCheckouts = new Map<string, string>(); // tgId -> productId
 
 export function startTelegramBot() {
   const token = process.env.TELEGRAM_BOT_TOKEN;
@@ -292,7 +293,7 @@ async function sendStoreShowcase(ctx: any, isEdit: boolean = false) {
     if (!tgId) return ctx.answerCbQuery('خطا در شناسایی کاربر!');
 
     try {
-      const user = db.prepare('SELECT id FROM users WHERE telegramId = ?').get(tgId) as any;
+      const user = db.prepare('SELECT * FROM users WHERE telegramId = ?').get(tgId) as any;
       if (!user) return ctx.answerCbQuery('لطفا ابتدا ربات را /start کنید.');
 
       const product = db.prepare(`
@@ -308,72 +309,95 @@ async function sendStoreShowcase(ctx: any, isEdit: boolean = false) {
         return ctx.answerCbQuery('موجودی محصول به اتمام رسیده است.', { show_alert: true });
       }
 
-      // Create Order
-      const orderId = 'ORD-' + Math.random().toString(36).substring(2, 10).toUpperCase();
-      const insertStmt = db.prepare(`
-        INSERT INTO orders (id, userId, productId, amount, paymentStatus) 
-        VALUES (?, ?, ?, ?, 'pending')
-      `);
-      insertStmt.run(orderId, user.id, product.id, product.price);
-
-      // Determine environment URL (Render, Production, or Localhost)
-      const rawUrl = (process.env.WEB_URL || process.env.APP_URL || '').trim();
-      const isOnlineUrl = Boolean(
-        rawUrl &&
-        (rawUrl.startsWith('http://') || rawUrl.startsWith('https://')) &&
-        !rawUrl.includes('localhost') &&
-        !rawUrl.includes('127.0.0.1') &&
-        !rawUrl.includes('MY_APP_URL')
-      );
-
-      const priceFa = Number(product.price || 0).toLocaleString('fa-IR');
-      const invoiceText = `${RLM}🧾 **فاکتور خرید محصول**\n\n` +
-                          `${RLM}📦 **محصول:** ${product.title}\n` +
-                          `${RLM}🔢 **شماره سفارش:** \`${orderId}\`\n` +
-                          `${RLM}💰 **مبلغ قابل پرداخت:** ${priceFa} تومان\n\n` +
-                          (isOnlineUrl 
-                            ? `جهت پرداخت، روی دکمه درگاه پرداخت کلیک کنید:` 
-                            : `جهت ثبت فاکتور و ارسال به پنل مدیریت برای بررسی و تأیید، روی دکمه زیر بزنید:`);
-
-      const keyboardButtons: any[] = [];
-
-      if (isOnlineUrl) {
-        const cleanBaseUrl = rawUrl.replace(/\/$/, '');
-        const paymentUrl = `${cleanBaseUrl}/api/store/mock-payment?orderId=${orderId}`;
-        keyboardButtons.push([Markup.button.url('💳 انتقال به درگاه پرداخت', paymentUrl)]);
-      } else {
-        // Local/Direct request submission button
-        keyboardButtons.push([Markup.button.callback('📤 ثبت و ارسال به مدیریت جهت تأیید', `submit_order_${orderId}`)]);
-      }
-      keyboardButtons.push([Markup.button.callback('🔙 بازگشت به فروشگاه', 'back_to_store')]);
-
-      try {
-        await ctx.reply(invoiceText, {
-          parse_mode: 'Markdown',
-          reply_markup: {
-            inline_keyboard: keyboardButtons
+      const hasRealContact = (user.email && !user.email.endsWith('@telegram.local')) || user.phone;
+      if (!hasRealContact) {
+        pendingCheckouts.set(tgId, productId);
+        try {
+          await ctx.deleteMessage().catch(() => {});
+        } catch (_) {}
+        return ctx.reply(
+          'جهت ثبت سفارش، لطفاً **ایمیل** معتبر خود را در همین چت تایپ کرده و ارسال کنید و یا از طریق دکمه زیر شماره موبایل خود را به اشتراک بگذارید:',
+          {
+            parse_mode: 'Markdown',
+            reply_markup: {
+              keyboard: [
+                [{ text: '📱 ارسال شماره موبایل', request_contact: true }]
+              ],
+              resize_keyboard: true,
+              one_time_keyboard: true
+            }
           }
-        });
-      } catch (sendError) {
-        // Fallback in case Telegram rejects URL button
-        console.warn('[Telegram] Falling back to text invoice due to:', sendError);
-        await ctx.reply(invoiceText, {
-          parse_mode: 'Markdown',
-          reply_markup: {
-            inline_keyboard: [
-              [Markup.button.callback('📤 ثبت و ارسال به مدیریت جهت تأیید', `submit_order_${orderId}`)],
-              [Markup.button.callback('🔙 بازگشت به فروشگاه', 'back_to_store')]
-            ]
-          }
-        });
+        );
       }
-      
-      ctx.answerCbQuery();
+
+      await createOrderAndSendInvoice(ctx, user, product);
     } catch (err) {
       console.error('[Telegram] Buy error:', err);
       ctx.answerCbQuery('خطا در صدور فاکتور!');
     }
   });
+
+  async function createOrderAndSendInvoice(ctx: any, user: any, product: any) {
+    // Create Order
+    const orderId = 'ORD-' + Math.random().toString(36).substring(2, 10).toUpperCase();
+    const insertStmt = db.prepare(`
+      INSERT INTO orders (id, userId, productId, amount, paymentStatus) 
+      VALUES (?, ?, ?, ?, 'pending')
+    `);
+    insertStmt.run(orderId, user.id, product.id, product.price);
+
+    // Determine environment URL (Render, Production, or Localhost)
+    const rawUrl = (process.env.WEB_URL || process.env.APP_URL || '').trim();
+    const isOnlineUrl = Boolean(
+      rawUrl &&
+      (rawUrl.startsWith('http://') || rawUrl.startsWith('https://')) &&
+      !rawUrl.includes('localhost') &&
+      !rawUrl.includes('127.0.0.1') &&
+      !rawUrl.includes('MY_APP_URL')
+    );
+
+    const priceFa = Number(product.price || 0).toLocaleString('fa-IR');
+    const invoiceText = `${RLM}🧾 **فاکتور خرید محصول**\n\n` +
+                        `${RLM}📦 **محصول:** ${product.title}\n` +
+                        `${RLM}🔢 **شماره سفارش:** \`${orderId}\`\n` +
+                        `${RLM}💰 **مبلغ قابل پرداخت:** ${priceFa} تومان\n\n` +
+                        (isOnlineUrl 
+                          ? `جهت پرداخت، روی دکمه درگاه پرداخت کلیک کنید:` 
+                          : `جهت ثبت فاکتور و ارسال به پنل مدیریت برای بررسی و تأیید، روی دکمه زیر بزنید:`);
+
+    const keyboardButtons: any[] = [];
+
+    if (isOnlineUrl) {
+      const cleanBaseUrl = rawUrl.replace(/\/$/, '');
+      const paymentUrl = `${cleanBaseUrl}/api/store/mock-payment?orderId=${orderId}`;
+      keyboardButtons.push([Markup.button.url('💳 انتقال به درگاه پرداخت', paymentUrl)]);
+    } else {
+      // Local/Direct request submission button
+      keyboardButtons.push([Markup.button.callback('📤 ثبت و ارسال به مدیریت جهت تأیید', `submit_order_${orderId}`)]);
+    }
+    keyboardButtons.push([Markup.button.callback('🔙 بازگشت به فروشگاه', 'back_to_store')]);
+
+    try {
+      await ctx.reply(invoiceText, {
+        parse_mode: 'Markdown',
+        reply_markup: {
+          inline_keyboard: keyboardButtons
+        }
+      });
+    } catch (sendError) {
+      // Fallback in case Telegram rejects URL button
+      console.warn('[Telegram] Falling back to text invoice due to:', sendError);
+      await ctx.reply(invoiceText, {
+        parse_mode: 'Markdown',
+        reply_markup: {
+          inline_keyboard: [
+            [Markup.button.callback('📤 ثبت و ارسال به مدیریت جهت تأیید', `submit_order_${orderId}`)],
+            [Markup.button.callback('🔙 بازگشت به فروشگاه', 'back_to_store')]
+          ]
+        }
+      });
+    }
+  }
 
   // Handler for submitting order for admin approval (both submit_order and simpay)
   bot.action(/(?:submit_order|simpay)_(.+)/, async (ctx) => {
@@ -415,6 +439,72 @@ async function sendStoreShowcase(ctx: any, isEdit: boolean = false) {
     } catch (err) {
       console.error('[Telegram] Submit order error:', err);
       ctx.answerCbQuery('خطا در ثبت درخواست!');
+    }
+  });
+
+  bot.on('message', async (ctx: any) => {
+    const tgId = ctx.from?.id.toString();
+    if (!tgId) return;
+
+    if (pendingCheckouts.has(tgId)) {
+      const productId = pendingCheckouts.get(tgId);
+      const contactText = ctx.message.text || '';
+      const contactObj = ctx.message.contact;
+
+      let phone = null;
+      let email = null;
+
+      if (contactObj) {
+        phone = contactObj.phone_number;
+      } else if (contactText.includes('@')) {
+        email = contactText;
+      } else if (/^\d{10,14}$/.test(contactText.replace('+', ''))) {
+        phone = contactText;
+      } else {
+        return ctx.reply('فرمت نامعتبر است. لطفاً ایمیل صحیح یا شماره موبایل ارسال کنید.');
+      }
+
+      try {
+        if (email) {
+          db.prepare('UPDATE users SET email = ? WHERE telegramId = ?').run(email, tgId);
+        } else if (phone) {
+          db.prepare('UPDATE users SET phone = ? WHERE telegramId = ?').run(phone, tgId);
+        }
+        pendingCheckouts.delete(tgId);
+        await ctx.reply('✅ اطلاعات تماس شما با موفقیت ثبت شد.', { reply_markup: { remove_keyboard: true } });
+        
+        const user = db.prepare('SELECT * FROM users WHERE telegramId = ?').get(tgId) as any;
+        const product = db.prepare(`SELECT p.*, COUNT(CASE WHEN l.status = 'available' THEN 1 END) as stock FROM products p LEFT JOIN licenses l ON p.id = l.productId WHERE p.id = ? GROUP BY p.id`).get(productId) as any;
+        
+        if (product) {
+          await createOrderAndSendInvoice(ctx, user, product);
+        }
+      } catch (err) {
+        console.error('[Telegram] Contact save error:', err);
+        return ctx.reply('خطا در ثبت اطلاعات. این ایمیل/شماره ممکن است قبلاً ثبت شده باشد.');
+      }
+      return;
+    }
+
+    // Default message handler for users who didn't press start or sent random text
+    const text = ctx.message.text || '';
+    if (text && !text.startsWith('/')) {
+      const name = ctx.from?.first_name || 'کاربر';
+      const welcomeMsg = 
+        `${RLM}🌟 **سلام ${name} عزیز، به دستیار هوشمند خوش آمدید!**\n\n` +
+        `${RLM}جهت مشاهده محصولات، از دکمه‌های زیر استفاده کنید:`;
+
+      await ctx.reply(welcomeMsg, {
+        parse_mode: 'Markdown',
+        reply_markup: {
+          keyboard: [
+            ['🛍 محصولات هوش مصنوعی'],
+            ['🌐 فروشگاه وب‌سایت', '📰 وبلاگ و آموزش‌ها'],
+            ['💬 چت با هوش مصنوعی', '📢 عضویت در کانال ما']
+          ],
+          resize_keyboard: true
+        }
+      });
     }
   });
 

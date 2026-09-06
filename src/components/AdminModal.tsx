@@ -67,6 +67,8 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
   const [longDescription, setLongDescription] = useState('');
   const [image, setImage] = useState<string>('');
   const [bannerImage, setBannerImage] = useState<string>('');
+  const [baseUrl, setBaseUrl] = useState('');
+  const [deliveryGuide, setDeliveryGuide] = useState('');
 
   // Licenses state
   const [selectedProductForLicenses, setSelectedProductForLicenses] = useState<any>(null);
@@ -359,7 +361,9 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
           description,
           longDescription,
           image,
-          bannerImage
+          bannerImage,
+          baseUrl,
+          deliveryGuide
         })
       });
       
@@ -374,6 +378,8 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
       setLongDescription('');
       setImage('');
       setBannerImage('');
+      setBaseUrl('');
+      setDeliveryGuide('');
       setCategory('account');
       setIsAdding(false);
       setEditingProductId(null);
@@ -392,6 +398,8 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
     setCategory(p.category);
     setImage(p.image || '');
     setBannerImage(p.bannerImage || '');
+    setBaseUrl(p.baseUrl || '');
+    setDeliveryGuide(p.deliveryGuide || '');
     setEditingProductId(p.id);
     setIsAdding(true);
     setTimeout(() => {
@@ -759,6 +767,28 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
                     onChange={(e) => setLongDescription(e.target.value)}
                     className="w-full px-4 py-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/50 focus:border-zinc-400 dark:focus:border-zinc-500 focus:ring-1 focus:ring-zinc-400 dark:focus:ring-zinc-500 text-sm outline-none transition-all min-h-[150px]"
                     placeholder="توضیحات کامل محصول که در پاپ‌آپ نمایش داده می‌شود..."
+                  />
+                </div>
+
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-bold text-zinc-600 dark:text-zinc-400">آدرس سرور / Base URL (اختیاری برای کلید API)</label>
+                  <input 
+                    type="text" 
+                    value={baseUrl}
+                    onChange={(e) => setBaseUrl(e.target.value)}
+                    className="w-full px-4 py-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/50 focus:border-zinc-400 dark:focus:border-zinc-500 focus:ring-1 focus:ring-zinc-400 dark:focus:ring-zinc-500 text-sm outline-none transition-all"
+                    placeholder="مثال: https://api.openai.com/v1/chat/completions"
+                    dir="ltr"
+                  />
+                </div>
+
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-bold text-zinc-600 dark:text-zinc-400">راهنمای تحویل / Delivery Guide (اختیاری)</label>
+                  <textarea 
+                    value={deliveryGuide}
+                    onChange={(e) => setDeliveryGuide(e.target.value)}
+                    className="w-full px-4 py-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/50 focus:border-zinc-400 dark:focus:border-zinc-500 focus:ring-1 focus:ring-zinc-400 dark:focus:ring-zinc-500 text-sm outline-none transition-all min-h-[100px]"
+                    placeholder="راهنمای استفاده یا اطلاعات بیشتر که پس از خرید به کاربر نمایش داده می‌شود..."
                   />
                 </div>
 

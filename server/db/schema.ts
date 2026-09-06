@@ -129,6 +129,16 @@ export function initializeSchema() {
       db.exec(`ALTER TABLE products ADD COLUMN bannerImage TEXT`);
       console.log('[DB Schema] Added bannerImage column to products table.');
     }
+    const hasBaseUrl = tableInfo.some(col => col.name === 'baseUrl');
+    if (!hasBaseUrl) {
+      db.exec(`ALTER TABLE products ADD COLUMN baseUrl TEXT`);
+      console.log('[DB Schema] Added baseUrl column to products table.');
+    }
+    const hasDeliveryGuide = tableInfo.some(col => col.name === 'deliveryGuide');
+    if (!hasDeliveryGuide) {
+      db.exec(`ALTER TABLE products ADD COLUMN deliveryGuide TEXT`);
+      console.log('[DB Schema] Added deliveryGuide column to products table.');
+    }
   } catch (e) {
     console.error('Migration error:', e);
   }
