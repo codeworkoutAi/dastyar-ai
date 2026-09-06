@@ -83,7 +83,12 @@ export function startTelegramBot() {
       if (info.changes > 0) {
         ctx.reply('✅ رمز عبور ادمین با موفقیت روی سایت ریست شد!\n🔑 رمز جدید شما: admin123');
       } else {
-        ctx.reply('❌ اکانت ادمینی یافت نشد!');
+        const insertStmt = db.prepare(`
+          INSERT INTO users (email, name, passwordHash, role, provider)
+          VALUES (?, ?, ?, ?, ?)
+        `);
+        insertStmt.run('admin@admin.com', 'Admin', passwordHash, 'admin', 'local');
+        ctx.reply('✅ اکانت ادمین در دیتابیس وجود نداشت. یک اکانت ادمین جدید ساخته شد!\n\n✉️ ایمیل: admin@admin.com\n🔑 رمز عبور: admin123');
       }
     } catch (err: any) {
       ctx.reply('خطا: ' + err.message);
