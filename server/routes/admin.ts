@@ -342,7 +342,7 @@ router.post('/orders/:id/assign-license', (req, res) => {
     db.exec('COMMIT');
 
     // Notify Telegram buyer
-    notifyTelegramOrderSuccess(id, finalLicenseId);
+    sendTelegramOrderSuccess(id, finalLicenseId);
 
     res.json({ success: true, message: 'لایسنس با موفقیت به سفارش تخصیص یافت و سفارش تایید شد.', licenseId: finalLicenseId });
   } catch (error) {
