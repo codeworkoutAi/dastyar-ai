@@ -69,7 +69,8 @@ export function startTelegramBot() {
         ],
         resize_keyboard: true
       }
-
+    });
+  });
 
 const RLM = '\u200F';
 
