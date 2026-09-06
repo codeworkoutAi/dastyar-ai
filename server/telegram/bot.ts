@@ -636,3 +636,58 @@ async function sendStoreShowcase(ctx: any, page: number = 0, isEdit: boolean = f
     try { bot?.stop('SIGTERM'); } catch(e) {}
   });
 }
+
+export async function sendTelegramOrderSuccess(orderId: string, licenseId: number | bigint | null) {
+  try {
+    if (!bot) {
+      console.warn('[Telegram] bot instance is null, cannot send order success notification');
+      return;
+    }
+
+    const orderInfo = db.prepare(`
+      SELECT o.*, u.telegramId, p.title as productTitle, p.baseUrl, p.deliveryGuide
+      FROM orders o
+      LEFT JOIN users u ON o.userId = u.id
+      LEFT JOIN products p ON o.productId = p.id
+      WHERE o.id = ?
+    `).get(orderId) as any;
+
+    if (orderInfo?.telegramId) {
+      let msg = `${RLM}🎉 **سفارش شما با موفقیت توسط مدیریت تأیید شد!**\n\n` +
+                `${RLM}📦 **محصول:** ${orderInfo.productTitle || 'سفارش شما'}\n` +
+                `${RLM}🔢 **شماره سفارش:** \`${orderId}\`\n\n`;
+
+      const activeLicenseId = licenseId || orderInfo.licenseId;
+      if (activeLicenseId) {
+        const lic = db.prepare('SELECT key FROM licenses WHERE id = ?').get(activeLicenseId) as any;
+        if (lic?.key) {
+          msg += `${RLM}🔑 **کد لایسنس شما:**\n\`${lic.key}\`\n\n`;
+          
+          if (orderInfo.baseUrl) {
+            let cleanBaseUrl = orderInfo.baseUrl.replace(/\/$/, '');
+            msg += `${RLM}🔗 **راهنمای استفاده از API:**\n` +
+                   `جهت استفاده از سرویس، می‌توانید از نمونه کد cURL زیر استفاده کنید:\n\n` +
+                   `\`\`\`bash\ncurl -X POST ${cleanBaseUrl} \\\n` +
+                   `-H "Authorization: Bearer ${lic.key}"\n\`\`\`\n\n`;
+          }
+          
+          if (orderInfo.deliveryGuide) {
+            msg += `${RLM}📖 **راهنمای تحویل:**\n${orderInfo.deliveryGuide}\n\n`;
+          }
+
+          msg += `💡 *این لایسنس برای شما ثبت شده و در صورت نیاز از طریق وب‌سایت در بخش «ردیم کد» نیز قابل استفاده است.*`;
+        }
+      } else {
+        msg += `${RLM}✅ سفارش شما تایید و فعال شد.\n\n`;
+        if (orderInfo.deliveryGuide) {
+          msg += `${RLM}📖 **راهنمای تحویل:**\n${orderInfo.deliveryGuide}\n\n`;
+        }
+      }
+
+      await bot.telegram.sendMessage(orderInfo.telegramId, msg, { parse_mode: 'Markdown' });
+      console.log(`[Telegram] Order success notification sent to user ${orderInfo.telegramId}`);
+    }
+  } catch (err) {
+    console.error('[Telegram] Telegram notification error:', err);
+  }
+}
