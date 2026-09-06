@@ -439,7 +439,8 @@ router.post('/reset-database', (req, res) => {
     db.exec('BEGIN EXCLUSIVE TRANSACTION');
     
     // Delete all data from all tables (schema remains)
-    const tables = ['products', 'licenses', 'orders', 'news', 'otps', 'conversations'];
+    // IMPORTANT: Order matters because of FOREIGN KEY constraints (e.g. orders -> products ON DELETE RESTRICT)
+    const tables = ['orders', 'licenses', 'products', 'conversations', 'otps', 'news'];
     
     for (const table of tables) {
       db.exec(`DELETE FROM ${table}`);
