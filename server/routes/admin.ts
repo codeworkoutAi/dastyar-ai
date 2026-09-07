@@ -1,5 +1,5 @@
 import express from 'express';
-import db from '../db/database';
+import db, { syncDatabase } from '../db/database';
 import { requireAuth } from '../middleware/auth';
 import { bot, sendTelegramOrderSuccess } from '../telegram/bot';
 
@@ -44,6 +44,7 @@ router.post('/products', (req, res) => {
 
     const stmt = db.prepare('INSERT INTO products (title, description, longDescription, price, category, image, bannerImage, baseUrl, deliveryGuide) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)');
     const info = stmt.run(title, description || '', longDescription || '', price, category, image || null, bannerImage || null, baseUrl || null, deliveryGuide || null);
+    syncDatabase();
 
     const newProduct = db.prepare('SELECT * FROM products WHERE id = ?').get(info.lastInsertRowid);
     res.status(201).json(newProduct);
@@ -70,6 +71,7 @@ router.put('/products/:id', (req, res) => {
 
     const stmt = db.prepare('UPDATE products SET title = ?, description = ?, longDescription = ?, price = ?, category = ?, image = ?, bannerImage = ?, baseUrl = ?, deliveryGuide = ? WHERE id = ?');
     stmt.run(title, description || '', longDescription || '', price, category, image || null, bannerImage || null, baseUrl || null, deliveryGuide || null, id);
+    syncDatabase();
 
     const updatedProduct = db.prepare('SELECT * FROM products WHERE id = ?').get(id);
     res.json(updatedProduct);
@@ -89,10 +91,9 @@ router.delete('/products/:id', (req, res) => {
       return res.status(404).json({ error: 'محصول یافت نشد.' });
     }
 
-    // Optionally delete related licenses or set status to deleted?
-    // For now, hard delete product and its available licenses
     db.prepare('DELETE FROM licenses WHERE productId = ? AND status = ?').run(id, 'available');
     db.prepare('DELETE FROM products WHERE id = ?').run(id);
+    syncDatabase();
 
     res.json({ success: true, message: 'محصول با موفقیت حذف شد.' });
   } catch (error) {
@@ -114,6 +115,8 @@ router.get('/products/:productId/licenses', (req, res) => {
 });
 
 // POST /api/admin/products/:productId/licenses
+// NOTE: db.transaction() is NOT supported in libsql embedded replica (syncUrl) mode.
+// We insert each license individually and call syncDatabase() once at the end.
 router.post('/products/:productId/licenses', (req, res) => {
   try {
     const { productId } = req.params;
@@ -129,17 +132,17 @@ router.post('/products/:productId/licenses', (req, res) => {
     }
 
     const insertStmt = db.prepare('INSERT INTO licenses (productId, key) VALUES (?, ?)');
-    
     let inserted = 0;
-    const bulkInsert = db.transaction(() => {
-      for (const key of keys) {
-        if (typeof key === 'string' && key.trim()) {
-          insertStmt.run(productId, key.trim());
-          inserted++;
-        }
+
+    for (const key of keys) {
+      if (typeof key === 'string' && key.trim()) {
+        insertStmt.run(productId, key.trim());
+        inserted++;
       }
-    });
-    bulkInsert();
+    }
+
+    // Sync all inserts to Turso Cloud in one go
+    syncDatabase();
 
     res.status(201).json({ success: true, count: inserted });
   } catch (error) {
@@ -164,6 +167,7 @@ router.delete('/licenses/:id', (req, res) => {
     }
 
     db.prepare('DELETE FROM licenses WHERE id = ?').run(id);
+    syncDatabase();
     res.json({ success: true });
   } catch (error) {
     console.error('[Admin API] Error deleting license:', error);
@@ -221,12 +225,9 @@ router.get('/orders/:id', (req, res) => {
   }
 });
 
-
 // PUT /api/admin/orders/:id/status
+// NOTE: No db.transaction() – embedded replica does not support it.
 router.put('/orders/:id/status', (req, res) => {
-  let licenseId: any = null;
-  let warning: string | null = null;
-
   try {
     const { id } = req.params;
     const { status } = req.body; // pending, success, failed
@@ -235,45 +236,44 @@ router.put('/orders/:id/status', (req, res) => {
       return res.status(400).json({ error: 'وضعیت نامعتبر است.' });
     }
 
-    const orderStmt = db.prepare(`
+    const order = db.prepare(`
       SELECT o.*, p.category as productCategory 
       FROM orders o 
       LEFT JOIN products p ON o.productId = p.id 
       WHERE o.id = ?
-    `);
-    const order = orderStmt.get(id) as any;
+    `).get(id) as any;
 
     if (!order) {
       return res.status(404).json({ error: 'سفارش یافت نشد.' });
     }
 
-    licenseId = order.licenseId;
+    let licenseId = order.licenseId;
+    let warning: string | null = null;
 
-    const updateFn = db.transaction(() => {
-      if (status === 'success') {
-        if (order.productCategory !== 'package' && !licenseId) {
-          const availLicense = db.prepare(
-            'SELECT id, key FROM licenses WHERE productId = ? AND status = ? LIMIT 1'
-          ).get(order.productId, 'available') as any;
+    if (status === 'success') {
+      if (order.productCategory !== 'package' && !licenseId) {
+        const availLicense = db.prepare(
+          'SELECT id, key FROM licenses WHERE productId = ? AND status = ? LIMIT 1'
+        ).get(order.productId, 'available') as any;
 
-          if (availLicense) {
-            licenseId = availLicense.id;
-            db.prepare('UPDATE licenses SET status = ? WHERE id = ?').run('sold', licenseId);
-          } else {
-            warning = 'سفارش به حالت موفق تغییر یافت، اما موجودی لایسنس این محصول خالی است و لایسنسی تخصیص داده نشد.';
-          }
-        }
-      } else if (status === 'failed' || status === 'pending') {
-        if (licenseId) {
-          db.prepare('UPDATE licenses SET status = ? WHERE id = ?').run('available', licenseId);
-          licenseId = null;
+        if (availLicense) {
+          licenseId = availLicense.id;
+          db.prepare('UPDATE licenses SET status = ? WHERE id = ?').run('sold', licenseId);
+        } else {
+          warning = 'سفارش به حالت موفق تغییر یافت، اما موجودی لایسنس این محصول خالی است و لایسنسی تخصیص داده نشد.';
         }
       }
+    } else if (status === 'failed' || status === 'pending') {
+      if (licenseId) {
+        db.prepare('UPDATE licenses SET status = ? WHERE id = ?').run('available', licenseId);
+        licenseId = null;
+      }
+    }
 
-      db.prepare('UPDATE orders SET paymentStatus = ?, licenseId = ? WHERE id = ?')
-        .run(status, licenseId, id);
-    });
-    updateFn();
+    db.prepare('UPDATE orders SET paymentStatus = ?, licenseId = ? WHERE id = ?')
+      .run(status, licenseId, id);
+
+    syncDatabase();
 
     // Send Telegram delivery notification if approved
     if (status === 'success') {
@@ -294,6 +294,7 @@ router.put('/orders/:id/status', (req, res) => {
 });
 
 // POST /api/admin/orders/:id/assign-license
+// NOTE: No db.transaction() – embedded replica does not support it.
 router.post('/orders/:id/assign-license', (req, res) => {
   try {
     const { id } = req.params;
@@ -308,28 +309,27 @@ router.post('/orders/:id/assign-license', (req, res) => {
       return res.status(404).json({ error: 'سفارش یافت نشد.' });
     }
 
+    // Release old license if already had one
+    if (order.licenseId) {
+      db.prepare('UPDATE licenses SET status = ? WHERE id = ?').run('available', order.licenseId);
+    }
+
     let finalLicenseId: number | bigint = providedLicenseId;
 
-    const assignFn = db.transaction(() => {
-      // Release old license if already had one
-      if (order.licenseId) {
-        db.prepare('UPDATE licenses SET status = ? WHERE id = ?').run('available', order.licenseId);
-      }
+    if (licenseKey && !providedLicenseId) {
+      // Insert new custom license and mark as sold
+      const insertResult = db.prepare(
+        'INSERT INTO licenses (productId, key, status) VALUES (?, ?, ?)'
+      ).run(order.productId, licenseKey.trim(), 'sold');
+      finalLicenseId = insertResult.lastInsertRowid;
+    } else if (providedLicenseId) {
+      db.prepare('UPDATE licenses SET status = ? WHERE id = ?').run('sold', providedLicenseId);
+    }
 
-      if (licenseKey && !providedLicenseId) {
-        // Insert new custom license and mark as sold
-        const insertResult = db.prepare(
-          'INSERT INTO licenses (productId, key, status) VALUES (?, ?, ?)'
-        ).run(order.productId, licenseKey.trim(), 'sold');
-        finalLicenseId = insertResult.lastInsertRowid;
-      } else if (providedLicenseId) {
-        db.prepare('UPDATE licenses SET status = ? WHERE id = ?').run('sold', providedLicenseId);
-      }
+    db.prepare('UPDATE orders SET paymentStatus = ?, licenseId = ? WHERE id = ?')
+      .run('success', finalLicenseId, id);
 
-      db.prepare('UPDATE orders SET paymentStatus = ?, licenseId = ? WHERE id = ?')
-        .run('success', finalLicenseId, id);
-    });
-    assignFn();
+    syncDatabase();
 
     // Notify Telegram buyer
     sendTelegramOrderSuccess(id, finalLicenseId);
@@ -342,6 +342,7 @@ router.post('/orders/:id/assign-license', (req, res) => {
 });
 
 // DELETE /api/admin/orders/:id
+// NOTE: No db.transaction() – embedded replica does not support it.
 router.delete('/orders/:id', (req, res) => {
   try {
     const { id } = req.params;
@@ -351,14 +352,12 @@ router.delete('/orders/:id', (req, res) => {
       return res.status(404).json({ error: 'سفارش یافت نشد.' });
     }
 
-    const deleteFn = db.transaction(() => {
-      // If order had a license and was success, release the license
-      if (order.licenseId && order.paymentStatus === 'success') {
-        db.prepare('UPDATE licenses SET status = ? WHERE id = ?').run('available', order.licenseId);
-      }
-      db.prepare('DELETE FROM orders WHERE id = ?').run(id);
-    });
-    deleteFn();
+    // If order had a license and was success, release the license
+    if (order.licenseId && order.paymentStatus === 'success') {
+      db.prepare('UPDATE licenses SET status = ? WHERE id = ?').run('available', order.licenseId);
+    }
+    db.prepare('DELETE FROM orders WHERE id = ?').run(id);
+    syncDatabase();
 
     res.json({ success: true, message: 'سفارش با موفقیت حذف شد.' });
   } catch (error) {
@@ -368,20 +367,19 @@ router.delete('/orders/:id', (req, res) => {
 });
 
 // POST /api/admin/reset-database
+// NOTE: No db.transaction() – embedded replica does not support it.
 router.post('/reset-database', (req, res) => {
   try {
     const adminId = (req as any).user.id;
     
-    const resetFn = db.transaction(() => {
-      // IMPORTANT: Order matters because of FOREIGN KEY constraints
-      const tables = ['orders', 'licenses', 'products', 'conversations', 'otps', 'news'];
-      for (const table of tables) {
-        db.exec(`DELETE FROM ${table}`);
-      }
-      // Delete everyone EXCEPT the current admin
-      db.prepare('DELETE FROM users WHERE id != ?').run(adminId);
-    });
-    resetFn();
+    // IMPORTANT: Order matters because of FOREIGN KEY constraints
+    const tables = ['orders', 'licenses', 'products', 'conversations', 'otps', 'news'];
+    for (const table of tables) {
+      db.exec(`DELETE FROM ${table}`);
+    }
+    // Delete everyone EXCEPT the current admin
+    db.prepare('DELETE FROM users WHERE id != ?').run(adminId);
+    syncDatabase();
 
     res.json({ success: true, message: 'دیتابیس با موفقیت پاک شد.' });
   } catch (error) {
@@ -418,6 +416,7 @@ router.delete('/users/:id', (req, res) => {
     }
 
     db.prepare('DELETE FROM users WHERE id = ?').run(id);
+    syncDatabase();
 
     res.json({ success: true, message: 'کاربر با موفقیت حذف شد.' });
   } catch (error) {
