@@ -637,6 +637,57 @@ async function sendStoreShowcase(ctx: any, page: number = 0, isEdit: boolean = f
   });
 }
 
+function escapeHtml(str: string): string {
+  return (str || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
+function buildCurlSnippet(rawInput: string, licenseKey: string): string {
+  const trimmed = (rawInput || '').trim();
+  if (!trimmed) return '';
+
+  // Extract endpoint URL
+  let targetUrl = '';
+  const urlMatch = trimmed.match(/--url\s+["']?([^"'\s\\]+)["']?/i) || trimmed.match(/https?:\/\/[^\s"'\\]+/i);
+  if (urlMatch) {
+    targetUrl = urlMatch[1] || urlMatch[0];
+  } else {
+    targetUrl = trimmed;
+  }
+  // Strip trailing slashes, quotes, or dashes
+  targetUrl = targetUrl.replace(/["';\\]+$/, '').replace(/\/$/, '');
+
+  // Extract model name if provided in rawInput
+  let modelName = 'gpt-5.6-luna';
+  const modelMatch = trimmed.match(/"model"\s*:\s*"([^"]+)"/i);
+  if (modelMatch && modelMatch[1]) {
+    modelName = modelMatch[1];
+  }
+
+  // Extract sample message content if provided
+  let contentMsg = 'سلام! چطوری؟';
+  const contentMatch = trimmed.match(/"content"\s*:\s*"([^"]+)"/i);
+  if (contentMatch && contentMatch[1]) {
+    contentMsg = contentMatch[1].trim();
+  }
+
+  return `curl --request POST \\\n` +
+         `  --url "${targetUrl}" \\\n` +
+         `  --header "Authorization: Bearer ${licenseKey}" \\\n` +
+         `  --header "Content-Type: application/json" \\\n` +
+         `  --data '{\n` +
+         `    "model": "${modelName}",\n` +
+         `    "messages": [\n` +
+         `      {\n` +
+         `        "role": "user",\n` +
+         `        "content": "${contentMsg}"\n` +
+         `      }\n` +
+         `    ]\n` +
+         `  }'`;
+}
+
 export async function sendTelegramOrderSuccess(orderId: string, licenseId: number | bigint | null) {
   try {
     if (!bot) {
@@ -664,11 +715,10 @@ export async function sendTelegramOrderSuccess(orderId: string, licenseId: numbe
           msg += `${RLM}🔑 <b>کد لایسنس شما:</b>\n<code>${lic.key}</code>\n\n`;
           
           if (orderInfo.baseUrl) {
-            let cleanBaseUrl = orderInfo.baseUrl.replace(/\/$/, '');
+            const curlCode = buildCurlSnippet(orderInfo.baseUrl, lic.key);
             msg += `${RLM}🔗 <b>راهنمای استفاده از API:</b>\n` +
                    `جهت استفاده از سرویس، می‌توانید از نمونه کد cURL زیر استفاده کنید:\n\n` +
-                   `<pre>curl -X POST ${cleanBaseUrl} \\\n` +
-                   `-H "Authorization: Bearer ${lic.key}"</pre>\n\n`;
+                   `<pre><code class="language-shell">${escapeHtml(curlCode)}</code></pre>\n\n`;
           }
           
           if (orderInfo.deliveryGuide) {
