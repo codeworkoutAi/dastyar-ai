@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useAuthStore } from '../../store/authStore';
 import { 
   LayoutDashboard, ShoppingBag, User as UserIcon, LifeBuoy, 
-  Key, Package, CheckCircle2, XCircle, Clock, Save, Lock, LogOut 
+  Key, Package, CheckCircle2, XCircle, Clock, Save, Lock, LogOut,
+  Receipt, Printer
 } from 'lucide-react';
 
 export const UserDashboard = () => {
@@ -12,6 +13,14 @@ export const UserDashboard = () => {
   const [purchases, setPurchases] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+
+  // Redeem Code
+  const [redeemCode, setRedeemCode] = useState('');
+  const [isRedeeming, setIsRedeeming] = useState(false);
+  const [redeemMessage, setRedeemMessage] = useState<{type: 'error' | 'success', text: string} | null>(null);
+
+  // Invoice Modal
+  const [selectedInvoice, setSelectedInvoice] = useState<any>(null);
 
   // Profile Form
   const [profileData, setProfileData] = useState({ name: '', email: '' });
@@ -50,6 +59,33 @@ export const UserDashboard = () => {
       setError(err.message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleRedeem = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!redeemCode.trim()) return;
+    try {
+      setIsRedeeming(true);
+      setRedeemMessage(null);
+      const res = await fetch('/api/store/redeem', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ licenseKey: redeemCode.trim() })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'خطا در فعال‌سازی کد');
+      
+      setRedeemMessage({ type: 'success', text: data.message });
+      setRedeemCode('');
+      fetchPurchases();
+    } catch (err: any) {
+      setRedeemMessage({ type: 'error', text: err.message });
+    } finally {
+      setIsRedeeming(false);
     }
   };
 
@@ -162,6 +198,40 @@ export const UserDashboard = () => {
                 <span className="text-sm text-zinc-500">تکمیل شده</span>
               </div>
             </div>
+
+            {/* Redeem Section */}
+            <div className="mt-6 p-6 bg-blue-50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-900/30 rounded-3xl shadow-sm">
+              <h3 className="font-bold text-lg mb-2 text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
+                <Key className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                ردیم کد (فعال‌سازی لایسنس)
+              </h3>
+              <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-4">
+                اگر کد لایسنس را از طریق ربات تلگرام یا پشتیبانی دریافت کرده‌اید، آن را در کادر زیر وارد کنید تا به حساب شما متصل شود.
+              </p>
+              <form onSubmit={handleRedeem} className="flex flex-col sm:flex-row gap-3">
+                <input 
+                  type="text" 
+                  value={redeemCode}
+                  onChange={(e) => setRedeemCode(e.target.value)}
+                  placeholder="مثال: AAAA-BBBB-CCCC"
+                  dir="ltr"
+                  className="flex-1 px-4 py-3 rounded-xl bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all text-sm font-mono"
+                />
+                <button 
+                  type="submit" 
+                  disabled={isRedeeming || !redeemCode.trim()}
+                  className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-bold transition-all disabled:opacity-50 shadow-sm shrink-0"
+                >
+                  {isRedeeming ? 'در حال بررسی...' : 'فعال‌سازی'}
+                </button>
+              </form>
+              {redeemMessage && (
+                <div className={`mt-4 p-3 rounded-xl text-sm font-bold flex items-center gap-2 ${redeemMessage.type === 'success' ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800' : 'bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-400 border border-red-200 dark:border-red-800'}`}>
+                  {redeemMessage.type === 'success' ? <CheckCircle2 size={16} /> : <XCircle size={16} />}
+                  {redeemMessage.text}
+                </div>
+              )}
+            </div>
           </div>
         )}
 
@@ -201,6 +271,12 @@ export const UserDashboard = () => {
                           <Key size={12} /> {p.licenseKey}
                         </div>
                       )}
+                      <button 
+                        onClick={() => setSelectedInvoice(p)}
+                        className="mt-1 flex items-center gap-1 text-xs font-bold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors"
+                      >
+                        <Receipt size={14} /> مشاهده فاکتور
+                      </button>
                     </div>
                   </div>
                 ))}
@@ -276,6 +352,81 @@ export const UserDashboard = () => {
           </div>
         )}
       </div>
+
+      {/* Invoice Modal */}
+      {selectedInvoice && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-900/80 backdrop-blur-sm animate-fadeIn" onClick={() => setSelectedInvoice(null)}>
+          <div 
+            className="w-full max-w-lg bg-white dark:bg-zinc-900 rounded-3xl shadow-2xl border border-zinc-200 dark:border-zinc-800 overflow-hidden" 
+            onClick={e => e.stopPropagation()}
+          >
+            <div id="invoice-print-area" className="p-8 pb-4">
+              <div className="flex justify-between items-start mb-8 pb-6 border-b border-zinc-200 dark:border-zinc-800 border-dashed">
+                <div>
+                  <h3 className="text-xl font-black text-zinc-900 dark:text-white flex items-center gap-2 mb-1">
+                    <ShoppingBag className="text-blue-500" /> فروشگاه هوش مصنوعی
+                  </h3>
+                  <p className="text-sm text-zinc-500">فاکتور فروش کالا و خدمات دیجیتال</p>
+                </div>
+                <div className="text-left">
+                  <div className="text-sm font-bold text-zinc-900 dark:text-white mb-1" dir="ltr">#{selectedInvoice.orderId.split('-')[1] || selectedInvoice.orderId}</div>
+                  <div className="text-xs text-zinc-500" dir="ltr">{new Date(selectedInvoice.orderDate).toLocaleDateString('fa-IR')}</div>
+                </div>
+              </div>
+
+              <div className="mb-6 space-y-4">
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-zinc-500">مشخصات خریدار:</span>
+                  <span className="font-bold text-zinc-900 dark:text-white">{user.name || 'کاربر چت‌باکس'} ({user.phone || user.email})</span>
+                </div>
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-zinc-500">نام محصول:</span>
+                  <span className="font-bold text-zinc-900 dark:text-white">{selectedInvoice.title}</span>
+                </div>
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-zinc-500">وضعیت پرداخت:</span>
+                  {getStatusBadge(selectedInvoice.paymentStatus)}
+                </div>
+                {selectedInvoice.licenseKey && selectedInvoice.paymentStatus === 'success' && (
+                  <div className="flex flex-col gap-2 p-3 bg-zinc-50 dark:bg-zinc-800/50 rounded-xl border border-zinc-200 dark:border-zinc-800 text-sm">
+                    <span className="text-zinc-500 font-bold">کد لایسنس شما:</span>
+                    <span className="font-mono text-center tracking-widest text-zinc-900 dark:text-white" dir="ltr">{selectedInvoice.licenseKey}</span>
+                  </div>
+                )}
+              </div>
+
+              <div className="mt-8 pt-6 border-t border-zinc-200 dark:border-zinc-800 border-dashed flex justify-between items-center">
+                <span className="font-bold text-zinc-900 dark:text-white">مبلغ کل پرداخت شده:</span>
+                <span className="text-xl font-black text-blue-600 dark:text-blue-400">{selectedInvoice.amount.toLocaleString('fa-IR')} تومان</span>
+              </div>
+            </div>
+
+            <div className="p-4 bg-zinc-50 dark:bg-zinc-800/50 border-t border-zinc-200 dark:border-zinc-800 flex justify-end gap-3 rounded-b-3xl">
+              <button 
+                onClick={() => setSelectedInvoice(null)}
+                className="px-5 py-2.5 rounded-xl font-bold text-sm text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors"
+              >
+                بستن
+              </button>
+              <button 
+                onClick={() => {
+                  const printContent = document.getElementById('invoice-print-area');
+                  const originalBody = document.body.innerHTML;
+                  if (printContent) {
+                    document.body.innerHTML = printContent.innerHTML;
+                    window.print();
+                    document.body.innerHTML = originalBody;
+                    window.location.reload();
+                  }
+                }}
+                className="px-5 py-2.5 rounded-xl font-bold text-sm bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2 transition-colors"
+              >
+                <Printer size={16} /> چاپ فاکتور
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
