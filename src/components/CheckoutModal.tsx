@@ -169,8 +169,8 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ product, isOpen, o
             <div className="flex flex-col gap-4 animate-fadeIn">
               <div className="p-4 bg-blue-50 dark:bg-blue-900/10 rounded-xl border border-blue-100 dark:border-blue-900/30 text-center flex flex-col gap-2">
                 <span className="text-sm text-blue-800 dark:text-blue-200">لطفا مبلغ فوق را به شماره کارت زیر واریز نمایید:</span>
-                <span className="text-xl font-bold font-mono tracking-widest text-blue-900 dark:text-white" dir="ltr">1234-5678-1234-5678</span>
-                <span className="text-xs font-bold text-blue-700 dark:text-blue-300">به نام: مدیریت چت باکس</span>
+                <span className="text-xl font-bold font-mono tracking-widest text-blue-900 dark:text-white" dir="ltr">5894-6311-1590-7644</span>
+                <span className="text-xs font-bold text-blue-700 dark:text-blue-300">به نام: علی ابراهیمی قرخلو (بانک رفاه)</span>
               </div>
               <div>
                 <label className="block text-xs font-bold text-zinc-600 dark:text-zinc-400 mb-2">شماره پیگیری یا ۴ رقم آخر کارت:</label>
