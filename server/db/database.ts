@@ -1,6 +1,9 @@
 import Database from 'libsql';
 import path from 'path';
 import fs from 'fs';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 // Ensure data directory exists
 const dataDir = path.join(process.cwd(), 'server', 'data');
