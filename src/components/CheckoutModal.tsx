@@ -147,7 +147,6 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ product, isOpen, o
                 <span>تومان</span>
               </div>
             </div>
-            </div>
           </div>
 
           {/* Payment Method Tabs */}
