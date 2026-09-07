@@ -4,6 +4,7 @@ import { HttpsProxyAgent } from 'https-proxy-agent';
 import { SocksProxyAgent } from 'socks-proxy-agent';
 
 export let bot: Telegraf<any> | null = null;
+const RLM = '\u200F';
 const pendingCheckouts = new Map<string, string>(); // tgId -> productId
 const activeSupportUsers = new Set<string>(); // Users currently in support mode
 const adminMessageMap = new Map<number, string>(); // Maps admin message IDs to user telegram IDs
@@ -50,17 +51,17 @@ export function startTelegramBot() {
     }
 
     const welcomeMsg = 
-      `${RLM}🌟 **سلام ${name} عزیز، به دستیار هوشمند خوش آمدید!**\n\n` +
+      `${RLM}🌟 <b>سلام ${name} عزیز، به دستیار هوشمند خوش آمدید!</b>\n\n` +
       `${RLM}مرجع تخصصی خدمات و دسترسی به برترین ابزارها و مدل‌های هوش مصنوعی.\n\n` +
-      `${RLM}📌 **امکانات در دسترس شما:**\n` +
-      `${RLM}🛍 **محصولات هوش مصنوعی:** مشاهده و خرید آنی اکانت، لایسنس و کلید API\n` +
-      `${RLM}💬 **چت هوشمند:** گفتگو با قوی‌ترین مدل‌های هوش مصنوعی در وب‌سایت\n` +
-      `${RLM}🌐 **فروشگاه وب‌سایت:** دسترسی به فروشگاه کامل در وب‌سایت\n` +
-      `${RLM}📰 **وبلاگ و آموزش‌ها:** جدیدترین مقالات، آموزش‌ها و اخبار هوش مصنوعی\n\n` +
+      `${RLM}📌 <b>امکانات در دسترس شما:</b>\n` +
+      `${RLM}🛍 <b>محصولات هوش مصنوعی:</b> مشاهده و خرید آنی اکانت، لایسنس و کلید API\n` +
+      `${RLM}💬 <b>چت هوشمند:</b> گفتگو با قوی‌ترین مدل‌های هوش مصنوعی در وب‌سایت\n` +
+      `${RLM}🌐 <b>فروشگاه وب‌سایت:</b> دسترسی به فروشگاه کامل در وب‌سایت\n` +
+      `${RLM}📰 <b>وبلاگ و آموزش‌ها:</b> جدیدترین مقالات، آموزش‌ها و اخبار هوش مصنوعی\n\n` +
       `${RLM}👇 برای شروع یکی از گزینه‌های زیر را انتخاب کنید:`;
 
     await ctx.reply(welcomeMsg, {
-      parse_mode: 'Markdown',
+      parse_mode: 'HTML',
       reply_markup: {
         keyboard: [
           [{ text: '🛍 محصولات هوش مصنوعی' }, { text: '💬 چت با هوش مصنوعی' }],
@@ -72,7 +73,6 @@ export function startTelegramBot() {
     });
   });
 
-const RLM = '\u200F';
 
 function getWebsiteUrl(): string {
   const envUrl = (process.env.WEBSITE_URL || process.env.WEB_URL || process.env.APP_URL || '').trim();
