@@ -73,6 +73,16 @@ export function startTelegramBot() {
     });
   });
 
+  // Reset Command for testing
+  bot.command('reset', async (ctx) => {
+    const tgId = ctx.from.id.toString();
+    const dummyEmail = `tg_${tgId}@telegram.local`;
+    db.prepare('UPDATE users SET email = ?, phone = NULL WHERE telegramId = ?').run(dummyEmail, tgId);
+    pendingCheckouts.delete(tgId);
+    activeSupportUsers.delete(tgId);
+    await ctx.reply('🔄 اطلاعات تماس شما (ایمیل و شماره موبایل) و وضعیت‌های ربات پاک شد. می‌توانید فرآیند خرید یا تست را مجدداً آغاز کنید.');
+  });
+
 
 function getWebsiteUrl(): string {
   const envUrl = (process.env.WEBSITE_URL || process.env.WEB_URL || process.env.APP_URL || '').trim();
