@@ -370,26 +370,38 @@ export const UserDashboard = () => {
                 </div>
                 <div className="text-left">
                   <div className="text-sm font-bold text-zinc-900 dark:text-white mb-1" dir="ltr">#{selectedInvoice.orderId.split('-')[1] || selectedInvoice.orderId}</div>
-                  <div className="text-xs text-zinc-500" dir="ltr">{new Date(selectedInvoice.orderDate).toLocaleDateString('fa-IR')}</div>
+                  <div className="text-xs text-zinc-500" dir="ltr">{new Date(selectedInvoice.orderDate).toLocaleString('fa-IR', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })}</div>
                 </div>
               </div>
 
               <div className="mb-6 space-y-4">
                 <div className="flex justify-between items-center text-sm">
-                  <span className="text-zinc-500">مشخصات خریدار:</span>
-                  <span className="font-bold text-zinc-900 dark:text-white">{user.name || 'کاربر چت‌باکس'} ({user.phone || user.email})</span>
+                  <span className="font-bold text-zinc-900 dark:text-white">مشخصات خریدار:</span>
+                  <span className="text-zinc-700 dark:text-zinc-300">{user.name || 'کاربر چت‌باکس'} ({user.phone || user.email})</span>
+                </div>
+                {/* Optional Telegram Row */}
+                {/* For now, we will add a placeholder or check if user.telegramId exists. We don't have telegramId on user right now, so we will pretend or skip if not exist. Let's add it based on a condition if we have it in future. */}
+                <div className="flex justify-between items-center text-sm">
+                  <span className="font-bold text-zinc-900 dark:text-white">ثبت شده از طریق:</span>
+                  <span className="text-zinc-700 dark:text-zinc-300">سایت چت‌باکس</span>
                 </div>
                 <div className="flex justify-between items-center text-sm">
-                  <span className="text-zinc-500">نام محصول:</span>
-                  <span className="font-bold text-zinc-900 dark:text-white">{selectedInvoice.title}</span>
+                  <span className="font-bold text-zinc-900 dark:text-white">نام محصول:</span>
+                  <span className="text-zinc-700 dark:text-zinc-300">{selectedInvoice.title}</span>
                 </div>
                 <div className="flex justify-between items-center text-sm">
-                  <span className="text-zinc-500">وضعیت پرداخت:</span>
+                  <span className="font-bold text-zinc-900 dark:text-white">وضعیت پرداخت:</span>
                   {getStatusBadge(selectedInvoice.paymentStatus)}
                 </div>
+                {selectedInvoice.paymentStatus === 'success' && (
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="font-bold text-zinc-900 dark:text-white">تاریخ و ساعت تحویل:</span>
+                    <span className="text-zinc-700 dark:text-zinc-300" dir="ltr">{new Date(selectedInvoice.orderDate).toLocaleString('fa-IR', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })}</span>
+                  </div>
+                )}
                 {selectedInvoice.licenseKey && selectedInvoice.paymentStatus === 'success' && (
                   <div className="flex flex-col gap-2 p-3 bg-zinc-50 dark:bg-zinc-800/50 rounded-xl border border-zinc-200 dark:border-zinc-800 text-sm">
-                    <span className="text-zinc-500 font-bold">کد لایسنس شما:</span>
+                    <span className="font-bold text-zinc-900 dark:text-white">کد لایسنس شما:</span>
                     <span className="font-mono text-center tracking-widest text-zinc-900 dark:text-white" dir="ltr">{selectedInvoice.licenseKey}</span>
                   </div>
                 )}
