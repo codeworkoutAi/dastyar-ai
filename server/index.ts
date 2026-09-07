@@ -138,19 +138,6 @@ async function start() {
   app.listen(Number(PORT), '0.0.0.0', () => {
     console.log(`Persian AI Chatbox Server running on http://localhost:${PORT}`);
     startTelegramBot();
-
-    // Self-ping mechanism to keep Render instance awake
-    // TODO: Remove this once moved to a dedicated web host
-    const selfPingUrl = (process.env.WEBSITE_URL || process.env.WEB_URL || process.env.APP_URL || '').trim();
-    if (selfPingUrl && !selfPingUrl.includes('localhost')) {
-      const cleanUrl = selfPingUrl.replace(/\/$/, '');
-      setInterval(() => {
-        fetch(cleanUrl)
-          .then(res => console.log(`[Self-Ping] Sent ping to ${cleanUrl}, status: ${res.status}`))
-          .catch(err => console.error(`[Self-Ping] Ping failed:`, err.message));
-      }, 10 * 60 * 1000); // Every 10 minutes
-      console.log(`[Self-Ping] Initialized for ${cleanUrl} every 10 minutes.`);
-    }
   });
 }
 
