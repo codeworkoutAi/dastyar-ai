@@ -653,38 +653,38 @@ export async function sendTelegramOrderSuccess(orderId: string, licenseId: numbe
     `).get(orderId) as any;
 
     if (orderInfo?.telegramId) {
-      let msg = `${RLM}🎉 **سفارش شما با موفقیت توسط مدیریت تأیید شد!**\n\n` +
-                `${RLM}📦 **محصول:** ${orderInfo.productTitle || 'سفارش شما'}\n` +
-                `${RLM}🔢 **شماره سفارش:** \`${orderId}\`\n\n`;
+      let msg = `${RLM}🎉 <b>سفارش شما با موفقیت توسط مدیریت تأیید شد!</b>\n\n` +
+                `${RLM}📦 <b>محصول:</b> ${orderInfo.productTitle || 'سفارش شما'}\n` +
+                `${RLM}🔢 <b>شماره سفارش:</b> <code>${orderId}</code>\n\n`;
 
       const activeLicenseId = licenseId || orderInfo.licenseId;
       if (activeLicenseId) {
         const lic = db.prepare('SELECT key FROM licenses WHERE id = ?').get(activeLicenseId) as any;
         if (lic?.key) {
-          msg += `${RLM}🔑 **کد لایسنس شما:**\n\`${lic.key}\`\n\n`;
+          msg += `${RLM}🔑 <b>کد لایسنس شما:</b>\n<code>${lic.key}</code>\n\n`;
           
           if (orderInfo.baseUrl) {
             let cleanBaseUrl = orderInfo.baseUrl.replace(/\/$/, '');
-            msg += `${RLM}🔗 **راهنمای استفاده از API:**\n` +
+            msg += `${RLM}🔗 <b>راهنمای استفاده از API:</b>\n` +
                    `جهت استفاده از سرویس، می‌توانید از نمونه کد cURL زیر استفاده کنید:\n\n` +
-                   `\`\`\`bash\ncurl -X POST ${cleanBaseUrl} \\\n` +
-                   `-H "Authorization: Bearer ${lic.key}"\n\`\`\`\n\n`;
+                   `<pre>curl -X POST ${cleanBaseUrl} \\\n` +
+                   `-H "Authorization: Bearer ${lic.key}"</pre>\n\n`;
           }
           
           if (orderInfo.deliveryGuide) {
-            msg += `${RLM}📖 **راهنمای تحویل:**\n${orderInfo.deliveryGuide}\n\n`;
+            msg += `${RLM}📖 <b>راهنمای تحویل:</b>\n${orderInfo.deliveryGuide}\n\n`;
           }
 
-          msg += `💡 *این لایسنس برای شما ثبت شده و در صورت نیاز از طریق وب‌سایت در بخش «ردیم کد» نیز قابل استفاده است.*`;
+          msg += `💡 <i>این لایسنس برای شما ثبت شده و در صورت نیاز از طریق وب‌سایت در بخش «ردیم کد» نیز قابل استفاده است.</i>`;
         }
       } else {
         msg += `${RLM}✅ سفارش شما تایید و فعال شد.\n\n`;
         if (orderInfo.deliveryGuide) {
-          msg += `${RLM}📖 **راهنمای تحویل:**\n${orderInfo.deliveryGuide}\n\n`;
+          msg += `${RLM}📖 <b>راهنمای تحویل:</b>\n${orderInfo.deliveryGuide}\n\n`;
         }
       }
 
-      await bot.telegram.sendMessage(orderInfo.telegramId, msg, { parse_mode: 'Markdown' });
+      await bot.telegram.sendMessage(orderInfo.telegramId, msg, { parse_mode: 'HTML' });
       console.log(`[Telegram] Order success notification sent to user ${orderInfo.telegramId}`);
     }
   } catch (err) {
