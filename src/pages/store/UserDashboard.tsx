@@ -404,7 +404,7 @@ export const UserDashboard = () => {
             <div className="p-4 bg-zinc-50 dark:bg-zinc-800/50 border-t border-zinc-200 dark:border-zinc-800 flex justify-end gap-3 rounded-b-3xl">
               <button 
                 onClick={() => setSelectedInvoice(null)}
-                className="px-5 py-2.5 rounded-xl font-bold text-sm text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors"
+                className="px-5 py-2.5 rounded-xl font-bold text-sm bg-zinc-200 hover:bg-zinc-300 text-zinc-700 dark:bg-zinc-800 dark:hover:bg-zinc-700 dark:text-zinc-300 transition-colors"
               >
                 بستن
               </button>
