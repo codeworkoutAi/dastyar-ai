@@ -6,6 +6,7 @@ import { SocksProxyAgent } from 'socks-proxy-agent';
 export let bot: Telegraf<any> | null = null;
 const RLM = '\u200F';
 const pendingCheckouts = new Map<string, string>(); // tgId -> productId
+const pendingReceipts = new Map<string, string>(); // tgId -> orderId
 const activeSupportUsers = new Set<string>(); // Users currently in support mode
 const adminMessageMap = new Map<number, string>(); // Maps admin message IDs to user telegram IDs
 
@@ -436,7 +437,8 @@ async function sendStoreShowcase(ctx: any, page: number = 0, isEdit: boolean = f
 
     if (isOnlineUrl) {
       const paymentUrl = `${rawUrl}/api/store/mock-payment?orderId=${orderId}`;
-      keyboardButtons.push([Markup.button.url('💳 انتقال به درگاه پرداخت', paymentUrl)]);
+      keyboardButtons.push([Markup.button.url('💳 پرداخت آنلاین (درگاه)', paymentUrl)]);
+      keyboardButtons.push([Markup.button.callback('💳 پرداخت کارت به کارت', `c2c_${orderId}`)]);
     } else {
       // Local/Direct request submission button
       keyboardButtons.push([Markup.button.callback('📤 ثبت و ارسال به مدیریت جهت تأیید', `submit_order_${orderId}`)]);
@@ -508,6 +510,28 @@ async function sendStoreShowcase(ctx: any, page: number = 0, isEdit: boolean = f
     }
   });
 
+  // Handler for Card to Card payment
+  bot.action(/^c2c_(.+)$/, async (ctx) => {
+    const orderId = ctx.match[1];
+    const tgId = ctx.from.id.toString();
+    pendingReceipts.set(tgId, orderId);
+    
+    const c2cMessage = 
+      `💳 **پرداخت کارت به کارت**\n\n` +
+      `لطفاً مبلغ فاکتور را به شماره کارت زیر واریز نمایید:\n\n` +
+      `💳 \`1234-5678-9012-3456\`\n` +
+      `👤 به نام: (نام صاحب حساب در فایل bot.ts ویرایش شود)\n\n` +
+      `📸 **پس از واریز، لطفاً عکس فیش واریزی خود را دقیقاً در همین چت ارسال کنید.**`;
+      
+    await ctx.reply(c2cMessage, { 
+      parse_mode: 'Markdown',
+      reply_markup: {
+        inline_keyboard: [[Markup.button.callback('انصراف و بازگشت', 'back_to_store')]]
+      }
+    });
+    await ctx.answerCbQuery();
+  });
+
   bot.command('chatid', (ctx) => {
     ctx.reply(`آیدی این چت/گروه:\n\`${ctx.chat.id}\``, { parse_mode: 'Markdown' });
   });
@@ -516,8 +540,29 @@ async function sendStoreShowcase(ctx: any, page: number = 0, isEdit: boolean = f
     const tgId = ctx.from?.id.toString();
     if (!tgId) return;
 
-    // Check if the sender is admin replying to a support message
     const ADMIN_ID = process.env.TELEGRAM_ADMIN_ID || '';
+
+    // Check if waiting for receipt photo
+    if (pendingReceipts.has(tgId)) {
+      if (ctx.message.photo || ctx.message.document) {
+        const orderId = pendingReceipts.get(tgId);
+        pendingReceipts.delete(tgId);
+        
+        if (ADMIN_ID) {
+          const order = db.prepare('SELECT o.*, p.title as productTitle, p.price as productPrice FROM orders o LEFT JOIN products p ON o.productId = p.id WHERE o.id = ?').get(orderId) as any;
+          const priceFa = Number(order?.productPrice || 0).toLocaleString('fa-IR');
+          
+          await ctx.telegram.sendMessage(ADMIN_ID, `🧾 **فیش واریزی جدید (کارت به کارت)**\n\n📦 **محصول:** ${order?.productTitle}\n💰 **مبلغ:** ${priceFa} تومان\n🔢 **سفارش:** \`${orderId}\`\n👤 **کاربر:** ${ctx.from.first_name}\n🆔 **آیدی:** \`${tgId}\``, { parse_mode: 'Markdown' });
+          await ctx.telegram.copyMessage(ADMIN_ID, ctx.chat.id, ctx.message.message_id);
+        }
+        
+        return ctx.reply('✅ فیش واریزی شما دریافت شد و جهت بررسی برای مدیریت ارسال گردید.\n\nپس از تایید مدیریت در پنل ادمین، لایسنس شما به صورت خودکار ارسال خواهد شد.');
+      } else {
+        return ctx.reply('لطفاً فقط عکس فیش واریزی را ارسال کنید.');
+      }
+    }
+
+    // Check if the sender is admin replying to a support message
     const isAdminChat = ctx.chat.id.toString() === ADMIN_ID;
 
     if (ADMIN_ID && isAdminChat && ctx.message.reply_to_message) {
