@@ -1,5 +1,5 @@
 import express from 'express';
-import db from '../db/database';
+import db, { syncDatabase } from '../db/database';
 import { requireAuth } from '../middleware/auth';
 import { bot } from '../telegram/bot';
 
@@ -137,55 +137,28 @@ router.get('/mock-callback', (req, res) => {
   if (!orderId) return res.redirect('/store?payment=failed');
 
   if (status === 'success') {
-    // Attempt to fulfill the order
+    // Keep the order as 'pending' for manual review by admin
     try {
-      db.exec('BEGIN EXCLUSIVE TRANSACTION');
       const orderStmt = db.prepare('SELECT * FROM orders WHERE id = ?');
       const order = orderStmt.get(orderId) as any;
       
       if (!order || order.paymentStatus !== 'pending') {
-        db.exec('ROLLBACK');
         return res.redirect('/store?payment=failed');
       }
 
-      const productStmt = db.prepare('SELECT category FROM products WHERE id = ?');
+      const productStmt = db.prepare('SELECT category, title FROM products WHERE id = ?');
       const product = productStmt.get(order.productId) as any;
-      let licenseId = null;
 
-      if (product && product.category !== 'package') {
-        // Find an available license
-        const licenseStmt = db.prepare('SELECT id FROM licenses WHERE productId = ? AND status = ? LIMIT 1');
-        const license = licenseStmt.get(order.productId, 'available') as any;
-        if (license) {
-          licenseId = license.id;
-          // Mark license as sold
-          db.prepare('UPDATE licenses SET status = ? WHERE id = ?').run('sold', licenseId);
-        }
-      }
-
-      // Update order
-      db.prepare('UPDATE orders SET paymentStatus = ?, licenseId = ? WHERE id = ?')
-        .run('success', licenseId, orderId);
-        
-      db.exec('COMMIT');
-
-      // Send instant Telegram notification if this order was placed by a Telegram user
+      // Send Telegram notification that order is pending review
       try {
         const orderUser = db.prepare('SELECT telegramId FROM users WHERE id = ?').get(order.userId) as any;
         if (orderUser?.telegramId && bot) {
-          let tgNotice = `🎉 **پرداخت سفارش شما با موفقیت تایید شد!**\n\n` +
+          let tgNotice = `⏳ **سفارش شما با موفقیت ثبت شد و در انتظار تایید مدیریت است.**\n\n` +
                          `📦 **محصول:** ${product?.title || ''}\n` +
-                         `🔢 **شماره سفارش:** \`${orderId}\`\n\n`;
-          if (licenseId) {
-            const lic = db.prepare('SELECT key FROM licenses WHERE id = ?').get(licenseId) as any;
-            if (lic?.key) {
-              tgNotice += `🔑 **کد لایسنس شما:**\n\`${lic.key}\`\n\nاز اعتماد و خرید شما سپاسگزاریم!`;
-            }
-          } else {
-            tgNotice += `✅ سفارش پکیج شما ثبت و فعال شد.`;
-          }
+                         `🔢 **شماره سفارش:** \`${orderId}\`\n\n` +
+                         `پس از بررسی و تایید توسط پشتیبانی، لایسنس شما از همین طریق ارسال خواهد شد.`;
           bot.telegram.sendMessage(orderUser.telegramId, tgNotice, { parse_mode: 'Markdown' }).catch((e) => {
-            console.error('[Store] Failed to send Telegram success notification:', e);
+            console.error('[Store] Failed to send Telegram pending notification:', e);
           });
         }
       } catch (tgErr) {
@@ -194,13 +167,13 @@ router.get('/mock-callback', (req, res) => {
 
       res.redirect('/store?payment=success&orderId=' + orderId);
     } catch (err) {
-      db.exec('ROLLBACK');
       console.error(err);
       res.redirect('/store?payment=failed');
     }
   } else {
     // Failed payment
     db.prepare('UPDATE orders SET paymentStatus = ? WHERE id = ?').run('failed', orderId);
+    syncDatabase();
     res.redirect('/store?payment=failed');
   }
 });
@@ -259,6 +232,7 @@ router.post('/redeem', requireAuth, (req: any, res) => {
       }
       // Transfer the order to this user (they are linking their purchase to their web account)
       db.prepare('UPDATE orders SET userId = ? WHERE id = ?').run(userId, order.id);
+      syncDatabase();
       return res.json({ message: 'لایسنس با موفقیت به حساب شما متصل شد' });
     } else {
       // If it's an 'available' license that was never sold (e.g. admin gave it directly)
@@ -266,17 +240,15 @@ router.post('/redeem', requireAuth, (req: any, res) => {
         const product = db.prepare('SELECT * FROM products WHERE id = ?').get(license.productId) as any;
         const orderId = 'RDM-' + Math.random().toString(36).substring(2, 10).toUpperCase();
         
-        db.exec('BEGIN EXCLUSIVE TRANSACTION');
         try {
           db.prepare('UPDATE licenses SET status = ? WHERE id = ?').run('sold', license.id);
           db.prepare(`
             INSERT INTO orders (id, userId, productId, licenseId, amount, paymentStatus) 
             VALUES (?, ?, ?, ?, ?, 'success')
           `).run(orderId, userId, license.productId, product ? product.price : 0);
-          db.exec('COMMIT');
+          syncDatabase();
           return res.json({ message: 'لایسنس با موفقیت فعال و در حساب شما ثبت شد' });
         } catch (err) {
-          db.exec('ROLLBACK');
           throw err;
         }
       } else {
