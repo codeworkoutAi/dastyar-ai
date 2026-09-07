@@ -71,7 +71,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ product, isOpen, o
       }
 
       // Redirect to Telegram
-      const telegramUsername = 'FaChatBox_bot';
+      const telegramUsername = 'DastyaraiAdmin';
       const message = encodeURIComponent(`سلام، فیش واریز سفارش ${data.orderId} (مبلغ: ${product.price.toLocaleString()} تومان) را ضمیمه این پیام ارسال می‌کنم.\nشماره پیگیری/کارت: ${trackingNumber}`);
       window.open(`https://t.me/${telegramUsername}?text=${message}`, '_blank');
       
