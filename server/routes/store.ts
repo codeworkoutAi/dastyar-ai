@@ -186,6 +186,7 @@ router.get('/purchases', requireAuth, (req: any, res) => {
       SELECT 
         o.id as orderId,
         o.amount,
+        o.paymentStatus,
         o.createdAt as orderDate,
         p.id as productId,
         p.title,
@@ -196,7 +197,7 @@ router.get('/purchases', requireAuth, (req: any, res) => {
       FROM orders o
       JOIN products p ON o.productId = p.id
       LEFT JOIN licenses l ON o.licenseId = l.id
-      WHERE o.userId = ? AND o.paymentStatus = 'success'
+      WHERE o.userId = ?
       ORDER BY o.createdAt DESC
     `).all(userId);
     

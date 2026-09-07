@@ -1,6 +1,6 @@
 import express from 'express';
 import bcrypt from 'bcryptjs';
-import db from '../db/database';
+import db, { syncDatabase } from '../db/database';
 import jwt from 'jsonwebtoken';
 import { requireAuth } from '../middleware/auth';
 import { sendOtpSms } from '../services/kavenegar';
@@ -370,6 +370,68 @@ router.post('/reset-password', async (req, res) => {
   } catch (error) {
     console.error('[Auth API] Reset Password Error:', error);
     res.status(500).json({ error: 'خطای سرور در تغییر رمز عبور' });
+  }
+});
+
+// PUT /api/auth/profile
+router.put('/profile', requireAuth, (req: any, res) => {
+  try {
+    const { name, email } = req.body;
+    const userId = req.user.id;
+
+    if (!name || name.trim() === '') {
+      return res.status(400).json({ error: 'نام و نام خانوادگی نمی‌تواند خالی باشد.' });
+    }
+
+    // Check if email is already taken by someone else
+    if (email && email.trim() !== '') {
+      const existingUser = db.prepare('SELECT id FROM users WHERE email = ? AND id != ?').get(email.trim(), userId);
+      if (existingUser) {
+        return res.status(400).json({ error: 'این ایمیل توسط کاربر دیگری استفاده شده است.' });
+      }
+    }
+
+    db.prepare('UPDATE users SET name = ?, email = ? WHERE id = ?').run(name.trim(), email ? email.trim() : null, userId);
+    syncDatabase();
+
+    res.json({ message: 'پروفایل با موفقیت بروزرسانی شد.' });
+  } catch (error) {
+    console.error('[Auth API] Update Profile Error:', error);
+    res.status(500).json({ error: 'خطای سرور در بروزرسانی پروفایل.' });
+  }
+});
+
+// PUT /api/auth/password
+router.put('/password', requireAuth, async (req: any, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    const userId = req.user.id;
+
+    if (!currentPassword || !newPassword || newPassword.length < 6) {
+      return res.status(400).json({ error: 'رمز عبور فعلی و رمز عبور جدید (حداقل ۶ کاراکتر) الزامی است.' });
+    }
+
+    const user = db.prepare('SELECT * FROM users WHERE id = ?').get(userId) as any;
+
+    if (!user.passwordHash) {
+      return res.status(400).json({ error: 'شما با شماره موبایل ثبت‌نام کرده‌اید و رمز عبور ندارید.' });
+    }
+
+    const isValid = await bcrypt.compare(currentPassword, user.passwordHash);
+    if (!isValid) {
+      return res.status(400).json({ error: 'رمز عبور فعلی اشتباه است.' });
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const passwordHash = await bcrypt.hash(newPassword, salt);
+
+    db.prepare('UPDATE users SET passwordHash = ? WHERE id = ?').run(passwordHash, userId);
+    syncDatabase();
+
+    res.json({ message: 'رمز عبور با موفقیت تغییر کرد.' });
+  } catch (error) {
+    console.error('[Auth API] Update Password Error:', error);
+    res.status(500).json({ error: 'خطای سرور در تغییر رمز عبور.' });
   }
 });
 
