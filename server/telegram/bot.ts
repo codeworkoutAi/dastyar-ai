@@ -404,14 +404,13 @@ async function sendStoreShowcase(ctx: any, page: number = 0, isEdit: boolean = f
     `);
     insertStmt.run(orderId, user.id, product.id, product.price);
 
-    // Determine environment URL (Render, Production, or Localhost)
-    const rawUrl = (process.env.WEB_URL || process.env.APP_URL || '').trim();
+    // Determine environment URL (Custom Domain, Render, Production, or Localhost)
+    const rawUrl = getWebsiteUrl();
     const isOnlineUrl = Boolean(
       rawUrl &&
-      (rawUrl.startsWith('http://') || rawUrl.startsWith('https://')) &&
+      rawUrl.startsWith('http') &&
       !rawUrl.includes('localhost') &&
-      !rawUrl.includes('127.0.0.1') &&
-      !rawUrl.includes('MY_APP_URL')
+      !rawUrl.includes('127.0.0.1')
     );
 
     const priceFa = Number(product.price || 0).toLocaleString('fa-IR');
@@ -426,8 +425,7 @@ async function sendStoreShowcase(ctx: any, page: number = 0, isEdit: boolean = f
     const keyboardButtons: any[] = [];
 
     if (isOnlineUrl) {
-      const cleanBaseUrl = rawUrl.replace(/\/$/, '');
-      const paymentUrl = `${cleanBaseUrl}/api/store/mock-payment?orderId=${orderId}`;
+      const paymentUrl = `${rawUrl}/api/store/mock-payment?orderId=${orderId}`;
       keyboardButtons.push([Markup.button.url('💳 انتقال به درگاه پرداخت', paymentUrl)]);
     } else {
       // Local/Direct request submission button
