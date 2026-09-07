@@ -26,6 +26,7 @@
     "https-proxy-agent": "^9.1.0",
     "jsonwebtoken": "^9.0.3",
     "katex": "^0.18.4",
+    "libsql": "^0.5.29",
     "lucide-react": "^0.546.0",
     "node-cron": "^4.6.0",
     "nodemailer": "^9.1.1",
