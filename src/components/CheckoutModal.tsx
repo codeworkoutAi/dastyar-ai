@@ -13,6 +13,9 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ product, isOpen, o
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const [paymentMethod, setPaymentMethod] = useState<'online' | 'card'>('online');
+  const [trackingNumber, setTrackingNumber] = useState('');
+
   if (!isOpen || !product) return null;
 
   const handleCheckout = async () => {
@@ -38,6 +41,44 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ product, isOpen, o
       if (data.paymentUrl) {
         window.location.href = data.paymentUrl;
       }
+    } catch (err: any) {
+      setError(err.message);
+      setLoading(false);
+    }
+  };
+
+  const handleManualCheckout = async () => {
+    if (!trackingNumber.trim()) {
+      setError('لطفاً شماره پیگیری یا ۴ رقم آخر کارت را وارد کنید.');
+      return;
+    }
+    try {
+      setLoading(true);
+      setError(null);
+      const res = await fetch('/api/store/checkout-manual', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}` 
+        },
+        body: JSON.stringify({ productId: product.id, trackingNumber })
+      });
+      
+      const data = await res.json();
+      
+      if (!res.ok) {
+        throw new Error(data.error || 'خطا در ایجاد فاکتور');
+      }
+
+      // Redirect to Telegram
+      const telegramUsername = 'FaChatboxAdmin'; // TODO: Update with real admin
+      const message = encodeURIComponent(`سلام، فیش واریز سفارش ${data.orderId} (مبلغ: ${product.price.toLocaleString()} تومان) را ضمیمه این پیام ارسال می‌کنم.\nشماره پیگیری/کارت: ${trackingNumber}`);
+      window.open(`https://t.me/${telegramUsername}?text=${message}`, '_blank');
+      
+      onClose();
+      // Optionally reload or let user go to dashboard to see pending order
+      window.location.assign('/store?tab=dashboard');
+      
     } catch (err: any) {
       setError(err.message);
       setLoading(false);
@@ -106,25 +147,80 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ product, isOpen, o
                 <span>تومان</span>
               </div>
             </div>
+            </div>
           </div>
 
-          <button 
-            onClick={handleCheckout}
-            disabled={loading}
-            className="w-full py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
-          >
-            {loading ? (
-              <>
+          {/* Payment Method Tabs */}
+          <div className="flex bg-zinc-100 dark:bg-zinc-800 p-1 rounded-xl">
+            <button 
+              onClick={() => setPaymentMethod('online')}
+              className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all ${paymentMethod === 'online' ? 'bg-white dark:bg-zinc-700 shadow-sm text-blue-600 dark:text-blue-400' : 'text-zinc-500 dark:text-zinc-400'}`}
+            >
+              درگاه پرداخت
+            </button>
+            <button 
+              onClick={() => setPaymentMethod('card')}
+              className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all ${paymentMethod === 'card' ? 'bg-white dark:bg-zinc-700 shadow-sm text-blue-600 dark:text-blue-400' : 'text-zinc-500 dark:text-zinc-400'}`}
+            >
+              کارت به کارت
+            </button>
+          </div>
+
+          {paymentMethod === 'card' && (
+            <div className="flex flex-col gap-4 animate-fadeIn">
+              <div className="p-4 bg-blue-50 dark:bg-blue-900/10 rounded-xl border border-blue-100 dark:border-blue-900/30 text-center flex flex-col gap-2">
+                <span className="text-sm text-blue-800 dark:text-blue-200">لطفا مبلغ فوق را به شماره کارت زیر واریز نمایید:</span>
+                <span className="text-xl font-bold font-mono tracking-widest text-blue-900 dark:text-white" dir="ltr">1234-5678-1234-5678</span>
+                <span className="text-xs font-bold text-blue-700 dark:text-blue-300">به نام: مدیریت چت باکس</span>
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-zinc-600 dark:text-zinc-400 mb-2">شماره پیگیری یا ۴ رقم آخر کارت:</label>
+                <input 
+                  type="text" 
+                  value={trackingNumber}
+                  onChange={(e) => setTrackingNumber(e.target.value)}
+                  placeholder="مثال: 123456 یا 8765"
+                  className="w-full px-4 py-3 rounded-xl bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 focus:border-blue-500 focus:ring-1 outline-none text-sm font-mono text-center"
+                  dir="ltr"
+                />
+              </div>
+            </div>
+          )}
+
+          {paymentMethod === 'online' ? (
+            <button 
+              onClick={handleCheckout}
+              disabled={loading}
+              className="w-full py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+            >
+              {loading ? (
+                <>
+                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  در حال انتقال به درگاه...
+                </>
+              ) : (
+                'تایید و انتقال به درگاه پرداخت'
+              )}
+            </button>
+          ) : (
+            <button 
+              onClick={handleManualCheckout}
+              disabled={loading || !trackingNumber.trim()}
+              className="w-full py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+            >
+              {loading ? (
                 <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                در حال انتقال به درگاه...
-              </>
-            ) : (
-              'تایید و انتقال به درگاه پرداخت'
-            )}
-          </button>
+              ) : (
+                'ثبت پرداخت و ارسال فیش در تلگرام'
+              )}
+            </button>
+          )}
           
           <p className="text-xs text-center text-zinc-500 dark:text-zinc-500">
-            با کلیک روی دکمه بالا، به درگاه پرداخت امن منتقل خواهید شد.
+            {paymentMethod === 'online' 
+              ? 'با کلیک روی دکمه بالا، به درگاه پرداخت امن منتقل خواهید شد.'
+              : 'پس از ثبت، برای ارسال عکس فیش به تلگرام پشتیبانی هدایت می‌شوید.'
+            }
           </p>
         </div>
       </div>

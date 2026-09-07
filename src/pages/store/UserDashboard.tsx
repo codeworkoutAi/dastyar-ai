@@ -266,6 +266,11 @@ export const UserDashboard = () => {
                     </div>
                     <div className="flex flex-col items-end gap-2 shrink-0">
                       {getStatusBadge(p.paymentStatus)}
+                      {p.trackingNumber && (
+                        <div className="text-xs bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 px-3 py-1.5 rounded-lg font-mono border border-zinc-200 dark:border-zinc-700 mt-1">
+                          پیگیری: {p.trackingNumber}
+                        </div>
+                      )}
                       {p.licenseKey && p.paymentStatus === 'success' && (
                         <div className="text-xs bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 px-3 py-1.5 rounded-lg font-mono border border-emerald-100 dark:border-emerald-800/50 flex items-center gap-2 mt-1">
                           <Key size={12} /> {p.licenseKey}

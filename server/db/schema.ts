@@ -183,6 +183,24 @@ export function initializeSchema() {
     )
   `);
 
+  // Migration: Add paymentMethod and trackingNumber to orders table
+  try {
+    const tableInfo = db.prepare(`PRAGMA table_info(orders)`).all() as any[];
+    const hasPaymentMethod = tableInfo.some(col => col.name === 'paymentMethod');
+    const hasTrackingNumber = tableInfo.some(col => col.name === 'trackingNumber');
+
+    if (!hasPaymentMethod) {
+      db.exec(`ALTER TABLE orders ADD COLUMN paymentMethod TEXT DEFAULT 'online'`);
+      console.log('[DB Schema] Added paymentMethod column to orders table.');
+    }
+    if (!hasTrackingNumber) {
+      db.exec(`ALTER TABLE orders ADD COLUMN trackingNumber TEXT`);
+      console.log('[DB Schema] Added trackingNumber column to orders table.');
+    }
+  } catch (e) {
+    console.error('Migration error (orders):', e);
+  }
+
   // Create News table
   db.exec(`
     CREATE TABLE IF NOT EXISTS news (

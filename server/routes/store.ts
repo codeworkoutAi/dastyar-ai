@@ -97,6 +97,45 @@ router.post('/checkout', requireAuth, (req: any, res) => {
   }
 });
 
+// POST /api/store/checkout-manual
+router.post('/checkout-manual', requireAuth, (req: any, res) => {
+  try {
+    const { productId, trackingNumber } = req.body;
+    const userId = req.user.id;
+
+    if (!productId) return res.status(400).json({ error: 'شناسه محصول نامعتبر است' });
+    if (!trackingNumber) return res.status(400).json({ error: 'شماره پیگیری نامعتبر است' });
+
+    const product = db.prepare(`
+      SELECT p.*, COUNT(CASE WHEN l.status = 'available' THEN 1 END) as stock
+      FROM products p LEFT JOIN licenses l ON p.id = l.productId
+      WHERE p.id = ? GROUP BY p.id
+    `).get(productId) as any;
+
+    if (!product) return res.status(404).json({ error: 'محصول پیدا نشد' });
+    if (product.category !== 'package' && product.stock <= 0) {
+      return res.status(400).json({ error: 'موجودی این محصول به اتمام رسیده است' });
+    }
+
+    const orderId = 'ORD-' + Math.random().toString(36).substring(2, 10).toUpperCase();
+    
+    // We update the insert statement to include trackingNumber and paymentMethod if they exist in schema.
+    // We already added them via migration.
+    const insertStmt = db.prepare(`
+      INSERT INTO orders (id, userId, productId, amount, paymentStatus, paymentMethod, trackingNumber) 
+      VALUES (?, ?, ?, ?, 'pending', 'card', ?)
+    `);
+    
+    insertStmt.run(orderId, userId, productId, product.price, trackingNumber);
+
+    res.json({ message: 'فاکتور ایجاد شد', orderId });
+
+  } catch (error) {
+    console.error('[Store API] Manual Checkout error:', error);
+    res.status(500).json({ error: 'خطای سرور در ثبت پرداخت کارت به کارت' });
+  }
+});
+
 // GET /api/store/mock-payment (Dummy gateway to simulate successful payment)
 router.get('/mock-payment', (req, res) => {
   const { orderId } = req.query;
@@ -187,6 +226,7 @@ router.get('/purchases', requireAuth, (req: any, res) => {
         o.id as orderId,
         o.amount,
         o.paymentStatus,
+        o.trackingNumber,
         o.createdAt as orderDate,
         p.id as productId,
         p.title,
