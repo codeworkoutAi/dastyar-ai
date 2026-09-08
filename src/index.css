@@ -2,6 +2,10 @@
 @import url('https://cdn.jsdelivr.net/gh/rastikerdar/sahel-font@v3.4.0/dist/font-face.css');
 @import "tailwindcss";
 @import "@fontsource/estedad/index.css";
+@import "@fontsource/estedad/500.css";
+@import "@fontsource/estedad/600.css";
+@import "@fontsource/estedad/700.css";
+@import "@fontsource/estedad/800.css";
 @plugin "@tailwindcss/typography";
 
 @custom-variant dark (&:is(.dark *));
@@ -9,7 +13,7 @@
 @font-face {
   font-family: 'Mikhak';
   src: url('https://cdn.jsdelivr.net/gh/aminabedi68/Mikhak@main/fonts/woff2/Mikhak-Regular.woff2') format('woff2');
-  font-weight: 400;
+  font-weight: 100 500;
   font-style: normal;
   font-display: swap;
 }
@@ -17,13 +21,17 @@
 @font-face {
   font-family: 'Mikhak';
   src: url('https://cdn.jsdelivr.net/gh/aminabedi68/Mikhak@main/fonts/woff2/Mikhak-Bold.woff2') format('woff2');
-  font-weight: 700;
+  font-weight: 600 900;
   font-style: normal;
   font-display: swap;
 }
 
 @theme {
   --font-sans: var(--user-font-family);
+  --font-display: var(--font-display);
+  --font-ui: var(--font-ui);
+  --font-reading: var(--font-reading);
+  --font-chat: var(--font-chat);
   --font-mono: var(--font-mono);
   --color-subtle: var(--border-subtle);
   --color-strong: var(--border-strong);
@@ -31,40 +39,108 @@
 
 @layer base {
   :root {
-  --chat-font-size: 15.5px;
-  --chat-line-height: 1.8;
-    --user-font-family: 'Vazirmatn', 'Vazir', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    --font-persian: var(--user-font-family);
-    --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace;
     --chat-font-size: 15.5px;
     --chat-line-height: 1.8;
+    --font-display-family: 'Mikhak', 'Estedad', 'Vazirmatn', sans-serif;
+    --font-ui-family: 'Estedad', 'Vazirmatn', -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-reading-family: 'Sahel', 'Vazirmatn', serif, sans-serif;
+    --font-chat-family: 'Vazirmatn', 'Vazir', -apple-system, BlinkMacSystemFont, sans-serif;
+
+    --user-font-family: var(--font-ui-family);
+    --font-display: var(--font-display-family);
+    --font-ui: var(--font-ui-family);
+    --font-reading: var(--font-reading-family);
+    --font-chat: var(--font-chat-family);
+    --font-persian: var(--user-font-family);
+    --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace;
   }
 
-  [data-font="vazir"],
-  [data-font="vazirmatn"],
+  /* Hybrid / Smart Multi-font mode (Default) */
+  [data-font="hybrid"],
   :root:not([data-font]) {
+    --user-font-family: var(--font-ui-family);
+    --font-display: var(--font-display-family);
+    --font-ui: var(--font-ui-family);
+    --font-reading: var(--font-reading-family);
+    --font-chat: var(--font-chat-family);
+    --font-persian: var(--user-font-family);
+  }
+
+  /* Single font override modes */
+  [data-font="vazir"],
+  [data-font="vazirmatn"] {
     --user-font-family: 'Vazirmatn', 'Vazir', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --font-display: var(--user-font-family);
+    --font-ui: var(--user-font-family);
+    --font-reading: var(--user-font-family);
+    --font-chat: var(--user-font-family);
     --font-persian: var(--user-font-family);
   }
 
   [data-font="sahel"] {
     --user-font-family: 'Sahel', 'Vazirmatn', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --font-display: var(--user-font-family);
+    --font-ui: var(--user-font-family);
+    --font-reading: var(--user-font-family);
+    --font-chat: var(--user-font-family);
     --font-persian: var(--user-font-family);
   }
 
   [data-font="estedad"] {
     --user-font-family: 'Estedad', 'Vazirmatn', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --font-display: var(--user-font-family);
+    --font-ui: var(--user-font-family);
+    --font-reading: var(--user-font-family);
+    --font-chat: var(--user-font-family);
     --font-persian: var(--user-font-family);
   }
 
   [data-font="mikhak"] {
     --user-font-family: 'Mikhak', 'Vazirmatn', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --font-display: var(--user-font-family);
+    --font-ui: var(--user-font-family);
+    --font-reading: var(--user-font-family);
+    --font-chat: var(--user-font-family);
     --font-persian: var(--user-font-family);
   }
 
-
   body, button, input, select, textarea {
     font-family: var(--user-font-family);
+  }
+
+  /* Role specific utilities and elements */
+  .font-display,
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-display);
+  }
+
+  .font-ui {
+    font-family: var(--font-ui);
+  }
+
+  .font-reading {
+    font-family: var(--font-reading);
+  }
+
+  .font-chat,
+  .clay-bubble-user,
+  .clay-bubble-ai {
+    font-family: var(--font-chat);
+  }
+
+  /* KaTeX Math RTL isolation & scroll safety */
+  .katex {
+    direction: ltr !important;
+    unicode-bidi: isolate !important;
+    text-align: left;
+  }
+
+  .katex-display {
+    direction: ltr !important;
+    unicode-bidi: isolate !important;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 0.35rem 0;
   }
 
   body {

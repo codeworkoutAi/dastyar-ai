@@ -22,6 +22,8 @@ import { usePWAInstall } from '../lib/usePWAInstall';
 import { useUIStore } from '../store/uiStore';
 import { useSettingsStore } from '../store/settingsStore';
 import { useChatStore } from '../store/chatStore';
+import { useAuthStore } from '../store/authStore';
+import { ShieldCheck } from 'lucide-react';
 import { SmartRoutingAnimation } from './ChatBox';
 import { ThemeToggle } from './ThemeToggle';
 
@@ -37,7 +39,8 @@ export const SmartRoutingBadge: React.FC<{ isStreaming: boolean }> = ({ isStream
 };
 
 export const Header: React.FC = React.memo(() => {
-  const { toggleSidebar, setIsSettingsOpen, setIsExportOpen } = useUIStore();
+  const { toggleSidebar, setIsSettingsOpen, setIsExportOpen, setIsAdminOpen } = useUIStore();
+  const { user } = useAuthStore();
   const { settings, setSettings } = useSettingsStore();
   const { activeId, conversations, isStreaming, routingState } = useChatStore();
   const activeConversation = conversations.find((c) => c.id === activeId) || null;
@@ -126,7 +129,7 @@ export const Header: React.FC = React.memo(() => {
 
   return (
     <header className="relative flex items-center justify-center z-20 shrink-0 select-none border-b border-subtle clay-header backdrop-blur-md h-16 sm:h-18">
-      
+
       {/* -------------------- Original Header Content -------------------- */}
       <div className={`absolute inset-0 px-2.5 sm:px-4 md:px-6 flex items-center justify-between w-full h-full transition-all duration-500 ease-out ${isAnimating ? 'opacity-0 scale-95 pointer-events-none' : 'opacity-100 scale-100 pointer-events-auto'}`}>
 
@@ -146,49 +149,24 @@ export const Header: React.FC = React.memo(() => {
           <div className="min-w-0 hidden sm:flex flex-col justify-center">
             <h1 className="font-extrabold text-sm sm:text-base md:text-lg tracking-tight truncate flex items-center gap-1.5">
               <ChatRoundDotsOutlineIcon className="w-4 h-4 opacity-50 hidden md:block" />
-              دستیارهوشمند
+              دستیار هوشمند
             </h1>
             <p className="text-[10px] sm:text-[11px] opacity-70 truncate">
-              پشتیبانی از زبان فارسی با هوش مصنوعی
+              قدرتمند شده با زبان فارسی
             </p>
           </div>
         </div>
 
-      {/* 2. Absolute Center - Interactive Model Label Pill */}
-      <div className="absolute inset-0 flex justify-center items-center pointer-events-none z-40">
-        <div className="pointer-events-auto min-w-[120px] max-w-[280px] sm:max-w-sm w-auto relative flex justify-center" ref={dropdownRef}>
-          {isStreaming && settings.tools.smartRouting ? (
-            <div className="flex items-center justify-center transition-all w-full" dir="ltr">
-              {providerInfo.name}
-            </div>
-          ) : isStreaming ? (
-            <div
-              className="group flex items-center justify-center gap-2.5 px-2.5 py-2 sm:px-3 sm:py-2 rounded-xl sm:rounded-2xl transition-all w-full"
-              dir="ltr"
-            >
-              {providerInfo.icon ? (
-                <>
-                  {providerInfo.icon}
-                  <span className="font-extrabold text-sm sm:text-base text-[var(--accent-text)] truncate mt-0.5">
-                    {providerInfo.name}
-                  </span>
-                </>
-              ) : (
-                typeof providerInfo.name === 'string' ? (
-                  <span className="font-extrabold text-sm sm:text-base text-[var(--accent-text)] truncate mt-0.5">
-                    {providerInfo.name}
-                  </span>
-                ) : (
-                  providerInfo.name
-                )
-              )}
-              <AltArrowDownOutlineIcon className="w-3.5 h-3.5 text-[var(--text-main)] opacity-30 shrink-0" />
-            </div>
-          ) : (
-            <Tooltip content="تغییر سریع مدل یا باز کردن تنظیمات" className="w-full">
-              <button
-                onClick={() => setShowModelDropdown(!showModelDropdown)}
-                className="group flex items-center justify-center gap-2.5 px-2.5 py-2 sm:px-3 sm:py-2 clay-btn rounded-xl sm:rounded-2xl hover:opacity-90 transition-all shadow-sm cursor-pointer w-full"
+        {/* 2. Absolute Center - Interactive Model Label Pill */}
+        <div className="absolute inset-0 flex justify-center items-center pointer-events-none z-40">
+          <div className="pointer-events-auto min-w-[120px] max-w-[280px] sm:max-w-sm w-auto relative flex justify-center" ref={dropdownRef}>
+            {isStreaming && settings.tools.smartRouting ? (
+              <div className="flex items-center justify-center transition-all w-full" dir="ltr">
+                {providerInfo.name}
+              </div>
+            ) : isStreaming ? (
+              <div
+                className="group flex items-center justify-center gap-2.5 px-2.5 py-2 sm:px-3 sm:py-2 rounded-xl sm:rounded-2xl transition-all w-full"
                 dir="ltr"
               >
                 {providerInfo.icon ? (
@@ -207,161 +185,207 @@ export const Header: React.FC = React.memo(() => {
                     providerInfo.name
                   )
                 )}
-                <AltArrowDownOutlineIcon className={`w-3.5 h-3.5 text-[var(--text-main)] opacity-50 group-hover:opacity-100 transition-all shrink-0 ${showModelDropdown ? 'rotate-180' : ''}`} />
-              </button>
-            </Tooltip>
-          )}
-
-          {/* Dropdown Menu */}
-          {showModelDropdown && (
-            <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 w-56 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-2xl p-2 z-50 flex flex-col gap-1 overflow-hidden" dir="rtl">
-              <button
-                onClick={() => {
-                  setSettings({ ...settings, tools: { ...settings.tools, smartRouting: !settings.tools.smartRouting } });
-                  setShowModelDropdown(false);
-                }}
-                className={`flex items-center justify-center px-3 py-2.5 rounded-xl text-sm font-medium transition-colors cursor-pointer w-full text-center ${settings.tools.smartRouting ? 'bg-indigo-500/10 text-indigo-400' : 'hover:bg-zinc-100 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300'}`}
-              >
-                مسیریابی هوشمند
-              </button>
-
-              <div className="h-px bg-white dark:bg-zinc-800 my-1 mx-2" />
-
-              {/* Models List */}
-              {dropdownModels.map((model) => (
+                <AltArrowDownOutlineIcon className="w-3.5 h-3.5 text-[var(--text-main)] opacity-30 shrink-0" />
+              </div>
+            ) : (
+              <Tooltip content="تغییر سریع مدل یا باز کردن تنظیمات" className="w-full">
                 <button
-                  key={model.id}
+                  onClick={() => setShowModelDropdown(!showModelDropdown)}
+                  className="group flex items-center justify-center gap-2.5 px-2.5 py-2 sm:px-3 sm:py-2 clay-btn rounded-xl sm:rounded-2xl hover:opacity-90 transition-all shadow-sm cursor-pointer w-full"
                   dir="ltr"
+                >
+                  {providerInfo.icon ? (
+                    <>
+                      {providerInfo.icon}
+                      <span className="font-extrabold text-sm sm:text-base text-[var(--accent-text)] truncate mt-0.5">
+                        {providerInfo.name}
+                      </span>
+                    </>
+                  ) : (
+                    typeof providerInfo.name === 'string' ? (
+                      <span className="font-extrabold text-sm sm:text-base text-[var(--accent-text)] truncate mt-0.5">
+                        {providerInfo.name}
+                      </span>
+                    ) : (
+                      providerInfo.name
+                    )
+                  )}
+                  <AltArrowDownOutlineIcon className={`w-3.5 h-3.5 text-[var(--text-main)] opacity-50 group-hover:opacity-100 transition-all shrink-0 ${showModelDropdown ? 'rotate-180' : ''}`} />
+                </button>
+              </Tooltip>
+            )}
+
+            {/* Dropdown Menu */}
+            {showModelDropdown && (
+              <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 w-56 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-2xl p-2 z-50 flex flex-col gap-1 overflow-hidden" dir="rtl">
+                <button
                   onClick={() => {
-                    const newSettings = { ...settings };
-                    newSettings.tools.smartRouting = false;
-                    newSettings.providers.activeProvider = 'custom';
-                    newSettings.providers.custom.activeProfileId = model.id;
-                    setSettings(newSettings);
+                    setSettings({ ...settings, tools: { ...settings.tools, smartRouting: !settings.tools.smartRouting } });
                     setShowModelDropdown(false);
                   }}
-                  className={`flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium transition-colors cursor-pointer w-full text-left ${!settings.tools.smartRouting && settings.providers.activeProvider === 'custom' && settings.providers.custom.activeProfileId === model.id ? 'bg-white dark:bg-zinc-800 text-white' : 'hover:bg-zinc-100 dark:hover:bg-zinc-700/60 text-zinc-700 dark:text-zinc-400'}`}
+                  className={`flex items-center justify-center px-3 py-2.5 rounded-xl text-sm font-medium transition-colors cursor-pointer w-full text-center ${settings.tools.smartRouting ? 'bg-indigo-500/10 text-indigo-400' : 'hover:bg-zinc-100 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300'}`}
                 >
-                  {model.icon}
-                  <div className="flex flex-col min-w-0 items-start">
-                    <span className="truncate w-full">{model.name}</span>
-                  </div>
+                  مسیریابی هوشمند
                 </button>
-              ))}
 
-              <div className="h-px bg-white dark:bg-zinc-800 my-1 mx-2" />
-              <button
-                onClick={() => {
-                  setShowModelDropdown(false);
-                  setIsSettingsOpen(true);
-                }}
-                className="flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-xs font-medium transition-colors hover:bg-zinc-100 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-400 cursor-pointer w-full mt-1"
-              >
-                <SettingsMinimalisticLinearIcon className="w-4 h-4 shrink-0" />
-                تنظیمات پیشرفته...
-              </button>
-            </div>
-          )}
+                <div className="h-px bg-white dark:bg-zinc-800 my-1 mx-2" />
+
+                {/* Models List */}
+                {dropdownModels.map((model) => (
+                  <button
+                    key={model.id}
+                    dir="ltr"
+                    onClick={() => {
+                      const newSettings = { ...settings };
+                      newSettings.tools.smartRouting = false;
+                      newSettings.providers.activeProvider = 'custom';
+                      newSettings.providers.custom.activeProfileId = model.id;
+                      setSettings(newSettings);
+                      setShowModelDropdown(false);
+                    }}
+                    className={`flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium transition-colors cursor-pointer w-full text-left ${!settings.tools.smartRouting && settings.providers.activeProvider === 'custom' && settings.providers.custom.activeProfileId === model.id ? 'bg-white dark:bg-zinc-800 text-white' : 'hover:bg-zinc-100 dark:hover:bg-zinc-700/60 text-zinc-700 dark:text-zinc-400'}`}
+                  >
+                    {model.icon}
+                    <div className="flex flex-col min-w-0 items-start">
+                      <span className="truncate w-full">{model.name}</span>
+                    </div>
+                  </button>
+                ))}
+
+                <div className="h-px bg-white dark:bg-zinc-800 my-1 mx-2" />
+                <button
+                  onClick={() => {
+                    setShowModelDropdown(false);
+                    setIsSettingsOpen(true);
+                  }}
+                  className="flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-xs font-medium transition-colors hover:bg-zinc-100 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-400 cursor-pointer w-full mt-1"
+                >
+                  <SettingsMinimalisticLinearIcon className="w-4 h-4 shrink-0" />
+                  تنظیمات پیشرفته...
+                </button>
+              </div>
+            )}
+          </div>
         </div>
-      </div>
 
-      {/* 3. Left Side (End) - Tools & Mobile Menu */}
-      <div className="flex items-center gap-1 sm:gap-2 md:gap-3 shrink-0 z-10 w-1/3 justify-end">
+        {/* 3. Left Side (End) - Tools & Mobile Menu */}
+        <div className="flex items-center gap-1 sm:gap-2 md:gap-3 shrink-0 z-10 w-1/3 justify-end">
 
-        {/* Desktop View Tools (Hidden on Mobile) */}
-        <div className="hidden sm:flex items-center gap-1 sm:gap-2 md:gap-3">
+          {/* Desktop View Tools (Hidden on Mobile) */}
+          <div className="hidden sm:flex items-center gap-1 sm:gap-2 md:gap-3">
 
-          {/* Export Button */}
-          {activeConversation && activeConversation.messages.length > 0 && (
-            <Tooltip content="خروجی و ذخیره گفتگو">
+            {/* Export Button */}
+            {activeConversation && activeConversation.messages.length > 0 && (
+              <Tooltip content="خروجی و ذخیره گفتگو">
+                <button
+                  id="header-export-btn"
+                  onClick={() => setIsExportOpen(true)}
+                  className="clay-btn w-11 h-11 flex items-center justify-center hover:opacity-90 rounded-xl sm:rounded-2xl cursor-pointer"
+                  aria-label="Export Chat"
+                >
+                  <DownloadMinimalisticLinearIcon className="w-4 h-4 sm:w-5 sm:h-5" />
+                </button>
+              </Tooltip>
+            )}
+
+            {/* Install PWA Button */}
+            {isInstallable && (
+              <Tooltip content="نصب برنامه (App)">
+                <button
+                  onClick={install}
+                  className="clay-btn w-11 h-11 flex items-center justify-center hover:opacity-90 rounded-xl sm:rounded-2xl text-blue-500 font-bold cursor-pointer"
+                  aria-label="Install App"
+                >
+                  <SmartphoneLinearIcon className="w-4 h-4 sm:w-5 sm:h-5" />
+                </button>
+              </Tooltip>
+            )}
+
+            {/* Theme Toggle Button */}
+            <ThemeToggle variant="clay" />
+
+            {/* Admin panel button */}
+            {user?.role === 'admin' && (
+              <Tooltip content="تنظیمات سیستم (پنل مدیریت)">
+                <button
+                  id="header-admin-btn"
+                  onClick={() => setIsAdminOpen(true)}
+                  className="clay-btn w-11 h-11 flex items-center justify-center hover:opacity-90 relative rounded-xl sm:rounded-2xl cursor-pointer text-blue-600 dark:text-blue-400"
+                  aria-label="Admin Settings"
+                >
+                  <ShieldCheck className="w-4 h-4 sm:w-5 sm:h-5" />
+                </button>
+              </Tooltip>
+            )}
+
+            {/* Settings button */}
+            <Tooltip content="تنظیمات سیستم (تم، پالت رنگی، مدل‌ها و قلم)">
               <button
-                id="header-export-btn"
-                onClick={() => setIsExportOpen(true)}
-                className="clay-btn w-11 h-11 flex items-center justify-center hover:opacity-90 rounded-xl sm:rounded-2xl cursor-pointer"
-                aria-label="Export Chat"
+                id="header-settings-btn"
+                onClick={() => setIsSettingsOpen(true)}
+                className="clay-btn w-11 h-11 flex items-center justify-center hover:opacity-90 relative rounded-xl sm:rounded-2xl cursor-pointer"
+                aria-label="Open Settings"
               >
-                <DownloadMinimalisticLinearIcon className="w-4 h-4 sm:w-5 sm:h-5" />
+                <SettingsMinimalisticLinearIcon className="w-4 h-4 sm:w-5 sm:h-5" />
               </button>
             </Tooltip>
-          )}
+          </div>
 
-          {/* Install PWA Button */}
-          {isInstallable && (
-            <Tooltip content="نصب برنامه (App)">
+          {/* Mobile Dropdown Menu (Visible on Mobile) */}
+          <div className="sm:hidden flex items-center gap-1.5" ref={mobileMenuRef}>
+            {/* Quick Theme Toggle on Mobile */}
+            <ThemeToggle variant="clay" className="!w-10 !h-10 !rounded-xl" />
+
+            <Tooltip content="ابزارهای بیشتر">
               <button
-                onClick={install}
-                className="clay-btn w-11 h-11 flex items-center justify-center hover:opacity-90 rounded-xl sm:rounded-2xl text-blue-500 font-bold cursor-pointer"
-                aria-label="Install App"
+                onClick={() => setShowMobileMenu(!showMobileMenu)}
+                className="clay-btn w-10 h-10 flex items-center justify-center hover:opacity-90 rounded-xl cursor-pointer"
+                aria-label="More Options"
               >
-                <SmartphoneLinearIcon className="w-4 h-4 sm:w-5 sm:h-5" />
+                <MenuDotsLinearIcon className="w-5 h-5" />
               </button>
             </Tooltip>
-          )}
 
-          {/* Theme Toggle Button */}
-          <ThemeToggle variant="clay" />
+            {showMobileMenu && (
+              <div className="absolute top-full mt-2 left-0 w-48 clay-card shadow-2xl z-50 flex flex-col gap-1 p-2 animate-fadeIn border border-subtle" dir="rtl">
+                {activeConversation && activeConversation.messages.length > 0 && (
+                  <button onClick={() => { setIsExportOpen(true); setShowMobileMenu(false); }} className="flex items-center gap-2 p-2 rounded-lg hover:bg-[var(--bg-main)] transition-colors text-right cursor-pointer">
+                    <DownloadMinimalisticLinearIcon className="w-4 h-4 text-emerald-400" />
+                    <span className="text-xs font-bold text-[var(--text-main)]">خروجی گفتگو</span>
+                  </button>
+                )}
 
-          {/* Settings button */}
-          <Tooltip content="تنظیمات سیستم (تم، پالت رنگی، مدل‌ها و قلم)">
-            <button
-              id="header-settings-btn"
-              onClick={() => setIsSettingsOpen(true)}
-              className="clay-btn w-11 h-11 flex items-center justify-center hover:opacity-90 relative rounded-xl sm:rounded-2xl cursor-pointer"
-              aria-label="Open Settings"
-            >
-              <SettingsMinimalisticLinearIcon className="w-4 h-4 sm:w-5 sm:h-5" />
-            </button>
-          </Tooltip>
-        </div>
+                {isInstallable && (
+                  <button onClick={() => { install(); setShowMobileMenu(false); }} className="flex items-center gap-2 p-2 rounded-lg hover:bg-[var(--bg-main)] transition-colors text-right cursor-pointer">
+                    <SmartphoneLinearIcon className="w-4 h-4 text-blue-500" />
+                    <span className="text-xs font-bold text-[var(--text-main)]">نصب برنامه</span>
+                  </button>
+                )}
 
-        {/* Mobile Dropdown Menu (Visible on Mobile) */}
-        <div className="sm:hidden flex items-center gap-1.5" ref={mobileMenuRef}>
-          {/* Quick Theme Toggle on Mobile */}
-          <ThemeToggle variant="clay" className="!w-10 !h-10 !rounded-xl" />
+                <div className="h-px bg-[var(--border-color)] opacity-50 my-1" />
 
-          <Tooltip content="ابزارهای بیشتر">
-            <button
-              onClick={() => setShowMobileMenu(!showMobileMenu)}
-              className="clay-btn w-10 h-10 flex items-center justify-center hover:opacity-90 rounded-xl cursor-pointer"
-              aria-label="More Options"
-            >
-              <MenuDotsLinearIcon className="w-5 h-5" />
-            </button>
-          </Tooltip>
+                {user?.role === 'admin' && (
+                  <button onClick={() => { setIsAdminOpen(true); setShowMobileMenu(false); }} className="flex items-center gap-2 p-2 rounded-lg hover:bg-[var(--bg-main)] transition-colors text-right cursor-pointer text-blue-600 dark:text-blue-400">
+                    <ShieldCheck className="w-4 h-4" />
+                    <span className="text-xs font-bold">پنل مدیریت سیستم</span>
+                  </button>
+                )}
 
-          {showMobileMenu && (
-            <div className="absolute top-full mt-2 left-0 w-48 clay-card shadow-2xl z-50 flex flex-col gap-1 p-2 animate-fadeIn border border-subtle" dir="rtl">
-              {activeConversation && activeConversation.messages.length > 0 && (
-                <button onClick={() => { setIsExportOpen(true); setShowMobileMenu(false); }} className="flex items-center gap-2 p-2 rounded-lg hover:bg-[var(--bg-main)] transition-colors text-right cursor-pointer">
-                  <DownloadMinimalisticLinearIcon className="w-4 h-4 text-emerald-400" />
-                  <span className="text-xs font-bold text-[var(--text-main)]">خروجی گفتگو</span>
+                <button onClick={() => { setIsSettingsOpen(true); setShowMobileMenu(false); }} className="flex items-center gap-2 p-2 rounded-lg hover:bg-[var(--bg-main)] transition-colors text-right cursor-pointer">
+                  <SettingsMinimalisticLinearIcon className="w-4 h-4 text-[var(--text-main)]" />
+                  <span className="text-xs font-bold text-[var(--text-main)]">تنظیمات پیشرفته</span>
                 </button>
-              )}
-
-              {isInstallable && (
-                <button onClick={() => { install(); setShowMobileMenu(false); }} className="flex items-center gap-2 p-2 rounded-lg hover:bg-[var(--bg-main)] transition-colors text-right cursor-pointer">
-                  <SmartphoneLinearIcon className="w-4 h-4 text-blue-500" />
-                  <span className="text-xs font-bold text-[var(--text-main)]">نصب برنامه</span>
-                </button>
-              )}
-
-              <div className="h-px bg-[var(--border-color)] opacity-50 my-1" />
-
-              <button onClick={() => { setIsSettingsOpen(true); setShowMobileMenu(false); }} className="flex items-center gap-2 p-2 rounded-lg hover:bg-[var(--bg-main)] transition-colors text-right cursor-pointer">
-                <SettingsMinimalisticLinearIcon className="w-4 h-4 text-[var(--text-main)]" />
-                <span className="text-xs font-bold text-[var(--text-main)]">تنظیمات پیشرفته</span>
-              </button>
-            </div>
-          )}
-        </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
       {/* -------------------- Animation Content -------------------- */}
       <div className={`absolute inset-0 w-full h-full flex items-center justify-center px-4 transition-all duration-500 delay-100 ${isAnimating ? 'opacity-100 scale-100 pointer-events-auto' : 'opacity-0 scale-105 pointer-events-none'}`}>
-         <div className="w-full h-full max-w-4xl flex items-center justify-center">
-            <SmartRoutingAnimation routingState={isStreaming ? routingState : null} />
-         </div>
+        <div className="w-full h-full max-w-4xl flex items-center justify-center">
+          <SmartRoutingAnimation routingState={isStreaming ? routingState : null} />
+        </div>
       </div>
     </header>
   );

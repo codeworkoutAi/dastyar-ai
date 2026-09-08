@@ -46,7 +46,11 @@ export default function App() {
     if (isDarkMode) root.classList.add('dark');
     else root.classList.remove('dark');
 
-    root.style.setProperty('--font-primary', "'" + settings.appearance.font + "', sans-serif");
+    if (settings.appearance.font === 'hybrid') {
+      root.style.setProperty('--font-primary', 'var(--font-ui)');
+    } else {
+      root.style.setProperty('--font-primary', "'" + settings.appearance.font + "', sans-serif");
+    }
     root.setAttribute('data-font', settings.appearance.font);
     root.style.fontSize = settings.appearance.fontSize + 'px';
     root.dir = direction;

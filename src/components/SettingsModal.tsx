@@ -744,11 +744,12 @@ export const SettingsModal: React.FC = () => {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">فونت فارسی</label>
-                    <select value={tempSettings.appearance.font} onChange={(e) => setTempSettings({ ...tempSettings, appearance: { ...tempSettings.appearance, font: e.target.value as FontFamily } })} className="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl py-2.5 px-3 text-sm outline-none focus:border-blue-500">
+                    <select value={tempSettings.appearance.font} onChange={(e) => setTempSettings({ ...tempSettings, appearance: { ...tempSettings.appearance, font: e.target.value as FontFamily } })} className="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl py-2.5 px-3 text-sm outline-none focus:border-blue-500 font-medium">
+                      <option value="hybrid">✨ ترکیب هوشمند (پیش‌فرض مدرن)</option>
                       <option value="vazir">وزیرمتن (Vazirmatn)</option>
                       <option value="estedad">استعداد (Estedad)</option>
                       <option value="sahel">ساحل (Sahel)</option>
-                      <option value="shabnam">شبنم (Shabnam)</option>
+                      <option value="mikhak">میخک (Mikhak)</option>
                     </select>
                   </div>
                   <div>

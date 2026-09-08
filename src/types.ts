@@ -40,7 +40,7 @@ export interface Conversation {
 }
 
 export type ThemeMode = 'light' | 'dark' | 'system';
-export type FontFamily = 'vazir' | 'sahel' | 'estedad' | 'mikhak';
+export type FontFamily = 'hybrid' | 'vazir' | 'sahel' | 'estedad' | 'mikhak';
 
 export interface CustomProfile {
   id: string;

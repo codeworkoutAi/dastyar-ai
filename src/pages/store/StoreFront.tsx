@@ -7,14 +7,23 @@ import { Footer } from '../../components/Footer';
 import { ThemeToggle } from '../../components/ThemeToggle';
 import { useAuthStore } from '../../store/authStore';
 import { useUIStore } from '../../store/uiStore';
+import { useSettingsStore } from '../../store/settingsStore';
+import { toPersianDigits } from '../../lib/persianUtils';
 
 import { UserDashboard } from './UserDashboard';
 
 export function StoreFront() {
   const { id } = useParams<{ id: string }>();
   const { setIsAdminOpen } = useUIStore();
+  const { settings } = useSettingsStore();
+  const usePersianDigits = settings?.appearance?.persianNumerals ?? false;
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [detailsProduct, setDetailsProduct] = useState<any>(null);
+
+  const formatPrice = (price: number) => {
+    const formatted = (price || 0).toLocaleString();
+    return usePersianDigits ? toPersianDigits(formatted) : formatted;
+  };
   const { user } = useAuthStore();
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -183,8 +192,8 @@ export function StoreFront() {
                 {products.map(p => (
                   <div key={p.id} className="group flex flex-col bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl shadow-sm hover:shadow-lg hover:border-zinc-300 dark:hover:border-zinc-700 transition-all overflow-hidden cursor-pointer" onClick={() => setDetailsProduct(p)}>
                     <div className="w-full h-48 bg-zinc-100 dark:bg-zinc-800 relative flex-shrink-0">
-                      {p.image ? (
-                        <img src={p.image} alt={p.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                      {p.bannerImage || p.image ? (
+                        <img src={p.bannerImage || p.image} alt={p.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-zinc-400">
                           <Store className="w-12 h-12 opacity-30" />
@@ -204,7 +213,7 @@ export function StoreFront() {
                       <div className="mt-auto pt-4 border-t border-zinc-100 dark:border-zinc-800/60 flex items-center justify-between">
                         <div className="flex flex-col">
                           <span className="text-[11px] text-zinc-500 mb-1">مبلغ پرداختی</span>
-                          <span className="text-lg font-black text-zinc-900 dark:text-zinc-100">{p.price.toLocaleString()} <span className="text-xs font-normal text-zinc-500">تومان</span></span>
+                          <span className="text-lg font-bold text-zinc-900 dark:text-zinc-100">{formatPrice(p.price)} <span className="text-xs font-normal text-zinc-500">تومان</span></span>
                         </div>
                         <button 
                           onClick={(e) => {

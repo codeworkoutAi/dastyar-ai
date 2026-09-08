@@ -49,7 +49,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
     }
   },
   persona: { systemPrompt: '', tone: 'expert', temperature: 0.7 },
-  appearance: { theme: 'dark', font: 'vazir', fontSize: 16, persianNumerals: false, direction: 'rtl', uiLanguage: 'fa' },
+  appearance: { theme: 'dark', font: 'hybrid', fontSize: 16, persianNumerals: true, direction: 'rtl', uiLanguage: 'fa' },
   tools: { 
     webSearch: true, 
     enterToSend: true, 
@@ -169,6 +169,22 @@ export function loadSettings(): AppSettings {
     };
     
     merged.providers.custom = { ...DEFAULT_SETTINGS.providers.custom, ...(parsed.providers?.custom || {}) };
+
+    // Migration: ensure persianNumerals defaults to true if not explicitly migrated
+    if (localStorage.getItem('fa_chat_persian_numerals_default_v1') !== 'true') {
+      merged.appearance.persianNumerals = true;
+      try {
+        localStorage.setItem('fa_chat_persian_numerals_default_v1', 'true');
+      } catch {}
+    }
+
+    // Migration: ensure font defaults to 'hybrid' if not explicitly migrated
+    if (localStorage.getItem('fa_chat_font_hybrid_default_v1') !== 'true') {
+      merged.appearance.font = 'hybrid';
+      try {
+        localStorage.setItem('fa_chat_font_hybrid_default_v1', 'true');
+      } catch {}
+    }
 
     // Migrate legacy custom config to a profile if it has a baseUrl but no profiles array
     if (merged.providers.custom.baseUrl && (!merged.providers.custom.profiles || merged.providers.custom.profiles.length === 0)) {

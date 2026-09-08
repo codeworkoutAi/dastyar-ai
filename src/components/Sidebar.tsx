@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   AddCircleBoldIcon,
   MinimalisticMagnifierLinearIcon,
@@ -25,9 +25,8 @@ import { getStorageUsage } from '../lib/storage';
 import { calculateSessionStats } from '../utils/pricing';
 import { Tooltip } from './Tooltip';
 import { useAuthStore } from '../store/authStore';
-import { User, LogOut } from 'lucide-react';
+import { User, LogOut, ShieldCheck, Settings, ChevronUp } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { SuggestionsSandbox } from './SuggestionsSandbox';
 import { useUIStore } from '../store/uiStore';
 import { useSettingsStore } from '../store/settingsStore';
 import { useChatStore } from '../store/chatStore';
@@ -40,7 +39,7 @@ interface GroupedConversations {
 }
 
 export const Sidebar: React.FC = React.memo(() => {
-  const { sidebarOpen, setSidebarOpen, setIsImageStudioOpen, setIsExploreOpen, setIsUiGuideOpen, setIsAdminOpen } = useUIStore();
+  const { sidebarOpen, setSidebarOpen, setIsImageStudioOpen, setIsExploreOpen, setIsUiGuideOpen, setIsAdminOpen, setIsSettingsOpen } = useUIStore();
   const { settings } = useSettingsStore();
   const { conversations, activeId, setActiveId, createChat, deleteConversation, updateConversation, clearAllConversations } = useChatStore();
   
@@ -53,6 +52,18 @@ export const Sidebar: React.FC = React.memo(() => {
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>({});
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const userMenuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) {
+        setUserMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   // Filter conversations based on search query
   const filtered = conversations.filter((c) => {
@@ -315,149 +326,241 @@ export const Sidebar: React.FC = React.memo(() => {
           sidebarOpen ? 'translate-x-0' : 'translate-x-full md:translate-x-0 md:w-0 md:overflow-hidden md:border-none'
         }`}
       >
-        {/* Top Header & Actions in Sidebar */}
-        <div className="p-3 pb-2 space-y-2 shrink-0">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold opacity-70 px-1">تاریخچه گفتگوها</span>
+        {/* ---------------- 1. بالای بالا: کارت کاربر و منوی پروفایل ---------------- */}
+        <div className="p-3 pb-2.5 shrink-0 border-b border-zinc-200/60 dark:border-zinc-800/60 relative" ref={userMenuRef}>
+          <div className="flex items-center justify-between gap-2">
+            {isAuthenticated ? (
+              <button
+                onClick={() => setUserMenuOpen(!userMenuOpen)}
+                className="flex items-center justify-between p-2 rounded-xl bg-zinc-100/90 dark:bg-zinc-800/70 hover:bg-zinc-200 dark:hover:bg-zinc-700/80 border border-zinc-200/80 dark:border-zinc-700/60 transition-all cursor-pointer flex-1 text-right"
+              >
+                <div className="flex items-center gap-2.5 overflow-hidden">
+                  <img 
+                    src={user?.avatar || `https://source.boringavatars.com/beam/120/${user?.phone || user?.email || 'default'}?colors=264653,2a9d8f,e9c46a,f4a261,e76f51`} 
+                    alt="Avatar" 
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.onerror = null;
+                      const letter = user?.name?.charAt(0).toUpperCase() || (user?.phone ? user.phone.slice(-2) : user?.email?.charAt(0).toUpperCase() || 'U');
+                      target.src = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><rect width="100" height="100" fill="%232563eb"/><text x="50%" y="54%" fill="white" font-size="45" font-weight="bold" font-family="Tahoma, sans-serif" dominant-baseline="middle" text-anchor="middle">${letter}</text></svg>`;
+                    }}
+                    className="w-8 h-8 rounded-full bg-white dark:bg-zinc-800 shadow-sm object-cover shrink-0" 
+                  />
+                  <div className="flex flex-col min-w-0">
+                    <span className="text-xs font-bold text-zinc-900 dark:text-zinc-100 truncate" dir={user?.name ? 'rtl' : 'ltr'}>
+                      {user?.name || user?.phone || user?.email}
+                    </span>
+                    <span className="text-[10px] text-zinc-500 dark:text-zinc-400 font-medium">
+                      {user?.role === 'admin' ? 'مدیر سیستم' : 'کاربر عادی'}
+                    </span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-1.5 shrink-0">
+                  {user?.role === 'admin' && (
+                    <span className="text-[9px] px-1.5 py-0.5 rounded-md bg-blue-500/15 text-blue-600 dark:text-blue-400 font-bold">
+                      ادمین
+                    </span>
+                  )}
+                  <ChevronDown className={`w-4 h-4 text-zinc-400 transition-transform duration-200 ${userMenuOpen ? 'rotate-180' : ''}`} />
+                </div>
+              </button>
+            ) : (
+              <button
+                onClick={() => setAuthModalOpen(true)}
+                className="flex-1 flex items-center justify-between p-2 rounded-xl bg-blue-50 dark:bg-blue-900/20 border border-blue-200/60 dark:border-blue-800/40 hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors cursor-pointer group"
+              >
+                <div className="flex items-center gap-2">
+                  <div className="w-7 h-7 rounded-full bg-blue-600 text-white flex items-center justify-center">
+                    <User className="w-3.5 h-3.5" />
+                  </div>
+                  <span className="text-xs font-bold text-blue-700 dark:text-blue-300">
+                    ورود / ثبت‌نام
+                  </span>
+                </div>
+              </button>
+            )}
+
+            {/* Mobile Close Button */}
             <button
               onClick={() => setSidebarOpen(false)}
-              className="p-1.5 rounded-xl text-zinc-700 dark:text-zinc-400 hover:text-zinc-900 dark:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors md:hidden cursor-pointer"
+              className="p-2 rounded-xl text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors md:hidden cursor-pointer shrink-0"
               aria-label="Close sidebar"
             >
               <X className="w-4 h-4" />
             </button>
           </div>
 
-          {/* 1. New Chat Button */}
+          {/* User Floating Dropdown Popover */}
+          {userMenuOpen && isAuthenticated && (
+            <div className="absolute top-full mt-1.5 right-3 left-3 p-2 bg-white dark:bg-zinc-900 rounded-2xl shadow-2xl border border-zinc-200 dark:border-zinc-800 flex flex-col gap-1 z-50 animate-fadeIn">
+              <div className="flex items-center gap-2.5 p-2 rounded-xl bg-zinc-50 dark:bg-zinc-800/60 mb-1">
+                <img 
+                  src={user?.avatar || `https://source.boringavatars.com/beam/120/${user?.phone || user?.email || 'default'}?colors=264653,2a9d8f,e9c46a,f4a261,e76f51`} 
+                  alt="Avatar" 
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.onerror = null;
+                    const letter = user?.name?.charAt(0).toUpperCase() || (user?.phone ? user.phone.slice(-2) : user?.email?.charAt(0).toUpperCase() || 'U');
+                    target.src = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><rect width="100" height="100" fill="%232563eb"/><text x="50%" y="54%" fill="white" font-size="45" font-weight="bold" font-family="Tahoma, sans-serif" dominant-baseline="middle" text-anchor="middle">${letter}</text></svg>`;
+                  }}
+                  className="w-8 h-8 rounded-full bg-white dark:bg-zinc-800 shadow-sm object-cover shrink-0" 
+                />
+                <div className="flex flex-col min-w-0">
+                  <span className="text-xs font-bold text-zinc-900 dark:text-zinc-100 truncate" dir={user?.name ? 'rtl' : 'ltr'}>
+                    {user?.name || user?.phone || user?.email}
+                  </span>
+                  <span className="text-[10px] text-blue-600 dark:text-blue-400 font-bold">
+                    {user?.role === 'admin' ? 'مدیر سیستم' : 'کاربر عادی'}
+                  </span>
+                </div>
+              </div>
+
+              {user?.role === 'admin' && (
+                <button
+                  onClick={() => {
+                    setIsAdminOpen(true);
+                    setUserMenuOpen(false);
+                    if (window.innerWidth < 768) setSidebarOpen(false);
+                  }}
+                  className="flex items-center gap-2 w-full p-2 rounded-xl hover:bg-blue-50 dark:hover:bg-blue-950/40 text-blue-600 dark:text-blue-400 text-xs font-bold transition-colors text-right cursor-pointer"
+                >
+                  <ShieldCheck size={16} />
+                  <span>پنل مدیریت سیستم (ادمین چت)</span>
+                </button>
+              )}
+
+              <button
+                onClick={() => {
+                  setIsSettingsOpen(true);
+                  setUserMenuOpen(false);
+                }}
+                className="flex items-center gap-2 w-full p-2 rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 text-xs font-medium transition-colors text-right cursor-pointer"
+              >
+                <Settings size={16} />
+                <span>تنظیمات ظاهر و مدل‌ها</span>
+              </button>
+
+              <div className="h-px bg-zinc-200 dark:bg-zinc-800 my-0.5" />
+
+              <button
+                onClick={() => {
+                  logout();
+                  setUserMenuOpen(false);
+                }}
+                className="flex items-center gap-2 w-full p-2 rounded-xl hover:bg-red-50 dark:hover:bg-red-950/30 text-red-600 dark:text-red-400 text-xs font-bold transition-colors text-right cursor-pointer"
+              >
+                <LogOut size={16} />
+                <span>خروج از حساب</span>
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* ---------------- 2. نوار افقی ابزارهای سریع با آیکون‌های بزرگتر ---------------- */}
+        <div className="px-4 sm:px-5 pt-2 pb-1.5 shrink-0">
+          <div className="flex items-center justify-between px-3.5 py-1.5 bg-zinc-100/70 dark:bg-zinc-800/50 rounded-2xl border border-zinc-200/60 dark:border-zinc-700/50 shadow-xs">
+            <Tooltip content="فروشگاه محصولات" position="top" align="start">
+              <Link
+                to="/store"
+                onClick={() => { if (window.innerWidth < 768) setSidebarOpen(false); }}
+                className="p-2 text-blue-600 dark:text-blue-400 transition-transform duration-200 hover:scale-125 active:scale-95 cursor-pointer flex items-center justify-center"
+              >
+                <ShopLinearIcon className="w-5 h-5 sm:w-6 sm:h-6" />
+              </Link>
+            </Tooltip>
+
+            <Tooltip content="وبلاگ هوش مصنوعی" position="top" align="center">
+              <Link
+                to="/blog"
+                onClick={() => { if (window.innerWidth < 768) setSidebarOpen(false); }}
+                className="p-2 text-emerald-600 dark:text-emerald-400 transition-transform duration-200 hover:scale-125 active:scale-95 cursor-pointer flex items-center justify-center"
+              >
+                <PenLinearIcon className="w-5 h-5 sm:w-6 sm:h-6" />
+              </Link>
+            </Tooltip>
+
+            <Tooltip content="کاوش در پرامپت‌ها و ایده‌ها (HUB)" position="top" align="center">
+              <button
+                id="sidebar-explore-hub-btn"
+                onClick={() => { setIsExploreOpen(true); if (window.innerWidth < 768) setSidebarOpen(false); }}
+                className="p-2 text-purple-600 dark:text-purple-400 transition-transform duration-200 hover:scale-125 active:scale-95 cursor-pointer flex items-center justify-center"
+              >
+                <CompassOutlineIcon className="w-5 h-5 sm:w-6 sm:h-6" />
+              </button>
+            </Tooltip>
+
+            <Tooltip content="استودیو خلق تصویر" position="top" align="center">
+              <button
+                id="sidebar-image-studio-btn"
+                onClick={() => { setIsImageStudioOpen(true); if (window.innerWidth < 768) setSidebarOpen(false); }}
+                className="p-2 text-amber-500 dark:text-amber-400 transition-transform duration-200 hover:scale-125 active:scale-95 cursor-pointer flex items-center justify-center"
+              >
+                <StarsMinimalisticBoldIcon className="w-5 h-5 sm:w-6 sm:h-6" />
+              </button>
+            </Tooltip>
+
+            <Tooltip content="راهنمای تصویری برنامه" position="top" align="end">
+              <button
+                id="sidebar-ui-guide-btn"
+                onClick={() => { setIsUiGuideOpen(true); if (window.innerWidth < 768) setSidebarOpen(false); }}
+                className="p-2 text-sky-600 dark:text-sky-400 transition-transform duration-200 hover:scale-125 active:scale-95 cursor-pointer flex items-center justify-center"
+              >
+                <HelpLinearIcon className="w-5 h-5 sm:w-6 sm:h-6" />
+              </button>
+            </Tooltip>
+          </div>
+        </div>
+
+        {/* ---------------- 3. دکمه گفتگوی جدید، جستجو و تیتر تاریخچه گفتگوها ---------------- */}
+        <div className="px-3 pt-2 pb-2.5 shrink-0 space-y-2 border-b border-zinc-200/60 dark:border-zinc-800/60">
+          {/* New Chat Button */}
           <button
             id="sidebar-new-chat-btn"
             onClick={() => {
               createChat(settings.providers[settings.providers.activeProvider]?.modelName);
               if (window.innerWidth < 768) setSidebarOpen(false);
             }}
-            className="w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-2xl bg-white dark:bg-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-700 text-zinc-900 dark:text-zinc-100 font-bold text-xs sm:text-sm transition-all text-right shadow-xs hover:scale-[1.01] active:scale-[0.99] cursor-pointer"
+            className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs sm:text-sm transition-all shadow-md shadow-blue-500/20 active:scale-[0.99] cursor-pointer group"
           >
-            <div className="w-7 h-7 rounded-xl bg-blue-500/15 text-blue-400 flex items-center justify-center shrink-0">
-              <AddCircleBoldIcon className="w-4 h-4" />
+            <div className="flex items-center gap-2">
+              <AddCircleBoldIcon className="w-4 h-4 transition-transform group-hover:rotate-90" />
+              <span>گفتگوی جدید</span>
             </div>
-            <span className="flex-1">گفتگوی جدید</span>
+            <span className="text-[10px] bg-white/20 px-1.5 py-0.5 rounded-md font-mono">جدید</span>
           </button>
 
-          {/* Action Grid: Explore Hub, Image Studio, Coding Assistant */}
-          <div className="grid grid-cols-2 gap-1.5">
-            {user?.role === 'admin' && (
-              <button
-                onClick={() => {
-                  setIsAdminOpen(true);
-                  if (window.innerWidth < 768) setSidebarOpen(false);
-                }}
-                className="col-span-2 flex items-center gap-2 px-3 py-2 rounded-xl bg-zinc-900 dark:bg-zinc-100 hover:bg-zinc-800 dark:hover:bg-zinc-200 text-white dark:text-zinc-900 text-xs font-semibold transition-all text-right hover:scale-[1.01] active:scale-[0.98] cursor-pointer"
-              >
-                <div className="w-6 h-6 rounded-lg bg-white/20 dark:bg-black/10 flex items-center justify-center shrink-0">
-                  <PinBoldIcon className="w-3.5 h-3.5" />
-                </div>
-                <span className="truncate flex-1">تنظیمات سیستم (ادمین چت)</span>
-              </button>
-            )}
-
-            <Link
-              to="/store"
-              onClick={() => {
-                if (window.innerWidth < 768) setSidebarOpen(false);
-              }}
-              className="col-span-1 flex items-center gap-2 px-2.5 py-2 rounded-xl bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/40 border border-transparent text-blue-700 dark:text-blue-300 text-xs font-semibold transition-all text-right hover:scale-[1.01] active:scale-[0.98] cursor-pointer"
-            >
-              <div className="w-6 h-6 rounded-lg bg-blue-100 dark:bg-blue-500/20 flex items-center justify-center shrink-0">
-                <ShopLinearIcon className="w-3.5 h-3.5" />
-              </div>
-              <span className="truncate">فروشگاه</span>
-            </Link>
-
-            <Link
-              to="/blog"
-              onClick={() => {
-                if (window.innerWidth < 768) setSidebarOpen(false);
-              }}
-              className="col-span-1 flex items-center gap-2 px-2.5 py-2 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 border border-transparent text-emerald-700 dark:text-emerald-300 text-xs font-semibold transition-all text-right hover:scale-[1.01] active:scale-[0.98] cursor-pointer"
-            >
-              <div className="w-6 h-6 rounded-lg bg-emerald-100 dark:bg-emerald-500/20 flex items-center justify-center shrink-0">
-                <PenLinearIcon className="w-3.5 h-3.5" />
-              </div>
-              <span className="truncate">وبلاگ</span>
-            </Link>
-
-            <button
-              id="sidebar-explore-hub-btn"
-              onClick={() => {
-                setIsExploreOpen(true);
-                if (window.innerWidth < 768) setSidebarOpen(false);
-              }}
-              className="col-span-2 flex items-center gap-2 px-3 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-900/50 hover:bg-zinc-100 dark:hover:bg-zinc-800 border border-transparent text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-zinc-100 text-xs font-semibold transition-all text-right hover:scale-[1.01] active:scale-[0.98] cursor-pointer"
-            >
-              <div className="w-6 h-6 rounded-lg bg-purple-100 dark:bg-purple-500/20 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0">
-                <CompassOutlineIcon className="w-3.5 h-3.5" />
-              </div>
-              <span className="truncate flex-1">کاوش مدل‌ها و بانک ایده‌ها</span>
-              <span className="text-[9px] bg-zinc-200 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 px-1.5 py-0.5 rounded-md font-mono">HUB</span>
-            </button>
-
-            <button
-              id="sidebar-image-studio-btn"
-              onClick={() => {
-                setIsImageStudioOpen(true);
-                if (window.innerWidth < 768) setSidebarOpen(false);
-              }}
-              className="col-span-2 flex items-center gap-2 px-2.5 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-900/50 hover:bg-zinc-100 dark:hover:bg-zinc-800 border border-transparent text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-zinc-100 text-xs font-semibold transition-all text-right hover:scale-[1.01] active:scale-[0.98] cursor-pointer"
-            >
-              <div className="w-6 h-6 rounded-lg bg-purple-100 dark:bg-purple-500/15 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0">
-                <StarsMinimalisticBoldIcon className="w-3.5 h-3.5" />
-              </div>
-              <span className="truncate">استودیو تصویر</span>
-            </button>
-
-
-
-            {/* UI Guide button (نقشه اجزا) */}
-            <button
-              id="sidebar-ui-guide-btn"
-              onClick={() => {
-                setIsUiGuideOpen(true);
-                if (window.innerWidth < 768) setSidebarOpen(false);
-              }}
-              className="col-span-2 flex items-center gap-2 px-3 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-900/50 hover:bg-zinc-100 dark:hover:bg-zinc-800 border border-transparent text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-zinc-100 text-xs font-semibold transition-all text-right hover:scale-[1.01] active:scale-[0.98] cursor-pointer"
-            >
-              <div className="w-6 h-6 rounded-lg bg-sky-100 dark:bg-sky-500/15 text-sky-600 dark:text-sky-400 flex items-center justify-center shrink-0">
-                <HelpLinearIcon className="w-3.5 h-3.5" />
-              </div>
-              <span className="truncate flex-1">نقشه و راهنمای تصویری برنامه</span>
-            </button>
-          </div>
-          
-          <div className="px-1 mt-3">
-            <SuggestionsSandbox />
-          </div>
-        </div>
-
-        {/* Search box */}
-        <div className="p-3 pb-1 shrink-0">
+          {/* Search box */}
           <div className="relative flex items-center">
-            <MinimalisticMagnifierLinearIcon className="w-4 h-4 text-zinc-700 dark:text-zinc-400 absolute right-3 pointer-events-none" />
+            <MinimalisticMagnifierLinearIcon className="w-4 h-4 text-zinc-400 absolute right-3 pointer-events-none" />
             <input
               id="sidebar-search-input"
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="جستجو در گفتگوها..."
-              className="w-full text-xs pr-9 pl-7 py-2 rounded-xl bg-white dark:bg-zinc-800/60 border border-zinc-300 dark:border-zinc-700/60 text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-700 dark:text-zinc-500 focus:outline-hidden focus:ring-1 focus:ring-blue-500/40"
+              className="w-full text-xs pr-9 pl-7 py-2 rounded-xl bg-zinc-100/90 dark:bg-zinc-800/80 border border-zinc-200/80 dark:border-zinc-700/60 text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 focus:outline-hidden focus:ring-1 focus:ring-blue-500/40 transition-all"
             />
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery('')}
-                className="absolute left-2.5 p-1 text-zinc-700 dark:text-zinc-400 hover:text-white cursor-pointer"
+                className="absolute left-2.5 p-1 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 cursor-pointer"
                 aria-label="Clear search"
               >
                 <X className="w-3 h-3" />
               </button>
+            )}
+          </div>
+
+          {/* تیتر تاریخچه گفتگوها */}
+          <div className="flex items-center justify-between px-1 pt-1">
+            <div className="flex items-center gap-1.5">
+              <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="text-xs font-black text-zinc-800 dark:text-zinc-200">تاریخچه گفتگوها</span>
+            </div>
+            {conversations.length > 0 && (
+              <span className="text-[10px] font-medium text-zinc-500 dark:text-zinc-400 bg-zinc-100/80 dark:bg-zinc-800/60 px-2 py-0.5 rounded-full border border-zinc-200/50 dark:border-zinc-700/40">
+                {usePersianDigits ? toPersianDigits(conversations.length) : conversations.length} گفتگو
+              </span>
             )}
           </div>
         </div>
@@ -532,112 +635,58 @@ export const Sidebar: React.FC = React.memo(() => {
           ) : null}
         </div>
 
-        {/* Bottom Storage & Clear panel */}
-        <div className="p-3 border-t border-zinc-200 dark:border-zinc-800/80 bg-zinc-50 dark:bg-zinc-900 shrink-0">
-          <div className="flex items-center justify-between text-[11px] text-zinc-700 dark:text-zinc-400 mb-2 px-1">
-            <span className="flex items-center gap-1.5">
-              <DatabaseLinearIcon className="w-3.5 h-3.5 text-blue-400" />
-              <span>حافظه محلی:</span>
-            </span>
-            <span className="font-medium text-xs text-zinc-700 dark:text-zinc-300">
-              {usePersianDigits ? toPersianDigits(storageStats.usedKb) : storageStats.usedKb} KB ({usePersianDigits ? toPersianDigits(storageStats.count) : storageStats.count} گفتگو)
-            </span>
+        {/* Bottom Storage & Metrics (فوتر خلوت) */}
+        <div className="p-3 border-t border-zinc-200/80 dark:border-zinc-800/80 bg-zinc-50/80 dark:bg-zinc-900/80 shrink-0">
+          <div className="flex items-center justify-between text-[11px] text-zinc-500 dark:text-zinc-400 px-1">
+            <div className="flex items-center gap-1.5 truncate">
+              <DatabaseLinearIcon className="w-3.5 h-3.5 text-blue-500 shrink-0" />
+              <span>حافظه: {usePersianDigits ? toPersianDigits(storageStats.usedKb) : storageStats.usedKb} KB</span>
+              {sessionStats.totalTokens > 0 && (
+                <>
+                  <span className="opacity-40">•</span>
+                  <span dir="ltr">~${sessionStats.totalCostUSDFormatted}</span>
+                </>
+              )}
+            </div>
+
+            {conversations.length > 0 && !showClearConfirm && (
+              <Tooltip content="پاک‌سازی تاریخچه گفتگوها">
+                <button
+                  onClick={() => setShowClearConfirm(true)}
+                  className="p-1 hover:text-red-500 transition-colors cursor-pointer rounded-md hover:bg-red-50 dark:hover:bg-red-950/30"
+                  aria-label="پاک‌سازی تاریخچه"
+                >
+                  <TrashBinMinimalisticLinearIcon className="w-3.5 h-3.5" />
+                </button>
+              </Tooltip>
+            )}
           </div>
 
-          {sessionStats.totalTokens > 0 && (
-            <div className="flex items-center justify-between text-[11px] text-zinc-700 dark:text-zinc-400 mb-2 px-1">
-              <span className="flex items-center gap-1.5">
-                <span className="text-amber-400 font-bold text-[13px] leading-none">⚡</span>
-                <span>مصرف کل نشست:</span>
-              </span>
-              <span className="font-medium text-xs text-zinc-700 dark:text-zinc-300" dir="ltr">
-                {sessionStats.totalTokens >= 1000 ? `${(sessionStats.totalTokens / 1000).toFixed(1)}k` : sessionStats.totalTokens} <span className="opacity-40 px-1">•</span> <span className="text-emerald-600 dark:text-emerald-500">~${sessionStats.totalCostUSDFormatted}</span>
-              </span>
-            </div>
-          )}
-
-          {showClearConfirm ? (
-            <div className="p-2.5 bg-red-950/50 border border-red-800/80 rounded-2xl space-y-2 text-xs shadow-lg mb-2">
-              <div className="flex items-center gap-1.5 text-red-400 font-bold">
-                <AlertTriangle className="w-4 h-4" />
+          {showClearConfirm && (
+            <div className="mt-2 p-2 rounded-xl bg-red-950/40 border border-red-800/60 space-y-1.5 text-xs animate-fadeIn">
+              <div className="flex items-center gap-1.5 text-red-400 font-bold text-[11px]">
+                <AlertTriangle className="w-3.5 h-3.5" />
                 <span>حذف تمام تاریخچه؟</span>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5">
                 <button
                   onClick={() => {
                     clearAllConversations();
                     setShowClearConfirm(false);
                   }}
-                  className="flex-1 py-1.5 px-3 rounded-xl bg-red-600 text-white font-bold hover:bg-red-500 transition-colors shadow-md cursor-pointer"
+                  className="flex-1 py-1 px-2 rounded-lg bg-red-600 text-white font-bold text-[10px] hover:bg-red-500 transition-colors cursor-pointer"
                 >
                   بله، حذف کن
                 </button>
                 <button
                   onClick={() => setShowClearConfirm(false)}
-                  className="py-1.5 px-3 rounded-xl bg-white dark:bg-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 transition-colors cursor-pointer"
+                  className="flex-1 py-1 px-2 rounded-lg bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 text-[10px] hover:bg-zinc-300 dark:hover:bg-zinc-700 transition-colors cursor-pointer"
                 >
                   انصراف
                 </button>
               </div>
             </div>
-          ) : (
-            conversations.length > 0 && (
-              <button
-                onClick={() => setShowClearConfirm(true)}
-                className="w-full text-center text-[11px] text-zinc-600 dark:text-zinc-400 hover:text-red-600 dark:hover:text-red-400 transition-colors py-1.5 flex items-center justify-center gap-1.5 rounded-xl hover:bg-red-50 dark:hover:bg-red-500/10 cursor-pointer mb-2"
-              >
-                <TrashBinMinimalisticLinearIcon className="w-3.5 h-3.5" />
-                <span>پاک‌سازی تاریخچه گفتگوها</span>
-              </button>
-            )
           )}
-
-          <div className="pt-2 border-t border-zinc-200 dark:border-zinc-800">
-            {isAuthenticated ? (
-              <div className="flex items-center justify-between p-2 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/50">
-                <div className="flex items-center gap-3 overflow-hidden">
-                  <img 
-                    src={user?.avatar || `https://source.boringavatars.com/beam/120/${user?.phone || user?.email || 'default'}?colors=264653,2a9d8f,e9c46a,f4a261,e76f51`} 
-                    alt="Avatar" 
-                    onError={(e) => {
-                      const target = e.target as HTMLImageElement;
-                      target.onerror = null;
-                      const letter = user?.name?.charAt(0).toUpperCase() || (user?.phone ? user.phone.slice(-2) : user?.email?.charAt(0).toUpperCase() || 'U');
-                      target.src = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><rect width="100" height="100" fill="%232563eb"/><text x="50%" y="54%" fill="white" font-size="45" font-weight="bold" font-family="Tahoma, sans-serif" dominant-baseline="middle" text-anchor="middle">${letter}</text></svg>`;
-                    }}
-                    className="w-9 h-9 rounded-full bg-white dark:bg-zinc-800 shadow-sm object-cover shrink-0" 
-                  />
-                  <div className="flex flex-col min-w-0">
-                    <span className="text-sm font-bold text-zinc-900 dark:text-zinc-100 truncate" dir={user?.name ? 'rtl' : 'ltr'}>
-                      {user?.name || user?.phone || user?.email}
-                    </span>
-                    <span className="text-[10px] text-zinc-500 dark:text-zinc-400 font-medium">{user?.role === 'admin' ? 'مدیر سیستم' : 'کاربر عادی'}</span>
-                  </div>
-                </div>
-                <button
-                  onClick={logout}
-                  className="p-1.5 text-red-500 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg transition-colors"
-                  title="خروج"
-                >
-                  <LogOut size={16} />
-                </button>
-              </div>
-            ) : (
-              <button
-                onClick={() => setAuthModalOpen(true)}
-                className="w-full flex items-center justify-between p-2 rounded-xl bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-700/50 transition-colors cursor-pointer group"
-              >
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
-                    <User className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                  </div>
-                  <span className="text-xs font-bold text-zinc-700 dark:text-zinc-300 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-                    ورود / ثبت‌نام
-                  </span>
-                </div>
-              </button>
-            )}
-          </div>
         </div>
       </aside>
     </>

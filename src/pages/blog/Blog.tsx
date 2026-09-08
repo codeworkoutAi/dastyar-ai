@@ -224,8 +224,8 @@ export function Blog() {
               </div>
             </div>
             
-            <div className="prose prose-zinc dark:prose-invert max-w-none text-base text-zinc-700 dark:text-zinc-300 leading-relaxed
-                            prose-headings:font-bold prose-headings:tracking-tight 
+            <div className="font-reading prose prose-zinc dark:prose-invert max-w-none text-base text-zinc-700 dark:text-zinc-300 leading-relaxed
+                            prose-headings:font-bold prose-headings:tracking-tight prose-headings:font-display
                             prose-h1:text-base md:prose-h1:text-lg 
                             prose-h2:text-sm md:prose-h2:text-base 
                             prose-h3:text-xs md:prose-h3:text-sm

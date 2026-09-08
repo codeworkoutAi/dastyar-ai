@@ -471,7 +471,7 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = React.memo(({
             const rtl = rawText ? isRtlText(rawText) : isOverallRtl;
             return (
               <h1
-                className={`!mt-3.5 !mb-2 text-base sm:text-lg font-bold text-inherit border-b border-subtle pb-1.5 flex items-center gap-2 ${
+                className={`font-display !mt-3.5 !mb-2 text-base sm:text-lg font-bold text-inherit border-b border-subtle pb-1.5 flex items-center gap-2 ${
                   rtl ? 'text-right' : 'text-left'
                 }`}
                 dir={rtl ? 'rtl' : 'ltr'}
@@ -485,7 +485,7 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = React.memo(({
             const rtl = rawText ? isRtlText(rawText) : isOverallRtl;
             return (
               <h2
-                className={`!mt-3 !mb-2 text-sm sm:text-base font-bold text-inherit border-b border-subtle/50 pb-1 ${
+                className={`font-display !mt-3 !mb-2 text-sm sm:text-base font-bold text-inherit border-b border-subtle/50 pb-1 ${
                   rtl ? 'text-right' : 'text-left'
                 }`}
                 dir={rtl ? 'rtl' : 'ltr'}
@@ -499,7 +499,7 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = React.memo(({
             const rtl = rawText ? isRtlText(rawText) : isOverallRtl;
             return (
               <h3
-                className={`!mt-3.5 !mb-2 text-base sm:text-lg font-semibold text-inherit ${
+                className={`font-display !mt-3.5 !mb-2 text-base sm:text-lg font-semibold text-inherit ${
                   rtl ? 'text-right' : 'text-left'
                 }`}
                 dir={rtl ? 'rtl' : 'ltr'}
@@ -513,7 +513,7 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = React.memo(({
             const rtl = rawText ? isRtlText(rawText) : isOverallRtl;
             return (
               <h4
-                className={`!mt-3 !mb-1.5 text-sm sm:text-base font-semibold text-inherit ${
+                className={`font-display !mt-3 !mb-1.5 text-sm sm:text-base font-semibold text-inherit ${
                   rtl ? 'text-right' : 'text-left'
                 }`}
                 dir={rtl ? 'rtl' : 'ltr'}
@@ -523,12 +523,13 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = React.memo(({
             );
           },
 
-          // Lists with correct adaptive RTL / LTR bullet / number alignment
-          ul({ children }) {
+          // Lists with correct adaptive RTL / LTR bullet / number alignment & task lists
+          ul({ className, children }: any) {
+            const isTaskList = className?.includes('contains-task-list');
             return (
               <ul
-                className={`list-disc !my-3 space-y-2 text-inherit opacity-95 marker:text-slate-400 dark:marker:text-slate-500 ${
-                  isOverallRtl ? '!pr-6 !pl-0 text-right' : '!pl-6 !pr-0 text-left'
+                className={`${isTaskList ? 'list-none !pr-1 !pl-0' : 'list-disc ' + (isOverallRtl ? '!pr-6 !pl-0' : '!pl-6 !pr-0')} !my-3 space-y-2 text-inherit opacity-95 marker:text-slate-400 dark:marker:text-slate-500 ${
+                  isOverallRtl ? 'text-right' : 'text-left'
                 }`}
                 dir={isOverallRtl ? 'rtl' : 'ltr'}
               >
@@ -652,8 +653,24 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = React.memo(({
             );
           },
 
+          // Task list checkbox
+          input({ type, checked, ...props }: any) {
+            if (type === 'checkbox') {
+              return (
+                <input
+                  type="checkbox"
+                  checked={checked}
+                  disabled
+                  className="rounded-md accent-blue-600 dark:accent-blue-500 w-4 h-4 ml-2 mr-1 align-middle cursor-default"
+                  {...props}
+                />
+              );
+            }
+            return <input type={type} {...props} />;
+          },
+
           // Divider
-          hr: () => null,
+          hr: () => <hr className="!my-4 border-t border-zinc-200 dark:border-zinc-800/60 first:hidden" />,
         }}
       >
         {processedContent}
@@ -670,10 +687,34 @@ interface CodeBlockProps {
 const CodeBlock: React.FC<CodeBlockProps> = ({ language, code }) => {
   const [copied, setCopied] = useState(false);
 
+  const fallbackCopy = (text: string) => {
+    try {
+      const textarea = document.createElement('textarea');
+      textarea.value = text;
+      textarea.style.position = 'fixed';
+      textarea.style.opacity = '0';
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textarea);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (e) {
+      console.error('Failed to copy code', e);
+    }
+  };
+
   const handleCopy = () => {
-    navigator.clipboard.writeText(code);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    if (navigator?.clipboard?.writeText) {
+      navigator.clipboard.writeText(code).then(() => {
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      }).catch(() => {
+        fallbackCopy(code);
+      });
+    } else {
+      fallbackCopy(code);
+    }
   };
 
   const handleDownload = () => {
