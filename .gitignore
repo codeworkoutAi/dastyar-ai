@@ -52,3 +52,6 @@ server/data/*.db
 server/data/*.sqlite
 server/data/*.db-wal
 server/data/*.db-shm
+server/data/*.db-info
+server/data/*
+!server/data/.gitkeep

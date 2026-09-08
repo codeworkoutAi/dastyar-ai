@@ -12,6 +12,15 @@ if (!fs.existsSync(dataDir)) {
 }
 
 const dbPath = path.join(dataDir, 'chatbox.db');
+const dbInfoPath = path.join(dataDir, 'chatbox.db-info');
+
+// Self-healing: if orphan metadata/info file exists but db does not, remove it to avoid InvalidLocalState
+if (!fs.existsSync(dbPath) && fs.existsSync(dbInfoPath)) {
+  try {
+    fs.unlinkSync(dbInfoPath);
+    console.log('[Database] Removed orphan chatbox.db-info to ensure clean sync state.');
+  } catch (e) {}
+}
 
 const syncUrl = (process.env.TURSO_DATABASE_URL || '').trim();
 const authToken = (process.env.TURSO_AUTH_TOKEN || '').trim();
@@ -20,10 +29,30 @@ let db: any;
 
 if (syncUrl && authToken) {
   console.log('[Database] Connecting to Turso Cloud database with local replica...');
-  db = new Database(dbPath, {
-    syncUrl,
-    authToken
-  });
+  try {
+    db = new Database(dbPath, {
+      syncUrl,
+      authToken
+    });
+  } catch (initErr: any) {
+    if (initErr?.message?.includes('InvalidLocalState') || initErr?.message?.includes('metadata file exists')) {
+      console.warn('[Database] Invalid local replica state detected. Cleaning up local replica files and retrying...');
+      try {
+        if (fs.existsSync(dbPath)) fs.unlinkSync(dbPath);
+        if (fs.existsSync(dbInfoPath)) fs.unlinkSync(dbInfoPath);
+        const walPath = path.join(dataDir, 'chatbox.db-wal');
+        if (fs.existsSync(walPath)) fs.unlinkSync(walPath);
+        const shmPath = path.join(dataDir, 'chatbox.db-shm');
+        if (fs.existsSync(shmPath)) fs.unlinkSync(shmPath);
+      } catch (cleanupErr) {}
+      db = new Database(dbPath, {
+        syncUrl,
+        authToken
+      });
+    } else {
+      throw initErr;
+    }
+  }
   try {
     console.log('[Database] Synchronizing schema and data with Turso Cloud...');
     db.sync();
