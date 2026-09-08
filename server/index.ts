@@ -70,7 +70,7 @@ app.get('/sitemap.xml', (req, res) => {
     const protocol = req.protocol === 'https' || req.headers['x-forwarded-proto'] === 'https' ? 'https' : 'http';
     const host = req.get('host');
     const baseUrl = `${protocol}://${host}`;
-    
+
     let xml = `<?xml version="1.0" encoding="UTF-8"?>\n`;
     xml += `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">\n`;
 
@@ -87,7 +87,7 @@ app.get('/sitemap.xml', (req, res) => {
     // Dynamic Blog pages
     const news = db.prepare('SELECT id, title, image, createdAt, tags FROM news ORDER BY createdAt DESC').all() as any[];
     const allTags = new Set<string>();
-    
+
     for (const item of news) {
       const date = item.createdAt ? new Date(item.createdAt).toISOString().split('T')[0] : new Date().toISOString().split('T')[0];
       xml += `  <url>\n    <loc>${baseUrl}/blog/${item.id}</loc>\n    <lastmod>${date}</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>0.8</priority>\n`;
@@ -96,7 +96,7 @@ app.get('/sitemap.xml', (req, res) => {
         xml += `    <image:image>\n      <image:loc>${imgUrl}</image:loc>\n      <image:title><![CDATA[${item.title || ''}]]></image:title>\n    </image:image>\n`;
       }
       xml += `  </url>\n`;
-      
+
       // Collect tags
       if (item.tags) {
         try {
@@ -104,7 +104,7 @@ app.get('/sitemap.xml', (req, res) => {
           if (Array.isArray(parsedTags)) {
             parsedTags.forEach(t => allTags.add(t));
           }
-        } catch (e) {}
+        } catch (e) { }
       }
     }
 
@@ -127,7 +127,7 @@ app.get('/sitemap.xml', (req, res) => {
     }
 
     xml += `</urlset>`;
-    
+
     res.header('Content-Type', 'application/xml');
     res.send(xml);
   } catch (err) {
@@ -149,7 +149,7 @@ function renderHtmlWithSeo(req: express.Request, res: express.Response, distPath
     const baseUrl = `${protocol}://${host}`;
     const urlPath = req.path;
 
-    let pageTitle = '60366138';
+    let pageTitle = 'دستیار هوشمند | چت با هوش مصنوعی رایگان، فارسی و پیشرفته';
     let pageDesc = 'چت‌باکس هوش مصنوعی فارسی با پشتیبانی از مدل‌های برتر (ChatGPT, Claude, Gemini)، جستجوی زنده وب، تولید تصویر، مجله اخبار هوش مصنوعی و فروشگاه اختصاصی.';
     let pageImage = `${baseUrl}/pwa-512x512.png`;
     let pageType = 'website';
@@ -271,7 +271,7 @@ async function start() {
   if (process.env.NODE_ENV !== 'production') {
     const { createServer: createViteServer } = await import('vite');
     const vite = await createViteServer({
-      server: { 
+      server: {
         middlewareMode: true,
         watch: {
           ignored: ['**/server/data/**', '**/*.db', '**/*.db-*', '**/*.sqlite*']
