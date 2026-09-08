@@ -149,7 +149,7 @@ function renderHtmlWithSeo(req: express.Request, res: express.Response, distPath
     const baseUrl = `${protocol}://${host}`;
     const urlPath = req.path;
 
-    let pageTitle = 'دستیار هوشمند | چت با هوش مصنوعی رایگان، فارسی و پیشرفته';
+    let pageTitle = '60366138';
     let pageDesc = 'چت‌باکس هوش مصنوعی فارسی با پشتیبانی از مدل‌های برتر (ChatGPT, Claude, Gemini)، جستجوی زنده وب، تولید تصویر، مجله اخبار هوش مصنوعی و فروشگاه اختصاصی.';
     let pageImage = `${baseUrl}/pwa-512x512.png`;
     let pageType = 'website';
