@@ -18,7 +18,11 @@ export function startTelegramBot() {
     return;
   }
 
-  const proxyUrl = (process.env.PROXY_URL || '').trim();
+  const rawProxy = (process.env.PROXY_URL || '').trim();
+  // Skip proxies that point to localhost (only valid in local dev, not on Render/cloud)
+  const isLocalProxy = rawProxy.includes('127.0.0.1') || rawProxy.includes('localhost') || rawProxy.includes('::1');
+  const proxyUrl = (rawProxy && !isLocalProxy) ? rawProxy : '';
+
   let agent;
   if (proxyUrl) {
     console.log(`[Telegram] Using proxy: ${proxyUrl}`);
@@ -28,7 +32,11 @@ export function startTelegramBot() {
       agent = new HttpsProxyAgent(proxyUrl);
     }
   } else {
-    console.log('[Telegram] No proxy configured, connecting directly.');
+    if (rawProxy && isLocalProxy) {
+      console.log('[Telegram] PROXY_URL points to localhost — skipped in this environment, connecting directly.');
+    } else {
+      console.log('[Telegram] No proxy configured, connecting directly.');
+    }
   }
 
   bot = new Telegraf(token, {

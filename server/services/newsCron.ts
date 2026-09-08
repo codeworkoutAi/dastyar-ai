@@ -158,6 +158,8 @@ Example: {"title": "عنوان جذاب فارسی", "content": "متن کامل
 
     // Broadcast to Telegram
     const channelId = process.env.TELEGRAM_CHANNEL_ID;
+    const proxyUrl = process.env.PROXY_URL || '';
+    console.log(`[NewsCron] Telegram check — bot: ${bot ? 'initialized' : 'null'}, channelId: ${channelId || 'NOT SET'}, proxy: ${proxyUrl || 'none'}`);
     if (bot && channelId) {
       const rawBase = (process.env.WEBSITE_URL || process.env.WEB_URL || process.env.APP_URL || 'http://localhost:3000').trim().replace(/\/$/, '');
       const baseUrl = (rawBase && !rawBase.includes('MY_APP_URL')) ? rawBase : 'http://localhost:3000';
