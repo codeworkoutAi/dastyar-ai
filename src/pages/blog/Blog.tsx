@@ -5,6 +5,7 @@ import { MarkdownRenderer } from '../../components/MarkdownRenderer';
 import { NeuralBanner } from '../../components/NeuralBanner';
 import { Footer } from '../../components/Footer';
 import { ThemeToggle } from '../../components/ThemeToggle';
+import { setPageSeo } from '../../lib/seo';
 
 interface NewsItem {
   id: number;
@@ -122,6 +123,41 @@ export function Blog() {
         setLoading(false);
       });
   }, [id]);
+
+  useEffect(() => {
+    if (selectedPost) {
+      const cleanSnippet = (selectedPost.content || '')
+        .replace(/[#*`_\[\]()\-!>]/g, '')
+        .slice(0, 160)
+        .trim();
+      setPageSeo({
+        title: `${selectedPost.title} | مجله هوش مصنوعی`,
+        description: cleanSnippet || 'مقاله و خبر هوش مصنوعی در دستیار هوشمند',
+        canonical: `${window.location.origin}/blog/${selectedPost.id}`,
+        ogImage: selectedPost.image,
+        ogType: 'article',
+        schema: {
+          '@context': 'https://schema.org',
+          '@type': 'BlogPosting',
+          headline: selectedPost.title,
+          description: cleanSnippet,
+          image: selectedPost.image ? [selectedPost.image] : undefined,
+          datePublished: selectedPost.createdAt,
+          author: {
+            '@type': 'Organization',
+            name: 'دستیار هوشمند'
+          }
+        }
+      });
+    } else {
+      setPageSeo({
+        title: 'مجله و اخبار هوش مصنوعی | آخرین رویدادها، تحلیل‌ها و آموزش‌ها',
+        description: 'تازه‌ترین اخبار هوش مصنوعی، بررسی مدل‌های جدید زبان طبیعی، مقالات و آموزش‌های تخصصی هوش مصنوعی به زبان فارسی.',
+        canonical: `${window.location.origin}/blog`,
+        ogType: 'website'
+      });
+    }
+  }, [selectedPost]);
 
   const handleBack = () => {
     if (selectedPost) {

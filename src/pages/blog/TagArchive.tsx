@@ -4,6 +4,7 @@ import { Home, BookOpen, Clock, ChevronRight, Hash, MessageCircle } from 'lucide
 import { NeuralBanner } from '../../components/NeuralBanner';
 import { Footer } from '../../components/Footer';
 import { ThemeToggle } from '../../components/ThemeToggle';
+import { setPageSeo } from '../../lib/seo';
 
 interface NewsItem {
   id: number;
@@ -28,6 +29,12 @@ export function TagArchive() {
 
   useEffect(() => {
     if (!tagName) return;
+    setPageSeo({
+      title: `مقالات برچسب ${tagName} | مجله هوش مصنوعی`,
+      description: `مجموعه اخبار، مقالات و رویدادهای مرتبط با ${tagName} در مجله هوش مصنوعی دستیار هوشمند.`,
+      canonical: `${window.location.origin}/blog/tag/${encodeURIComponent(tagName)}`,
+      ogType: 'website'
+    });
     setLoading(true);
     fetch(`/api/news/tag/${encodeURIComponent(tagName)}`)
       .then(res => res.json())

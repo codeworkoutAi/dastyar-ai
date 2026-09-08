@@ -7,9 +7,20 @@ import { InfoCircleBoldIcon } from '@solar-icons/react';
 import { useUIStore } from '../../store/uiStore';
 import { useChatStore } from '../../store/chatStore';
 
+import { useEffect } from 'react';
+import { setPageSeo } from '../../lib/seo';
+
 export function ChatApp() {
   const { videoNotice, metricsNotice } = useUIStore();
   const { conversations, activeId } = useChatStore();
+
+  useEffect(() => {
+    setPageSeo({
+      title: 'دستیار هوشمند | چت با هوش مصنوعی رایگان، فارسی و پیشرفته',
+      description: 'چت‌باکس هوش مصنوعی فارسی با پشتیبانی از مدل‌های برتر (ChatGPT, Claude, Gemini)، جستجوی زنده وب، تولید تصویر، مجله اخبار هوش مصنوعی و فروشگاه اختصاصی.',
+      canonical: window.location.origin + '/'
+    });
+  }, []);
 
   const activeConversation = conversations.find(c => c.id === activeId);
   const isEmpty = !activeConversation || activeConversation.messages.length === 0;

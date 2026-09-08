@@ -9,6 +9,7 @@ import { useAuthStore } from '../../store/authStore';
 import { useUIStore } from '../../store/uiStore';
 import { useSettingsStore } from '../../store/settingsStore';
 import { toPersianDigits } from '../../lib/persianUtils';
+import { setPageSeo } from '../../lib/seo';
 
 import { UserDashboard } from './UserDashboard';
 
@@ -38,6 +39,40 @@ export function StoreFront() {
   useEffect(() => {
     fetchProducts();
   }, []);
+
+  useEffect(() => {
+    const currentProduct = detailsProduct || selectedProduct;
+    if (currentProduct) {
+      const priceText = currentProduct.price ? `${currentProduct.price.toLocaleString('fa-IR')} تومان` : 'رایگان';
+      setPageSeo({
+        title: `خرید ${currentProduct.title} | فروشگاه هوش مصنوعی`,
+        description: `خرید آنلاین ${currentProduct.title} - قیمت: ${priceText}. تحویل فوری با پشتیبانی تخصصی در دستیار هوشمند.`,
+        canonical: `${window.location.origin}/store/${currentProduct.id}`,
+        ogImage: currentProduct.bannerImage || currentProduct.image,
+        ogType: 'product',
+        schema: {
+          '@context': 'https://schema.org',
+          '@type': 'Product',
+          name: currentProduct.title,
+          description: currentProduct.description || currentProduct.title,
+          image: currentProduct.bannerImage || currentProduct.image ? [currentProduct.bannerImage || currentProduct.image] : undefined,
+          offers: {
+            '@type': 'Offer',
+            price: currentProduct.price || 0,
+            priceCurrency: 'IRR',
+            availability: 'https://schema.org/InStock'
+          }
+        }
+      });
+    } else {
+      setPageSeo({
+        title: 'فروشگاه هوش مصنوعی | خرید اکانت ChatGPT Plus، کلیدهای API و آموزش‌ها',
+        description: 'فروشگاه تخصصی هوش مصنوعی: خرید اکانت‌های اختصاصی ChatGPT Plus، کلیدهای API معتبر و پکیج‌های آموزشی با پرداخت ریالی و تحویل فوری.',
+        canonical: `${window.location.origin}/store`,
+        ogType: 'website'
+      });
+    }
+  }, [detailsProduct, selectedProduct]);
 
   const fetchProducts = async () => {
     try {
