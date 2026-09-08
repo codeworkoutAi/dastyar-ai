@@ -3,41 +3,96 @@
 Welcome, AI Agent! If you are reading this, you are working on the **Persian AI Chatbox** project. Please read this document carefully to understand the architecture, core features, and rules of this repository before making any changes.
 
 ## 📌 Project Overview
-Persian AI Chatbox is a highly polished, full-stack AI chat interface designed specifically for Persian-speaking users. It acts as a bridge to Gemini models (and others) providing real-time streaming, voice interactions, and deep file/image analysis within a strictly RTL, Persian-localized UI.
+Persian AI Chatbox is a highly polished, full-stack AI platform for Persian-speaking users. Beyond chat, it includes a product store, AI news blog, Telegram bot, and admin tools. The chat UI bridges multiple model providers (Gemini, Groq, OpenAI-compatible, etc.) with real-time streaming, voice, tools, and file/image analysis — all in a strictly RTL, Persian-localized experience.
 
 ## 🛠 Tech Stack
-- **Frontend**: React 19, Vite, TypeScript, Tailwind CSS, Lucide React (for icons), and a custom CSS design system.
-- **Backend**: Express (Node.js) acting as an API proxy to secure API keys.
-- **Build System**: Vite handles frontend building; `esbuild` bundles the Express server into `dist/server.cjs` for production.
+- **Frontend**: React 19, Vite, TypeScript, Tailwind CSS v4 (`@tailwindcss/vite`), Lucide + Solar Icons, custom CSS design system (`index.css`).
+- **State / Routing**: Zustand stores (`chatStore`, `settingsStore`, `authStore`, `uiStore`); `react-router-dom` routes for chat, store, and blog.
+- **Backend**: Express (Node.js) in `server/index.ts` — API proxy, auth, store, news, SEO, Telegram bootstrap.
+- **Database**: `libsql` local SQLite at `server/data/chatbox.db`; optional **Turso** embedded replica via `TURSO_DATABASE_URL` + `TURSO_AUTH_TOKEN`.
+- **Build**: `vite build` for the client; `esbuild` bundles `server/index.ts` → `dist/server.cjs`. Scripts: `dev` (`tsx server/index.ts`), `build`, `start` (`node dist/server.cjs`).
+- **Deploy**: Render (`render.yaml`) — Node web service, bind `0.0.0.0`, use `PORT`.
+- **PWA**: `vite-plugin-pwa` (RTL/fa-IR manifest). Workbox must keep `/api` NetworkOnly / denylisted — never cache API responses in the service worker.
 
 ## ✨ Core Features & Implementation Details
 
 ### 1. Persian-First UI & UX
-- **Layout**: Strictly Right-to-Left (RTL). 
-- **Typography**: Uses the `Vazirmatn` and `Mikhak` font families.
+- **Layout**: Strictly Right-to-Left (RTL).
+- **Typography**: `Vazirmatn`, `Mikhak`, and `Estedad` font families (hybrid typography).
 - **Language**: All UI text, error messages, and placeholders MUST be in fluent Persian.
-- **Features**: Includes a toggle for Persian numerals (`toPersianDigits`) and TTS/Speech Recognition tuned for the Persian language (`fa-IR`).
+- **Features**: Persian numerals toggle (`toPersianDigits`); TTS/Speech Recognition for `fa-IR`.
 
-### 2. File & Image Handling (Crucial)
-- **Images**: Images are uploaded and converted to Base64. To prevent `localStorage` quota issues, images are automatically resized/compressed via a Canvas element (max width/height 1200px) *before* being saved to state.
-- **Documents & Text**: Supports PDF (up to 10MB), text files, code files (`.js`, `.py`, etc.), and datasets (`.csv`, `.json`). Text contents are extracted and injected into the prompt.
-- **UI Logic**: When rendering messages, if a file is not an image (e.g., PDF), it uses a specific UI fallback (a `FileText` icon layout) instead of trying to render it as an `<img>`.
+### 2. Chat, Models & Tools
+- Multi-provider chat with SSE streaming, smart routing, role-based model profiles (default / coding / vision).
+- Tools include web search, Google grounding, image generation, TTS, prompt enhance, and Explore Hub.
+- Hybrid intent detection: `/api/chat/detect-intent` plus client heuristics (see `docs/hybrid-intent-routing.md`).
+- Client may store BYOK API keys encrypted in localStorage (`src/lib/crypto.ts` + `storage.ts`). Default free profiles live in `storage.ts`.
 
-### 3. LocalStorage Quota Management
-- The app stores conversation history in the browser's `localStorage`.
-- **Anti-Quota Exceed System**: `src/lib/storage.ts` contains custom logic in `saveConversations` that handles `QuotaExceededError`. If the quota is hit, it automatically strips Base64 images from older conversations (keeping only the most recent ones) and replaces them with a Persian placeholder text indicating the image was removed to free up space. **DO NOT OVERWRITE OR REMOVE THIS LOGIC.**
+### 3. File & Image Handling (Crucial)
+- **Images**: Converted to Base64 and resized/compressed via Canvas (max 1200px) *before* saving to state to reduce `localStorage` pressure.
+- **Documents & Text**: PDF (up to 10MB), text, code (`.js`, `.py`, etc.), datasets (`.csv`, `.json`). Text is extracted and injected into the prompt.
+- **UI Logic**: Non-image files use a `FileText` fallback layout — never render them as `<img>`.
 
-### 4. Real-time Streaming (SSE)
-- The backend (`server.ts`) streams responses to the frontend using Server-Sent Events (SSE).
-- **Important Headers**: The Express server uses `res.setHeader('X-Accel-Buffering', 'no');` to prevent reverse proxies (like Nginx) from buffering the stream, which previously caused `Failed to fetch` or timeout errors. **Do not remove this header.**
+### 4. LocalStorage Quota Management
+- Conversation history is stored in `localStorage`.
+- **Anti-Quota Exceed System**: `src/lib/storage.ts` → `saveConversations` handles `QuotaExceededError` by stripping Base64 images from older conversations and replacing them with a Persian placeholder. **DO NOT OVERWRITE OR REMOVE THIS LOGIC.**
+
+### 5. Real-time Streaming (SSE)
+- Chat streaming lives in `server/routes/chat.ts` (mounted from `server/index.ts`).
+- **Important Headers**: Always set `res.setHeader('X-Accel-Buffering', 'no');` so reverse proxies (Nginx, etc.) do not buffer the stream. Removing it causes `Failed to fetch` / timeouts.
+
+### 6. Auth, Store & Admin
+- Auth: JWT, email/password, Google OAuth, phone OTP (Kavenegar), SMTP password reset (`server/routes/auth.ts`).
+- Store: products, licenses, orders, redeem codes, checkout (including manual card-to-card with Telegram notify) — `server/routes/store.ts` + `src/pages/store/`.
+- Admin: product/license/order/news management (`server/routes/admin.ts`).
+- **Turso note**: `db.transaction()` is not supported in embedded-replica mode — avoid transactions or guard them.
+
+### 7. Blog / AI News
+- Public blog + tag archives (`/blog`, `/blog/:id`, `/blog/tag/:tagName`).
+- Hourly cron (`Asia/Tehran`) in `server/services/newsCron.ts`: RSS failover → Gemini rewrite/tags → DB → optional Telegram channel post.
+- Resilient feed fetch (multi-feed, timeouts, headers). Do not break Telegram fallback or schedule.
+
+### 8. Telegram Bot
+- Telegraf bot in `server/telegram/bot.ts`: catalog, checkout/receipts, support, channel membership, deep links.
+- **Proxy rule (critical)**: If `PROXY_URL` points at localhost/`127.0.0.1`/`::1` and `NODE_ENV === 'production'`, **skip the proxy and connect directly** (Render/cloud-safe). Keep the localhost proxy for local dev. Do not “fix” production by forcing a local proxy.
+
+### 9. SEO & eNamad
+- Dynamic `/sitemap.xml` (static routes + blog + tags + store products) and `/robots.txt` in `server/index.ts`.
+- Production SPA fallback injects title/description/OG/Twitter/JSON-LD via `renderHtmlWithSeo`. Client SPA updates use `src/lib/seo.ts` (`setPageSeo`).
+- Default page title: `دستیار هوشمند | چت با هوش مصنوعی رایگان، فارسی و پیشرفته`.
+- **eNamad**: Keep `<meta name="enamad" content="60366138" />` in `index.html` and the trust seal markup in `src/components/Footer.tsx` (including `referrerpolicy="origin"`). Do not remove or casually rewrite verification assets (`60366138.txt` in root/public) unless explicitly asked.
+
+### 10. Dev Server / DB Watch
+- Vite middleware mode watches the app but **must ignore** `server/data/**` and `*.db*` files so Turso/SQLite sync does not thrash HMR (`server/index.ts`).
 
 ## 🛑 Rules for Future AI Agents
-1. **Preserve the Build Script**: The `server.ts` handles both API routes and Vite middleware in dev, and serves static files in prod. Never break the `npm run build` logic defined in `package.json`.
-2. **Never Expose API Keys**: All interactions with external AI providers MUST route through `server.ts`. Never call external AI APIs directly from the React frontend.
+1. **Preserve the Build Script**: `server/index.ts` handles API routes, Vite middleware in dev, static + SEO injection in prod. Never break `npm run build` / `start` in `package.json`.
+2. **Never Expose API Keys**: All LLM/search/TTS/provider calls MUST route through the Express server. Never call external AI APIs directly from the React frontend (BYOK keys stay encrypted client-side and are sent only to our backend).
 3. **No Unrequested Features**: Stick strictly to the user's prompt. Do not add unrequested pages, sidebars, or databases unless explicitly asked.
-4. **Styling Approach**: Use Tailwind utility classes for layout and simple styling. A custom CSS design system is present in `index.css` for complex UI components; utilize existing CSS variables and classes from there where appropriate. Do not introduce CSS modules or new external CSS files.
-5. **Robust Error Handling**: Any new API route or feature must handle failures gracefully and return user-friendly Persian error messages.
-6. **Web Search Global Toggle (KILL-SWITCH)**: The Global Web Search toggle in settings is a strict KILL-SWITCH. If disabled, NO web search must occur, even if Smart Routing detects the need for it. Never bypass this manual setting (refer to `chatStore.ts`).
-7. **Markdown Rendering Stability**: When preprocessing `<think>` tags in `MarkdownRenderer.tsx`, ensure the resulting code blocks are wrapped in double newlines (`\n\n\`\`\`reasoning\n...\n\`\`\`\n\n`). Failing to do so causes HTML nesting errors (`<pre>` inside `<p>`) and crashes the React DOM entirely.
+4. **Styling Approach**: Prefer Tailwind utilities; reuse CSS variables/classes from `index.css`. Do not introduce CSS modules or new external CSS files.
+5. **Robust Error Handling**: New API routes/features must fail gracefully with user-friendly **Persian** error messages.
+6. **Web Search Global Toggle (KILL-SWITCH)**: `settings.tools.webSearch` is a strict KILL-SWITCH. If disabled, NO web search may occur — even if Smart Routing wants it. Enforcement is in `src/store/chatStore.ts`. Never bypass this.
+7. **Markdown Rendering Stability**: When preprocessing `<think>` tags in `MarkdownRenderer.tsx`, wrap reasoning fences with double newlines: `\n\n\`\`\`reasoning\n...\n\`\`\`\n\n`. Otherwise React can crash with nested `<pre>` inside `<p>`.
+8. **Telegram Proxy + NODE_ENV**: Preserve production skip of localhost `PROXY_URL`; do not break cloud Telegram broadcasts from `newsCron` / bot.
+9. **Turso / SQLite Safety**: Prefer sync-friendly patterns; avoid unsupported transactions; do not delete self-healing replica / orphan `chatbox.db-info` cleanup logic without cause.
+10. **eNamad & SEO**: Do not strip enamad meta/seal, sitemap image tags, or server-side meta injection unless the user asks.
+11. **PWA `/api`**: Keep API routes out of the service worker cache.
+12. **Env awareness**: `server/.env.example` may lag real usage. Important vars include `DEFAULT_GEMINI_KEY` / `GEMINI_API_KEY`, `DEFAULT_GROQ_KEY`, `TURSO_*`, `JWT_SECRET`, `TELEGRAM_*`, `PROXY_URL`, `KAVENEGAR_API_KEY`, `SMTP_*`, `WEBSITE_URL`/`WEB_URL`/`APP_URL`, `NODE_ENV`, `PORT`.
+
+## 📂 Key Paths
+```
+server/index.ts              # Express entry, sitemap, robots, SEO HTML, Vite/prod static
+server/routes/chat.ts        # SSE + X-Accel-Buffering
+server/routes/{auth,admin,store,news,tools,intent,models}.ts
+server/db/database.ts        # libsql + Turso
+server/telegram/bot.ts       # Proxy skip in production
+server/services/newsCron.ts  # Hourly AI news pipeline
+src/store/chatStore.ts       # Web-search kill-switch + smart routing
+src/lib/storage.ts           # Quota stripping, defaults, encrypted keys
+src/lib/seo.ts               # Client-side SEO updates
+src/components/Footer.tsx    # eNamad trust seal
+src/components/MarkdownRenderer.tsx
+index.html                   # Shell SEO + enamad meta
+```
 
 *End of instructions.*
