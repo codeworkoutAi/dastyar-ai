@@ -5,6 +5,11 @@ import { getGeminiClient, getPollinationsImageUrl } from './utils';
 import { bot } from '../telegram/bot';
 
 const parser = new Parser({
+  headers: {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+    'Accept': 'application/rss+xml, application/xml, text/xml, */*'
+  },
+  timeout: 12000,
   customFields: {
     item: [
       ['media:content', 'mediaContent'],
@@ -15,9 +20,10 @@ const parser = new Parser({
 });
 
 const RSS_FEEDS = [
-  'https://techcrunch.com/category/artificial-intelligence/feed/',
   'https://www.artificialintelligence-news.com/feed/',
-  // 'https://www.technologyreview.com/topic/artificial-intelligence/feed' // sometimes blocking
+  'https://theverge.com/rss/ai-artificial-intelligence/index.xml',
+  'https://venturebeat.com/category/ai/feed/',
+  'https://techcrunch.com/category/artificial-intelligence/feed/'
 ];
 
 export async function fetchAndProcessNews() {
@@ -25,34 +31,44 @@ export async function fetchAndProcessNews() {
   try {
     const ai = getGeminiClient(); // Fails if no API key is set
     
-    // Pick a random feed
-    const feedUrl = RSS_FEEDS[Math.floor(Math.random() * RSS_FEEDS.length)];
-    console.log(`[NewsCron] Fetching from ${feedUrl}`);
-    
-    const feed = await parser.parseURL(feedUrl);
-    if (!feed.items || feed.items.length === 0) {
-      console.log('[NewsCron] No items found in feed.');
-      return;
-    }
+    let targetItem: any = null;
+    let selectedFeedUrl = '';
 
-    let targetItem = null;
-    for (const item of feed.items) {
-      if (!item.link) continue;
-      
-      // Check if we already processed this URL
-      const existing = db.prepare('SELECT 1 FROM news WHERE sourceUrl = ?').get(item.link);
-      if (!existing) {
-        targetItem = item;
-        break; // Found a fresh news item
+    // Shuffle feeds to ensure variety and try each until a working feed with an unseen item is found
+    const feedsToTry = [...RSS_FEEDS].sort(() => Math.random() - 0.5);
+
+    for (const feedUrl of feedsToTry) {
+      try {
+        console.log(`[NewsCron] Fetching from ${feedUrl}...`);
+        const feed = await parser.parseURL(feedUrl);
+        if (!feed.items || feed.items.length === 0) continue;
+
+        for (const item of feed.items) {
+          if (!item.link) continue;
+          // Check if we already processed this URL
+          const existing = db.prepare('SELECT 1 FROM news WHERE sourceUrl = ?').get(item.link);
+          if (!existing) {
+            targetItem = item;
+            selectedFeedUrl = feedUrl;
+            break;
+          }
+        }
+
+        if (targetItem) {
+          console.log(`[NewsCron] Found new unseen item from ${selectedFeedUrl}: "${targetItem.title}"`);
+          break;
+        }
+      } catch (feedErr: any) {
+        console.warn(`[NewsCron] Feed ${feedUrl} timed out or failed, trying next feed:`, feedErr?.message || feedErr);
       }
     }
 
     if (!targetItem) {
-      console.log('[NewsCron] No new unseen news items found in this feed.');
+      console.log('[NewsCron] No new unseen news items found across all available feeds.');
       return;
     }
 
-    console.log(`[NewsCron] Found new item: ${targetItem.title}`);
+    console.log(`[NewsCron] Processing news item: ${targetItem.title}`);
     
     // Construct the prompt for Gemini
     const systemPrompt = `You are a professional technology journalist translating and rewriting AI news for a Persian audience.
@@ -69,12 +85,28 @@ Example: {"title": "عنوان جذاب فارسی", "content": "متن کامل
 
     const userPrompt = `Title: ${targetItem.title}\nSource Link: ${targetItem.link}\nContent: ${targetItem.contentEncoded || targetItem.contentSnippet || targetItem.content || ''}`;
 
-    const response = await ai.models.generateContent({
-      model: 'gemini-3.6-flash', // Using latest flash model
-      contents: [
-        { role: 'user', parts: [{ text: systemPrompt + '\n\n' + userPrompt }] }
-      ]
-    });
+    const candidateModels = ['gemini-3.6-flash', 'gemini-1.5-flash', 'gemini-2.0-flash-lite'];
+    let response: any = null;
+
+    for (const model of candidateModels) {
+      try {
+        console.log(`[NewsCron] Generating article with model: ${model}...`);
+        response = await ai.models.generateContent({
+          model,
+          contents: [
+            { role: 'user', parts: [{ text: systemPrompt + '\n\n' + userPrompt }] }
+          ]
+        });
+        if (response?.text) break;
+      } catch (geminiErr: any) {
+        console.warn(`[NewsCron] Model ${model} failed (${geminiErr?.status || geminiErr?.message}), trying fallback...`);
+      }
+    }
+
+    if (!response?.text) {
+      console.error('[NewsCron] All Gemini models failed to generate content.');
+      return;
+    }
 
     let generatedText = response.text || '';
     generatedText = generatedText.replace(/```json/g, '').replace(/```/g, '').trim();
@@ -140,16 +172,41 @@ Example: {"title": "عنوان جذاب فارسی", "content": "متن کامل
                           `🔗 <a href="${articleUrl}">مطالعه کامل مقاله در وب‌سایت</a>`;
       
       try {
-        await bot.telegram.sendPhoto(channelId, imageUrl, { 
-          caption: messageText, 
-          parse_mode: 'HTML',
-          reply_markup: {
-            inline_keyboard: [
-              [{ text: '📖 مطالعه کامل مقاله در سایت', url: articleUrl }]
-            ]
+        if (imageUrl && !imageUrl.includes('undefined')) {
+          try {
+            await bot.telegram.sendPhoto(channelId, imageUrl, { 
+              caption: messageText, 
+              parse_mode: 'HTML',
+              reply_markup: {
+                inline_keyboard: [
+                  [{ text: '📖 مطالعه کامل مقاله در سایت', url: articleUrl }]
+                ]
+              }
+            });
+            console.log('[NewsCron] News photo broadcasted to Telegram successfully.');
+          } catch (photoErr) {
+            console.warn('[NewsCron] sendPhoto failed, falling back to text message:', photoErr);
+            await bot.telegram.sendMessage(channelId, messageText, {
+              parse_mode: 'HTML',
+              reply_markup: {
+                inline_keyboard: [
+                  [{ text: '📖 مطالعه کامل مقاله در سایت', url: articleUrl }]
+                ]
+              }
+            });
+            console.log('[NewsCron] News text broadcasted to Telegram successfully.');
           }
-        });
-        console.log('[NewsCron] News broadcasted to Telegram successfully.');
+        } else {
+          await bot.telegram.sendMessage(channelId, messageText, {
+            parse_mode: 'HTML',
+            reply_markup: {
+              inline_keyboard: [
+                [{ text: '📖 مطالعه کامل مقاله در سایت', url: articleUrl }]
+              ]
+            }
+          });
+          console.log('[NewsCron] News text broadcasted to Telegram successfully.');
+        }
       } catch (tgError) {
         console.error('[NewsCron] Telegram broadcast failed:', tgError);
       }
@@ -161,11 +218,11 @@ Example: {"title": "عنوان جذاب فارسی", "content": "متن کامل
 }
 
 export function initNewsCron() {
-  // Schedule to run at 10:00 and 20:00 every day (Tehran Time)
-  cron.schedule('0 10,20 * * *', () => {
+  // Schedule to run every hour at minute 0 (Tehran Time)
+  cron.schedule('0 * * * *', () => {
     fetchAndProcessNews();
   }, {
     timezone: 'Asia/Tehran'
   });
-  console.log('[NewsCron] Scheduled AI News fetcher initialized for 10:00 and 20:00 Tehran time.');
+  console.log('[NewsCron] Scheduled AI News fetcher initialized to run EVERY HOUR (Asia/Tehran).');
 }
