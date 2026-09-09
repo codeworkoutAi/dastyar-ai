@@ -335,11 +335,25 @@ function getCalloutType(text: string): { type: 'note' | 'tip' | 'warning' | 'cau
   return { type: 'none', title: '', cleanText: text };
 }
 
+let katexCssLoaded = false;
+const loadKatexCss = () => {
+  if (!katexCssLoaded) {
+    katexCssLoaded = true;
+    import('katex/dist/katex.min.css');
+  }
+};
+
 export const MarkdownRenderer: React.FC<MarkdownRendererProps> = React.memo(({
   content,
   isStreaming = false,
   usePersianDigits = false,
 }) => {
+  React.useEffect(() => {
+    if (content && (content.includes('$') || content.includes('\\'))) {
+      loadKatexCss();
+    }
+  }, [content]);
+
   const formattedContent = formatInlineListsAndPrinciples(content);
   const processedContent = usePersianDigits ? toPersianDigits(formattedContent) : formattedContent;
   const isOverallRtl = isRtlText(processedContent);
