@@ -78,6 +78,7 @@ Persian AI Chatbox is a highly polished, full-stack AI platform for Persian-spea
 10. **eNamad & SEO**: Do not strip enamad meta/seal, sitemap image tags, or server-side meta injection unless the user asks.
 11. **PWA `/api`**: Keep API routes out of the service worker cache.
 12. **Env awareness**: `server/.env.example` may lag real usage. Important vars include `DEFAULT_GEMINI_KEY` / `GEMINI_API_KEY`, `DEFAULT_GROQ_KEY`, `TURSO_*`, `JWT_SECRET`, `TELEGRAM_*`, `PROXY_URL`, `KAVENEGAR_API_KEY`, `SMTP_*`, `WEBSITE_URL`/`WEB_URL`/`APP_URL`, `NODE_ENV`, `PORT`.
+13. **Frontend Monitoring**: Always use the `chrome-devtools-mcp` to monitor console errors and network requests directly when making frontend changes to ensure no hidden client-side errors exist.
 
 ## 📂 Key Paths
 ```

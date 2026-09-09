@@ -9,6 +9,7 @@ import { ChatApp } from './pages/chat/ChatApp';
 
 // Lazy-loaded Pages
 const StoreFront = lazy(() => import('./pages/store/StoreFront').then(m => ({ default: m.StoreFront })));
+const UserDashboard = lazy(() => import('./pages/store/UserDashboard').then(m => ({ default: m.UserDashboard })));
 const Blog = lazy(() => import('./pages/blog/Blog').then(m => ({ default: m.Blog })));
 const TagArchive = lazy(() => import('./pages/blog/TagArchive').then(m => ({ default: m.TagArchive })));
 
@@ -70,6 +71,7 @@ export default function App() {
           <Route path="/blog" element={<Blog />} />
           <Route path="/blog/:id" element={<Blog />} />
           <Route path="/blog/tag/:tagName" element={<TagArchive />} />
+          <Route path="/dashboard" element={<UserDashboard />} />
         </Routes>
 
         {/* Global Modals */}

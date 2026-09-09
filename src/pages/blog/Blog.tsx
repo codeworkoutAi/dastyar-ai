@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
-import { Home, BookOpen, Clock, ChevronRight, Share2, Send, PenTool, MessageCircle, Search, CalendarDays, Hash, ChevronDown, Check, LayoutGrid, List, AlignJustify } from 'lucide-react';
+import { Home, BookOpen, Clock, ChevronRight, Share2, Send, PenTool, MessageCircle, Search, CalendarDays, Hash, ChevronDown, Check, LayoutGrid, List, AlignJustify, LayoutDashboard } from 'lucide-react';
 import { MarkdownRenderer } from '../../components/MarkdownRenderer';
 import { NeuralBanner } from '../../components/NeuralBanner';
 import { Footer } from '../../components/Footer';
@@ -293,6 +293,14 @@ export function Blog() {
             </h1>
           )}
           <div className="flex items-center gap-2 sm:gap-3">
+            <Link 
+              to="/dashboard"
+              className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:text-blue-600 dark:hover:text-blue-400 text-sm font-bold transition-colors"
+              title="داشبورد کاربری"
+            >
+              <LayoutDashboard size={18} />
+              <span className="hidden md:inline">داشبورد</span>
+            </Link>
             <ThemeToggle variant="minimal" />
             <button 
               onClick={handleBack}

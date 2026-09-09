@@ -3,8 +3,9 @@ import { useAuthStore } from '../../store/authStore';
 import { 
   LayoutDashboard, ShoppingBag, User as UserIcon, LifeBuoy, 
   Key, Package, CheckCircle2, XCircle, Clock, Save, Lock, LogOut,
-  Receipt, Printer
+  Receipt, Printer, ArrowRight, Home, ExternalLink
 } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
 
 export const UserDashboard = () => {
   const { user, token, checkAuth, logout } = useAuthStore();
@@ -13,6 +14,8 @@ export const UserDashboard = () => {
   const [purchases, setPurchases] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+
+  const navigate = useNavigate();
 
   // Redeem Code
   const [redeemCode, setRedeemCode] = useState('');
@@ -142,319 +145,412 @@ export const UserDashboard = () => {
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case 'success': return <span className="px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 text-xs font-bold flex items-center gap-1"><CheckCircle2 size={14}/> تکمیل شده</span>;
-      case 'pending': return <span className="px-2.5 py-1 rounded-lg bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400 text-xs font-bold flex items-center gap-1"><Clock size={14}/> در انتظار بررسی</span>;
-      case 'failed': return <span className="px-2.5 py-1 rounded-lg bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 text-xs font-bold flex items-center gap-1"><XCircle size={14}/> لغو شده</span>;
-      default: return <span className="px-2.5 py-1 rounded-lg bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-400 text-xs font-bold">{status}</span>;
+      case 'success': return <span className="px-3 py-1 rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400 text-xs font-bold flex items-center gap-1.5"><CheckCircle2 size={14}/> تکمیل شده</span>;
+      case 'pending': return <span className="px-3 py-1 rounded-full bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-400 text-xs font-bold flex items-center gap-1.5"><Clock size={14}/> در انتظار بررسی</span>;
+      case 'failed': return <span className="px-3 py-1 rounded-full bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400 text-xs font-bold flex items-center gap-1.5"><XCircle size={14}/> لغو شده</span>;
+      default: return <span className="px-3 py-1 rounded-full bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-400 text-xs font-bold">{status}</span>;
     }
+  };
+
+  const handleLogout = () => {
+    logout();
+    navigate('/');
   };
 
   if (!user) {
     return (
-      <div className="flex flex-col items-center justify-center p-12 bg-white dark:bg-zinc-900 rounded-3xl border border-zinc-200 dark:border-zinc-800">
-        <p className="text-zinc-500 mb-4">برای مشاهده داشبورد ابتدا وارد شوید.</p>
-        <button onClick={() => window.dispatchEvent(new CustomEvent('open-auth-modal'))} className="px-6 py-2 bg-blue-600 text-white rounded-xl font-bold">ورود به حساب</button>
+      <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 flex flex-col items-center justify-center p-6">
+        <div className="w-full max-w-md bg-white dark:bg-zinc-900 rounded-3xl border border-zinc-200 dark:border-zinc-800 p-10 text-center shadow-xl shadow-zinc-200/20 dark:shadow-none">
+          <div className="w-20 h-20 bg-blue-50 dark:bg-blue-900/30 text-blue-500 rounded-full flex items-center justify-center mx-auto mb-6">
+            <Lock size={32} />
+          </div>
+          <h2 className="text-2xl font-black text-zinc-900 dark:text-white mb-3">دسترسی غیرمجاز</h2>
+          <p className="text-zinc-500 dark:text-zinc-400 mb-8 leading-relaxed">برای مشاهده پنل کاربری اختصاصی خود ابتدا باید وارد حساب کاربری شوید.</p>
+          <button 
+            onClick={() => {
+              navigate('/');
+              setTimeout(() => window.dispatchEvent(new CustomEvent('open-auth-modal')), 500);
+            }} 
+            className="w-full py-3.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl font-bold shadow-lg shadow-blue-600/20 transition-all hover:-translate-y-0.5"
+          >
+            ورود به حساب کاربری
+          </button>
+          <Link to="/" className="inline-flex items-center gap-2 mt-6 text-sm font-bold text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200 transition-colors">
+            <ArrowRight size={16} /> بازگشت به صفحه اصلی
+          </Link>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col md:flex-row gap-6">
-      {/* Sidebar */}
-      <div className="w-full md:w-64 shrink-0 flex flex-col gap-2">
-        <div className="p-4 bg-white dark:bg-zinc-900 rounded-3xl border border-zinc-200 dark:border-zinc-800 flex flex-col items-center text-center mb-2">
-          <div className="w-16 h-16 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 flex items-center justify-center font-bold text-2xl mb-3 shadow-sm">
-            {user.name ? user.name.charAt(0).toUpperCase() : <UserIcon />}
+    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 flex flex-col md:flex-row font-sans">
+      
+      {/* Mobile Header (Shown only on small screens) */}
+      <div className="md:hidden flex items-center justify-between p-4 bg-white dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 sticky top-0 z-20">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold shadow-md overflow-hidden">
+            {user.avatar ? <img src={user.avatar} className="w-full h-full object-cover" /> : (user.name ? user.name.charAt(0).toUpperCase() : <UserIcon size={20} />)}
           </div>
-          <h3 className="font-bold text-zinc-900 dark:text-white truncate w-full">{user.name || 'کاربر چت‌باکس'}</h3>
-          <p className="text-xs text-zinc-500 mt-1 truncate w-full" dir="ltr">{user.phone || user.email}</p>
+          <span className="font-bold text-zinc-900 dark:text-white truncate max-w-[150px]">{user.name || 'کاربر چت‌باکس'}</span>
+        </div>
+        <Link to="/" className="p-2 bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 rounded-full hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors">
+          <ArrowRight size={20} />
+        </Link>
+      </div>
+
+      {/* Sidebar Navigation */}
+      <div className="w-full md:w-72 md:h-screen md:sticky md:top-0 shrink-0 bg-white dark:bg-zinc-900 border-r border-zinc-200 dark:border-zinc-800 flex flex-col hide-scrollbar overflow-y-auto">
+        
+        {/* User Profile Summary (Desktop) */}
+        <div className="hidden md:flex flex-col items-center text-center p-8 border-b border-zinc-200 dark:border-zinc-800">
+          <div className="relative mb-4 group">
+            <div className="w-24 h-24 rounded-full bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/40 dark:to-indigo-900/40 p-1">
+              <div className="w-full h-full rounded-full bg-white dark:bg-zinc-800 flex items-center justify-center overflow-hidden shadow-sm">
+                {user.avatar ? (
+                  <img src={user.avatar} className="w-full h-full object-cover" alt="avatar" />
+                ) : (
+                  <UserIcon className="w-10 h-10 text-blue-500 opacity-50" />
+                )}
+              </div>
+            </div>
+            <div className="absolute -bottom-2 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 text-[10px] font-bold px-3 py-1 rounded-full shadow-lg left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+              پنل کاربری
+            </div>
+          </div>
+          <h3 className="font-black text-lg text-zinc-900 dark:text-white truncate w-full px-2">{user.name || 'کاربر عزیز'}</h3>
+          <p className="text-xs text-zinc-500 mt-1.5 truncate w-full px-4 font-mono" dir="ltr">{user.phone || user.email}</p>
         </div>
 
-        <nav className="flex flex-col gap-1 p-2 bg-white dark:bg-zinc-900 rounded-3xl border border-zinc-200 dark:border-zinc-800">
-          <button onClick={() => setActiveTab('overview')} className={`flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-bold transition-all ${activeTab === 'overview' ? 'bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400' : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800/50'}`}>
-            <LayoutDashboard size={18} /> نمای کلی
+        {/* Navigation Links */}
+        <div className="flex md:flex-col gap-2 p-4 md:p-6 overflow-x-auto md:overflow-visible">
+          <button onClick={() => setActiveTab('overview')} className={`flex shrink-0 md:w-full items-center gap-3 px-4 py-3.5 rounded-2xl text-sm font-bold transition-all ${activeTab === 'overview' ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20' : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800/50 hover:text-zinc-900 dark:hover:text-zinc-200'}`}>
+            <LayoutDashboard size={18} className={activeTab === 'overview' ? 'text-white' : 'text-zinc-400 dark:text-zinc-500'} /> نمای کلی
           </button>
-          <button onClick={() => setActiveTab('orders')} className={`flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-bold transition-all ${activeTab === 'orders' ? 'bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400' : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800/50'}`}>
-            <ShoppingBag size={18} /> سفارش‌های من
+          <button onClick={() => setActiveTab('orders')} className={`flex shrink-0 md:w-full items-center gap-3 px-4 py-3.5 rounded-2xl text-sm font-bold transition-all ${activeTab === 'orders' ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20' : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800/50 hover:text-zinc-900 dark:hover:text-zinc-200'}`}>
+            <ShoppingBag size={18} className={activeTab === 'orders' ? 'text-white' : 'text-zinc-400 dark:text-zinc-500'} /> تاریخچه سفارش‌ها
           </button>
-          <button onClick={() => setActiveTab('profile')} className={`flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-bold transition-all ${activeTab === 'profile' ? 'bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400' : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800/50'}`}>
-            <UserIcon size={18} /> اطلاعات حساب
+          <button onClick={() => setActiveTab('profile')} className={`flex shrink-0 md:w-full items-center gap-3 px-4 py-3.5 rounded-2xl text-sm font-bold transition-all ${activeTab === 'profile' ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20' : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800/50 hover:text-zinc-900 dark:hover:text-zinc-200'}`}>
+            <UserIcon size={18} className={activeTab === 'profile' ? 'text-white' : 'text-zinc-400 dark:text-zinc-500'} /> تنظیمات حساب
           </button>
-          <button onClick={() => setActiveTab('support')} className={`flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-bold transition-all ${activeTab === 'support' ? 'bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400' : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800/50'}`}>
-            <LifeBuoy size={18} /> پشتیبانی
+          <button onClick={() => setActiveTab('support')} className={`flex shrink-0 md:w-full items-center gap-3 px-4 py-3.5 rounded-2xl text-sm font-bold transition-all ${activeTab === 'support' ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20' : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800/50 hover:text-zinc-900 dark:hover:text-zinc-200'}`}>
+            <LifeBuoy size={18} className={activeTab === 'support' ? 'text-white' : 'text-zinc-400 dark:text-zinc-500'} /> پشتیبانی
           </button>
-        </nav>
+        </div>
 
-        <button onClick={logout} className="flex items-center justify-center gap-2 px-4 py-3 mt-2 rounded-2xl text-sm font-bold text-red-600 bg-red-50 hover:bg-red-100 dark:bg-red-500/10 dark:hover:bg-red-500/20 transition-all border border-red-100 dark:border-red-900/50">
-          <LogOut size={18} /> خروج از حساب
-        </button>
+        <div className="mt-auto p-4 md:p-6 flex flex-col gap-2 border-t border-zinc-200 dark:border-zinc-800">
+          <Link to="/" className="flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-bold text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors">
+            <Home size={18} /> بازگشت به چت
+          </Link>
+          <Link to="/store" className="flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-bold text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors">
+            <ExternalLink size={18} /> فروشگاه محصولات
+          </Link>
+          <button onClick={handleLogout} className="flex items-center justify-center gap-2 px-4 py-3.5 mt-2 rounded-2xl text-sm font-bold text-red-600 bg-red-50 hover:bg-red-100 dark:bg-red-500/10 dark:hover:bg-red-500/20 transition-all">
+            <LogOut size={18} /> خروج از حساب
+          </button>
+        </div>
       </div>
 
       {/* Main Content Area */}
-      <div className="flex-1 bg-white dark:bg-zinc-900 rounded-3xl border border-zinc-200 dark:border-zinc-800 p-6 min-h-[500px]">
-        {activeTab === 'overview' && (
-          <div className="animate-fadeIn">
-            <h2 className="text-xl font-bold mb-6 flex items-center gap-2"><LayoutDashboard className="text-blue-500"/> داشبورد کاربری</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="p-5 rounded-2xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-100 dark:border-zinc-800 flex flex-col items-center text-center">
-                <ShoppingBag className="w-8 h-8 text-blue-500 mb-2" />
-                <span className="text-2xl font-black">{purchases.length}</span>
-                <span className="text-sm text-zinc-500">کل سفارش‌ها</span>
+      <div className="flex-1 p-4 md:p-8 lg:p-12 overflow-y-auto">
+        <div className="max-w-5xl mx-auto">
+          
+          {activeTab === 'overview' && (
+            <div className="animate-fadeIn">
+              <div className="mb-8">
+                <h1 className="text-2xl md:text-3xl font-black text-zinc-900 dark:text-white mb-2">سلام، {user.name?.split(' ')[0] || 'کاربر عزیز'} 👋</h1>
+                <p className="text-zinc-500 dark:text-zinc-400">به پنل مدیریت یکپارچه حساب کاربری خود خوش آمدید.</p>
               </div>
-              <div className="p-5 rounded-2xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-100 dark:border-zinc-800 flex flex-col items-center text-center">
-                <CheckCircle2 className="w-8 h-8 text-emerald-500 mb-2" />
-                <span className="text-2xl font-black">{purchases.filter(p => p.paymentStatus === 'success').length}</span>
-                <span className="text-sm text-zinc-500">تکمیل شده</span>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                <div className="p-6 md:p-8 rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 flex items-center justify-between shadow-sm hover:shadow-md transition-shadow">
+                  <div>
+                    <span className="text-sm font-bold text-zinc-500 dark:text-zinc-400 block mb-1">تعداد کل سفارش‌ها</span>
+                    <span className="text-4xl font-black text-zinc-900 dark:text-white">{purchases.length}</span>
+                  </div>
+                  <div className="w-16 h-16 rounded-2xl bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 flex items-center justify-center">
+                    <ShoppingBag size={32} strokeWidth={2.5} />
+                  </div>
+                </div>
+                <div className="p-6 md:p-8 rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 flex items-center justify-between shadow-sm hover:shadow-md transition-shadow">
+                  <div>
+                    <span className="text-sm font-bold text-zinc-500 dark:text-zinc-400 block mb-1">سفارش‌های موفق</span>
+                    <span className="text-4xl font-black text-zinc-900 dark:text-white">{purchases.filter(p => p.paymentStatus === 'success').length}</span>
+                  </div>
+                  <div className="w-16 h-16 rounded-2xl bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+                    <CheckCircle2 size={32} strokeWidth={2.5} />
+                  </div>
+                </div>
+              </div>
+
+              {/* Redeem Section */}
+              <div className="p-6 md:p-8 bg-gradient-to-br from-indigo-600 to-blue-700 dark:from-indigo-900/80 dark:to-blue-900/80 rounded-3xl shadow-xl shadow-blue-600/10 relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-64 h-64 bg-white opacity-5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3"></div>
+                <div className="absolute bottom-0 left-0 w-64 h-64 bg-black opacity-10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/3"></div>
+                
+                <div className="relative z-10">
+                  <h3 className="font-black text-xl md:text-2xl mb-3 text-white flex items-center gap-3">
+                    <div className="p-2.5 bg-white/20 backdrop-blur-md rounded-xl"><Key className="w-6 h-6 text-white" /></div>
+                    ردیم کد (فعال‌سازی لایسنس)
+                  </h3>
+                  <p className="text-blue-100 mb-6 text-sm md:text-base leading-relaxed max-w-2xl">
+                    کد لایسنس خریداری شده از طریق تلگرام یا سایر پلتفرم‌ها را در کادر زیر وارد کنید تا خدمات به حساب فعلی شما متصل شود.
+                  </p>
+                  <form onSubmit={handleRedeem} className="flex flex-col sm:flex-row gap-3 max-w-xl">
+                    <input 
+                      type="text" 
+                      value={redeemCode}
+                      onChange={(e) => setRedeemCode(e.target.value)}
+                      placeholder="مثال: X7Y9-ABCD-1234"
+                      dir="ltr"
+                      className="flex-1 px-5 py-4 rounded-2xl bg-white/10 border border-white/20 text-white placeholder:text-blue-200 focus:bg-white/20 focus:border-white/40 focus:ring-2 focus:ring-white/20 outline-none transition-all font-mono tracking-widest"
+                    />
+                    <button 
+                      type="submit" 
+                      disabled={isRedeeming || !redeemCode.trim()}
+                      className="px-8 py-4 bg-white text-blue-700 hover:bg-blue-50 rounded-2xl font-black transition-all disabled:opacity-50 shadow-lg shrink-0"
+                    >
+                      {isRedeeming ? 'در حال بررسی...' : 'فعال‌سازی کد'}
+                    </button>
+                  </form>
+                  {redeemMessage && (
+                    <div className={`mt-5 p-4 rounded-2xl text-sm font-bold flex items-center gap-3 max-w-xl backdrop-blur-md ${redeemMessage.type === 'success' ? 'bg-emerald-500/20 text-emerald-100 border border-emerald-400/30' : 'bg-red-500/30 text-red-100 border border-red-400/30'}`}>
+                      {redeemMessage.type === 'success' ? <CheckCircle2 size={20} /> : <XCircle size={20} />}
+                      {redeemMessage.text}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
+          )}
 
-            {/* Redeem Section */}
-            <div className="mt-6 p-6 bg-blue-50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-900/30 rounded-3xl shadow-sm">
-              <h3 className="font-bold text-lg mb-2 text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
-                <Key className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                ردیم کد (فعال‌سازی لایسنس)
-              </h3>
-              <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-4">
-                اگر کد لایسنس را از طریق ربات تلگرام یا پشتیبانی دریافت کرده‌اید، آن را در کادر زیر وارد کنید تا به حساب شما متصل شود.
-              </p>
-              <form onSubmit={handleRedeem} className="flex flex-col sm:flex-row gap-3">
-                <input 
-                  type="text" 
-                  value={redeemCode}
-                  onChange={(e) => setRedeemCode(e.target.value)}
-                  placeholder="مثال: AAAA-BBBB-CCCC"
-                  dir="ltr"
-                  className="flex-1 px-4 py-3 rounded-xl bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all text-sm font-mono"
-                />
-                <button 
-                  type="submit" 
-                  disabled={isRedeeming || !redeemCode.trim()}
-                  className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-bold transition-all disabled:opacity-50 shadow-sm shrink-0"
-                >
-                  {isRedeeming ? 'در حال بررسی...' : 'فعال‌سازی'}
-                </button>
-              </form>
-              {redeemMessage && (
-                <div className={`mt-4 p-3 rounded-xl text-sm font-bold flex items-center gap-2 ${redeemMessage.type === 'success' ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800' : 'bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-400 border border-red-200 dark:border-red-800'}`}>
-                  {redeemMessage.type === 'success' ? <CheckCircle2 size={16} /> : <XCircle size={16} />}
-                  {redeemMessage.text}
+          {activeTab === 'orders' && (
+            <div className="animate-fadeIn">
+              <div className="flex items-center gap-3 mb-8">
+                <div className="p-3 bg-blue-100 dark:bg-blue-900/30 text-blue-600 rounded-2xl"><ShoppingBag size={24} /></div>
+                <h2 className="text-2xl font-black text-zinc-900 dark:text-white">تاریخچه سفارش‌ها</h2>
+              </div>
+              
+              {loading ? (
+                <div className="flex justify-center p-12"><div className="w-10 h-10 border-4 border-zinc-200 border-t-blue-600 rounded-full animate-spin"></div></div>
+              ) : purchases.length === 0 ? (
+                <div className="flex flex-col items-center justify-center p-16 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl text-zinc-400">
+                  <div className="w-24 h-24 bg-zinc-50 dark:bg-zinc-800 rounded-full flex items-center justify-center mb-6">
+                    <Package size={40} className="opacity-50" />
+                  </div>
+                  <h3 className="text-lg font-bold text-zinc-700 dark:text-zinc-300 mb-2">هنوز سفارشی ثبت نکرده‌اید!</h3>
+                  <p>محصولات هوش مصنوعی ما در فروشگاه منتظر شما هستند.</p>
+                  <Link to="/store" className="mt-6 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition-colors">بازدید از فروشگاه</Link>
+                </div>
+              ) : (
+                <div className="flex flex-col gap-4">
+                  {purchases.map(p => (
+                    <div key={p.orderId} className="p-5 md:p-6 rounded-3xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 flex flex-col md:flex-row md:items-center justify-between gap-6 hover:shadow-md transition-shadow">
+                      <div className="flex items-start md:items-center gap-5">
+                        {p.image ? (
+                          <img src={p.image} className="w-16 h-16 rounded-2xl object-cover shadow-sm shrink-0" />
+                        ) : (
+                          <div className="w-16 h-16 rounded-2xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center text-zinc-400 shrink-0"><Package size={24}/></div>
+                        )}
+                        <div>
+                          <h4 className="font-bold text-base md:text-lg mb-2 text-zinc-900 dark:text-white">{p.title}</h4>
+                          <div className="text-xs md:text-sm text-zinc-500 dark:text-zinc-400 flex flex-wrap items-center gap-x-4 gap-y-2">
+                            <span className="flex items-center gap-1.5"><Clock size={14}/> <span dir="ltr">{new Date(p.orderDate).toLocaleDateString('fa-IR')}</span></span>
+                            <span className="flex items-center gap-1.5 text-zinc-700 dark:text-zinc-300 font-bold">{p.amount.toLocaleString('fa-IR')} تومان</span>
+                            <span className="font-mono bg-zinc-100 dark:bg-zinc-800 px-2 py-1 rounded-md text-xs">#{p.orderId.split('-')[1] || p.orderId}</span>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="flex flex-col items-start md:items-end gap-3 shrink-0 pt-4 md:pt-0 border-t md:border-0 border-zinc-100 dark:border-zinc-800">
+                        {getStatusBadge(p.paymentStatus)}
+                        
+                        {p.trackingNumber && (
+                          <div className="text-xs bg-zinc-50 dark:bg-zinc-800/50 text-zinc-600 dark:text-zinc-400 px-3 py-2 rounded-xl font-mono border border-zinc-200 dark:border-zinc-700 w-full md:w-auto text-center">
+                            پیگیری: {p.trackingNumber}
+                          </div>
+                        )}
+                        
+                        {p.licenseKey && p.paymentStatus === 'success' && (
+                          <div className="text-xs bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 px-3 py-2 rounded-xl font-mono border border-emerald-200 dark:border-emerald-800/50 flex items-center justify-center gap-2 w-full md:w-auto">
+                            <Key size={14} /> <span className="tracking-wider">{p.licenseKey}</span>
+                          </div>
+                        )}
+                        
+                        <button 
+                          onClick={() => setSelectedInvoice(p)}
+                          className="w-full md:w-auto flex items-center justify-center gap-2 px-4 py-2 mt-1 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 rounded-xl text-sm font-bold transition-colors"
+                        >
+                          <Receipt size={16} /> فاکتور
+                        </button>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               )}
             </div>
-          </div>
-        )}
+          )}
 
-        {activeTab === 'orders' && (
-          <div className="animate-fadeIn">
-            <h2 className="text-xl font-bold mb-6 flex items-center gap-2"><ShoppingBag className="text-blue-500"/> تاریخچه سفارش‌ها</h2>
-            {loading ? (
-              <div className="flex justify-center p-8"><div className="w-8 h-8 border-2 border-zinc-200 border-t-blue-500 rounded-full animate-spin"></div></div>
-            ) : purchases.length === 0 ? (
-              <div className="flex flex-col items-center justify-center p-12 text-zinc-400">
-                <Package size={48} className="mb-4 opacity-50" />
-                <p>هیچ سفارشی یافت نشد.</p>
+          {activeTab === 'profile' && (
+            <div className="animate-fadeIn max-w-3xl">
+              <div className="flex items-center gap-3 mb-8">
+                <div className="p-3 bg-blue-100 dark:bg-blue-900/30 text-blue-600 rounded-2xl"><UserIcon size={24} /></div>
+                <h2 className="text-2xl font-black text-zinc-900 dark:text-white">تنظیمات حساب کاربری</h2>
               </div>
-            ) : (
-              <div className="flex flex-col gap-4">
-                {purchases.map(p => (
-                  <div key={p.orderId} className="p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-800/20 flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    <div className="flex items-center gap-4">
-                      {p.image ? (
-                        <img src={p.image} className="w-12 h-12 rounded-xl object-cover" />
-                      ) : (
-                        <div className="w-12 h-12 rounded-xl bg-zinc-200 dark:bg-zinc-700 flex items-center justify-center text-zinc-500"><Package size={20}/></div>
-                      )}
-                      <div>
-                        <h4 className="font-bold text-sm mb-1">{p.title}</h4>
-                        <div className="text-xs text-zinc-500 flex items-center gap-3">
-                          <span dir="ltr">{new Date(p.orderDate).toLocaleDateString('fa-IR')}</span>
-                          <span>{p.amount.toLocaleString('fa-IR')} تومان</span>
-                          <span className="font-mono">#{p.orderId.split('-')[1] || p.orderId}</span>
-                        </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <form onSubmit={handleUpdateProfile} className="p-6 md:p-8 rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-sm">
+                  <h3 className="font-bold text-lg mb-6 flex items-center gap-2 border-b border-zinc-100 dark:border-zinc-800 pb-4">اطلاعات شخصی</h3>
+                  <div className="space-y-5">
+                    <div>
+                      <label className="block text-sm font-bold text-zinc-700 dark:text-zinc-300 mb-2">نام و نام خانوادگی</label>
+                      <input type="text" value={profileData.name} onChange={e => setProfileData({...profileData, name: e.target.value})} className="w-full px-4 py-3.5 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 text-sm transition-all" required />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-bold text-zinc-700 dark:text-zinc-300 mb-3">آواتار من</label>
+                      <div className="flex flex-wrap gap-4">
+                        {defaultAvatars.map((url, i) => (
+                          <button
+                            key={i}
+                            type="button"
+                            onClick={() => setProfileData({...profileData, avatar: url})}
+                            className={`relative p-1.5 rounded-full transition-all duration-300 transform hover:scale-110 ${
+                              (profileData.avatar === url || (!profileData.avatar && i === 0))
+                                ? 'bg-blue-100 dark:bg-blue-900/40 shadow-inner'
+                                : 'hover:bg-zinc-100 dark:hover:bg-zinc-800'
+                            }`}
+                          >
+                            <img src={url} alt={`avatar-${i}`} className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-white dark:bg-zinc-700 shadow-sm" />
+                            {(profileData.avatar === url || (!profileData.avatar && i === 0)) && (
+                              <div className="absolute -bottom-1 -right-1 bg-blue-600 text-white rounded-full p-1 border-2 border-white dark:border-zinc-900">
+                                <CheckCircle2 size={12} strokeWidth={4} />
+                              </div>
+                            )}
+                          </button>
+                        ))}
                       </div>
                     </div>
-                    <div className="flex flex-col items-end gap-2 shrink-0">
-                      {getStatusBadge(p.paymentStatus)}
-                      {p.trackingNumber && (
-                        <div className="text-xs bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 px-3 py-1.5 rounded-lg font-mono border border-zinc-200 dark:border-zinc-700 mt-1">
-                          پیگیری: {p.trackingNumber}
-                        </div>
-                      )}
-                      {p.licenseKey && p.paymentStatus === 'success' && (
-                        <div className="text-xs bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 px-3 py-1.5 rounded-lg font-mono border border-emerald-100 dark:border-emerald-800/50 flex items-center gap-2 mt-1">
-                          <Key size={12} /> {p.licenseKey}
-                        </div>
-                      )}
-                      <button 
-                        onClick={() => setSelectedInvoice(p)}
-                        className="mt-1 flex items-center gap-1 text-xs font-bold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors"
-                      >
-                        <Receipt size={14} /> مشاهده فاکتور
-                      </button>
+                    <div>
+                      <label className="block text-sm font-bold text-zinc-700 dark:text-zinc-300 mb-2">آدرس ایمیل</label>
+                      <input type="email" value={profileData.email} onChange={e => setProfileData({...profileData, email: e.target.value})} className="w-full px-4 py-3.5 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 text-sm transition-all" dir="ltr" />
                     </div>
+                    {user.phone && (
+                      <div>
+                        <label className="block text-sm font-bold text-zinc-700 dark:text-zinc-300 mb-2">شماره موبایل (تایید شده)</label>
+                        <input type="text" value={user.phone} disabled className="w-full px-4 py-3.5 rounded-xl bg-zinc-100 dark:bg-zinc-800/80 border border-zinc-200 dark:border-zinc-700 text-zinc-500 text-sm cursor-not-allowed opacity-80" dir="ltr" />
+                      </div>
+                    )}
+                    
+                    {profileMsg && <div className={`p-4 rounded-xl text-sm font-bold flex items-center gap-2 ${profileMsg.type === 'success' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-red-50 text-red-700 border border-red-200'}`}>{profileMsg.type === 'success' ? <CheckCircle2 size={18}/> : <XCircle size={18}/>} {profileMsg.text}</div>}
+                    
+                    <button type="submit" disabled={isUpdatingProfile} className="w-full py-3.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-bold flex justify-center items-center gap-2 transition-colors disabled:opacity-50 mt-4 shadow-lg shadow-blue-600/20">
+                      <Save size={18} /> {isUpdatingProfile ? 'در حال ذخیره...' : 'ذخیره اطلاعات شخصی'}
+                    </button>
                   </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
+                </form>
 
-        {activeTab === 'profile' && (
-          <div className="animate-fadeIn max-w-xl">
-            <h2 className="text-xl font-bold mb-6 flex items-center gap-2"><UserIcon className="text-blue-500"/> تنظیمات حساب کاربری</h2>
-            
-            <form onSubmit={handleUpdateProfile} className="mb-8 p-5 rounded-2xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-100 dark:border-zinc-800">
-              <h3 className="font-bold text-sm mb-4">اطلاعات شخصی</h3>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-xs font-bold text-zinc-500 mb-1">نام و نام خانوادگی</label>
-                  <input type="text" value={profileData.name} onChange={e => setProfileData({...profileData, name: e.target.value})} className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 outline-none focus:border-blue-500 text-sm" required />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-zinc-500 mb-2">آواتار</label>
-                  <div className="flex flex-wrap gap-3 mb-2">
-                    {defaultAvatars.map((url, i) => (
-                      <button
-                        key={i}
-                        type="button"
-                        onClick={() => setProfileData({...profileData, avatar: url})}
-                        className={`relative p-1 rounded-full transition-all ${
-                          (profileData.avatar === url || (!profileData.avatar && i === 0))
-                            ? 'ring-2 ring-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                            : 'hover:bg-zinc-100 dark:hover:bg-zinc-800'
-                        }`}
-                      >
-                        <img src={url} alt={`avatar-${i}`} className="w-12 h-12 rounded-full bg-white dark:bg-zinc-700" />
-                        {(profileData.avatar === url || (!profileData.avatar && i === 0)) && (
-                          <div className="absolute -bottom-1 -right-1 bg-blue-500 text-white rounded-full p-0.5">
-                            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
-                          </div>
-                        )}
-                      </button>
-                    ))}
+                <form onSubmit={handleUpdatePassword} className="p-6 md:p-8 rounded-3xl bg-zinc-100 dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800 h-fit">
+                  <h3 className="font-bold text-lg mb-6 flex items-center gap-2 border-b border-zinc-200 dark:border-zinc-800 pb-4">تغییر رمز عبور</h3>
+                  <div className="space-y-5">
+                    <div>
+                      <label className="block text-sm font-bold text-zinc-700 dark:text-zinc-300 mb-2">رمز عبور فعلی</label>
+                      <input type="password" value={passData.currentPassword} onChange={e => setPassData({...passData, currentPassword: e.target.value})} className="w-full px-4 py-3.5 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 outline-none focus:border-zinc-500 focus:ring-2 focus:ring-zinc-500/20 text-sm transition-all" dir="ltr" required />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-bold text-zinc-700 dark:text-zinc-300 mb-2">رمز عبور جدید</label>
+                      <input type="password" value={passData.newPassword} onChange={e => setPassData({...passData, newPassword: e.target.value})} minLength={6} className="w-full px-4 py-3.5 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 outline-none focus:border-zinc-500 focus:ring-2 focus:ring-zinc-500/20 text-sm transition-all" dir="ltr" required />
+                    </div>
+                    
+                    {passMsg && <div className={`p-4 rounded-xl text-sm font-bold flex items-center gap-2 ${passMsg.type === 'success' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-red-50 text-red-700 border border-red-200'}`}>{passMsg.type === 'success' ? <CheckCircle2 size={18}/> : <XCircle size={18}/>} {passMsg.text}</div>}
+                    
+                    <button type="submit" disabled={isUpdatingPass} className="w-full py-3.5 bg-zinc-900 hover:bg-black dark:bg-white dark:hover:bg-zinc-100 text-white dark:text-zinc-900 rounded-xl text-sm font-bold flex justify-center items-center gap-2 transition-all disabled:opacity-50 mt-4 shadow-lg">
+                      <Lock size={18} /> {isUpdatingPass ? 'در حال ثبت...' : 'بروزرسانی رمز عبور'}
+                    </button>
                   </div>
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-zinc-500 mb-1">ایمیل</label>
-                  <input type="email" value={profileData.email} onChange={e => setProfileData({...profileData, email: e.target.value})} className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 outline-none focus:border-blue-500 text-sm" dir="ltr" />
-                </div>
-                {user.phone && (
-                  <div>
-                    <label className="block text-xs font-bold text-zinc-500 mb-1">شماره موبایل (غیرقابل تغییر)</label>
-                    <input type="text" value={user.phone} disabled className="w-full px-4 py-2.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-400 text-sm cursor-not-allowed" dir="ltr" />
-                  </div>
-                )}
-                
-                {profileMsg && <div className={`p-3 rounded-xl text-sm ${profileMsg.type === 'success' ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-600'}`}>{profileMsg.text}</div>}
-                
-                <button type="submit" disabled={isUpdatingProfile} className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-bold flex items-center gap-2 transition-colors disabled:opacity-50">
-                  <Save size={16} /> ذخیره اطلاعات
-                </button>
+                </form>
               </div>
-            </form>
-
-            <form onSubmit={handleUpdatePassword} className="p-5 rounded-2xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-100 dark:border-zinc-800">
-              <h3 className="font-bold text-sm mb-4">تغییر رمز عبور</h3>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-xs font-bold text-zinc-500 mb-1">رمز عبور فعلی</label>
-                  <input type="password" value={passData.currentPassword} onChange={e => setPassData({...passData, currentPassword: e.target.value})} className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 outline-none focus:border-blue-500 text-sm" dir="ltr" required />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-zinc-500 mb-1">رمز عبور جدید</label>
-                  <input type="password" value={passData.newPassword} onChange={e => setPassData({...passData, newPassword: e.target.value})} minLength={6} className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 outline-none focus:border-blue-500 text-sm" dir="ltr" required />
-                </div>
-                
-                {passMsg && <div className={`p-3 rounded-xl text-sm ${passMsg.type === 'success' ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-600'}`}>{passMsg.text}</div>}
-                
-                <button type="submit" disabled={isUpdatingPass} className="px-6 py-2.5 bg-zinc-800 hover:bg-zinc-900 dark:bg-white dark:hover:bg-zinc-100 text-white dark:text-zinc-900 rounded-xl text-sm font-bold flex items-center gap-2 transition-colors disabled:opacity-50">
-                  <Lock size={16} /> تغییر رمز عبور
-                </button>
-              </div>
-            </form>
-          </div>
-        )}
-
-        {activeTab === 'support' && (
-          <div className="animate-fadeIn max-w-xl">
-            <h2 className="text-xl font-bold mb-6 flex items-center gap-2"><LifeBuoy className="text-blue-500"/> پشتیبانی و ارتباط با ما</h2>
-            <div className="p-6 rounded-2xl bg-blue-50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-900/30">
-              <h3 className="font-bold text-blue-900 dark:text-blue-100 mb-3">نیاز به راهنمایی دارید؟</h3>
-              <p className="text-sm text-blue-800 dark:text-blue-200 mb-6 leading-relaxed">
-                تیم پشتیبانی ما همه روزه آماده پاسخگویی به سوالات و مشکلات شماست. برای پیگیری سفارش‌ها، دریافت لایسنس یا رفع مشکلات فنی، روی دکمه زیر کلیک کنید تا از طریق پشتیبانی سایت یا تلگرام با ما در ارتباط باشید.
-              </p>
-              <button onClick={() => window.dispatchEvent(new CustomEvent('open-contact-modal'))} className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-sm transition-all shadow-md">
-                <LifeBuoy size={18} /> ارتباط با پشتیبانی
-              </button>
             </div>
-          </div>
-        )}
+          )}
+
+          {activeTab === 'support' && (
+            <div className="animate-fadeIn max-w-3xl mx-auto">
+              <div className="flex items-center gap-3 mb-8">
+                <div className="p-3 bg-blue-100 dark:bg-blue-900/30 text-blue-600 rounded-2xl"><LifeBuoy size={24} /></div>
+                <h2 className="text-2xl font-black text-zinc-900 dark:text-white">پشتیبانی پلتفرم</h2>
+              </div>
+              
+              <div className="p-8 md:p-12 rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-center shadow-sm">
+                <div className="w-24 h-24 bg-blue-50 dark:bg-blue-900/20 text-blue-500 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <LifeBuoy size={48} strokeWidth={1.5} />
+                </div>
+                <h3 className="text-xl font-black text-zinc-900 dark:text-white mb-4">چگونه می‌توانیم به شما کمک کنیم؟</h3>
+                <p className="text-zinc-500 dark:text-zinc-400 mb-10 max-w-lg mx-auto leading-relaxed">
+                  تیم پشتیبانی ما همه روزه آماده پاسخگویی به سوالات و مشکلات شماست. برای پیگیری سفارش‌ها، دریافت لایسنس یا رفع مشکلات فنی، با ما در ارتباط باشید.
+                </p>
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+                  <button onClick={() => window.dispatchEvent(new CustomEvent('open-contact-modal'))} className="w-full sm:w-auto px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold transition-all shadow-lg shadow-blue-600/20 flex items-center justify-center gap-2 hover:-translate-y-1">
+                    <LifeBuoy size={20} /> ارسال پیام به پشتیبانی
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+        </div>
       </div>
 
       {/* Invoice Modal */}
       {selectedInvoice && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-900/80 backdrop-blur-sm animate-fadeIn" onClick={() => setSelectedInvoice(null)}>
           <div 
-            className="w-full max-w-lg bg-white dark:bg-zinc-900 rounded-3xl shadow-2xl border border-zinc-200 dark:border-zinc-800 overflow-hidden" 
+            className="w-full max-w-lg bg-white dark:bg-zinc-900 rounded-3xl shadow-2xl shadow-black/50 border border-zinc-200 dark:border-zinc-800 overflow-hidden" 
             onClick={e => e.stopPropagation()}
           >
             <div id="invoice-print-area" className="p-8 pb-4">
               <div className="flex justify-between items-start mb-8 pb-6 border-b border-zinc-200 dark:border-zinc-800 border-dashed">
                 <div>
                   <h3 className="text-xl font-black text-zinc-900 dark:text-white flex items-center gap-2 mb-1">
-                    <ShoppingBag className="text-blue-500" /> فروشگاه هوش مصنوعی
+                    <ShoppingBag className="text-blue-500" /> چت‌باکس
                   </h3>
-                  <p className="text-sm text-zinc-500">فاکتور فروش کالا و خدمات دیجیتال</p>
+                  <p className="text-sm text-zinc-500">فاکتور کالا و خدمات دیجیتال</p>
                 </div>
-                <div className="text-left">
+                <div className="text-left bg-zinc-50 dark:bg-zinc-800/50 p-3 rounded-2xl">
                   <div className="text-sm font-bold text-zinc-900 dark:text-white mb-1" dir="ltr">#{selectedInvoice.orderId.split('-')[1] || selectedInvoice.orderId}</div>
                   <div className="text-xs text-zinc-500" dir="ltr">{new Date(selectedInvoice.orderDate).toLocaleString('fa-IR', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })}</div>
                 </div>
               </div>
 
               <div className="mb-6 space-y-4">
-                <div className="flex justify-between items-center text-sm">
-                  <span className="font-bold text-zinc-900 dark:text-white">مشخصات خریدار:</span>
-                  <span className="text-zinc-700 dark:text-zinc-300">{user.name || 'کاربر چت‌باکس'} ({user.phone || user.email})</span>
+                <div className="flex justify-between items-center text-sm p-2 rounded-lg hover:bg-zinc-50 dark:hover:bg-zinc-800/50">
+                  <span className="font-bold text-zinc-500">خریدار:</span>
+                  <span className="font-bold text-zinc-900 dark:text-zinc-100">{user.name || 'کاربر چت‌باکس'} ({user.phone || user.email})</span>
                 </div>
-                {/* Optional Telegram Row */}
-                {/* For now, we will add a placeholder or check if user.telegramId exists. We don't have telegramId on user right now, so we will pretend or skip if not exist. Let's add it based on a condition if we have it in future. */}
-                <div className="flex justify-between items-center text-sm">
-                  <span className="font-bold text-zinc-900 dark:text-white">ثبت شده از طریق:</span>
-                  <span className="text-zinc-700 dark:text-zinc-300">سایت چت‌باکس</span>
+                <div className="flex justify-between items-center text-sm p-2 rounded-lg hover:bg-zinc-50 dark:hover:bg-zinc-800/50">
+                  <span className="font-bold text-zinc-500">نام محصول:</span>
+                  <span className="font-bold text-zinc-900 dark:text-zinc-100">{selectedInvoice.title}</span>
                 </div>
-                <div className="flex justify-between items-center text-sm">
-                  <span className="font-bold text-zinc-900 dark:text-white">نام محصول:</span>
-                  <span className="text-zinc-700 dark:text-zinc-300">{selectedInvoice.title}</span>
-                </div>
-                <div className="flex justify-between items-center text-sm">
-                  <span className="font-bold text-zinc-900 dark:text-white">وضعیت پرداخت:</span>
+                <div className="flex justify-between items-center text-sm p-2 rounded-lg hover:bg-zinc-50 dark:hover:bg-zinc-800/50">
+                  <span className="font-bold text-zinc-500">وضعیت پرداخت:</span>
                   {getStatusBadge(selectedInvoice.paymentStatus)}
                 </div>
-                {selectedInvoice.paymentStatus === 'success' && (
-                  <div className="flex justify-between items-center text-sm">
-                    <span className="font-bold text-zinc-900 dark:text-white">تاریخ و ساعت تحویل:</span>
-                    <span className="text-zinc-700 dark:text-zinc-300" dir="ltr">{new Date(selectedInvoice.orderDate).toLocaleString('fa-IR', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })}</span>
-                  </div>
-                )}
                 {selectedInvoice.licenseKey && selectedInvoice.paymentStatus === 'success' && (
-                  <div className="flex flex-col gap-2 p-3 bg-zinc-50 dark:bg-zinc-800/50 rounded-xl border border-zinc-200 dark:border-zinc-800 text-sm">
-                    <span className="font-bold text-zinc-900 dark:text-white">کد لایسنس شما:</span>
-                    <span className="font-mono text-center tracking-widest text-zinc-900 dark:text-white" dir="ltr">{selectedInvoice.licenseKey}</span>
+                  <div className="flex flex-col gap-3 p-4 bg-blue-50 dark:bg-blue-900/10 rounded-2xl border border-blue-100 dark:border-blue-900/30 text-sm mt-4">
+                    <span className="font-bold text-blue-900 dark:text-blue-200">کد لایسنس اختصاصی شما:</span>
+                    <span className="font-mono text-center tracking-[0.3em] text-lg font-black text-blue-700 dark:text-blue-400 bg-white dark:bg-zinc-900 py-3 rounded-xl shadow-sm" dir="ltr">{selectedInvoice.licenseKey}</span>
                   </div>
                 )}
               </div>
 
-              <div className="mt-8 pt-6 border-t border-zinc-200 dark:border-zinc-800 border-dashed flex justify-between items-center">
-                <span className="font-bold text-zinc-900 dark:text-white">مبلغ کل پرداخت شده:</span>
-                <span className="text-xl font-black text-blue-600 dark:text-blue-400">{selectedInvoice.amount.toLocaleString('fa-IR')} تومان</span>
+              <div className="mt-8 pt-6 border-t border-zinc-200 dark:border-zinc-800 border-dashed flex justify-between items-center bg-zinc-50 dark:bg-zinc-800/30 -mx-8 px-8 py-6 -mb-4">
+                <span className="font-bold text-zinc-500">مبلغ کل پرداخت شده:</span>
+                <span className="text-2xl font-black text-blue-600 dark:text-blue-400">{selectedInvoice.amount.toLocaleString('fa-IR')} <span className="text-sm font-bold text-zinc-500">تومان</span></span>
               </div>
             </div>
 
-            <div className="p-4 bg-zinc-50 dark:bg-zinc-800/50 border-t border-zinc-200 dark:border-zinc-800 flex justify-end gap-3 rounded-b-3xl">
+            <div className="p-5 bg-zinc-100 dark:bg-zinc-900/80 flex flex-col sm:flex-row justify-end gap-3 rounded-b-3xl">
               <button 
                 onClick={() => setSelectedInvoice(null)}
-                className="px-5 py-2.5 rounded-xl font-bold text-sm bg-zinc-200 hover:bg-zinc-300 text-zinc-700 dark:bg-zinc-800 dark:hover:bg-zinc-700 dark:text-zinc-300 transition-colors"
+                className="w-full sm:w-auto px-6 py-3 rounded-xl font-bold text-sm bg-white hover:bg-zinc-50 text-zinc-700 dark:bg-zinc-800 dark:hover:bg-zinc-700 dark:text-zinc-300 transition-colors border border-zinc-200 dark:border-zinc-700"
               >
                 بستن
               </button>
@@ -469,9 +565,9 @@ export const UserDashboard = () => {
                     window.location.reload();
                   }
                 }}
-                className="px-5 py-2.5 rounded-xl font-bold text-sm bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2 transition-colors"
+                className="w-full sm:w-auto px-6 py-3 rounded-xl font-bold text-sm bg-blue-600 hover:bg-blue-700 text-white flex justify-center items-center gap-2 transition-colors shadow-lg shadow-blue-600/20"
               >
-                <Printer size={16} /> چاپ فاکتور
+                <Printer size={18} /> چاپ رسید
               </button>
             </div>
           </div>

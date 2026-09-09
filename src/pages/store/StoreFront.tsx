@@ -11,7 +11,6 @@ import { useSettingsStore } from '../../store/settingsStore';
 import { toPersianDigits } from '../../lib/persianUtils';
 import { setPageSeo } from '../../lib/seo';
 
-import { UserDashboard } from './UserDashboard';
 
 export function StoreFront() {
   const { id } = useParams<{ id: string }>();
@@ -29,7 +28,6 @@ export function StoreFront() {
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'products' | 'dashboard'>('products');
   
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -193,17 +191,16 @@ export function StoreFront() {
           </div>
           <div className="flex items-center bg-zinc-200/50 dark:bg-zinc-800/50 p-1.5 rounded-xl shrink-0">
             <button 
-              onClick={() => setActiveTab('products')} 
-              className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'products' ? 'bg-white dark:bg-zinc-700 shadow-sm text-blue-600 dark:text-blue-400' : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'}`}
+              className="px-4 py-2 rounded-lg text-sm font-bold transition-all bg-white dark:bg-zinc-700 shadow-sm text-blue-600 dark:text-blue-400 cursor-default"
             >
               فروشگاه
             </button>
-            <button 
-              onClick={() => setActiveTab('dashboard')} 
-              className={`px-4 py-2 rounded-lg text-sm font-bold transition-all flex items-center gap-2 ${activeTab === 'dashboard' ? 'bg-white dark:bg-zinc-700 shadow-sm text-blue-600 dark:text-blue-400' : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'}`}
+            <Link 
+              to="/dashboard"
+              className="px-4 py-2 rounded-lg text-sm font-bold transition-all flex items-center gap-2 text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300"
             >
               داشبورد کاربری
-            </button>
+            </Link>
           </div>
         </div>
 
@@ -262,10 +259,7 @@ export function StoreFront() {
           </div>
         )}
 
-        {activeTab === 'dashboard' ? (
-          <UserDashboard />
-        ) : (
-          <>
+        <>
             {loading ? (
               <div className="flex items-center justify-center h-48">
                 <div className="w-10 h-10 border-2 border-zinc-200 dark:border-zinc-800 border-t-blue-600 rounded-full animate-spin" />
@@ -329,8 +323,7 @@ export function StoreFront() {
                 ))}
               </div>
             )}
-          </>
-        )}
+        </>
       </main>
 
       <Footer />

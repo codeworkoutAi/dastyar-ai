@@ -25,7 +25,7 @@ import { getStorageUsage } from '../lib/storage';
 import { calculateSessionStats } from '../utils/pricing';
 import { Tooltip } from './Tooltip';
 import { useAuthStore } from '../store/authStore';
-import { User, LogOut, ShieldCheck, Settings, ChevronUp } from 'lucide-react';
+import { User, LogOut, ShieldCheck, Settings, ChevronUp, LayoutDashboard } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useUIStore } from '../store/uiStore';
 import { useSettingsStore } from '../store/settingsStore';
@@ -428,6 +428,18 @@ export const Sidebar: React.FC = React.memo(() => {
                   <span>پنل مدیریت سیستم (ادمین چت)</span>
                 </button>
               )}
+
+              <Link
+                to="/dashboard"
+                onClick={() => {
+                  setUserMenuOpen(false);
+                  if (window.innerWidth < 768) setSidebarOpen(false);
+                }}
+                className="flex items-center gap-2 w-full p-2 rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 text-xs font-medium transition-colors text-right cursor-pointer"
+              >
+                <LayoutDashboard size={16} />
+                <span>داشبورد کاربری</span>
+              </Link>
 
               <button
                 onClick={() => {
