@@ -10,21 +10,6 @@
 
 @custom-variant dark (&:is(.dark *));
 
-@font-face {
-  font-family: 'Mikhak';
-  src: url('https://cdn.jsdelivr.net/gh/aminabedi68/Mikhak@master/fonts/woff2/Mikhak-Regular.woff2') format('woff2');
-  font-weight: 100 500;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'Mikhak';
-  src: url('https://cdn.jsdelivr.net/gh/aminabedi68/Mikhak@master/fonts/woff2/Mikhak-Bold.woff2') format('woff2');
-  font-weight: 600 900;
-  font-style: normal;
-  font-display: swap;
-}
 @theme {
   --font-sans: var(--user-font-family);
   --font-display: var(--font-display);
