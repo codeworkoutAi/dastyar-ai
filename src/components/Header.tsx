@@ -29,9 +29,9 @@ import { ThemeToggle } from './ThemeToggle';
 
 export const SmartRoutingBadge: React.FC<{ isStreaming: boolean }> = ({ isStreaming }) => {
   return (
-    <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-purple-500/10 dark:bg-purple-500/10 border border-purple-200 dark:border-purple-500/20 shadow-[0_0_10px_rgba(124,58,237,0.05)] dark:shadow-[0_0_10px_rgba(168,85,247,0.1)] transition-all">
-      <StarsOutlineIcon className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400 animate-[spin_4s_linear_infinite]" />
-      <span className="text-[10px] sm:text-xs font-bold routing-glow-text tracking-wide animate-routing-text-breathe whitespace-nowrap">
+    <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-500/10 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/20 shadow-[0_0_10px_rgba(37,99,235,0.05)] dark:shadow-[0_0_10px_rgba(59,130,246,0.1)] transition-all">
+      <StarsOutlineIcon className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 animate-[spin_4s_linear_infinite]" />
+      <span className="text-[10px] sm:text-xs font-bold text-blue-600 dark:text-blue-400 routing-glow-text tracking-wide animate-routing-text-breathe whitespace-nowrap">
         مسیریابی هوشمند
       </span>
     </div>
@@ -224,7 +224,7 @@ export const Header: React.FC = React.memo(() => {
                     setSettings({ ...settings, tools: { ...settings.tools, smartRouting: !settings.tools.smartRouting } });
                     setShowModelDropdown(false);
                   }}
-                  className={`flex items-center justify-center px-3 py-2.5 rounded-xl text-sm font-medium transition-colors cursor-pointer w-full text-center ${settings.tools.smartRouting ? 'bg-indigo-500/10 text-indigo-400' : 'hover:bg-zinc-100 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300'}`}
+                  className={`flex items-center justify-center px-3 py-2.5 rounded-xl text-sm font-medium transition-colors cursor-pointer w-full text-center ${settings.tools.smartRouting ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400 font-semibold' : 'hover:bg-zinc-100 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300'}`}
                 >
                   مسیریابی هوشمند
                 </button>
