@@ -23,7 +23,7 @@
 
 @layer base {
   :root {
-    --chat-font-size: 15.5px;
+    --chat-font-size: 15px;
     --chat-line-height: 1.8;
     --font-display-family: 'Mikhak', 'Estedad', 'Vazirmatn', sans-serif;
     --font-ui-family: 'Estedad', 'Vazirmatn', -apple-system, BlinkMacSystemFont, sans-serif;
@@ -164,7 +164,7 @@
    GEMINI DESIGN SYSTEM VARIABLES
    ========================================================================== */
 :root {
-  --chat-font-size: 15.5px;
+  --chat-font-size: 15px;
   --chat-line-height: 1.8;
   --gemini-gradient: linear-gradient(90deg, #4285f4, #9b72cb, #d96570);
   --gemini-gradient-subtle: linear-gradient(90deg, rgba(66, 133, 244, 0.15), rgba(155, 114, 203, 0.15), rgba(217, 101, 112, 0.15));
