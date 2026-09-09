@@ -146,12 +146,13 @@ export const Header: React.FC = React.memo(() => {
             </button>
           </Tooltip>
 
-          <div className="min-w-0 hidden sm:flex flex-col justify-center">
-            <h1 className="font-extrabold text-sm sm:text-base md:text-lg tracking-tight truncate flex items-center gap-1.5">
+          <div className="min-w-0 flex flex-col justify-center">
+            <h1 className="font-extrabold text-xs sm:text-base md:text-lg tracking-tight truncate flex items-center gap-1.5">
               <ChatRoundDotsOutlineIcon className="w-4 h-4 opacity-50 hidden md:block" />
-              دستیار هوشمند
+              <span>دستیار هوشمند</span>
+              <span className="sr-only"> | چت با هوش مصنوعی رایگان و فارسی</span>
             </h1>
-            <p className="text-[10px] sm:text-[11px] opacity-70 truncate">
+            <p className="text-[10px] sm:text-[11px] opacity-70 truncate hidden sm:block">
               قدرتمند شده با زبان فارسی
             </p>
           </div>

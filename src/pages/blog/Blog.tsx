@@ -160,23 +160,63 @@ export function Blog() {
         .replace(/[#*`_\[\]()\-!>]/g, '')
         .slice(0, 160)
         .trim();
+
+      let postKeywords = 'هوش مصنوعی, اخبار فناوری';
+      if (selectedPost.tags) {
+        try {
+          const parsed = JSON.parse(selectedPost.tags);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            postKeywords = parsed.join(', ');
+          }
+        } catch {}
+      }
+
+      const postCanonical = `${window.location.origin}/blog/${selectedPost.id}`;
+
       setPageSeo({
         title: `${selectedPost.title} | مجله هوش مصنوعی`,
         description: cleanSnippet || 'مقاله و خبر هوش مصنوعی در دستیار هوشمند',
-        canonical: `${window.location.origin}/blog/${selectedPost.id}`,
+        canonical: postCanonical,
         ogImage: selectedPost.image,
         ogType: 'article',
         schema: {
           '@context': 'https://schema.org',
-          '@type': 'BlogPosting',
-          headline: selectedPost.title,
-          description: cleanSnippet,
-          image: selectedPost.image ? [selectedPost.image] : undefined,
-          datePublished: selectedPost.createdAt,
-          author: {
-            '@type': 'Organization',
-            name: 'دستیار هوشمند'
-          }
+          '@graph': [
+            {
+              '@type': 'BlogPosting',
+              headline: selectedPost.title,
+              description: cleanSnippet,
+              image: selectedPost.image ? [selectedPost.image] : undefined,
+              datePublished: selectedPost.createdAt,
+              dateModified: selectedPost.createdAt,
+              mainEntityOfPage: {
+                '@type': 'WebPage',
+                '@id': postCanonical
+              },
+              keywords: postKeywords,
+              inLanguage: 'fa-IR',
+              author: {
+                '@type': 'Organization',
+                name: 'دستیار هوشمند'
+              },
+              publisher: {
+                '@type': 'Organization',
+                name: 'دستیار هوشمند',
+                logo: {
+                  '@type': 'ImageObject',
+                  url: `${window.location.origin}/pwa-512x512.png`
+                }
+              }
+            },
+            {
+              '@type': 'BreadcrumbList',
+              itemListElement: [
+                { '@type': 'ListItem', position: 1, name: 'خانه', item: `${window.location.origin}/` },
+                { '@type': 'ListItem', position: 2, name: 'مجله هوش مصنوعی', item: `${window.location.origin}/blog` },
+                { '@type': 'ListItem', position: 3, name: selectedPost.title, item: postCanonical }
+              ]
+            }
+          ]
         }
       });
     } else {
@@ -184,7 +224,34 @@ export function Blog() {
         title: 'مجله و اخبار هوش مصنوعی | آخرین رویدادها، تحلیل‌ها و آموزش‌ها',
         description: 'تازه‌ترین اخبار هوش مصنوعی، بررسی مدل‌های جدید زبان طبیعی، مقالات و آموزش‌های تخصصی هوش مصنوعی به زبان فارسی.',
         canonical: `${window.location.origin}/blog`,
-        ogType: 'website'
+        ogType: 'website',
+        schema: {
+          '@context': 'https://schema.org',
+          '@graph': [
+            {
+              '@type': 'Blog',
+              name: 'مجله و اخبار هوش مصنوعی دستیار هوشمند',
+              description: 'تازه‌ترین اخبار و مقالات تخصصی هوش مصنوعی به زبان فارسی',
+              url: `${window.location.origin}/blog`,
+              inLanguage: 'fa-IR',
+              publisher: {
+                '@type': 'Organization',
+                name: 'دستیار هوشمند',
+                logo: {
+                  '@type': 'ImageObject',
+                  url: `${window.location.origin}/pwa-512x512.png`
+                }
+              }
+            },
+            {
+              '@type': 'BreadcrumbList',
+              itemListElement: [
+                { '@type': 'ListItem', position: 1, name: 'خانه', item: `${window.location.origin}/` },
+                { '@type': 'ListItem', position: 2, name: 'مجله هوش مصنوعی', item: `${window.location.origin}/blog` }
+              ]
+            }
+          ]
+        }
       });
     }
   }, [selectedPost]);
@@ -215,10 +282,16 @@ export function Blog() {
     <div className="flex flex-col min-h-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 transition-colors duration-300 font-sans">
       <header className="sticky top-0 z-40 bg-white/90 dark:bg-zinc-950/90 backdrop-blur-xl border-b border-zinc-200 dark:border-zinc-800">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between max-w-5xl">
-          <h1 className="text-xl font-black bg-gradient-to-l from-emerald-600 to-teal-600 bg-clip-text text-transparent flex items-center gap-2">
-            {!selectedPost && <BookOpen size={24} className="text-emerald-600" />}
-            مجله هوش مصنوعی
-          </h1>
+          {selectedPost ? (
+            <span className="text-xl font-black bg-gradient-to-l from-emerald-600 to-teal-600 bg-clip-text text-transparent flex items-center gap-2">
+              مجله هوش مصنوعی
+            </span>
+          ) : (
+            <h1 className="text-xl font-black bg-gradient-to-l from-emerald-600 to-teal-600 bg-clip-text text-transparent flex items-center gap-2">
+              <BookOpen size={24} className="text-emerald-600" />
+              مجله هوش مصنوعی
+            </h1>
+          )}
           <div className="flex items-center gap-2 sm:gap-3">
             <ThemeToggle variant="minimal" />
             <button 

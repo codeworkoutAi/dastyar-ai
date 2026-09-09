@@ -44,24 +44,49 @@ export function StoreFront() {
     const currentProduct = detailsProduct || selectedProduct;
     if (currentProduct) {
       const priceText = currentProduct.price ? `${currentProduct.price.toLocaleString('fa-IR')} تومان` : 'رایگان';
+      const prodCanonical = `${window.location.origin}/store/${currentProduct.id}`;
+      const priceRials = (currentProduct.price || 0) * 10;
+
       setPageSeo({
         title: `خرید ${currentProduct.title} | فروشگاه هوش مصنوعی`,
         description: `خرید آنلاین ${currentProduct.title} - قیمت: ${priceText}. تحویل فوری با پشتیبانی تخصصی در دستیار هوشمند.`,
-        canonical: `${window.location.origin}/store/${currentProduct.id}`,
+        canonical: prodCanonical,
         ogImage: currentProduct.bannerImage || currentProduct.image,
         ogType: 'product',
         schema: {
           '@context': 'https://schema.org',
-          '@type': 'Product',
-          name: currentProduct.title,
-          description: currentProduct.description || currentProduct.title,
-          image: currentProduct.bannerImage || currentProduct.image ? [currentProduct.bannerImage || currentProduct.image] : undefined,
-          offers: {
-            '@type': 'Offer',
-            price: currentProduct.price || 0,
-            priceCurrency: 'IRR',
-            availability: 'https://schema.org/InStock'
-          }
+          '@graph': [
+            {
+              '@type': 'Product',
+              name: currentProduct.title,
+              description: currentProduct.description || currentProduct.title,
+              image: currentProduct.bannerImage || currentProduct.image ? [currentProduct.bannerImage || currentProduct.image] : undefined,
+              sku: `AI-PROD-${currentProduct.id}`,
+              brand: {
+                '@type': 'Brand',
+                name: 'دستیار هوشمند'
+              },
+              offers: {
+                '@type': 'Offer',
+                price: priceRials,
+                priceCurrency: 'IRR',
+                availability: 'https://schema.org/InStock',
+                url: prodCanonical,
+                seller: {
+                  '@type': 'Organization',
+                  name: 'دستیار هوشمند'
+                }
+              }
+            },
+            {
+              '@type': 'BreadcrumbList',
+              itemListElement: [
+                { '@type': 'ListItem', position: 1, name: 'خانه', item: `${window.location.origin}/` },
+                { '@type': 'ListItem', position: 2, name: 'فروشگاه', item: `${window.location.origin}/store` },
+                { '@type': 'ListItem', position: 3, name: currentProduct.title, item: prodCanonical }
+              ]
+            }
+          ]
         }
       });
     } else {
@@ -69,10 +94,43 @@ export function StoreFront() {
         title: 'فروشگاه هوش مصنوعی | خرید اکانت ChatGPT Plus، کلیدهای API و آموزش‌ها',
         description: 'فروشگاه تخصصی هوش مصنوعی: خرید اکانت‌های اختصاصی ChatGPT Plus، کلیدهای API معتبر و پکیج‌های آموزشی با پرداخت ریالی و تحویل فوری.',
         canonical: `${window.location.origin}/store`,
-        ogType: 'website'
+        ogType: 'website',
+        schema: {
+          '@context': 'https://schema.org',
+          '@graph': [
+            {
+              '@type': 'Store',
+              name: 'فروشگاه هوش مصنوعی دستیار هوشمند',
+              description: 'فروشگاه تخصصی هوش مصنوعی: خرید اکانت‌های اختصاصی ChatGPT Plus، کلیدهای API معتبر و پکیج‌های آموزشی با پرداخت ریالی و تحویل فوری.',
+              url: `${window.location.origin}/store`,
+              image: `${window.location.origin}/pwa-512x512.png`,
+              hasOfferCatalog: {
+                '@type': 'OfferCatalog',
+                name: 'محصولات و خدمات هوش مصنوعی',
+                itemListElement: products.slice(0, 12).map(p => ({
+                  '@type': 'Offer',
+                  itemOffered: {
+                    '@type': 'Product',
+                    name: p.title,
+                    url: `${window.location.origin}/store/${p.id}`
+                  },
+                  price: (p.price || 0) * 10,
+                  priceCurrency: 'IRR'
+                }))
+              }
+            },
+            {
+              '@type': 'BreadcrumbList',
+              itemListElement: [
+                { '@type': 'ListItem', position: 1, name: 'خانه', item: `${window.location.origin}/` },
+                { '@type': 'ListItem', position: 2, name: 'فروشگاه', item: `${window.location.origin}/store` }
+              ]
+            }
+          ]
+        }
       });
     }
-  }, [detailsProduct, selectedProduct]);
+  }, [detailsProduct, selectedProduct, products]);
 
   const fetchProducts = async () => {
     try {

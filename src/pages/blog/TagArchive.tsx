@@ -50,11 +50,31 @@ export function TagArchive() {
 
   useEffect(() => {
     if (!tagName) return;
+    const tagCanonical = `${window.location.origin}/blog/tag/${encodeURIComponent(tagName)}`;
     setPageSeo({
       title: `مقالات برچسب ${tagName} | مجله هوش مصنوعی`,
       description: `مجموعه اخبار، مقالات و رویدادهای مرتبط با ${tagName} در مجله هوش مصنوعی دستیار هوشمند.`,
-      canonical: `${window.location.origin}/blog/tag/${encodeURIComponent(tagName)}`,
-      ogType: 'website'
+      canonical: tagCanonical,
+      ogType: 'website',
+      schema: {
+        '@context': 'https://schema.org',
+        '@graph': [
+          {
+            '@type': 'CollectionPage',
+            name: `مقالات برچسب ${tagName}`,
+            description: `مجموعه مقالات هوش مصنوعی با برچسب ${tagName}`,
+            url: tagCanonical
+          },
+          {
+            '@type': 'BreadcrumbList',
+            itemListElement: [
+              { '@type': 'ListItem', position: 1, name: 'خانه', item: `${window.location.origin}/` },
+              { '@type': 'ListItem', position: 2, name: 'مجله هوش مصنوعی', item: `${window.location.origin}/blog` },
+              { '@type': 'ListItem', position: 3, name: tagName, item: tagCanonical }
+            ]
+          }
+        ]
+      }
     });
     setLoading(true);
     fetch(`/api/news/tag/${encodeURIComponent(tagName)}`)

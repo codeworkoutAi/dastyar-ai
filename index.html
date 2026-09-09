@@ -28,26 +28,57 @@
 
   <!-- Twitter / X -->
   <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:site" content="@lifeencoder" />
+  <meta name="twitter:creator" content="@lifeencoder" />
   <meta name="twitter:title" content="دستیار هوشمند | چت با هوش مصنوعی رایگان و پیشرفته" />
   <meta name="twitter:description"
     content="چت‌باکس هوش مصنوعی فارسی با پشتیبانی از مدل‌های برتر (ChatGPT, Claude, Gemini)، جستجوی زنده وب، مجله اخبار و فروشگاه خدمات AI." />
   <meta name="twitter:image" content="/pwa-512x512.png" />
 
-  <!-- Structured Data (JSON-LD) -->
+  <!-- Structured Data (JSON-LD Graph) -->
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
-    "@type": "WebApplication",
-    "name": "دستیار هوشمند",
-    "applicationCategory": "ProductivityApplication",
-    "operatingSystem": "All",
-    "inLanguage": "fa",
-    "description": "چت‌باکس هوش مصنوعی فارسی با پشتیبانی از برترین مدل‌های هوش مصنوعی جهان، جستجوی وب، تولید تصویر و ابزارهای پیشرفته.",
-    "offers": {
-      "@type": "Offer",
-      "price": "0",
-      "priceCurrency": "IRR"
-    }
+    "@graph": [
+      {
+        "@type": "Organization",
+        "@id": "#organization",
+        "name": "دستیار هوشمند",
+        "url": "/",
+        "logo": "/pwa-512x512.png",
+        "description": "پلتفرم جامع هوش مصنوعی فارسی با پشتیبانی از مدل‌های برتر جهان و ابزارهای هوشمند."
+      },
+      {
+        "@type": "WebSite",
+        "@id": "#website",
+        "url": "/",
+        "name": "دستیار هوشمند",
+        "publisher": { "@id": "#organization" },
+        "inLanguage": "fa-IR"
+      },
+      {
+        "@type": "WebApplication",
+        "@id": "#webapp",
+        "name": "دستیار هوشمند",
+        "applicationCategory": "ProductivityApplication",
+        "operatingSystem": "All",
+        "browserRequirements": "Requires JavaScript. Requires HTML5 support.",
+        "inLanguage": "fa-IR",
+        "description": "چت‌باکس هوش مصنوعی فارسی با پشتیبانی از مدل‌های برتر (ChatGPT, Claude, Gemini)، جستجوی زنده وب، تولید تصویر، تحلیل فایل و ابزارهای پیشرفته.",
+        "featureList": [
+          "گفت‌وگوی فارسی با مدل‌های هوش مصنوعی پیشرو",
+          "اتصال زنده به وب با Google Search Grounding",
+          "تولید تصویر با مدل‌های Flux و Stable Diffusion",
+          "تحلیل اسناد متنی، کد و فایل‌های PDF",
+          "رابط کاربری راست‌چین بهینه‌سازی‌شده برای زبان فارسی"
+        ],
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "IRR"
+        }
+      }
+    ]
   }
   </script>
 

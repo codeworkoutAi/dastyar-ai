@@ -18,7 +18,45 @@ export function ChatApp() {
     setPageSeo({
       title: 'دستیار هوشمند | چت با هوش مصنوعی رایگان، فارسی و پیشرفته',
       description: 'چت‌باکس هوش مصنوعی فارسی با پشتیبانی از مدل‌های برتر (ChatGPT, Claude, Gemini)، جستجوی زنده وب، تولید تصویر، مجله اخبار هوش مصنوعی و فروشگاه اختصاصی.',
-      canonical: window.location.origin + '/'
+      canonical: window.location.origin + '/',
+      schema: {
+        '@context': 'https://schema.org',
+        '@type': 'FAQPage',
+        mainEntity: [
+          {
+            '@type': 'Question',
+            name: 'آیا چت با هوش مصنوعی در دستیار هوشمند رایگان است؟',
+            acceptedAnswer: {
+              '@type': 'Answer',
+              text: 'بله، استفاده از مدل‌های پیشرفته هوش مصنوعی در دستیار هوشمند کاملاً رایگان است و کاربران بدون نیاز به فیلترشکن یا شماره خارجی می‌توانند به گفت‌وگو بپردازند.'
+            }
+          },
+          {
+            '@type': 'Question',
+            name: 'دستیار هوشمند از چه مدل‌های هوش مصنوعی پشتیبانی می‌کند؟',
+            acceptedAnswer: {
+              '@type': 'Answer',
+              text: 'دستیار هوشمند از مدل‌های برتر دنیا نظیر ChatGPT (GPT-4o)، Claude 3.5 Sonnet، Gemini 2.0 Flash و DeepSeek پشتیبانی می‌کند و قابلیت انتخاب دستی یا مسیریابی هوشمند (Smart Routing) را دارد.'
+            }
+          },
+          {
+            '@type': 'Question',
+            name: 'آیا امکان جستجوی آنلاین در وب و ساخت عکس با هوش مصنوعی وجود دارد؟',
+            acceptedAnswer: {
+              '@type': 'Answer',
+              text: 'بله، این پلتفرم مجهز به جستجوی زنده وب (Google Search Grounding) برای دسترسی به اخبار و داده‌های روز و استودیوی تولید تصویر با مدل‌های Flux و Stable Diffusion است.'
+            }
+          },
+          {
+            '@type': 'Question',
+            name: 'فروشگاه هوش مصنوعی چه خدماتی ارائه می‌دهد؟',
+            acceptedAnswer: {
+              '@type': 'Answer',
+              text: 'در فروشگاه دستیار هوشمند، اشتراک‌های قانونی ChatGPT Plus، کلیدهای اختصاصی API و آموزش‌های تخصصی هوش مصنوعی با امکان پرداخت ریالی و تحویل آنی عرضه می‌شوند.'
+            }
+          }
+        ]
+      }
     });
   }, []);
 

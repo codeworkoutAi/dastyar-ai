@@ -62,7 +62,30 @@ Disallow: /api/admin/
 Disallow: /api/auth/
 Disallow: /store?tab=dashboard
 
-Sitemap: ${protocol}://${host}/sitemap.xml`);
+# AI & LLM Search Engine Crawlers (GEO Optimization)
+User-agent: GPTBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: anthropic-ai
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: Applebot-Extended
+Allow: /
+
+Sitemap: ${protocol}://${host}/sitemap.xml
+`);
 });
 
 app.get('/sitemap.xml', (req, res) => {
@@ -156,6 +179,8 @@ function renderHtmlWithSeo(req: express.Request, res: express.Response, distPath
     let canonicalUrl = `${baseUrl}${urlPath}`;
     let structuredData: any = null;
 
+    let extraMetaTags = '';
+
     // Check /blog/:id
     const blogMatch = urlPath.match(/^\/blog\/(\d+)$/);
     if (blogMatch) {
@@ -169,34 +194,96 @@ function renderHtmlWithSeo(req: express.Request, res: express.Response, distPath
           pageImage = post.image.startsWith('http') ? post.image : `${baseUrl}${post.image}`;
         }
         pageType = 'article';
+
+        let parsedKeywords: string[] = [];
+        if (post.tags) {
+          try {
+            const parsed = JSON.parse(post.tags);
+            if (Array.isArray(parsed)) parsedKeywords = parsed;
+          } catch {}
+        }
+
+        const tagsMeta = parsedKeywords.map(k => `  <meta property="article:tag" content="${k}" />`).join('\n');
+        extraMetaTags += `\n  <meta property="article:published_time" content="${post.createdAt}" />\n  <meta property="article:modified_time" content="${post.createdAt}" />\n  <meta property="article:author" content="دستیار هوشمند" />\n${tagsMeta}`;
+
         structuredData = {
           '@context': 'https://schema.org',
-          '@type': 'BlogPosting',
-          headline: post.title,
-          description: pageDesc,
-          image: [pageImage],
-          datePublished: post.createdAt,
-          author: {
-            '@type': 'Organization',
-            name: 'دستیار هوشمند'
-          },
-          publisher: {
-            '@type': 'Organization',
-            name: 'دستیار هوشمند',
-            logo: {
-              '@type': 'ImageObject',
-              url: `${baseUrl}/pwa-512x512.png`
+          '@graph': [
+            {
+              '@type': 'BlogPosting',
+              headline: post.title,
+              description: pageDesc,
+              image: [pageImage],
+              datePublished: post.createdAt,
+              dateModified: post.createdAt,
+              mainEntityOfPage: {
+                '@type': 'WebPage',
+                '@id': canonicalUrl
+              },
+              keywords: parsedKeywords.length > 0 ? parsedKeywords.join(', ') : 'هوش مصنوعی, اخبار فناوری',
+              inLanguage: 'fa-IR',
+              author: {
+                '@type': 'Organization',
+                name: 'دستیار هوشمند'
+              },
+              publisher: {
+                '@type': 'Organization',
+                name: 'دستیار هوشمند',
+                logo: {
+                  '@type': 'ImageObject',
+                  url: `${baseUrl}/pwa-512x512.png`
+                }
+              }
+            },
+            {
+              '@type': 'BreadcrumbList',
+              itemListElement: [
+                { '@type': 'ListItem', position: 1, name: 'خانه', item: `${baseUrl}/` },
+                { '@type': 'ListItem', position: 2, name: 'مجله هوش مصنوعی', item: `${baseUrl}/blog` },
+                { '@type': 'ListItem', position: 3, name: post.title, item: canonicalUrl }
+              ]
             }
-          }
+          ]
         };
       }
     } else if (urlPath.startsWith('/blog/tag/')) {
       const tag = decodeURIComponent(urlPath.replace('/blog/tag/', ''));
       pageTitle = `مقالات برچسب ${tag} | مجله هوش مصنوعی`;
       pageDesc = `مجموعه اخبار و مقالات آموزشی هوش مصنوعی مرتبط با ${tag} در مجله هوش مصنوعی دستیار هوشمند.`;
+      structuredData = {
+        '@context': 'https://schema.org',
+        '@type': 'CollectionPage',
+        name: pageTitle,
+        description: pageDesc,
+        url: canonicalUrl
+      };
     } else if (urlPath === '/blog') {
       pageTitle = 'مجله و اخبار هوش مصنوعی | تازه‌ترین رویدادها، مدل‌ها و آموزش‌ها';
       pageDesc = 'آخرین اخبار دنیای هوش مصنوعی، بررسی مدل‌های جدید زبان طبیعی، مقالات و آموزش‌های تخصصی هوش مصنوعی به زبان فارسی.';
+      structuredData = {
+        '@context': 'https://schema.org',
+        '@graph': [
+          {
+            '@type': 'Blog',
+            name: 'مجله و اخبار هوش مصنوعی دستیار هوشمند',
+            description: pageDesc,
+            url: canonicalUrl,
+            inLanguage: 'fa-IR',
+            publisher: {
+              '@type': 'Organization',
+              name: 'دستیار هوشمند',
+              logo: { '@type': 'ImageObject', url: `${baseUrl}/pwa-512x512.png` }
+            }
+          },
+          {
+            '@type': 'BreadcrumbList',
+            itemListElement: [
+              { '@type': 'ListItem', position: 1, name: 'خانه', item: `${baseUrl}/` },
+              { '@type': 'ListItem', position: 2, name: 'مجله هوش مصنوعی', item: canonicalUrl }
+            ]
+          }
+        ]
+      };
     } else {
       // Check /store/:id
       const storeMatch = urlPath.match(/^\/store\/(\d+)$/);
@@ -212,24 +299,124 @@ function renderHtmlWithSeo(req: express.Request, res: express.Response, distPath
             pageImage = prodImg.startsWith('http') ? prodImg : `${baseUrl}${prodImg}`;
           }
           pageType = 'product';
+
+          const priceRials = (product.price || 0) * 10;
+          extraMetaTags += `\n  <meta property="product:price:amount" content="${priceRials}" />\n  <meta property="product:price:currency" content="IRR" />\n  <meta property="product:availability" content="in stock" />`;
+
           structuredData = {
             '@context': 'https://schema.org',
-            '@type': 'Product',
-            name: product.title,
-            description: product.description || product.title,
-            image: [pageImage],
-            offers: {
-              '@type': 'Offer',
-              price: product.price || 0,
-              priceCurrency: 'IRR',
-              availability: 'https://schema.org/InStock',
-              url: canonicalUrl
-            }
+            '@graph': [
+              {
+                '@type': 'Product',
+                name: product.title,
+                description: product.description || product.title,
+                image: [pageImage],
+                sku: `AI-PROD-${product.id}`,
+                brand: {
+                  '@type': 'Brand',
+                  name: 'دستیار هوشمند'
+                },
+                offers: {
+                  '@type': 'Offer',
+                  price: priceRials,
+                  priceCurrency: 'IRR',
+                  availability: 'https://schema.org/InStock',
+                  url: canonicalUrl,
+                  seller: {
+                    '@type': 'Organization',
+                    name: 'دستیار هوشمند'
+                  }
+                }
+              },
+              {
+                '@type': 'BreadcrumbList',
+                itemListElement: [
+                  { '@type': 'ListItem', position: 1, name: 'خانه', item: `${baseUrl}/` },
+                  { '@type': 'ListItem', position: 2, name: 'فروشگاه', item: `${baseUrl}/store` },
+                  { '@type': 'ListItem', position: 3, name: product.title, item: canonicalUrl }
+                ]
+              }
+            ]
           };
         }
       } else if (urlPath === '/store') {
         pageTitle = 'فروشگاه هوش مصنوعی | خرید اکانت ChatGPT Plus، کلیدهای API و آموزش‌ها';
         pageDesc = 'فروشگاه خدمات و ابزارهای هوش مصنوعی: خرید اکانت پرمیوم ChatGPT Plus، کلیدهای API معتبر و پکیج‌های آموزشی تخصصی با پرداخت ریالی و تحویل فوری.';
+        
+        const storeProducts = db.prepare('SELECT id, title, price FROM products ORDER BY id DESC LIMIT 12').all() as any[];
+        structuredData = {
+          '@context': 'https://schema.org',
+          '@graph': [
+            {
+              '@type': 'Store',
+              name: 'فروشگاه هوش مصنوعی دستیار هوشمند',
+              description: pageDesc,
+              url: canonicalUrl,
+              image: `${baseUrl}/pwa-512x512.png`,
+              hasOfferCatalog: {
+                '@type': 'OfferCatalog',
+                name: 'محصولات دیجیتال و اشتراک‌های هوش مصنوعی',
+                itemListElement: storeProducts.map(p => ({
+                  '@type': 'Offer',
+                  itemOffered: {
+                    '@type': 'Product',
+                    name: p.title,
+                    url: `${baseUrl}/store/${p.id}`
+                  },
+                  price: (p.price || 0) * 10,
+                  priceCurrency: 'IRR'
+                }))
+              }
+            },
+            {
+              '@type': 'BreadcrumbList',
+              itemListElement: [
+                { '@type': 'ListItem', position: 1, name: 'خانه', item: `${baseUrl}/` },
+                { '@type': 'ListItem', position: 2, name: 'فروشگاه', item: canonicalUrl }
+              ]
+            }
+          ]
+        };
+      } else if (urlPath === '/') {
+        // Home page FAQPage Schema for GEO / AI Answer Engines
+        structuredData = {
+          '@context': 'https://schema.org',
+          '@type': 'FAQPage',
+          mainEntity: [
+            {
+              '@type': 'Question',
+              name: 'آیا چت با هوش مصنوعی در دستیار هوشمند رایگان است؟',
+              acceptedAnswer: {
+                '@type': 'Answer',
+                text: 'بله، استفاده از مدل‌های پیشرفته هوش مصنوعی در دستیار هوشمند کاملاً رایگان است و کاربران بدون نیاز به فیلترشکن یا شماره خارجی می‌توانند به گفت‌وگو بپردازند.'
+              }
+            },
+            {
+              '@type': 'Question',
+              name: 'دستیار هوشمند از چه مدل‌های هوش مصنوعی پشتیبانی می‌کند؟',
+              acceptedAnswer: {
+                '@type': 'Answer',
+                text: 'دستیار هوشمند از مدل‌های برتر دنیا نظیر ChatGPT (GPT-4o)، Claude 3.5 Sonnet، Gemini 2.0 Flash و DeepSeek پشتیبانی می‌کند و قابلیت انتخاب دستی یا مسیریابی هوشمند (Smart Routing) را دارد.'
+              }
+            },
+            {
+              '@type': 'Question',
+              name: 'آیا امکان جستجوی آنلاین در وب و ساخت عکس با هوش مصنوعی وجود دارد؟',
+              acceptedAnswer: {
+                '@type': 'Answer',
+                text: 'بله، این پلتفرم مجهز به جستجوی زنده وب (Google Search Grounding) برای دسترسی به اخبار و داده‌های روز و استودیوی تولید تصویر با مدل‌های Flux و Stable Diffusion است.'
+              }
+            },
+            {
+              '@type': 'Question',
+              name: 'فروشگاه هوش مصنوعی چه خدماتی ارائه می‌دهد؟',
+              acceptedAnswer: {
+                '@type': 'Answer',
+                text: 'در فروشگاه دستیار هوشمند، اشتراک‌های قانونی ChatGPT Plus، کلیدهای اختصاصی API و آموزش‌های تخصصی هوش مصنوعی با امکان پرداخت ریالی و تحویل آنی عرضه می‌شوند.'
+              }
+            }
+          ]
+        };
       }
     }
 
@@ -253,7 +440,10 @@ function renderHtmlWithSeo(req: express.Request, res: express.Response, distPath
     html = html.replace(/<meta\s+name="twitter:description"\s+content=".*?"\s*\/?>/i, `<meta name="twitter:description" content="${pageDesc}" />`);
     html = html.replace(/<meta\s+name="twitter:image"\s+content=".*?"\s*\/?>/i, `<meta name="twitter:image" content="${pageImage}" />`);
 
-    // Inject Dynamic JSON-LD Schema if present
+    // Inject Dynamic JSON-LD Schema & extra meta tags
+    if (extraMetaTags) {
+      html = html.replace('</head>', `${extraMetaTags}\n</head>`);
+    }
     if (structuredData) {
       const schemaTag = `\n  <script type="application/ld+json" id="server-injected-schema">\n  ${JSON.stringify(structuredData, null, 2)}\n  </script>\n</head>`;
       html = html.replace('</head>', schemaTag);
