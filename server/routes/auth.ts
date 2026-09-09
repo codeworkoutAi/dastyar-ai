@@ -527,7 +527,7 @@ router.put('/password', requireAuth, async (req: any, res) => {
   }
 });
 // PUT /api/auth/profile
-router.put('/profile', authMiddleware, async (req: any, res) => {
+router.put('/profile', requireAuth, async (req: any, res) => {
   try {
     const userId = req.user.id;
     const { name, avatar } = req.body;
