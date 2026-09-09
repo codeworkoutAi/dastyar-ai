@@ -16,6 +16,7 @@ interface AuthState {
   isAuthModalOpen: boolean;
   login: (user: User, token: string) => void;
   logout: () => void;
+  updateUser: (updates: Partial<User>) => void;
   setAuthModalOpen: (isOpen: boolean) => void;
   checkAuth: () => Promise<void>;
 }
@@ -34,6 +35,12 @@ export const useAuthStore = create<AuthState>((set) => ({
   logout: () => {
     localStorage.removeItem('token');
     set({ user: null, token: null, isAuthenticated: false });
+  },
+
+  updateUser: (updates) => {
+    set((state) => ({
+      user: state.user ? { ...state.user, ...updates } : null
+    }));
   },
 
   setAuthModalOpen: (isOpen) => set({ isAuthModalOpen: isOpen }),

@@ -526,5 +526,29 @@ router.put('/password', requireAuth, async (req: any, res) => {
     res.status(500).json({ error: 'خطای سرور در تغییر رمز عبور.' });
   }
 });
+// PUT /api/auth/profile
+router.put('/profile', authMiddleware, async (req: any, res) => {
+  try {
+    const userId = req.user.id;
+    const { name, avatar } = req.body;
+
+    const user = db.prepare('SELECT * FROM users WHERE id = ?').get(userId) as any;
+    if (!user) return res.status(404).json({ error: 'کاربر یافت نشد.' });
+
+    let updatedName = user.name;
+    let updatedAvatar = user.avatar;
+
+    if (name !== undefined) updatedName = name.trim();
+    if (avatar !== undefined) updatedAvatar = avatar.trim();
+
+    db.prepare('UPDATE users SET name = ?, avatar = ? WHERE id = ?').run(updatedName, updatedAvatar, userId);
+    syncDatabase();
+
+    res.json({ message: 'پروفایل با موفقیت بروزرسانی شد.', user: { ...user, name: updatedName, avatar: updatedAvatar } });
+  } catch (error) {
+    console.error('[Auth API] Profile Update Error:', error);
+    res.status(500).json({ error: 'خطای سرور در بروزرسانی پروفایل.' });
+  }
+});
 
 export default router;

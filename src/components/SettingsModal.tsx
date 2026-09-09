@@ -3,12 +3,12 @@ import { useSettingsStore } from '../store/settingsStore';
 import { useChatStore } from '../store/chatStore';
 import { useAuthStore } from '../store/authStore';
 import React, { useState, useEffect } from 'react';
-import { CloseOutlineIcon, DisketteOutlineIcon, GlobalOutlineIcon, CpuOutlineIcon, UserCircleOutlineIcon, PaletteOutlineIcon, SettingsOutlineIcon, InfoCircleOutlineIcon, TrashBinMinimalisticOutlineIcon, DownloadOutlineIcon, UploadOutlineIcon, StarsOutlineIcon } from '@solar-icons/react';
+import { CloseOutlineIcon, DisketteOutlineIcon, GlobalOutlineIcon, CpuOutlineIcon, UserCircleOutlineIcon, PaletteOutlineIcon, SettingsOutlineIcon, InfoCircleOutlineIcon, TrashBinMinimalisticOutlineIcon, DownloadOutlineIcon, UploadOutlineIcon, StarsOutlineIcon, UserOutlineIcon } from '@solar-icons/react';
 import { AppSettings, Conversation, FontFamily, ThemeMode, CustomProfile } from '../types';
 import { CustomProviderCards, getModelDetails } from './CustomProviderCards';
 import { EyeOutlineIcon, CodeOutlineIcon, BrainOutlineIcon } from '@solar-icons/react';
 
-type TabType = 'providers' | 'persona' | 'appearance' | 'tools' | 'data';
+type TabType = 'account' | 'providers' | 'persona' | 'appearance' | 'tools' | 'data';
 
 interface VisualRoleSelectProps {
   roleType: 'default' | 'coding' | 'vision';
@@ -278,6 +278,7 @@ export const SettingsModal: React.FC = () => {
   const { isSettingsOpen: isOpen, setIsSettingsOpen } = useUIStore();
   const { settings, setSettings } = useSettingsStore();
   const { setConversations, clearAllConversations } = useChatStore();
+  const { user, updateUser } = useAuthStore();
   const onClose = () => setIsSettingsOpen(false);
   const onSaveSettings = setSettings;
   const onImportConversations = (imported: Conversation[]) => setConversations(imported);
@@ -292,6 +293,47 @@ export const SettingsModal: React.FC = () => {
 
   const [activeTab, setActiveTab] = useState<TabType>('providers');
   const [tempSettings, setTempSettings] = useState<AppSettings>(settings);
+
+  // Profile Update State
+  const [profileName, setProfileName] = useState(user?.name || '');
+  const [profileAvatar, setProfileAvatar] = useState(user?.avatar || '');
+  const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
+  const [profileUpdateMsg, setProfileUpdateMsg] = useState<{ success: boolean, msg: string } | null>(null);
+
+  const defaultAvatars = [
+    'https://api.dicebear.com/7.x/bottts/svg?seed=Felix',
+    'https://api.dicebear.com/7.x/bottts/svg?seed=Aneka',
+    'https://api.dicebear.com/7.x/bottts/svg?seed=Milo',
+    'https://api.dicebear.com/7.x/bottts/svg?seed=Luna',
+    'https://api.dicebear.com/7.x/bottts/svg?seed=Oliver',
+    'https://api.dicebear.com/7.x/bottts/svg?seed=Bella'
+  ];
+
+  const handleUpdateProfile = async () => {
+    if (!user) return;
+    setIsUpdatingProfile(true);
+    setProfileUpdateMsg(null);
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch('/api/auth/profile', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ name: profileName, avatar: profileAvatar })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        updateUser({ name: data.user.name, avatar: data.user.avatar });
+        setProfileUpdateMsg({ success: true, msg: 'پروفایل با موفقیت بروزرسانی شد.' });
+      } else {
+        setProfileUpdateMsg({ success: false, msg: data.error || 'خطا در بروزرسانی پروفایل' });
+      }
+    } catch (err) {
+      setProfileUpdateMsg({ success: false, msg: 'خطا در برقراری ارتباط با سرور' });
+    } finally {
+      setIsUpdatingProfile(false);
+      setTimeout(() => setProfileUpdateMsg(null), 3000);
+    }
+  };
 
   const [testing, setTesting] = useState(false);
   const [testResult, setTestResult] = useState<{ success: boolean; message: string; latencyMs?: number } | null>(null);
@@ -524,6 +566,9 @@ export const SettingsModal: React.FC = () => {
             </button>
           </div>
           <div className="flex-1 overflow-y-auto flex sm:flex-col sm:p-3 p-2 gap-2 sm:gap-1 overflow-x-auto">
+            {user && (
+              <TabButton active={activeTab === 'account'} onClick={() => setActiveTab('account')} icon={<UserOutlineIcon className="w-4 h-4 shrink-0" />} label="حساب کاربری" />
+            )}
             <TabButton active={activeTab === 'providers'} onClick={() => setActiveTab('providers')} icon={<GlobalOutlineIcon className="w-4 h-4 shrink-0" />} label="ارائه‌دهندگان" />
             <TabButton active={activeTab === 'persona'} onClick={() => setActiveTab('persona')} icon={<UserCircleOutlineIcon className="w-4 h-4 shrink-0" />} label="شخصی‌سازی" />
             <TabButton active={activeTab === 'appearance'} onClick={() => setActiveTab('appearance')} icon={<PaletteOutlineIcon className="w-4 h-4 shrink-0" />} label="ظاهر و قالب" />
@@ -535,6 +580,72 @@ export const SettingsModal: React.FC = () => {
         {/* Main Content Area */}
         <div className="flex-1 flex flex-col overflow-hidden bg-zinc-50 dark:bg-zinc-950">
           <div className="flex-1 overflow-y-auto p-3.5 sm:p-8">
+
+            {activeTab === 'account' && user && (
+              <div className="space-y-6 sm:space-y-8 animate-fadeIn">
+                <div className="flex items-center gap-3 mb-4 sm:mb-6">
+                  <div className="p-2 bg-blue-500/10 rounded-lg text-blue-400"><UserOutlineIcon className="w-5 h-5" /></div>
+                  <div>
+                    <h3 className="text-lg font-bold">تنظیمات حساب کاربری</h3>
+                    <p className="text-xs text-zinc-700 dark:text-zinc-400">ویرایش نام و آواتار کاربری</p>
+                  </div>
+                </div>
+
+                <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-5 space-y-6">
+                  <div>
+                    <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">نام نمایشی</label>
+                    <input
+                      type="text"
+                      value={profileName}
+                      onChange={(e) => setProfileName(e.target.value)}
+                      placeholder="نام خود را وارد کنید..."
+                      className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 rounded-xl px-4 py-3 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-sm"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">آواتار</label>
+                    <div className="flex flex-wrap gap-3">
+                      {defaultAvatars.map((url, i) => (
+                        <button
+                          key={i}
+                          type="button"
+                          onClick={() => setProfileAvatar(url)}
+                          className={`relative p-1 rounded-full transition-all ${
+                            (profileAvatar === url || (!profileAvatar && i === 0))
+                              ? 'ring-2 ring-blue-500 bg-blue-50 dark:bg-blue-900/20'
+                              : 'hover:bg-zinc-100 dark:hover:bg-zinc-800'
+                          }`}
+                        >
+                          <img src={url} alt={`avatar-${i}`} className="w-12 h-12 rounded-full bg-white dark:bg-zinc-700" />
+                          {(profileAvatar === url || (!profileAvatar && i === 0)) && (
+                            <div className="absolute -bottom-1 -right-1 bg-blue-500 text-white rounded-full p-0.5">
+                              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
+                            </div>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="pt-4 border-t border-zinc-200 dark:border-zinc-800">
+                    <button
+                      type="button"
+                      onClick={handleUpdateProfile}
+                      disabled={isUpdatingProfile}
+                      className="w-full sm:w-auto px-6 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded-xl text-sm font-medium transition-all"
+                    >
+                      {isUpdatingProfile ? 'در حال بروزرسانی...' : 'ذخیره تغییرات حساب'}
+                    </button>
+                    {profileUpdateMsg && (
+                      <div className={`mt-3 text-sm ${profileUpdateMsg.success ? 'text-green-500' : 'text-red-500'}`}>
+                        {profileUpdateMsg.msg}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
 
             {activeTab === 'providers' && (
               <div className="space-y-6 sm:space-y-8 animate-fadeIn">
