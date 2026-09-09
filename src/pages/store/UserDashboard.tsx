@@ -23,9 +23,18 @@ export const UserDashboard = () => {
   const [selectedInvoice, setSelectedInvoice] = useState<any>(null);
 
   // Profile Form
-  const [profileData, setProfileData] = useState({ name: '', email: '' });
+  const [profileData, setProfileData] = useState({ name: '', email: '', avatar: '' });
   const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
   const [profileMsg, setProfileMsg] = useState<{type: 'success'|'error', text: string} | null>(null);
+
+  const defaultAvatars = [
+    'https://api.dicebear.com/7.x/bottts/svg?seed=Felix',
+    'https://api.dicebear.com/7.x/bottts/svg?seed=Aneka',
+    'https://api.dicebear.com/7.x/bottts/svg?seed=Milo',
+    'https://api.dicebear.com/7.x/bottts/svg?seed=Luna',
+    'https://api.dicebear.com/7.x/bottts/svg?seed=Oliver',
+    'https://api.dicebear.com/7.x/bottts/svg?seed=Bella'
+  ];
 
   // Password Form
   const [passData, setPassData] = useState({ currentPassword: '', newPassword: '' });
@@ -34,7 +43,7 @@ export const UserDashboard = () => {
 
   useEffect(() => {
     if (user) {
-      setProfileData({ name: user.name || '', email: user.email || '' });
+      setProfileData({ name: user.name || '', email: user.email || '', avatar: user.avatar || '' });
     }
   }, [user]);
 
@@ -300,6 +309,30 @@ export const UserDashboard = () => {
                 <div>
                   <label className="block text-xs font-bold text-zinc-500 mb-1">نام و نام خانوادگی</label>
                   <input type="text" value={profileData.name} onChange={e => setProfileData({...profileData, name: e.target.value})} className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 outline-none focus:border-blue-500 text-sm" required />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-zinc-500 mb-2">آواتار</label>
+                  <div className="flex flex-wrap gap-3 mb-2">
+                    {defaultAvatars.map((url, i) => (
+                      <button
+                        key={i}
+                        type="button"
+                        onClick={() => setProfileData({...profileData, avatar: url})}
+                        className={`relative p-1 rounded-full transition-all ${
+                          (profileData.avatar === url || (!profileData.avatar && i === 0))
+                            ? 'ring-2 ring-blue-500 bg-blue-50 dark:bg-blue-900/20'
+                            : 'hover:bg-zinc-100 dark:hover:bg-zinc-800'
+                        }`}
+                      >
+                        <img src={url} alt={`avatar-${i}`} className="w-12 h-12 rounded-full bg-white dark:bg-zinc-700" />
+                        {(profileData.avatar === url || (!profileData.avatar && i === 0)) && (
+                          <div className="absolute -bottom-1 -right-1 bg-blue-500 text-white rounded-full p-0.5">
+                            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
+                          </div>
+                        )}
+                      </button>
+                    ))}
+                  </div>
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-zinc-500 mb-1">ایمیل</label>
