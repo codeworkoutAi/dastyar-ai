@@ -43,6 +43,12 @@
     --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace;
   }
 
+  @media (max-width: 768px) {
+    :root {
+      --chat-font-size: 16px;
+    }
+  }
+
   /* Hybrid / Smart Multi-font mode (Default) */
   [data-font="hybrid"],
   :root:not([data-font]) {

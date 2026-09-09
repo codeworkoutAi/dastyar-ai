@@ -66,12 +66,12 @@ export default function AuthModal() {
   const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || 'your-client-id.apps.googleusercontent.com';
 
   const defaultAvatars = [
-    'https://api.dicebear.com/7.x/bottts/svg?seed=Felix',
-    'https://api.dicebear.com/7.x/bottts/svg?seed=Aneka',
-    'https://api.dicebear.com/7.x/bottts/svg?seed=Milo',
-    'https://api.dicebear.com/7.x/bottts/svg?seed=Luna',
-    'https://api.dicebear.com/7.x/bottts/svg?seed=Oliver',
-    'https://api.dicebear.com/7.x/bottts/svg?seed=Bella'
+    '/avatars/avatar-1.svg',
+    '/avatars/avatar-2.svg',
+    '/avatars/avatar-3.svg',
+    '/avatars/avatar-4.svg',
+    '/avatars/avatar-5.svg',
+    '/avatars/avatar-6.svg'
   ];
 
   // Detect password reset token from URL

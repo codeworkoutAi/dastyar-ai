@@ -153,22 +153,23 @@ export function StoreFront() {
   return (
     <div className="flex flex-col min-h-screen bg-zinc-50 dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 transition-colors duration-300">
       <header className="sticky top-0 z-40 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-md border-b border-zinc-200 dark:border-zinc-800">
-        <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-4">
+        <div className="container mx-auto px-3 sm:px-4 h-16 flex items-center justify-between">
+          <div className="flex items-center gap-2 sm:gap-4">
             <Link 
               to="/" 
-              className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-xl transition-colors text-zinc-600 dark:text-zinc-400"
+              className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-xl transition-colors text-zinc-600 dark:text-zinc-400 shrink-0"
               title="بازگشت به چت"
+              aria-label="بازگشت به چت"
             >
               <Home size={20} />
             </Link>
-            <h1 className="text-xl font-black bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent flex items-center gap-2">
-              <Store size={24} className="text-blue-600" />
-              فروشگاه هوش مصنوعی
+            <h1 className="text-lg sm:text-xl font-black bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent flex items-center gap-1.5 sm:gap-2 truncate">
+              <Store size={22} className="text-blue-600 shrink-0" />
+              <span>فروشگاه</span>
             </h1>
           </div>
           
-          <div className="flex items-center gap-2 sm:gap-3">
+          <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
             {user && (
               <Link
                 to="/dashboard"
@@ -182,10 +183,10 @@ export function StoreFront() {
             {user?.role === 'admin' && (
               <button
                 onClick={() => setIsAdminOpen(true)}
-                className="flex items-center gap-2 px-4 py-2 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 rounded-xl text-sm font-bold hover:opacity-90 transition-opacity"
+                className="flex items-center gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 rounded-xl text-xs sm:text-sm font-bold hover:opacity-90 transition-opacity"
               >
-                <Settings size={16} />
-                مدیریت فروشگاه
+                <Settings size={15} />
+                <span>مدیریت</span>
               </button>
             )}
           </div>

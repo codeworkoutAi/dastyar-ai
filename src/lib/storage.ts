@@ -49,7 +49,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
     }
   },
   persona: { systemPrompt: '', tone: 'expert', temperature: 0.7 },
-  appearance: { theme: 'dark', font: 'hybrid', fontSize: 15, persianNumerals: true, direction: 'rtl', uiLanguage: 'fa' },
+  appearance: { theme: 'dark', font: 'hybrid', fontSize: 16, persianNumerals: true, direction: 'rtl', uiLanguage: 'fa' },
   tools: { 
     webSearch: true, 
     enterToSend: true, 
@@ -186,13 +186,13 @@ export function loadSettings(): AppSettings {
       } catch {}
     }
 
-    // Migration: update default font size from 16 to 15
-    if (localStorage.getItem('fa_chat_font_size_default_15_v1') !== 'true') {
-      if (merged.appearance.fontSize === 16 || !merged.appearance.fontSize) {
-        merged.appearance.fontSize = 15;
+    // Migration: update default font size to 16
+    if (localStorage.getItem('fa_chat_font_size_default_16_v2') !== 'true') {
+      if (merged.appearance.fontSize === 15 || !merged.appearance.fontSize) {
+        merged.appearance.fontSize = 16;
       }
       try {
-        localStorage.setItem('fa_chat_font_size_default_15_v1', 'true');
+        localStorage.setItem('fa_chat_font_size_default_16_v2', 'true');
       } catch {}
     }
 

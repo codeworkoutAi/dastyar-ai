@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <defs>
+    <linearGradient id="bg2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#8b5cf6"/>
+      <stop offset="100%" stop-color="#6d28d9"/>
+    </linearGradient>
+    <linearGradient id="metal2" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#fdf4ff"/>
+      <stop offset="100%" stop-color="#e9d5ff"/>
+    </linearGradient>
+  </defs>
+  <circle cx="50" cy="50" r="48" fill="url(#bg2)"/>
+  <!-- Antennas dual -->
+  <line x1="40" y1="26" x2="34" y2="16" stroke="#c4b5fd" stroke-width="3.5" stroke-linecap="round"/>
+  <line x1="60" y1="26" x2="66" y2="16" stroke="#c4b5fd" stroke-width="3.5" stroke-linecap="round"/>
+  <circle cx="34" cy="14" r="4" fill="#a78bfa"/>
+  <circle cx="66" cy="14" r="4" fill="#a78bfa"/>
+  <!-- Ears -->
+  <circle cx="24" cy="46" r="6" fill="#a78bfa"/>
+  <circle cx="76" cy="46" r="6" fill="#a78bfa"/>
+  <!-- Head -->
+  <rect x="26" y="26" width="48" height="40" rx="14" fill="url(#metal2)"/>
+  <!-- Curved Visor -->
+  <rect x="31" y="33" width="38" height="19" rx="8" fill="#1e1b4b"/>
+  <!-- Glowing Eyes -->
+  <rect x="37" y="38" width="9" height="7" rx="3.5" fill="#f43f5e"/>
+  <rect x="54" y="38" width="9" height="7" rx="3.5" fill="#f43f5e"/>
+  <!-- Cheerful Mouth -->
+  <line x1="43" y1="58" x2="57" y2="58" stroke="#7c3aed" stroke-width="2.5" stroke-linecap="round"/>
+  <!-- Body -->
+  <path d="M 36 66 L 64 66 L 70 85 Q 50 88 30 85 Z" fill="#c4b5fd"/>
+</svg>

@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <defs>
+    <linearGradient id="bg5" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f43f5e"/>
+      <stop offset="100%" stop-color="#be123c"/>
+    </linearGradient>
+    <linearGradient id="metal5" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#fff1f2"/>
+      <stop offset="100%" stop-color="#fecdd3"/>
+    </linearGradient>
+  </defs>
+  <circle cx="50" cy="50" r="48" fill="url(#bg5)"/>
+  <!-- Heart Antenna -->
+  <path d="M 50 18 Q 47 13 42 16 Q 37 20 50 26 Q 63 20 58 16 Q 53 13 50 18 Z" fill="#fda4af"/>
+  <!-- Head -->
+  <rect x="25" y="27" width="50" height="40" rx="14" fill="url(#metal5)"/>
+  <!-- Headphones -->
+  <rect x="20" y="38" width="7" height="18" rx="3.5" fill="#e11d48"/>
+  <rect x="73" y="38" width="7" height="18" rx="3.5" fill="#e11d48"/>
+  <!-- Screen -->
+  <rect x="31" y="34" width="38" height="18" rx="6" fill="#4c0519"/>
+  <!-- Heart or Star Eyes -->
+  <circle cx="41" cy="43" r="4.5" fill="#fda4af"/>
+  <circle cx="59" cy="43" r="4.5" fill="#fda4af"/>
+  <circle cx="42.5" cy="41.5" r="1.5" fill="#ffffff"/>
+  <circle cx="60.5" cy="41.5" r="1.5" fill="#ffffff"/>
+  <!-- Blush -->
+  <ellipse cx="32" cy="56" rx="3" ry="1.5" fill="#fb7185"/>
+  <ellipse cx="68" cy="56" rx="3" ry="1.5" fill="#fb7185"/>
+  <!-- Cute mouth -->
+  <path d="M 45 57 Q 50 61 55 57" fill="none" stroke="#be123c" stroke-width="2.5" stroke-linecap="round"/>
+  <!-- Body -->
+  <path d="M 37 67 L 63 67 L 69 85 Q 50 89 31 85 Z" fill="#fda4af"/>
+</svg>

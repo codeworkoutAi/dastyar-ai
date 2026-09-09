@@ -30,12 +30,12 @@ export const UserDashboard = () => {
   const [profileMsg, setProfileMsg] = useState<{type: 'success'|'error', text: string} | null>(null);
 
   const defaultAvatars = [
-    'https://api.dicebear.com/7.x/bottts/svg?seed=Felix',
-    'https://api.dicebear.com/7.x/bottts/svg?seed=Aneka',
-    'https://api.dicebear.com/7.x/bottts/svg?seed=Milo',
-    'https://api.dicebear.com/7.x/bottts/svg?seed=Luna',
-    'https://api.dicebear.com/7.x/bottts/svg?seed=Oliver',
-    'https://api.dicebear.com/7.x/bottts/svg?seed=Bella'
+    '/avatars/avatar-1.svg',
+    '/avatars/avatar-2.svg',
+    '/avatars/avatar-3.svg',
+    '/avatars/avatar-4.svg',
+    '/avatars/avatar-5.svg',
+    '/avatars/avatar-6.svg'
   ];
 
   // Password Form
