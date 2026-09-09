@@ -25,7 +25,7 @@ import { getStorageUsage } from '../lib/storage';
 import { calculateSessionStats } from '../utils/pricing';
 import { Tooltip } from './Tooltip';
 import { useAuthStore } from '../store/authStore';
-import { User, LogOut, ShieldCheck, Settings, ChevronUp, LayoutDashboard } from 'lucide-react';
+import { User, LogOut, ShieldCheck, Settings, ChevronUp, LayoutDashboard, Store, BookOpen, Compass, Palette, HelpCircle, MessageSquarePlus, Search } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useUIStore } from '../store/uiStore';
 import { useSettingsStore } from '../store/settingsStore';
@@ -468,16 +468,17 @@ export const Sidebar: React.FC = React.memo(() => {
           )}
         </div>
 
-        {/* ---------------- 2. نوار افقی ابزارهای سریع با آیکون‌های بزرگتر ---------------- */}
-        <div className="px-4 sm:px-5 pt-2 pb-1.5 shrink-0">
-          <div className="flex items-center justify-between px-3.5 py-1.5 bg-zinc-100/70 dark:bg-zinc-800/50 rounded-2xl border border-zinc-200/60 dark:border-zinc-700/50 shadow-xs">
+        {/* ---------------- 2. نوار ابزارهای سریع (سر جای اصلی بالای سرچ - مونوکروم) ---------------- */}
+        {/* ---------------- 2. نوار ابزارهای سریع (سر جای اصلی بالای سرچ - مونوکروم) ---------------- */}
+        <div className="px-3 pt-2.5 pb-1 mb-3.5 shrink-0">
+          <div className="flex items-center justify-between p-1 bg-zinc-100/60 dark:bg-zinc-800/40 rounded-xl border border-zinc-200/50 dark:border-zinc-800/60">
             <Tooltip content="فروشگاه محصولات" position="top" align="start">
               <Link
                 to="/store"
                 onClick={() => { if (window.innerWidth < 768) setSidebarOpen(false); }}
-                className="p-2 text-blue-600 dark:text-blue-400 transition-transform duration-200 hover:scale-125 active:scale-95 cursor-pointer flex items-center justify-center"
+                className="p-2 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 transition-all duration-200 cursor-pointer flex items-center justify-center rounded-lg hover:bg-white dark:hover:bg-zinc-700/60 shadow-none hover:shadow-xs"
               >
-                <ShopLinearIcon className="w-5 h-5 sm:w-6 sm:h-6" />
+                <Store className="w-4 h-4" strokeWidth={1.8} />
               </Link>
             </Tooltip>
 
@@ -485,9 +486,9 @@ export const Sidebar: React.FC = React.memo(() => {
               <Link
                 to="/blog"
                 onClick={() => { if (window.innerWidth < 768) setSidebarOpen(false); }}
-                className="p-2 text-emerald-600 dark:text-emerald-400 transition-transform duration-200 hover:scale-125 active:scale-95 cursor-pointer flex items-center justify-center"
+                className="p-2 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 transition-all duration-200 cursor-pointer flex items-center justify-center rounded-lg hover:bg-white dark:hover:bg-zinc-700/60 shadow-none hover:shadow-xs"
               >
-                <PenLinearIcon className="w-5 h-5 sm:w-6 sm:h-6" />
+                <BookOpen className="w-4 h-4" strokeWidth={1.8} />
               </Link>
             </Tooltip>
 
@@ -495,9 +496,9 @@ export const Sidebar: React.FC = React.memo(() => {
               <button
                 id="sidebar-explore-hub-btn"
                 onClick={() => { setIsExploreOpen(true); if (window.innerWidth < 768) setSidebarOpen(false); }}
-                className="p-2 text-purple-600 dark:text-purple-400 transition-transform duration-200 hover:scale-125 active:scale-95 cursor-pointer flex items-center justify-center"
+                className="p-2 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 transition-all duration-200 cursor-pointer flex items-center justify-center rounded-lg hover:bg-white dark:hover:bg-zinc-700/60 shadow-none hover:shadow-xs"
               >
-                <CompassOutlineIcon className="w-5 h-5 sm:w-6 sm:h-6" />
+                <Compass className="w-4 h-4" strokeWidth={1.8} />
               </button>
             </Tooltip>
 
@@ -505,9 +506,9 @@ export const Sidebar: React.FC = React.memo(() => {
               <button
                 id="sidebar-image-studio-btn"
                 onClick={() => { setIsImageStudioOpen(true); if (window.innerWidth < 768) setSidebarOpen(false); }}
-                className="p-2 text-amber-500 dark:text-amber-400 transition-transform duration-200 hover:scale-125 active:scale-95 cursor-pointer flex items-center justify-center"
+                className="p-2 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 transition-all duration-200 cursor-pointer flex items-center justify-center rounded-lg hover:bg-white dark:hover:bg-zinc-700/60 shadow-none hover:shadow-xs"
               >
-                <StarsMinimalisticBoldIcon className="w-5 h-5 sm:w-6 sm:h-6" />
+                <Palette className="w-4 h-4" strokeWidth={1.8} />
               </button>
             </Tooltip>
 
@@ -515,42 +516,44 @@ export const Sidebar: React.FC = React.memo(() => {
               <button
                 id="sidebar-ui-guide-btn"
                 onClick={() => { setIsUiGuideOpen(true); if (window.innerWidth < 768) setSidebarOpen(false); }}
-                className="p-2 text-sky-600 dark:text-sky-400 transition-transform duration-200 hover:scale-125 active:scale-95 cursor-pointer flex items-center justify-center"
+                className="p-2 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 transition-all duration-200 cursor-pointer flex items-center justify-center rounded-lg hover:bg-white dark:hover:bg-zinc-700/60 shadow-none hover:shadow-xs"
               >
-                <HelpLinearIcon className="w-5 h-5 sm:w-6 sm:h-6" />
+                <HelpCircle className="w-4 h-4" strokeWidth={1.8} />
               </button>
             </Tooltip>
           </div>
         </div>
 
-        {/* ---------------- 3. دکمه گفتگوی جدید، جستجو و تیتر تاریخچه گفتگوها ---------------- */}
-        <div className="px-3 pt-2 pb-2.5 shrink-0 space-y-2 border-b border-zinc-200/60 dark:border-zinc-800/60">
-          {/* New Chat Button */}
+        {/* ---------------- 3. اکشن اصلی: دکمه گفتگوی جدید + سرچ ---------------- */}
+        <div className="px-3 pt-0.5 pb-2 shrink-0 space-y-2.5">
+          {/* دکمه گفتگوی جدید - عریض و شاخص */}
           <button
             id="sidebar-new-chat-btn"
             onClick={() => {
               createChat(settings.providers[settings.providers.activeProvider]?.modelName);
               if (window.innerWidth < 768) setSidebarOpen(false);
             }}
-            className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs sm:text-sm transition-all shadow-md shadow-blue-500/20 active:scale-[0.99] cursor-pointer group"
+            className="w-full py-2.5 px-3.5 text-white bg-blue-600 hover:bg-blue-500 active:bg-blue-700 transition-all duration-200 cursor-pointer flex items-center justify-between rounded-xl shadow-xs hover:shadow-sm font-semibold text-xs group"
           >
             <div className="flex items-center gap-2">
-              <AddCircleBoldIcon className="w-4 h-4 transition-transform group-hover:rotate-90" />
+              <MessageSquarePlus className="w-4 h-4 transition-transform group-hover:scale-110" strokeWidth={2} />
               <span>گفتگوی جدید</span>
             </div>
-            <span className="text-[10px] bg-white/20 px-1.5 py-0.5 rounded-md font-mono">جدید</span>
+            <span className="text-[10px] opacity-75 font-mono dir-ltr font-normal bg-white/15 px-1.5 py-0.5 rounded-md">
+              Ctrl+K
+            </span>
           </button>
 
-          {/* Search box */}
-          <div className="relative flex items-center">
-            <MinimalisticMagnifierLinearIcon className="w-4 h-4 text-zinc-400 absolute right-3 pointer-events-none" />
+          {/* کادر سرچ کامل و باکیفیت - مونوکروم و عریض */}
+          <div className="relative flex items-center w-full group">
+            <Search className="w-3.5 h-3.5 text-zinc-400 dark:text-zinc-500 group-focus-within:text-zinc-600 dark:group-focus-within:text-zinc-300 absolute right-3 pointer-events-none transition-colors" strokeWidth={1.75} />
             <input
               id="sidebar-search-input"
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="جستجو در گفتگوها..."
-              className="w-full text-xs pr-9 pl-7 py-2 rounded-xl bg-zinc-100/90 dark:bg-zinc-800/80 border border-zinc-200/80 dark:border-zinc-700/60 text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 focus:outline-hidden focus:ring-1 focus:ring-blue-500/40 transition-all"
+              className="w-full text-xs pr-8.5 pl-7 py-2 rounded-xl bg-zinc-100/90 dark:bg-zinc-800/70 border border-zinc-200/80 dark:border-zinc-700/60 hover:border-zinc-300 dark:hover:border-zinc-600 text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus:outline-hidden focus:border-zinc-400 dark:focus:border-zinc-500 focus:ring-1 focus:ring-zinc-400/20 dark:focus:ring-zinc-500/20 transition-all"
             />
             {searchQuery && (
               <button
@@ -562,12 +565,14 @@ export const Sidebar: React.FC = React.memo(() => {
               </button>
             )}
           </div>
+        </div>
 
-          {/* تیتر تاریخچه گفتگوها */}
-          <div className="flex items-center justify-between px-1 pt-1">
+        {/* ---------------- 4. تیتر تاریخچه گفتگوها ---------------- */}
+        <div className="px-4 sm:px-5 pt-2 pb-2 shrink-0 border-b border-zinc-200/60 dark:border-zinc-800/60 mt-1">
+          <div className="flex items-center justify-between">
             <div className="flex items-center gap-1.5">
               <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span className="text-xs font-black text-zinc-800 dark:text-zinc-200">تاریخچه گفتگوها</span>
+              <span className="text-xs font-bold text-zinc-800 dark:text-zinc-200">تاریخچه گفتگوها</span>
             </div>
             {conversations.length > 0 && (
               <span className="text-[10px] font-medium text-zinc-500 dark:text-zinc-400 bg-zinc-100/80 dark:bg-zinc-800/60 px-2 py-0.5 rounded-full border border-zinc-200/50 dark:border-zinc-700/40">

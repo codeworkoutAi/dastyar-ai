@@ -73,8 +73,8 @@ export function Footer() {
           <div className="space-y-4 flex flex-col items-start md:items-start text-right">
             <h3 className="font-bold text-zinc-900 dark:text-zinc-100 mb-4">نماد اعتماد</h3>
             <div className="p-2.5 bg-white dark:bg-zinc-900 rounded-2xl shadow-sm border border-zinc-200 dark:border-zinc-800 hover:shadow-md transition-shadow">
-              <a referrerpolicy="origin" target="_blank" href="https://trustseal.enamad.ir/?id=7675736&Code=Gx87lRnRBjSnMfkfeXWDlWi88ZzK41Oj" className="inline-block">
-                <img referrerpolicy="origin" src="https://trustseal.enamad.ir/logo.aspx?id=7675736&Code=Gx87lRnRBjSnMfkfeXWDlWi88ZzK41Oj" alt="نماد تجارت الکترونیکی (اینماد)" style={{ cursor: 'pointer', width: '105px', height: 'auto' }} />
+              <a referrerPolicy="origin" target="_blank" href="https://trustseal.enamad.ir/?id=7675736&Code=Gx87lRnRBjSnMfkfeXWDlWi88ZzK41Oj" className="inline-block">
+                <img referrerPolicy="origin" src="https://trustseal.enamad.ir/logo.aspx?id=7675736&Code=Gx87lRnRBjSnMfkfeXWDlWi88ZzK41Oj" alt="نماد تجارت الکترونیکی (اینماد)" style={{ cursor: 'pointer', width: '105px', height: 'auto' }} />
               </a>
             </div>
           </div>

@@ -468,7 +468,7 @@ router.post('/reset-password', async (req, res) => {
 // PUT /api/auth/profile
 router.put('/profile', requireAuth, (req: any, res) => {
   try {
-    const { name, email } = req.body;
+    const { name, email, avatar } = req.body;
     const userId = req.user.id;
 
     if (!name || name.trim() === '') {
@@ -483,7 +483,16 @@ router.put('/profile', requireAuth, (req: any, res) => {
       }
     }
 
-    db.prepare('UPDATE users SET name = ?, email = ? WHERE id = ?').run(name.trim(), email ? email.trim() : null, userId);
+    // Get existing user to keep old avatar if not provided
+    const user = db.prepare('SELECT avatar FROM users WHERE id = ?').get(userId) as any;
+    const newAvatar = avatar ? avatar.trim() : user.avatar;
+
+    db.prepare('UPDATE users SET name = ?, email = ?, avatar = ? WHERE id = ?').run(
+      name.trim(), 
+      email && email.trim() !== '' ? email.trim() : null, 
+      newAvatar, 
+      userId
+    );
     syncDatabase();
 
     res.json({ message: 'پروفایل با موفقیت بروزرسانی شد.' });
@@ -526,29 +535,4 @@ router.put('/password', requireAuth, async (req: any, res) => {
     res.status(500).json({ error: 'خطای سرور در تغییر رمز عبور.' });
   }
 });
-// PUT /api/auth/profile
-router.put('/profile', requireAuth, async (req: any, res) => {
-  try {
-    const userId = req.user.id;
-    const { name, avatar } = req.body;
-
-    const user = db.prepare('SELECT * FROM users WHERE id = ?').get(userId) as any;
-    if (!user) return res.status(404).json({ error: 'کاربر یافت نشد.' });
-
-    let updatedName = user.name;
-    let updatedAvatar = user.avatar;
-
-    if (name !== undefined) updatedName = name.trim();
-    if (avatar !== undefined) updatedAvatar = avatar.trim();
-
-    db.prepare('UPDATE users SET name = ?, avatar = ? WHERE id = ?').run(updatedName, updatedAvatar, userId);
-    syncDatabase();
-
-    res.json({ message: 'پروفایل با موفقیت بروزرسانی شد.', user: { ...user, name: updatedName, avatar: updatedAvatar } });
-  } catch (error) {
-    console.error('[Auth API] Profile Update Error:', error);
-    res.status(500).json({ error: 'خطای سرور در بروزرسانی پروفایل.' });
-  }
-});
-
 export default router;

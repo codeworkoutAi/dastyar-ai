@@ -169,6 +169,15 @@ export function StoreFront() {
           </div>
           
           <div className="flex items-center gap-2 sm:gap-3">
+            {user && (
+              <Link
+                to="/dashboard"
+                className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:text-blue-600 dark:hover:text-blue-400 text-sm font-bold transition-colors"
+                title="داشبورد کاربری"
+              >
+                داشبورد
+              </Link>
+            )}
             <ThemeToggle variant="minimal" />
             {user?.role === 'admin' && (
               <button
@@ -188,19 +197,6 @@ export function StoreFront() {
           <div>
             <h2 className="text-2xl font-bold mb-2 text-zinc-900 dark:text-zinc-100">محصولات دیجیتال</h2>
             <p className="text-zinc-500 dark:text-zinc-400">کلید API، اکانت پرمیوم و دوره‌های آموزشی.</p>
-          </div>
-          <div className="flex items-center bg-zinc-200/50 dark:bg-zinc-800/50 p-1.5 rounded-xl shrink-0">
-            <button 
-              className="px-4 py-2 rounded-lg text-sm font-bold transition-all bg-white dark:bg-zinc-700 shadow-sm text-blue-600 dark:text-blue-400 cursor-default"
-            >
-              فروشگاه
-            </button>
-            <Link 
-              to="/dashboard"
-              className="px-4 py-2 rounded-lg text-sm font-bold transition-all flex items-center gap-2 text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300"
-            >
-              داشبورد کاربری
-            </Link>
           </div>
         </div>
 
