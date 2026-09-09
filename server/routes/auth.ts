@@ -224,12 +224,31 @@ router.post('/google', async (req, res) => {
     const { credential } = req.body;
     if (!credential) return res.status(400).json({ error: 'توکن گوگل دریافت نشد.' });
 
-    // Validate token using Google's public endpoint
-    const googleRes = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${credential}`);
-    const payload = await googleRes.json();
+    // Validate token using Google's public endpoint (supports both ID Token and OAuth2 Access Token)
+    let payload: any = null;
 
-    if (!googleRes.ok || !payload.sub) {
-      return res.status(400).json({ error: 'توکن گوگل نامعتبر است.' });
+    // 1. Try validating as ID Token
+    try {
+      const idTokenRes = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${credential}`);
+      if (idTokenRes.ok) {
+        payload = await idTokenRes.json();
+      }
+    } catch (e) {}
+
+    // 2. If not an ID Token, try fetching user info with OAuth2 Access Token
+    if (!payload || !payload.sub) {
+      try {
+        const userInfoRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+          headers: { Authorization: `Bearer ${credential}` }
+        });
+        if (userInfoRes.ok) {
+          payload = await userInfoRes.json();
+        }
+      } catch (e) {}
+    }
+
+    if (!payload || !payload.sub) {
+      return res.status(400).json({ error: 'توکن گوگل نامعتبر یا منقضی شده است.' });
     }
 
     const { sub: googleId, email, name, picture: avatar } = payload;
