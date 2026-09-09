@@ -409,8 +409,16 @@ export default function AuthModal() {
                     ربات تلگرام باز شد. لطفاً در چت ربات روی دکمه <b>«تایید و ورود به سایت»</b> کلیک کنید.
                   </p>
                 </div>
+
+                {/* VPN Notice */}
+                <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl text-xs text-amber-800 dark:text-amber-300 text-right leading-relaxed flex items-start gap-2">
+                  <span className="text-sm shrink-0">💡</span>
+                  <span>
+                    <b>نکته:</b> برای باز شدن تلگرام، حتماً از اتصال <b>فیلترشکن (VPN)</b> خود اطمینان حاصل کرده و سپس دکمه زیر را لمس کنید.
+                  </span>
+                </div>
                 
-                <div className="flex flex-col gap-2 pt-3">
+                <div className="flex flex-col gap-2 pt-1">
                   <a
                     href={telegramBotUrl}
                     target="_blank"
