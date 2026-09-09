@@ -107,7 +107,7 @@ router.post('/verify-otp', verifyLimiter, async (req, res) => {
       const role = count === 0 ? 'admin' : 'user';
 
       const randomColors = '264653,2a9d8f,e9c46a,f4a261,e76f51';
-      const defaultAvatar = avatar || `https://source.boringavatars.com/beam/120/${phone}?colors=${randomColors}`;
+      const defaultAvatar = avatar || `https://api.dicebear.com/9.x/shapes/svg?seed=${phone}`;
 
       const insertUserStmt = db.prepare('INSERT INTO users (phone, name, avatar, role) VALUES (?, ?, ?, ?)');
       const info = insertUserStmt.run(phone, name || '', defaultAvatar, role);
@@ -163,7 +163,7 @@ router.post('/register', async (req, res) => {
     const passwordHash = await bcrypt.hash(password, salt);
 
     const randomColors = '264653,2a9d8f,e9c46a,f4a261,e76f51';
-    const defaultAvatar = avatar || `https://source.boringavatars.com/beam/120/${email}?colors=${randomColors}`;
+    const defaultAvatar = avatar || `https://api.dicebear.com/9.x/shapes/svg?seed=${email}`;
 
     const insertStmt = db.prepare('INSERT INTO users (email, passwordHash, name, avatar, role) VALUES (?, ?, ?, ?, ?)');
     const info = insertStmt.run(email, passwordHash, name || '', defaultAvatar, role);
