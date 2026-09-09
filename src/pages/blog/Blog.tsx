@@ -22,11 +22,41 @@ const getReadingTime = (text: string) => {
   return `${minutes} دقیقه`;
 };
 
+const parseDbDate = (dateString: string): Date => {
+  if (!dateString) return new Date();
+  let str = dateString.trim();
+  if (/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/.test(str)) {
+    str = str.replace(' ', 'T') + 'Z';
+  } else if (!str.endsWith('Z') && !str.includes('+') && str.includes('T')) {
+    str = str + 'Z';
+  }
+  return new Date(str);
+};
+
 const formatDateTime = (dateString: string) => {
-  const date = new Date(dateString);
-  const dDate = date.toLocaleDateString('fa-IR', { year: 'numeric', month: 'long', day: 'numeric' });
-  const dTime = date.toLocaleTimeString('fa-IR', { hour: '2-digit', minute: '2-digit' });
+  const date = parseDbDate(dateString);
+  const dDate = date.toLocaleDateString('fa-IR', { 
+    timeZone: 'Asia/Tehran',
+    year: 'numeric', 
+    month: 'long', 
+    day: 'numeric' 
+  });
+  const dTime = date.toLocaleTimeString('fa-IR', { 
+    timeZone: 'Asia/Tehran',
+    hour: '2-digit', 
+    minute: '2-digit' 
+  });
   return `${dDate}، ساعت ${dTime}`;
+};
+
+const formatDateOnly = (dateString: string) => {
+  const date = parseDbDate(dateString);
+  return date.toLocaleDateString('fa-IR', { 
+    timeZone: 'Asia/Tehran',
+    year: 'numeric', 
+    month: 'long', 
+    day: 'numeric' 
+  });
 };
 
 export function Blog() {
@@ -82,7 +112,7 @@ export function Blog() {
     
     // Time Filter
     if (timeFilter !== 'all') {
-      const itemDate = new Date(item.createdAt);
+      const itemDate = parseDbDate(item.createdAt);
       const now = new Date();
       
       if (timeFilter === 'today') {
@@ -563,7 +593,7 @@ export function Blog() {
                           }`}>
                             <div className="flex items-center gap-1.5">
                               <Clock size={viewMode === 'compact' ? 14 : 14} />
-                              <span>{new Date(item.createdAt).toLocaleDateString('fa-IR')}</span>
+                              <span>{formatDateOnly(item.createdAt)}</span>
                             </div>
                             <div className="flex items-center gap-1.5">
                               <BookOpen size={viewMode === 'compact' ? 14 : 14} />

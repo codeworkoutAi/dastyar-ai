@@ -21,6 +21,27 @@ const getReadingTime = (text: string) => {
   return `${minutes} دقیقه`;
 };
 
+const parseDbDate = (dateString: string): Date => {
+  if (!dateString) return new Date();
+  let str = dateString.trim();
+  if (/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/.test(str)) {
+    str = str.replace(' ', 'T') + 'Z';
+  } else if (!str.endsWith('Z') && !str.includes('+') && str.includes('T')) {
+    str = str + 'Z';
+  }
+  return new Date(str);
+};
+
+const formatDateOnly = (dateString: string) => {
+  const date = parseDbDate(dateString);
+  return date.toLocaleDateString('fa-IR', { 
+    timeZone: 'Asia/Tehran',
+    year: 'numeric', 
+    month: 'long', 
+    day: 'numeric' 
+  });
+};
+
 export function TagArchive() {
   const { tagName } = useParams<{ tagName: string }>();
   const navigate = useNavigate();
@@ -127,7 +148,7 @@ export function TagArchive() {
                   <div className="flex items-center gap-4 text-zinc-400 text-xs mt-auto">
                     <div className="flex items-center gap-1.5">
                       <Clock size={14} />
-                      <span>{new Date(item.createdAt).toLocaleDateString('fa-IR')}</span>
+                      <span>{formatDateOnly(item.createdAt)}</span>
                     </div>
                     <div className="flex items-center gap-1.5">
                       <BookOpen size={14} />

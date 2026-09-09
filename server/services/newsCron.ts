@@ -150,11 +150,12 @@ Example: {"title": "عنوان جذاب فارسی", "content": "متن کامل
       console.log('[NewsCron] Successfully extracted original image from RSS feed.');
     }
 
-    // Save to database
-    const insertStmt = db.prepare('INSERT INTO news (title, content, image, sourceUrl, tags) VALUES (?, ?, ?, ?, ?)');
-    const info = insertStmt.run(parsedData.title, parsedData.content, imageUrl, targetItem.link, JSON.stringify(parsedData.tags || []));
+    // Save to database with ISO createdAt
+    const nowIso = new Date().toISOString();
+    const insertStmt = db.prepare('INSERT INTO news (title, content, image, sourceUrl, tags, createdAt) VALUES (?, ?, ?, ?, ?, ?)');
+    const info = insertStmt.run(parsedData.title, parsedData.content, imageUrl, targetItem.link, JSON.stringify(parsedData.tags || []), nowIso);
     
-    console.log(`[NewsCron] News saved to database with ID: ${info.lastInsertRowid}`);
+    console.log(`[NewsCron] News saved to database with ID: ${info.lastInsertRowid} at ${nowIso}`);
 
     // Broadcast to Telegram
     const channelId = process.env.TELEGRAM_CHANNEL_ID;
@@ -220,11 +221,11 @@ Example: {"title": "عنوان جذاب فارسی", "content": "متن کامل
 }
 
 export function initNewsCron() {
-  // Schedule to run every hour at minute 0 (Tehran Time)
-  cron.schedule('0 * * * *', () => {
+  // Schedule to run 3 times a day: 8:00 AM, 12:00 PM, and 8:00 PM (Asia/Tehran)
+  cron.schedule('0 8,12,20 * * *', () => {
     fetchAndProcessNews();
   }, {
     timezone: 'Asia/Tehran'
   });
-  console.log('[NewsCron] Scheduled AI News fetcher initialized to run EVERY HOUR (Asia/Tehran).');
+  console.log('[NewsCron] Scheduled AI News fetcher initialized for 08:00, 12:00, 20:00 (Asia/Tehran).');
 }
