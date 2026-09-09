@@ -627,6 +627,7 @@ export const ChatBox: React.FC = React.memo(() => {
                           <button
                             onClick={() => handleCopyMessage(msg)}
                             className="p-1.5 rounded-lg text-zinc-700 dark:text-zinc-400 hover:text-zinc-900 dark:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-700/80 transition-colors cursor-pointer"
+                            aria-label="کپی متن پیام"
                           >
                             {copiedId === msg.id ? (
                               <Check className="w-4 h-4 text-emerald-400" />
@@ -649,6 +650,7 @@ export const ChatBox: React.FC = React.memo(() => {
                                 ? 'text-sky-400 bg-sky-500/15'
                                 : 'text-zinc-700 dark:text-zinc-400 hover:text-zinc-900 dark:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-700/80'
                             }`}
+                            aria-label="ویرایش پیام"
                           >
                             <PenLinearIcon className="w-4 h-4" />
                           </button>
@@ -665,6 +667,7 @@ export const ChatBox: React.FC = React.memo(() => {
                                   ? 'text-sky-400 bg-sky-500/15'
                                   : 'text-zinc-700 dark:text-zinc-400 hover:text-zinc-900 dark:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-700/80'
                               }`}
+                              aria-label={speakingId === msg.id ? 'توقف خوانش متن' : 'خواندن صوتی متن پیام'}
                             >
                               {loadingTtsId === msg.id ? (
                                 <RotateCw className="w-4 h-4 animate-spin" />
@@ -680,6 +683,7 @@ export const ChatBox: React.FC = React.memo(() => {
                             <button
                               onClick={() => handleExportSingleMessage(msg)}
                               className="p-1.5 rounded-lg text-zinc-700 dark:text-zinc-400 hover:text-zinc-900 dark:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-700/80 transition-colors cursor-pointer"
+                              aria-label="دانلود خروجی متن به صورت فایل مارک‌داون"
                             >
                               <DownloadMinimalisticLinearIcon className="w-4 h-4" />
                             </button>
@@ -690,9 +694,10 @@ export const ChatBox: React.FC = React.memo(() => {
                               onClick={() => handleFeedback(msg.id, 'up')}
                               className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
                                 feedback[msg.id] === 'up'
-                                  ? 'text-emerald-400 bg-emerald-500/15'
+                                    ? 'text-emerald-400 bg-emerald-500/15'
                                   : 'text-zinc-700 dark:text-zinc-400 hover:text-zinc-900 dark:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-700/80'
                               }`}
+                              aria-label="ثبت بازخورد مثبت برای پاسخ"
                             >
                               {feedback[msg.id] === 'up' ? <LikeBoldIcon className="w-4 h-4 text-emerald-400" /> : <LikeLinearIcon className="w-4 h-4" />}
                             </button>
@@ -706,6 +711,7 @@ export const ChatBox: React.FC = React.memo(() => {
                                   ? 'text-rose-400 bg-rose-500/15'
                                   : 'text-zinc-700 dark:text-zinc-400 hover:text-zinc-900 dark:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-700/80'
                               }`}
+                              aria-label="ثبت بازخورد منفی برای پاسخ"
                             >
                               {feedback[msg.id] === 'down' ? <DislikeBoldIcon className="w-4 h-4 text-rose-400" /> : <DislikeLinearIcon className="w-4 h-4" />}
                             </button>
@@ -716,6 +722,7 @@ export const ChatBox: React.FC = React.memo(() => {
                               <button
                                 onClick={onRegenerate}
                                 className="p-1.5 rounded-lg text-zinc-700 dark:text-zinc-400 hover:text-zinc-900 dark:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-700/80 transition-colors cursor-pointer"
+                                aria-label="تولید مجدد پاسخ هوش مصنوعی"
                               >
                                 <RestartLinearIcon className="w-4 h-4" />
                               </button>
@@ -766,6 +773,7 @@ export const ChatBox: React.FC = React.memo(() => {
           <button 
             className="absolute top-6 right-6 p-2 rounded-full bg-white dark:bg-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-700 text-white transition-colors cursor-pointer"
             onClick={() => setLightboxMedia(null)}
+            aria-label="بستن پیش‌نمایش"
           >
             <X className="w-6 h-6" />
           </button>

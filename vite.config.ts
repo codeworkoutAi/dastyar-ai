@@ -49,6 +49,29 @@ export default defineConfig(() => {
         '@': path.resolve(__dirname, '.'),
       },
     },
+    build: {
+      chunkSizeWarningLimit: 1000,
+      rollupOptions: {
+        output: {
+          manualChunks(id) {
+            if (id.includes('node_modules')) {
+              if (id.includes('react-syntax-highlighter') || id.includes('prismjs')) {
+                return 'syntax-highlighter';
+              }
+              if (id.includes('katex') || id.includes('rehype-katex') || id.includes('remark-math')) {
+                return 'katex';
+              }
+              if (id.includes('@solar-icons') || id.includes('lucide-react')) {
+                return 'ui-icons';
+              }
+              if (id.includes('react') || id.includes('react-dom') || id.includes('react-router-dom') || id.includes('zustand')) {
+                return 'vendor-react';
+              }
+            }
+          }
+        }
+      }
+    },
     server: {
       hmr: process.env.DISABLE_HMR !== 'true',
       watch: process.env.DISABLE_HMR === 'true' ? null : {

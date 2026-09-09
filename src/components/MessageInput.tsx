@@ -29,9 +29,6 @@ import { useChatStore } from '../store/chatStore';
 import { CameraCaptureModal } from './CameraCaptureModal';
 import { getModelIntro } from './ChatBox';
 import { getModelDetails } from './CustomProviderCards';
-import * as pdfjsLib from 'pdfjs-dist';
-
-pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`;
 
 
 
@@ -237,6 +234,8 @@ export const MessageInput: React.FC = React.memo(() => {
 
       const processPdfHybrid = async () => {
         try {
+          const pdfjsLib = await import('pdfjs-dist');
+          pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`;
           const arrayBuffer = await file.arrayBuffer();
           const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
           const numPages = pdf.numPages;
