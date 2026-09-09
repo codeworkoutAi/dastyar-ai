@@ -48,6 +48,7 @@ export const ReloadPrompt: React.FC = () => {
           <button
             onClick={close}
             className="p-1.5 rounded-full hover:bg-white/20 transition-colors"
+            aria-label="بستن اعلان به‌روزرسانی"
           >
             <X className="w-4 h-4" />
           </button>

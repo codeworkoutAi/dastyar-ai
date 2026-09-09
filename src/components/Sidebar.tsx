@@ -477,6 +477,7 @@ export const Sidebar: React.FC = React.memo(() => {
                 to="/store"
                 onClick={() => { if (window.innerWidth < 768) setSidebarOpen(false); }}
                 className="p-2 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 transition-all duration-200 cursor-pointer flex items-center justify-center rounded-lg hover:bg-white dark:hover:bg-zinc-700/60 shadow-none hover:shadow-xs"
+                aria-label="فروشگاه محصولات و اشتراک"
               >
                 <Store className="w-4 h-4" strokeWidth={1.8} />
               </Link>
@@ -487,6 +488,7 @@ export const Sidebar: React.FC = React.memo(() => {
                 to="/blog"
                 onClick={() => { if (window.innerWidth < 768) setSidebarOpen(false); }}
                 className="p-2 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 transition-all duration-200 cursor-pointer flex items-center justify-center rounded-lg hover:bg-white dark:hover:bg-zinc-700/60 shadow-none hover:shadow-xs"
+                aria-label="وبلاگ هوش مصنوعی"
               >
                 <BookOpen className="w-4 h-4" strokeWidth={1.8} />
               </Link>
@@ -497,6 +499,7 @@ export const Sidebar: React.FC = React.memo(() => {
                 id="sidebar-explore-hub-btn"
                 onClick={() => { setIsExploreOpen(true); if (window.innerWidth < 768) setSidebarOpen(false); }}
                 className="p-2 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 transition-all duration-200 cursor-pointer flex items-center justify-center rounded-lg hover:bg-white dark:hover:bg-zinc-700/60 shadow-none hover:shadow-xs"
+                aria-label="کاوش در پرامپت‌ها و ایده‌ها"
               >
                 <Compass className="w-4 h-4" strokeWidth={1.8} />
               </button>
@@ -507,6 +510,7 @@ export const Sidebar: React.FC = React.memo(() => {
                 id="sidebar-image-studio-btn"
                 onClick={() => { setIsImageStudioOpen(true); if (window.innerWidth < 768) setSidebarOpen(false); }}
                 className="p-2 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 transition-all duration-200 cursor-pointer flex items-center justify-center rounded-lg hover:bg-white dark:hover:bg-zinc-700/60 shadow-none hover:shadow-xs"
+                aria-label="استودیو خلق تصویر"
               >
                 <Palette className="w-4 h-4" strokeWidth={1.8} />
               </button>
@@ -517,6 +521,7 @@ export const Sidebar: React.FC = React.memo(() => {
                 id="sidebar-ui-guide-btn"
                 onClick={() => { setIsUiGuideOpen(true); if (window.innerWidth < 768) setSidebarOpen(false); }}
                 className="p-2 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 transition-all duration-200 cursor-pointer flex items-center justify-center rounded-lg hover:bg-white dark:hover:bg-zinc-700/60 shadow-none hover:shadow-xs"
+                aria-label="راهنمای تصویری برنامه"
               >
                 <HelpCircle className="w-4 h-4" strokeWidth={1.8} />
               </button>
