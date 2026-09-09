@@ -449,6 +449,12 @@ function renderHtmlWithSeo(req: express.Request, res: express.Response, distPath
       html = html.replace('</head>', schemaTag);
     }
 
+    // Defer render-blocking KaTeX CSS using print media onload trick
+    html = html.replace(
+      /(<link\s+rel="stylesheet"\s+crossorigin\s+href="\/assets\/katex-[^"]+\.css")>/gi,
+      `$1 media="print" onload="this.media='all'">`
+    );
+
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
     res.send(html);
   } catch (err) {
@@ -473,6 +479,7 @@ async function start() {
   } else {
     const distPath = path.join(process.cwd(), 'dist');
     app.use(express.static(distPath, {
+      index: false,
       maxAge: '1y',
       immutable: true,
       setHeaders: (res, filePath) => {
