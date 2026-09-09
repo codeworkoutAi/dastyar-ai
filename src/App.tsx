@@ -1,24 +1,28 @@
-import { useEffect } from 'react';
+import { useEffect, lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { SettingsModal } from './components/SettingsModal';
-import { ExportModal } from './components/ExportModal';
-import { ImageGenStudio } from './components/ImageGenStudio';
-import { UiGuideModal } from './components/UiGuideModal';
-import { ExploreHub } from './components/ExploreHub';
-import { ReloadPrompt } from './components/ReloadPrompt';
-import AuthModal from './components/AuthModal';
-import { AdminModal } from './components/AdminModal';
-import { AboutModal } from './components/AboutModal';
-import { ContactModal } from './components/ContactModal';
 import { useSettingsStore } from './store/settingsStore';
 import { useAuthStore } from './store/authStore';
 import { useUIStore } from './store/uiStore';
 
-// Pages
+// Critical Pages (loaded immediately)
 import { ChatApp } from './pages/chat/ChatApp';
-import { StoreFront } from './pages/store/StoreFront';
-import { Blog } from './pages/blog/Blog';
-import { TagArchive } from './pages/blog/TagArchive';
+
+// Lazy-loaded Pages
+const StoreFront = lazy(() => import('./pages/store/StoreFront').then(m => ({ default: m.StoreFront })));
+const Blog = lazy(() => import('./pages/blog/Blog').then(m => ({ default: m.Blog })));
+const TagArchive = lazy(() => import('./pages/blog/TagArchive').then(m => ({ default: m.TagArchive })));
+
+// Lazy-loaded Modals
+const SettingsModal = lazy(() => import('./components/SettingsModal').then(m => ({ default: m.SettingsModal })));
+const ExportModal = lazy(() => import('./components/ExportModal').then(m => ({ default: m.ExportModal })));
+const ImageGenStudio = lazy(() => import('./components/ImageGenStudio').then(m => ({ default: m.ImageGenStudio })));
+const UiGuideModal = lazy(() => import('./components/UiGuideModal').then(m => ({ default: m.UiGuideModal })));
+const ExploreHub = lazy(() => import('./components/ExploreHub').then(m => ({ default: m.ExploreHub })));
+const ReloadPrompt = lazy(() => import('./components/ReloadPrompt').then(m => ({ default: m.ReloadPrompt })));
+const AuthModal = lazy(() => import('./components/AuthModal'));
+const AdminModal = lazy(() => import('./components/AdminModal').then(m => ({ default: m.AdminModal })));
+const AboutModal = lazy(() => import('./components/AboutModal').then(m => ({ default: m.AboutModal })));
+const ContactModal = lazy(() => import('./components/ContactModal').then(m => ({ default: m.ContactModal })));
 
 export default function App() {
   const { settings, systemIsDark } = useSettingsStore();
@@ -58,26 +62,28 @@ export default function App() {
 
   return (
     <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<ChatApp />} />
-        <Route path="/store" element={<StoreFront />} />
-        <Route path="/store/:id" element={<StoreFront />} />
-        <Route path="/blog" element={<Blog />} />
-        <Route path="/blog/:id" element={<Blog />} />
-        <Route path="/blog/tag/:tagName" element={<TagArchive />} />
-      </Routes>
+      <Suspense fallback={null}>
+        <Routes>
+          <Route path="/" element={<ChatApp />} />
+          <Route path="/store" element={<StoreFront />} />
+          <Route path="/store/:id" element={<StoreFront />} />
+          <Route path="/blog" element={<Blog />} />
+          <Route path="/blog/:id" element={<Blog />} />
+          <Route path="/blog/tag/:tagName" element={<TagArchive />} />
+        </Routes>
 
-      {/* Global Modals */}
-      <ExploreHub />
-      <SettingsModal />
-      <ExportModal />
-      <ImageGenStudio />
-      <UiGuideModal />
-      <AuthModal />
-      <AdminModal isOpen={isAdminOpen} onClose={() => setIsAdminOpen(false)} />
-      <AboutModal />
-      <ContactModal />
-      <ReloadPrompt />
+        {/* Global Modals */}
+        <ExploreHub />
+        <SettingsModal />
+        <ExportModal />
+        <ImageGenStudio />
+        <UiGuideModal />
+        <AuthModal />
+        <AdminModal isOpen={isAdminOpen} onClose={() => setIsAdminOpen(false)} />
+        <AboutModal />
+        <ContactModal />
+        <ReloadPrompt />
+      </Suspense>
     </BrowserRouter>
   );
 }

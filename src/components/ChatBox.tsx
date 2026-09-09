@@ -24,7 +24,7 @@ import {
   StarsOutlineIcon,
   BrainOutlineIcon
 } from '@solar-icons/react';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback, memo } from 'react';
 import { isRtlText } from '../lib/persianUtils';
 import { SpeakController, speakText } from '../lib/tts';
 import { useChatStore } from '../store/chatStore';
@@ -194,26 +194,26 @@ export const ChatBox: React.FC = React.memo(() => {
   const [feedback, setFeedback] = useState<Record<string, 'up' | 'down'>>({});
   const [lightboxMedia, setLightboxMedia] = useState<{url: string, type: 'image' | 'video'} | null>(null);
 
-  const handleFeedback = (msgId: string, type: 'up' | 'down') => {
+  const handleFeedback = useCallback((msgId: string, type: 'up' | 'down') => {
     setFeedback(prev => ({ ...prev, [msgId]: type }));
-  };
+  }, []);
 
-  const handleDownloadMedia = (url: string, isVideo = false) => {
+  const handleDownloadMedia = useCallback((url: string, isVideo = false) => {
     const a = document.createElement('a');
     a.href = url;
     a.download = isVideo ? `persian-ai-video-${Date.now()}.mp4` : `persian-ai-image-${Date.now()}.png`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
-  };
+  }, []);
 
   // Scroll to bottom helper
-  const scrollToBottom = (smooth = true) => {
+  const scrollToBottom = useCallback((smooth = true) => {
     chatEndRef.current?.scrollIntoView({
       behavior: smooth ? 'smooth' : 'auto',
       block: 'end',
     });
-  };
+  }, []);
 
   // Initial scroll on conversation change
   useEffect(() => {
@@ -284,20 +284,20 @@ export const ChatBox: React.FC = React.memo(() => {
   };
 
   // Handle scroll listener to show scroll-to-bottom button
-  const handleScroll = () => {
+  const handleScroll = useCallback(() => {
     if (!scrollContainerRef.current) return;
     const { scrollTop, scrollHeight, clientHeight } = scrollContainerRef.current;
     const distanceToBottom = scrollHeight - scrollTop - clientHeight;
     setShowScrollBottom(distanceToBottom > 150);
-  };
+  }, []);
 
-  const handleCopyMessage = (msg: ChatMessage) => {
+  const handleCopyMessage = useCallback((msg: ChatMessage) => {
     navigator.clipboard.writeText(msg.content);
     setCopiedId(msg.id);
     setTimeout(() => setCopiedId(null), 2000);
-  };
+  }, []);
 
-  const handleExportSingleMessage = (msg: ChatMessage) => {
+  const handleExportSingleMessage = useCallback((msg: ChatMessage) => {
     const blob = new Blob([msg.content], { type: 'text/markdown;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -307,7 +307,7 @@ export const ChatBox: React.FC = React.memo(() => {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-  };
+  }, []);
 
   const messages = conversation?.messages || [];
 
