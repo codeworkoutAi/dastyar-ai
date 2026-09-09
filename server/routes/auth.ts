@@ -40,7 +40,7 @@ const forgotPasswordLimiter = rateLimit({
 router.post('/send-otp', otpLimiter, async (req, res) => {
   try {
     const { phone } = req.body;
-    
+
     if (!phone || !/^09\d{9}$/.test(phone)) {
       return res.status(400).json({ error: 'شماره موبایل نامعتبر است (مثال: 09123456789)' });
     }
@@ -55,7 +55,7 @@ router.post('/send-otp', otpLimiter, async (req, res) => {
 
     // Send SMS
     const sent = await sendOtpSms(phone, code);
-    
+
     if (sent) {
       res.json({ message: 'کد تایید ارسال شد' });
     } else {
@@ -110,7 +110,7 @@ router.post('/verify-otp', verifyLimiter, async (req, res) => {
 
       const insertUserStmt = db.prepare('INSERT INTO users (phone, name, avatar, role) VALUES (?, ?, ?, ?)');
       const info = insertUserStmt.run(phone, name || '', defaultAvatar, role);
-      
+
       user = { id: info.lastInsertRowid, phone, name, avatar: defaultAvatar, role };
     } else {
       // Update name and avatar if provided
@@ -143,7 +143,7 @@ router.post('/verify-otp', verifyLimiter, async (req, res) => {
 router.post('/register', async (req, res) => {
   try {
     const { email, password, name, avatar } = req.body;
-    
+
     if (!email || !email.includes('@') || !password || password.length < 6) {
       return res.status(400).json({ error: 'ایمیل معتبر و رمز عبور (حداقل ۶ کاراکتر) الزامی است.' });
     }
@@ -274,7 +274,7 @@ router.post('/google', async (req, res) => {
 router.get('/me', requireAuth, (req: any, res) => {
   const userStmt = db.prepare('SELECT id, phone, email, name, avatar, role FROM users WHERE id = ?');
   const user = userStmt.get(req.user.id);
-  
+
   if (!user) {
     return res.status(404).json({ error: 'User not found' });
   }
@@ -301,38 +301,62 @@ router.post('/forgot-password', forgotPasswordLimiter, async (req, res) => {
 
     db.prepare('UPDATE users SET resetToken = ?, resetTokenExpiry = ? WHERE id = ?').run(resetToken, resetTokenExpiry, user.id);
 
-    // Setup nodemailer
-    const transporter = nodemailer.createTransport({
-      service: 'gmail',
-      auth: {
-        user: process.env.SMTP_EMAIL || '',
-        pass: process.env.SMTP_PASSWORD || ''
-      }
-    });
-
     const resetUrl = `${req.headers.origin}/?reset_token=${resetToken}`;
-
-    const mailOptions = {
-      from: `"Chatbox AI" <${process.env.SMTP_EMAIL}>`,
-      to: user.email,
-      subject: 'بازیابی رمز عبور - چت‌باکس',
-      html: `
-        <div dir="rtl" style="font-family: Tahoma, Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; text-align: right; background-color: #f9fafb; border-radius: 16px;">
-          <h2 style="color: #2563eb;">بازیابی رمز عبور</h2>
-          <p style="color: #4b5563; font-size: 16px;">شما درخواست بازیابی رمز عبور داده‌اید. برای تغییر رمز عبور خود روی دکمه زیر کلیک کنید:</p>
-          <div style="text-align: center; margin: 30px 0;">
-            <a href="${resetUrl}" style="background-color: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">تغییر رمز عبور</a>
-          </div>
-          <p style="color: #6b7280; font-size: 14px;">این لینک تا ۱۵ دقیقه دیگر منقضی می‌شود.</p>
-          <p style="color: #9ca3af; font-size: 12px; margin-top: 40px;">اگر شما این درخواست را نداده‌اید، این ایمیل را نادیده بگیرید.</p>
+    const senderEmail = process.env.FROM_EMAIL || 'info@dastyarai.com';
+    const mailHtml = `
+      <div dir="rtl" style="font-family: Tahoma, Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; text-align: right; background-color: #f9fafb; border-radius: 16px;">
+        <h2 style="color: #2563eb;">بازیابی رمز عبور</h2>
+        <p style="color: #4b5563; font-size: 16px;">شما درخواست بازیابی رمز عبور داده‌اید. برای تغییر رمز عبور خود روی دکمه زیر کلیک کنید:</p>
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="${resetUrl}" style="background-color: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">تغییر رمز عبور</a>
         </div>
-      `
-    };
+        <p style="color: #6b7280; font-size: 14px;">این لینک تا ۱۵ دقیقه دیگر منقضی می‌شود.</p>
+        <p style="color: #9ca3af; font-size: 12px; margin-top: 40px;">اگر شما این درخواست را نداده‌اید، این ایمیل را نادیده بگیرید.</p>
+      </div>
+    `;
 
-    if (!process.env.SMTP_EMAIL || !process.env.SMTP_PASSWORD) {
-      console.warn('[Auth API] SMTP credentials not set. Token generated but email not sent:', resetUrl);
+    // 1. Prioritize Resend API if RESEND_API_KEY is configured
+    if (process.env.RESEND_API_KEY) {
+      console.log(`[Auth API] Sending password reset email via Resend API to: ${user.email}`);
+      const resendRes = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${process.env.RESEND_API_KEY.trim()}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          from: `دستیار هوشمند <${senderEmail}>`,
+          to: [user.email],
+          subject: 'بازیابی رمز عبور - دستیار هوشمند',
+          html: mailHtml
+        })
+      });
+
+      if (!resendRes.ok) {
+        const errorData = await resendRes.json().catch(() => ({}));
+        console.error('[Auth API] Resend API error:', errorData);
+        throw new Error('Resend API failed to send email');
+      }
+    } 
+    // 2. Fallback to SMTP (Gmail / Custom SMTP)
+    else if (process.env.SMTP_EMAIL && process.env.SMTP_PASSWORD) {
+      console.log(`[Auth API] Sending password reset email via SMTP to: ${user.email}`);
+      const transporter = nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+          user: process.env.SMTP_EMAIL,
+          pass: process.env.SMTP_PASSWORD
+        }
+      });
+
+      await transporter.sendMail({
+        from: `"دستیار هوشمند" <${senderEmail}>`,
+        to: user.email,
+        subject: 'بازیابی رمز عبور - دستیار هوشمند',
+        html: mailHtml
+      });
     } else {
-      await transporter.sendMail(mailOptions);
+      console.warn('[Auth API] Neither RESEND_API_KEY nor SMTP credentials set. Reset link:', resetUrl);
     }
 
     res.json({ message: 'لینک بازیابی رمز عبور به ایمیل شما ارسال شد.' });
