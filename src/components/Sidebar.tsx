@@ -336,7 +336,7 @@ export const Sidebar: React.FC = React.memo(() => {
               >
                 <div className="flex items-center gap-2.5 overflow-hidden">
                   <img 
-                    src={user?.avatar || `https://source.boringavatars.com/beam/120/${user?.phone || user?.email || 'default'}?colors=264653,2a9d8f,e9c46a,f4a261,e76f51`} 
+                    src={user?.avatar || `https://api.dicebear.com/7.x/bottts/svg?seed=${user?.phone || user?.email || 'default'}&colors=264653,2a9d8f,e9c46a,f4a261,e76f51`} 
                     alt="Avatar" 
                     onError={(e) => {
                       const target = e.target as HTMLImageElement;
@@ -395,7 +395,7 @@ export const Sidebar: React.FC = React.memo(() => {
             <div className="absolute top-full mt-1.5 right-3 left-3 p-2 bg-white dark:bg-zinc-900 rounded-2xl shadow-2xl border border-zinc-200 dark:border-zinc-800 flex flex-col gap-1 z-50 animate-fadeIn">
               <div className="flex items-center gap-2.5 p-2 rounded-xl bg-zinc-50 dark:bg-zinc-800/60 mb-1">
                 <img 
-                  src={user?.avatar || `https://source.boringavatars.com/beam/120/${user?.phone || user?.email || 'default'}?colors=264653,2a9d8f,e9c46a,f4a261,e76f51`} 
+                  src={user?.avatar || `https://api.dicebear.com/7.x/bottts/svg?seed=${user?.phone || user?.email || 'default'}&colors=264653,2a9d8f,e9c46a,f4a261,e76f51`} 
                   alt="Avatar" 
                   onError={(e) => {
                     const target = e.target as HTMLImageElement;
