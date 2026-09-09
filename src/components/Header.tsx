@@ -385,7 +385,7 @@ export const Header: React.FC = React.memo(() => {
       {/* -------------------- Animation Content -------------------- */}
       <div className={`absolute inset-0 w-full h-full flex items-center justify-center px-4 transition-all duration-500 delay-100 ${isAnimating ? 'opacity-100 scale-100 pointer-events-auto' : 'opacity-0 scale-105 pointer-events-none'}`}>
         <div className="w-full h-full max-w-4xl flex items-center justify-center">
-          <SmartRoutingAnimation routingState={isStreaming ? routingState : null} />
+          <SmartRoutingAnimation routingState={isStreaming && routingState !== 'idle' ? routingState : null} />
         </div>
       </div>
     </header>

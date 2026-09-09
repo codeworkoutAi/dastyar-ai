@@ -102,9 +102,9 @@ export const getModelIntro = (modelName: string, details: ModelDetails) => {
   };
 };
 
-export const SmartRoutingAnimation: React.FC<{ routingState: 'general' | 'coding' | 'vision' | null }> = ({ routingState }) => {
+export const SmartRoutingAnimation: React.FC<{ routingState: 'general' | 'coding' | 'vision' | 'idle' | null }> = ({ routingState }) => {
   const { settings } = useSettingsStore();
-  const roles = settings.tools.routingRoles || {};
+  const roles = (settings.tools as any).routingRoles || {};
   const profiles = settings.providers.custom.profiles || [];
   const activeProv = settings.providers.activeProvider || 'gemini';
   const defaultModelName = (settings.providers as any)[activeProv]?.modelName || 'gemini-2.5-pro';
