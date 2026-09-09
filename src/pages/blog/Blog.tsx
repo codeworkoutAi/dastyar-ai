@@ -6,6 +6,7 @@ import { NeuralBanner } from '../../components/NeuralBanner';
 import { Footer } from '../../components/Footer';
 import { ThemeToggle } from '../../components/ThemeToggle';
 import { setPageSeo } from '../../lib/seo';
+import 'sahel-font/dist/font-face.css';
 
 interface NewsItem {
   id: number;
