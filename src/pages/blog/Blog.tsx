@@ -434,6 +434,8 @@ export function Blog() {
                 </div>
                 <input
                   type="text"
+                  id="searchQuery"
+                  name="search"
                   placeholder="جستجو در اخبار..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
