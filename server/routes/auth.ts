@@ -7,6 +7,7 @@ import { sendOtpSms } from '../services/kavenegar';
 import nodemailer from 'nodemailer';
 import crypto from 'crypto';
 import rateLimit from 'express-rate-limit';
+import { telegramAuthSessions } from '../services/telegramAuthSessions';
 
 const router = express.Router();
 const JWT_SECRET = process.env.JWT_SECRET || 'chatbox-secret-key-123';
@@ -286,6 +287,54 @@ router.post('/google', async (req, res) => {
   } catch (error) {
     console.error('[Auth API] Google Login Error:', error);
     res.status(500).json({ error: 'خطای سرور در ورود با گوگل' });
+  }
+});
+
+// POST /api/auth/telegram/session
+router.post('/telegram/session', (req, res) => {
+  try {
+    const sessionToken = crypto.randomBytes(16).toString('hex');
+    const botUsername = process.env.TELEGRAM_BOT_USERNAME || 'FaChatBox_bot';
+
+    telegramAuthSessions.set(sessionToken, {
+      token: sessionToken,
+      status: 'pending',
+      createdAt: Date.now()
+    });
+
+    const botUrl = `https://t.me/${botUsername}?start=auth_${sessionToken}`;
+    res.json({ token: sessionToken, botUrl });
+  } catch (err) {
+    console.error('[Auth API] Telegram Session Error:', err);
+    res.status(500).json({ error: 'خطا در ایجاد نشست ورود با تلگرام' });
+  }
+});
+
+// GET /api/auth/telegram/check
+router.get('/telegram/check', (req, res) => {
+  try {
+    const { token } = req.query;
+    if (!token || typeof token !== 'string') {
+      return res.status(400).json({ error: 'توکن نامعتبر است' });
+    }
+
+    const session = telegramAuthSessions.get(token);
+    if (!session || Date.now() - session.createdAt > 5 * 60 * 1000) {
+      return res.json({ status: 'expired' });
+    }
+
+    if (session.status === 'authenticated') {
+      return res.json({
+        status: 'authenticated',
+        token: session.jwtToken,
+        user: session.user
+      });
+    }
+
+    res.json({ status: 'pending' });
+  } catch (err) {
+    console.error('[Auth API] Telegram Check Error:', err);
+    res.status(500).json({ error: 'خطا در بررسی وضعیت نشست تلگرام' });
   }
 });
 

@@ -2,6 +2,8 @@ import { Telegraf, Markup } from 'telegraf';
 import db from '../db/database';
 import { HttpsProxyAgent } from 'https-proxy-agent';
 import { SocksProxyAgent } from 'socks-proxy-agent';
+import jwt from 'jsonwebtoken';
+import { telegramAuthSessions, JWT_SECRET } from '../services/telegramAuthSessions';
 
 export let bot: Telegraf<any> | null = null;
 const RLM = '\u200F';
@@ -51,13 +53,28 @@ export function startTelegramBot() {
     const tgId = ctx.from.id.toString();
     const name = ctx.from.first_name || 'کاربر';
 
-    // Register or get user
-    let user = db.prepare('SELECT * FROM users WHERE telegramId = ?').get(tgId) as any;
-    if (!user) {
-      const email = `tg_${tgId}@telegram.local`; // Dummy email to bypass sqlite limitations if any
-      const insertStmt = db.prepare('INSERT INTO users (telegramId, email, name, role) VALUES (?, ?, ?, ?)');
-      const info = insertStmt.run(tgId, email, name, 'user');
-      user = { id: info.lastInsertRowid, telegramId: tgId, name };
+    // Check if start payload is for Web Login confirmation
+    const payload = (ctx as any).payload || (ctx.message && 'text' in ctx.message ? (ctx.message.text as string).split(' ')[1] : '') || '';
+    if (payload && payload.startsWith('auth_')) {
+      const sessionToken = payload.replace('auth_', '').trim();
+      const session = telegramAuthSessions.get(sessionToken);
+      if (!session || Date.now() - session.createdAt > 5 * 60 * 1000) {
+        return ctx.reply('⚠️ <b>این لینک ورود منقضی شده است.</b>\nلطفاً به وب‌سایت بازگردید و مجدداً روی ورود با تلگرام کلیک کنید.', { parse_mode: 'HTML' });
+      }
+
+      return ctx.reply(
+        `🔐 <b>درخواست ورود به وب‌سایت دستیار هوشمند</b>\n\n` +
+        `سلام ${ctx.from.first_name || 'کاربر'} عزیز،\nآیا تایید می‌کنید که با این حساب تلگرام وارد حساب کاربری خود در وب‌سایت شوید؟`,
+        {
+          parse_mode: 'HTML',
+          reply_markup: {
+            inline_keyboard: [
+              [{ text: '✅ تایید و ورود به سایت', callback_data: `tg_auth_confirm_${sessionToken}` }],
+              [{ text: '❌ انصراف', callback_data: `tg_auth_cancel_${sessionToken}` }]
+            ]
+          }
+        }
+      );
     }
 
     const welcomeMsg = 
@@ -539,6 +556,73 @@ async function sendStoreShowcase(ctx: any, page: number = 0, isEdit: boolean = f
       }
     });
     await ctx.answerCbQuery();
+  });
+
+  // Handler for Web Login Confirmation
+  bot.action(/^tg_auth_confirm_(.+)$/, async (ctx) => {
+    try {
+      const sessionToken = ctx.match[1];
+      const session = telegramAuthSessions.get(sessionToken);
+
+      if (!session || Date.now() - session.createdAt > 5 * 60 * 1000) {
+        await ctx.answerCbQuery('این نشست ورود منقضی شده است. لطفاً دوباره از سایت اقدام کنید.', { show_alert: true });
+        return ctx.editMessageText('⚠️ <b>نشست ورود منقضی شده است.</b> لطفاً از وب‌سایت مجدداً تلاش کنید.', { parse_mode: 'HTML' });
+      }
+
+      if (session.status === 'authenticated') {
+        await ctx.answerCbQuery('این نشست قبلاً تایید شده است.');
+        return;
+      }
+
+      const tgId = ctx.from.id.toString();
+      const name = [ctx.from.first_name, ctx.from.last_name].filter(Boolean).join(' ') || 'کاربر تلگرام';
+      const username = ctx.from.username;
+
+      let user = db.prepare('SELECT * FROM users WHERE telegramId = ?').get(tgId) as any;
+      if (!user) {
+        const countStmt = db.prepare('SELECT COUNT(*) as count FROM users');
+        const { count } = countStmt.get() as { count: number };
+        const role = count === 0 ? 'admin' : 'user';
+        const email = username ? `${username}@telegram.local` : `tg_${tgId}@telegram.local`;
+        const defaultAvatar = `https://api.dicebear.com/7.x/bottts/svg?seed=${tgId}`;
+
+        const insertStmt = db.prepare('INSERT INTO users (telegramId, email, name, avatar, role) VALUES (?, ?, ?, ?, ?)');
+        const info = insertStmt.run(tgId, email, name, defaultAvatar, role);
+        user = { id: info.lastInsertRowid, telegramId: tgId, email, name, avatar: defaultAvatar, role };
+      }
+
+      const jwtToken = jwt.sign(
+        { id: user.id, email: user.email, name: user.name, role: user.role },
+        JWT_SECRET,
+        { expiresIn: '7d' }
+      );
+
+      session.status = 'authenticated';
+      session.jwtToken = jwtToken;
+      session.user = { id: user.id, email: user.email, name: user.name, avatar: user.avatar, role: user.role };
+
+      await ctx.answerCbQuery('✅ ورود شما با موفقیت تایید شد!');
+      await ctx.editMessageText(
+        `✅ <b>ورود شما با موفقیت تأیید شد!</b>\n\nاکنون می‌توانید به مرورگر خود بازگردید؛ به طور خودکار وارد حساب کاربری خود شده‌اید.`,
+        { parse_mode: 'HTML' }
+      );
+    } catch (err) {
+      console.error('[Telegram] Auth confirmation error:', err);
+      await ctx.answerCbQuery('خطا در تایید ورود.');
+    }
+  });
+
+  // Handler for Web Login Cancel
+  bot.action(/^tg_auth_cancel_(.+)$/, async (ctx) => {
+    try {
+      const sessionToken = ctx.match[1];
+      telegramAuthSessions.delete(sessionToken);
+      await ctx.answerCbQuery('درخواست ورود لغو شد.');
+      await ctx.editMessageText('❌ <b>درخواست ورود لغو شد.</b>', { parse_mode: 'HTML' });
+    } catch (err) {
+      console.error('[Telegram] Auth cancel error:', err);
+      await ctx.answerCbQuery('خطا در لغو درخواست.');
+    }
   });
 
   bot.command('chatid', (ctx) => {

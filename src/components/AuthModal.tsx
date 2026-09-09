@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuthStore } from '../store/authStore';
-import { X, Smartphone, KeyRound, Loader2, ArrowRight, Mail, Lock, LogIn, UserPlus, UserCircle, Check } from 'lucide-react';
+import { X, Loader2, ArrowRight, Mail, Lock, LogIn, UserPlus, UserCircle, Check } from 'lucide-react';
 import { GoogleOAuthProvider, useGoogleLogin } from '@react-oauth/google';
-
 
 function GoogleLoginButton({ onSuccess, onError, loading }: { onSuccess: (token: string) => void, onError: () => void, loading: boolean }) {
   const login = useGoogleLogin({
@@ -16,156 +15,165 @@ function GoogleLoginButton({ onSuccess, onError, loading }: { onSuccess: (token:
       type="button"
       disabled={loading}
       onClick={() => login()}
-      className="w-full flex items-center justify-center gap-3 py-2.5 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-200 rounded-xl font-medium shadow-sm hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-all active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed"
+      className="w-full flex items-center justify-center gap-2.5 py-2.5 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-200 rounded-xl font-medium shadow-sm hover:bg-zinc-50 dark:hover:bg-zinc-750 transition-all active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed text-sm"
     >
-      <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" className="w-5 h-5" />
-      ورود با گوگل
+      <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" className="w-4 h-4" />
+      <span>گوگل</span>
+    </button>
+  );
+}
+
+function TelegramLoginButton({ onClick, loading }: { onClick: () => void, loading: boolean }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={loading}
+      className="w-full flex items-center justify-center gap-2.5 py-2.5 bg-[#229ED9]/10 hover:bg-[#229ED9]/20 text-[#229ED9] dark:bg-[#229ED9]/15 dark:hover:bg-[#229ED9]/25 border border-[#229ED9]/30 rounded-xl font-medium shadow-sm transition-all active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed text-sm"
+    >
+      <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
+        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 00-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.74-.55 2.92-1.27 4.86-2.11 5.83-2.51 2.78-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .38z"/>
+      </svg>
+      <span>تلگرام</span>
     </button>
   );
 }
 
 export default function AuthModal() {
   const { isAuthModalOpen, setAuthModalOpen, login } = useAuthStore();
-  const [authMethod, setAuthMethod] = useState<'phone' | 'email'>('phone');
   
-  // User Info State
-  const [name, setName] = useState('');
-
-  // Phone State
-  const [step, setStep] = useState<1 | 2>(1);
-  const [phone, setPhone] = useState('');
-  const [code, setCode] = useState('');
-  const [timeLeft, setTimeLeft] = useState(120);
-  
-  // Email State
+  // Form View State
   const [isEmailLogin, setIsEmailLogin] = useState(true);
+  const [isForgotPassword, setIsForgotPassword] = useState(false);
+  
+  // User Info & Form Fields
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-
-  const [isForgotPassword, setIsForgotPassword] = useState(false);
+  const [selectedAvatar, setSelectedAvatar] = useState<string>('');
   const [resetToken, setResetToken] = useState('');
-  const [successMsg, setSuccessMsg] = useState('');
+  
+  // Telegram Auth State
+  const [telegramWaiting, setTelegramWaiting] = useState(false);
+  const [telegramToken, setTelegramToken] = useState('');
+  const [telegramBotUrl, setTelegramBotUrl] = useState('');
 
+  // Status & Feedback
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [successMsg, setSuccessMsg] = useState('');
 
   const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || 'your-client-id.apps.googleusercontent.com';
 
-  useEffect(() => {
-    let timer: any;
-    if (authMethod === 'phone' && step === 2 && timeLeft > 0) {
-      timer = setInterval(() => setTimeLeft(prev => prev - 1), 1000);
-    }
-    return () => clearInterval(timer);
-  }, [step, timeLeft, authMethod]);
+  const defaultAvatars = [
+    'https://api.dicebear.com/7.x/bottts/svg?seed=Felix',
+    'https://api.dicebear.com/7.x/bottts/svg?seed=Aneka',
+    'https://api.dicebear.com/7.x/bottts/svg?seed=Milo',
+    'https://api.dicebear.com/7.x/bottts/svg?seed=Luna',
+    'https://api.dicebear.com/7.x/bottts/svg?seed=Oliver',
+    'https://api.dicebear.com/7.x/bottts/svg?seed=Bella'
+  ];
 
+  // Detect password reset token from URL
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const token = params.get('reset_token');
     if (token) {
       setAuthModalOpen(true);
-      setAuthMethod('email');
       setResetToken(token);
+      setIsForgotPassword(false);
       window.history.replaceState({}, '', window.location.pathname);
     }
   }, [setAuthModalOpen]);
 
+  // Reset states on modal open
   useEffect(() => {
     if (isAuthModalOpen) {
-      if (!resetToken) {
-        setAuthMethod('phone');
-      }
-      setStep(1);
-      setPhone('');
-      setCode('');
       setEmail('');
       setPassword('');
       setName('');
       setError('');
       setSuccessMsg('');
+      setTelegramWaiting(false);
+      setTelegramToken('');
       if (!resetToken) {
         setIsForgotPassword(false);
       }
     }
   }, [isAuthModalOpen, resetToken]);
 
+  // Polling for Telegram Bot Auth confirmation
+  useEffect(() => {
+    if (!telegramWaiting || !telegramToken) return;
+
+    const interval = setInterval(async () => {
+      try {
+        const res = await fetch(`/api/auth/telegram/check?token=${telegramToken}`);
+        const data = await res.json();
+
+        if (data.status === 'authenticated') {
+          clearInterval(interval);
+          setTelegramWaiting(false);
+          login(data.user, data.token);
+          setAuthModalOpen(false);
+        } else if (data.status === 'expired') {
+          clearInterval(interval);
+          setTelegramWaiting(false);
+          setError('نشست ورود تلگرام منقضی شد. لطفاً دوباره امتحان کنید.');
+        }
+      } catch (err) {
+        // Network hiccup - ignore and keep checking
+      }
+    }, 1500);
+
+    return () => clearInterval(interval);
+  }, [telegramWaiting, telegramToken, login, setAuthModalOpen]);
+
   if (!isAuthModalOpen) return null;
 
-  // Phone Methods
-  const handleSendOtp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!/^09\d{9}$/.test(phone)) {
-      setError('شماره موبایل باید با 09 شروع شود و ۱۱ رقم باشد.');
-      return;
-    }
-
+  // Telegram Login Handler
+  const handleTelegramLogin = async () => {
     setLoading(true);
     setError('');
+    setSuccessMsg('');
 
     try {
-      const res = await fetch('/api/auth/send-otp', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone })
-      });
+      const res = await fetch('/api/auth/telegram/session', { method: 'POST' });
       const data = await res.json();
 
-      if (!res.ok) {
-        setError(data.error || 'خطا در ارسال پیامک.');
-      } else {
-        setStep(2);
-        setTimeLeft(120);
+      if (!res.ok || !data.token) {
+        throw new Error(data.error || 'خطا در برقراری ارتباط با ربات تلگرام');
       }
-    } catch (err) {
-      setError('خطا در ارتباط با سرور.');
+
+      setTelegramToken(data.token);
+      setTelegramBotUrl(data.botUrl);
+      setTelegramWaiting(true);
+
+      // Open Telegram Bot in a new window/tab
+      window.open(data.botUrl, '_blank');
+    } catch (err: any) {
+      setError(err.message || 'خطا در ارتباط با ربات تلگرام.');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleVerifyOtp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (code.length !== 5) {
-      setError('کد تایید باید ۵ رقم باشد.');
-      return;
-    }
-
-    setLoading(true);
-    setError('');
-
-    try {
-      const res = await fetch('/api/auth/verify-otp', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone, code, name })
-      });
-      const data = await res.json();
-
-      if (!res.ok) {
-        setError(data.error || 'کد تایید اشتباه است.');
-      } else {
-        login(data.user, data.token);
-      }
-    } catch (err) {
-      setError('خطا در ارتباط با سرور.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Email Methods
+  // Email Submit Handler (Login or Register)
   const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError('');
 
     const endpoint = isEmailLogin ? '/api/auth/login' : '/api/auth/register';
+    const payload = isEmailLogin 
+      ? { email, password }
+      : { email, password, name, avatar: selectedAvatar || defaultAvatars[0] };
 
     try {
       const res = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password, name })
+        body: JSON.stringify(payload)
       });
       const data = await res.json();
 
@@ -173,6 +181,7 @@ export default function AuthModal() {
         setError(data.error || 'خطایی رخ داده است.');
       } else {
         login(data.user, data.token);
+        setAuthModalOpen(false);
       }
     } catch (err) {
       setError('خطا در برقراری ارتباط با سرور.');
@@ -181,6 +190,7 @@ export default function AuthModal() {
     }
   };
 
+  // Forgot Password Handler
   const handleForgotPasswordSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -198,7 +208,7 @@ export default function AuthModal() {
       if (!res.ok) {
         setError(data.error || 'خطایی رخ داده است.');
       } else {
-        setSuccessMsg(data.message || 'لینک بازیابی ارسال شد.');
+        setSuccessMsg(data.message || 'لینک بازیابی رمز عبور ارسال شد.');
         setIsForgotPassword(false);
       }
     } catch (err) {
@@ -208,6 +218,7 @@ export default function AuthModal() {
     }
   };
 
+  // Reset Password Handler
   const handleResetPasswordSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -225,7 +236,7 @@ export default function AuthModal() {
       if (!res.ok) {
         setError(data.error || 'خطایی رخ داده است.');
       } else {
-        setSuccessMsg(data.message || 'رمز عبور تغییر کرد.');
+        setSuccessMsg(data.message || 'رمز عبور با موفقیت تغییر کرد.');
         setResetToken('');
         setPassword('');
         setIsEmailLogin(true);
@@ -237,15 +248,11 @@ export default function AuthModal() {
     }
   };
 
-  // Google Login Method
+  // Google Login Success Handler
   const handleGoogleSuccess = async (token: string) => {
     setLoading(true);
     setError('');
-    
-    // Fallback: When using implicit flow, tokenResponse might only have access_token.
-    // The backend endpoint can either decode ID Token or use google API for access_token.
-    // For safety, let's pass it and let backend verify.
-    
+
     try {
       const res = await fetch('/api/auth/google', {
         method: 'POST',
@@ -258,6 +265,7 @@ export default function AuthModal() {
         setError(data.error || 'خطا در ورود با گوگل');
       } else {
         login(data.user, data.token);
+        setAuthModalOpen(false);
       }
     } catch (err) {
       setError('خطا در ارتباط با سرور.');
@@ -266,24 +274,39 @@ export default function AuthModal() {
     }
   };
 
-  const formatTime = (seconds: number) => {
-    const m = Math.floor(seconds / 60);
-    const s = seconds % 60;
-    return `${m}:${s.toString().padStart(2, '0')}`;
-  };
-
   const renderUserInfoFields = () => (
-    <div className="mb-4">
-      <label className="block mb-3 text-sm font-medium text-zinc-700 dark:text-zinc-300">نام کاربری (اختیاری)</label>
-      <div className="relative">
-        <UserCircle className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400" size={18} />
-        <input 
-          type="text" 
-          value={name}
-          onChange={e => setName(e.target.value)}
-          className="w-full pl-4 pr-10 py-2.5 bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/50 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none text-zinc-900 dark:text-zinc-100"
-          placeholder="نام شما..."
-        />
+    <div className="space-y-4 mb-4">
+      <div>
+        <label className="block mb-2 text-xs font-medium text-zinc-600 dark:text-zinc-400">انتخاب تصویر نمایه</label>
+        <div className="flex gap-2 justify-between items-center bg-zinc-50 dark:bg-zinc-800/50 p-2.5 rounded-xl border border-zinc-200/60 dark:border-zinc-700/50 overflow-x-auto">
+          {defaultAvatars.map((url, i) => (
+            <button
+              key={i}
+              type="button"
+              onClick={() => setSelectedAvatar(url)}
+              className={`relative rounded-full p-0.5 transition-all flex-shrink-0 ${
+                (selectedAvatar === url || (!selectedAvatar && i === 0))
+                  ? 'ring-2 ring-blue-500 scale-105' 
+                  : 'opacity-70 hover:opacity-100 hover:scale-105'
+              }`}
+            >
+              <img src={url} alt={`avatar-${i}`} className="w-9 h-9 rounded-full bg-white dark:bg-zinc-700" />
+            </button>
+          ))}
+        </div>
+      </div>
+      <div>
+        <label className="block mb-1.5 text-xs font-medium text-zinc-600 dark:text-zinc-400">نام نمایشی</label>
+        <div className="relative">
+          <UserCircle className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400" size={18} />
+          <input 
+            type="text" 
+            value={name} 
+            onChange={e => setName(e.target.value)}
+            className="w-full pl-3 pr-10 py-2.5 bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/50 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none text-zinc-900 dark:text-zinc-100 text-sm"
+            placeholder="مثال: علی رضایی"
+          />
+        </div>
       </div>
     </div>
   );
@@ -300,20 +323,24 @@ export default function AuthModal() {
           {/* Header */}
           <div className="flex items-center justify-between p-5 border-b border-zinc-100 dark:border-zinc-800">
             <div className="flex items-center gap-3">
-              {authMethod === 'phone' && step === 2 && (
+              {(isForgotPassword || telegramWaiting) && (
                 <button 
-                  onClick={() => setStep(1)}
+                  onClick={() => {
+                    setIsForgotPassword(false);
+                    setTelegramWaiting(false);
+                    setError('');
+                  }}
                   className="p-1.5 text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
                 >
                   <ArrowRight size={20} />
                 </button>
               )}
               <h2 className="text-lg font-bold text-zinc-800 dark:text-zinc-100">
-                {authMethod === 'phone' 
-                  ? (step === 1 ? 'ورود / ثبت‌نام' : 'تایید موبایل') 
-                  : (resetToken 
-                      ? 'تغییر رمز عبور' 
-                      : (isForgotPassword ? 'بازیابی رمز عبور' : (isEmailLogin ? 'ورود' : 'ثبت‌نام')))}
+                {telegramWaiting 
+                  ? 'ورود با تلگرام'
+                  : resetToken 
+                    ? 'تغییر رمز عبور' 
+                    : (isForgotPassword ? 'بازیابی رمز عبور' : (isEmailLogin ? 'ورود به حساب کاربری' : 'ثبت‌نام حساب کاربری'))}
               </h2>
             </div>
             <button 
@@ -324,28 +351,30 @@ export default function AuthModal() {
             </button>
           </div>
 
-          {/* Tabs */}
-          {((authMethod === 'phone' && step === 1) || (authMethod === 'email' && !resetToken && !isForgotPassword)) && (
+          {/* Login / Register Tabs */}
+          {!resetToken && !isForgotPassword && !telegramWaiting && (
             <div className="flex p-2 bg-zinc-50/50 dark:bg-zinc-900/50 border-b border-zinc-100 dark:border-zinc-800">
               <button
-                onClick={() => { setAuthMethod('phone'); setError(''); }}
-                className={`flex-1 py-1.5 text-sm font-medium rounded-lg transition-all ${
-                  authMethod === 'phone' 
-                    ? 'bg-white dark:bg-zinc-800 text-blue-600 dark:text-blue-400 shadow-sm border border-zinc-200 dark:border-zinc-700' 
+                type="button"
+                onClick={() => { setIsEmailLogin(true); setError(''); setSuccessMsg(''); }}
+                className={`flex-1 py-2 text-sm font-medium rounded-xl transition-all ${
+                  isEmailLogin 
+                    ? 'bg-white dark:bg-zinc-800 text-blue-600 dark:text-blue-400 shadow-sm border border-zinc-200/80 dark:border-zinc-700' 
                     : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'
                 }`}
               >
-                شماره موبایل
+                ورود
               </button>
               <button
-                onClick={() => { setAuthMethod('email'); setError(''); }}
-                className={`flex-1 py-1.5 text-sm font-medium rounded-lg transition-all ${
-                  authMethod === 'email' 
-                    ? 'bg-white dark:bg-zinc-800 text-blue-600 dark:text-blue-400 shadow-sm border border-zinc-200 dark:border-zinc-700' 
+                type="button"
+                onClick={() => { setIsEmailLogin(false); setError(''); setSuccessMsg(''); }}
+                className={`flex-1 py-2 text-sm font-medium rounded-xl transition-all ${
+                  !isEmailLogin 
+                    ? 'bg-white dark:bg-zinc-800 text-blue-600 dark:text-blue-400 shadow-sm border border-zinc-200/80 dark:border-zinc-700' 
                     : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'
                 }`}
               >
-                ایمیل
+                ثبت‌نام جدید
               </button>
             </div>
           )}
@@ -366,128 +395,51 @@ export default function AuthModal() {
               </div>
             )}
 
-            {/* Form Container */}
-
-            {authMethod === 'phone' ? (
-              step === 1 ? (
-                <form onSubmit={handleSendOtp} className="space-y-6">
-                  {renderUserInfoFields()}
-                  <div className="mb-4">
-                    <label className="block mb-3 text-sm font-medium text-zinc-700 dark:text-zinc-300">شماره موبایل</label>
-                    <div className="relative">
-                      <Smartphone className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400" size={18} />
-                      <input 
-                        type="tel" 
-                        value={phone}
-                        onChange={e => setPhone(e.target.value)}
-                        className="w-full pl-4 pr-10 py-3 bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/50 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none text-zinc-900 dark:text-zinc-100 text-left font-mono tracking-widest text-lg"
-                        placeholder="۰۹۱۲ ۳۴۵ ۶۷۸۹"
-                        maxLength={11}
-                        required
-                        dir="ltr"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="pt-2">
-                    <GoogleLoginButton 
-                      onSuccess={handleGoogleSuccess} 
-                      onError={() => setError('ورود با گوگل لغو شد یا با خطا مواجه شد.')}
-                      loading={loading}
-                    />
-                  </div>
-
-                  <div className="relative py-2">
-                    <div className="absolute inset-0 flex items-center">
-                      <div className="w-full border-t border-zinc-200 dark:border-zinc-800"></div>
-                    </div>
-                    <div className="relative flex justify-center text-sm">
-                      <span className="px-2 bg-white dark:bg-zinc-900 text-zinc-500 text-xs font-medium">یا با پیامک</span>
-                    </div>
-                  </div>
-
-                  <button 
-                    type="submit" 
-                    disabled={loading || phone.length !== 11}
-                    className="w-full flex items-center justify-center gap-2 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-medium shadow-sm transition-all active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed"
+            {/* Telegram Waiting Screen */}
+            {telegramWaiting ? (
+              <div className="text-center py-5 space-y-4">
+                <div className="w-16 h-16 mx-auto rounded-2xl bg-[#229ED9]/15 flex items-center justify-center text-[#229ED9] animate-pulse shadow-sm">
+                  <svg className="w-9 h-9 fill-current" viewBox="0 0 24 24">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 00-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.74-.55 2.92-1.27 4.86-2.11 5.83-2.51 2.78-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .38z"/>
+                  </svg>
+                </div>
+                <div className="space-y-1">
+                  <h3 className="font-bold text-zinc-900 dark:text-zinc-100 text-base">در انتظار تأیید در تلگرام...</h3>
+                  <p className="text-xs text-zinc-500 dark:text-zinc-400 max-w-xs mx-auto leading-relaxed">
+                    ربات تلگرام باز شد. لطفاً در چت ربات روی دکمه <b>«تایید و ورود به سایت»</b> کلیک کنید.
+                  </p>
+                </div>
+                
+                <div className="flex flex-col gap-2 pt-3">
+                  <a
+                    href={telegramBotUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="w-full py-2.5 bg-[#229ED9] hover:bg-[#1e8ec3] text-white text-sm font-medium rounded-xl shadow-sm transition-all text-center"
                   >
-                    {loading ? <Loader2 size={18} className="animate-spin" /> : null}
-                    ادامه
-                  </button>
-                </form>
-              ) : (
-                <form onSubmit={handleVerifyOtp} className="space-y-6">
-                  {/* Live Preview Card */}
-                  <div className="flex items-center gap-3 p-3 bg-blue-50/50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-800/30 rounded-xl">
-                    <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold uppercase shrink-0">
-                      {name ? name.charAt(0).toUpperCase() : (phone ? phone.slice(-2) : 'U')}
-                    </div>
-                    <div>
-                      <div className="text-sm font-medium text-zinc-900 dark:text-zinc-100">{name || 'کاربر چت‌باکس'}</div>
-                      <div className="text-xs text-zinc-500 font-mono tracking-wider" dir="ltr">{phone}</div>
-                    </div>
-                  </div>
-
-                  <div className="text-sm text-zinc-600 dark:text-zinc-400 mb-2">
-                    کد پیامک شده را وارد کنید:
-                  </div>
-
-                  <div className="space-y-2">
-                    <div className="relative">
-                      <KeyRound className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400" size={18} />
-                      <input 
-                        type="text" 
-                        value={code}
-                        onChange={e => setCode(e.target.value)}
-                        className="w-full pl-4 pr-10 py-3 bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/50 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none text-zinc-900 dark:text-zinc-100 text-center font-mono tracking-[0.5em] text-2xl"
-                        placeholder="•••••"
-                        maxLength={5}
-                        required
-                        dir="ltr"
-                        autoComplete="one-time-code"
-                        autoFocus
-                      />
-                    </div>
-                  </div>
-
-                  <button 
-                    type="submit" 
-                    disabled={loading || code.length !== 5}
-                    className="w-full flex items-center justify-center gap-2 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-medium shadow-sm transition-all active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed"
+                    باز کردن مجدد ربات تلگرام
+                  </a>
+                  <button
+                    type="button"
+                    onClick={() => { setTelegramWaiting(false); setTelegramToken(''); }}
+                    className="w-full py-2 text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300 text-xs font-medium transition-colors"
                   >
-                    {loading ? <Loader2 size={18} className="animate-spin" /> : null}
-                    تایید و ورود
+                    انصراف و بازگشت
                   </button>
-
-                  <div className="text-center pt-2">
-                    {timeLeft > 0 ? (
-                      <span className="text-sm text-zinc-500 dark:text-zinc-400">
-                        ارسال مجدد تا {formatTime(timeLeft)}
-                      </span>
-                    ) : (
-                      <button 
-                        type="button" 
-                        onClick={handleSendOtp}
-                        disabled={loading}
-                        className="text-sm text-blue-600 dark:text-blue-400 font-medium hover:underline disabled:opacity-50"
-                      >
-                        ارسال مجدد کد
-                      </button>
-                    )}
-                  </div>
-                </form>
-              )
+                </div>
+              </div>
             ) : resetToken ? (
-              <form onSubmit={handleResetPasswordSubmit} className="space-y-6">
-                <div className="mb-4">
-                  <label className="block mb-3 text-sm font-medium text-zinc-700 dark:text-zinc-300">رمز عبور جدید</label>
+              /* Reset Password Form */
+              <form onSubmit={handleResetPasswordSubmit} className="space-y-5">
+                <div>
+                  <label className="block mb-2 text-xs font-medium text-zinc-700 dark:text-zinc-300">رمز عبور جدید</label>
                   <div className="relative">
                     <Lock className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400" size={18} />
                     <input 
                       type="password" 
-                      value={password}
+                      value={password} 
                       onChange={e => setPassword(e.target.value)}
-                      className="w-full pl-4 pr-10 py-2.5 bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/50 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none text-zinc-900 dark:text-zinc-100"
+                      className="w-full pl-3 pr-10 py-2.5 bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/50 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none text-zinc-900 dark:text-zinc-100 text-sm"
                       placeholder="حداقل ۶ کاراکتر"
                       required
                       dir="ltr"
@@ -499,26 +451,27 @@ export default function AuthModal() {
                 <button 
                   type="submit" 
                   disabled={loading}
-                  className="w-full flex items-center justify-center gap-2 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-medium shadow-sm transition-all active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed"
+                  className="w-full flex items-center justify-center gap-2 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-medium shadow-sm transition-all active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed text-sm"
                 >
                   {loading ? <Loader2 size={18} className="animate-spin" /> : <Check size={18} />}
                   تایید و تغییر رمز
                 </button>
               </form>
             ) : isForgotPassword ? (
-              <form onSubmit={handleForgotPasswordSubmit} className="space-y-6">
-                <p className="text-sm text-zinc-600 dark:text-zinc-400 mb-4">
-                  ایمیل خود را وارد کنید تا لینک بازیابی رمز عبور برای شما ارسال شود.
+              /* Forgot Password Form */
+              <form onSubmit={handleForgotPasswordSubmit} className="space-y-5">
+                <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
+                  ایمیل حساب خود را وارد کنید تا لینک اختصاصی بازیابی رمز عبور برای شما ارسال شود.
                 </p>
-                <div className="mb-4">
-                  <label className="block mb-3 text-sm font-medium text-zinc-700 dark:text-zinc-300">ایمیل</label>
+                <div>
+                  <label className="block mb-2 text-xs font-medium text-zinc-700 dark:text-zinc-300">ایمیل</label>
                   <div className="relative">
                     <Mail className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400" size={18} />
                     <input 
                       type="email" 
-                      value={email}
+                      value={email} 
                       onChange={e => setEmail(e.target.value)}
-                      className="w-full pl-4 pr-10 py-2.5 bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/50 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none text-zinc-900 dark:text-zinc-100"
+                      className="w-full pl-3 pr-10 py-2.5 bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/50 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none text-zinc-900 dark:text-zinc-100 text-sm"
                       placeholder="example@mail.com"
                       required
                       dir="ltr"
@@ -529,36 +482,61 @@ export default function AuthModal() {
                 <button 
                   type="submit" 
                   disabled={loading}
-                  className="w-full flex items-center justify-center gap-2 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-medium shadow-sm transition-all active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed"
+                  className="w-full flex items-center justify-center gap-2 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-medium shadow-sm transition-all active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed text-sm"
                 >
                   {loading ? <Loader2 size={18} className="animate-spin" /> : <Mail size={18} />}
                   ارسال لینک بازیابی
                 </button>
 
-                <div className="text-center pt-4">
+                <div className="text-center pt-2">
                   <button 
                     type="button" 
                     onClick={() => { setIsForgotPassword(false); setError(''); setSuccessMsg(''); }}
-                    className="text-sm text-zinc-500 dark:text-zinc-400 font-medium hover:text-zinc-800 dark:hover:text-zinc-200 transition-colors"
+                    className="text-xs text-zinc-500 dark:text-zinc-400 font-medium hover:text-zinc-800 dark:hover:text-zinc-200 transition-colors"
                   >
-                    بازگشت به ورود
+                    بازگشت به صفحه ورود
                   </button>
                 </div>
               </form>
             ) : (
-              <form onSubmit={handleEmailSubmit} className="space-y-6">
-                {/* Username and Avatar fields for Email form conditionally based on registration */}
+              /* Main Email / Password Form (Login & Register) */
+              <form onSubmit={handleEmailSubmit} className="space-y-4">
+                {/* 1-Click Social Logins at the top */}
+                <div className="space-y-2.5">
+                  <span className="block text-xs font-medium text-zinc-500 dark:text-zinc-400 text-center">ورود سریع با یک کلیک:</span>
+                  <div className="grid grid-cols-2 gap-2.5">
+                    <GoogleLoginButton 
+                      onSuccess={handleGoogleSuccess} 
+                      onError={() => setError('ورود با گوگل لغو شد یا با خطا مواجه شد.')}
+                      loading={loading}
+                    />
+                    <TelegramLoginButton 
+                      onClick={handleTelegramLogin}
+                      loading={loading}
+                    />
+                  </div>
+                </div>
+
+                <div className="relative my-4">
+                  <div className="absolute inset-0 flex items-center">
+                    <div className="w-full border-t border-zinc-200 dark:border-zinc-800"></div>
+                  </div>
+                  <div className="relative flex justify-center text-xs">
+                    <span className="px-3 bg-white dark:bg-zinc-900 text-zinc-400">یا با ایمیل و رمز عبور</span>
+                  </div>
+                </div>
+
                 {!isEmailLogin && renderUserInfoFields()}
 
-                <div className="mb-4">
-                  <label className="block mb-3 text-sm font-medium text-zinc-700 dark:text-zinc-300">ایمیل</label>
+                <div>
+                  <label className="block mb-1.5 text-xs font-medium text-zinc-700 dark:text-zinc-300">ایمیل</label>
                   <div className="relative">
                     <Mail className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400" size={18} />
                     <input 
                       type="email" 
-                      value={email}
+                      value={email} 
                       onChange={e => setEmail(e.target.value)}
-                      className="w-full pl-4 pr-10 py-2.5 bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/50 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none text-zinc-900 dark:text-zinc-100"
+                      className="w-full pl-3 pr-10 py-2.5 bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/50 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none text-zinc-900 dark:text-zinc-100 text-sm"
                       placeholder="example@mail.com"
                       required
                       dir="ltr"
@@ -566,16 +544,16 @@ export default function AuthModal() {
                   </div>
                 </div>
 
-                <div className="mb-4">
-                  <div className="flex items-center justify-between mb-3">
-                    <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">رمز عبور</label>
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="block text-xs font-medium text-zinc-700 dark:text-zinc-300">رمز عبور</label>
                     {isEmailLogin && (
                       <button 
                         type="button" 
                         onClick={() => { setIsForgotPassword(true); setError(''); setSuccessMsg(''); }}
                         className="text-xs text-blue-600 dark:text-blue-400 hover:underline"
                       >
-                        فراموشی رمز؟
+                        فراموشی رمز عبور؟
                       </button>
                     )}
                   </div>
@@ -583,9 +561,9 @@ export default function AuthModal() {
                     <Lock className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400" size={18} />
                     <input 
                       type="password" 
-                      value={password}
+                      value={password} 
                       onChange={e => setPassword(e.target.value)}
-                      className="w-full pl-4 pr-10 py-2.5 bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/50 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none text-zinc-900 dark:text-zinc-100"
+                      className="w-full pl-3 pr-10 py-2.5 bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/50 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none text-zinc-900 dark:text-zinc-100 text-sm"
                       placeholder="حداقل ۶ کاراکتر"
                       required
                       dir="ltr"
@@ -594,38 +572,21 @@ export default function AuthModal() {
                   </div>
                 </div>
 
-                <div className="pt-2">
-                  <GoogleLoginButton 
-                    onSuccess={handleGoogleSuccess} 
-                    onError={() => setError('ورود با گوگل لغو شد یا با خطا مواجه شد.')}
-                    loading={loading}
-                  />
-                </div>
-
-                <div className="relative py-2">
-                  <div className="absolute inset-0 flex items-center">
-                    <div className="w-full border-t border-zinc-200 dark:border-zinc-800"></div>
-                  </div>
-                  <div className="relative flex justify-center text-sm">
-                    <span className="px-2 bg-white dark:bg-zinc-900 text-zinc-500 text-xs font-medium">یا ثبت/ورود با ایمیل</span>
-                  </div>
-                </div>
-
                 <button 
                   type="submit" 
                   disabled={loading}
-                  className="w-full flex items-center justify-center gap-2 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-medium shadow-sm transition-all active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed"
+                  className="w-full flex items-center justify-center gap-2 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-medium shadow-sm transition-all active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed text-sm mt-2"
                 >
                   {loading ? <Loader2 size={18} className="animate-spin" /> : (isEmailLogin ? <LogIn size={18} /> : <UserPlus size={18} />)}
-                  {isEmailLogin ? 'ورود' : 'ثبت‌نام'}
+                  {isEmailLogin ? 'ورود به حساب کاربری' : 'تکمیل ثبت‌نام'}
                 </button>
 
-                <div className="text-center pt-4 text-sm text-zinc-500 dark:text-zinc-400">
+                <div className="text-center pt-3 text-xs text-zinc-500 dark:text-zinc-400">
                   {isEmailLogin ? 'حساب کاربری ندارید؟ ' : 'قبلاً ثبت‌نام کرده‌اید؟ '}
                   <button 
                     type="button" 
                     onClick={() => { setIsEmailLogin(!isEmailLogin); setError(''); setSuccessMsg(''); }}
-                    className="text-blue-600 dark:text-blue-400 font-medium hover:underline"
+                    className="text-blue-600 dark:text-blue-400 font-semibold hover:underline"
                   >
                     {isEmailLogin ? 'ثبت‌نام کنید' : 'وارد شوید'}
                   </button>
