@@ -1,4 +1,6 @@
 import express from 'express';
+import fs from 'fs';
+import path from 'path';
 import db from '../db/database';
 import { requireAuth, requireAdmin } from '../middleware/auth';
 import { bot } from '../telegram/bot';
@@ -97,6 +99,23 @@ router.delete('/:id', requireAuth, requireAdmin, (req, res) => {
   } catch (error) {
     console.error('[News API] Error deleting news:', error);
     res.status(500).json({ error: 'خطا در حذف خبر' });
+  }
+});
+
+// GET /api/news/admin/cron-logs (Admin: Get latest bot logs)
+router.get('/admin/cron-logs', requireAuth, requireAdmin, (req, res) => {
+  try {
+    const logPath = path.join(process.cwd(), 'server', 'data', 'news-cron.log');
+    if (!fs.existsSync(logPath)) {
+      return res.json({ logs: 'هنوز فایلی ثبت نشده است.' });
+    }
+    const content = fs.readFileSync(logPath, 'utf8');
+    const lines = content.trim().split('\n');
+    const recent = lines.slice(-200).join('\n');
+    res.json({ logs: recent });
+  } catch (error) {
+    console.error('[News API] Error reading cron logs:', error);
+    res.status(500).json({ error: 'خطا در خواندن فایل لاگ' });
   }
 });
 
