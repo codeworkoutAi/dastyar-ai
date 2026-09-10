@@ -806,6 +806,75 @@ export const MessageInput: React.FC = React.memo(() => {
         {/* Input Frame */}
         <div className={`relative flex items-end gap-2 sm:gap-3 bg-zinc-100 dark:bg-zinc-800/90 rounded-[32px] p-1.5 sm:p-2 shadow-sm border border-zinc-200 dark:border-white/5 transition-all focus-within:ring-2 focus-within:ring-white/10 ${isStreaming ? 'opacity-80' : ''}`}>
           
+          {/* Floating Compact Image Engine Pill Bar */}
+          {showImageEngineModal && (
+            <div 
+              className="absolute bottom-full right-0 left-0 mb-2 z-[70] flex items-center justify-between gap-1.5 px-3 py-2 rounded-2xl bg-white/95 dark:bg-zinc-900/95 backdrop-blur-xl border border-zinc-200/90 dark:border-white/10 shadow-xl animate-in fade-in slide-in-from-bottom-2 duration-200 select-none" 
+              dir="rtl"
+            >
+              <div className="flex items-center gap-1.5 overflow-x-auto py-0.5 custom-scrollbar min-w-0 flex-1">
+                <div className="flex items-center gap-1 text-[11px] font-bold text-zinc-500 dark:text-zinc-400 shrink-0 ml-1">
+                  <StarsMinimalisticBoldIcon className="w-3.5 h-3.5 text-purple-500" />
+                  <span className="hidden sm:inline">موتور تصویر:</span>
+                </div>
+
+                {/* Sana NVIDIA */}
+                <button 
+                  type="button"
+                  onClick={() => confirmImageGen('sana')}
+                  className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:hover:bg-emerald-900/60 border border-emerald-300/60 dark:border-emerald-700/50 text-emerald-700 dark:text-emerald-300 text-xs font-bold transition-all shrink-0 hover:scale-[1.02] active:scale-95 shadow-sm cursor-pointer"
+                  title="مدل نسل جدید انویدیا با رزولوشن بالا و سرعت آنی"
+                >
+                  <span>⚡ Sana (NVIDIA)</span>
+                  <span className="text-[9px] bg-emerald-500 text-white px-1 py-0.2 rounded font-medium">رایگان</span>
+                </button>
+
+                {/* Flux.1 */}
+                <button 
+                  type="button"
+                  onClick={() => confirmImageGen('flux')}
+                  className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/40 dark:hover:bg-blue-900/60 border border-blue-300/60 dark:border-blue-700/50 text-blue-700 dark:text-blue-300 text-xs font-bold transition-all shrink-0 hover:scale-[1.02] active:scale-95 shadow-sm cursor-pointer"
+                  title="کیفیت عالی، طبیعی و واقع‌گرایانه"
+                >
+                  <span>🎨 Flux.1 Realism</span>
+                  <span className="text-[9px] bg-blue-500 text-white px-1 py-0.2 rounded font-medium">رایگان</span>
+                </button>
+
+                {/* DALL-E 3 */}
+                <button 
+                  type="button"
+                  onClick={() => confirmImageGen('dalle-3')}
+                  className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/40 dark:hover:bg-amber-900/60 border border-amber-300/60 dark:border-amber-700/50 text-amber-700 dark:text-amber-300 text-xs font-bold transition-all shrink-0 hover:scale-[1.02] active:scale-95 shadow-sm cursor-pointer"
+                  title="هوش بالا - نیازمند کلید OpenAI"
+                >
+                  <span>💎 DALL-E 3</span>
+                  <span className="text-[9px] bg-amber-500 text-white px-1 py-0.2 rounded font-medium">VIP</span>
+                </button>
+
+                {/* Imagen 3 */}
+                <button 
+                  type="button"
+                  onClick={() => confirmImageGen('imagen-3')}
+                  className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-purple-50 hover:bg-purple-100 dark:bg-purple-950/40 dark:hover:bg-purple-900/60 border border-purple-300/60 dark:border-purple-700/50 text-purple-700 dark:text-purple-300 text-xs font-bold transition-all shrink-0 hover:scale-[1.02] active:scale-95 shadow-sm cursor-pointer"
+                  title="کیفیت استودیو گوگل - رسمی"
+                >
+                  <span>🔷 Imagen 3</span>
+                  <span className="text-[9px] bg-purple-500 text-white px-1 py-0.2 rounded font-medium">گوگل</span>
+                </button>
+              </div>
+
+              {/* Dismiss button */}
+              <button 
+                type="button"
+                onClick={() => setShowImageEngineModal(false)}
+                className="p-1 rounded-lg text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-white/10 transition-colors shrink-0 cursor-pointer mr-1"
+                title="بستن"
+              >
+                <X size={15} />
+              </button>
+            </div>
+          )}
+          
           {/* Right actions (Attachment, Image Gen) */}
           <div className="flex items-center gap-0.5 pb-0.5 sm:pb-1 border-none outline-none">
             <div className="relative">
@@ -1056,54 +1125,7 @@ export const MessageInput: React.FC = React.memo(() => {
         onClose={() => setIsCameraModalOpen(false)}
         onCapture={handleCameraModalCapture}
       />
-      {showImageEngineModal && createPortal(
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in" onClick={() => setShowImageEngineModal(false)}>
-          <div className="bg-[#1e1e1e] border border-white/10 rounded-2xl p-5 w-full max-w-sm shadow-2xl flex flex-col gap-3 relative" onClick={e => e.stopPropagation()} dir="rtl">
-            <button onClick={() => setShowImageEngineModal(false)} className="absolute top-3 left-3 p-1.5 rounded-full hover:bg-white/10 text-white/70 hover:text-white transition-colors">
-              <X size={18} />
-            </button>
-            
-            <h3 className="text-white text-base font-bold pr-1">انتخاب هوش مصنوعی تصویرساز</h3>
-            <p className="text-gray-400 text-xs pr-1 -mt-2">برای تولید این تصویر از کدام موتور استفاده شود؟</p>
-            
-            <div className="flex flex-col gap-2 mt-1">
-              <button 
-                onClick={() => confirmImageGen('flux')}
-                className="flex items-center justify-between p-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 hover:border-blue-500/30 transition-all text-right group"
-              >
-                <div>
-                  <div className="text-white font-medium text-sm flex items-center gap-1.5">Flux.1 Realism <StarsMinimalisticBoldIcon className="text-blue-400 opacity-0 group-hover:opacity-100 transition-opacity" size={14} /></div>
-                  <div className="text-[10px] text-gray-400 mt-0.5">رایگان و سریع - کیفیت عالی</div>
-                </div>
-                <span className="px-1.5 py-0.5 bg-green-500/10 text-green-400 text-[9px] font-bold rounded-full border border-green-500/20">رایگان</span>
-              </button>
 
-              <button 
-                onClick={() => confirmImageGen('dalle-3')}
-                className="flex items-center justify-between p-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 hover:border-amber-500/30 transition-all text-right group"
-              >
-                <div>
-                  <div className="text-white font-medium text-sm flex items-center gap-1.5">DALL-E 3 <StarsMinimalisticBoldIcon className="text-amber-400 opacity-0 group-hover:opacity-100 transition-opacity" size={14} /></div>
-                  <div className="text-[10px] text-gray-400 mt-0.5">هوش بالا - نیازمند API OpenAI</div>
-                </div>
-                <span className="px-1.5 py-0.5 bg-amber-500/10 text-amber-400 text-[9px] font-bold rounded-full border border-amber-500/20">وی‌آی‌پی</span>
-              </button>
-
-              <button 
-                onClick={() => confirmImageGen('imagen-3')}
-                className="flex items-center justify-between p-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 hover:border-blue-500/30 transition-all text-right group"
-              >
-                <div>
-                  <div className="text-white font-medium text-sm flex items-center gap-1.5">Imagen 3 (Gemini) <StarsMinimalisticBoldIcon className="text-blue-400 opacity-0 group-hover:opacity-100 transition-opacity" size={14} /></div>
-                  <div className="text-[10px] text-gray-400 mt-0.5">کیفیت استودیو گوگل - نیازمند API</div>
-                </div>
-                <span className="px-1.5 py-0.5 bg-blue-500/10 text-blue-400 text-[9px] font-bold rounded-full border border-blue-500/20">رسمی گوگل</span>
-              </button>
-            </div>
-          </div>
-        </div>,
-        document.body
-      )}
     </div>
   );
 });
