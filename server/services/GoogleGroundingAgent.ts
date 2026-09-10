@@ -71,8 +71,9 @@ export class GoogleGroundingAgent {
 فقط در اینترنت جستجو کنید و مهم‌ترین فکت‌ها، داده‌ها، قیمت‌ها یا اخبار زنده را در قالب چند بولت‌پوینتِ بسیار کوتاه (تیتروار) لیست کنید.
 به هیچ وجه مقدمه، موخره یا پاراگراف طولانی ننویسید تا زمان پردازش حداقل شود. سرعت اولویت اول است!`;
 
+      const model = process.env.GEMINI_GROUNDING_MODEL || 'gemini-2.0-flash';
       const response = await ai.models.generateContent({
-        model: 'gemini-3.6-flash',
+        model,
         contents: [{ role: 'user', parts: [{ text: prompt }] }],
         config: {
           tools: [{ googleSearch: {} }],

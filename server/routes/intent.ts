@@ -76,7 +76,7 @@ Do not wrap in markdown. Raw JSON only.`;
     if (provider === 'gemini') {
       const ai = getGeminiClient(apiConfig?.[provider]?.apiKey);
       // We force a fast, non-thinking model for Intent Routing to prevent <think> tags from breaking JSON
-      let modelName = 'gemini-3.6-flash';
+      let modelName = process.env.GEMINI_INTENT_MODEL || 'gemini-2.0-flash';
       
       const response = await ai.models.generateContent({
         model: modelName,
@@ -176,7 +176,7 @@ Do not wrap in markdown. Raw JSON only.`;
       });
 
       if (!response.ok) {
-        return res.json({ webSearch: false, intent: 'general' });
+        return res.json(parseLLMJsonResponse('', userText));
       }
 
       const data = await response.json();
@@ -191,7 +191,7 @@ Do not wrap in markdown. Raw JSON only.`;
     }
   } catch (err) {
     console.error('[Intent Router] Error:', err);
-    return res.json({ webSearch: false, intent: 'general' });
+    return res.json(parseLLMJsonResponse('', userText));
   }
 });
 
