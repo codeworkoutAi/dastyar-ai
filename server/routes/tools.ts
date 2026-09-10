@@ -1,13 +1,32 @@
 import express from 'express';
 import { Modality } from '@google/genai';
+import db from '../db/database';
 import { getGeminiClient, sanitizeErrorMessage, getPollinationsImageUrl, translateAndEnhanceImagePrompt } from '../services/utils';
 
 const router = express.Router();
 
 router.post('/api/fetch-models', async (req, res) => {
   try {
-    const { baseUrl, apiKey, customHeaders } = req.body;
+    let { baseUrl, apiKey, customHeaders, profileId } = req.body;
     if (!baseUrl) return res.status(400).json({ error: 'Base URL is required' });
+
+    // Look up stored API key for default profile if not explicitly passed
+    if (!apiKey && profileId) {
+      try {
+        const row = db.prepare('SELECT apiKey FROM default_profiles WHERE id = ?').get(profileId) as any;
+        if (row?.apiKey) apiKey = row.apiKey;
+      } catch {}
+    }
+
+    // Fallback to server env keys for known providers if still empty
+    if (!apiKey) {
+      const bUrl = baseUrl.toLowerCase();
+      if (bUrl.includes('api.groq.com')) {
+        apiKey = process.env.DEFAULT_GROQ_KEY || process.env.GROQ_API_KEY || '';
+      } else if (bUrl.includes('generativelanguage.googleapis.com')) {
+        apiKey = process.env.DEFAULT_GEMINI_KEY || process.env.GEMINI_API_KEY || '';
+      }
+    }
 
     const headers: any = { 
       'Content-Type': 'application/json',
@@ -22,8 +41,15 @@ router.post('/api/fetch-models', async (req, res) => {
       } catch (e) {}
     }
 
-    // Try to normalize endpoint
-    const endpoint = baseUrl.replace(/\/v1\/?$/, '') + '/v1/models';
+    // Smart endpoint normalization
+    let endpoint = baseUrl.trim().replace(/\/+$/, '');
+    if (endpoint.endsWith('/models')) {
+      // already points to models
+    } else if (endpoint.endsWith('/openai') || endpoint.endsWith('/v1')) {
+      endpoint = `${endpoint}/models`;
+    } else {
+      endpoint = `${endpoint}/models`;
+    }
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 10000);
 

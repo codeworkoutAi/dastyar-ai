@@ -117,6 +117,12 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
   const [testingProfileId, setTestingProfileId] = useState<string | null>(null);
   const [testResult, setTestResult] = useState<{ id: string; success: boolean; message: string; latencyMs?: number } | null>(null);
 
+  // Fetch Models for Admin State
+  const [fetchingModelsForAdmin, setFetchingModelsForAdmin] = useState(false);
+  const [fetchedModelsList, setFetchedModelsList] = useState<any[]>([]);
+  const [adminModelSearchQuery, setAdminModelSearchQuery] = useState('');
+  const [fetchModelsMessage, setFetchModelsMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
   const formRef = useRef<HTMLDivElement>(null);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>, type: 'image' | 'banner' = 'image') => {
@@ -159,6 +165,9 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
     setProfileFormIsActive(true);
     setEditingDefaultProfile(null);
     setIsAddingDefaultProfile(false);
+    setFetchedModelsList([]);
+    setAdminModelSearchQuery('');
+    setFetchModelsMessage(null);
   };
 
   const openEditDefaultProfile = (profile: any) => {
@@ -172,6 +181,61 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
     setProfileFormRole(profile.role || 'default');
     setProfileFormOrderIndex(profile.orderIndex || 0);
     setProfileFormIsActive(profile.isActive === 1);
+    setFetchedModelsList([]);
+    setAdminModelSearchQuery('');
+    setFetchModelsMessage(null);
+  };
+
+  const handleFetchModelsForAdmin = async () => {
+    if (!profileFormBaseUrl.trim()) {
+      alert('لطفاً ابتدا آدرس پایه اندپوینت (Base URL) را وارد کنید.');
+      return;
+    }
+
+    try {
+      setFetchingModelsForAdmin(true);
+      setFetchModelsMessage(null);
+
+      const res = await fetch('/api/fetch-models', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          baseUrl: profileFormBaseUrl.trim(),
+          apiKey: profileFormApiKey.trim() || undefined,
+          customHeaders: profileFormCustomHeaders.trim() || undefined,
+          profileId: editingDefaultProfile?.id
+        })
+      });
+
+      const data = await res.json();
+      if (res.ok && data.models && Array.isArray(data.models)) {
+        setFetchedModelsList(data.models);
+        setFetchModelsMessage({
+          type: 'success',
+          text: `تعداد ${data.models.length} مدل با موفقیت از ارائه‌دهنده دریافت شد.`
+        });
+      } else {
+        throw new Error(data.error || 'خطا در دریافت مدل‌ها از سرور');
+      }
+    } catch (err: any) {
+      setFetchModelsMessage({
+        type: 'error',
+        text: err.message || 'خطا در ارتباط با ارائه‌دهنده'
+      });
+    } finally {
+      setFetchingModelsForAdmin(false);
+    }
+  };
+
+  const handleSelectAdminModel = (modelId: string, modelObj?: any) => {
+    setProfileFormModelName(modelId);
+    if (!profileFormName.trim() || profileFormName === 'کارت جدید' || profileFormName.includes('(رایگان)')) {
+      const cleanName = modelObj?.name || modelId.split('/').pop() || modelId;
+      setProfileFormName(`${cleanName} (رایگان)`);
+    }
   };
 
   const handleSaveDefaultProfile = async (e: React.FormEvent) => {
@@ -1093,18 +1157,41 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
                       </div>
 
                       <div>
-                        <label className="block text-zinc-700 dark:text-zinc-300 font-bold mb-1.5">
-                          شناسه مدل (Model Name) <span className="text-red-500">*</span>
-                        </label>
-                        <input
-                          type="text"
-                          value={profileFormModelName}
-                          onChange={(e) => setProfileFormModelName(e.target.value)}
-                          placeholder="مثال: qwen/qwen3.6-27b یا gemini-3.1-flash-lite"
-                          className="w-full px-3.5 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-blue-500 transition-colors"
-                          dir="ltr"
-                          required
-                        />
+                        <div className="flex items-center justify-between mb-1.5">
+                          <label className="text-zinc-700 dark:text-zinc-300 font-bold">
+                            شناسه مدل (Model Name) <span className="text-red-500">*</span>
+                          </label>
+                          <button
+                            type="button"
+                            onClick={handleFetchModelsForAdmin}
+                            disabled={fetchingModelsForAdmin}
+                            className="text-[11px] text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-bold flex items-center gap-1 cursor-pointer disabled:opacity-50"
+                            title="دریافت خودکار مدل‌ها از روی API Key و Base URL"
+                          >
+                            <RefreshCw className={`w-3 h-3 ${fetchingModelsForAdmin ? 'animate-spin' : ''}`} />
+                            <span>فچ مدل‌ها</span>
+                          </button>
+                        </div>
+                        <div className="flex gap-2">
+                          <input
+                            type="text"
+                            value={profileFormModelName}
+                            onChange={(e) => setProfileFormModelName(e.target.value)}
+                            placeholder="مثال: qwen/qwen3.6-27b یا gemini-3.1-flash-lite"
+                            className="flex-1 px-3.5 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-blue-500 transition-colors font-mono"
+                            dir="ltr"
+                            required
+                          />
+                          <button
+                            type="button"
+                            onClick={handleFetchModelsForAdmin}
+                            disabled={fetchingModelsForAdmin}
+                            className="px-3 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-700 text-blue-600 dark:text-blue-400 transition-colors flex items-center justify-center shrink-0"
+                            title="دریافت خودکار لیست مدل‌ها از روی API Key"
+                          >
+                            <RefreshCw className={`w-4 h-4 ${fetchingModelsForAdmin ? 'animate-spin' : ''}`} />
+                          </button>
+                        </div>
                       </div>
 
                       <div>
@@ -1194,6 +1281,103 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
                         />
                       </div>
                     </div>
+
+                    {/* Fetch Models Feedback Message */}
+                    {fetchModelsMessage && (
+                      <div className={`p-3 rounded-xl text-xs flex items-center justify-between gap-2 animate-fadeIn ${
+                        fetchModelsMessage.type === 'success'
+                          ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20'
+                          : 'bg-red-500/10 text-red-700 dark:text-red-300 border border-red-500/20'
+                      }`}>
+                        <div className="flex items-center gap-1.5">
+                          {fetchModelsMessage.type === 'success' ? (
+                            <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-500" />
+                          ) : (
+                            <AlertCircle className="w-4 h-4 shrink-0 text-red-500" />
+                          )}
+                          <span>{fetchModelsMessage.text}</span>
+                        </div>
+                        {fetchedModelsList.length > 0 && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setFetchedModelsList([]);
+                              setFetchModelsMessage(null);
+                            }}
+                            className="text-[11px] underline opacity-80 hover:opacity-100 cursor-pointer"
+                          >
+                            بستن لیست
+                          </button>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Fetched Models Browser with Search */}
+                    {fetchedModelsList.length > 0 && (
+                      <div className="p-4 rounded-2xl bg-white dark:bg-zinc-850 border border-blue-200 dark:border-blue-900/50 shadow-sm space-y-3 animate-fadeIn">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-bold text-zinc-800 dark:text-zinc-200 flex items-center gap-1.5">
+                              <Sparkles className="w-3.5 h-3.5 text-blue-500" />
+                              مدل‌های دریافت شده ({fetchedModelsList.length})
+                            </span>
+                            <span className="text-[11px] text-zinc-500">
+                              (برای انتخاب روی مدل کلیک کنید)
+                            </span>
+                          </div>
+                          
+                          <div className="relative flex-1 max-w-xs">
+                            <Search className="w-3.5 h-3.5 absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 pointer-events-none" />
+                            <input
+                              type="text"
+                              value={adminModelSearchQuery}
+                              onChange={(e) => setAdminModelSearchQuery(e.target.value)}
+                              placeholder="جستجوی مدل..."
+                              className="w-full pr-8 pl-3 py-1.5 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-900 text-xs text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-blue-500"
+                              dir="ltr"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="max-h-52 overflow-y-auto custom-scrollbar grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 pt-1" dir="ltr">
+                          {fetchedModelsList
+                            .filter(m => {
+                              if (!adminModelSearchQuery.trim()) return true;
+                              const q = adminModelSearchQuery.toLowerCase().trim();
+                              const id = (m.id || '').toLowerCase();
+                              const name = (m.name || '').toLowerCase();
+                              return id.includes(q) || name.includes(q);
+                            })
+                            .map((m) => {
+                              const isSelected = profileFormModelName === m.id;
+                              return (
+                                <button
+                                  key={m.id}
+                                  type="button"
+                                  onClick={() => handleSelectAdminModel(m.id, m)}
+                                  className={`p-2.5 rounded-xl border text-left transition-all flex flex-col justify-between gap-1 group ${
+                                    isSelected
+                                      ? 'bg-blue-500/10 border-blue-500 text-blue-600 dark:text-blue-400 shadow-sm'
+                                      : 'bg-zinc-50 dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 hover:border-blue-400 dark:hover:border-blue-500/50 hover:bg-blue-50/40 dark:hover:bg-zinc-800'
+                                  }`}
+                                >
+                                  <div className="flex items-center justify-between gap-1 w-full">
+                                    <span className="font-mono text-xs font-bold truncate text-zinc-800 dark:text-zinc-200 group-hover:text-blue-500" title={m.id}>
+                                      {m.id}
+                                    </span>
+                                    {isSelected && <Check className="w-3.5 h-3.5 text-blue-500 shrink-0" />}
+                                  </div>
+                                  {m.name && m.name !== m.id && (
+                                    <span className="text-[10px] text-zinc-500 truncate" title={m.name}>
+                                      {m.name}
+                                    </span>
+                                  )}
+                                </button>
+                              );
+                            })}
+                        </div>
+                      </div>
+                    )}
 
                     <div className="flex items-center justify-end gap-3 pt-3 border-t border-zinc-200 dark:border-zinc-800">
                       <button
