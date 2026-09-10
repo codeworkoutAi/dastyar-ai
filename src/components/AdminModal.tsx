@@ -87,6 +87,12 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
   const [newsContent, setNewsContent] = useState('');
   const [newsImage, setNewsImage] = useState<string>('');
   const [isAddingNews, setIsAddingNews] = useState(false);
+  const [editingNews, setEditingNews] = useState<any | null>(null);
+  const [editNewsTitle, setEditNewsTitle] = useState('');
+  const [editNewsContent, setEditNewsContent] = useState('');
+  const [editNewsImage, setEditNewsImage] = useState<string>('');
+  const [editNewsRebroadcast, setEditNewsRebroadcast] = useState(false);
+  const [editNewsLoading, setEditNewsLoading] = useState(false);
 
   const formRef = useRef<HTMLDivElement>(null);
 
@@ -374,6 +380,74 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
         setNewsImage(reader.result as string);
       };
       reader.readAsDataURL(file);
+    }
+  };
+
+  const startEditNews = (item: any) => {
+    setEditingNews(item);
+    setEditNewsTitle(item.title || '');
+    setEditNewsContent(item.content || '');
+    setEditNewsImage(item.image || '');
+    setEditNewsRebroadcast(false);
+    setIsAddingNews(false);
+    setError(null);
+  };
+
+  const cancelEditNews = () => {
+    setEditingNews(null);
+    setEditNewsTitle('');
+    setEditNewsContent('');
+    setEditNewsImage('');
+    setEditNewsRebroadcast(false);
+  };
+
+  const handleEditNewsImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setEditNewsImage(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleUpdateNews = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingNews) return;
+    if (!editNewsTitle.trim() || !editNewsContent.trim()) {
+      setError('عنوان و متن خبر اجباری است');
+      return;
+    }
+
+    try {
+      setError(null);
+      setEditNewsLoading(true);
+      const res = await fetch(`/api/news/${editingNews.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          title: editNewsTitle.trim(),
+          content: editNewsContent.trim(),
+          image: editNewsImage,
+          rebroadcastTelegram: editNewsRebroadcast
+        })
+      });
+
+      if (!res.ok) {
+        const d = await res.json();
+        throw new Error(d.error || 'خطا در ویرایش خبر');
+      }
+
+      cancelEditNews();
+      await fetchNews();
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setEditNewsLoading(false);
     }
   };
 
@@ -1127,7 +1201,10 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
                 <h3 className="text-lg font-bold text-zinc-800 dark:text-zinc-200">مدیریت اخبار و مقالات</h3>
                 <button 
-                  onClick={() => setIsAddingNews(!isAddingNews)}
+                  onClick={() => {
+                    setIsAddingNews(!isAddingNews);
+                    if (!isAddingNews) setEditingNews(null);
+                  }}
                   className="flex items-center gap-2 px-4 py-2 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 text-sm font-bold rounded-xl hover:opacity-90 transition-opacity"
                 >
                   <AddSquareOutlineIcon className="w-4 h-4" />
@@ -1138,6 +1215,109 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
               {error && (
                 <div className="mb-6 p-4 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-900/50 text-red-600 dark:text-red-400 text-sm font-bold">
                   {error}
+                </div>
+              )}
+
+              {/* Edit News Form */}
+              {editingNews && (
+                <div className="mb-8 p-6 rounded-2xl bg-white dark:bg-zinc-900 border-2 border-blue-500/40 dark:border-blue-500/30 shadow-lg animate-fadeIn">
+                  <div className="flex items-center justify-between pb-4 mb-5 border-b border-zinc-100 dark:border-zinc-800">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400">
+                        <Edit2 size={18} />
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-zinc-900 dark:text-zinc-100 text-sm sm:text-base">
+                          ویرایش خبر #{editingNews.id}
+                        </h4>
+                        <span className="text-[11px] text-zinc-400">عنوان فعلی: {editingNews.title}</span>
+                      </div>
+                    </div>
+                    <button 
+                      type="button" 
+                      onClick={cancelEditNews}
+                      className="p-1.5 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+                      title="انصراف و بستن"
+                    >
+                      <X size={18} />
+                    </button>
+                  </div>
+
+                  <form onSubmit={handleUpdateNews} className="flex flex-col gap-5">
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-bold text-zinc-600 dark:text-zinc-400">عنوان خبر</label>
+                      <input 
+                        type="text" 
+                        value={editNewsTitle}
+                        onChange={(e) => setEditNewsTitle(e.target.value)}
+                        className="w-full px-4 py-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/50 focus:border-blue-500 outline-none transition-all font-medium text-sm text-zinc-800 dark:text-zinc-100"
+                        placeholder="عنوان جدید خبر..."
+                      />
+                    </div>
+                    
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-bold text-zinc-600 dark:text-zinc-400">متن کامل خبر (پشتیبانی از پاراگراف‌بندی و مارک‌داون)</label>
+                      <textarea 
+                        value={editNewsContent}
+                        onChange={(e) => setEditNewsContent(e.target.value)}
+                        className="w-full px-4 py-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/50 focus:border-blue-500 outline-none transition-all min-h-[160px] text-sm text-zinc-800 dark:text-zinc-100 leading-relaxed custom-scrollbar"
+                        placeholder="متن کامل مقاله یا خبر..."
+                      />
+                    </div>
+
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-bold text-zinc-600 dark:text-zinc-400">تصویر کاور خبر</label>
+                      <div className="flex items-center gap-4">
+                        <label className="flex-1 px-4 py-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/50 text-sm cursor-pointer text-center hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors">
+                          <span>انتخاب یا تغییر تصویر</span>
+                          <input type="file" accept="image/*" className="hidden" onChange={handleEditNewsImageChange} />
+                        </label>
+                        {editNewsImage && (
+                          <div className="relative w-16 h-16 rounded-xl overflow-hidden shrink-0 border border-zinc-200 dark:border-zinc-700 shadow-sm">
+                            <img src={editNewsImage} className="w-full h-full object-cover" />
+                            <button 
+                              type="button" 
+                              onClick={() => setEditNewsImage('')} 
+                              className="absolute top-1 right-1 bg-red-500/90 hover:bg-red-600 text-white w-5 h-5 rounded-full flex items-center justify-center text-[10px] shadow"
+                              title="حذف کاور"
+                            >
+                              ✕
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 p-3 bg-blue-50/60 dark:bg-blue-950/20 rounded-xl border border-blue-100 dark:border-blue-900/30">
+                      <input 
+                        type="checkbox" 
+                        id="rebroadcastTelegram" 
+                        checked={editNewsRebroadcast} 
+                        onChange={(e) => setEditNewsRebroadcast(e.target.checked)}
+                        className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 cursor-pointer" 
+                      />
+                      <label htmlFor="rebroadcastTelegram" className="text-xs font-bold text-zinc-700 dark:text-zinc-300 cursor-pointer select-none">
+                        ارسال مجدد این خبر به کانال تلگرام پس از ذخیره تغییرات
+                      </label>
+                    </div>
+
+                    <div className="flex items-center justify-end gap-3 pt-2">
+                      <button 
+                        type="button" 
+                        onClick={cancelEditNews}
+                        className="px-5 py-2.5 rounded-xl border border-zinc-300 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 font-bold text-sm hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+                      >
+                        انصراف
+                      </button>
+                      <button 
+                        type="submit" 
+                        disabled={editNewsLoading} 
+                        className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition-colors disabled:opacity-50 text-sm shadow-sm flex items-center gap-2"
+                      >
+                        {editNewsLoading ? 'در حال ذخیره...' : 'ذخیره تغییرات'}
+                      </button>
+                    </div>
+                  </form>
                 </div>
               )}
 
@@ -1199,9 +1379,20 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {news.map(n => (
-                    <div key={n.id} className="flex flex-col bg-white dark:bg-zinc-800 rounded-2xl border border-zinc-200 dark:border-zinc-700 overflow-hidden relative">
-                      <div className="absolute top-2 left-2 z-10">
-                        <button onClick={() => handleDeleteNews(n.id)} className="p-1.5 bg-white/80 dark:bg-black/50 text-red-500 rounded-lg backdrop-blur-sm">
+                    <div key={n.id} className="flex flex-col bg-white dark:bg-zinc-800 rounded-2xl border border-zinc-200 dark:border-zinc-700 overflow-hidden relative group">
+                      <div className="absolute top-2 left-2 z-10 flex items-center gap-1.5">
+                        <button 
+                          onClick={() => startEditNews(n)} 
+                          className="p-1.5 bg-white/90 hover:bg-white dark:bg-black/60 dark:hover:bg-black/80 text-blue-600 dark:text-blue-400 rounded-lg backdrop-blur-sm transition-all shadow-sm"
+                          title="ویرایش خبر"
+                        >
+                          <Edit2 size={16} />
+                        </button>
+                        <button 
+                          onClick={() => handleDeleteNews(n.id)} 
+                          className="p-1.5 bg-white/90 hover:bg-white dark:bg-black/60 dark:hover:bg-black/80 text-red-500 rounded-lg backdrop-blur-sm transition-all shadow-sm"
+                          title="حذف خبر"
+                        >
                           <Trash2 size={16} />
                         </button>
                       </div>

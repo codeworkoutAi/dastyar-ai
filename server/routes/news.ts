@@ -45,48 +45,84 @@ router.get('/:id', (req, res) => {
   }
 });
 
+import { sendNewsToTelegram } from '../services/newsCron';
+
 // POST /api/news (Admin: Create news and broadcast to Telegram)
 router.post('/', requireAuth, requireAdmin, async (req, res) => {
   try {
-    const { title, content, image } = req.body;
+    const { title, content, image, tags, rebroadcastTelegram } = req.body;
     
     if (!title || !content) {
       return res.status(400).json({ error: 'عنوان و متن خبر الزامی است' });
     }
 
-    const insertStmt = db.prepare('INSERT INTO news (title, content, image) VALUES (?, ?, ?)');
-    const info = insertStmt.run(title, content, image || null);
+    const tagsJson = Array.isArray(tags) ? JSON.stringify(tags) : (typeof tags === 'string' && tags ? tags : '[]');
+    const insertStmt = db.prepare('INSERT INTO news (title, content, image, tags) VALUES (?, ?, ?, ?)');
+    const info = insertStmt.run(title, content, image || null, tagsJson);
+    const newId = Number(info.lastInsertRowid);
 
     // Broadcast to Telegram Channel
     const channelId = process.env.TELEGRAM_CHANNEL_ID;
-    if (bot && channelId) {
-      const baseUrl = process.env.WEB_URL || 'http://localhost:5173';
-      const articleUrl = `${baseUrl}/blog`; // We can point to the specific article later if we use routing like /blog/:id
-      
-      const messageText = `📰 **${title}**\n\n` + 
-                          `${content.substring(0, 150)}...\n\n` +
-                          `🔗 [مطالعه کامل در سایت](${articleUrl})`;
-      
+    if (rebroadcastTelegram !== false && bot && channelId) {
       try {
-        if (image) {
-          // If image is a base64 string, we might need to handle it differently, 
-          // but if it's a URL, sendPhoto works perfectly.
-          // For now, assuming base64 or URL, Telegraf handles URLs easily.
-          // If it's a massive base64, it might fail. We will just send message for now.
-          await bot.telegram.sendMessage(channelId, messageText, { parse_mode: 'Markdown' });
-        } else {
-          await bot.telegram.sendMessage(channelId, messageText, { parse_mode: 'Markdown' });
-        }
+        await sendNewsToTelegram(channelId, bot, {
+          id: newId,
+          title,
+          content,
+          image: image || ''
+        });
       } catch (tgError) {
         console.error('[News API] Telegram broadcast failed:', tgError);
-        // Do not throw, just log the error so the news is still created in the DB
       }
     }
 
-    res.json({ message: 'خبر با موفقیت منتشر شد', id: info.lastInsertRowid });
+    res.json({ message: 'خبر با موفقیت منتشر شد', id: newId });
   } catch (error) {
     console.error('[News API] Error creating news:', error);
     res.status(500).json({ error: 'خطا در انتشار خبر' });
+  }
+});
+
+// PUT /api/news/:id (Admin: Edit news and optional rebroadcast)
+router.put('/:id', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { title, content, image, tags, rebroadcastTelegram } = req.body;
+
+    if (!title || !content) {
+      return res.status(400).json({ error: 'عنوان و متن خبر الزامی است' });
+    }
+
+    const existing = db.prepare('SELECT * FROM news WHERE id = ?').get(id) as any;
+    if (!existing) {
+      return res.status(404).json({ error: 'خبر پیدا نشد' });
+    }
+
+    const tagsJson = Array.isArray(tags) ? JSON.stringify(tags) : (typeof tags === 'string' && tags ? tags : existing.tags || '[]');
+    const finalImage = image !== undefined ? (image || null) : existing.image;
+
+    db.prepare('UPDATE news SET title = ?, content = ?, image = ?, tags = ? WHERE id = ?')
+      .run(title, content, finalImage, tagsJson, id);
+
+    // Broadcast to Telegram Channel if requested
+    const channelId = process.env.TELEGRAM_CHANNEL_ID;
+    if (rebroadcastTelegram && bot && channelId) {
+      try {
+        await sendNewsToTelegram(channelId, bot, {
+          id: Number(id),
+          title,
+          content,
+          image: finalImage || ''
+        });
+      } catch (tgError) {
+        console.error('[News API] Telegram broadcast failed upon edit:', tgError);
+      }
+    }
+
+    res.json({ message: 'خبر با موفقیت ویرایش شد', id: Number(id) });
+  } catch (error) {
+    console.error('[News API] Error updating news:', error);
+    res.status(500).json({ error: 'خطا در ویرایش خبر' });
   }
 });
 

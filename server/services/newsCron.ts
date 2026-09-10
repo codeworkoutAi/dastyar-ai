@@ -391,12 +391,36 @@ export async function sendNewsToTelegram(
   safeContent = safeContent.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>');
 
   const messageText = `📰 <b>${article.title}</b>\n\n` +
-    `${safeContent}...\n\n` +
-    `🔗 <a href="${articleUrl}">مطالعه کامل مقاله در وب‌سایت</a>`;
+    `${safeContent}...`;
 
   const cleanImageUrl = sanitizeImageUrl(article.image);
 
   if (cleanImageUrl && !cleanImageUrl.includes('undefined')) {
+    // Attempt 0: Base64 Data URL
+    if (cleanImageUrl.startsWith('data:image/')) {
+      try {
+        const base64Data = cleanImageUrl.split(',')[1];
+        if (base64Data) {
+          const buffer = Buffer.from(base64Data, 'base64');
+          await currentBot.telegram.sendPhoto(channelId, { source: buffer }, {
+            caption: messageText,
+            parse_mode: 'HTML',
+            reply_markup: {
+              inline_keyboard: [
+                [{ text: '📖 مطالعه کامل مقاله در سایت', url: articleUrl }]
+              ]
+            }
+          });
+          console.log(`[NewsCron] News photo broadcasted via base64 data successfully (Article #${article.id}).`);
+          appendCronLog('INFO', 'News photo broadcasted via base64 data successfully', { articleId: article.id });
+          return true;
+        }
+      } catch (base64Err: any) {
+        console.warn('[NewsCron] sendPhoto via base64 failed:', base64Err?.message || base64Err);
+        appendCronLog('WARN', 'sendPhoto via base64 failed', base64Err?.message || base64Err);
+      }
+    }
+
     // Attempt 1: Direct photo URL
     try {
       await currentBot.telegram.sendPhoto(channelId, cleanImageUrl, {

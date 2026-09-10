@@ -20,7 +20,7 @@ export const NeuralBanner: React.FC = () => {
   }, []);
 
   return (
-    <div className="relative w-full overflow-hidden bg-zinc-950 rounded-3xl shadow-2xl mb-12 border border-emerald-900/30 group font-sans">
+    <div className="relative w-full overflow-hidden bg-gradient-to-b from-slate-50 via-white to-zinc-50 dark:from-zinc-950 dark:via-zinc-950 dark:to-zinc-950 rounded-3xl shadow-xl dark:shadow-2xl mb-12 border border-zinc-200/80 dark:border-emerald-900/30 group font-sans transition-colors">
       
       {/* CSS Keyframes scoped to standard class names */}
       <style>{`
@@ -60,7 +60,8 @@ export const NeuralBanner: React.FC = () => {
             animation: bannerPulseFire 2.8s infinite ease-out;
             filter: drop-shadow(0 0 3px #ffffff) drop-shadow(0 0 6px #d8b4fe);
         }
-        .base-path { stroke: rgba(255,255,255,0.06); stroke-width: 2; fill: none; }
+        .base-path { stroke: rgba(0, 0, 0, 0.08); stroke-width: 2; fill: none; }
+        :is(.dark) .base-path { stroke: rgba(255, 255, 255, 0.06); }
       `}</style>
 
       <div className="flex flex-col items-center justify-center relative z-10 min-h-[350px] p-6 md:p-12">
@@ -69,7 +70,7 @@ export const NeuralBanner: React.FC = () => {
         <div className="w-full relative min-h-[220px] md:min-h-[260px] flex items-center justify-center mb-6 md:mb-10">
           
           {/* Background Glow */}
-          <div className="absolute w-64 h-64 bg-purple-600/10 rounded-full blur-3xl pointer-events-none"></div>
+          <div className="absolute w-64 h-64 bg-purple-500/10 dark:bg-purple-600/10 rounded-full blur-3xl pointer-events-none"></div>
 
           {/* Absolute centering flex container to prevent RTL transform issues */}
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
@@ -96,7 +97,7 @@ export const NeuralBanner: React.FC = () => {
 
                 {/* Source Node (Exact Original Lightbulb Icon) */}
                 <div 
-                  className="absolute w-12 h-12 p-2.5 rounded-full flex items-center justify-center z-10 bg-emerald-900 text-emerald-400 border border-emerald-700 shadow-[inset_0_0_15px_rgba(52,211,153,0.2)] anim-source" 
+                  className="absolute w-12 h-12 p-2.5 rounded-full flex items-center justify-center z-10 bg-emerald-500/15 dark:bg-emerald-900 text-emerald-600 dark:text-emerald-400 border border-emerald-400/40 dark:border-emerald-700 shadow-[inset_0_0_15px_rgba(52,211,153,0.2)] anim-source" 
                   style={{ left: 16, top: 76 }}
                 >
                     <svg className="w-full h-full" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
@@ -106,8 +107,8 @@ export const NeuralBanner: React.FC = () => {
                 <div 
                   className={`absolute w-12 h-12 p-3 rounded-full flex items-center justify-center z-10 transition-all duration-500 border ${
                     activeRow === 0
-                      ? 'bg-zinc-950 text-purple-300 border-purple-400/50 shadow-[inset_0_0_15px_rgba(192,132,252,0.3)] anim-target'
-                      : 'bg-zinc-900 text-zinc-500 border-zinc-800'
+                      ? 'bg-purple-50 dark:bg-zinc-950 text-purple-600 dark:text-purple-300 border-purple-400/70 dark:border-purple-400/50 shadow-[0_0_15px_rgba(192,132,252,0.3)] dark:shadow-[inset_0_0_15px_rgba(192,132,252,0.3)] anim-target'
+                      : 'bg-zinc-100 dark:bg-zinc-900 text-zinc-400 dark:text-zinc-500 border-zinc-200 dark:border-zinc-800'
                   }`}
                   style={{ left: 176, top: 16 }}
                   title="متن و محتوا"
@@ -121,8 +122,8 @@ export const NeuralBanner: React.FC = () => {
                 <div 
                   className={`absolute w-12 h-12 p-3 rounded-full flex items-center justify-center z-10 transition-all duration-500 border ${
                     activeRow === 1
-                      ? 'bg-zinc-950 text-purple-300 border-purple-400/50 shadow-[inset_0_0_15px_rgba(192,132,252,0.3)] anim-target'
-                      : 'bg-zinc-900 text-zinc-500 border-zinc-800'
+                      ? 'bg-purple-50 dark:bg-zinc-950 text-purple-600 dark:text-purple-300 border-purple-400/70 dark:border-purple-400/50 shadow-[0_0_15px_rgba(192,132,252,0.3)] dark:shadow-[inset_0_0_15px_rgba(192,132,252,0.3)] anim-target'
+                      : 'bg-zinc-100 dark:bg-zinc-900 text-zinc-400 dark:text-zinc-500 border-zinc-200 dark:border-zinc-800'
                   }`}
                   style={{ left: 176, top: 76 }}
                   title="کدنویسی و توسعه"
@@ -136,8 +137,8 @@ export const NeuralBanner: React.FC = () => {
                 <div 
                   className={`absolute w-12 h-12 p-3 rounded-full flex items-center justify-center z-10 transition-all duration-500 border ${
                     activeRow === 2
-                      ? 'bg-zinc-950 text-purple-300 border-purple-400/50 shadow-[inset_0_0_15px_rgba(192,132,252,0.3)] anim-target'
-                      : 'bg-zinc-900 text-zinc-500 border-zinc-800'
+                      ? 'bg-purple-50 dark:bg-zinc-950 text-purple-600 dark:text-purple-300 border-purple-400/70 dark:border-purple-400/50 shadow-[0_0_15px_rgba(192,132,252,0.3)] dark:shadow-[inset_0_0_15px_rgba(192,132,252,0.3)] anim-target'
+                      : 'bg-zinc-100 dark:bg-zinc-900 text-zinc-400 dark:text-zinc-500 border-zinc-200 dark:border-zinc-800'
                   }`}
                   style={{ left: 176, top: 136 }}
                   title="تحلیل تصویر و بینایی"
@@ -153,8 +154,8 @@ export const NeuralBanner: React.FC = () => {
                 <div 
                   className={`absolute w-12 h-12 p-3 rounded-full flex items-center justify-center z-10 transition-all duration-500 border ${
                     activeRow === 0
-                      ? 'bg-slate-950 text-sky-400 border-sky-400/40 shadow-[inset_0_0_15px_rgba(56,189,248,0.2)] anim-model'
-                      : 'bg-zinc-900 text-zinc-500 border-zinc-800'
+                      ? 'bg-sky-50 dark:bg-slate-950 text-sky-600 dark:text-sky-400 border-sky-400/70 dark:border-sky-400/40 shadow-[0_0_15px_rgba(56,189,248,0.3)] dark:shadow-[inset_0_0_15px_rgba(56,189,248,0.2)] anim-model'
+                      : 'bg-zinc-100 dark:bg-zinc-900 text-zinc-400 dark:text-zinc-500 border-zinc-200 dark:border-zinc-800'
                   }`}
                   style={{ left: 356, top: 16 }}
                 >
@@ -162,8 +163,8 @@ export const NeuralBanner: React.FC = () => {
                     <div 
                       className={`absolute whitespace-nowrap text-xs font-['Vazirmatn'] transition-all duration-300 ${
                         activeRow === 0
-                          ? 'font-bold text-sky-400 drop-shadow-[0_0_5px_rgba(56,189,248,0.5)]'
-                          : 'font-normal text-zinc-600'
+                          ? 'font-bold text-sky-600 dark:text-sky-400 drop-shadow-sm'
+                          : 'font-normal text-zinc-500 dark:text-zinc-600'
                       }`} 
                       style={{ left: 60 }}
                     >
@@ -175,8 +176,8 @@ export const NeuralBanner: React.FC = () => {
                 <div 
                   className={`absolute w-12 h-12 p-3 rounded-full flex items-center justify-center z-10 transition-all duration-500 border ${
                     activeRow === 1
-                      ? 'bg-slate-950 text-sky-400 border-sky-400/40 shadow-[inset_0_0_15px_rgba(56,189,248,0.2)] anim-model'
-                      : 'bg-zinc-900 text-zinc-500 border-zinc-800'
+                      ? 'bg-sky-50 dark:bg-slate-950 text-sky-600 dark:text-sky-400 border-sky-400/70 dark:border-sky-400/40 shadow-[0_0_15px_rgba(56,189,248,0.3)] dark:shadow-[inset_0_0_15px_rgba(56,189,248,0.2)] anim-model'
+                      : 'bg-zinc-100 dark:bg-zinc-900 text-zinc-400 dark:text-zinc-500 border-zinc-200 dark:border-zinc-800'
                   }`}
                   style={{ left: 356, top: 76 }}
                 >
@@ -184,8 +185,8 @@ export const NeuralBanner: React.FC = () => {
                     <div 
                       className={`absolute whitespace-nowrap text-xs font-['Vazirmatn'] transition-all duration-300 ${
                         activeRow === 1
-                          ? 'font-bold text-sky-400 drop-shadow-[0_0_5px_rgba(56,189,248,0.5)]'
-                          : 'font-normal text-zinc-600'
+                          ? 'font-bold text-sky-600 dark:text-sky-400 drop-shadow-sm'
+                          : 'font-normal text-zinc-500 dark:text-zinc-600'
                       }`} 
                       style={{ left: 60 }}
                     >
@@ -197,8 +198,8 @@ export const NeuralBanner: React.FC = () => {
                 <div 
                   className={`absolute w-12 h-12 p-3 rounded-full flex items-center justify-center z-10 transition-all duration-500 border ${
                     activeRow === 2
-                      ? 'bg-slate-950 text-sky-400 border-sky-400/40 shadow-[inset_0_0_15px_rgba(56,189,248,0.2)] anim-model'
-                      : 'bg-zinc-900 text-zinc-500 border-zinc-800'
+                      ? 'bg-sky-50 dark:bg-slate-950 text-sky-600 dark:text-sky-400 border-sky-400/70 dark:border-sky-400/40 shadow-[0_0_15px_rgba(56,189,248,0.3)] dark:shadow-[inset_0_0_15px_rgba(56,189,248,0.2)] anim-model'
+                      : 'bg-zinc-100 dark:bg-zinc-900 text-zinc-400 dark:text-zinc-500 border-zinc-200 dark:border-zinc-800'
                   }`}
                   style={{ left: 356, top: 136 }}
                 >
@@ -206,8 +207,8 @@ export const NeuralBanner: React.FC = () => {
                     <div 
                       className={`absolute whitespace-nowrap text-xs font-['Vazirmatn'] transition-all duration-300 ${
                         activeRow === 2
-                          ? 'font-bold text-sky-400 drop-shadow-[0_0_5px_rgba(56,189,248,0.5)]'
-                          : 'font-normal text-zinc-600'
+                          ? 'font-bold text-sky-600 dark:text-sky-400 drop-shadow-sm'
+                          : 'font-normal text-zinc-500 dark:text-zinc-600'
                       }`} 
                       style={{ left: 60 }}
                     >
@@ -223,24 +224,24 @@ export const NeuralBanner: React.FC = () => {
         {/* Bottom Content Column (Text & CTA) */}
         <div className="w-full max-w-3xl flex flex-col items-center justify-center text-center z-20">
           <div className="flex items-center gap-2 mb-4 justify-center">
-            <div className="bg-emerald-500/20 p-2 rounded-full border border-emerald-500/30 flex items-center justify-center">
-              <Sparkles className="text-emerald-400" size={20} />
+            <div className="bg-emerald-500/10 dark:bg-emerald-500/20 p-2 rounded-full border border-emerald-500/20 dark:border-emerald-500/30 flex items-center justify-center">
+              <Sparkles className="text-emerald-600 dark:text-emerald-400" size={20} />
             </div>
-            <span className="text-emerald-400 font-bold text-sm">مسیریابی هوشمند چت‌باکس</span>
+            <span className="text-emerald-700 dark:text-emerald-400 font-bold text-sm">مسیریابی هوشمند چت‌باکس</span>
           </div>
           
-          <h2 className="text-xl md:text-2xl lg:text-3xl font-black text-white mb-4 leading-tight drop-shadow-md">
+          <h2 className="text-xl md:text-2xl lg:text-3xl font-black text-zinc-900 dark:text-white mb-4 leading-tight">
             قدرتِ انتخابِ هوشمند؛ <br className="hidden md:block" /> محدود به یک مدل نباشید!
           </h2>
           
-          <p className="text-zinc-400 mb-6 text-xs md:text-sm leading-relaxed max-w-2xl mx-auto">
+          <p className="text-zinc-600 dark:text-zinc-400 mb-6 text-xs md:text-sm leading-relaxed max-w-2xl mx-auto">
             چت‌باکسِ ما فراتر از یک چتِ ساده است. ما مجهز به یک موتور مسیریابِ هوشمند (Smart Router) هستیم که در کسری از ثانیه، بهترین هوش مصنوعی را برای حل چالشِ شما انتخاب و فعال می‌کند. تجربه‌ای یکپارچه از کدهای بی‌نقص تا تحلیل‌های عمیق.
           </p>
           
           <div className="flex justify-center">
             <Link 
               to="/" 
-              className="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3.5 px-8 rounded-full transition-all duration-300 shadow-[0_0_20px_rgba(5,150,105,0.4)] hover:shadow-[0_0_30px_rgba(5,150,105,0.6)] hover:-translate-y-1"
+              className="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3.5 px-8 rounded-full transition-all duration-300 shadow-[0_4px_14px_rgba(5,150,105,0.35)] hover:shadow-[0_6px_20px_rgba(5,150,105,0.5)] hover:-translate-y-0.5"
             >
               کشف قدرتِ چت‌باکس
               <ArrowLeft size={18} />
