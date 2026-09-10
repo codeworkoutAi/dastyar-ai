@@ -28,7 +28,8 @@ interface ImageHistory {
 }
 
 const IMAGE_ENGINES = [
-  { id: 'flux', name: 'Flux.1 Realism', tag: 'رایگان', desc: 'خروجی فوق‌العاده واقعی و طبیعی', tier: 'free' },
+  { id: 'flux', name: 'Flux.1 Realism', tag: 'واقع‌گرایانه', desc: 'خروجی فوق‌العاده باکیفیت، طبیعی و پرجزئیات', tier: 'free' },
+  { id: 'sana', name: 'Sana (NVIDIA)', tag: 'فوق‌سریع', desc: 'مدل نسل جدید انویدیا با رزولوشن بالا و سرعت آنی', tier: 'free' },
   { id: 'flux-anime', name: 'Flux Anime', tag: 'رایگان', desc: 'استایل انیمه و نقاشی دیجیتال', tier: 'free' },
   { id: 'flux-3d', name: 'Flux 3D', tag: 'رایگان', desc: 'رندرهای خیره‌کننده سه‌بعدی', tier: 'free' },
   { id: 'turbo', name: 'SDXL Turbo', tag: 'آنی', desc: 'تولید سریع تصاویر', tier: 'free' },
