@@ -260,6 +260,41 @@ router.post('/api/generate-image', async (req, res) => {
   }
 });
 
+// Secure image proxy to bypass TLS/cipher handshake issues and ISP filtering
+router.get('/api/proxy-image', async (req, res) => {
+  try {
+    const rawUrl = req.query.url as string;
+    if (!rawUrl || typeof rawUrl !== 'string') {
+      return res.status(400).send('پارامتر url الزامی است.');
+    }
+
+    const parsed = new URL(rawUrl);
+    const allowedHosts = ['image.pollinations.ai', 'pollinations.ai'];
+    if (!allowedHosts.includes(parsed.hostname.toLowerCase())) {
+      return res.status(403).send('دامنه درخواستی مجاز نیست.');
+    }
+
+    const upstreamRes = await fetch(rawUrl, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+      },
+    });
+
+    if (!upstreamRes.ok) {
+      return res.status(upstreamRes.status).send('خطا در دریافت تصویر از منبع.');
+    }
+
+    const contentType = upstreamRes.headers.get('content-type') || 'image/jpeg';
+    res.setHeader('Content-Type', contentType);
+    res.setHeader('Cache-Control', 'public, max-age=604800, immutable');
+    const buffer = await upstreamRes.arrayBuffer();
+    res.send(Buffer.from(buffer));
+  } catch (err: any) {
+    console.error('[Image Proxy] Error:', err?.message || err);
+    res.status(500).send('خطا در پراکسی تصویر.');
+  }
+});
+
 // 5. Enhance Prompt endpoint
 router.post('/api/enhance-prompt', async (req, res) => {
   try {

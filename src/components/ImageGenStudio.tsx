@@ -52,9 +52,13 @@ const ASPECT_RATIOS = [
   { id: '9:16', name: 'استوری', icon: '▯', w: 'w-4', h: 'h-7' },
 ];
 
-// Helper to preload image before rendering in DOM with automatic fallback retry
+// Helper to preload image before rendering in DOM with automatic fallback retry & secure proxy
 function preloadImage(url: string, timeoutMs = 45000): Promise<string> {
   return new Promise((resolve, reject) => {
+    if (url.startsWith('data:')) {
+      return resolve(url);
+    }
+
     const img = new Image();
     let isSettled = false;
 
@@ -74,24 +78,37 @@ function preloadImage(url: string, timeoutMs = 45000): Promise<string> {
 
     img.onerror = () => {
       if (isSettled) return;
-      // If error occurs, try to fetch with a fresh seed fallback
-      const separator = url.includes('?') ? '&' : '?';
-      const fallbackUrl = `${url.replace(/seed=\d+/, '')}${separator}seed=${Math.floor(Math.random() * 10000000)}`;
-      
-      const retryImg = new Image();
-      retryImg.onload = () => {
+      // If direct CDN connection fails (e.g. Iranian ISP TLS/cipher reset or filtering),
+      // seamlessly load via our own server's secure proxy
+      const proxyUrl = `/api/proxy-image?url=${encodeURIComponent(url)}`;
+      const proxyImg = new Image();
+      proxyImg.onload = () => {
         if (isSettled) return;
         isSettled = true;
         clearTimeout(timer);
-        resolve(fallbackUrl);
+        resolve(proxyUrl);
       };
-      retryImg.onerror = () => {
-        if (isSettled) return;
-        isSettled = true;
-        clearTimeout(timer);
-        reject(new Error('خطا در دریافت فایل تصویر از سرور. لطفاً مجدداً دکمه تولید را بزنید.'));
+      proxyImg.onerror = () => {
+        // As a final fallback attempt, try fresh seed via proxy
+        const separator = url.includes('?') ? '&' : '?';
+        const fallbackUrl = `${url.replace(/seed=\d+/, '')}${separator}seed=${Math.floor(Math.random() * 10000000)}`;
+        const fallbackProxy = `/api/proxy-image?url=${encodeURIComponent(fallbackUrl)}`;
+        const lastTry = new Image();
+        lastTry.onload = () => {
+          if (isSettled) return;
+          isSettled = true;
+          clearTimeout(timer);
+          resolve(fallbackProxy);
+        };
+        lastTry.onerror = () => {
+          if (isSettled) return;
+          isSettled = true;
+          clearTimeout(timer);
+          reject(new Error('خطا در دریافت فایل تصویر از سرور. لطفاً مجدداً دکمه تولید را بزنید.'));
+        };
+        lastTry.src = fallbackProxy;
       };
-      retryImg.src = fallbackUrl;
+      proxyImg.src = proxyUrl;
     };
 
     img.src = url;
