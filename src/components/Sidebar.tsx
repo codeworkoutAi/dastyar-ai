@@ -42,7 +42,7 @@ export const Sidebar: React.FC = React.memo(() => {
   const { sidebarOpen, setSidebarOpen, setIsImageStudioOpen, setIsExploreOpen, setIsUiGuideOpen, setIsAdminOpen, setIsSettingsOpen } = useUIStore();
   const { settings } = useSettingsStore();
   const { conversations, activeId, setActiveId, createChat, deleteConversation, updateConversation, clearAllConversations } = useChatStore();
-  
+
   const { user, isAuthenticated, logout, setAuthModalOpen } = useAuthStore();
   const usePersianDigits = settings.appearance.persianNumerals;
 
@@ -127,7 +127,7 @@ export const Sidebar: React.FC = React.memo(() => {
   };
 
   const storageStats = getStorageUsage();
-  
+
   const sessionStats = React.useMemo(() => {
     return calculateSessionStats(conversations || []);
   }, [conversations]);
@@ -164,11 +164,10 @@ export const Sidebar: React.FC = React.memo(() => {
             }
           }
         }}
-        className={`group relative flex flex-col p-2.5 rounded-2xl cursor-pointer transition-all duration-150 border-transparent ${
-          isActive
-            ? 'bg-blue-50 dark:bg-blue-500/10 border-l-2 border-l-blue-500 text-zinc-900 dark:text-zinc-100 shadow-[inset_2px_0_0_0_rgba(59,130,246,0.5)]'
-            : 'hover:bg-zinc-100 dark:hover:bg-zinc-700/40 text-zinc-700 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200'
-        }`}
+        className={`group relative flex flex-col p-2.5 rounded-2xl cursor-pointer transition-all duration-150 border-transparent ${isActive
+          ? 'bg-blue-50 dark:bg-blue-500/10 border-l-2 border-l-blue-500 text-zinc-900 dark:text-zinc-100 shadow-[inset_2px_0_0_0_rgba(59,130,246,0.5)]'
+          : 'hover:bg-zinc-100 dark:hover:bg-zinc-700/40 text-zinc-700 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200'
+          }`}
       >
         <div className="flex items-center justify-between gap-2">
           {isEditing ? (
@@ -240,11 +239,10 @@ export const Sidebar: React.FC = React.memo(() => {
                       e.stopPropagation();
                       updateConversation(conv.id, c => ({ ...c, isPinned: !c.isPinned }));
                     }}
-                    className={`p-1.5 rounded-lg transition-all cursor-pointer ${
-                      conv.isPinned 
-                        ? 'text-amber-500 dark:text-amber-400 bg-amber-400/15 opacity-100' 
-                        : 'opacity-60 hover:opacity-100 hover:bg-black/5 dark:hover:bg-white/10 text-zinc-700 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200'
-                    }`}
+                    className={`p-1.5 rounded-lg transition-all cursor-pointer ${conv.isPinned
+                      ? 'text-amber-500 dark:text-amber-400 bg-amber-400/15 opacity-100'
+                      : 'opacity-60 hover:opacity-100 hover:bg-black/5 dark:hover:bg-white/10 text-zinc-700 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200'
+                      }`}
                     aria-label="Pin conversation"
                   >
                     {conv.isPinned ? <PinBoldIcon className="w-3.5 h-3.5" /> : <PinLinearIcon className="w-3.5 h-3.5" />}
@@ -322,9 +320,8 @@ export const Sidebar: React.FC = React.memo(() => {
       <aside
         id="sidebar-panel"
         aria-label="Sidebar Panel"
-        className={`fixed md:static inset-y-0 right-0 z-40 w-72 sm:w-80 flex flex-col transition-all duration-200 ease-in-out border-l border-subtle clay-sidebar select-none ${
-          sidebarOpen ? 'translate-x-0' : 'translate-x-full md:translate-x-0 md:w-0 md:overflow-hidden md:border-none'
-        }`}
+        className={`fixed md:static inset-y-0 right-0 z-40 w-72 sm:w-80 flex flex-col transition-all duration-200 ease-in-out border-l border-subtle clay-sidebar select-none ${sidebarOpen ? 'translate-x-0' : 'translate-x-full md:translate-x-0 md:w-0 md:overflow-hidden md:border-none'
+          }`}
       >
         {/* ---------------- 1. بالای بالا: کارت کاربر و منوی پروفایل ---------------- */}
         <div className="p-3 pb-2.5 shrink-0 border-b border-zinc-200/60 dark:border-zinc-800/60 relative" ref={userMenuRef}>
@@ -335,16 +332,16 @@ export const Sidebar: React.FC = React.memo(() => {
                 className="flex items-center justify-between p-2 rounded-xl bg-zinc-100/90 dark:bg-zinc-800/70 hover:bg-zinc-200 dark:hover:bg-zinc-700/80 border border-zinc-200/80 dark:border-zinc-700/60 transition-all cursor-pointer flex-1 text-right"
               >
                 <div className="flex items-center gap-2.5 overflow-hidden">
-                  <img 
-                    src={user?.avatar || '/avatars/avatar-1.svg'} 
-                    alt="Avatar" 
+                  <img
+                    src={user?.avatar || '/avatars/avatar-1.svg'}
+                    alt="Avatar"
                     onError={(e) => {
                       const target = e.target as HTMLImageElement;
                       target.onerror = null;
                       const letter = user?.name?.charAt(0).toUpperCase() || (user?.phone ? user.phone.slice(-2) : user?.email?.charAt(0).toUpperCase() || 'U');
                       target.src = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><rect width="100" height="100" fill="%232563eb"/><text x="50%" y="54%" fill="white" font-size="45" font-weight="bold" font-family="Tahoma, sans-serif" dominant-baseline="middle" text-anchor="middle">${letter}</text></svg>`;
                     }}
-                    className="w-8 h-8 rounded-full bg-white dark:bg-zinc-800 shadow-sm object-cover shrink-0" 
+                    className="w-8 h-8 rounded-full bg-white dark:bg-zinc-800 shadow-sm object-cover shrink-0"
                   />
                   <div className="flex flex-col min-w-0">
                     <span className="text-xs font-bold text-zinc-900 dark:text-zinc-100 truncate" dir={user?.name ? 'rtl' : 'ltr'}>
@@ -394,16 +391,16 @@ export const Sidebar: React.FC = React.memo(() => {
           {userMenuOpen && isAuthenticated && (
             <div className="absolute top-full mt-1.5 right-3 left-3 p-2 bg-white dark:bg-zinc-900 rounded-2xl shadow-2xl border border-zinc-200 dark:border-zinc-800 flex flex-col gap-1 z-50 animate-fadeIn">
               <div className="flex items-center gap-2.5 p-2 rounded-xl bg-zinc-50 dark:bg-zinc-800/60 mb-1">
-                <img 
-                  src={user?.avatar || '/avatars/avatar-1.svg'} 
-                  alt="Avatar" 
+                <img
+                  src={user?.avatar || '/avatars/avatar-1.svg'}
+                  alt="Avatar"
                   onError={(e) => {
                     const target = e.target as HTMLImageElement;
                     target.onerror = null;
                     const letter = user?.name?.charAt(0).toUpperCase() || (user?.phone ? user.phone.slice(-2) : user?.email?.charAt(0).toUpperCase() || 'U');
                     target.src = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><rect width="100" height="100" fill="%232563eb"/><text x="50%" y="54%" fill="white" font-size="45" font-weight="bold" font-family="Tahoma, sans-serif" dominant-baseline="middle" text-anchor="middle">${letter}</text></svg>`;
                   }}
-                  className="w-8 h-8 rounded-full bg-white dark:bg-zinc-800 shadow-sm object-cover shrink-0" 
+                  className="w-8 h-8 rounded-full bg-white dark:bg-zinc-800 shadow-sm object-cover shrink-0"
                 />
                 <div className="flex flex-col min-w-0">
                   <span className="text-xs font-bold text-zinc-900 dark:text-zinc-100 truncate" dir={user?.name ? 'rtl' : 'ltr'}>
@@ -425,7 +422,7 @@ export const Sidebar: React.FC = React.memo(() => {
                   className="flex items-center gap-2 w-full p-2 rounded-xl hover:bg-blue-50 dark:hover:bg-blue-950/40 text-blue-600 dark:text-blue-400 text-xs font-bold transition-colors text-right cursor-pointer"
                 >
                   <ShieldCheck size={16} />
-                  <span>پنل مدیریت سیستم (ادمین چت)</span>
+                  <span>پنل مدیریت سیستم</span>
                 </button>
               )}
 
@@ -449,7 +446,7 @@ export const Sidebar: React.FC = React.memo(() => {
                 className="flex items-center gap-2 w-full p-2 rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 text-xs font-medium transition-colors text-right cursor-pointer"
               >
                 <Settings size={16} />
-                <span>تنظیمات ظاهر و مدل‌ها</span>
+                <span>تنظیمات</span>
               </button>
 
               <div className="h-px bg-zinc-200 dark:bg-zinc-800 my-0.5" />
@@ -626,10 +623,9 @@ export const Sidebar: React.FC = React.memo(() => {
                         {usePersianDigits ? toPersianDigits(group.items.length) : group.items.length}
                       </span>
                     </div>
-                    <ChevronDown 
-                      className={`w-3.5 h-3.5 text-zinc-700 dark:text-zinc-500 transition-transform duration-200 ${
-                        isCollapsed ? '-rotate-90' : 'rotate-0'
-                      }`} 
+                    <ChevronDown
+                      className={`w-3.5 h-3.5 text-zinc-700 dark:text-zinc-500 transition-transform duration-200 ${isCollapsed ? '-rotate-90' : 'rotate-0'
+                        }`}
                     />
                   </button>
 

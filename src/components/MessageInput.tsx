@@ -806,60 +806,55 @@ export const MessageInput: React.FC = React.memo(() => {
         {/* Input Frame */}
         <div className={`relative flex items-end gap-2 sm:gap-3 bg-zinc-100 dark:bg-zinc-800/90 rounded-[32px] p-1.5 sm:p-2 shadow-sm border border-zinc-200 dark:border-white/5 transition-all focus-within:ring-2 focus-within:ring-white/10 ${isStreaming ? 'opacity-80' : ''}`}>
           
-          {/* Floating Compact Image Engine Pill Bar */}
+          {/* Floating Compact Image Engine Pill Bar (Monochrome Minimal Style) */}
           {showImageEngineModal && (
             <div 
-              className="absolute bottom-full right-0 left-0 mb-2 z-[70] flex items-center justify-between gap-1.5 px-3 py-2 rounded-2xl bg-white/95 dark:bg-zinc-900/95 backdrop-blur-xl border border-zinc-200/90 dark:border-white/10 shadow-xl animate-in fade-in slide-in-from-bottom-2 duration-200 select-none" 
+              className="absolute bottom-full right-0 left-0 mb-2 z-[70] flex items-center justify-between gap-2 px-3 py-2 rounded-2xl bg-white/95 dark:bg-zinc-900/95 backdrop-blur-xl border border-zinc-200 dark:border-zinc-800 shadow-lg select-none" 
               dir="rtl"
             >
               <div className="flex items-center gap-1.5 overflow-x-auto py-0.5 custom-scrollbar min-w-0 flex-1">
-                <div className="flex items-center gap-1 text-[11px] font-bold text-zinc-500 dark:text-zinc-400 shrink-0 ml-1">
-                  <StarsMinimalisticBoldIcon className="w-3.5 h-3.5 text-purple-500" />
-                  <span className="hidden sm:inline">موتور تصویر:</span>
-                </div>
+                <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400 shrink-0 ml-1">
+                  موتور تصویر:
+                </span>
 
                 {/* Sana NVIDIA */}
                 <button 
                   type="button"
                   onClick={() => confirmImageGen('sana')}
-                  className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:hover:bg-emerald-900/60 border border-emerald-300/60 dark:border-emerald-700/50 text-emerald-700 dark:text-emerald-300 text-xs font-bold transition-all shrink-0 hover:scale-[1.02] active:scale-95 shadow-sm cursor-pointer"
+                  className="px-3 py-1.5 rounded-xl bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 border border-zinc-200 dark:border-zinc-700 text-xs font-medium transition-all shrink-0 active:scale-95 cursor-pointer"
                   title="مدل نسل جدید انویدیا با رزولوشن بالا و سرعت آنی"
                 >
-                  <span>⚡ Sana (NVIDIA)</span>
-                  <span className="text-[9px] bg-emerald-500 text-white px-1 py-0.2 rounded font-medium">رایگان</span>
+                  Sana (NVIDIA)
                 </button>
 
                 {/* Flux.1 */}
                 <button 
                   type="button"
                   onClick={() => confirmImageGen('flux')}
-                  className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/40 dark:hover:bg-blue-900/60 border border-blue-300/60 dark:border-blue-700/50 text-blue-700 dark:text-blue-300 text-xs font-bold transition-all shrink-0 hover:scale-[1.02] active:scale-95 shadow-sm cursor-pointer"
+                  className="px-3 py-1.5 rounded-xl bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 border border-zinc-200 dark:border-zinc-700 text-xs font-medium transition-all shrink-0 active:scale-95 cursor-pointer"
                   title="کیفیت عالی، طبیعی و واقع‌گرایانه"
                 >
-                  <span>🎨 Flux.1 Realism</span>
-                  <span className="text-[9px] bg-blue-500 text-white px-1 py-0.2 rounded font-medium">رایگان</span>
+                  Flux.1 Realism
                 </button>
 
                 {/* DALL-E 3 */}
                 <button 
                   type="button"
                   onClick={() => confirmImageGen('dalle-3')}
-                  className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/40 dark:hover:bg-amber-900/60 border border-amber-300/60 dark:border-amber-700/50 text-amber-700 dark:text-amber-300 text-xs font-bold transition-all shrink-0 hover:scale-[1.02] active:scale-95 shadow-sm cursor-pointer"
+                  className="px-3 py-1.5 rounded-xl bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 border border-zinc-200 dark:border-zinc-700 text-xs font-medium transition-all shrink-0 active:scale-95 cursor-pointer"
                   title="هوش بالا - نیازمند کلید OpenAI"
                 >
-                  <span>💎 DALL-E 3</span>
-                  <span className="text-[9px] bg-amber-500 text-white px-1 py-0.2 rounded font-medium">VIP</span>
+                  DALL-E 3
                 </button>
 
                 {/* Imagen 3 */}
                 <button 
                   type="button"
                   onClick={() => confirmImageGen('imagen-3')}
-                  className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-purple-50 hover:bg-purple-100 dark:bg-purple-950/40 dark:hover:bg-purple-900/60 border border-purple-300/60 dark:border-purple-700/50 text-purple-700 dark:text-purple-300 text-xs font-bold transition-all shrink-0 hover:scale-[1.02] active:scale-95 shadow-sm cursor-pointer"
+                  className="px-3 py-1.5 rounded-xl bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 border border-zinc-200 dark:border-zinc-700 text-xs font-medium transition-all shrink-0 active:scale-95 cursor-pointer"
                   title="کیفیت استودیو گوگل - رسمی"
                 >
-                  <span>🔷 Imagen 3</span>
-                  <span className="text-[9px] bg-purple-500 text-white px-1 py-0.2 rounded font-medium">گوگل</span>
+                  Imagen 3
                 </button>
               </div>
 
@@ -867,7 +862,7 @@ export const MessageInput: React.FC = React.memo(() => {
               <button 
                 type="button"
                 onClick={() => setShowImageEngineModal(false)}
-                className="p-1 rounded-lg text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-white/10 transition-colors shrink-0 cursor-pointer mr-1"
+                className="p-1.5 rounded-lg text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors shrink-0 cursor-pointer mr-1"
                 title="بستن"
               >
                 <X size={15} />
