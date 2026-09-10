@@ -240,8 +240,8 @@ export async function fetchAndProcessNews() {
 
     // Prepare content for Gemini: use scraped full content if richer than RSS snippet
     const rawRssContent = targetItem.contentEncoded || targetItem.contentSnippet || targetItem.content || '';
-    const chosenContent = (scraped.fullContent && scraped.fullContent.length > rawRssContent.length) 
-      ? scraped.fullContent 
+    const chosenContent = (scraped.fullContent && scraped.fullContent.length > rawRssContent.length)
+      ? scraped.fullContent
       : rawRssContent;
 
     appendCronLog('INFO', `Content prepared for translation (${chosenContent.length} chars, source: ${scraped.fullContent.length > rawRssContent.length ? 'full-scraped-page' : 'rss-snippet'})`);
@@ -350,8 +350,8 @@ export async function fetchAndProcessNews() {
       safeContent = safeContent.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>');
 
       const messageText = `📰 <b>${parsedData.title}</b>\n\n` +
-                          `${safeContent}...\n\n` +
-                          `🔗 <a href="${articleUrl}">مطالعه کامل مقاله در وب‌سایت</a>`;
+        `${safeContent}...\n\n` +
+        `🔗 <a href="${articleUrl}">مطالعه کامل مقاله در وب‌سایت</a>`;
 
       try {
         if (imageUrl && !imageUrl.includes('undefined')) {
@@ -412,7 +412,7 @@ export async function fetchAndProcessNews() {
 
 export function initNewsCron() {
   // Schedule to run exactly 3 times a day: 08:00 AM, 12:00 PM, and 20:00 (8:00 PM) (Asia/Tehran)
-  cron.schedule('0 8,12,20 * * *', () => {
+  cron.schedule('0 8,12,14,20 * * *', () => {
     fetchAndProcessNews();
   }, {
     timezone: 'Asia/Tehran'

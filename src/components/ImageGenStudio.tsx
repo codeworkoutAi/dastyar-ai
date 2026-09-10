@@ -2,15 +2,17 @@ import {
   AlertTriangle,
   ArrowRight,
   Check, Copy,
+  Dices,
   Download,
   History,
   Image as ImageIcon,
+  RefreshCw,
   RotateCcw,
   Search,
   Send, Sliders,
   Sparkles,
   Trash2, Wand2,
-  X
+  X, Zap
 } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { loadSettings } from '../lib/storage';
@@ -30,8 +32,6 @@ interface ImageHistory {
 const IMAGE_ENGINES = [
   { id: 'flux', name: 'Flux.1 Realism', tag: 'واقع‌گرایانه', desc: 'خروجی فوق‌العاده باکیفیت، طبیعی و پرجزئیات', tier: 'free' },
   { id: 'sana', name: 'Sana (NVIDIA)', tag: 'فوق‌سریع', desc: 'مدل نسل جدید انویدیا با رزولوشن بالا و سرعت آنی', tier: 'free' },
-  { id: 'flux-anime', name: 'Flux Anime', tag: 'رایگان', desc: 'استایل انیمه و نقاشی دیجیتال', tier: 'free' },
-  { id: 'flux-3d', name: 'Flux 3D', tag: 'رایگان', desc: 'رندرهای خیره‌کننده سه‌بعدی', tier: 'free' },
   { id: 'turbo', name: 'SDXL Turbo', tag: 'آنی', desc: 'تولید سریع تصاویر', tier: 'free' },
   { id: 'dalle-3', name: 'DALL-E 3', tag: 'ویژه', desc: 'نیازمند API Key (درک متن و هوش بالا)', tier: 'pro' },
   { id: 'imagen-3', name: 'Imagen 3 (Gemini)', tag: 'رسمی', desc: 'نیازمند API Key جمنای (کیفیت استودیو گوگل)', tier: 'pro' },
@@ -44,12 +44,96 @@ const STYLE_PRESETS = [
   { id: 'anime', name: 'انیمه', icon: '🌸', prompt: 'vibrant anime style, studio ghibli aesthetic, highly detailed, beautiful illustration' },
   { id: '3d', name: 'رندر سه‌بعدی', icon: '🧸', prompt: 'octane render, unreal engine 5, 3d isometric clay style, smooth lighting' },
   { id: 'cyberpunk', name: 'سایبرپانک', icon: '🌃', prompt: 'cyberpunk neon lights, futuristic city, glowing holographic accents, dark moody atmosphere' },
+  { id: 'oil', name: 'رنگ روغن', icon: '🎨', prompt: 'textured oil painting on canvas, expressive impasto brushstrokes, classical fine art masterpiece' },
+  { id: 'sketch', name: 'سیاه‌قلم', icon: '✏️', prompt: 'detailed graphite pencil sketch, cross-hatching shading, architectural fine line art' },
+  { id: 'pixel', name: 'پیکسل آرت', icon: '👾', prompt: '16-bit retro pixel art, vibrant color palette, nostalgic arcade videogame aesthetics' },
 ];
 
 const ASPECT_RATIOS = [
   { id: '1:1', name: 'مربع', icon: '◻️', w: 'w-6', h: 'h-6' },
   { id: '16:9', name: 'سینمایی', icon: '▭', w: 'w-7', h: 'h-4' },
   { id: '9:16', name: 'استوری', icon: '▯', w: 'w-4', h: 'h-7' },
+];
+
+export interface InspirationCard {
+  id: string;
+  title: string;
+  category: string;
+  prompt: string;
+  style: string;
+  engine: string;
+  aspectRatio: string;
+  gradient: string;
+  badge: string;
+}
+
+const INSPIRATION_PROMPTS: InspirationCard[] = [
+  {
+    id: 'cheetah',
+    title: 'یوزپلنگ ایرانی در غروب کویر',
+    category: 'حیات وحش و فوتورئال',
+    prompt: 'یک یوزپلنگ باشکوه ایرانی روی تپه‌های شنی کویر لوت در غروب آفتاب طلایی، وزش باد ملایم، فوکوس دقیق بر روی چشمان کهربایی، کیفیت 8K',
+    style: 'photo',
+    engine: 'flux',
+    aspectRatio: '16:9',
+    gradient: 'from-amber-500/20 via-orange-500/10 to-transparent',
+    badge: '🔥 محبوب‌ترین',
+  },
+  {
+    id: 'tehran-2150',
+    title: 'تهران در سال ۲۱۵۰',
+    category: 'سایبرپانک و آینده‌نگر',
+    prompt: 'برج میلاد در آینده سایبرپانک سال ۲۱۵۰، ماشین‌های پرنده نورانی در آسمان بارانی، نورپردازی نئونی آبی و بنفش، بیلبوردهای هولوگرافیک فارسی',
+    style: 'cyberpunk',
+    engine: 'flux',
+    aspectRatio: '16:9',
+    gradient: 'from-cyan-500/20 via-blue-500/10 to-transparent',
+    badge: '🚀 سایبرپانک',
+  },
+  {
+    id: 'floating-castle',
+    title: 'قلعه معلق در ابرها',
+    category: 'انیمه و فانتزی',
+    prompt: 'قلعه‌ای باستانی معلق در میان ابرهای صورتی و بنفش، آبشارهای معلق، معماری جادویی الهام‌گرفته از استودیو جیبلی، نور خورشید ملایم',
+    style: 'anime',
+    engine: 'sana',
+    aspectRatio: '1:1',
+    gradient: 'from-pink-500/20 via-purple-500/10 to-transparent',
+    badge: '🌸 استودیو جیبلی',
+  },
+  {
+    id: 'space-fox',
+    title: 'روباه فضانورد سه‌بعدی',
+    category: 'رندر سه‌بعدی و فانتزی',
+    prompt: 'یک روباه بامزه و فسقلی با لباس فضانوردی کوچک، روی سطح ماه در حال کشف یک کریستال درخشان، رندر سه‌بعدی اکتان با بافت خمیری براق',
+    style: '3d',
+    engine: 'sana',
+    aspectRatio: '1:1',
+    gradient: 'from-emerald-500/20 via-teal-500/10 to-transparent',
+    badge: '🧸 سه‌بعدی بامزه',
+  },
+  {
+    id: 'samurai-sketch',
+    title: 'سامورایی زیر درخت گیلاس',
+    category: 'طراحی و سیاه‌قلم',
+    prompt: 'طرح سیاه‌قلم مدادی پرجزئیات از یک جنگجوی باستانی زیر باران گلبرگ‌های شکوفه گیلاس، سایه‌روشن‌های هاشورخورده و خطوط پویا',
+    style: 'sketch',
+    engine: 'flux',
+    aspectRatio: '9:16',
+    gradient: 'from-zinc-500/20 via-zinc-700/10 to-transparent',
+    badge: '✏️ سیاه‌قلم',
+  },
+  {
+    id: 'crystal-oasis',
+    title: 'درخت زندگی رنگ‌روغن',
+    category: 'نقاشی کلاسیک',
+    prompt: 'نقاشی رنگ روغن باشکوه از درختی عظیم با برگ‌های شیشه‌ای و ریشه‌های نورانی در واحه شبانه، ضربات قلم‌مو با بافت روغنی برجسته',
+    style: 'oil',
+    engine: 'flux',
+    aspectRatio: '1:1',
+    gradient: 'from-violet-500/20 via-indigo-500/10 to-transparent',
+    badge: '🎨 رنگ روغن',
+  },
 ];
 
 // Helper to preload image before rendering in DOM with automatic fallback retry & secure proxy
@@ -254,14 +338,24 @@ export function ImageGenStudio() {
     }
   };
 
-  const handleGenerate = async () => {
-    if (!prompt.trim()) {
+  const executeGenerate = async (
+    customPrompt?: string,
+    customStyle?: string,
+    customEngine?: string,
+    customAspectRatio?: string
+  ) => {
+    const activePrompt = (customPrompt !== undefined ? customPrompt : prompt).trim();
+    const activeStyle = customStyle !== undefined ? customStyle : selectedStyle;
+    const activeEngine = customEngine !== undefined ? customEngine : engine;
+    const activeRatio = customAspectRatio !== undefined ? customAspectRatio : aspectRatio;
+
+    if (!activePrompt) {
       setError('لطفاً توصیف تصویر را وارد کنید.');
       return;
     }
     
     // Check Pro lock
-    const selectedEngineConf = IMAGE_ENGINES.find(e => e.id === engine);
+    const selectedEngineConf = IMAGE_ENGINES.find(e => e.id === activeEngine);
     if (selectedEngineConf?.tier === 'pro' && !hasOpenAiKey) {
       setError('برای استفاده از این مدل باید کلید OpenAI API را در تنظیمات وارد کنید.');
       return;
@@ -273,10 +367,10 @@ export function ImageGenStudio() {
     setShowHistory(false);
     
     // Apply style preset if not none
-    let finalPrompt = prompt;
-    const preset = STYLE_PRESETS.find(s => s.id === selectedStyle);
+    let finalPrompt = activePrompt;
+    const preset = STYLE_PRESETS.find(s => s.id === activeStyle);
     if (preset && preset.id !== 'none' && preset.prompt) {
-      finalPrompt = `${prompt}, ${preset.prompt}`;
+      finalPrompt = `${activePrompt}, ${preset.prompt}`;
     }
 
     try {
@@ -285,9 +379,9 @@ export function ImageGenStudio() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           prompt: finalPrompt,
-          aspectRatio,
-          engine,
-          apiKey: engine === 'dalle-3' ? settings.providers.openai?.apiKey : engine === 'imagen-3' ? settings.providers.gemini?.apiKey : undefined,
+          aspectRatio: activeRatio,
+          engine: activeEngine,
+          apiKey: activeEngine === 'dalle-3' ? settings.providers.openai?.apiKey : activeEngine === 'imagen-3' ? settings.providers.gemini?.apiKey : undefined,
           settings,
         }),
       });
@@ -302,9 +396,9 @@ export function ImageGenStudio() {
         setImageUrl(finalLoadedUrl);
         saveHistory({
           url: finalLoadedUrl,
-          prompt,
+          prompt: activePrompt,
           enhancedPrompt: data.enhancedPrompt,
-          engine,
+          engine: activeEngine,
           timestamp: Date.now(),
         });
         if (window.innerWidth < 1024) {
@@ -316,6 +410,27 @@ export function ImageGenStudio() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleGenerate = () => executeGenerate();
+
+  const handleSelectInspiration = (item: InspirationCard, autoGenerate = false) => {
+    setPrompt(item.prompt);
+    setSelectedStyle(item.style);
+    setEngine(item.engine);
+    setAspectRatio(item.aspectRatio);
+    if (autoGenerate) {
+      executeGenerate(item.prompt, item.style, item.engine, item.aspectRatio);
+    }
+  };
+
+  const handleRandomPrompt = () => {
+    const randomIndex = Math.floor(Math.random() * INSPIRATION_PROMPTS.length);
+    const item = INSPIRATION_PROMPTS[randomIndex];
+    setPrompt(item.prompt);
+    setSelectedStyle(item.style);
+    setEngine(item.engine);
+    setAspectRatio(item.aspectRatio);
   };
 
   // Filtered gallery items
@@ -774,21 +889,31 @@ export function ImageGenStudio() {
                   }}
                 />
                 
-                {/* Send to Chat Floating Overlay */}
-                {onInsertToChat && (
-                  <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-30 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all duration-300 transform sm:translate-y-2 sm:group-hover:translate-y-0">
+                {/* Floating Overlay Controls (Re-roll + Send to Chat) */}
+                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all duration-300 transform sm:translate-y-2 sm:group-hover:translate-y-0">
+                  <button 
+                    onClick={() => handleGenerate()}
+                    disabled={loading}
+                    className="flex items-center gap-1.5 px-4 py-3 bg-zinc-900/90 hover:bg-black backdrop-blur-xl text-white rounded-2xl transition-all font-bold text-xs sm:text-sm shadow-2xl border border-white/20 hover:scale-105 cursor-pointer disabled:opacity-50"
+                    title="تولید مجدد با این پرامپت (تنوع جدید)"
+                  >
+                    <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+                    <span>تنوع جدید</span>
+                  </button>
+
+                  {onInsertToChat && (
                     <button 
                       onClick={() => {
                         onInsertToChat(prompt, imageUrl);
                         onClose();
                       }}
-                      className="flex items-center gap-2 px-5 py-3 bg-purple-600/95 hover:bg-purple-500 backdrop-blur-xl text-white rounded-2xl transition-all font-bold text-sm shadow-2xl border border-purple-400/30 hover:scale-105 cursor-pointer"
+                      className="flex items-center gap-2 px-5 py-3 bg-purple-600/95 hover:bg-purple-500 backdrop-blur-xl text-white rounded-2xl transition-all font-bold text-xs sm:text-sm shadow-2xl border border-purple-400/30 hover:scale-105 cursor-pointer"
                     >
                       <Send className="w-4 h-4" />
                       <span>ارسال به چت</span>
                     </button>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
             ) : loading ? (
               /* --- LOADING STATE --- */
@@ -805,15 +930,78 @@ export function ImageGenStudio() {
                 </div>
               </div>
             ) : (
-              /* --- EMPTY CANVAS STATE --- */
-              <div className="text-center opacity-40 flex flex-col items-center mt-10">
-                <div className="w-20 h-20 sm:w-24 sm:h-24 mb-6 rounded-full bg-zinc-200 dark:bg-zinc-800 flex items-center justify-center">
-                  <ImageIcon className="w-10 h-10 text-zinc-700 dark:text-zinc-400" />
+              /* --- EMPTY CANVAS & INSPIRATION SHOWCASE --- */
+              <div className="w-full max-w-5xl py-2 sm:py-4 flex flex-col items-center animate-fadeIn text-right">
+                <div className="text-center mb-5 space-y-1.5">
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-500/10 text-purple-600 dark:text-purple-400 text-xs font-bold border border-purple-500/20 mb-1">
+                    <Sparkles className="w-3.5 h-3.5" />
+                    <span>ویترین ایده‌ها و پرامپت‌های طلایی</span>
+                  </div>
+                  <h3 className="text-base sm:text-xl font-extrabold text-zinc-800 dark:text-white">
+                    الهام بگیرید یا با یک کلیک تصویر تولید کنید
+                  </h3>
+                  <p className="text-xs text-zinc-500 dark:text-zinc-400 max-w-md mx-auto">
+                    روی هر کارت کلیک کنید تا تنظیمات بارگذاری شود یا دکمه ⚡ تولید آنی را بزنید:
+                  </p>
                 </div>
-                <h3 className="text-xl sm:text-2xl font-extrabold text-zinc-800 dark:text-white mb-2 tracking-tight">بوم خالی شما</h3>
-                <p className="text-xs sm:text-sm max-w-sm mx-auto leading-relaxed px-4">
-                  تخیلات خود را در کادر پایین بنویسید تا هوش مصنوعی آن را به یک شاهکار بصری تبدیل کند.
-                </p>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 w-full">
+                  {INSPIRATION_PROMPTS.map((item) => (
+                    <div
+                      key={item.id}
+                      onClick={() => handleSelectInspiration(item, false)}
+                      className="group relative bg-white/90 dark:bg-[#18181b]/90 hover:bg-white dark:hover:bg-[#1e1f20] border border-zinc-200/80 dark:border-white/10 hover:border-purple-500/50 rounded-2xl p-4 transition-all duration-200 shadow-sm hover:shadow-xl hover:-translate-y-1 cursor-pointer flex flex-col justify-between overflow-hidden"
+                    >
+                      {/* Top Gradient Accent */}
+                      <div className={`absolute top-0 right-0 left-0 h-1 bg-gradient-to-l ${item.gradient}`} />
+
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-500/10 text-purple-600 dark:text-purple-400">
+                            {item.badge}
+                          </span>
+                          <span className="text-[10px] text-zinc-400 dark:text-zinc-500">
+                            {item.category}
+                          </span>
+                        </div>
+
+                        <h4 className="font-extrabold text-xs sm:text-sm text-zinc-800 dark:text-zinc-100 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors line-clamp-1">
+                          {item.title}
+                        </h4>
+
+                        <p className="text-[11px] leading-relaxed text-zinc-600 dark:text-zinc-400 line-clamp-2">
+                          {item.prompt}
+                        </p>
+                      </div>
+
+                      {/* Footer Action & Tags */}
+                      <div className="pt-3 mt-3 border-t border-zinc-100 dark:border-white/5 flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-1.5 text-[10px] text-zinc-500 dark:text-zinc-400">
+                          <span className="bg-zinc-100 dark:bg-white/5 text-zinc-700 dark:text-zinc-300 px-1.5 py-0.5 rounded font-bold">
+                            {IMAGE_ENGINES.find(e => e.id === item.engine)?.name || item.engine}
+                          </span>
+                          <span>•</span>
+                          <span>{STYLE_PRESETS.find(s => s.id === item.style)?.name}</span>
+                          <span>•</span>
+                          <span className="font-mono">{item.aspectRatio}</span>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleSelectInspiration(item, true);
+                          }}
+                          className="flex items-center gap-1 px-2.5 py-1.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white rounded-xl text-[11px] font-bold shadow-xs hover:shadow transition-all hover:scale-105 active:scale-95 cursor-pointer shrink-0"
+                          title="تولید آنی این تصویر"
+                        >
+                          <Zap className="w-3 h-3 text-amber-300 fill-amber-300" />
+                          <span>تولید آنی</span>
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
           </div>
@@ -851,6 +1039,17 @@ export function ImageGenStudio() {
               {/* Clean Borderless Prompt Box */}
               <div className="relative flex items-end gap-2 bg-white/75 dark:bg-[#18181b]/75 backdrop-blur-md p-2 rounded-2xl transition-all shadow-md">
                 
+                {/* Random Idea Dice Button */}
+                <button
+                  type="button"
+                  onClick={handleRandomPrompt}
+                  disabled={loading}
+                  className="shrink-0 p-3 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 rounded-xl transition-all disabled:opacity-50 shadow-xs hover:shadow hover:-translate-y-0.5 cursor-pointer"
+                  title="ایده تصادفی (تاس پرامپت)"
+                >
+                  <Dices className="w-5 h-5 text-amber-500 hover:rotate-12 transition-transform" />
+                </button>
+
                 {/* Magic Enhance Button */}
                 <button
                   type="button"
