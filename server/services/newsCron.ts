@@ -4,7 +4,7 @@ import fs from 'fs';
 import path from 'path';
 import db from '../db/database';
 import { getGeminiClient, getPollinationsImageUrl } from './utils';
-import { bot } from '../telegram/bot';
+import { bot, getTelegramBot } from '../telegram/bot';
 
 // Path for persistent news-cron log file
 const LOG_FILE = path.join(process.cwd(), 'server', 'data', 'news-cron.log');
@@ -337,9 +337,10 @@ export async function fetchAndProcessNews() {
     // Broadcast to Telegram
     const channelId = process.env.TELEGRAM_CHANNEL_ID;
     const proxyUrl = process.env.PROXY_URL || '';
-    console.log(`[NewsCron] Telegram check — bot: ${bot ? 'initialized' : 'null'}, channelId: ${channelId || 'NOT SET'}, proxy: ${proxyUrl || 'none'}`);
+    const currentBot = getTelegramBot() || bot;
+    console.log(`[NewsCron] Telegram check — bot: ${currentBot ? 'initialized' : 'null'}, channelId: ${channelId || 'NOT SET'}, proxy: ${proxyUrl || 'none'}`);
 
-    if (bot && channelId) {
+    if (currentBot && channelId) {
       const rawBase = (process.env.WEBSITE_URL || process.env.WEB_URL || process.env.APP_URL || 'http://localhost:3000').trim().replace(/\/$/, '');
       const baseUrl = (rawBase && !rawBase.includes('MY_APP_URL')) ? rawBase : 'http://localhost:3000';
       const articleUrl = `${baseUrl}/blog/${info.lastInsertRowid}`;
@@ -355,7 +356,7 @@ export async function fetchAndProcessNews() {
       try {
         if (imageUrl && !imageUrl.includes('undefined')) {
           try {
-            await bot.telegram.sendPhoto(channelId, imageUrl, {
+            await currentBot.telegram.sendPhoto(channelId, imageUrl, {
               caption: messageText,
               parse_mode: 'HTML',
               reply_markup: {
@@ -370,7 +371,7 @@ export async function fetchAndProcessNews() {
             console.warn('[NewsCron] sendPhoto failed, falling back to text message:', photoErr?.message || photoErr);
             appendCronLog('WARN', 'sendPhoto failed, falling back to text message', photoErr?.message || photoErr);
 
-            await bot.telegram.sendMessage(channelId, messageText, {
+            await currentBot.telegram.sendMessage(channelId, messageText, {
               parse_mode: 'HTML',
               reply_markup: {
                 inline_keyboard: [
@@ -382,7 +383,7 @@ export async function fetchAndProcessNews() {
             appendCronLog('INFO', 'News text broadcasted to Telegram successfully', { articleId: info.lastInsertRowid });
           }
         } else {
-          await bot.telegram.sendMessage(channelId, messageText, {
+          await currentBot.telegram.sendMessage(channelId, messageText, {
             parse_mode: 'HTML',
             reply_markup: {
               inline_keyboard: [

@@ -6,6 +6,13 @@ import jwt from 'jsonwebtoken';
 import { telegramAuthSessions, JWT_SECRET } from '../services/telegramAuthSessions';
 
 export let bot: Telegraf<any> | null = null;
+
+export function getTelegramBot(): Telegraf<any> | null {
+  if (!bot && process.env.TELEGRAM_BOT_TOKEN) {
+    startTelegramBot();
+  }
+  return bot;
+}
 const RLM = '\u200F';
 const pendingCheckouts = new Map<string, string>(); // tgId -> productId
 const pendingReceipts = new Map<string, string>(); // tgId -> orderId
