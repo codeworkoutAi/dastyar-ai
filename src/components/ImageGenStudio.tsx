@@ -136,13 +136,25 @@ const INSPIRATION_PROMPTS: InspirationCard[] = [
   },
 ];
 
+// Helper to ensure all image URLs (including older history) load through secure proxy to bypass Iranian ISP SSL filtering
+export function toSafeImageUrl(url?: string | null): string {
+  if (!url) return '';
+  if (url.startsWith('data:') || url.startsWith('/')) return url;
+  if (url.includes('pollinations.ai')) {
+    return `/api/proxy-image?url=${encodeURIComponent(url)}`;
+  }
+  return url;
+}
+
 // Helper to preload image before rendering in DOM with automatic fallback retry & secure proxy
-function preloadImage(url: string, timeoutMs = 45000): Promise<string> {
+function preloadImage(rawUrl: string, timeoutMs = 55000): Promise<string> {
   return new Promise((resolve, reject) => {
-    if (url.startsWith('data:')) {
-      return resolve(url);
+    if (!rawUrl) return reject(new Error('آدرس تصویر نامعتبر است.'));
+    if (rawUrl.startsWith('data:')) {
+      return resolve(rawUrl);
     }
 
+    const safeUrl = toSafeImageUrl(rawUrl);
     const img = new Image();
     let isSettled = false;
 
@@ -157,45 +169,32 @@ function preloadImage(url: string, timeoutMs = 45000): Promise<string> {
       if (isSettled) return;
       isSettled = true;
       clearTimeout(timer);
-      resolve(url);
+      resolve(safeUrl);
     };
 
     img.onerror = () => {
       if (isSettled) return;
-      // If direct CDN connection fails (e.g. Iranian ISP TLS/cipher reset or filtering),
-      // seamlessly load via our own server's secure proxy
-      const proxyUrl = `/api/proxy-image?url=${encodeURIComponent(url)}`;
-      const proxyImg = new Image();
-      proxyImg.onload = () => {
+      // If direct CDN or proxy fails, attempt one fresh seed retry
+      const separator = rawUrl.includes('?') ? '&' : '?';
+      const fallbackUrl = `${rawUrl.replace(/seed=\d+/, '')}${separator}seed=${Math.floor(Math.random() * 10000000)}`;
+      const fallbackProxy = toSafeImageUrl(fallbackUrl);
+      const lastTry = new Image();
+      lastTry.onload = () => {
         if (isSettled) return;
         isSettled = true;
         clearTimeout(timer);
-        resolve(proxyUrl);
+        resolve(fallbackProxy);
       };
-      proxyImg.onerror = () => {
-        // As a final fallback attempt, try fresh seed via proxy
-        const separator = url.includes('?') ? '&' : '?';
-        const fallbackUrl = `${url.replace(/seed=\d+/, '')}${separator}seed=${Math.floor(Math.random() * 10000000)}`;
-        const fallbackProxy = `/api/proxy-image?url=${encodeURIComponent(fallbackUrl)}`;
-        const lastTry = new Image();
-        lastTry.onload = () => {
-          if (isSettled) return;
-          isSettled = true;
-          clearTimeout(timer);
-          resolve(fallbackProxy);
-        };
-        lastTry.onerror = () => {
-          if (isSettled) return;
-          isSettled = true;
-          clearTimeout(timer);
-          reject(new Error('خطا در دریافت فایل تصویر از سرور. لطفاً مجدداً دکمه تولید را بزنید.'));
-        };
-        lastTry.src = fallbackProxy;
+      lastTry.onerror = () => {
+        if (isSettled) return;
+        isSettled = true;
+        clearTimeout(timer);
+        reject(new Error('خطا در دریافت فایل تصویر از سرور. لطفاً مجدداً دکمه تولید را بزنید.'));
       };
-      proxyImg.src = proxyUrl;
+      lastTry.src = fallbackProxy;
     };
 
-    img.src = url;
+    img.src = safeUrl;
   });
 }
 
@@ -637,7 +636,7 @@ export function ImageGenStudio() {
               {imageUrl && (
                 <div className="pointer-events-auto">
                   <a
-                    href={imageUrl}
+                    href={toSafeImageUrl(imageUrl)}
                     download="persian-ai-image.png"
                     target="_blank"
                     rel="noreferrer"
@@ -803,7 +802,7 @@ export function ImageGenStudio() {
                           className="group relative aspect-square rounded-2xl sm:rounded-3xl overflow-hidden bg-zinc-200 dark:bg-zinc-800 cursor-pointer border border-zinc-200/80 dark:border-white/10 shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
                         >
                           <img 
-                            src={item.url} 
+                            src={toSafeImageUrl(item.url)} 
                             alt={item.prompt} 
                             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" 
                             loading="lazy" 
@@ -850,7 +849,7 @@ export function ImageGenStudio() {
 
                               {/* Download */}
                               <a
-                                href={item.url}
+                                href={toSafeImageUrl(item.url)}
                                 download="persian-ai-image.png"
                                 target="_blank"
                                 rel="noreferrer"
@@ -881,7 +880,7 @@ export function ImageGenStudio() {
               /* --- SINGLE CANVAS IMAGE PREVIEW --- */
               <div className="relative group max-w-full max-h-full rounded-2xl overflow-hidden shadow-2xl animate-scaleIn ring-1 ring-white/10">
                 <img 
-                  src={imageUrl} 
+                  src={toSafeImageUrl(imageUrl)} 
                   alt="Generated" 
                   className="max-w-full max-h-[55vh] lg:max-h-[72vh] object-contain bg-black/10 backdrop-blur-3xl"
                   onError={() => {
@@ -1110,7 +1109,7 @@ export function ImageGenStudio() {
             {/* Left Side: Large Image Preview */}
             <div className="flex-1 bg-black/40 flex items-center justify-center p-4 min-h-[260px] sm:min-h-[380px] relative">
               <img 
-                src={selectedDetailImage.url} 
+                src={toSafeImageUrl(selectedDetailImage.url)} 
                 alt={selectedDetailImage.prompt} 
                 className="max-w-full max-h-[45vh] md:max-h-[75vh] object-contain rounded-2xl shadow-xl"
               />
@@ -1206,7 +1205,7 @@ export function ImageGenStudio() {
                 <div className="flex items-center gap-2 pt-1">
                   {/* Download */}
                   <a
-                    href={selectedDetailImage.url}
+                    href={toSafeImageUrl(selectedDetailImage.url)}
                     download="persian-ai-image.png"
                     target="_blank"
                     rel="noreferrer"

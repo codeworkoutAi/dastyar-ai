@@ -385,7 +385,8 @@ router.post('/api/chat/stream', async (req, res) => {
             let generatedImageUrl: string | undefined = undefined;
             if (targetImagePrompt) {
               const enhancedPrompt = await translateAndEnhanceImagePrompt(targetImagePrompt);
-              generatedImageUrl = getPollinationsImageUrl(enhancedPrompt, '1:1', 'flux');
+              const rawUrl = getPollinationsImageUrl(enhancedPrompt, '1:1', 'flux');
+              generatedImageUrl = `/api/proxy-image?url=${encodeURIComponent(rawUrl)}`;
               sendChunk({ imageUrl: generatedImageUrl });
             }
 

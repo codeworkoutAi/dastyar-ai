@@ -251,9 +251,11 @@ router.post('/api/generate-image', async (req, res) => {
       throw new Error('خطا در دریافت تصویر از Imagen 3');
     }
 
-    const imageUrl = getPollinationsImageUrl(enhancedPrompt, aspectRatio, engine);
-    console.log('[ImageGen API] ✅ Image generated successfully URL:', imageUrl);
-    res.json({ imageUrl, enhancedPrompt });
+    const rawImageUrl = getPollinationsImageUrl(enhancedPrompt, aspectRatio, engine);
+    console.log('[ImageGen API] ✅ Image generated successfully URL:', rawImageUrl);
+    // Use secure proxy URL by default to avoid Iranian ISP cipher mismatches & filtering
+    const imageUrl = `/api/proxy-image?url=${encodeURIComponent(rawImageUrl)}`;
+    res.json({ imageUrl, rawImageUrl, enhancedPrompt });
   } catch (err: any) {
     console.error('[ImageGen API] 💥 Error in image generation:', err);
     res.status(500).json({ error: sanitizeErrorMessage(err) });
@@ -274,11 +276,16 @@ router.get('/api/proxy-image', async (req, res) => {
       return res.status(403).send('دامنه درخواستی مجاز نیست.');
     }
 
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 55000);
+
     const upstreamRes = await fetch(rawUrl, {
+      signal: controller.signal,
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
       },
     });
+    clearTimeout(timeout);
 
     if (!upstreamRes.ok) {
       return res.status(upstreamRes.status).send('خطا در دریافت تصویر از منبع.');
