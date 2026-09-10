@@ -1,7 +1,10 @@
 import {
   AlertTriangle,
   ArrowRight,
-  Check, Copy,
+  Check,
+  ChevronLeft,
+  ChevronRight,
+  Copy,
   Dices,
   Download,
   History,
@@ -14,7 +17,7 @@ import {
   Trash2, Wand2,
   X, Zap
 } from 'lucide-react';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { loadSettings } from '../lib/storage';
 import { useChatStore } from '../store/chatStore';
 import { useUIStore } from '../store/uiStore';
@@ -263,6 +266,15 @@ export function ImageGenStudio() {
   // Settings
   const settings = loadSettings();
   const hasOpenAiKey = !!settings.providers.openai?.apiKey;
+
+  // Horizontal Inspiration Scroll Ref & Navigation
+  const inspirationScrollRef = useRef<HTMLDivElement>(null);
+  const scrollInspiration = (direction: 'left' | 'right') => {
+    if (inspirationScrollRef.current) {
+      const amount = direction === 'left' ? -260 : 260;
+      inspirationScrollRef.current.scrollBy({ left: amount, behavior: 'smooth' });
+    }
+  };
 
   useEffect(() => {
     if (isOpen) {
@@ -996,42 +1008,69 @@ export function ImageGenStudio() {
             <div className="absolute bottom-0 left-0 right-0 p-3 lg:p-6 bg-gradient-to-t from-zinc-100 via-zinc-100/95 dark:from-[#0a0a0a] dark:via-[#0a0a0a]/95 to-transparent pt-12 z-20">
               <div className="max-w-4xl mx-auto flex flex-col gap-2.5">
                 
-                {/* Compact Horizontal Inspiration Rail (Single sleek row above prompt) */}
+                {/* Compact Horizontal Inspiration Rail (Single sleek row with smooth scroll & chevrons) */}
                 {!imageUrl && !loading && (
-                  <div className="flex items-center gap-2 overflow-x-auto hide-scrollbar pb-1 px-1">
-                    <span className="shrink-0 flex items-center gap-1 text-[11px] font-extrabold text-purple-600 dark:text-purple-400 pl-1">
-                      <Sparkles className="w-3.5 h-3.5" />
-                      <span>ایده‌ها:</span>
-                    </span>
-                    {INSPIRATION_PROMPTS.map((item) => (
-                      <button
-                        key={item.id}
-                        type="button"
-                        onClick={() => handleSelectInspiration(item, false)}
-                        className="group shrink-0 flex items-center gap-2 p-1.5 pl-3 rounded-2xl bg-white/80 dark:bg-[#18181b]/80 hover:bg-white dark:hover:bg-[#222226] border border-zinc-200/80 dark:border-white/10 hover:border-purple-500/40 shadow-xs hover:shadow-md transition-all cursor-pointer hover:scale-102 active:scale-98"
-                        title={item.prompt}
-                      >
-                        <img
-                          src={item.thumbnail}
-                          alt={item.title}
-                          className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl object-cover shadow-xs group-hover:scale-105 transition-transform"
-                          loading="lazy"
-                        />
-                        <span className="text-[11px] sm:text-xs font-bold text-zinc-700 dark:text-zinc-200 group-hover:text-purple-600 dark:group-hover:text-purple-400 whitespace-nowrap">
-                          {item.title}
-                        </span>
-                        <span
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleSelectInspiration(item, true);
-                          }}
-                          className="p-1 rounded-lg hover:bg-purple-500 hover:text-white text-purple-600 dark:text-purple-400 transition-colors"
-                          title="تولید آنی"
+                  <div className="relative flex items-center gap-1.5 w-full">
+                    {/* Right Arrow (Scroll right) */}
+                    <button
+                      type="button"
+                      onClick={() => scrollInspiration('right')}
+                      className="shrink-0 w-7 h-7 rounded-xl bg-white/90 dark:bg-zinc-800/90 border border-zinc-200/80 dark:border-white/10 hover:bg-purple-50 dark:hover:bg-purple-950/40 text-zinc-600 dark:text-zinc-300 hover:text-purple-600 flex items-center justify-center shadow-xs transition-all cursor-pointer hover:scale-105 active:scale-95 z-10"
+                    >
+                      <ChevronRight className="w-4 h-4" />
+                    </button>
+
+                    {/* Scrollable Container with horizontal mouse wheel support */}
+                    <div
+                      ref={inspirationScrollRef}
+                      onWheel={(e) => {
+                        if (e.deltaY !== 0 && inspirationScrollRef.current) {
+                          inspirationScrollRef.current.scrollLeft += e.deltaY;
+                        }
+                      }}
+                      className="flex-1 flex items-center gap-2 overflow-x-auto hide-scrollbar scroll-smooth py-1 px-1"
+                    >
+                      <span className="shrink-0 flex items-center gap-1 text-[11px] font-extrabold text-purple-600 dark:text-purple-400 pl-1 select-none">
+                        <Sparkles className="w-3.5 h-3.5" />
+                        <span>ایده‌ها:</span>
+                      </span>
+                      {INSPIRATION_PROMPTS.map((item) => (
+                        <button
+                          key={item.id}
+                          type="button"
+                          onClick={() => handleSelectInspiration(item, false)}
+                          className="group shrink-0 flex items-center gap-2 p-1.5 pl-3 rounded-2xl bg-white/80 dark:bg-[#18181b]/80 hover:bg-white dark:hover:bg-[#222226] border border-zinc-200/80 dark:border-white/10 hover:border-purple-500/40 shadow-xs hover:shadow-md transition-all cursor-pointer hover:scale-102 active:scale-98"
                         >
-                          <Zap className="w-3 h-3 text-amber-400 fill-amber-400" />
-                        </span>
-                      </button>
-                    ))}
+                          <img
+                            src={item.thumbnail}
+                            alt={item.title}
+                            className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl object-cover shadow-xs group-hover:scale-105 transition-transform"
+                            loading="lazy"
+                          />
+                          <span className="text-[11px] sm:text-xs font-bold text-zinc-700 dark:text-zinc-200 group-hover:text-purple-600 dark:group-hover:text-purple-400 whitespace-nowrap select-none">
+                            {item.title}
+                          </span>
+                          <span
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleSelectInspiration(item, true);
+                            }}
+                            className="p-1 rounded-lg hover:bg-purple-500 hover:text-white text-purple-600 dark:text-purple-400 transition-colors"
+                          >
+                            <Zap className="w-3 h-3 text-amber-400 fill-amber-400" />
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* Left Arrow (Scroll left) */}
+                    <button
+                      type="button"
+                      onClick={() => scrollInspiration('left')}
+                      className="shrink-0 w-7 h-7 rounded-xl bg-white/90 dark:bg-zinc-800/90 border border-zinc-200/80 dark:border-white/10 hover:bg-purple-50 dark:hover:bg-purple-950/40 text-zinc-600 dark:text-zinc-300 hover:text-purple-600 flex items-center justify-center shadow-xs transition-all cursor-pointer hover:scale-105 active:scale-95 z-10"
+                    >
+                      <ChevronLeft className="w-4 h-4" />
+                    </button>
                   </div>
                 )}
 
