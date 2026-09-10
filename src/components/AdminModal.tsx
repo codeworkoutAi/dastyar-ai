@@ -1303,7 +1303,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
                               {/* Header & Badges */}
                               <div className="flex items-start justify-between gap-2">
                                 <div>
-                                  <h4 className="text-sm font-extrabold text-zinc-900 dark:text-zinc-100 flex items-center gap-1.5">
+                                  <h4 className="text-sm font-bold text-zinc-900 dark:text-zinc-100 flex items-center gap-1.5">
                                     <span>{p.name}</span>
                                     {p.isActive === 1 ? (
                                       <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]" title="فعال" />
@@ -1321,8 +1321,8 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
                                       {p.role === 'coding' ? <Code2 className="w-3 h-3" /> : p.role === 'vision' ? <Eye className="w-3 h-3" /> : <Sparkles className="w-3 h-3" />}
                                       <span>{p.role === 'coding' ? 'کدنویسی' : p.role === 'vision' ? 'بینایی و تصویر' : 'عمومی'}</span>
                                     </span>
-                                    <span className="text-[10px] text-zinc-500 dark:text-zinc-400 bg-zinc-100 dark:bg-zinc-800 px-2 py-0.5 rounded-full font-mono">
-                                      ترتیب: {p.orderIndex || 0}
+                                    <span className="text-[10px] text-zinc-600 dark:text-zinc-300 bg-zinc-100 dark:bg-zinc-800 px-2 py-0.5 rounded-full font-medium">
+                                      ترتیب: <span className="font-mono">{p.orderIndex || 0}</span>
                                     </span>
                                     <span className="text-[10px] text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full font-bold flex items-center gap-1">
                                       <ShieldCheck className="w-3 h-3" />
@@ -1344,16 +1344,16 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
                               </div>
 
                               {/* Details */}
-                              <div className="space-y-1.5 text-xs text-zinc-600 dark:text-zinc-400 pt-2 border-t border-zinc-100 dark:border-zinc-800">
-                                <div className="flex items-center justify-between font-mono text-[11px]" dir="ltr">
-                                  <span className="text-zinc-400 dark:text-zinc-500">Model:</span>
-                                  <span className="font-bold text-zinc-800 dark:text-zinc-200 bg-zinc-100 dark:bg-zinc-800/80 px-1.5 py-0.5 rounded truncate max-w-[200px]" title={p.modelName}>
+                              <div className="space-y-2 text-xs pt-2.5 border-t border-zinc-100 dark:border-zinc-800/80">
+                                <div className="flex items-center justify-between gap-2" dir="ltr">
+                                  <span className="text-[11px] font-semibold text-zinc-400 dark:text-zinc-400 tracking-wider">Model:</span>
+                                  <span className="font-mono font-medium text-[11.5px] text-zinc-800 dark:text-zinc-200 bg-zinc-100 dark:bg-zinc-800/90 px-2 py-0.5 rounded border border-zinc-200/40 dark:border-zinc-700/50 truncate max-w-[210px]" title={p.modelName}>
                                     {p.modelName}
                                   </span>
                                 </div>
-                                <div className="flex items-center justify-between font-mono text-[10px]" dir="ltr">
-                                  <span className="text-zinc-400 dark:text-zinc-500">Endpoint:</span>
-                                  <span className="text-zinc-500 dark:text-zinc-400 truncate max-w-[200px]" title={p.baseUrl}>
+                                <div className="flex items-center justify-between gap-2" dir="ltr">
+                                  <span className="text-[11px] font-semibold text-zinc-400 dark:text-zinc-400 tracking-wider">Endpoint:</span>
+                                  <span className="font-mono text-[11px] text-zinc-600 dark:text-zinc-300 truncate max-w-[210px]" title={p.baseUrl}>
                                     {p.baseUrl ? p.baseUrl.replace(/^https?:\/\//, '') : '-'}
                                   </span>
                                 </div>
