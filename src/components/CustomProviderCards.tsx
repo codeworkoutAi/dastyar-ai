@@ -594,40 +594,37 @@ export const CustomProviderCards: React.FC<CustomProviderCardsProps> = ({
               onClick={() => handleSelectActive(profile.id)}
               className={`relative cursor-pointer rounded-2xl p-4 border transition-all duration-200 overflow-hidden group ${
                 isActive 
-                  ? 'bg-white dark:bg-zinc-800/60 border-zinc-500 shadow-md' 
-                  : 'bg-zinc-50 dark:bg-zinc-950/50 border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:border-zinc-700'
+                  ? 'bg-blue-50/20 dark:bg-zinc-800/80 border-blue-500/60 dark:border-blue-500/50 shadow-md ring-1 ring-blue-500/20' 
+                  : 'bg-white dark:bg-zinc-900/70 border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 hover:bg-zinc-50/50 dark:hover:bg-zinc-900/90'
               }`}
             >
-              <div className="flex justify-between items-start mb-2">
-                <div className="flex items-center gap-2 max-w-[75%]">
-                  <h5 className="font-bold text-zinc-900 dark:text-zinc-100 text-sm truncate pr-1">{profile.name}</h5>
-                  {profile.isSystemDefault ? (
-                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 shrink-0">رایگان سیستم</span>
-                  ) : (
-                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 shrink-0">شخصی</span>
-                  )}
+              <div className="flex justify-between items-center mb-2.5">
+                <div className="flex items-center gap-2 min-w-0 flex-1 pl-2">
                   {isActive && (
-                    <div className="w-2 h-2 shrink-0 bg-zinc-300 rounded-full shadow-[0_0_8px_rgba(255,255,255,0.8)]" title="پروفایل فعال" />
+                    <div className="w-2 h-2 shrink-0 bg-emerald-500 rounded-full shadow-[0_0_8px_rgba(16,185,129,0.8)]" title="پروفایل فعال" />
                   )}
+                  <h5 className="font-bold text-zinc-900 dark:text-zinc-100 text-sm truncate" title={profile.name}>
+                    {profile.name}
+                  </h5>
                 </div>
-                <div className="flex gap-1 opacity-100 sm:opacity-75 sm:group-hover:opacity-100 transition-opacity shrink-0">
+                <div className="flex items-center gap-1 shrink-0">
                   <button 
                     onClick={(e) => { e.stopPropagation(); setEditingProfileId(profile.id); }}
-                    className="p-1.5 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-200 dark:hover:bg-zinc-700/60 rounded-lg transition-colors"
+                    className="p-1.5 text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors"
                     title="ویرایش"
                   >
                     <PenOutlineIcon className="w-3.5 h-3.5" />
                   </button>
                   <button 
                     onClick={(e) => handleDuplicateProfile(profile, e)}
-                    className="p-1.5 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-200 dark:hover:bg-zinc-700/60 rounded-lg transition-colors"
+                    className="p-1.5 text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors"
                     title="کپی گرفتن"
                   >
                     <CopyOutlineIcon className="w-3.5 h-3.5" />
                   </button>
                   <button 
                     onClick={(e) => handleDeleteProfile(profile.id, e)}
-                    className="p-1.5 text-zinc-600 dark:text-zinc-400 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
+                    className="p-1.5 text-zinc-400 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
                     title="حذف"
                   >
                     <TrashBinMinimalisticOutlineIcon className="w-3.5 h-3.5" />
@@ -635,14 +632,29 @@ export const CustomProviderCards: React.FC<CustomProviderCardsProps> = ({
                 </div>
               </div>
               
-              <div className="space-y-1.5 mt-3">
-                <div className="flex items-center gap-2 text-xs text-zinc-700 dark:text-zinc-400 font-mono truncate">
-                  <ChartOutlineIcon className="w-3.5 h-3.5 shrink-0" />
-                  <span className="truncate bg-zinc-50 dark:bg-zinc-900 px-1.5 py-0.5 rounded text-[11px]">{profile.modelName || 'بدون مدل'}</span>
+              <div className="space-y-2 mt-3 pt-2.5 border-t border-zinc-100 dark:border-zinc-800/80">
+                <div className="flex items-center justify-between gap-2 text-xs">
+                  <div className="flex items-center gap-1.5 font-mono min-w-0 flex-1">
+                    <ChartOutlineIcon className="w-3.5 h-3.5 shrink-0 text-zinc-400 dark:text-zinc-500" />
+                    <span className="truncate bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 px-1.5 py-0.5 rounded text-[11px]" title={profile.modelName}>
+                      {profile.modelName || 'بدون مدل'}
+                    </span>
+                  </div>
+                  {profile.isSystemDefault ? (
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 shrink-0">
+                      رایگان سیستم
+                    </span>
+                  ) : (
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-zinc-500/10 text-zinc-600 dark:text-zinc-400 border border-zinc-500/20 shrink-0">
+                      شخصی
+                    </span>
+                  )}
                 </div>
-                <div className="flex items-center gap-2 text-xs text-zinc-700 dark:text-zinc-500 font-mono truncate">
-                  <LinkOutlineIcon className="w-3.5 h-3.5 shrink-0" />
-                  <span className="truncate" dir="ltr">{profile.baseUrl ? profile.baseUrl.replace(/^https?:\/\//, '') : 'بدون آدرس'}</span>
+                <div className="flex items-center gap-1.5 text-xs text-zinc-500 dark:text-zinc-400 font-mono truncate" dir="ltr">
+                  <LinkOutlineIcon className="w-3.5 h-3.5 shrink-0 text-zinc-400 dark:text-zinc-500" />
+                  <span className="truncate text-[10.5px]" title={profile.baseUrl}>
+                    {profile.baseUrl ? profile.baseUrl.replace(/^https?:\/\//, '') : 'بدون آدرس'}
+                  </span>
                 </div>
               </div>
             </div>
@@ -659,12 +671,12 @@ export const CustomProviderCards: React.FC<CustomProviderCardsProps> = ({
       </div>
 
       {editingProfile && (
-        <div className="mt-4 p-5 rounded-2xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 animate-fadeIn">
-          <div className="flex justify-between items-center mb-4 pb-3 border-b border-zinc-200 dark:border-zinc-800/50">
+        <div className="mt-4 p-5 rounded-2xl bg-zinc-50 dark:bg-zinc-950/70 border border-zinc-200 dark:border-zinc-800 animate-fadeIn">
+          <div className="flex justify-between items-center mb-4 pb-3 border-b border-zinc-200 dark:border-zinc-800/80">
             <h5 className="font-bold text-sm text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
-              <PenOutlineIcon className="w-4 h-4" /> ویرایش پروفایل
+              <PenOutlineIcon className="w-4 h-4 text-blue-500" /> ویرایش پروفایل
             </h5>
-            <button onClick={() => setEditingProfileId(null)} className="text-xs text-zinc-700 dark:text-zinc-400 hover:text-zinc-800 dark:text-zinc-200 px-2 py-1 rounded bg-zinc-50 dark:bg-zinc-900">بستن</button>
+            <button onClick={() => setEditingProfileId(null)} className="text-xs text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200 px-2.5 py-1 rounded-lg bg-zinc-200/60 dark:bg-zinc-800/80 transition-colors">بستن</button>
           </div>
           
           <div className="space-y-4">

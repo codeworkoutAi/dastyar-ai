@@ -1,14 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { 
-  CloseCircleOutlineIcon, 
+import {
+  CloseCircleOutlineIcon,
   ShopLinearIcon,
   AddSquareOutlineIcon,
   BoxLinearIcon
 } from '@solar-icons/react';
-import { 
-  Edit2, 
-  Trash2, 
-  Key, 
+import {
+  Edit2,
+  Trash2,
+  Key,
   ArrowRight,
   Check,
   X,
@@ -43,7 +43,7 @@ interface AdminModalProps {
 
 export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
   const { token, user } = useAuthStore();
-  
+
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -198,7 +198,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
 
       const res = await fetch('/api/fetch-models', {
         method: 'POST',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
@@ -264,18 +264,18 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
       if (editingDefaultProfile) {
         res = await fetch(`/api/admin/default-profiles/${editingDefaultProfile.id}`, {
           method: 'PUT',
-          headers: { 
+          headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}` 
+            'Authorization': `Bearer ${token}`
           },
           body: JSON.stringify(payload)
         });
       } else {
         res = await fetch('/api/admin/default-profiles', {
           method: 'POST',
-          headers: { 
+          headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}` 
+            'Authorization': `Bearer ${token}`
           },
           body: JSON.stringify(payload)
         });
@@ -319,9 +319,9 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
     try {
       const res = await fetch(`/api/admin/default-profiles/${profile.id}`, {
         method: 'PUT',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}` 
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({ isActive: profile.isActive === 1 ? 0 : 1 })
       });
@@ -462,13 +462,13 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
       if (data.warning) {
         setOrderFeedback({ type: 'warning', text: data.warning });
       } else {
-        setOrderFeedback({ 
-          type: 'success', 
-          text: status === 'success' 
-            ? 'سفارش تایید شد و لایسنس به صورت خودکار تخصیص یافت.' 
-            : status === 'failed' 
-            ? 'سفارش رد شد و در صورت وجود لایسنس، به انبار بازگشت.' 
-            : 'وضعیت سفارش به حالت در انتظار تغییر یافت.' 
+        setOrderFeedback({
+          type: 'success',
+          text: status === 'success'
+            ? 'سفارش تایید شد و لایسنس به صورت خودکار تخصیص یافت.'
+            : status === 'failed'
+              ? 'سفارش رد شد و در صورت وجود لایسنس، به انبار بازگشت.'
+              : 'وضعیت سفارش به حالت در انتظار تغییر یافت.'
         });
       }
 
@@ -594,15 +594,15 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
       setError('عنوان و متن خبر اجباری است');
       return;
     }
-    
+
     try {
       setError(null);
       setNewsLoading(true);
       const res = await fetch('/api/news', {
         method: 'POST',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}` 
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
           title: newsTitle,
@@ -610,14 +610,14 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
           image: newsImage
         })
       });
-      
+
       if (!res.ok) throw new Error('خطا در انتشار خبر');
-      
+
       setNewsTitle('');
       setNewsContent('');
       setNewsImage('');
       setIsAddingNews(false);
-      
+
       fetchNews();
     } catch (err: any) {
       setError(err.message);
@@ -727,17 +727,17 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
       setError('پر کردن عنوان، قیمت و دسته‌بندی اجباری است');
       return;
     }
-    
+
     try {
       setError(null);
       const url = editingProductId ? `/api/admin/products/${editingProductId}` : '/api/admin/products';
       const method = editingProductId ? 'PUT' : 'POST';
-      
+
       const res = await fetch(url, {
         method,
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}` 
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
           title,
@@ -751,12 +751,12 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
           deliveryGuide
         })
       });
-      
+
       if (!res.ok) {
         const d = await res.json();
         throw new Error(d.error || 'خطا در ذخیره محصول');
       }
-      
+
       setTitle('');
       setPrice('');
       setDescription('');
@@ -768,7 +768,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
       setCategory('account');
       setIsAdding(false);
       setEditingProductId(null);
-      
+
       fetchProducts();
     } catch (err: any) {
       setError(err.message);
@@ -794,7 +794,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
 
   const handleDeleteProduct = async (id: number) => {
     if (!window.confirm('آیا از حذف این محصول مطمئن هستید؟')) return;
-    
+
     try {
       setLoading(true);
       const res = await fetch(`/api/admin/products/${id}`, {
@@ -852,15 +852,15 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
       setLicensesLoading(true);
       const res = await fetch(`/api/admin/products/${selectedProductForLicenses.id}/licenses`, {
         method: 'POST',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}` 
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({ keys })
       });
 
       if (!res.ok) throw new Error('خطا در ثبت لایسنس‌ها');
-      
+
       setNewLicensesText('');
       await fetchLicenses(selectedProductForLicenses.id);
     } catch (err: any) {
@@ -892,11 +892,11 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-2 sm:p-4">
-      <div 
+      <div
         className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-fadeIn"
       />
       <div className="relative w-full w-[95vw] max-w-6xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl shadow-2xl overflow-hidden flex flex-col h-[90vh] md:h-[85vh] animate-slideUpScale">
-        
+
         {/* Header */}
         <div className="flex flex-col border-b border-zinc-200 dark:border-zinc-800 shrink-0">
           <div className="flex items-center justify-between p-4 sm:p-6 pb-2 sm:pb-4">
@@ -908,9 +908,6 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
                 <h2 className="text-base sm:text-lg font-extrabold text-zinc-900 dark:text-zinc-100 font-rokh">
                   پنل مدیریت فروشگاه
                 </h2>
-                <p className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 mt-0.5">
-                  مدیریت محصولات، اکانت‌ها، سفارشات و لایسنس‌ها
-                </p>
               </div>
             </div>
             <div className="flex items-center gap-2">
@@ -924,22 +921,20 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
               </button>
             </div>
           </div>
-          
+
           {/* Tabs */}
           <div className="flex items-center gap-6 px-4 sm:px-6">
             <button
               onClick={() => setActiveTab('products')}
-              className={`pb-3 text-sm font-bold border-b-2 transition-colors ${
-                activeTab === 'products' ? 'border-blue-600 text-blue-600 dark:border-blue-500 dark:text-blue-400' : 'border-transparent text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200'
-              }`}
+              className={`pb-3 text-sm font-bold border-b-2 transition-colors ${activeTab === 'products' ? 'border-blue-600 text-blue-600 dark:border-blue-500 dark:text-blue-400' : 'border-transparent text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200'
+                }`}
             >
-              محصولات و لایسنس‌ها
+              محصولات
             </button>
             <button
               onClick={() => setActiveTab('orders')}
-              className={`pb-3 text-sm font-bold border-b-2 transition-colors flex items-center gap-2 ${
-                activeTab === 'orders' ? 'border-blue-600 text-blue-600 dark:border-blue-500 dark:text-blue-400' : 'border-transparent text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200'
-              }`}
+              className={`pb-3 text-sm font-bold border-b-2 transition-colors flex items-center gap-2 ${activeTab === 'orders' ? 'border-blue-600 text-blue-600 dark:border-blue-500 dark:text-blue-400' : 'border-transparent text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200'
+                }`}
             >
               <span>سفارشات</span>
               {orders.filter(o => o.paymentStatus === 'pending').length > 0 && (
@@ -950,25 +945,22 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
             </button>
             <button
               onClick={() => setActiveTab('users')}
-              className={`pb-3 text-sm font-bold border-b-2 transition-colors ${
-                activeTab === 'users' ? 'border-blue-600 text-blue-600 dark:border-blue-500 dark:text-blue-400' : 'border-transparent text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200'
-              }`}
+              className={`pb-3 text-sm font-bold border-b-2 transition-colors ${activeTab === 'users' ? 'border-blue-600 text-blue-600 dark:border-blue-500 dark:text-blue-400' : 'border-transparent text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200'
+                }`}
             >
               کاربران
             </button>
             <button
               onClick={() => setActiveTab('news')}
-              className={`pb-3 text-sm font-bold border-b-2 transition-colors ${
-                activeTab === 'news' ? 'border-blue-600 text-blue-600 dark:border-blue-500 dark:text-blue-400' : 'border-transparent text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200'
-              }`}
+              className={`pb-3 text-sm font-bold border-b-2 transition-colors ${activeTab === 'news' ? 'border-blue-600 text-blue-600 dark:border-blue-500 dark:text-blue-400' : 'border-transparent text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200'
+                }`}
             >
               اخبار و وبلاگ
             </button>
             <button
               onClick={() => setActiveTab('settings')}
-              className={`pb-3 text-sm font-bold border-b-2 transition-colors ${
-                activeTab === 'settings' ? 'border-blue-600 text-blue-600 dark:border-blue-500 dark:text-blue-400' : 'border-transparent text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200'
-              }`}
+              className={`pb-3 text-sm font-bold border-b-2 transition-colors ${activeTab === 'settings' ? 'border-blue-600 text-blue-600 dark:border-blue-500 dark:text-blue-400' : 'border-transparent text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200'
+                }`}
             >
               تنظیمات سیستم
             </button>
@@ -1045,11 +1037,10 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
                               )}
                             </td>
                             <td className="py-4 px-6">
-                              <span className={`px-2 py-1 rounded-full text-xs font-bold ${
-                                u.role === 'admin' 
-                                  ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-400' 
-                                  : 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400'
-                              }`}>
+                              <span className={`px-2 py-1 rounded-full text-xs font-bold ${u.role === 'admin'
+                                ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-400'
+                                : 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400'
+                                }`}>
                                 {u.role === 'admin' ? 'مدیر' : 'کاربر'}
                               </span>
                             </td>
@@ -1157,41 +1148,18 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
                       </div>
 
                       <div>
-                        <div className="flex items-center justify-between mb-1.5">
-                          <label className="text-zinc-700 dark:text-zinc-300 font-bold">
-                            شناسه مدل (Model Name) <span className="text-red-500">*</span>
-                          </label>
-                          <button
-                            type="button"
-                            onClick={handleFetchModelsForAdmin}
-                            disabled={fetchingModelsForAdmin}
-                            className="text-[11px] text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-bold flex items-center gap-1 cursor-pointer disabled:opacity-50"
-                            title="دریافت خودکار مدل‌ها از روی API Key و Base URL"
-                          >
-                            <RefreshCw className={`w-3 h-3 ${fetchingModelsForAdmin ? 'animate-spin' : ''}`} />
-                            <span>فچ مدل‌ها</span>
-                          </button>
-                        </div>
-                        <div className="flex gap-2">
-                          <input
-                            type="text"
-                            value={profileFormModelName}
-                            onChange={(e) => setProfileFormModelName(e.target.value)}
-                            placeholder="مثال: qwen/qwen3.6-27b یا gemini-3.1-flash-lite"
-                            className="flex-1 px-3.5 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-blue-500 transition-colors font-mono"
-                            dir="ltr"
-                            required
-                          />
-                          <button
-                            type="button"
-                            onClick={handleFetchModelsForAdmin}
-                            disabled={fetchingModelsForAdmin}
-                            className="px-3 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-700 text-blue-600 dark:text-blue-400 transition-colors flex items-center justify-center shrink-0"
-                            title="دریافت خودکار لیست مدل‌ها از روی API Key"
-                          >
-                            <RefreshCw className={`w-4 h-4 ${fetchingModelsForAdmin ? 'animate-spin' : ''}`} />
-                          </button>
-                        </div>
+                        <label className="block text-zinc-700 dark:text-zinc-300 font-bold mb-1.5">
+                          شناسه مدل (Model Name) <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          value={profileFormModelName}
+                          onChange={(e) => setProfileFormModelName(e.target.value)}
+                          placeholder="مثال: qwen/qwen3.6-27b یا gemini-3.1-flash-lite"
+                          className="w-full px-3.5 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-blue-500 transition-colors"
+                          dir="ltr"
+                          required
+                        />
                       </div>
 
                       <div>
@@ -1282,103 +1250,6 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
                       </div>
                     </div>
 
-                    {/* Fetch Models Feedback Message */}
-                    {fetchModelsMessage && (
-                      <div className={`p-3 rounded-xl text-xs flex items-center justify-between gap-2 animate-fadeIn ${
-                        fetchModelsMessage.type === 'success'
-                          ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20'
-                          : 'bg-red-500/10 text-red-700 dark:text-red-300 border border-red-500/20'
-                      }`}>
-                        <div className="flex items-center gap-1.5">
-                          {fetchModelsMessage.type === 'success' ? (
-                            <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-500" />
-                          ) : (
-                            <AlertCircle className="w-4 h-4 shrink-0 text-red-500" />
-                          )}
-                          <span>{fetchModelsMessage.text}</span>
-                        </div>
-                        {fetchedModelsList.length > 0 && (
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setFetchedModelsList([]);
-                              setFetchModelsMessage(null);
-                            }}
-                            className="text-[11px] underline opacity-80 hover:opacity-100 cursor-pointer"
-                          >
-                            بستن لیست
-                          </button>
-                        )}
-                      </div>
-                    )}
-
-                    {/* Fetched Models Browser with Search */}
-                    {fetchedModelsList.length > 0 && (
-                      <div className="p-4 rounded-2xl bg-white dark:bg-zinc-850 border border-blue-200 dark:border-blue-900/50 shadow-sm space-y-3 animate-fadeIn">
-                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs font-bold text-zinc-800 dark:text-zinc-200 flex items-center gap-1.5">
-                              <Sparkles className="w-3.5 h-3.5 text-blue-500" />
-                              مدل‌های دریافت شده ({fetchedModelsList.length})
-                            </span>
-                            <span className="text-[11px] text-zinc-500">
-                              (برای انتخاب روی مدل کلیک کنید)
-                            </span>
-                          </div>
-                          
-                          <div className="relative flex-1 max-w-xs">
-                            <Search className="w-3.5 h-3.5 absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 pointer-events-none" />
-                            <input
-                              type="text"
-                              value={adminModelSearchQuery}
-                              onChange={(e) => setAdminModelSearchQuery(e.target.value)}
-                              placeholder="جستجوی مدل..."
-                              className="w-full pr-8 pl-3 py-1.5 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-900 text-xs text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-blue-500"
-                              dir="ltr"
-                            />
-                          </div>
-                        </div>
-
-                        <div className="max-h-52 overflow-y-auto custom-scrollbar grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 pt-1" dir="ltr">
-                          {fetchedModelsList
-                            .filter(m => {
-                              if (!adminModelSearchQuery.trim()) return true;
-                              const q = adminModelSearchQuery.toLowerCase().trim();
-                              const id = (m.id || '').toLowerCase();
-                              const name = (m.name || '').toLowerCase();
-                              return id.includes(q) || name.includes(q);
-                            })
-                            .map((m) => {
-                              const isSelected = profileFormModelName === m.id;
-                              return (
-                                <button
-                                  key={m.id}
-                                  type="button"
-                                  onClick={() => handleSelectAdminModel(m.id, m)}
-                                  className={`p-2.5 rounded-xl border text-left transition-all flex flex-col justify-between gap-1 group ${
-                                    isSelected
-                                      ? 'bg-blue-500/10 border-blue-500 text-blue-600 dark:text-blue-400 shadow-sm'
-                                      : 'bg-zinc-50 dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 hover:border-blue-400 dark:hover:border-blue-500/50 hover:bg-blue-50/40 dark:hover:bg-zinc-800'
-                                  }`}
-                                >
-                                  <div className="flex items-center justify-between gap-1 w-full">
-                                    <span className="font-mono text-xs font-bold truncate text-zinc-800 dark:text-zinc-200 group-hover:text-blue-500" title={m.id}>
-                                      {m.id}
-                                    </span>
-                                    {isSelected && <Check className="w-3.5 h-3.5 text-blue-500 shrink-0" />}
-                                  </div>
-                                  {m.name && m.name !== m.id && (
-                                    <span className="text-[10px] text-zinc-500 truncate" title={m.name}>
-                                      {m.name}
-                                    </span>
-                                  )}
-                                </button>
-                              );
-                            })}
-                        </div>
-                      </div>
-                    )}
-
                     <div className="flex items-center justify-end gap-3 pt-3 border-t border-zinc-200 dark:border-zinc-800">
                       <button
                         type="button"
@@ -1423,11 +1294,10 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
                         return (
                           <div
                             key={p.id}
-                            className={`p-4 rounded-2xl border transition-all duration-200 flex flex-col justify-between ${
-                              p.isActive === 1
-                                ? 'bg-white dark:bg-zinc-850 border-zinc-200 dark:border-zinc-700/80 shadow-sm'
-                                : 'bg-zinc-100/60 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/80 opacity-70'
-                            }`}
+                            className={`p-4 rounded-2xl border transition-all duration-200 flex flex-col justify-between ${p.isActive === 1
+                              ? 'bg-white dark:bg-zinc-900/90 border-zinc-200 dark:border-zinc-800 shadow-sm hover:border-zinc-300 dark:hover:border-zinc-700'
+                              : 'bg-zinc-100/60 dark:bg-zinc-950/60 border-zinc-200/60 dark:border-zinc-800/60 opacity-60'
+                              }`}
                           >
                             <div className="space-y-3">
                               {/* Header & Badges */}
@@ -1438,21 +1308,20 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
                                     {p.isActive === 1 ? (
                                       <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]" title="فعال" />
                                     ) : (
-                                      <span className="w-2 h-2 rounded-full bg-zinc-400" title="غیرفعال" />
+                                      <span className="w-2 h-2 rounded-full bg-zinc-500" title="غیرفعال" />
                                     )}
                                   </h4>
                                   <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
-                                    <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                                      p.role === 'coding'
-                                        ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20'
-                                        : p.role === 'vision'
+                                    <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full ${p.role === 'coding'
+                                      ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20'
+                                      : p.role === 'vision'
                                         ? 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20'
                                         : 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20'
-                                    }`}>
+                                      }`}>
                                       {p.role === 'coding' ? <Code2 className="w-3 h-3" /> : p.role === 'vision' ? <Eye className="w-3 h-3" /> : <Sparkles className="w-3 h-3" />}
                                       <span>{p.role === 'coding' ? 'کدنویسی' : p.role === 'vision' ? 'بینایی و تصویر' : 'عمومی'}</span>
                                     </span>
-                                    <span className="text-[10px] text-zinc-500 bg-zinc-100 dark:bg-zinc-800 px-2 py-0.5 rounded-full font-mono">
+                                    <span className="text-[10px] text-zinc-500 dark:text-zinc-400 bg-zinc-100 dark:bg-zinc-800 px-2 py-0.5 rounded-full font-mono">
                                       ترتیب: {p.orderIndex || 0}
                                     </span>
                                     <span className="text-[10px] text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full font-bold flex items-center gap-1">
@@ -1464,11 +1333,10 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
 
                                 <button
                                   onClick={() => handleToggleDefaultProfileActive(p)}
-                                  className={`px-2 py-1 rounded-lg text-[10px] font-bold transition-colors ${
-                                    p.isActive === 1
-                                      ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20'
-                                      : 'bg-zinc-200 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-300'
-                                  }`}
+                                  className={`px-2 py-1 rounded-lg text-[10px] font-bold transition-colors ${p.isActive === 1
+                                    ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20'
+                                    : 'bg-zinc-200 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-300 dark:hover:bg-zinc-700'
+                                    }`}
                                   title={p.isActive === 1 ? 'کلیک برای غیرفعال‌سازی' : 'کلیک برای فعال‌سازی'}
                                 >
                                   {p.isActive === 1 ? 'فعال' : 'غیرفعال'}
@@ -1477,15 +1345,15 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
 
                               {/* Details */}
                               <div className="space-y-1.5 text-xs text-zinc-600 dark:text-zinc-400 pt-2 border-t border-zinc-100 dark:border-zinc-800">
-                                <div className="flex items-center justify-between font-mono text-[11px]">
-                                  <span className="text-zinc-400">Model:</span>
-                                  <span className="font-bold text-zinc-800 dark:text-zinc-200 bg-zinc-100 dark:bg-zinc-800/80 px-1.5 py-0.5 rounded" dir="ltr">
+                                <div className="flex items-center justify-between font-mono text-[11px]" dir="ltr">
+                                  <span className="text-zinc-400 dark:text-zinc-500">Model:</span>
+                                  <span className="font-bold text-zinc-800 dark:text-zinc-200 bg-zinc-100 dark:bg-zinc-800/80 px-1.5 py-0.5 rounded truncate max-w-[200px]" title={p.modelName}>
                                     {p.modelName}
                                   </span>
                                 </div>
-                                <div className="flex items-center justify-between font-mono text-[10px]">
-                                  <span className="text-zinc-400">Endpoint:</span>
-                                  <span className="text-zinc-500 truncate max-w-[200px]" dir="ltr" title={p.baseUrl}>
+                                <div className="flex items-center justify-between font-mono text-[10px]" dir="ltr">
+                                  <span className="text-zinc-400 dark:text-zinc-500">Endpoint:</span>
+                                  <span className="text-zinc-500 dark:text-zinc-400 truncate max-w-[200px]" title={p.baseUrl}>
                                     {p.baseUrl ? p.baseUrl.replace(/^https?:\/\//, '') : '-'}
                                   </span>
                                 </div>
@@ -1493,11 +1361,10 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
 
                               {/* Test Result Message */}
                               {result && (
-                                <div className={`p-2.5 rounded-xl text-[11px] leading-tight flex items-start gap-1.5 animate-fadeIn ${
-                                  result.success
-                                    ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20'
-                                    : 'bg-red-500/10 text-red-700 dark:text-red-300 border border-red-500/20'
-                                }`}>
+                                <div className={`p-2.5 rounded-xl text-[11px] leading-tight flex items-start gap-1.5 animate-fadeIn ${result.success
+                                  ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20'
+                                  : 'bg-red-500/10 text-red-700 dark:text-red-300 border border-red-500/20'
+                                  }`}>
                                   {result.success ? <CheckCircle2 className="w-3.5 h-3.5 shrink-0 mt-0.5" /> : <XCircle className="w-3.5 h-3.5 shrink-0 mt-0.5" />}
                                   <span>{result.message}</span>
                                 </div>
@@ -1509,7 +1376,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
                               <button
                                 onClick={() => handleTestDefaultProfile(p)}
                                 disabled={isTesting}
-                                className="px-3 py-1.5 rounded-xl text-[11px] font-bold bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 transition-colors flex items-center gap-1"
+                                className="px-3 py-1.5 rounded-xl text-[11px] font-bold bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 transition-colors flex items-center gap-1"
                                 title="آزمایش سرعت پاسخ و اتصال به این مدل"
                               >
                                 {isTesting ? (
@@ -1523,14 +1390,14 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
                               <div className="flex items-center gap-1">
                                 <button
                                   onClick={() => openEditDefaultProfile(p)}
-                                  className="p-1.5 rounded-lg text-zinc-600 dark:text-zinc-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/40 transition-colors"
+                                  className="p-1.5 rounded-lg text-zinc-400 hover:text-blue-500 hover:bg-blue-500/10 dark:hover:bg-blue-500/20 transition-colors"
                                   title="ویرایش این کارت"
                                 >
                                   <Edit2 className="w-3.5 h-3.5" />
                                 </button>
                                 <button
                                   onClick={() => handleDeleteDefaultProfile(p.id)}
-                                  className="p-1.5 rounded-lg text-zinc-600 dark:text-zinc-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/40 transition-colors"
+                                  className="p-1.5 rounded-lg text-zinc-400 hover:text-red-500 hover:bg-red-500/10 dark:hover:bg-red-500/20 transition-colors"
                                   title="حذف این کارت"
                                 >
                                   <Trash2 className="w-3.5 h-3.5" />
@@ -1554,7 +1421,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
                 <p className="text-sm text-zinc-600 dark:text-zinc-400 mb-6 leading-relaxed">
                   با کلیک روی دکمه زیر، تمامی اطلاعات دیتابیس (شامل محصولات، سفارشات، لایسنس‌ها و غیره) به جز حساب کاربری فعلی شما پاک خواهد شد. این عملیات غیرقابل بازگشت است و مخصوص تست سیستم می‌باشد.
                 </p>
-                
+
                 <button
                   onClick={async () => {
                     if (window.confirm('آیا از پاک کردن کل دیتابیس مطمئن هستید؟ این عملیات غیرقابل بازگشت است!')) {
@@ -1583,356 +1450,355 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
               </div>
             </div>
           ) : activeTab === 'products' ? (
-          <div>
-          {selectedProductForLicenses ? (
-            // License Manager View
-            <div className="flex flex-col h-full animate-fadeIn">
-              <div className="flex items-center gap-4 mb-6">
-                <button 
-                  onClick={closeLicenseManager}
-                  className="p-2 hover:bg-zinc-200 dark:hover:bg-zinc-800 rounded-xl transition-colors"
-                >
-                  <ArrowRight size={20} className="text-zinc-600 dark:text-zinc-400" />
-                </button>
-                <div className="flex flex-col">
-                  <h3 className="text-lg font-bold text-zinc-800 dark:text-zinc-200">مدیریت لایسنس‌ها</h3>
-                  <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">محصول: {selectedProductForLicenses.title}</p>
-                </div>
-              </div>
-
-              {error && (
-                <div className="mb-6 p-4 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-900/50 text-red-600 dark:text-red-400 text-sm font-bold">
-                  {error}
-                </div>
-              )}
-
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Add Licenses Form */}
-                <div className="lg:col-span-1">
-                  <div className="p-5 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-sm">
-                    <h4 className="text-sm font-bold text-zinc-900 dark:text-zinc-100 mb-4">افزودن لایسنس جدید (گروهی)</h4>
-                    <p className="text-xs text-zinc-500 mb-4 leading-relaxed">
-                      هر لایسنس یا اکانت را در یک خط جدید وارد کنید.
-                    </p>
-                    <form onSubmit={handleAddLicenses} className="flex flex-col gap-4">
-                      <textarea 
-                        value={newLicensesText}
-                        onChange={(e) => setNewLicensesText(e.target.value)}
-                        className="w-full px-4 py-3 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/50 focus:border-zinc-400 dark:focus:border-zinc-500 focus:ring-1 focus:ring-zinc-400 text-sm outline-none transition-all min-h-[200px]"
-                        placeholder="apikey_12345&#10;apikey_67890&#10;user:pass"
-                        dir="ltr"
-                      />
-                      <button 
-                        type="submit" 
-                        disabled={licensesLoading || !newLicensesText.trim()}
-                        className="w-full py-2.5 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 font-bold rounded-xl hover:opacity-90 transition-opacity disabled:opacity-50"
-                      >
-                        {licensesLoading ? 'در حال ثبت...' : 'ثبت لایسنس‌ها'}
-                      </button>
-                    </form>
-                  </div>
-                </div>
-
-                {/* Licenses List */}
-                <div className="lg:col-span-2">
-                  <div className="p-5 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-sm h-full">
-                    <div className="flex items-center justify-between mb-4">
-                      <h4 className="text-sm font-bold text-zinc-900 dark:text-zinc-100">لیست لایسنس‌های موجود</h4>
-                      <span className="text-xs font-medium text-emerald-600 bg-emerald-50 dark:bg-emerald-900/30 dark:text-emerald-400 px-2.5 py-1 rounded-lg">
-                        {licenses.filter(l => l.status === 'available').length} عدد موجود
-                      </span>
-                    </div>
-
-                    {licensesLoading && licenses.length === 0 ? (
-                      <div className="flex justify-center p-8">
-                        <div className="w-6 h-6 border-2 border-zinc-300 border-t-zinc-800 rounded-full animate-spin" />
-                      </div>
-                    ) : licenses.length === 0 ? (
-                      <div className="flex flex-col items-center justify-center h-48 opacity-50">
-                        <Key className="w-10 h-10 mb-3" />
-                        <span className="text-sm font-bold">هیچ لایسنسی برای این محصول ثبت نشده است.</span>
-                      </div>
-                    ) : (
-                      <div className="flex flex-col gap-2 max-h-[500px] overflow-y-auto custom-scrollbar pr-2">
-                        {licenses.map((l: any) => (
-                          <div key={l.id} className="flex items-center justify-between p-3 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/50">
-                            <div className="flex flex-col min-w-0">
-                              <span className="text-sm font-mono text-zinc-800 dark:text-zinc-200 truncate" dir="ltr">{l.key}</span>
-                              <span className={`text-[10px] mt-1 w-max px-2 py-0.5 rounded-md ${
-                                l.status === 'available' ? 'bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400' : 'bg-red-50 text-red-600 dark:bg-red-900/30 dark:text-red-400'
-                              }`}>
-                                {l.status === 'available' ? 'آماده فروش' : 'فروخته شده'}
-                              </span>
-                            </div>
-                            {l.status === 'available' && (
-                              <button 
-                                onClick={() => handleDeleteLicense(l.id)}
-                                className="p-2 text-zinc-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors shrink-0"
-                                title="حذف لایسنس"
-                              >
-                                <Trash2 size={16} />
-                              </button>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-          ) : (
-            // Product List View
-            <div className="w-full flex flex-col h-full">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 animate-fadeIn">
-                <h3 className="text-lg font-bold text-zinc-800 dark:text-zinc-200">محصولات دیجیتال</h3>
-            <button 
-              onClick={() => {
-                if (isAdding) {
-                  setIsAdding(false);
-                  setEditingProductId(null);
-                  setTitle('');
-                  setPrice('');
-                  setDescription('');
-                  setLongDescription('');
-                  setCategory('account');
-                  setImage('');
-                  setBannerImage('');
-                } else {
-                  setIsAdding(true);
-                }
-              }}
-              className="flex items-center gap-2 px-4 py-2 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 text-sm font-bold rounded-xl hover:opacity-90 transition-opacity"
-            >
-              <AddSquareOutlineIcon className="w-4 h-4" />
-              {isAdding ? 'انصراف' : 'افزودن محصول'}
-            </button>
-          </div>
-
-          {error && (
-            <div className="mb-6 p-4 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-900/50 text-red-600 dark:text-red-400 text-sm font-bold">
-              {error}
-            </div>
-          )}
-
-          {isAdding && (
-            <div className="mb-8 p-6 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-sm max-w-2xl mx-auto">
-              <h4 className="text-base font-bold text-zinc-900 dark:text-zinc-100 mb-6 pb-4 border-b border-zinc-100 dark:border-zinc-800">{editingProductId ? 'ویرایش محصول' : 'تعریف محصول جدید'}</h4>
-              <form onSubmit={handleAddProduct} className="flex flex-col gap-5">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-bold text-zinc-600 dark:text-zinc-400">نام محصول</label>
-                    <input 
-                      type="text" 
-                      value={title}
-                      onChange={(e) => setTitle(e.target.value)}
-                      className="w-full px-4 py-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/50 focus:border-zinc-400 dark:focus:border-zinc-500 focus:ring-1 focus:ring-zinc-400 dark:focus:ring-zinc-500 text-sm outline-none transition-all"
-                      placeholder="مثال: API Key 5$"
-                    />
-                  </div>
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-bold text-zinc-600 dark:text-zinc-400">دسته بندی</label>
-                    <select 
-                      value={category}
-                      onChange={(e) => setCategory(e.target.value)}
-                      className="w-full px-4 py-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/50 focus:border-zinc-400 dark:focus:border-zinc-500 focus:ring-1 focus:ring-zinc-400 dark:focus:ring-zinc-500 text-sm outline-none transition-all"
+            <div>
+              {selectedProductForLicenses ? (
+                // License Manager View
+                <div className="flex flex-col h-full animate-fadeIn">
+                  <div className="flex items-center gap-4 mb-6">
+                    <button
+                      onClick={closeLicenseManager}
+                      className="p-2 hover:bg-zinc-200 dark:hover:bg-zinc-800 rounded-xl transition-colors"
                     >
-                      <option value="account">اکانت پرمیوم</option>
-                      <option value="api">کلید API</option>
-                      <option value="package">پکیج آموزشی</option>
-                    </select>
-                  </div>
-                </div>
-                
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-bold text-zinc-600 dark:text-zinc-400">قیمت (تومان)</label>
-                  <input 
-                    type="text" 
-                    value={price}
-                    onChange={(e) => setPrice(e.target.value)}
-                    className="w-full px-4 py-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/50 focus:border-zinc-400 dark:focus:border-zinc-500 focus:ring-1 focus:ring-zinc-400 dark:focus:ring-zinc-500 text-sm outline-none transition-all"
-                    placeholder="مثال: 50000"
-                    dir="ltr"
-                  />
-                </div>
-
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-bold text-zinc-600 dark:text-zinc-400">توضیحات کوتاه (کارت محصول)</label>
-                  <textarea 
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    className="w-full px-4 py-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/50 focus:border-zinc-400 dark:focus:border-zinc-500 focus:ring-1 focus:ring-zinc-400 dark:focus:ring-zinc-500 text-sm outline-none transition-all min-h-[80px]"
-                    placeholder="نمایش مختصر روی کارت فروشگاه..."
-                  />
-                </div>
-
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-bold text-zinc-600 dark:text-zinc-400">توضیحات کامل (پاپ‌آپ)</label>
-                  <textarea 
-                    value={longDescription}
-                    onChange={(e) => setLongDescription(e.target.value)}
-                    className="w-full px-4 py-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/50 focus:border-zinc-400 dark:focus:border-zinc-500 focus:ring-1 focus:ring-zinc-400 dark:focus:ring-zinc-500 text-sm outline-none transition-all min-h-[150px]"
-                    placeholder="توضیحات کامل محصول که در پاپ‌آپ نمایش داده می‌شود..."
-                  />
-                </div>
-
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-bold text-zinc-600 dark:text-zinc-400">آدرس سرور / Base URL (اختیاری برای کلید API)</label>
-                  <input 
-                    type="text" 
-                    value={baseUrl}
-                    onChange={(e) => setBaseUrl(e.target.value)}
-                    className="w-full px-4 py-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/50 focus:border-zinc-400 dark:focus:border-zinc-500 focus:ring-1 focus:ring-zinc-400 dark:focus:ring-zinc-500 text-sm outline-none transition-all"
-                    placeholder="مثال: https://api.openai.com/v1/chat/completions"
-                    dir="ltr"
-                  />
-                </div>
-
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-bold text-zinc-600 dark:text-zinc-400">راهنمای تحویل / Delivery Guide (اختیاری)</label>
-                  <textarea 
-                    value={deliveryGuide}
-                    onChange={(e) => setDeliveryGuide(e.target.value)}
-                    className="w-full px-4 py-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/50 focus:border-zinc-400 dark:focus:border-zinc-500 focus:ring-1 focus:ring-zinc-400 dark:focus:ring-zinc-500 text-sm outline-none transition-all min-h-[100px]"
-                    placeholder="راهنمای استفاده یا اطلاعات بیشتر که پس از خرید به کاربر نمایش داده می‌شود..."
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-bold text-zinc-600 dark:text-zinc-400">تصویر محصول (مربعی)</label>
-                    <div className="flex items-center gap-4">
-                      <label className="flex-1 px-4 py-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/50 text-sm cursor-pointer hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors text-center text-zinc-600 dark:text-zinc-400">
-                        <span>{image ? 'تغییر تصویر' : 'انتخاب تصویر'}</span>
-                        <input type="file" accept="image/*" className="hidden" onChange={(e) => handleImageChange(e, 'image')} />
-                      </label>
-                      {image && (
-                        <div className="relative w-12 h-12 rounded-lg overflow-hidden border border-zinc-200 dark:border-zinc-700 shrink-0">
-                          <img src={image} alt="Preview" className="w-full h-full object-cover" />
-                          <button type="button" onClick={() => setImage('')} className="absolute top-0 right-0 bg-red-500 text-white w-4 h-4 flex items-center justify-center rounded-bl-lg text-[10px]">✕</button>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-bold text-zinc-600 dark:text-zinc-400">تصویر بنر (عریض - اختیاری)</label>
-                    <div className="flex items-center gap-4">
-                      <label className="flex-1 px-4 py-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/50 text-sm cursor-pointer hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors text-center text-zinc-600 dark:text-zinc-400">
-                        <span>{bannerImage ? 'تغییر بنر' : 'انتخاب بنر'}</span>
-                        <input type="file" accept="image/*" className="hidden" onChange={(e) => handleImageChange(e, 'banner')} />
-                      </label>
-                      {bannerImage && (
-                        <div className="relative w-12 h-12 rounded-lg overflow-hidden border border-zinc-200 dark:border-zinc-700 shrink-0">
-                          <img src={bannerImage} alt="Preview" className="w-full h-full object-cover" />
-                          <button type="button" onClick={() => setBannerImage('')} className="absolute top-0 right-0 bg-red-500 text-white w-4 h-4 flex items-center justify-center rounded-bl-lg text-[10px]">✕</button>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex justify-end pt-2">
-                  <button type="submit" className="px-6 py-2.5 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 font-bold rounded-xl hover:opacity-90 transition-opacity">
-                    {editingProductId ? 'ذخیره تغییرات' : 'ثبت محصول'}
-                  </button>
-                </div>
-              </form>
-            </div>
-          )}
-
-          {/* Product List */}
-          {loading ? (
-            <div className="flex items-center justify-center h-32">
-              <div className="w-8 h-8 border-2 border-zinc-200 dark:border-zinc-800 border-t-zinc-900 dark:border-t-zinc-100 rounded-full animate-spin" />
-            </div>
-          ) : products.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-48 gap-4 opacity-50">
-              <BoxLinearIcon className="w-12 h-12" />
-              <span className="text-sm font-bold">هیچ محصولی یافت نشد.</span>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
-              {products.map(p => (
-                <div key={p.id} className="group flex flex-col bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-sm hover:shadow-md hover:border-zinc-300 dark:hover:border-zinc-700 transition-all overflow-hidden relative">
-                  
-                  {/* Actions (Absolute top-left) */}
-                  <div className="absolute top-3 left-3 flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity z-10 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md p-1 rounded-xl shadow-sm border border-zinc-100 dark:border-zinc-800">
-                    <button 
-                      type="button"
-                      onClick={() => handleEditClick(p)}
-                      className="p-1.5 text-zinc-600 hover:text-blue-600 hover:bg-blue-50 dark:text-zinc-400 dark:hover:bg-blue-900/40 rounded-lg transition-colors"
-                      title="ویرایش"
-                    >
-                      <Edit2 size={16} />
+                      <ArrowRight size={20} className="text-zinc-600 dark:text-zinc-400" />
                     </button>
-                    <button 
-                      type="button"
-                      onClick={() => handleDeleteProduct(p.id)}
-                      className="p-1.5 text-zinc-600 hover:text-red-600 hover:bg-red-50 dark:text-zinc-400 dark:hover:bg-red-900/40 rounded-lg transition-colors"
-                      title="حذف"
-                    >
-                      <Trash2 size={16} />
-                    </button>
+                    <div className="flex flex-col">
+                      <h3 className="text-lg font-bold text-zinc-800 dark:text-zinc-200">مدیریت لایسنس‌ها</h3>
+                      <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">محصول: {selectedProductForLicenses.title}</p>
+                    </div>
                   </div>
 
-                  {/* Image Banner */}
-                  <div className="w-full h-36 bg-zinc-100 dark:bg-zinc-800 relative flex-shrink-0">
-                    {p.image ? (
-                      <img src={p.image} alt={p.title} className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-zinc-400">
-                        <BoxLinearIcon className="w-10 h-10 opacity-50" />
-                      </div>
-                    )}
-                    <span className="absolute bottom-3 right-3 text-xs px-2.5 py-1 bg-white/90 dark:bg-zinc-900/90 text-zinc-800 dark:text-zinc-200 font-medium rounded-lg shadow-sm backdrop-blur-sm">
-                      {p.category}
-                    </span>
-                  </div>
+                  {error && (
+                    <div className="mb-6 p-4 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-900/50 text-red-600 dark:text-red-400 text-sm font-bold">
+                      {error}
+                    </div>
+                  )}
 
-                  {/* Details */}
-                  <div className="flex flex-col flex-1 p-4">
-                    <h5 className="font-bold text-zinc-900 dark:text-zinc-100 mb-2 leading-relaxed line-clamp-2" title={p.title}>{p.title}</h5>
-                    {p.description && (
-                      <p className="text-xs text-zinc-500 dark:text-zinc-400 line-clamp-2 mb-4 leading-loose">{p.description}</p>
-                    )}
-                    
-                    <div className="mt-auto flex items-center justify-between border-t border-zinc-100 dark:border-zinc-800/60 pt-4">
-                      <div className="flex flex-col">
-                        <span className="text-[10px] text-zinc-400 dark:text-zinc-500 mb-1">قیمت</span>
-                        <span className="text-[15px] font-black text-zinc-900 dark:text-zinc-100">{p.price.toLocaleString()} <span className="text-xs font-normal text-zinc-500">تومان</span></span>
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    {/* Add Licenses Form */}
+                    <div className="lg:col-span-1">
+                      <div className="p-5 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-sm">
+                        <h4 className="text-sm font-bold text-zinc-900 dark:text-zinc-100 mb-4">افزودن لایسنس جدید (گروهی)</h4>
+                        <p className="text-xs text-zinc-500 mb-4 leading-relaxed">
+                          هر لایسنس یا اکانت را در یک خط جدید وارد کنید.
+                        </p>
+                        <form onSubmit={handleAddLicenses} className="flex flex-col gap-4">
+                          <textarea
+                            value={newLicensesText}
+                            onChange={(e) => setNewLicensesText(e.target.value)}
+                            className="w-full px-4 py-3 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/50 focus:border-zinc-400 dark:focus:border-zinc-500 focus:ring-1 focus:ring-zinc-400 text-sm outline-none transition-all min-h-[200px]"
+                            placeholder="apikey_12345&#10;apikey_67890&#10;user:pass"
+                            dir="ltr"
+                          />
+                          <button
+                            type="submit"
+                            disabled={licensesLoading || !newLicensesText.trim()}
+                            className="w-full py-2.5 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 font-bold rounded-xl hover:opacity-90 transition-opacity disabled:opacity-50"
+                          >
+                            {licensesLoading ? 'در حال ثبت...' : 'ثبت لایسنس‌ها'}
+                          </button>
+                        </form>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <div className="flex flex-col items-end mr-2">
-                          <span className="text-[10px] text-zinc-400 dark:text-zinc-500 mb-1">{p.category === 'package' ? 'وضعیت' : 'موجودی'}</span>
-                          <span className="text-[13px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 px-2 py-0.5 rounded-md">
-                            {p.category === 'package' ? 'موجود' : `${p.stock || 0} عدد`}
+                    </div>
+
+                    {/* Licenses List */}
+                    <div className="lg:col-span-2">
+                      <div className="p-5 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-sm h-full">
+                        <div className="flex items-center justify-between mb-4">
+                          <h4 className="text-sm font-bold text-zinc-900 dark:text-zinc-100">لیست لایسنس‌های موجود</h4>
+                          <span className="text-xs font-medium text-emerald-600 bg-emerald-50 dark:bg-emerald-900/30 dark:text-emerald-400 px-2.5 py-1 rounded-lg">
+                            {licenses.filter(l => l.status === 'available').length} عدد موجود
                           </span>
                         </div>
-                        {p.category !== 'package' && (
-                          <button 
-                            onClick={() => openLicenseManager(p)}
-                            className="p-2 text-blue-600 bg-blue-50 hover:bg-blue-100 dark:text-blue-400 dark:bg-blue-900/20 dark:hover:bg-blue-900/40 rounded-xl transition-colors"
-                            title="مدیریت لایسنس‌ها"
-                          >
-                            <Key size={18} />
-                          </button>
+
+                        {licensesLoading && licenses.length === 0 ? (
+                          <div className="flex justify-center p-8">
+                            <div className="w-6 h-6 border-2 border-zinc-300 border-t-zinc-800 rounded-full animate-spin" />
+                          </div>
+                        ) : licenses.length === 0 ? (
+                          <div className="flex flex-col items-center justify-center h-48 opacity-50">
+                            <Key className="w-10 h-10 mb-3" />
+                            <span className="text-sm font-bold">هیچ لایسنسی برای این محصول ثبت نشده است.</span>
+                          </div>
+                        ) : (
+                          <div className="flex flex-col gap-2 max-h-[500px] overflow-y-auto custom-scrollbar pr-2">
+                            {licenses.map((l: any) => (
+                              <div key={l.id} className="flex items-center justify-between p-3 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/50">
+                                <div className="flex flex-col min-w-0">
+                                  <span className="text-sm font-mono text-zinc-800 dark:text-zinc-200 truncate" dir="ltr">{l.key}</span>
+                                  <span className={`text-[10px] mt-1 w-max px-2 py-0.5 rounded-md ${l.status === 'available' ? 'bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400' : 'bg-red-50 text-red-600 dark:bg-red-900/30 dark:text-red-400'
+                                    }`}>
+                                    {l.status === 'available' ? 'آماده فروش' : 'فروخته شده'}
+                                  </span>
+                                </div>
+                                {l.status === 'available' && (
+                                  <button
+                                    onClick={() => handleDeleteLicense(l.id)}
+                                    className="p-2 text-zinc-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors shrink-0"
+                                    title="حذف لایسنس"
+                                  >
+                                    <Trash2 size={16} />
+                                  </button>
+                                )}
+                              </div>
+                            ))}
+                          </div>
                         )}
                       </div>
                     </div>
                   </div>
                 </div>
-              ))}
+              ) : (
+                // Product List View
+                <div className="w-full flex flex-col h-full">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 animate-fadeIn">
+                    <h3 className="text-lg font-bold text-zinc-800 dark:text-zinc-200">محصولات دیجیتال</h3>
+                    <button
+                      onClick={() => {
+                        if (isAdding) {
+                          setIsAdding(false);
+                          setEditingProductId(null);
+                          setTitle('');
+                          setPrice('');
+                          setDescription('');
+                          setLongDescription('');
+                          setCategory('account');
+                          setImage('');
+                          setBannerImage('');
+                        } else {
+                          setIsAdding(true);
+                        }
+                      }}
+                      className="flex items-center gap-2 px-4 py-2 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 text-sm font-bold rounded-xl hover:opacity-90 transition-opacity"
+                    >
+                      <AddSquareOutlineIcon className="w-4 h-4" />
+                      {isAdding ? 'انصراف' : 'افزودن محصول'}
+                    </button>
+                  </div>
+
+                  {error && (
+                    <div className="mb-6 p-4 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-900/50 text-red-600 dark:text-red-400 text-sm font-bold">
+                      {error}
+                    </div>
+                  )}
+
+                  {isAdding && (
+                    <div className="mb-8 p-6 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-sm max-w-2xl mx-auto">
+                      <h4 className="text-base font-bold text-zinc-900 dark:text-zinc-100 mb-6 pb-4 border-b border-zinc-100 dark:border-zinc-800">{editingProductId ? 'ویرایش محصول' : 'تعریف محصول جدید'}</h4>
+                      <form onSubmit={handleAddProduct} className="flex flex-col gap-5">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <div className="flex flex-col gap-1.5">
+                            <label className="text-xs font-bold text-zinc-600 dark:text-zinc-400">نام محصول</label>
+                            <input
+                              type="text"
+                              value={title}
+                              onChange={(e) => setTitle(e.target.value)}
+                              className="w-full px-4 py-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/50 focus:border-zinc-400 dark:focus:border-zinc-500 focus:ring-1 focus:ring-zinc-400 dark:focus:ring-zinc-500 text-sm outline-none transition-all"
+                              placeholder="مثال: API Key 5$"
+                            />
+                          </div>
+                          <div className="flex flex-col gap-1.5">
+                            <label className="text-xs font-bold text-zinc-600 dark:text-zinc-400">دسته بندی</label>
+                            <select
+                              value={category}
+                              onChange={(e) => setCategory(e.target.value)}
+                              className="w-full px-4 py-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/50 focus:border-zinc-400 dark:focus:border-zinc-500 focus:ring-1 focus:ring-zinc-400 dark:focus:ring-zinc-500 text-sm outline-none transition-all"
+                            >
+                              <option value="account">اکانت پرمیوم</option>
+                              <option value="api">کلید API</option>
+                              <option value="package">پکیج آموزشی</option>
+                            </select>
+                          </div>
+                        </div>
+
+                        <div className="flex flex-col gap-1.5">
+                          <label className="text-xs font-bold text-zinc-600 dark:text-zinc-400">قیمت (تومان)</label>
+                          <input
+                            type="text"
+                            value={price}
+                            onChange={(e) => setPrice(e.target.value)}
+                            className="w-full px-4 py-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/50 focus:border-zinc-400 dark:focus:border-zinc-500 focus:ring-1 focus:ring-zinc-400 dark:focus:ring-zinc-500 text-sm outline-none transition-all"
+                            placeholder="مثال: 50000"
+                            dir="ltr"
+                          />
+                        </div>
+
+                        <div className="flex flex-col gap-1.5">
+                          <label className="text-xs font-bold text-zinc-600 dark:text-zinc-400">توضیحات کوتاه (کارت محصول)</label>
+                          <textarea
+                            value={description}
+                            onChange={(e) => setDescription(e.target.value)}
+                            className="w-full px-4 py-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/50 focus:border-zinc-400 dark:focus:border-zinc-500 focus:ring-1 focus:ring-zinc-400 dark:focus:ring-zinc-500 text-sm outline-none transition-all min-h-[80px]"
+                            placeholder="نمایش مختصر روی کارت فروشگاه..."
+                          />
+                        </div>
+
+                        <div className="flex flex-col gap-1.5">
+                          <label className="text-xs font-bold text-zinc-600 dark:text-zinc-400">توضیحات کامل (پاپ‌آپ)</label>
+                          <textarea
+                            value={longDescription}
+                            onChange={(e) => setLongDescription(e.target.value)}
+                            className="w-full px-4 py-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/50 focus:border-zinc-400 dark:focus:border-zinc-500 focus:ring-1 focus:ring-zinc-400 dark:focus:ring-zinc-500 text-sm outline-none transition-all min-h-[150px]"
+                            placeholder="توضیحات کامل محصول که در پاپ‌آپ نمایش داده می‌شود..."
+                          />
+                        </div>
+
+                        <div className="flex flex-col gap-1.5">
+                          <label className="text-xs font-bold text-zinc-600 dark:text-zinc-400">آدرس سرور / Base URL (اختیاری برای کلید API)</label>
+                          <input
+                            type="text"
+                            value={baseUrl}
+                            onChange={(e) => setBaseUrl(e.target.value)}
+                            className="w-full px-4 py-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/50 focus:border-zinc-400 dark:focus:border-zinc-500 focus:ring-1 focus:ring-zinc-400 dark:focus:ring-zinc-500 text-sm outline-none transition-all"
+                            placeholder="مثال: https://api.openai.com/v1/chat/completions"
+                            dir="ltr"
+                          />
+                        </div>
+
+                        <div className="flex flex-col gap-1.5">
+                          <label className="text-xs font-bold text-zinc-600 dark:text-zinc-400">راهنمای تحویل / Delivery Guide (اختیاری)</label>
+                          <textarea
+                            value={deliveryGuide}
+                            onChange={(e) => setDeliveryGuide(e.target.value)}
+                            className="w-full px-4 py-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/50 focus:border-zinc-400 dark:focus:border-zinc-500 focus:ring-1 focus:ring-zinc-400 dark:focus:ring-zinc-500 text-sm outline-none transition-all min-h-[100px]"
+                            placeholder="راهنمای استفاده یا اطلاعات بیشتر که پس از خرید به کاربر نمایش داده می‌شود..."
+                          />
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <div className="flex flex-col gap-1.5">
+                            <label className="text-xs font-bold text-zinc-600 dark:text-zinc-400">تصویر محصول (مربعی)</label>
+                            <div className="flex items-center gap-4">
+                              <label className="flex-1 px-4 py-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/50 text-sm cursor-pointer hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors text-center text-zinc-600 dark:text-zinc-400">
+                                <span>{image ? 'تغییر تصویر' : 'انتخاب تصویر'}</span>
+                                <input type="file" accept="image/*" className="hidden" onChange={(e) => handleImageChange(e, 'image')} />
+                              </label>
+                              {image && (
+                                <div className="relative w-12 h-12 rounded-lg overflow-hidden border border-zinc-200 dark:border-zinc-700 shrink-0">
+                                  <img src={image} alt="Preview" className="w-full h-full object-cover" />
+                                  <button type="button" onClick={() => setImage('')} className="absolute top-0 right-0 bg-red-500 text-white w-4 h-4 flex items-center justify-center rounded-bl-lg text-[10px]">✕</button>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+
+                          <div className="flex flex-col gap-1.5">
+                            <label className="text-xs font-bold text-zinc-600 dark:text-zinc-400">تصویر بنر (عریض - اختیاری)</label>
+                            <div className="flex items-center gap-4">
+                              <label className="flex-1 px-4 py-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/50 text-sm cursor-pointer hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors text-center text-zinc-600 dark:text-zinc-400">
+                                <span>{bannerImage ? 'تغییر بنر' : 'انتخاب بنر'}</span>
+                                <input type="file" accept="image/*" className="hidden" onChange={(e) => handleImageChange(e, 'banner')} />
+                              </label>
+                              {bannerImage && (
+                                <div className="relative w-12 h-12 rounded-lg overflow-hidden border border-zinc-200 dark:border-zinc-700 shrink-0">
+                                  <img src={bannerImage} alt="Preview" className="w-full h-full object-cover" />
+                                  <button type="button" onClick={() => setBannerImage('')} className="absolute top-0 right-0 bg-red-500 text-white w-4 h-4 flex items-center justify-center rounded-bl-lg text-[10px]">✕</button>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex justify-end pt-2">
+                          <button type="submit" className="px-6 py-2.5 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 font-bold rounded-xl hover:opacity-90 transition-opacity">
+                            {editingProductId ? 'ذخیره تغییرات' : 'ثبت محصول'}
+                          </button>
+                        </div>
+                      </form>
+                    </div>
+                  )}
+
+                  {/* Product List */}
+                  {loading ? (
+                    <div className="flex items-center justify-center h-32">
+                      <div className="w-8 h-8 border-2 border-zinc-200 dark:border-zinc-800 border-t-zinc-900 dark:border-t-zinc-100 rounded-full animate-spin" />
+                    </div>
+                  ) : products.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center h-48 gap-4 opacity-50">
+                      <BoxLinearIcon className="w-12 h-12" />
+                      <span className="text-sm font-bold">هیچ محصولی یافت نشد.</span>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
+                      {products.map(p => (
+                        <div key={p.id} className="group flex flex-col bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-sm hover:shadow-md hover:border-zinc-300 dark:hover:border-zinc-700 transition-all overflow-hidden relative">
+
+                          {/* Actions (Absolute top-left) */}
+                          <div className="absolute top-3 left-3 flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity z-10 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md p-1 rounded-xl shadow-sm border border-zinc-100 dark:border-zinc-800">
+                            <button
+                              type="button"
+                              onClick={() => handleEditClick(p)}
+                              className="p-1.5 text-zinc-600 hover:text-blue-600 hover:bg-blue-50 dark:text-zinc-400 dark:hover:bg-blue-900/40 rounded-lg transition-colors"
+                              title="ویرایش"
+                            >
+                              <Edit2 size={16} />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteProduct(p.id)}
+                              className="p-1.5 text-zinc-600 hover:text-red-600 hover:bg-red-50 dark:text-zinc-400 dark:hover:bg-red-900/40 rounded-lg transition-colors"
+                              title="حذف"
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          </div>
+
+                          {/* Image Banner */}
+                          <div className="w-full h-36 bg-zinc-100 dark:bg-zinc-800 relative flex-shrink-0">
+                            {p.image ? (
+                              <img src={p.image} alt={p.title} className="w-full h-full object-cover" />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center text-zinc-400">
+                                <BoxLinearIcon className="w-10 h-10 opacity-50" />
+                              </div>
+                            )}
+                            <span className="absolute bottom-3 right-3 text-xs px-2.5 py-1 bg-white/90 dark:bg-zinc-900/90 text-zinc-800 dark:text-zinc-200 font-medium rounded-lg shadow-sm backdrop-blur-sm">
+                              {p.category}
+                            </span>
+                          </div>
+
+                          {/* Details */}
+                          <div className="flex flex-col flex-1 p-4">
+                            <h5 className="font-bold text-zinc-900 dark:text-zinc-100 mb-2 leading-relaxed line-clamp-2" title={p.title}>{p.title}</h5>
+                            {p.description && (
+                              <p className="text-xs text-zinc-500 dark:text-zinc-400 line-clamp-2 mb-4 leading-loose">{p.description}</p>
+                            )}
+
+                            <div className="mt-auto flex items-center justify-between border-t border-zinc-100 dark:border-zinc-800/60 pt-4">
+                              <div className="flex flex-col">
+                                <span className="text-[10px] text-zinc-400 dark:text-zinc-500 mb-1">قیمت</span>
+                                <span className="text-[15px] font-black text-zinc-900 dark:text-zinc-100">{p.price.toLocaleString()} <span className="text-xs font-normal text-zinc-500">تومان</span></span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <div className="flex flex-col items-end mr-2">
+                                  <span className="text-[10px] text-zinc-400 dark:text-zinc-500 mb-1">{p.category === 'package' ? 'وضعیت' : 'موجودی'}</span>
+                                  <span className="text-[13px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 px-2 py-0.5 rounded-md">
+                                    {p.category === 'package' ? 'موجود' : `${p.stock || 0} عدد`}
+                                  </span>
+                                </div>
+                                {p.category !== 'package' && (
+                                  <button
+                                    onClick={() => openLicenseManager(p)}
+                                    className="p-2 text-blue-600 bg-blue-50 hover:bg-blue-100 dark:text-blue-400 dark:bg-blue-900/20 dark:hover:bg-blue-900/40 rounded-xl transition-colors"
+                                    title="مدیریت لایسنس‌ها"
+                                  >
+                                    <Key size={18} />
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
-          )}
-          </div>
-          )}
-          </div>
           ) : activeTab === 'news' ? (
             <div className="flex flex-col h-full animate-fadeIn">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
                 <h3 className="text-lg font-bold text-zinc-800 dark:text-zinc-200">مدیریت اخبار و مقالات</h3>
-                <button 
+                <button
                   onClick={() => {
                     setIsAddingNews(!isAddingNews);
                     if (!isAddingNews) setEditingNews(null);
@@ -1965,8 +1831,8 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
                         <span className="text-[11px] text-zinc-400">عنوان فعلی: {editingNews.title}</span>
                       </div>
                     </div>
-                    <button 
-                      type="button" 
+                    <button
+                      type="button"
                       onClick={cancelEditNews}
                       className="p-1.5 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
                       title="انصراف و بستن"
@@ -1978,18 +1844,18 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
                   <form onSubmit={handleUpdateNews} className="flex flex-col gap-5">
                     <div className="flex flex-col gap-1.5">
                       <label className="text-xs font-bold text-zinc-600 dark:text-zinc-400">عنوان خبر</label>
-                      <input 
-                        type="text" 
+                      <input
+                        type="text"
                         value={editNewsTitle}
                         onChange={(e) => setEditNewsTitle(e.target.value)}
                         className="w-full px-4 py-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/50 focus:border-blue-500 outline-none transition-all font-medium text-sm text-zinc-800 dark:text-zinc-100"
                         placeholder="عنوان جدید خبر..."
                       />
                     </div>
-                    
+
                     <div className="flex flex-col gap-1.5">
                       <label className="text-xs font-bold text-zinc-600 dark:text-zinc-400">متن کامل خبر (پشتیبانی از پاراگراف‌بندی و مارک‌داون)</label>
-                      <textarea 
+                      <textarea
                         value={editNewsContent}
                         onChange={(e) => setEditNewsContent(e.target.value)}
                         className="w-full px-4 py-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/50 focus:border-blue-500 outline-none transition-all min-h-[160px] text-sm text-zinc-800 dark:text-zinc-100 leading-relaxed custom-scrollbar"
@@ -2007,9 +1873,9 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
                         {editNewsImage && (
                           <div className="relative w-16 h-16 rounded-xl overflow-hidden shrink-0 border border-zinc-200 dark:border-zinc-700 shadow-sm">
                             <img src={editNewsImage} className="w-full h-full object-cover" />
-                            <button 
-                              type="button" 
-                              onClick={() => setEditNewsImage('')} 
+                            <button
+                              type="button"
+                              onClick={() => setEditNewsImage('')}
                               className="absolute top-1 right-1 bg-red-500/90 hover:bg-red-600 text-white w-5 h-5 rounded-full flex items-center justify-center text-[10px] shadow"
                               title="حذف کاور"
                             >
@@ -2021,12 +1887,12 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
                     </div>
 
                     <div className="flex items-center gap-2 p-3 bg-blue-50/60 dark:bg-blue-950/20 rounded-xl border border-blue-100 dark:border-blue-900/30">
-                      <input 
-                        type="checkbox" 
-                        id="rebroadcastTelegram" 
-                        checked={editNewsRebroadcast} 
+                      <input
+                        type="checkbox"
+                        id="rebroadcastTelegram"
+                        checked={editNewsRebroadcast}
                         onChange={(e) => setEditNewsRebroadcast(e.target.checked)}
-                        className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 cursor-pointer" 
+                        className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 cursor-pointer"
                       />
                       <label htmlFor="rebroadcastTelegram" className="text-xs font-bold text-zinc-700 dark:text-zinc-300 cursor-pointer select-none">
                         ارسال مجدد این خبر به کانال تلگرام پس از ذخیره تغییرات
@@ -2034,16 +1900,16 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
                     </div>
 
                     <div className="flex items-center justify-end gap-3 pt-2">
-                      <button 
-                        type="button" 
+                      <button
+                        type="button"
                         onClick={cancelEditNews}
                         className="px-5 py-2.5 rounded-xl border border-zinc-300 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 font-bold text-sm hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
                       >
                         انصراف
                       </button>
-                      <button 
-                        type="submit" 
-                        disabled={editNewsLoading} 
+                      <button
+                        type="submit"
+                        disabled={editNewsLoading}
                         className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition-colors disabled:opacity-50 text-sm shadow-sm flex items-center gap-2"
                       >
                         {editNewsLoading ? 'در حال ذخیره...' : 'ذخیره تغییرات'}
@@ -2058,17 +1924,17 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
                   <form onSubmit={handleAddNews} className="flex flex-col gap-5">
                     <div className="flex flex-col gap-1.5">
                       <label className="text-xs font-bold text-zinc-600 dark:text-zinc-400">عنوان خبر</label>
-                      <input 
-                        type="text" 
+                      <input
+                        type="text"
                         value={newsTitle}
                         onChange={(e) => setNewsTitle(e.target.value)}
                         className="w-full px-4 py-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/50 focus:border-zinc-400 outline-none transition-all"
                       />
                     </div>
-                    
+
                     <div className="flex flex-col gap-1.5">
                       <label className="text-xs font-bold text-zinc-600 dark:text-zinc-400">متن کامل خبر (پشتیبانی از پاراگراف‌بندی)</label>
-                      <textarea 
+                      <textarea
                         value={newsContent}
                         onChange={(e) => setNewsContent(e.target.value)}
                         className="w-full px-4 py-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/50 focus:border-zinc-400 outline-none transition-all min-h-[150px]"
@@ -2113,15 +1979,15 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
                   {news.map(n => (
                     <div key={n.id} className="flex flex-col bg-white dark:bg-zinc-800 rounded-2xl border border-zinc-200 dark:border-zinc-700 overflow-hidden relative group">
                       <div className="absolute top-2 left-2 z-10 flex items-center gap-1.5">
-                        <button 
-                          onClick={() => startEditNews(n)} 
+                        <button
+                          onClick={() => startEditNews(n)}
                           className="p-1.5 bg-white/90 hover:bg-white dark:bg-black/60 dark:hover:bg-black/80 text-blue-600 dark:text-blue-400 rounded-lg backdrop-blur-sm transition-all shadow-sm"
                           title="ویرایش خبر"
                         >
                           <Edit2 size={16} />
                         </button>
-                        <button 
-                          onClick={() => handleDeleteNews(n.id)} 
+                        <button
+                          onClick={() => handleDeleteNews(n.id)}
                           className="p-1.5 bg-white/90 hover:bg-white dark:bg-black/60 dark:hover:bg-black/80 text-red-500 rounded-lg backdrop-blur-sm transition-all shadow-sm"
                           title="حذف خبر"
                         >
@@ -2149,7 +2015,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
                     بررسی فاکتورها، تایید دستی پرداخت، و تخصیص خودکار یا دستی لایسنس به خریداران
                   </p>
                 </div>
-                
+
                 <div className="flex items-center gap-2">
                   <button
                     onClick={fetchOrders}
@@ -2165,19 +2031,18 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
 
               {/* Feedback Alert */}
               {orderFeedback && (
-                <div className={`p-4 rounded-2xl flex items-center justify-between gap-3 text-sm font-bold animate-slideUpScale ${
-                  orderFeedback.type === 'success' ? 'bg-emerald-50 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800' :
+                <div className={`p-4 rounded-2xl flex items-center justify-between gap-3 text-sm font-bold animate-slideUpScale ${orderFeedback.type === 'success' ? 'bg-emerald-50 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800' :
                   orderFeedback.type === 'warning' ? 'bg-amber-50 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300 border border-amber-200 dark:border-amber-800' :
-                  'bg-red-50 text-red-800 dark:bg-red-950/40 dark:text-red-300 border border-red-200 dark:border-red-800'
-                }`}>
+                    'bg-red-50 text-red-800 dark:bg-red-950/40 dark:text-red-300 border border-red-200 dark:border-red-800'
+                  }`}>
                   <div className="flex items-center gap-2.5">
                     {orderFeedback.type === 'success' ? <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" /> :
-                     orderFeedback.type === 'warning' ? <AlertCircle className="w-5 h-5 text-amber-600 shrink-0" /> :
-                     <XCircle className="w-5 h-5 text-red-600 shrink-0" />}
+                      orderFeedback.type === 'warning' ? <AlertCircle className="w-5 h-5 text-amber-600 shrink-0" /> :
+                        <XCircle className="w-5 h-5 text-red-600 shrink-0" />}
                     <span>{orderFeedback.text}</span>
                   </div>
-                  <button 
-                    onClick={() => setOrderFeedback(null)} 
+                  <button
+                    onClick={() => setOrderFeedback(null)}
                     className="p-1 hover:bg-black/5 dark:hover:bg-white/10 rounded-lg text-xs"
                   >
                     <X className="w-4 h-4" />
@@ -2190,21 +2055,19 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
                 <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
                   <button
                     onClick={() => setOrderStatusFilter('all')}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 ${
-                      orderStatusFilter === 'all'
-                        ? 'bg-zinc-900 text-white dark:bg-white dark:text-zinc-900 shadow-sm'
-                        : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800'
-                    }`}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 ${orderStatusFilter === 'all'
+                      ? 'bg-zinc-900 text-white dark:bg-white dark:text-zinc-900 shadow-sm'
+                      : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800'
+                      }`}
                   >
                     همه ({orders.length})
                   </button>
                   <button
                     onClick={() => setOrderStatusFilter('pending')}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 flex items-center gap-1.5 ${
-                      orderStatusFilter === 'pending'
-                        ? 'bg-amber-500 text-white shadow-sm'
-                        : 'text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/30'
-                    }`}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 flex items-center gap-1.5 ${orderStatusFilter === 'pending'
+                      ? 'bg-amber-500 text-white shadow-sm'
+                      : 'text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/30'
+                      }`}
                   >
                     <span>در انتظار تایید</span>
                     {orders.filter(o => o.paymentStatus === 'pending').length > 0 && (
@@ -2215,21 +2078,19 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
                   </button>
                   <button
                     onClick={() => setOrderStatusFilter('success')}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 ${
-                      orderStatusFilter === 'success'
-                        ? 'bg-emerald-600 text-white shadow-sm'
-                        : 'text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/30'
-                    }`}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 ${orderStatusFilter === 'success'
+                      ? 'bg-emerald-600 text-white shadow-sm'
+                      : 'text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/30'
+                      }`}
                   >
                     موفق ({orders.filter(o => o.paymentStatus === 'success').length})
                   </button>
                   <button
                     onClick={() => setOrderStatusFilter('failed')}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 ${
-                      orderStatusFilter === 'failed'
-                        ? 'bg-red-600 text-white shadow-sm'
-                        : 'text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30'
-                    }`}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 ${orderStatusFilter === 'failed'
+                      ? 'bg-red-600 text-white shadow-sm'
+                      : 'text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30'
+                      }`}
                   >
                     ناموفق / لغو ({orders.filter(o => o.paymentStatus === 'failed').length})
                   </button>
@@ -2298,11 +2159,10 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
                         .map((o: any) => {
                           const isProcessing = orderActionLoadingId === o.id;
                           return (
-                            <tr 
-                              key={o.id} 
-                              className={`hover:bg-zinc-50/80 dark:hover:bg-zinc-800/40 transition-colors ${
-                                o.paymentStatus === 'pending' ? 'bg-amber-50/30 dark:bg-amber-950/10' : ''
-                              }`}
+                            <tr
+                              key={o.id}
+                              className={`hover:bg-zinc-50/80 dark:hover:bg-zinc-800/40 transition-colors ${o.paymentStatus === 'pending' ? 'bg-amber-50/30 dark:bg-amber-950/10' : ''
+                                }`}
                             >
                               {/* Order ID */}
                               <td className="px-4 py-3.5">
@@ -2356,13 +2216,12 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
 
                               {/* Status Badge */}
                               <td className="px-4 py-3.5 whitespace-nowrap">
-                                <span className={`inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold rounded-lg ${
-                                  o.paymentStatus === 'success' 
-                                    ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300' 
-                                    : o.paymentStatus === 'failed' 
-                                    ? 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300' 
+                                <span className={`inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold rounded-lg ${o.paymentStatus === 'success'
+                                  ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300'
+                                  : o.paymentStatus === 'failed'
+                                    ? 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300'
                                     : 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300 ring-1 ring-amber-400/50 animate-pulse'
-                                }`}>
+                                  }`}>
                                   {o.paymentStatus === 'success' ? (
                                     <>
                                       <CheckCircle2 className="w-3 h-3" />
@@ -2501,11 +2360,11 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
               {/* Order Details Modal */}
               {selectedOrder && (
                 <div className="fixed inset-0 z-[120] flex items-center justify-center p-3 sm:p-4 animate-fadeIn">
-                  <div 
+                  <div
                     className="absolute inset-0 bg-black/60 backdrop-blur-sm"
                     onClick={() => setSelectedOrder(null)}
                   />
-                  
+
                   <div className="relative w-full max-w-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-slideUpScale">
                     {/* Modal Header */}
                     <div className="flex items-center justify-between p-5 border-b border-zinc-100 dark:border-zinc-800 shrink-0">
@@ -2582,16 +2441,15 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
                               handleUpdateOrderStatus(selectedOrder.id, 'success');
                             }}
                             disabled={orderActionLoadingId === selectedOrder.id}
-                            className={`py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${
-                              selectedOrder.paymentStatus === 'success'
-                                ? 'bg-emerald-600 text-white shadow-md'
-                                : 'bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 hover:text-emerald-600'
-                            }`}
+                            className={`py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${selectedOrder.paymentStatus === 'success'
+                              ? 'bg-emerald-600 text-white shadow-md'
+                              : 'bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 hover:text-emerald-600'
+                              }`}
                           >
                             <CheckCircle2 className="w-4 h-4" />
                             <span>موفق (تایید)</span>
                           </button>
-                          
+
                           <button
                             type="button"
                             onClick={(e) => {
@@ -2599,11 +2457,10 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
                               handleUpdateOrderStatus(selectedOrder.id, 'pending');
                             }}
                             disabled={orderActionLoadingId === selectedOrder.id}
-                            className={`py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${
-                              selectedOrder.paymentStatus === 'pending'
-                                ? 'bg-amber-500 text-white shadow-md'
-                                : 'bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700 hover:bg-amber-50 dark:hover:bg-amber-950/30 hover:text-amber-600'
-                            }`}
+                            className={`py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${selectedOrder.paymentStatus === 'pending'
+                              ? 'bg-amber-500 text-white shadow-md'
+                              : 'bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700 hover:bg-amber-50 dark:hover:bg-amber-950/30 hover:text-amber-600'
+                              }`}
                           >
                             <Clock className="w-4 h-4" />
                             <span>در انتظار</span>
@@ -2616,11 +2473,10 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
                               handleUpdateOrderStatus(selectedOrder.id, 'failed');
                             }}
                             disabled={orderActionLoadingId === selectedOrder.id}
-                            className={`py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${
-                              selectedOrder.paymentStatus === 'failed'
-                                ? 'bg-red-600 text-white shadow-md'
-                                : 'bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700 hover:bg-red-50 dark:hover:bg-red-950/30 hover:text-red-600'
-                            }`}
+                            className={`py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${selectedOrder.paymentStatus === 'failed'
+                              ? 'bg-red-600 text-white shadow-md'
+                              : 'bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700 hover:bg-red-50 dark:hover:bg-red-950/30 hover:text-red-600'
+                              }`}
                           >
                             <XCircle className="w-4 h-4" />
                             <span>رد / لغو</span>
@@ -2710,32 +2566,32 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
               {/* Delete Order Confirmation Dialog */}
               {orderToDelete && (
                 <div className="fixed inset-0 z-[130] flex items-center justify-center p-4 animate-fadeIn">
-                  <div 
+                  <div
                     className="absolute inset-0 bg-black/60 backdrop-blur-sm"
                     onClick={(e) => {
                       e.stopPropagation();
                       setOrderToDelete(null);
                     }}
                   />
-                  
-                  <div 
+
+                  <div
                     className="relative w-full max-w-sm bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl shadow-2xl p-6 flex flex-col items-center text-center animate-slideUpScale"
                     onClick={(e) => e.stopPropagation()}
                   >
                     <div className="w-12 h-12 rounded-2xl bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 flex items-center justify-center mb-4">
                       <Trash2 className="w-6 h-6" />
                     </div>
-                    
+
                     <h4 className="text-base font-bold text-zinc-900 dark:text-zinc-100 mb-2">
                       حذف سفارش
                     </h4>
-                    
+
                     <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed mb-6">
                       آیا از حذف کامل سفارش <span className="font-mono font-bold text-zinc-800 dark:text-zinc-200">{orderToDelete}</span> اطمینان دارید؟
                       <br />
                       (در صورت موفق بودن سفارش، لایسنس به انبار آزاد می‌شود)
                     </p>
-                    
+
                     <div className="flex items-center gap-3 w-full">
                       <button
                         onClick={(e) => {
@@ -2746,7 +2602,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
                       >
                         انصراف
                       </button>
-                      
+
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
