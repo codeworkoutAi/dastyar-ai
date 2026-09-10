@@ -334,39 +334,60 @@ User prompt: "${prompt}"`;
     // 1. Primary: Try Gemini
     try {
       const ai = getGeminiClient(apiKey);
-      const response = await ai.models.generateContent({
-        model: 'gemini-3.1-flash-lite',
-        contents: systemInstruction,
-      });
-      enhanced = response.text?.trim() || null;
+      const candidateModels = ['gemini-3.6-flash', 'gemini-3.1-flash-lite'];
+      for (const model of candidateModels) {
+        try {
+          const response = await ai.models.generateContent({
+            model,
+            contents: systemInstruction,
+          });
+          const text = response.text?.trim();
+          if (text && text.length > 5) {
+            enhanced = text;
+            break;
+          }
+        } catch (mErr) {
+          // try next candidate
+        }
+      }
     } catch (geminiErr: any) {
       console.warn('[Enhance Prompt] Gemini error, trying Groq fallback:', geminiErr?.message || geminiErr);
     }
 
-    // 2. Fallback: Try Groq (Llama-3.3-70B)
+    // 2. Fallback: Try Groq (openai/gpt-oss-120b / openai/gpt-oss-20b)
     if (!enhanced) {
       const groqKey = process.env.DEFAULT_GROQ_KEY || process.env.GROQ_API_KEY;
       if (groqKey) {
-        try {
-          const groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${groqKey}`,
-            },
-            body: JSON.stringify({
-              model: 'llama-3.3-70b-versatile',
-              messages: [{ role: 'user', content: systemInstruction }],
-              temperature: 0.7,
-              max_tokens: 350,
-            }),
-          });
-          if (groqRes.ok) {
-            const data = await groqRes.json();
-            enhanced = data?.choices?.[0]?.message?.content?.trim() || null;
+        const groqModels = ['openai/gpt-oss-120b', 'openai/gpt-oss-20b', 'qwen/qwen3.6-27b'];
+        for (const model of groqModels) {
+          try {
+            const groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${groqKey}`,
+              },
+              body: JSON.stringify({
+                model,
+                messages: [{ role: 'user', content: systemInstruction }],
+                temperature: 0.7,
+                max_tokens: 350,
+              }),
+            });
+            if (groqRes.ok) {
+              const data = await groqRes.json();
+              let text = data?.choices?.[0]?.message?.content?.trim();
+              if (text) {
+                text = text.replace(/^```[a-z]*\s*/i, '').replace(/\s*```$/i, '').replace(/^["']|["']$/g, '').trim();
+                if (text.length > 5) {
+                  enhanced = text;
+                  break;
+                }
+              }
+            }
+          } catch (groqErr: any) {
+            // try next model
           }
-        } catch (groqErr: any) {
-          console.warn('[Enhance Prompt] Groq fallback error:', groqErr?.message || groqErr);
         }
       }
     }

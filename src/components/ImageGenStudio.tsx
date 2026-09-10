@@ -216,6 +216,7 @@ export function ImageGenStudio() {
   };
   const onInsertToChat = insertImageToChat;
   const [prompt, setPrompt] = useState('');
+  const [activeEnglishPrompt, setActiveEnglishPrompt] = useState<string | null>(null);
   const [aspectRatio, setAspectRatio] = useState('1:1');
   const [engine, setEngine] = useState('flux');
   const [selectedStyle, setSelectedStyle] = useState('none');
@@ -336,6 +337,7 @@ export function ImageGenStudio() {
       const data = await res.json();
       if (data.enhancedPrompt) {
         setPrompt(data.enhancedPrompt);
+        setActiveEnglishPrompt(null);
       }
     } catch (err) {
       console.error(err);
@@ -420,10 +422,11 @@ export function ImageGenStudio() {
     }
   };
 
-  const handleGenerate = () => executeGenerate();
+  const handleGenerate = () => executeGenerate(prompt, selectedStyle, engine, aspectRatio, activeEnglishPrompt || undefined);
 
   const handleSelectInspiration = (item: InspirationCard, autoGenerate = false) => {
     setPrompt(item.prompt);
+    setActiveEnglishPrompt(item.englishPrompt);
     setSelectedStyle(item.style);
     setEngine(item.engine);
     setAspectRatio(item.aspectRatio);
@@ -436,6 +439,7 @@ export function ImageGenStudio() {
     const randomIndex = Math.floor(Math.random() * INSPIRATION_PROMPTS.length);
     const item = INSPIRATION_PROMPTS[randomIndex];
     setPrompt(item.prompt);
+    setActiveEnglishPrompt(item.englishPrompt);
     setSelectedStyle(item.style);
     setEngine(item.engine);
     setAspectRatio(item.aspectRatio);
@@ -1071,7 +1075,10 @@ export function ImageGenStudio() {
 
                 <textarea
                   value={prompt}
-                  onChange={(e) => setPrompt(e.target.value)}
+                  onChange={(e) => {
+                    setPrompt(e.target.value);
+                    setActiveEnglishPrompt(null);
+                  }}
                   placeholder="توصیف تصویر (فارسی یا انگلیسی)..."
                   className="flex-1 bg-transparent border-none outline-none focus:ring-0 focus:outline-none resize-none text-sm lg:text-base py-2.5 px-3 max-h-24 sm:max-h-32 min-h-[44px] custom-scrollbar placeholder:text-zinc-700 dark:text-zinc-400 dark:placeholder:text-zinc-700 dark:text-zinc-500 text-zinc-800 dark:text-zinc-100"
                   rows={Math.min(3, prompt.split('\n').length || 1)}
