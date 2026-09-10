@@ -66,6 +66,7 @@ export interface InspirationCard {
   aspectRatio: string;
   gradient: string;
   badge: string;
+  thumbnail: string;
 }
 
 const INSPIRATION_PROMPTS: InspirationCard[] = [
@@ -80,6 +81,7 @@ const INSPIRATION_PROMPTS: InspirationCard[] = [
     aspectRatio: '16:9',
     gradient: 'from-amber-500/20 via-orange-500/10 to-transparent',
     badge: '🔥 محبوب‌ترین',
+    thumbnail: '/studio-presets/cheetah.jpg',
   },
   {
     id: 'tehran-2150',
@@ -92,6 +94,7 @@ const INSPIRATION_PROMPTS: InspirationCard[] = [
     aspectRatio: '16:9',
     gradient: 'from-cyan-500/20 via-blue-500/10 to-transparent',
     badge: '🚀 سایبرپانک',
+    thumbnail: '/studio-presets/tehran2150.jpg',
   },
   {
     id: 'floating-castle',
@@ -104,6 +107,7 @@ const INSPIRATION_PROMPTS: InspirationCard[] = [
     aspectRatio: '1:1',
     gradient: 'from-pink-500/20 via-purple-500/10 to-transparent',
     badge: '🌸 استودیو جیبلی',
+    thumbnail: '/studio-presets/castle.jpg',
   },
   {
     id: 'space-fox',
@@ -116,6 +120,7 @@ const INSPIRATION_PROMPTS: InspirationCard[] = [
     aspectRatio: '1:1',
     gradient: 'from-emerald-500/20 via-teal-500/10 to-transparent',
     badge: '🧸 سه‌بعدی بامزه',
+    thumbnail: '/studio-presets/space-fox.jpg',
   },
   {
     id: 'samurai-sketch',
@@ -128,6 +133,7 @@ const INSPIRATION_PROMPTS: InspirationCard[] = [
     aspectRatio: '9:16',
     gradient: 'from-zinc-500/20 via-zinc-700/10 to-transparent',
     badge: '✏️ سیاه‌قلم',
+    thumbnail: '/studio-presets/samurai.jpg',
   },
   {
     id: 'crystal-oasis',
@@ -140,6 +146,7 @@ const INSPIRATION_PROMPTS: InspirationCard[] = [
     aspectRatio: '1:1',
     gradient: 'from-violet-500/20 via-indigo-500/10 to-transparent',
     badge: '🎨 رنگ روغن',
+    thumbnail: '/studio-presets/crystal-tree.jpg',
   },
 ];
 
@@ -482,6 +489,19 @@ export function ImageGenStudio() {
             </h2>
           </div>
           <div className="flex items-center gap-2">
+            {!showHistory && (imageUrl || error) && (
+              <button
+                onClick={() => {
+                  setImageUrl(null);
+                  setError(null);
+                }}
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400 text-xs font-bold border border-purple-500/20 hover:bg-purple-500/20 transition-all cursor-pointer"
+                title="پاک کردن بوم و بازگشت به ویترین ایده‌ها"
+              >
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>بوم جدید</span>
+              </button>
+            )}
             <button 
               onClick={() => { setShowHistory(!showHistory); setSelectedDetailImage(null); }} 
               className={`p-2 rounded-full transition-colors ${showHistory ? 'bg-purple-500 text-white' : 'bg-zinc-100 dark:bg-white/5 text-zinc-600 dark:text-zinc-300'}`}
@@ -645,9 +665,23 @@ export function ImageGenStudio() {
                 </button>
               </div>
 
-              {/* Top Right: Download Button */}
-              {imageUrl && (
-                <div className="pointer-events-auto">
+              {/* Top Right: Canvas Controls (New Canvas + Download) */}
+              <div className="pointer-events-auto flex items-center gap-2">
+                {(imageUrl || error) && (
+                  <button
+                    onClick={() => {
+                      setImageUrl(null);
+                      setError(null);
+                    }}
+                    className="flex items-center gap-2 px-3.5 py-2 rounded-xl backdrop-blur-md border bg-white/80 dark:bg-black/60 text-zinc-800 dark:text-zinc-200 border-zinc-200 dark:border-white/10 hover:bg-purple-50 dark:hover:bg-purple-950/40 hover:text-purple-600 dark:hover:text-purple-400 hover:border-purple-500/40 transition-all shadow-sm cursor-pointer hover:scale-105 active:scale-95"
+                    title="پاک کردن بوم و بازگشت به ویترین ایده‌ها"
+                  >
+                    <Sparkles className="w-4 h-4 text-purple-500" />
+                    <span className="text-sm font-bold">بوم جدید</span>
+                  </button>
+                )}
+
+                {imageUrl && (
                   <a
                     href={toSafeImageUrl(imageUrl)}
                     download="persian-ai-image.png"
@@ -659,8 +693,8 @@ export function ImageGenStudio() {
                     <Download className="w-4 h-4 text-purple-500" />
                     <span className="text-sm font-bold">دانلود تصویر</span>
                   </a>
-                </div>
-              )}
+                )}
+              </div>
             </div>
           ) : (
             /* Gallery Fullscreen Header */
@@ -944,72 +978,102 @@ export function ImageGenStudio() {
             ) : (
               /* --- EMPTY CANVAS & INSPIRATION SHOWCASE --- */
               <div className="w-full max-w-5xl py-2 sm:py-4 flex flex-col items-center animate-fadeIn text-right">
-                <div className="text-center mb-5 space-y-1.5">
+                <div className="text-center mb-6 space-y-1.5">
                   <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-500/10 text-purple-600 dark:text-purple-400 text-xs font-bold border border-purple-500/20 mb-1">
                     <Sparkles className="w-3.5 h-3.5" />
-                    <span>ویترین ایده‌ها و پرامپت‌های طلایی</span>
+                    <span>ویترین ایده‌ها و الگوهای آماده</span>
                   </div>
-                  <h3 className="text-base sm:text-xl font-extrabold text-zinc-800 dark:text-white">
-                    الهام بگیرید یا با یک کلیک تصویر تولید کنید
+                  <h3 className="text-base sm:text-2xl font-black text-zinc-800 dark:text-white">
+                    الهام بگیرید یا با یک کلیک خلق کنید
                   </h3>
-                  <p className="text-xs text-zinc-500 dark:text-zinc-400 max-w-md mx-auto">
-                    روی هر کارت کلیک کنید تا تنظیمات بارگذاری شود یا دکمه ⚡ تولید آنی را بزنید:
+                  <p className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 max-w-lg mx-auto">
+                    روی هر کارت کلیک کنید تا پرامپت و استایل بارگذاری شود یا دکمه ⚡ تولید آنی را بزنید:
                   </p>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 w-full">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 w-full">
                   {INSPIRATION_PROMPTS.map((item) => (
                     <div
                       key={item.id}
                       onClick={() => handleSelectInspiration(item, false)}
-                      className="group relative bg-white/90 dark:bg-[#18181b]/90 hover:bg-white dark:hover:bg-[#1e1f20] border border-zinc-200/80 dark:border-white/10 hover:border-purple-500/50 rounded-2xl p-4 transition-all duration-200 shadow-sm hover:shadow-xl hover:-translate-y-1 cursor-pointer flex flex-col justify-between overflow-hidden"
+                      className="group relative bg-white/90 dark:bg-[#18181b]/90 hover:bg-white dark:hover:bg-[#202024] border border-zinc-200/80 dark:border-white/10 hover:border-purple-500/50 rounded-2xl sm:rounded-3xl overflow-hidden transition-all duration-300 shadow-sm hover:shadow-2xl hover:-translate-y-1.5 cursor-pointer flex flex-col"
                     >
-                      {/* Top Gradient Accent */}
-                      <div className={`absolute top-0 right-0 left-0 h-1 bg-gradient-to-l ${item.gradient}`} />
+                      {/* Photo Thumbnail Container */}
+                      <div className="relative aspect-[16/10] sm:aspect-[4/3] w-full overflow-hidden bg-zinc-200 dark:bg-zinc-800">
+                        <img
+                          src={item.thumbnail}
+                          alt={item.title}
+                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                          loading="lazy"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-60 group-hover:opacity-40 transition-opacity" />
 
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between gap-2">
-                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-500/10 text-purple-600 dark:text-purple-400">
+                        {/* Top Badges */}
+                        <div className="absolute top-2.5 right-2.5 flex items-center gap-1.5 z-10 pointer-events-none">
+                          <span className="text-[10px] font-bold text-white bg-black/60 backdrop-blur-md px-2.5 py-1 rounded-xl border border-white/15 shadow-sm">
                             {item.badge}
                           </span>
-                          <span className="text-[10px] text-zinc-400 dark:text-zinc-500">
-                            {item.category}
+                        </div>
+
+                        <div className="absolute top-2.5 left-2.5 flex items-center gap-1.5 z-10 pointer-events-none">
+                          <span className="text-[10px] font-mono font-bold text-white bg-black/60 backdrop-blur-md px-2 py-0.5 rounded-lg border border-white/15">
+                            {item.aspectRatio}
                           </span>
                         </div>
 
-                        <h4 className="font-extrabold text-xs sm:text-sm text-zinc-800 dark:text-zinc-100 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors line-clamp-1">
-                          {item.title}
-                        </h4>
-
-                        <p className="text-[11px] leading-relaxed text-zinc-600 dark:text-zinc-400 line-clamp-2">
-                          {item.prompt}
-                        </p>
+                        {/* Hover Quick Generate Button Overlay */}
+                        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 z-20 pointer-events-none">
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleSelectInspiration(item, true);
+                            }}
+                            className="pointer-events-auto flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white rounded-2xl text-xs font-bold shadow-xl hover:shadow-2xl transition-all transform hover:scale-105 active:scale-95 border border-white/20 cursor-pointer"
+                            title="تولید آنی این تصویر"
+                          >
+                            <Zap className="w-3.5 h-3.5 text-amber-300 fill-amber-300 animate-pulse" />
+                            <span>⚡ تولید آنی</span>
+                          </button>
+                        </div>
                       </div>
 
-                      {/* Footer Action & Tags */}
-                      <div className="pt-3 mt-3 border-t border-zinc-100 dark:border-white/5 flex items-center justify-between gap-2">
-                        <div className="flex items-center gap-1.5 text-[10px] text-zinc-500 dark:text-zinc-400">
-                          <span className="bg-zinc-100 dark:bg-white/5 text-zinc-700 dark:text-zinc-300 px-1.5 py-0.5 rounded font-bold">
-                            {IMAGE_ENGINES.find(e => e.id === item.engine)?.name || item.engine}
-                          </span>
-                          <span>•</span>
-                          <span>{STYLE_PRESETS.find(s => s.id === item.style)?.name}</span>
-                          <span>•</span>
-                          <span className="font-mono">{item.aspectRatio}</span>
+                      {/* Card Content Below Photo */}
+                      <div className="p-3.5 sm:p-4 flex-1 flex flex-col justify-between gap-2.5">
+                        <div className="space-y-1.5">
+                          <div className="flex items-center justify-between gap-2">
+                            <h4 className="font-extrabold text-xs sm:text-sm text-zinc-900 dark:text-zinc-100 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors line-clamp-1">
+                              {item.title}
+                            </h4>
+                          </div>
+
+                          <p className="text-[11px] leading-relaxed text-zinc-600 dark:text-zinc-400 line-clamp-2">
+                            {item.prompt}
+                          </p>
                         </div>
 
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleSelectInspiration(item, true);
-                          }}
-                          className="flex items-center gap-1 px-2.5 py-1.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white rounded-xl text-[11px] font-bold shadow-xs hover:shadow transition-all hover:scale-105 active:scale-95 cursor-pointer shrink-0"
-                          title="تولید آنی این تصویر"
-                        >
-                          <Zap className="w-3 h-3 text-amber-300 fill-amber-300" />
-                          <span>تولید آنی</span>
-                        </button>
+                        {/* Footer Action & Tags */}
+                        <div className="pt-2.5 border-t border-zinc-100 dark:border-white/5 flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-1.5 text-[10px] text-zinc-500 dark:text-zinc-400">
+                            <span className="bg-zinc-100 dark:bg-white/5 text-zinc-700 dark:text-zinc-300 px-1.5 py-0.5 rounded font-bold">
+                              {IMAGE_ENGINES.find(e => e.id === item.engine)?.name || item.engine}
+                            </span>
+                            <span>•</span>
+                            <span>{STYLE_PRESETS.find(s => s.id === item.style)?.name}</span>
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleSelectInspiration(item, true);
+                            }}
+                            className="flex sm:hidden items-center gap-1 px-2.5 py-1 bg-purple-600/90 text-white rounded-xl text-[10px] font-bold shadow-xs cursor-pointer"
+                          >
+                            <Zap className="w-3 h-3 text-amber-300 fill-amber-300" />
+                            <span>تولید</span>
+                          </button>
+                        </div>
                       </div>
                     </div>
                   ))}
