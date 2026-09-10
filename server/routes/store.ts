@@ -138,8 +138,11 @@ router.post('/checkout-manual', requireAuth, (req: any, res) => {
 
 // GET /api/store/mock-payment (Dummy gateway to simulate successful payment)
 router.get('/mock-payment', (req, res) => {
-  const { orderId } = req.query;
-  if (!orderId) return res.send('شماره سفارش نامعتبر است');
+  const rawOrderId = typeof req.query.orderId === 'string' ? req.query.orderId : '';
+  if (!rawOrderId || !/^[a-zA-Z0-9_-]{1,64}$/.test(rawOrderId)) {
+    return res.status(400).send('شماره سفارش نامعتبر است');
+  }
+  const safeOrderId = encodeURIComponent(rawOrderId);
   
   // Create a beautiful HTML dummy payment page
   res.send(`
@@ -157,10 +160,10 @@ router.get('/mock-payment', (req, res) => {
       <body>
         <div class="card">
           <h2 style="color: #2563eb">درگاه پرداخت تستی</h2>
-          <p>شما در حال پرداخت سفارش <strong>${orderId}</strong> هستید.</p>
+          <p>شما در حال پرداخت سفارش <strong>${safeOrderId}</strong> هستید.</p>
           <div style="display: flex; gap: 10px; justify-content: center; margin-top: 20px;">
-            <a href="/api/store/mock-callback?orderId=${orderId}&status=success" class="btn">پرداخت موفق</a>
-            <a href="/api/store/mock-callback?orderId=${orderId}&status=failed" class="btn btn-danger">انصراف</a>
+            <a href="/api/store/mock-callback?orderId=${safeOrderId}&status=success" class="btn">پرداخت موفق</a>
+            <a href="/api/store/mock-callback?orderId=${safeOrderId}&status=failed" class="btn btn-danger">انصراف</a>
           </div>
         </div>
       </body>
@@ -170,10 +173,13 @@ router.get('/mock-payment', (req, res) => {
 
 // GET /api/store/mock-callback (Handles the return from Dummy gateway)
 router.get('/mock-callback', (req, res) => {
-  const orderId = req.query.orderId as string;
-  const status = req.query.status as string;
+  const rawOrderId = typeof req.query.orderId === 'string' ? req.query.orderId : '';
+  const status = typeof req.query.status === 'string' ? req.query.status : '';
   
-  if (!orderId) return res.redirect('/store?payment=failed');
+  if (!rawOrderId || !/^[a-zA-Z0-9_-]{1,64}$/.test(rawOrderId)) {
+    return res.redirect('/store?payment=failed');
+  }
+  const orderId = rawOrderId;
 
   if (status === 'success') {
     // Keep the order as 'pending' for manual review by admin

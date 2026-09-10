@@ -2,7 +2,7 @@ import express from 'express';
 import bcrypt from 'bcryptjs';
 import db, { syncDatabase } from '../db/database';
 import jwt from 'jsonwebtoken';
-import { requireAuth } from '../middleware/auth';
+import { requireAuth, JWT_SECRET } from '../middleware/auth';
 import { sendOtpSms } from '../services/kavenegar';
 import nodemailer from 'nodemailer';
 import crypto from 'crypto';
@@ -10,7 +10,6 @@ import rateLimit from 'express-rate-limit';
 import { telegramAuthSessions } from '../services/telegramAuthSessions';
 
 const router = express.Router();
-const JWT_SECRET = process.env.JWT_SECRET || 'chatbox-secret-key-123';
 
 // Rate limiters
 const otpLimiter = rateLimit({
@@ -29,10 +28,26 @@ const verifyLimiter = rateLimit({
   legacyHeaders: false,
 });
 
+const registerLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 10, // Limit each IP to 10 register attempts per window
+  message: { error: 'تعداد تلاش‌های ثبت‌نام بیش از حد مجاز است. لطفاً ۱۵ دقیقه دیگر دوباره تلاش کنید.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
 const forgotPasswordLimiter = rateLimit({
   windowMs: 10 * 60 * 1000, // 10 minutes
   max: 3, // Limit each IP to 3 forgot password requests per window
   message: { error: 'تعداد درخواست‌های بازیابی بیش از حد مجاز است. لطفاً ۱۰ دقیقه دیگر دوباره تلاش کنید.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+const resetPasswordLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 10, // Limit each IP to 10 password reset attempts per window
+  message: { error: 'تعداد تلاش‌های تغییر رمز بیش از حد مجاز است. لطفاً ۱۵ دقیقه دیگر دوباره تلاش کنید.' },
   standardHeaders: true,
   legacyHeaders: false,
 });
@@ -141,7 +156,7 @@ router.post('/verify-otp', verifyLimiter, async (req, res) => {
 });
 
 // POST /api/auth/register (Email)
-router.post('/register', async (req, res) => {
+router.post('/register', registerLimiter, async (req, res) => {
   try {
     const { email, password, name, avatar } = req.body;
 
@@ -250,6 +265,12 @@ router.post('/google', async (req, res) => {
 
     if (!payload || !payload.sub) {
       return res.status(400).json({ error: 'توکن گوگل نامعتبر یا منقضی شده است.' });
+    }
+
+    // Security: Validate audience (aud) to prevent Cross-App Token Confusion
+    const expectedClientId = process.env.VITE_GOOGLE_CLIENT_ID || process.env.GOOGLE_CLIENT_ID;
+    if (expectedClientId && payload.aud && payload.aud !== expectedClientId) {
+      return res.status(400).json({ error: 'توکن گوگل معتبر است اما متعلق به این سامانه نیست.' });
     }
 
     const { sub: googleId, email, name, picture: avatar } = payload;
@@ -369,7 +390,19 @@ router.post('/forgot-password', forgotPasswordLimiter, async (req, res) => {
 
     db.prepare('UPDATE users SET resetToken = ?, resetTokenExpiry = ? WHERE id = ?').run(resetToken, resetTokenExpiry, user.id);
 
-    const resetUrl = `${req.headers.origin}/?reset_token=${resetToken}`;
+    const configuredUrl = (process.env.APP_URL || process.env.WEBSITE_URL || process.env.WEB_URL || '').replace(/\/+$/, '');
+    let safeAppUrl = configuredUrl;
+    if (!safeAppUrl) {
+      const host = req.get('host');
+      const origin = req.headers.origin;
+      if (origin && host && (origin === `https://${host}` || origin === `http://${host}`)) {
+        safeAppUrl = origin;
+      } else {
+        const proto = req.protocol === 'https' || req.headers['x-forwarded-proto'] === 'https' ? 'https' : 'http';
+        safeAppUrl = `${proto}://${host}`;
+      }
+    }
+    const resetUrl = `${safeAppUrl}/?reset_token=${resetToken}`;
     const senderEmail = process.env.FROM_EMAIL || 'info@dastyarai.com';
     const mailHtml = `
       <div dir="rtl" style="font-family: Tahoma, Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; text-align: right; background-color: #f9fafb; border-radius: 16px;">
@@ -435,7 +468,7 @@ router.post('/forgot-password', forgotPasswordLimiter, async (req, res) => {
 });
 
 // POST /api/auth/reset-password
-router.post('/reset-password', async (req, res) => {
+router.post('/reset-password', resetPasswordLimiter, async (req, res) => {
   try {
     const { token, newPassword } = req.body;
     if (!token || !newPassword || newPassword.length < 6) {

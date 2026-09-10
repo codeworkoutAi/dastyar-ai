@@ -1,7 +1,19 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'chatbox-secret-key-123';
+export const getJwtSecret = (): string => {
+  const secret = process.env.JWT_SECRET;
+  if (!secret || secret === 'chatbox-secret-key-123') {
+    if (process.env.NODE_ENV === 'production') {
+      console.error('[Security] FATAL: JWT_SECRET must be explicitly configured with a secure key in production!');
+      throw new Error('JWT_SECRET is required and must not be default in production');
+    }
+    return 'chatbox-secret-key-123';
+  }
+  return secret;
+};
+
+export const JWT_SECRET = getJwtSecret();
 
 export interface AuthRequest extends Request {
   user?: {

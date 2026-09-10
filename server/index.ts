@@ -17,8 +17,20 @@ process.on('unhandledRejection', (reason) => {
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Trust reverse proxy (Nginx / Cloud Run) for accurate IP resolution
+// Security: Disable X-Powered-By header to prevent fingerprinting
+app.disable('x-powered-by');
+
+// Trust reverse proxy (Nginx / Cloud Run / Render) for accurate IP resolution
 app.set('trust proxy', 1);
+
+// Security Headers Middleware
+app.use((_req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+  res.setHeader('X-XSS-Protection', '1; mode=block');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  next();
+});
 
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
@@ -159,6 +171,16 @@ app.get('/sitemap.xml', (req, res) => {
   }
 });
 
+function escapeHtml(str?: string): string {
+  if (!str || typeof str !== 'string') return '';
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
 function renderHtmlWithSeo(req: express.Request, res: express.Response, distPath: string) {
   const indexPath = path.join(distPath, 'index.html');
   if (!fs.existsSync(indexPath)) {
@@ -203,8 +225,8 @@ function renderHtmlWithSeo(req: express.Request, res: express.Response, distPath
           } catch {}
         }
 
-        const tagsMeta = parsedKeywords.map(k => `  <meta property="article:tag" content="${k}" />`).join('\n');
-        extraMetaTags += `\n  <meta property="article:published_time" content="${post.createdAt}" />\n  <meta property="article:modified_time" content="${post.createdAt}" />\n  <meta property="article:author" content="دستیار هوشمند" />\n${tagsMeta}`;
+        const tagsMeta = parsedKeywords.map(k => `  <meta property="article:tag" content="${escapeHtml(k)}" />`).join('\n');
+        extraMetaTags += `\n  <meta property="article:published_time" content="${escapeHtml(post.createdAt)}" />\n  <meta property="article:modified_time" content="${escapeHtml(post.createdAt)}" />\n  <meta property="article:author" content="دستیار هوشمند" />\n${tagsMeta}`;
 
         structuredData = {
           '@context': 'https://schema.org',
@@ -247,7 +269,8 @@ function renderHtmlWithSeo(req: express.Request, res: express.Response, distPath
         };
       }
     } else if (urlPath.startsWith('/blog/tag/')) {
-      const tag = decodeURIComponent(urlPath.replace('/blog/tag/', ''));
+      const rawTag = decodeURIComponent(urlPath.replace('/blog/tag/', ''));
+      const tag = rawTag.replace(/[<>"'`;()]/g, '').trim().slice(0, 80);
       pageTitle = `مقالات برچسب ${tag} | مجله هوش مصنوعی`;
       pageDesc = `مجموعه اخبار و مقالات آموزشی هوش مصنوعی مرتبط با ${tag} در مجله هوش مصنوعی دستیار هوشمند.`;
       structuredData = {
@@ -420,25 +443,31 @@ function renderHtmlWithSeo(req: express.Request, res: express.Response, distPath
       }
     }
 
+    const safeTitle = escapeHtml(pageTitle);
+    const safeDesc = escapeHtml(pageDesc);
+    const safeCanonical = escapeHtml(canonicalUrl);
+    const safeImage = escapeHtml(pageImage);
+    const safeType = escapeHtml(pageType);
+
     // Replace Title
-    html = html.replace(/<title>.*?<\/title>/i, `<title>${pageTitle}</title>`);
+    html = html.replace(/<title>.*?<\/title>/i, `<title>${safeTitle}</title>`);
 
     // Replace Meta Description
-    html = html.replace(/<meta\s+name="description"\s+content=".*?"\s*\/?>/i, `<meta name="description" content="${pageDesc}" />`);
+    html = html.replace(/<meta\s+name="description"\s+content=".*?"\s*\/?>/i, `<meta name="description" content="${safeDesc}" />`);
 
     // Replace Canonical
-    html = html.replace(/<link\s+rel="canonical"\s+href=".*?"\s*\/?>/i, `<link rel="canonical" href="${canonicalUrl}" />`);
+    html = html.replace(/<link\s+rel="canonical"\s+href=".*?"\s*\/?>/i, `<link rel="canonical" href="${safeCanonical}" />`);
 
     // Replace Open Graph Tags
-    html = html.replace(/<meta\s+property="og:title"\s+content=".*?"\s*\/?>/i, `<meta property="og:title" content="${pageTitle}" />`);
-    html = html.replace(/<meta\s+property="og:description"\s+content=".*?"\s*\/?>/i, `<meta property="og:description" content="${pageDesc}" />`);
-    html = html.replace(/<meta\s+property="og:image"\s+content=".*?"\s*\/?>/i, `<meta property="og:image" content="${pageImage}" />`);
-    html = html.replace(/<meta\s+property="og:type"\s+content=".*?"\s*\/?>/i, `<meta property="og:type" content="${pageType}" />`);
+    html = html.replace(/<meta\s+property="og:title"\s+content=".*?"\s*\/?>/i, `<meta property="og:title" content="${safeTitle}" />`);
+    html = html.replace(/<meta\s+property="og:description"\s+content=".*?"\s*\/?>/i, `<meta property="og:description" content="${safeDesc}" />`);
+    html = html.replace(/<meta\s+property="og:image"\s+content=".*?"\s*\/?>/i, `<meta property="og:image" content="${safeImage}" />`);
+    html = html.replace(/<meta\s+property="og:type"\s+content=".*?"\s*\/?>/i, `<meta property="og:type" content="${safeType}" />`);
 
     // Replace Twitter Tags
-    html = html.replace(/<meta\s+name="twitter:title"\s+content=".*?"\s*\/?>/i, `<meta name="twitter:title" content="${pageTitle}" />`);
-    html = html.replace(/<meta\s+name="twitter:description"\s+content=".*?"\s*\/?>/i, `<meta name="twitter:description" content="${pageDesc}" />`);
-    html = html.replace(/<meta\s+name="twitter:image"\s+content=".*?"\s*\/?>/i, `<meta name="twitter:image" content="${pageImage}" />`);
+    html = html.replace(/<meta\s+name="twitter:title"\s+content=".*?"\s*\/?>/i, `<meta name="twitter:title" content="${safeTitle}" />`);
+    html = html.replace(/<meta\s+name="twitter:description"\s+content=".*?"\s*\/?>/i, `<meta name="twitter:description" content="${safeDesc}" />`);
+    html = html.replace(/<meta\s+name="twitter:image"\s+content=".*?"\s*\/?>/i, `<meta name="twitter:image" content="${safeImage}" />`);
 
     // Inject Dynamic JSON-LD Schema & extra meta tags
     if (extraMetaTags) {

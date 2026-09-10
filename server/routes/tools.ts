@@ -1,14 +1,16 @@
 import express from 'express';
 import { Modality } from '@google/genai';
 import db from '../db/database';
-import { getGeminiClient, sanitizeErrorMessage, getPollinationsImageUrl, translateAndEnhanceImagePrompt } from '../services/utils';
+import { isSafeBaseUrl, getGeminiClient, sanitizeErrorMessage, getPollinationsImageUrl, translateAndEnhanceImagePrompt } from '../services/utils';
 
 const router = express.Router();
 
 router.post('/api/fetch-models', async (req, res) => {
   try {
     let { baseUrl, apiKey, customHeaders, profileId } = req.body;
-    if (!baseUrl) return res.status(400).json({ error: 'Base URL is required' });
+    if (!baseUrl || typeof baseUrl !== 'string' || !isSafeBaseUrl(baseUrl)) {
+      return res.status(400).json({ error: 'آدرس پایه ارائه‌دهنده نامعتبر یا غیرمجاز است.' });
+    }
 
     // Look up stored API key for default profile if not explicitly passed
     if (!apiKey && profileId) {

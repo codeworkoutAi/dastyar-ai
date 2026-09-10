@@ -1,6 +1,6 @@
 import jwt from 'jsonwebtoken';
-
-export const JWT_SECRET = process.env.JWT_SECRET || 'chatbox-secret-key-123';
+import { JWT_SECRET } from '../middleware/auth';
+export { JWT_SECRET };
 
 export interface TelegramAuthSession {
   token: string;

@@ -1,4 +1,5 @@
 import express from 'express';
+import rateLimit from 'express-rate-limit';
 import db from '../db/database';
 import { isSafeBaseUrl, getGeminiClient, extractCleanErrorMessage, sanitizeErrorMessage, formatContentsForGemini, sleep, getPollinationsImageUrl, translateAndEnhanceImagePrompt, normalizeBaseUrl, parseCustomHeaders } from '../services/utils';
 import { GoogleGroundingAgent } from '../services/GoogleGroundingAgent';
@@ -6,7 +7,15 @@ import { ToolsAgent } from '../services/ToolsAgent';
 import { responseCache, CACHE_TTL_MS, computeCacheKey, setCachedResponse } from '../services/CacheService';
 const router = express.Router();
 
-router.post('/api/chat/stream', async (req, res) => {
+const chatStreamLimiter = rateLimit({
+  windowMs: 1 * 60 * 1000, // 1 minute
+  max: 60, // Limit each IP to 60 streaming requests per minute
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'تعداد درخواست‌های گفت‌وگو بیش از حد مجاز است. لطفاً کمی بعد دوباره تلاش کنید.' }
+});
+
+router.post('/api/chat/stream', chatStreamLimiter, async (req, res) => {
   // Setup SSE headers
   res.setHeader('Content-Type', 'text/event-stream');
   res.setHeader('Cache-Control', 'no-cache, no-transform');
@@ -534,6 +543,15 @@ router.post('/api/chat/stream', async (req, res) => {
 
       // Merge user custom headers
       const userHeaders = parseCustomHeaders(apiConfig?.custom?.customHeaders);
+      
+      // Security: Prevent client from overriding system-injected default credentials
+      if (injectedKey) {
+        delete (userHeaders as Record<string, string>)['authorization'];
+        delete (userHeaders as Record<string, string>)['Authorization'];
+        delete (userHeaders as Record<string, string>)['x-api-key'];
+        delete (userHeaders as Record<string, string>)['X-Api-Key'];
+      }
+      
       Object.assign(headers, userHeaders);
 
       // Build payload with history sanitization from pruned history (last 6 messages)
