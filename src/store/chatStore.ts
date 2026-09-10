@@ -265,6 +265,10 @@ stopGeneration: () => {
       let detectedWebSearch = false;
       let detectedTool = 'none';
 
+      // Comprehensive Persian Web Search Triggers (Client-side Heuristics)
+      const clientWebTriggers = /اخبار|خبر|قیمت|آب و هوا|آب‌وهوا|مقاله|تحقیق|درباره|سرچ|جستجو|امروز|تاریخ|جدیدترین|آپدیت|به روز|به‌روز|دسترسی به وب|دسترسی به اینترنت|وصل به اینترنت|اینترنت داری|به اینترنت وصلی|آنلاین هستی|وب رو چک کن|دسترسی داری/i;
+      const hasWebIntent = clientWebTriggers.test(promptText);
+
       // Only call router if it's not an image gen AND (webSearch is auto or smartRouting is on)
       if (!isImageGen && (smartRoutingEnabled || (globalWebSearchEnabled && webSearch === undefined))) {
         try {
@@ -285,11 +289,14 @@ stopGeneration: () => {
           if (routerRes.ok) {
             const routerData = await routerRes.json();
             detectedIntent = routerData.intent || 'general';
-            detectedWebSearch = !!routerData.webSearch;
+            detectedWebSearch = !!routerData.webSearch || hasWebIntent;
             detectedTool = routerData.tool || 'none';
+          } else {
+            detectedWebSearch = hasWebIntent;
           }
         } catch (err) {
-          console.warn('[LLM Router] Failed to detect intent:', err);
+          console.warn('[LLM Router] Failed to detect intent (falling back to client heuristics):', err);
+          detectedWebSearch = hasWebIntent;
         }
       } else if (isImageGen) {
         detectedIntent = 'vision';
@@ -314,7 +321,7 @@ stopGeneration: () => {
 
       if (webSearch !== undefined) {
         payloadSettings.tools.webSearch = webSearch;
-      } else if (globalWebSearchEnabled && detectedWebSearch) {
+      } else if (globalWebSearchEnabled && (detectedWebSearch || hasWebIntent)) {
         payloadSettings.tools.webSearch = true;
       } else {
         payloadSettings.tools.webSearch = false;
