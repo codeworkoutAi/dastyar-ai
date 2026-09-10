@@ -34,7 +34,10 @@ export class GoogleGroundingAgent {
       try {
         const domainsPath = path.join(process.cwd(), 'server', 'allowed_domains.json');
         if (fs.existsSync(domainsPath)) {
-          const content = fs.readFileSync(domainsPath, 'utf8');
+          let content = fs.readFileSync(domainsPath, 'utf8');
+          if (content.charCodeAt(0) === 0xFEFF) {
+            content = content.slice(1);
+          }
           const jsonConfig = JSON.parse(content);
           
           let domains: string[] = [];
@@ -71,7 +74,7 @@ export class GoogleGroundingAgent {
 فقط در اینترنت جستجو کنید و مهم‌ترین فکت‌ها، داده‌ها، قیمت‌ها یا اخبار زنده را در قالب چند بولت‌پوینتِ بسیار کوتاه (تیتروار) لیست کنید.
 به هیچ وجه مقدمه، موخره یا پاراگراف طولانی ننویسید تا زمان پردازش حداقل شود. سرعت اولویت اول است!`;
 
-      const model = process.env.GEMINI_GROUNDING_MODEL || 'gemini-2.0-flash';
+      const model = process.env.GEMINI_GROUNDING_MODEL || 'gemini-3.6-flash';
       const response = await ai.models.generateContent({
         model,
         contents: [{ role: 'user', parts: [{ text: prompt }] }],

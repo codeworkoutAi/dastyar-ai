@@ -150,7 +150,8 @@ export async function fetchAndProcessNews() {
   appendCronLog('INFO', startMsg);
 
   try {
-    const ai = getGeminiClient(); // Fails if no API key is set
+    const apiKey = process.env.GEMINI_SEARCH_KEY || process.env.DEFAULT_GEMINI_KEY || process.env.GEMINI_API_KEY;
+    const ai = getGeminiClient(apiKey, true);
 
     let targetItem: any = null;
     let selectedFeedUrl = '';
@@ -260,7 +261,7 @@ export async function fetchAndProcessNews() {
 
     const userPrompt = `عنوان اصلی: ${targetItem.title}\nلینک منبع: ${targetItem.link}\nمتن مقاله:\n${chosenContent}`;
 
-    const candidateModels = ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-2.0-flash-lite'];
+    const candidateModels = ['gemini-3.6-flash', 'gemini-3.5-flash-lite', 'gemini-3.1-flash-lite', 'gemini-2.5-flash', 'gemini-2.0-flash'];
     let response: any = null;
     let usedModel = '';
 
@@ -271,7 +272,10 @@ export async function fetchAndProcessNews() {
           model,
           contents: [
             { role: 'user', parts: [{ text: systemPrompt + '\n\n' + userPrompt }] }
-          ]
+          ],
+          config: {
+            responseMimeType: 'application/json',
+          },
         });
         if (response?.text) {
           usedModel = model;
@@ -292,11 +296,20 @@ export async function fetchAndProcessNews() {
     }
 
     let generatedText = response.text || '';
-    generatedText = generatedText.replace(/```json/g, '').replace(/```/g, '').trim();
-
     let parsedData: { title?: string; content?: string; tags?: string[] };
     try {
-      parsedData = JSON.parse(generatedText);
+      let cleaned = generatedText.trim();
+      if (cleaned.startsWith('```json')) {
+        cleaned = cleaned.replace(/^```json\s*/, '').replace(/\s*```$/, '').trim();
+      } else if (cleaned.startsWith('```')) {
+        cleaned = cleaned.replace(/^```\s*/, '').replace(/\s*```$/, '').trim();
+      }
+      try {
+        parsedData = JSON.parse(cleaned);
+      } catch {
+        const fixed = cleaned.replace(/(?<!\\)\n/g, '\\n').replace(/(?<!\\)\r/g, '\\r').replace(/(?<!\\)\t/g, '\\t');
+        parsedData = JSON.parse(fixed);
+      }
     } catch (e) {
       const parseFailMsg = `Failed to parse JSON from Gemini response`;
       console.error(`[NewsCron] ${parseFailMsg}:`, generatedText);

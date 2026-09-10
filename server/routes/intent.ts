@@ -77,7 +77,7 @@ Do not wrap in markdown. Raw JSON only.`;
     if (provider === 'gemini') {
       const ai = getGeminiClient(apiConfig?.[provider]?.apiKey);
       // We force a fast, non-thinking model for Intent Routing to prevent <think> tags from breaking JSON
-      let modelName = process.env.GEMINI_INTENT_MODEL || 'gemini-2.0-flash';
+      let modelName = process.env.GEMINI_INTENT_MODEL || 'gemini-3.6-flash';
       
       const response = await ai.models.generateContent({
         model: modelName,
