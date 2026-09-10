@@ -4,6 +4,7 @@ import { isSafeBaseUrl, getGeminiClient, normalizeBaseUrl, parseCustomHeaders } 
 const router = express.Router();
 
 router.post('/api/chat/detect-intent', async (req, res) => {
+  let userText = '';
   try {
     const { messages, apiConfig: rawApiConfig, settings } = req.body;
 
@@ -33,7 +34,7 @@ router.post('/api/chat/detect-intent', async (req, res) => {
     }
 
     const lastUserMsg = messages.slice().reverse().find((m: any) => m.role === 'user');
-    const userText = typeof lastUserMsg?.content === 'string' ? lastUserMsg.content : '';
+    userText = typeof lastUserMsg?.content === 'string' ? lastUserMsg.content : '';
 
     if (!userText || userText.trim().length === 0) {
       return res.json({ webSearch: false, intent: 'general' });
