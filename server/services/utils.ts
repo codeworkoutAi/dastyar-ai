@@ -148,27 +148,71 @@ export function getPollinationsImageUrl(prompt: string, aspectRatio = '1:1', eng
 
 // Helper to translate and enhance image prompts into professional English prompts
 export async function translateAndEnhanceImagePrompt(rawPrompt: string, apiKey?: string): Promise<string> {
+  const trimmed = (rawPrompt || '').trim();
+  if (!trimmed) return '';
+
+  const isPersian = /[\u0600-\u06FF]/.test(trimmed);
+
+  // If prompt is already mostly in English without Persian characters, keep it intact
+  if (!isPersian && trimmed.length > 5) {
+    return trimmed;
+  }
+
+  const systemInstruction = `You are a master AI image prompt engineer and translator.
+Convert the user's Persian image description into a highly detailed, cinematic, and professional English prompt optimized for state-of-the-art AI image generators (Flux.1 / Midjourney).
+Rules:
+1. Understand the core subject, style, and mood accurately (e.g. pencil sketch, ancient warrior, cherry blossoms, cyberpunk, etc.).
+2. Translate and expand with descriptive visual details, lighting, atmosphere, texture, and artistic technique.
+3. Return ONLY the final English prompt text. No quotes, no markdown fences, no Persian, no preamble or explanation.
+
+Persian description: "${trimmed}"`;
+
+  // 1. Primary: Try Gemini
   try {
     const ai = getGeminiClient(apiKey);
     const response = await ai.models.generateContent({
       model: 'gemini-3.1-flash-lite',
-      contents: `You are an expert AI art prompt engineer, editor, and master translator. The user has sent a request for an image generation in Persian.
-This Persian text might be colloquial, lazy, misspelled, or have words out of order (Lazy Persian).
-Step 1: First, act as a strict editor and understand the true intent and correct the Persian internally in your mind (fix spelling, grammar, and intent).
-Step 2: Convert that corrected intent into a highly detailed, highly descriptive, flawless English image generation prompt optimized for Midjourney / Flux. Ensure high anatomical accuracy, crisp details, perfect lighting, 8k resolution, and professional composition.
-Return ONLY the final English prompt text, nothing else, no quotes, no explanation.
-
-User request: "${rawPrompt}"`,
+      contents: systemInstruction,
     });
     const enhanced = response.text?.trim();
-    if (enhanced && enhanced.length > 3) {
+    if (enhanced && enhanced.length > 5 && !/[\u0600-\u06FF]/.test(enhanced)) {
       return enhanced;
     }
   } catch (e: any) {
-    // Fallback to basic enhancement if translation fails
+    console.warn('[Translate Prompt] Gemini failed, attempting Groq fallback:', e?.message || e);
   }
 
-  return `${rawPrompt}, highly detailed, 8k resolution, photorealistic, professional lighting, crisp focus, zero artifacts`;
+  // 2. Fallback: Try Groq (Llama-3.3-70B)
+  const groqKey = process.env.DEFAULT_GROQ_KEY || process.env.GROQ_API_KEY;
+  if (groqKey) {
+    try {
+      const groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${groqKey}`,
+        },
+        body: JSON.stringify({
+          model: 'llama-3.3-70b-versatile',
+          messages: [{ role: 'user', content: systemInstruction }],
+          temperature: 0.5,
+          max_tokens: 350,
+        }),
+      });
+      if (groqRes.ok) {
+        const data = await groqRes.json();
+        const text = data?.choices?.[0]?.message?.content?.trim();
+        if (text && text.length > 5 && !/[\u0600-\u06FF]/.test(text)) {
+          return text;
+        }
+      }
+    } catch (groqErr: any) {
+      console.warn('[Translate Prompt] Groq fallback failed:', groqErr?.message || groqErr);
+    }
+  }
+
+  // 3. Clean fallback without forcing "photorealistic" which ruins non-photo styles
+  return `${trimmed}, highly detailed, sharp focus, 8k resolution, award winning composition`;
 }
 
 

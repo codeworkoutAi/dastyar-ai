@@ -60,6 +60,7 @@ export interface InspirationCard {
   title: string;
   category: string;
   prompt: string;
+  englishPrompt: string;
   style: string;
   engine: string;
   aspectRatio: string;
@@ -73,6 +74,7 @@ const INSPIRATION_PROMPTS: InspirationCard[] = [
     title: 'یوزپلنگ ایرانی در غروب کویر',
     category: 'حیات وحش و فوتورئال',
     prompt: 'یک یوزپلنگ باشکوه ایرانی روی تپه‌های شنی کویر لوت در غروب آفتاب طلایی، وزش باد ملایم، فوکوس دقیق بر روی چشمان کهربایی، کیفیت 8K',
+    englishPrompt: 'A magnificent Iranian cheetah resting on the sweeping golden sand dunes of Lut desert during a golden hour sunset, gentle breeze, hyper-focused amber eyes, National Geographic award winning wildlife photography, 8k resolution, cinematic lighting',
     style: 'photo',
     engine: 'flux',
     aspectRatio: '16:9',
@@ -84,6 +86,7 @@ const INSPIRATION_PROMPTS: InspirationCard[] = [
     title: 'تهران در سال ۲۱۵۰',
     category: 'سایبرپانک و آینده‌نگر',
     prompt: 'برج میلاد در آینده سایبرپانک سال ۲۱۵۰، ماشین‌های پرنده نورانی در آسمان بارانی، نورپردازی نئونی آبی و بنفش، بیلبوردهای هولوگرافیک فارسی',
+    englishPrompt: 'Futuristic cyberpunk Tehran in year 2150 featuring iconic Milad Tower, luminous flying vehicles flying through rainy night sky, neon reflections in puddles, blue and purple holographic billboards with Persian calligraphy, Blade Runner aesthetic, ultra-detailed 8k',
     style: 'cyberpunk',
     engine: 'flux',
     aspectRatio: '16:9',
@@ -95,6 +98,7 @@ const INSPIRATION_PROMPTS: InspirationCard[] = [
     title: 'قلعه معلق در ابرها',
     category: 'انیمه و فانتزی',
     prompt: 'قلعه‌ای باستانی معلق در میان ابرهای صورتی و بنفش، آبشارهای معلق، معماری جادویی الهام‌گرفته از استودیو جیبلی، نور خورشید ملایم',
+    englishPrompt: 'An ancient fantastical castle floating high among pastel pink and violet sunset clouds, cascading airborne waterfalls, whimsical architecture inspired by Studio Ghibli, radiant soft sunbeams, enchanting vibrant anime illustration, masterwork',
     style: 'anime',
     engine: 'sana',
     aspectRatio: '1:1',
@@ -106,6 +110,7 @@ const INSPIRATION_PROMPTS: InspirationCard[] = [
     title: 'روباه فضانورد سه‌بعدی',
     category: 'رندر سه‌بعدی و فانتزی',
     prompt: 'یک روباه بامزه و فسقلی با لباس فضانوردی کوچک، روی سطح ماه در حال کشف یک کریستال درخشان، رندر سه‌بعدی اکتان با بافت خمیری براق',
+    englishPrompt: 'An adorable tiny fennec fox wearing a miniature white astronaut space suit on the lunar surface discovering a glowing colorful crystal, 3d octane render, smooth claymation toy aesthetics, big expressive glossy eyes, volumetric studio lighting',
     style: '3d',
     engine: 'sana',
     aspectRatio: '1:1',
@@ -117,6 +122,7 @@ const INSPIRATION_PROMPTS: InspirationCard[] = [
     title: 'سامورایی زیر درخت گیلاس',
     category: 'طراحی و سیاه‌قلم',
     prompt: 'طرح سیاه‌قلم مدادی پرجزئیات از یک جنگجوی باستانی زیر باران گلبرگ‌های شکوفه گیلاس، سایه‌روشن‌های هاشورخورده و خطوط پویا',
+    englishPrompt: 'A masterclass detailed graphite pencil sketch of an ancient warrior standing beneath falling cherry blossom petals, dynamic cross-hatching shading, delicate pencil strokes on textured ivory paper, chiaroscuro contrast, fine art sketch illustration',
     style: 'sketch',
     engine: 'flux',
     aspectRatio: '9:16',
@@ -128,6 +134,7 @@ const INSPIRATION_PROMPTS: InspirationCard[] = [
     title: 'درخت زندگی رنگ‌روغن',
     category: 'نقاشی کلاسیک',
     prompt: 'نقاشی رنگ روغن باشکوه از درختی عظیم با برگ‌های شیشه‌ای و ریشه‌های نورانی در واحه شبانه، ضربات قلم‌مو با بافت روغنی برجسته',
+    englishPrompt: 'A magnificent classical oil painting of a grand mystical Tree of Life with crystalline leaves and luminescent roots in a night desert oasis, expressive thick impasto oil brushstrokes, vibrant rich colors, fine art museum masterpiece',
     style: 'oil',
     engine: 'flux',
     aspectRatio: '1:1',
@@ -341,14 +348,15 @@ export function ImageGenStudio() {
     customPrompt?: string,
     customStyle?: string,
     customEngine?: string,
-    customAspectRatio?: string
+    customAspectRatio?: string,
+    customEnglishPrompt?: string
   ) => {
     const activePrompt = (customPrompt !== undefined ? customPrompt : prompt).trim();
     const activeStyle = customStyle !== undefined ? customStyle : selectedStyle;
     const activeEngine = customEngine !== undefined ? customEngine : engine;
     const activeRatio = customAspectRatio !== undefined ? customAspectRatio : aspectRatio;
 
-    if (!activePrompt) {
+    if (!activePrompt && !customEnglishPrompt) {
       setError('لطفاً توصیف تصویر را وارد کنید.');
       return;
     }
@@ -378,6 +386,7 @@ export function ImageGenStudio() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           prompt: finalPrompt,
+          englishPrompt: customEnglishPrompt,
           aspectRatio: activeRatio,
           engine: activeEngine,
           apiKey: activeEngine === 'dalle-3' ? settings.providers.openai?.apiKey : activeEngine === 'imagen-3' ? settings.providers.gemini?.apiKey : undefined,
@@ -419,7 +428,7 @@ export function ImageGenStudio() {
     setEngine(item.engine);
     setAspectRatio(item.aspectRatio);
     if (autoGenerate) {
-      executeGenerate(item.prompt, item.style, item.engine, item.aspectRatio);
+      executeGenerate(item.prompt, item.style, item.engine, item.aspectRatio, item.englishPrompt);
     }
   };
 

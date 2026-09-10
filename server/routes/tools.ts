@@ -202,18 +202,20 @@ router.post('/api/fetch-models', async (req, res) => {
 // 4. Image Generation endpoint
 router.post('/api/generate-image', async (req, res) => {
   try {
-    const { prompt, aspectRatio = '1:1', negativePrompt, engine, apiKey, settings } = req.body;
-    if (!prompt) {
+    const { prompt, englishPrompt, aspectRatio = '1:1', negativePrompt, engine, apiKey, settings } = req.body;
+    if (!prompt && !englishPrompt) {
       console.warn('[ImageGen API] ❌ Error: Missing prompt');
       return res.status(400).json({ error: 'دستور ساخت تصویر الزامی است.' });
     }
 
-    let fullPrompt = prompt;
+    let fullPrompt = (prompt || englishPrompt) as string;
     if (negativePrompt) {
       fullPrompt += ` --no ${negativePrompt}`;
     }
 
-    const enhancedPrompt = await translateAndEnhanceImagePrompt(fullPrompt, settings?.providers?.gemini?.apiKey || apiKey);
+    let enhancedPrompt = englishPrompt && typeof englishPrompt === 'string' && englishPrompt.trim().length > 5
+      ? englishPrompt.trim()
+      : await translateAndEnhanceImagePrompt(fullPrompt, settings?.providers?.gemini?.apiKey || apiKey);
 
     if (engine === 'dalle-3') {
       const openAiKey = apiKey || settings?.providers?.openai?.apiKey;
@@ -302,20 +304,74 @@ router.get('/api/proxy-image', async (req, res) => {
   }
 });
 
-// 5. Enhance Prompt endpoint
+// 5. Enhance Prompt endpoint (Enhances Persian in rich Persian, or English in English)
 router.post('/api/enhance-prompt', async (req, res) => {
   try {
     const { prompt, apiKey } = req.body;
-    if (!prompt) return res.status(400).json({ error: 'توصیف مورد نظر ارسال نشده است.' });
-    
-    const ai = getGeminiClient(apiKey);
-    const response = await ai.models.generateContent({
-      model: 'gemini-3.1-flash-lite',
-      contents: `You are an expert AI prompt engineer. Translate the user's short/simple idea (which could be in Persian or English) into a highly detailed, cinematic, and professional English prompt optimized for AI image generators like Midjourney or Flux. Add details about lighting, camera angle, mood, and texture. Return ONLY the English prompt, no extra text. User idea: "${prompt}"`,
-    });
-    
-    const enhanced = response.text?.trim() || prompt;
-    res.json({ enhancedPrompt: enhanced });
+    if (!prompt || typeof prompt !== 'string') {
+      return res.status(400).json({ error: 'توصیف مورد نظر ارسال نشده است.' });
+    }
+
+    const isPersian = /[\u0600-\u06FF]/.test(prompt);
+
+    const systemInstruction = isPersian
+      ? `شما یک متخصص ارشد نگارش پرامپت هوش مصنوعی برای خلق تصاویر شاهکار هستید.
+کاربر یک ایده یا توصیف اولیه به زبان فارسی داده است.
+وظیفه شما این است که این ایده را به یک توصیف بسیار غنی، شفاف، زنده، با جزئیات بصری دقیق، نورپردازی هنری، زاویه دید، بافت و اتمسفر سینمایی به «زبان فارسی شیوا، سلیس و گیرا» بازنویسی و ارتقا دهید.
+دستورالعمل‌های حیاتی:
+۱. پاسخ باید کاملاً و صرفاً به زبان فارسی باشد (هیچ کلمه یا جمله‌ای به زبان انگلیسی ننویسید).
+۲. ایده اصلی و ماهیت مدنظر کاربر را دقیقاً حفظ کنید و فقط جزئیات بصری، کادربندی و رنگ‌آمیزی آن را غنی‌تر و ادبی‌تر کنید.
+۳. فقط متن بازنویسی‌شده نهایی را برگردانید؛ بدون هیچ‌گونه مقدمه، علامت نقل قول یا توضیح اضافی.
+
+ایده کاربر: "${prompt}"`
+      : `You are an expert AI art prompt engineer. Take the user's concept and expand it into a rich, vivid, cinematic prompt optimized for AI image generation with lighting, atmosphere, texture, and camera angle.
+Return ONLY the expanded prompt text, nothing else.
+
+User prompt: "${prompt}"`;
+
+    let enhanced: string | null = null;
+
+    // 1. Primary: Try Gemini
+    try {
+      const ai = getGeminiClient(apiKey);
+      const response = await ai.models.generateContent({
+        model: 'gemini-3.1-flash-lite',
+        contents: systemInstruction,
+      });
+      enhanced = response.text?.trim() || null;
+    } catch (geminiErr: any) {
+      console.warn('[Enhance Prompt] Gemini error, trying Groq fallback:', geminiErr?.message || geminiErr);
+    }
+
+    // 2. Fallback: Try Groq (Llama-3.3-70B)
+    if (!enhanced) {
+      const groqKey = process.env.DEFAULT_GROQ_KEY || process.env.GROQ_API_KEY;
+      if (groqKey) {
+        try {
+          const groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${groqKey}`,
+            },
+            body: JSON.stringify({
+              model: 'llama-3.3-70b-versatile',
+              messages: [{ role: 'user', content: systemInstruction }],
+              temperature: 0.7,
+              max_tokens: 350,
+            }),
+          });
+          if (groqRes.ok) {
+            const data = await groqRes.json();
+            enhanced = data?.choices?.[0]?.message?.content?.trim() || null;
+          }
+        } catch (groqErr: any) {
+          console.warn('[Enhance Prompt] Groq fallback error:', groqErr?.message || groqErr);
+        }
+      }
+    }
+
+    res.json({ enhancedPrompt: enhanced || prompt });
   } catch (err: any) {
     console.error('[Enhance Prompt API] Error:', err);
     res.status(500).json({ error: 'خطا در بهبود توصیف تصویر.' });
