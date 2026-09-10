@@ -62,6 +62,18 @@ const RSS_FEEDS = [
   'https://openai.com/news/rss.xml'
 ];
 
+export function sanitizeImageUrl(rawUrl: string): string {
+  if (!rawUrl) return '';
+  let cleaned = rawUrl.trim();
+  cleaned = cleaned
+    .replace(/&amp;/g, '&')
+    .replace(/&#038;/g, '&')
+    .replace(/&quot;/g, '"')
+    .replace(/&apos;/g, "'")
+    .replace(/&#39;/g, "'");
+  return cleaned;
+}
+
 /**
  * Scrapes the target article's real webpage to extract:
  * 1. High-resolution og:image or twitter:image
@@ -103,7 +115,7 @@ async function fetchSourceArticleDetails(url: string): Promise<{ fullContent: st
       html.match(/<link[^>]+rel=["']image_src["'][^>]+href=["']([^"'>]+)["']/i);
 
     if (ogMatch && ogMatch[1]) {
-      const candidate = ogMatch[1].trim();
+      const candidate = sanitizeImageUrl(ogMatch[1]);
       try {
         ogImage = new URL(candidate, url).href;
       } catch {
@@ -227,6 +239,8 @@ export async function fetchAndProcessNews() {
       }
     }
 
+    imageUrl = sanitizeImageUrl(imageUrl);
+
     // Absolute fallback: only if no image exists anywhere in the source or feed
     if (!imageUrl) {
       console.log('[NewsCron] No original image found anywhere, using AI fallback image...');
@@ -341,59 +355,13 @@ export async function fetchAndProcessNews() {
     console.log(`[NewsCron] Telegram check — bot: ${currentBot ? 'initialized' : 'null'}, channelId: ${channelId || 'NOT SET'}, proxy: ${proxyUrl || 'none'}`);
 
     if (currentBot && channelId) {
-      const rawBase = (process.env.WEBSITE_URL || process.env.WEB_URL || process.env.APP_URL || 'http://localhost:3000').trim().replace(/\/$/, '');
-      const baseUrl = (rawBase && !rawBase.includes('MY_APP_URL')) ? rawBase : 'http://localhost:3000';
-      const articleUrl = `${baseUrl}/blog/${info.lastInsertRowid}`;
-
-      // Convert Markdown links [text](url) to HTML <a href="url">text</a> for Telegram
-      let safeContent = parsedData.content.substring(0, 300).replace(/</g, '&lt;').replace(/>/g, '&gt;');
-      safeContent = safeContent.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>');
-
-      const messageText = `📰 <b>${parsedData.title}</b>\n\n` +
-        `${safeContent}...\n\n` +
-        `🔗 <a href="${articleUrl}">مطالعه کامل مقاله در وب‌سایت</a>`;
-
       try {
-        if (imageUrl && !imageUrl.includes('undefined')) {
-          try {
-            await currentBot.telegram.sendPhoto(channelId, imageUrl, {
-              caption: messageText,
-              parse_mode: 'HTML',
-              reply_markup: {
-                inline_keyboard: [
-                  [{ text: '📖 مطالعه کامل مقاله در سایت', url: articleUrl }]
-                ]
-              }
-            });
-            console.log('[NewsCron] News photo broadcasted to Telegram successfully.');
-            appendCronLog('INFO', 'News photo broadcasted to Telegram successfully', { articleId: info.lastInsertRowid });
-          } catch (photoErr: any) {
-            console.warn('[NewsCron] sendPhoto failed, falling back to text message:', photoErr?.message || photoErr);
-            appendCronLog('WARN', 'sendPhoto failed, falling back to text message', photoErr?.message || photoErr);
-
-            await currentBot.telegram.sendMessage(channelId, messageText, {
-              parse_mode: 'HTML',
-              reply_markup: {
-                inline_keyboard: [
-                  [{ text: '📖 مطالعه کامل مقاله در سایت', url: articleUrl }]
-                ]
-              }
-            });
-            console.log('[NewsCron] News text broadcasted to Telegram successfully.');
-            appendCronLog('INFO', 'News text broadcasted to Telegram successfully', { articleId: info.lastInsertRowid });
-          }
-        } else {
-          await currentBot.telegram.sendMessage(channelId, messageText, {
-            parse_mode: 'HTML',
-            reply_markup: {
-              inline_keyboard: [
-                [{ text: '📖 مطالعه کامل مقاله در سایت', url: articleUrl }]
-              ]
-            }
-          });
-          console.log('[NewsCron] News text broadcasted to Telegram successfully.');
-          appendCronLog('INFO', 'News text broadcasted to Telegram successfully', { articleId: info.lastInsertRowid });
-        }
+        await sendNewsToTelegram(channelId, currentBot, {
+          id: Number(info.lastInsertRowid),
+          title: parsedData.title,
+          content: parsedData.content,
+          image: imageUrl
+        });
       } catch (tgError: any) {
         const tgFailMsg = `Telegram broadcast failed: ${tgError?.message || tgError}`;
         console.error(`[NewsCron] ${tgFailMsg}`);
@@ -408,6 +376,100 @@ export async function fetchAndProcessNews() {
     console.error(`[NewsCron] ${fatalMsg}`);
     appendCronLog('ERROR', fatalMsg, error?.stack || error);
   }
+}
+
+export async function sendNewsToTelegram(
+  channelId: string,
+  currentBot: any,
+  article: { id: number; title: string; content: string; image: string }
+): Promise<boolean> {
+  const rawBase = (process.env.WEBSITE_URL || process.env.WEB_URL || process.env.APP_URL || 'http://localhost:3000').trim().replace(/\/$/, '');
+  const baseUrl = (rawBase && !rawBase.includes('MY_APP_URL')) ? rawBase : 'http://localhost:3000';
+  const articleUrl = `${baseUrl}/blog/${article.id}`;
+
+  let safeContent = article.content.substring(0, 300).replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  safeContent = safeContent.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>');
+
+  const messageText = `📰 <b>${article.title}</b>\n\n` +
+    `${safeContent}...\n\n` +
+    `🔗 <a href="${articleUrl}">مطالعه کامل مقاله در وب‌سایت</a>`;
+
+  const cleanImageUrl = sanitizeImageUrl(article.image);
+
+  if (cleanImageUrl && !cleanImageUrl.includes('undefined')) {
+    // Attempt 1: Direct photo URL
+    try {
+      await currentBot.telegram.sendPhoto(channelId, cleanImageUrl, {
+        caption: messageText,
+        parse_mode: 'HTML',
+        reply_markup: {
+          inline_keyboard: [
+            [{ text: '📖 مطالعه کامل مقاله در سایت', url: articleUrl }]
+          ]
+        }
+      });
+      console.log(`[NewsCron] News photo broadcasted to Telegram successfully (Article #${article.id}).`);
+      appendCronLog('INFO', 'News photo broadcasted to Telegram successfully', { articleId: article.id });
+      return true;
+    } catch (photoErr: any) {
+      console.warn('[NewsCron] sendPhoto via URL failed, attempting buffer fallback:', photoErr?.message || photoErr);
+      appendCronLog('WARN', 'sendPhoto via URL failed, attempting buffer fallback', photoErr?.message || photoErr);
+
+      // Attempt 2: Server-side buffer download fallback
+      try {
+        const imgRes = await fetch(cleanImageUrl, {
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+          }
+        });
+        if (imgRes.ok) {
+          const arrayBuffer = await imgRes.arrayBuffer();
+          const buffer = Buffer.from(arrayBuffer);
+          await currentBot.telegram.sendPhoto(channelId, { source: buffer }, {
+            caption: messageText,
+            parse_mode: 'HTML',
+            reply_markup: {
+              inline_keyboard: [
+                [{ text: '📖 مطالعه کامل مقاله در سایت', url: articleUrl }]
+              ]
+            }
+          });
+          console.log(`[NewsCron] News photo broadcasted via buffer fallback successfully (Article #${article.id}).`);
+          appendCronLog('INFO', 'News photo broadcasted via buffer fallback successfully', { articleId: article.id });
+          return true;
+        }
+      } catch (bufErr: any) {
+        console.warn('[NewsCron] Buffer fallback also failed:', bufErr?.message || bufErr);
+      }
+    }
+  }
+
+  // Fallback to text message with link preview disabled so it never produces an ugly truncated card
+  await currentBot.telegram.sendMessage(channelId, messageText, {
+    parse_mode: 'HTML',
+    disable_web_page_preview: true,
+    reply_markup: {
+      inline_keyboard: [
+        [{ text: '📖 مطالعه کامل مقاله در سایت', url: articleUrl }]
+      ]
+    }
+  });
+  console.log(`[NewsCron] News text broadcasted to Telegram (Article #${article.id}).`);
+  appendCronLog('INFO', 'News text broadcasted to Telegram (fallback)', { articleId: article.id });
+  return true;
+}
+
+export async function broadcastArticleById(articleId: number) {
+  const article: any = db.prepare('SELECT id, title, content, image FROM news WHERE id = ?').get(articleId);
+  if (!article) {
+    throw new Error(`Article with ID ${articleId} not found`);
+  }
+  const channelId = process.env.TELEGRAM_CHANNEL_ID;
+  const currentBot = getTelegramBot() || bot;
+  if (!currentBot || !channelId) {
+    throw new Error('Telegram bot or channelId not configured');
+  }
+  return await sendNewsToTelegram(channelId, currentBot, article);
 }
 
 export function initNewsCron() {
