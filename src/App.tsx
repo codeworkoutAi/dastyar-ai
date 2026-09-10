@@ -26,7 +26,7 @@ const AboutModal = lazy(() => import('./components/AboutModal').then(m => ({ def
 const ContactModal = lazy(() => import('./components/ContactModal').then(m => ({ default: m.ContactModal })));
 
 export default function App() {
-  const { settings, systemIsDark } = useSettingsStore();
+  const { settings, systemIsDark, syncSystemProfiles } = useSettingsStore();
   const checkAuth = useAuthStore(state => state.checkAuth);
   const setAuthModalOpen = useAuthStore(state => state.setAuthModalOpen);
   const { isAdminOpen, setIsAdminOpen } = useUIStore();
@@ -36,6 +36,7 @@ export default function App() {
 
   useEffect(() => {
     checkAuth();
+    syncSystemProfiles();
 
     // Listen for custom event to open auth modal
     const handleOpenAuth = () => setAuthModalOpen(true);
@@ -44,7 +45,7 @@ export default function App() {
     return () => {
       window.removeEventListener('open-auth-modal', handleOpenAuth);
     };
-  }, [checkAuth, setAuthModalOpen]);
+  }, [checkAuth, setAuthModalOpen, syncSystemProfiles]);
 
   useEffect(() => {
     const root = document.documentElement;

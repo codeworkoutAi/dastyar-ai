@@ -24,7 +24,14 @@ import {
   User,
   Phone,
   Mail,
-  ExternalLink
+  ExternalLink,
+  Cpu,
+  Plus,
+  Sparkles,
+  Code2,
+  EyeOff,
+  ShieldCheck,
+  Activity
 } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import { toEnglishDigits } from '../lib/persianUtils';
@@ -94,6 +101,22 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
   const [editNewsRebroadcast, setEditNewsRebroadcast] = useState(false);
   const [editNewsLoading, setEditNewsLoading] = useState(false);
 
+  // System Default AI Profiles (Free Cards) state
+  const [defaultProfiles, setDefaultProfiles] = useState<any[]>([]);
+  const [defaultProfilesLoading, setDefaultProfilesLoading] = useState(false);
+  const [editingDefaultProfile, setEditingDefaultProfile] = useState<any | null>(null);
+  const [isAddingDefaultProfile, setIsAddingDefaultProfile] = useState(false);
+  const [profileFormName, setProfileFormName] = useState('');
+  const [profileFormBaseUrl, setProfileFormBaseUrl] = useState('');
+  const [profileFormApiKey, setProfileFormApiKey] = useState('');
+  const [profileFormModelName, setProfileFormModelName] = useState('');
+  const [profileFormCustomHeaders, setProfileFormCustomHeaders] = useState('');
+  const [profileFormRole, setProfileFormRole] = useState<'default' | 'coding' | 'vision'>('default');
+  const [profileFormOrderIndex, setProfileFormOrderIndex] = useState(0);
+  const [profileFormIsActive, setProfileFormIsActive] = useState(true);
+  const [testingProfileId, setTestingProfileId] = useState<string | null>(null);
+  const [testResult, setTestResult] = useState<{ id: string; success: boolean; message: string; latencyMs?: number } | null>(null);
+
   const formRef = useRef<HTMLDivElement>(null);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>, type: 'image' | 'banner' = 'image') => {
@@ -108,6 +131,187 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
     }
   };
 
+  const fetchDefaultProfiles = async () => {
+    try {
+      setDefaultProfilesLoading(true);
+      setError(null);
+      const res = await fetch('/api/admin/default-profiles', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (!res.ok) throw new Error('خطا در دریافت پروفایل‌های پیش‌فرض');
+      const data = await res.json();
+      setDefaultProfiles(data);
+    } catch (err: any) {
+      setError(err.message || 'خطای سرور');
+    } finally {
+      setDefaultProfilesLoading(false);
+    }
+  };
+
+  const resetDefaultProfileForm = () => {
+    setProfileFormName('');
+    setProfileFormBaseUrl('');
+    setProfileFormApiKey('');
+    setProfileFormModelName('');
+    setProfileFormCustomHeaders('');
+    setProfileFormRole('default');
+    setProfileFormOrderIndex(0);
+    setProfileFormIsActive(true);
+    setEditingDefaultProfile(null);
+    setIsAddingDefaultProfile(false);
+  };
+
+  const openEditDefaultProfile = (profile: any) => {
+    setEditingDefaultProfile(profile);
+    setIsAddingDefaultProfile(true);
+    setProfileFormName(profile.name || '');
+    setProfileFormBaseUrl(profile.baseUrl || '');
+    setProfileFormApiKey(profile.apiKey || '');
+    setProfileFormModelName(profile.modelName || '');
+    setProfileFormCustomHeaders(profile.customHeaders || '');
+    setProfileFormRole(profile.role || 'default');
+    setProfileFormOrderIndex(profile.orderIndex || 0);
+    setProfileFormIsActive(profile.isActive === 1);
+  };
+
+  const handleSaveDefaultProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!profileFormName.trim() || !profileFormBaseUrl.trim() || !profileFormModelName.trim()) {
+      alert('لطفاً نام، آدرس پایه (Base URL) و نام مدل را وارد کنید.');
+      return;
+    }
+
+    try {
+      setDefaultProfilesLoading(true);
+      setError(null);
+
+      const payload = {
+        name: profileFormName.trim(),
+        baseUrl: profileFormBaseUrl.trim(),
+        apiKey: profileFormApiKey.trim(),
+        modelName: profileFormModelName.trim(),
+        customHeaders: profileFormCustomHeaders.trim(),
+        role: profileFormRole,
+        orderIndex: Number(profileFormOrderIndex) || 0,
+        isActive: profileFormIsActive ? 1 : 0
+      };
+
+      let res;
+      if (editingDefaultProfile) {
+        res = await fetch(`/api/admin/default-profiles/${editingDefaultProfile.id}`, {
+          method: 'PUT',
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}` 
+          },
+          body: JSON.stringify(payload)
+        });
+      } else {
+        res = await fetch('/api/admin/default-profiles', {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}` 
+          },
+          body: JSON.stringify(payload)
+        });
+      }
+
+      if (!res.ok) {
+        const d = await res.json();
+        throw new Error(d.error || 'خطا در ذخیره پروفایل');
+      }
+
+      resetDefaultProfileForm();
+      await fetchDefaultProfiles();
+    } catch (err: any) {
+      setError(err.message || 'خطای سرور');
+    } finally {
+      setDefaultProfilesLoading(false);
+    }
+  };
+
+  const handleDeleteDefaultProfile = async (id: string) => {
+    if (!window.confirm('آیا از حذف این کارت مدل پیش‌فرض اطمینان دارید؟')) return;
+    try {
+      setDefaultProfilesLoading(true);
+      const res = await fetch(`/api/admin/default-profiles/${id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (!res.ok) {
+        const d = await res.json();
+        throw new Error(d.error || 'خطا در حذف پروفایل');
+      }
+      await fetchDefaultProfiles();
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setDefaultProfilesLoading(false);
+    }
+  };
+
+  const handleToggleDefaultProfileActive = async (profile: any) => {
+    try {
+      const res = await fetch(`/api/admin/default-profiles/${profile.id}`, {
+        method: 'PUT',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}` 
+        },
+        body: JSON.stringify({ isActive: profile.isActive === 1 ? 0 : 1 })
+      });
+      if (!res.ok) throw new Error('خطا در تغییر وضعیت کارت');
+      await fetchDefaultProfiles();
+    } catch (err: any) {
+      setError(err.message);
+    }
+  };
+
+  const handleTestDefaultProfile = async (profile: any) => {
+    try {
+      setTestingProfileId(profile.id);
+      setTestResult(null);
+
+      const res = await fetch('/api/models/test', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          provider: 'custom',
+          customBaseUrl: profile.baseUrl,
+          customApiKey: profile.apiKey || '',
+          modelName: profile.modelName,
+          customHeaders: profile.customHeaders,
+          profileId: profile.id
+        })
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        setTestResult({
+          id: profile.id,
+          success: true,
+          message: `اتصال موفقیت‌آمیز بود! زمان پاسخ: ${data.latencyMs || 0} میلی‌ثانیه`,
+          latencyMs: data.latencyMs
+        });
+      } else {
+        setTestResult({
+          id: profile.id,
+          success: false,
+          message: data.error || 'خطا در برقراری ارتباط با مدل'
+        });
+      }
+    } catch (err: any) {
+      setTestResult({
+        id: profile.id,
+        success: false,
+        message: err.message || 'خطا در ارسال درخواست تست'
+      });
+    } finally {
+      setTestingProfileId(null);
+    }
+  };
+
   useEffect(() => {
     if (isOpen && token && user?.role === 'admin') {
       if (activeTab === 'products') {
@@ -118,6 +322,8 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
         fetchUsers();
       } else if (activeTab === 'news') {
         fetchNews();
+      } else if (activeTab === 'settings') {
+        fetchDefaultProfiles();
       }
     }
   }, [isOpen, token, user, activeTab]);
@@ -814,6 +1020,348 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
             </div>
           ) : activeTab === 'settings' ? (
             <div className="flex flex-col gap-6 animate-fadeIn">
+              {/* Default AI Profiles Management Section */}
+              <div className="bg-white dark:bg-zinc-800/50 p-5 sm:p-6 rounded-2xl border border-zinc-200 dark:border-zinc-700/50 shadow-sm">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-zinc-100 dark:border-zinc-700/60">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
+                      <Cpu className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h3 className="text-base sm:text-lg font-bold text-zinc-900 dark:text-zinc-100 font-rokh">
+                        مدل‌های هوش مصنوعی پیش‌فرض سیستم (کارت‌های رایگان)
+                      </h3>
+                      <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5 leading-relaxed">
+                        این کارت‌ها به صورت عمومی و رایگان برای تمامی کاربران نمایش داده می‌شوند. کلیدهای API در سرور نگهداری شده و کاربران همچنین می‌توانند کارت‌های سفارشی خود را بدون تداخل اضافه کنند.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 shrink-0">
+                    <button
+                      onClick={fetchDefaultProfiles}
+                      disabled={defaultProfilesLoading}
+                      className="p-2.5 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-700/60 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5"
+                      title="تازه‌سازی لیست"
+                    >
+                      <RefreshCw className={`w-4 h-4 ${defaultProfilesLoading ? 'animate-spin' : ''}`} />
+                      <span className="hidden sm:inline">تازه‌سازی</span>
+                    </button>
+                    <button
+                      onClick={() => {
+                        resetDefaultProfileForm();
+                        setIsAddingDefaultProfile(true);
+                      }}
+                      className="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-md shadow-blue-600/20"
+                    >
+                      <Plus className="w-4 h-4" />
+                      <span>افزودن کارت مدل</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Form to Add or Edit Default Profile */}
+                {isAddingDefaultProfile && (
+                  <form onSubmit={handleSaveDefaultProfile} className="mt-5 p-5 bg-zinc-50 dark:bg-zinc-900/80 rounded-2xl border border-blue-200/60 dark:border-blue-800/40 animate-fadeIn space-y-4">
+                    <div className="flex items-center justify-between pb-3 border-b border-zinc-200 dark:border-zinc-800">
+                      <h4 className="text-sm font-bold text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
+                        <Edit2 className="w-4 h-4 text-blue-500" />
+                        {editingDefaultProfile ? 'ویرایش کارت مدل پیش‌فرض' : 'افزودن کارت مدل پیش‌فرض جدید'}
+                      </h4>
+                      <button
+                        type="button"
+                        onClick={resetDefaultProfileForm}
+                        className="p-1.5 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 rounded-lg hover:bg-zinc-200/60 dark:hover:bg-zinc-800 transition-colors"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 text-xs">
+                      <div>
+                        <label className="block text-zinc-700 dark:text-zinc-300 font-bold mb-1.5">
+                          نام نمایشی کارت <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          value={profileFormName}
+                          onChange={(e) => setProfileFormName(e.target.value)}
+                          placeholder="مثال: Qwen 3.6 27B (رایگان)"
+                          className="w-full px-3.5 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-blue-500 transition-colors"
+                          required
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-zinc-700 dark:text-zinc-300 font-bold mb-1.5">
+                          شناسه مدل (Model Name) <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          value={profileFormModelName}
+                          onChange={(e) => setProfileFormModelName(e.target.value)}
+                          placeholder="مثال: qwen/qwen3.6-27b یا gemini-3.1-flash-lite"
+                          className="w-full px-3.5 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-blue-500 transition-colors"
+                          dir="ltr"
+                          required
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-zinc-700 dark:text-zinc-300 font-bold mb-1.5">
+                          نقش مدل در سیستم
+                        </label>
+                        <select
+                          value={profileFormRole}
+                          onChange={(e) => setProfileFormRole(e.target.value as any)}
+                          className="w-full px-3.5 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-blue-500 transition-colors"
+                        >
+                          <option value="default">عمومی (چت و مکالمه پیش‌فرض)</option>
+                          <option value="coding">برنامه‌نویسی و کدنویسی</option>
+                          <option value="vision">بینایی و تحلیل تصویر</option>
+                        </select>
+                      </div>
+
+                      <div className="sm:col-span-2">
+                        <label className="block text-zinc-700 dark:text-zinc-300 font-bold mb-1.5">
+                          آدرس پایه اندپوینت (Base URL) <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          value={profileFormBaseUrl}
+                          onChange={(e) => setProfileFormBaseUrl(e.target.value)}
+                          placeholder="مثال: https://api.groq.com/openai/v1 یا https://generativelanguage.googleapis.com/v1beta/openai"
+                          className="w-full px-3.5 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-blue-500 transition-colors"
+                          dir="ltr"
+                          required
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-zinc-700 dark:text-zinc-300 font-bold mb-1.5">
+                          کلید دسترسی سرور (API Key)
+                        </label>
+                        <input
+                          type="password"
+                          value={profileFormApiKey}
+                          onChange={(e) => setProfileFormApiKey(e.target.value)}
+                          placeholder={editingDefaultProfile ? '(بدون تغییر - مقدار قبلی حفظ می‌شود)' : 'کلید دسترسی سرور'}
+                          className="w-full px-3.5 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-blue-500 transition-colors"
+                          dir="ltr"
+                        />
+                        <span className="text-[10px] text-zinc-400 mt-1 block">
+                          این کلید در سرور ذخیره می‌شود و هرگز به مرورگر کاربران ارسال نخواهد شد.
+                        </span>
+                      </div>
+
+                      <div>
+                        <label className="block text-zinc-700 dark:text-zinc-300 font-bold mb-1.5">
+                          ترتیب نمایش (اعداد کمتر بالاتر هستند)
+                        </label>
+                        <input
+                          type="number"
+                          value={profileFormOrderIndex}
+                          onChange={(e) => setProfileFormOrderIndex(parseInt(toEnglishDigits(e.target.value)) || 0)}
+                          className="w-full px-3.5 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-blue-500 transition-colors"
+                          min={0}
+                        />
+                      </div>
+
+                      <div className="flex items-center gap-2 pt-6">
+                        <input
+                          type="checkbox"
+                          id="profileFormIsActive"
+                          checked={profileFormIsActive}
+                          onChange={(e) => setProfileFormIsActive(e.target.checked)}
+                          className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 border-zinc-300 dark:border-zinc-700 dark:bg-zinc-800"
+                        />
+                        <label htmlFor="profileFormIsActive" className="text-zinc-700 dark:text-zinc-300 font-bold cursor-pointer">
+                          این کارت فعال باشد و برای کاربران نمایش داده شود
+                        </label>
+                      </div>
+
+                      <div className="sm:col-span-3">
+                        <label className="block text-zinc-700 dark:text-zinc-300 font-bold mb-1.5">
+                          هدرهای سفارشی (Custom Headers - اختیاری)
+                        </label>
+                        <input
+                          type="text"
+                          value={profileFormCustomHeaders}
+                          onChange={(e) => setProfileFormCustomHeaders(e.target.value)}
+                          placeholder='مثال: {"HTTP-Referer": "https://ai.studio"} یا هدر: مقدار'
+                          className="w-full px-3.5 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-blue-500 transition-colors font-mono"
+                          dir="ltr"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-end gap-3 pt-3 border-t border-zinc-200 dark:border-zinc-800">
+                      <button
+                        type="button"
+                        onClick={resetDefaultProfileForm}
+                        className="px-4 py-2 rounded-xl text-xs font-bold text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200/60 dark:hover:bg-zinc-800 transition-colors"
+                      >
+                        انصراف
+                      </button>
+                      <button
+                        type="submit"
+                        disabled={defaultProfilesLoading}
+                        className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-md shadow-blue-600/20 disabled:opacity-50 flex items-center gap-1.5"
+                      >
+                        {defaultProfilesLoading ? (
+                          <div className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                        ) : (
+                          <Check className="w-4 h-4" />
+                        )}
+                        <span>{editingDefaultProfile ? 'ذخیره تغییرات کارت' : 'ایجاد کارت مدل'}</span>
+                      </button>
+                    </div>
+                  </form>
+                )}
+
+                {/* List of Default Profiles */}
+                <div className="mt-5 space-y-3">
+                  {defaultProfilesLoading && defaultProfiles.length === 0 ? (
+                    <div className="py-12 flex flex-col items-center justify-center gap-3 text-zinc-500">
+                      <RefreshCw className="w-6 h-6 animate-spin text-blue-500" />
+                      <span className="text-xs">در حال بارگذاری کارت‌های پیش‌فرض سیستم...</span>
+                    </div>
+                  ) : defaultProfiles.length === 0 ? (
+                    <div className="py-10 text-center text-zinc-500 bg-zinc-50 dark:bg-zinc-900/40 rounded-2xl border border-dashed border-zinc-200 dark:border-zinc-800 text-xs">
+                      هیچ کارت مدل پیش‌فرضی ثبت نشده است. با کلیک روی «افزودن کارت مدل» یک مدل جدید بسازید.
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {defaultProfiles.map((p) => {
+                        const isTesting = testingProfileId === p.id;
+                        const result = testResult && testResult.id === p.id ? testResult : null;
+
+                        return (
+                          <div
+                            key={p.id}
+                            className={`p-4 rounded-2xl border transition-all duration-200 flex flex-col justify-between ${
+                              p.isActive === 1
+                                ? 'bg-white dark:bg-zinc-850 border-zinc-200 dark:border-zinc-700/80 shadow-sm'
+                                : 'bg-zinc-100/60 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/80 opacity-70'
+                            }`}
+                          >
+                            <div className="space-y-3">
+                              {/* Header & Badges */}
+                              <div className="flex items-start justify-between gap-2">
+                                <div>
+                                  <h4 className="text-sm font-extrabold text-zinc-900 dark:text-zinc-100 flex items-center gap-1.5">
+                                    <span>{p.name}</span>
+                                    {p.isActive === 1 ? (
+                                      <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]" title="فعال" />
+                                    ) : (
+                                      <span className="w-2 h-2 rounded-full bg-zinc-400" title="غیرفعال" />
+                                    )}
+                                  </h4>
+                                  <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
+                                    <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                                      p.role === 'coding'
+                                        ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20'
+                                        : p.role === 'vision'
+                                        ? 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20'
+                                        : 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20'
+                                    }`}>
+                                      {p.role === 'coding' ? <Code2 className="w-3 h-3" /> : p.role === 'vision' ? <Eye className="w-3 h-3" /> : <Sparkles className="w-3 h-3" />}
+                                      <span>{p.role === 'coding' ? 'کدنویسی' : p.role === 'vision' ? 'بینایی و تصویر' : 'عمومی'}</span>
+                                    </span>
+                                    <span className="text-[10px] text-zinc-500 bg-zinc-100 dark:bg-zinc-800 px-2 py-0.5 rounded-full font-mono">
+                                      ترتیب: {p.orderIndex || 0}
+                                    </span>
+                                    <span className="text-[10px] text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full font-bold flex items-center gap-1">
+                                      <ShieldCheck className="w-3 h-3" />
+                                      {p.apiKey ? 'کلید سرور فعال' : 'بدون کلید اختصاصی'}
+                                    </span>
+                                  </div>
+                                </div>
+
+                                <button
+                                  onClick={() => handleToggleDefaultProfileActive(p)}
+                                  className={`px-2 py-1 rounded-lg text-[10px] font-bold transition-colors ${
+                                    p.isActive === 1
+                                      ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20'
+                                      : 'bg-zinc-200 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-300'
+                                  }`}
+                                  title={p.isActive === 1 ? 'کلیک برای غیرفعال‌سازی' : 'کلیک برای فعال‌سازی'}
+                                >
+                                  {p.isActive === 1 ? 'فعال' : 'غیرفعال'}
+                                </button>
+                              </div>
+
+                              {/* Details */}
+                              <div className="space-y-1.5 text-xs text-zinc-600 dark:text-zinc-400 pt-2 border-t border-zinc-100 dark:border-zinc-800">
+                                <div className="flex items-center justify-between font-mono text-[11px]">
+                                  <span className="text-zinc-400">Model:</span>
+                                  <span className="font-bold text-zinc-800 dark:text-zinc-200 bg-zinc-100 dark:bg-zinc-800/80 px-1.5 py-0.5 rounded" dir="ltr">
+                                    {p.modelName}
+                                  </span>
+                                </div>
+                                <div className="flex items-center justify-between font-mono text-[10px]">
+                                  <span className="text-zinc-400">Endpoint:</span>
+                                  <span className="text-zinc-500 truncate max-w-[200px]" dir="ltr" title={p.baseUrl}>
+                                    {p.baseUrl ? p.baseUrl.replace(/^https?:\/\//, '') : '-'}
+                                  </span>
+                                </div>
+                              </div>
+
+                              {/* Test Result Message */}
+                              {result && (
+                                <div className={`p-2.5 rounded-xl text-[11px] leading-tight flex items-start gap-1.5 animate-fadeIn ${
+                                  result.success
+                                    ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20'
+                                    : 'bg-red-500/10 text-red-700 dark:text-red-300 border border-red-500/20'
+                                }`}>
+                                  {result.success ? <CheckCircle2 className="w-3.5 h-3.5 shrink-0 mt-0.5" /> : <XCircle className="w-3.5 h-3.5 shrink-0 mt-0.5" />}
+                                  <span>{result.message}</span>
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Actions */}
+                            <div className="flex items-center justify-between gap-1 pt-4 mt-3 border-t border-zinc-100 dark:border-zinc-800">
+                              <button
+                                onClick={() => handleTestDefaultProfile(p)}
+                                disabled={isTesting}
+                                className="px-3 py-1.5 rounded-xl text-[11px] font-bold bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 transition-colors flex items-center gap-1"
+                                title="آزمایش سرعت پاسخ و اتصال به این مدل"
+                              >
+                                {isTesting ? (
+                                  <div className="w-3 h-3 border-2 border-zinc-500 border-t-transparent rounded-full animate-spin" />
+                                ) : (
+                                  <Activity className="w-3 h-3 text-blue-500" />
+                                )}
+                                <span>تست پینگ</span>
+                              </button>
+
+                              <div className="flex items-center gap-1">
+                                <button
+                                  onClick={() => openEditDefaultProfile(p)}
+                                  className="p-1.5 rounded-lg text-zinc-600 dark:text-zinc-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/40 transition-colors"
+                                  title="ویرایش این کارت"
+                                >
+                                  <Edit2 className="w-3.5 h-3.5" />
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteDefaultProfile(p.id)}
+                                  className="p-1.5 rounded-lg text-zinc-600 dark:text-zinc-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/40 transition-colors"
+                                  title="حذف این کارت"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Danger Zone Section */}
               <div className="bg-white dark:bg-zinc-800/50 p-6 rounded-2xl border border-zinc-200 dark:border-zinc-700/50">
                 <h3 className="text-lg font-bold text-red-600 dark:text-red-400 mb-2 flex items-center gap-2">
                   <AlertCircle className="w-5 h-5" />

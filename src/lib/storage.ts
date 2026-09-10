@@ -229,6 +229,77 @@ export function saveSettings(settings: AppSettings): void {
   }
 }
 
+export function mergeSystemProfiles(currentSettings: AppSettings, serverProfiles: CustomProfile[]): AppSettings {
+  if (!serverProfiles || !Array.isArray(serverProfiles) || serverProfiles.length === 0) {
+    return currentSettings;
+  }
+
+  const existingProfiles = currentSettings.providers.custom.profiles || [];
+  const serverIds = new Set(serverProfiles.map(p => p.id));
+
+  // Identify user-created custom cards:
+  // Any profile that was NOT a system default and not one of the hardcoded default IDs
+  const userProfiles = existingProfiles.filter(p => 
+    !p.isSystemDefault && 
+    !serverIds.has(p.id) &&
+    !p.id.startsWith('default-groq-') &&
+    !p.id.startsWith('default-gemini-')
+  );
+
+  // Mark all server profiles as isSystemDefault
+  const formattedServerProfiles: CustomProfile[] = serverProfiles.map(sp => ({
+    ...sp,
+    apiKey: '', // System keys remain securely on server
+    isSystemDefault: true
+  }));
+
+  // Combined: server system default profiles first, then user's custom cards
+  const newProfiles = [...formattedServerProfiles, ...userProfiles];
+
+  // Verify activeProfileId still exists; if not, fallback to first profile
+  let activeProfileId = currentSettings.providers.custom.activeProfileId;
+  if (!newProfiles.some(p => p.id === activeProfileId)) {
+    activeProfileId = newProfiles[0]?.id || '';
+  }
+
+  // Update routing roles if the system profiles provide role mapping
+  const routingRoles = { ...currentSettings.tools.routingRoles };
+  for (const sp of formattedServerProfiles) {
+    if (sp.role === 'default' && (!routingRoles.default || !newProfiles.some(p => p.id === routingRoles.default))) {
+      routingRoles.default = sp.id;
+    } else if (sp.role === 'coding' && (!routingRoles.coding || !newProfiles.some(p => p.id === routingRoles.coding))) {
+      routingRoles.coding = sp.id;
+    } else if (sp.role === 'vision' && (!routingRoles.vision || !newProfiles.some(p => p.id === routingRoles.vision))) {
+      routingRoles.vision = sp.id;
+    }
+  }
+
+  // Sync active profile fields if active profile is in newProfiles
+  const activeProfile = newProfiles.find(p => p.id === activeProfileId);
+  const updatedCustom = {
+    ...currentSettings.providers.custom,
+    profiles: newProfiles,
+    activeProfileId,
+    ...(activeProfile ? {
+      baseUrl: activeProfile.baseUrl,
+      modelName: activeProfile.modelName,
+      customHeaders: activeProfile.customHeaders
+    } : {})
+  };
+
+  return {
+    ...currentSettings,
+    providers: {
+      ...currentSettings.providers,
+      custom: updatedCustom
+    },
+    tools: {
+      ...currentSettings.tools,
+      routingRoles
+    }
+  };
+}
+
 export function createNewConversation(modelName: string = 'gemini-2.5-flash'): Conversation {
   return {
     id: 'conv_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9),

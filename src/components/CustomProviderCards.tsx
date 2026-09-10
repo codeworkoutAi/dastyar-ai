@@ -599,8 +599,13 @@ export const CustomProviderCards: React.FC<CustomProviderCardsProps> = ({
               }`}
             >
               <div className="flex justify-between items-start mb-2">
-                <div className="flex items-center gap-2 max-w-[70%]">
+                <div className="flex items-center gap-2 max-w-[75%]">
                   <h5 className="font-bold text-zinc-900 dark:text-zinc-100 text-sm truncate pr-1">{profile.name}</h5>
+                  {profile.isSystemDefault ? (
+                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 shrink-0">رایگان سیستم</span>
+                  ) : (
+                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 shrink-0">شخصی</span>
+                  )}
                   {isActive && (
                     <div className="w-2 h-2 shrink-0 bg-zinc-300 rounded-full shadow-[0_0_8px_rgba(255,255,255,0.8)]" title="پروفایل فعال" />
                   )}
@@ -699,7 +704,7 @@ export const CustomProviderCards: React.FC<CustomProviderCardsProps> = ({
                   value={editingProfile.apiKey} 
                   onChange={(e) => handleUpdateProfile(editingProfile.id, { apiKey: e.target.value })} 
                   className="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl py-2 pr-9 pl-3 text-sm focus:border-zinc-500 outline-none transition-all font-mono" 
-                  placeholder="sk-..." 
+                  placeholder={editingProfile.isSystemDefault ? "(کلید پیش‌فرض رایگان فعال است - اختیاری)" : "sk-..."} 
                 />
               </div>
             </div>

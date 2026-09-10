@@ -1,4 +1,5 @@
 import express from 'express';
+import db from '../db/database';
 import { isSafeBaseUrl, getGeminiClient, extractCleanErrorMessage, sanitizeErrorMessage, formatContentsForGemini, sleep, getPollinationsImageUrl, translateAndEnhanceImagePrompt, normalizeBaseUrl, parseCustomHeaders } from '../services/utils';
 import { GoogleGroundingAgent } from '../services/GoogleGroundingAgent';
 import { ToolsAgent } from '../services/ToolsAgent';
@@ -289,8 +290,19 @@ router.post('/api/chat/stream', async (req, res) => {
 
       // Secure Backend Injection for Default Free Models
       if (!userKey || userKey.trim() === '') {
-        if (modelName === 'gemini-3.1-flash-lite' || modelName === 'gemini-2.0-flash-exp' || modelName === 'gemini-2.5-flash') {
-          userKey = process.env.DEFAULT_GEMINI_KEY || process.env.GEMINI_API_KEY;
+        const profileId = apiConfig?.custom?.activeProfileId || apiConfig?.custom?.id || apiConfig?.gemini?.id;
+        if (profileId) {
+          const row = db.prepare('SELECT apiKey FROM default_profiles WHERE id = ? AND isActive = 1').get(profileId) as any;
+          if (row?.apiKey) userKey = row.apiKey;
+        }
+        if (!userKey && modelName) {
+          const row = db.prepare('SELECT apiKey FROM default_profiles WHERE modelName = ? AND isActive = 1').get(modelName) as any;
+          if (row?.apiKey) userKey = row.apiKey;
+        }
+        if (!userKey) {
+          if (modelName === 'gemini-3.1-flash-lite' || modelName === 'gemini-2.0-flash-exp' || modelName === 'gemini-2.5-flash') {
+            userKey = process.env.DEFAULT_GEMINI_KEY || process.env.GEMINI_API_KEY;
+          }
         }
       }
 
@@ -480,9 +492,28 @@ router.post('/api/chat/stream', async (req, res) => {
           headers['Authorization'] = `Bearer ${String(apiConfig[provider]?.apiKey).trim()}`;
         }
       } else {
-        // Secure Backend Injection for Default Free Models (Groq / OpenRouter)
+        // Secure Backend Injection for Default Free Models from DB or Env
         const requestedModel = apiConfig?.[provider]?.modelName || '';
-        if (provider === 'custom') {
+        const profileId = apiConfig?.custom?.activeProfileId || apiConfig?.custom?.id || apiConfig?.[provider]?.id;
+        let injectedKey = '';
+
+        if (profileId) {
+          const row = db.prepare('SELECT apiKey FROM default_profiles WHERE id = ? AND isActive = 1').get(profileId) as any;
+          if (row?.apiKey) injectedKey = row.apiKey;
+        }
+        if (!injectedKey && requestedModel) {
+          const row = db.prepare('SELECT apiKey FROM default_profiles WHERE modelName = ? AND isActive = 1').get(requestedModel) as any;
+          if (row?.apiKey) injectedKey = row.apiKey;
+        }
+
+        if (injectedKey) {
+          if (provider === 'anthropic') {
+            headers['x-api-key'] = injectedKey;
+            headers['anthropic-version'] = '2023-06-01';
+          } else {
+            headers['Authorization'] = `Bearer ${injectedKey}`;
+          }
+        } else if (provider === 'custom') {
           const allowedGroqModels = ['qwen/qwen3.6-27b', 'openai/gpt-oss-120b', 'qwen/qwen3.8-27b', 'openai/gpt-oss-20b', 'allam-2-7b', 'groq/compound'];
           const allowedGeminiModels = ['gemini-3.1-flash-lite', 'gemini-1.5-flash'];
           const groqKey = process.env.DEFAULT_GROQ_KEY || process.env.GROQ_API_KEY;

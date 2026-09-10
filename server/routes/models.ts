@@ -1,4 +1,5 @@
 import express from 'express';
+import db from '../db/database';
 import { isSafeBaseUrl, getGeminiClient, extractCleanErrorMessage, sanitizeErrorMessage, normalizeBaseUrl, parseCustomHeaders } from '../services/utils';
 import { modelTestRateLimiter } from '../middleware/rateLimiter';
 
@@ -8,11 +9,28 @@ router.get('/api/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: Date.now() });
 });
 
+// 1. GET /api/default-profiles (Public: List active system default profiles without API keys)
+router.get('/api/default-profiles', (_req, res) => {
+  try {
+    const rows = db.prepare('SELECT id, name, baseUrl, modelName, customHeaders, role, orderIndex FROM default_profiles WHERE isActive = 1 ORDER BY orderIndex ASC, createdAt ASC').all() as any[];
+    // Ensure apiKey is completely blank for security
+    const sanitized = rows.map(r => ({
+      ...r,
+      apiKey: '',
+      isSystemDefault: true
+    }));
+    res.json(sanitized);
+  } catch (error) {
+    console.error('[Models API] Error fetching public default profiles:', error);
+    res.status(500).json({ error: 'خطا در دریافت پروفایل‌های پیش‌فرض' });
+  }
+});
+
 // 2. Test Connection & Benchmark Latency endpoint
 router.post(['/api/models/test', '/api/ping'], modelTestRateLimiter, async (req, res) => {
   const startTime = Date.now();
   try {
-    let { provider, customBaseUrl, customApiKey, customHeaders, modelName } = req.body;
+    let { provider, customBaseUrl, customApiKey, customHeaders, modelName, profileId } = req.body;
 
     // Auto-detect native official providers from custom profiles based on Base URL
     if (provider === 'custom' && customBaseUrl) {
@@ -39,7 +57,15 @@ router.post(['/api/models/test', '/api/ping'], modelTestRateLimiter, async (req,
 
       // Secure Backend Injection for Default Free Models during test
       if (!apiKey) {
-        if (targetModel === 'gemini-3.1-flash-lite' || targetModel === 'gemini-2.0-flash-exp' || targetModel === 'gemini-2.5-flash') {
+        if (profileId) {
+          const row = db.prepare('SELECT apiKey FROM default_profiles WHERE id = ? AND isActive = 1').get(profileId) as any;
+          if (row?.apiKey) apiKey = row.apiKey;
+        }
+        if (!apiKey && targetModel) {
+          const row = db.prepare('SELECT apiKey FROM default_profiles WHERE modelName = ? AND isActive = 1').get(targetModel) as any;
+          if (row?.apiKey) apiKey = row.apiKey;
+        }
+        if (!apiKey && (targetModel === 'gemini-3.1-flash-lite' || targetModel === 'gemini-2.0-flash-exp' || targetModel === 'gemini-2.5-flash')) {
           apiKey = process.env.DEFAULT_GEMINI_KEY || process.env.GEMINI_API_KEY;
         }
       }
@@ -114,16 +140,26 @@ router.post(['/api/models/test', '/api/ping'], modelTestRateLimiter, async (req,
 
       // Secure Backend Injection for Default Free Models during test
       if (!apiKey && provider === 'custom') {
-        const bUrl = baseUrl.toLowerCase();
-        if (bUrl.includes('api.groq.com')) {
-          const allowedGroqModels = ['qwen/qwen3.6-27b', 'openai/gpt-oss-120b', 'qwen/qwen3.8-27b', 'openai/gpt-oss-20b', 'allam-2-7b', 'groq/compound'];
-          if (allowedGroqModels.includes(model.toLowerCase())) {
-            apiKey = process.env.DEFAULT_GROQ_KEY || process.env.GROQ_API_KEY || '';
-          }
-        } else if (bUrl.includes('generativelanguage.googleapis.com')) {
-          const allowedGeminiModels = ['gemini-3.1-flash-lite', 'gemini-1.5-flash'];
-          if (allowedGeminiModels.includes(model.toLowerCase())) {
-            apiKey = process.env.DEFAULT_GEMINI_KEY || process.env.GEMINI_API_KEY || '';
+        if (profileId) {
+          const row = db.prepare('SELECT apiKey FROM default_profiles WHERE id = ? AND isActive = 1').get(profileId) as any;
+          if (row?.apiKey) apiKey = row.apiKey;
+        }
+        if (!apiKey && model) {
+          const row = db.prepare('SELECT apiKey FROM default_profiles WHERE modelName = ? AND isActive = 1').get(model) as any;
+          if (row?.apiKey) apiKey = row.apiKey;
+        }
+        if (!apiKey) {
+          const bUrl = baseUrl.toLowerCase();
+          if (bUrl.includes('api.groq.com')) {
+            const allowedGroqModels = ['qwen/qwen3.6-27b', 'openai/gpt-oss-120b', 'qwen/qwen3.8-27b', 'openai/gpt-oss-20b', 'allam-2-7b', 'groq/compound'];
+            if (allowedGroqModels.includes(model.toLowerCase())) {
+              apiKey = process.env.DEFAULT_GROQ_KEY || process.env.GROQ_API_KEY || '';
+            }
+          } else if (bUrl.includes('generativelanguage.googleapis.com')) {
+            const allowedGeminiModels = ['gemini-3.1-flash-lite', 'gemini-1.5-flash'];
+            if (allowedGeminiModels.includes(model.toLowerCase())) {
+              apiKey = process.env.DEFAULT_GEMINI_KEY || process.env.GEMINI_API_KEY || '';
+            }
           }
         }
       }

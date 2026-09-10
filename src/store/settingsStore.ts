@@ -1,12 +1,13 @@
 import { create } from 'zustand';
 import { AppSettings } from '../types';
-import { loadSettings, saveSettings } from '../lib/storage';
+import { loadSettings, saveSettings, mergeSystemProfiles } from '../lib/storage';
 
 interface SettingsState {
   settings: AppSettings;
   systemIsDark: boolean;
   setSettings: (settings: AppSettings) => void;
   updateSettings: (updater: (prev: AppSettings) => AppSettings) => void;
+  syncSystemProfiles: () => Promise<void>;
   setSystemIsDark: (isDark: boolean) => void;
   toggleTheme: () => void;
 }
@@ -24,6 +25,20 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
     const newSettings = updater(get().settings);
     saveSettings(newSettings);
     set({ settings: newSettings });
+  },
+
+  syncSystemProfiles: async () => {
+    try {
+      const res = await fetch('/api/default-profiles');
+      if (res.ok) {
+        const serverProfiles = await res.json();
+        if (Array.isArray(serverProfiles) && serverProfiles.length > 0) {
+          get().updateSettings(prev => mergeSystemProfiles(prev, serverProfiles));
+        }
+      }
+    } catch (err) {
+      console.warn('[SettingsStore] Failed to sync system profiles:', err);
+    }
   },
   
   setSystemIsDark: (isDark) => set({ systemIsDark: isDark }),

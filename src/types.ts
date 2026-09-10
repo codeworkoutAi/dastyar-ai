@@ -50,6 +50,8 @@ export interface CustomProfile {
   modelName: string;
   customHeaders: string;
   latencyMs?: number;
+  role?: 'default' | 'coding' | 'vision';
+  isSystemDefault?: boolean;
 }
 
 export interface MultiProviderConfig {

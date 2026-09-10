@@ -26,7 +26,12 @@ Persian AI Chatbox is a highly polished, full-stack AI platform for Persian-spea
 - Multi-provider chat with SSE streaming, smart routing, role-based model profiles (default / coding / vision).
 - Tools include web search, Google grounding, image generation, TTS, prompt enhance, and Explore Hub.
 - Hybrid intent detection: `/api/chat/detect-intent` plus client heuristics (see `docs/hybrid-intent-routing.md`).
-- Client may store BYOK API keys encrypted in localStorage (`src/lib/crypto.ts` + `storage.ts`). Default free profiles live in `storage.ts`.
+- Client may store BYOK API keys encrypted in localStorage (`src/lib/crypto.ts` + `storage.ts`).
+- **Server-Driven Default Profiles (Free Cards)**:
+  - Default free models (Qwen, GPT OSS, Gemini Flash) are stored in the SQLite/Turso `default_profiles` table.
+  - The Admin manages these profiles dynamically in `AdminModal.tsx` (`activeTab === 'settings'`) with full CRUD and live connection test.
+  - **Zero Key Leakage**: The public endpoint `GET /api/default-profiles` returns active system profiles with `apiKey: ''` masked. The server injects the real API key during chat streaming (`/api/chat/stream`) and connection testing (`/api/models/test`).
+  - **User Card Isolation**: Client sync via `mergeSystemProfiles` in `src/lib/storage.ts` updates only system default profiles (`isSystemDefault: true` or matching system IDs), strictly preserving any user-created personal custom cards (BYOK) in `settings.providers.custom.profiles`.
 
 ### 3. File & Image Handling (Crucial)
 - **Images**: Converted to Base64 and resized/compressed via Canvas (max 1200px) *before* saving to state to reduce `localStorage` pressure.
@@ -44,7 +49,13 @@ Persian AI Chatbox is a highly polished, full-stack AI platform for Persian-spea
 ### 6. Auth, Store & Admin
 - Auth: JWT, email/password, Google OAuth, phone OTP (Kavenegar), SMTP password reset (`server/routes/auth.ts`).
 - Store: products, licenses, orders, redeem codes, checkout (including manual card-to-card with Telegram notify) — `server/routes/store.ts` + `src/pages/store/`.
-- Admin: product/license/order/news management (`server/routes/admin.ts`).
+- Admin: product/license/order/news management and default AI profiles CRUD (`server/routes/admin.ts`).
+- Default Profiles Endpoints:
+  - `GET /api/default-profiles` (Public, sanitized, no API keys)
+  - `GET /api/admin/default-profiles` (Admin only)
+  - `POST /api/admin/default-profiles` (Admin only, create profile)
+  - `PUT /api/admin/default-profiles/:id` (Admin only, update profile)
+  - `DELETE /api/admin/default-profiles/:id` (Admin only, delete profile)
 - **Turso note**: `db.transaction()` is not supported in embedded-replica mode — avoid transactions or guard them.
 
 ### 7. Blog / AI News

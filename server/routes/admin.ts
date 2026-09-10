@@ -425,4 +425,100 @@ router.delete('/users/:id', (req, res) => {
   }
 });
 
+// GET /api/admin/default-profiles (List all default profiles with full details)
+router.get('/default-profiles', (req, res) => {
+  try {
+    const profiles = db.prepare('SELECT * FROM default_profiles ORDER BY orderIndex ASC, createdAt ASC').all();
+    res.json(profiles);
+  } catch (error) {
+    console.error('[Admin API] Error fetching default profiles:', error);
+    res.status(500).json({ error: 'خطا در دریافت پروفایل‌های پیش‌فرض' });
+  }
+});
+
+// POST /api/admin/default-profiles (Create new default profile)
+router.post('/default-profiles', (req, res) => {
+  try {
+    const { name, baseUrl, apiKey, modelName, customHeaders, role, orderIndex, isActive } = req.body;
+    if (!name || !baseUrl || !modelName) {
+      return res.status(400).json({ error: 'نام کارت، آدرس پایه (Base URL) و نام مدل الزامی است.' });
+    }
+
+    const id = `sys-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
+    const stmt = db.prepare(`
+      INSERT INTO default_profiles (id, name, baseUrl, apiKey, modelName, customHeaders, role, orderIndex, isActive)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `);
+    stmt.run(
+      id,
+      name.trim(),
+      baseUrl.trim().replace(/\/$/, ''),
+      apiKey ? String(apiKey).trim() : '',
+      modelName.trim(),
+      customHeaders ? String(customHeaders).trim() : '',
+      role || 'default',
+      typeof orderIndex === 'number' ? orderIndex : 0,
+      isActive === 0 ? 0 : 1
+    );
+    syncDatabase();
+
+    const created = db.prepare('SELECT * FROM default_profiles WHERE id = ?').get(id);
+    res.status(201).json(created);
+  } catch (error) {
+    console.error('[Admin API] Error creating default profile:', error);
+    res.status(500).json({ error: 'خطا در ایجاد پروفایل پیش‌فرض' });
+  }
+});
+
+// PUT /api/admin/default-profiles/:id (Update default profile)
+router.put('/default-profiles/:id', (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, baseUrl, apiKey, modelName, customHeaders, role, orderIndex, isActive } = req.body;
+
+    const existing = db.prepare('SELECT * FROM default_profiles WHERE id = ?').get(id) as any;
+    if (!existing) {
+      return res.status(404).json({ error: 'پروفایل پیش‌فرض یافت نشد.' });
+    }
+
+    const newApiKey = apiKey !== undefined ? String(apiKey).trim() : existing.apiKey;
+    const stmt = db.prepare(`
+      UPDATE default_profiles 
+      SET name = ?, baseUrl = ?, apiKey = ?, modelName = ?, customHeaders = ?, role = ?, orderIndex = ?, isActive = ?, updatedAt = CURRENT_TIMESTAMP
+      WHERE id = ?
+    `);
+    stmt.run(
+      name ? name.trim() : existing.name,
+      baseUrl ? baseUrl.trim().replace(/\/$/, '') : existing.baseUrl,
+      newApiKey,
+      modelName ? modelName.trim() : existing.modelName,
+      customHeaders !== undefined ? String(customHeaders).trim() : existing.customHeaders,
+      role || existing.role || 'default',
+      typeof orderIndex === 'number' ? orderIndex : existing.orderIndex,
+      isActive !== undefined ? (isActive ? 1 : 0) : existing.isActive,
+      id
+    );
+    syncDatabase();
+
+    const updated = db.prepare('SELECT * FROM default_profiles WHERE id = ?').get(id);
+    res.json(updated);
+  } catch (error) {
+    console.error('[Admin API] Error updating default profile:', error);
+    res.status(500).json({ error: 'خطا در ویرایش پروفایل پیش‌فرض' });
+  }
+});
+
+// DELETE /api/admin/default-profiles/:id (Delete default profile)
+router.delete('/default-profiles/:id', (req, res) => {
+  try {
+    const { id } = req.params;
+    db.prepare('DELETE FROM default_profiles WHERE id = ?').run(id);
+    syncDatabase();
+    res.json({ success: true, message: 'پروفایل پیش‌فرض با موفقیت حذف شد.' });
+  } catch (error) {
+    console.error('[Admin API] Error deleting default profile:', error);
+    res.status(500).json({ error: 'خطا در حذف پروفایل پیش‌فرض' });
+  }
+});
+
 export default router;

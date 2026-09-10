@@ -214,5 +214,72 @@ export function initializeSchema() {
     )
   `);
 
+  // Create Default Profiles table (Server-driven free AI cards for users)
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS default_profiles (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      baseUrl TEXT NOT NULL,
+      apiKey TEXT,
+      modelName TEXT NOT NULL,
+      customHeaders TEXT,
+      role TEXT DEFAULT 'default',
+      orderIndex INTEGER DEFAULT 0,
+      isActive INTEGER DEFAULT 1,
+      createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  // Seed default profiles if empty
+  try {
+    const countRow = db.prepare('SELECT COUNT(*) as count FROM default_profiles').get() as { count: number };
+    if (!countRow || countRow.count === 0) {
+      console.log('[Database] Seeding initial default profiles...');
+      const seedStmt = db.prepare(`
+        INSERT INTO default_profiles (id, name, baseUrl, apiKey, modelName, customHeaders, role, orderIndex, isActive)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `);
+
+      seedStmt.run(
+        'default-groq-qwen-27b',
+        'Qwen 3.6 27B (رایگان)',
+        'https://api.groq.com/openai/v1',
+        process.env.DEFAULT_GROQ_KEY || '',
+        'qwen/qwen3.6-27b',
+        '',
+        'default',
+        0,
+        1
+      );
+
+      seedStmt.run(
+        'default-groq-gpt-oss-120b',
+        'GPT OSS 120B (رایگان)',
+        'https://api.groq.com/openai/v1',
+        process.env.DEFAULT_GROQ_KEY || '',
+        'openai/gpt-oss-120b',
+        '',
+        'coding',
+        1,
+        1
+      );
+
+      seedStmt.run(
+        'default-gemini-3-1-flash-lite',
+        'Gemini 3.1 Flash Lite (رایگان)',
+        'https://generativelanguage.googleapis.com/v1beta/openai',
+        process.env.DEFAULT_GEMINI_KEY || '',
+        'gemini-3.1-flash-lite',
+        '',
+        'vision',
+        2,
+        1
+      );
+    }
+  } catch (seedErr) {
+    console.error('[Database] Failed to seed default profiles:', seedErr);
+  }
+
   console.log('[Database] SQLite schema ready.');
 }
