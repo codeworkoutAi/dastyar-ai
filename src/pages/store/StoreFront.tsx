@@ -130,7 +130,7 @@ export function StoreFront() {
     }
   }, [detailsProduct, selectedProduct, products]);
 
-  const fetchProducts = async () => {
+  const fetchProducts = async (retryCount = 0) => {
     try {
       setLoading(true);
       setError(null);
@@ -144,9 +144,15 @@ export function StoreFront() {
           setSelectedProduct(found);
         }
       }
+      setLoading(false);
     } catch (err: any) {
-      setError(err.message || 'خطای سرور');
-    } finally {
+      if (retryCount < 2) {
+        setTimeout(() => fetchProducts(retryCount + 1), 1200);
+        return;
+      }
+      const rawMsg = err?.message || '';
+      const isNetworkError = rawMsg.toLowerCase().includes('failed to fetch') || rawMsg.toLowerCase().includes('networkerror') || rawMsg.toLowerCase().includes('abort');
+      setError(isNetworkError ? 'عدم برقراری ارتباط با سرور. لطفاً فیلترشکن یا اتصال اینترنت خود را بررسی نمایید.' : (err.message || 'خطای سرور'));
       setLoading(false);
     }
   };

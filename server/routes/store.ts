@@ -17,6 +17,7 @@ const checkoutLimiter = rateLimit({
 // GET /api/store/products
 router.get('/products', (req, res) => {
   try {
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
     const products = db.prepare(`
       SELECT 
         p.*,

@@ -137,22 +137,43 @@ export function Blog() {
   const displayedNews = filteredNews.slice(0, visibleCount);
 
   useEffect(() => {
-    fetch('/api/news')
-      .then(res => res.json())
-      .then(data => {
-        if (Array.isArray(data)) {
-          setNews(data);
-          if (id) {
-            const found = data.find(item => item.id.toString() === id);
-            if (found) setSelectedPost(found);
+    let attempts = 0;
+    let isMounted = true;
+
+    const loadNews = () => {
+      fetch('/api/news')
+        .then(res => {
+          if (!res.ok) throw new Error('خطا در دریافت اخبار');
+          return res.json();
+        })
+        .then(data => {
+          if (!isMounted) return;
+          if (Array.isArray(data)) {
+            setNews(data);
+            if (id) {
+              const found = data.find(item => item.id.toString() === id);
+              if (found) setSelectedPost(found);
+            }
           }
-        }
-        setLoading(false);
-      })
-      .catch(err => {
-        console.error('Failed to load news', err);
-        setLoading(false);
-      });
+          setLoading(false);
+        })
+        .catch(err => {
+          if (!isMounted) return;
+          if (attempts < 2) {
+            attempts++;
+            setTimeout(loadNews, 1200);
+          } else {
+            console.error('Failed to load news', err);
+            setLoading(false);
+          }
+        });
+    };
+
+    loadNews();
+
+    return () => {
+      isMounted = false;
+    };
   }, [id]);
 
   useEffect(() => {

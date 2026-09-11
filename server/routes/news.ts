@@ -11,6 +11,7 @@ const router = express.Router();
 // GET /api/news (Public: List all news)
 router.get('/', (req, res) => {
   try {
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
     const news = db.prepare('SELECT * FROM news ORDER BY id DESC').all();
     res.json(news);
   } catch (error) {
