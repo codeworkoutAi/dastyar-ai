@@ -30,6 +30,30 @@ export default defineConfig(() => {
             { src: '/pwa-192x192.png', sizes: '192x192', type: 'image/png' },
             { src: '/pwa-512x512.png', sizes: '512x512', type: 'image/png' },
             { src: '/pwa-512x512.png', sizes: '512x512', type: 'image/png', purpose: 'any maskable' }
+          ],
+          categories: ['productivity', 'utilities'],
+          shortcuts: [
+            {
+              name: 'چت جدید',
+              short_name: 'چت',
+              description: 'شروع یک گفتگوی جدید با هوش مصنوعی',
+              url: '/',
+              icons: [{ src: '/pwa-192x192.png', sizes: '192x192' }]
+            },
+            {
+              name: 'فروشگاه',
+              short_name: 'فروشگاه',
+              description: 'محصولات و لایسنس‌های هوش مصنوعی',
+              url: '/store',
+              icons: [{ src: '/pwa-192x192.png', sizes: '192x192' }]
+            },
+            {
+              name: 'مجله هوش مصنوعی',
+              short_name: 'اخبار',
+              description: 'آخرین اخبار هوش مصنوعی',
+              url: '/blog',
+              icons: [{ src: '/pwa-192x192.png', sizes: '192x192' }]
+            }
           ]
         },
         workbox: {

@@ -155,6 +155,10 @@ router.get('/mock-payment', (req, res) => {
   if (!rawOrderId || !/^[a-zA-Z0-9_-]{1,64}$/.test(rawOrderId)) {
     return res.status(400).send('شماره سفارش نامعتبر است');
   }
+  const order = db.prepare('SELECT id, paymentStatus FROM orders WHERE id = ?').get(rawOrderId) as any;
+  if (!order || order.paymentStatus !== 'pending') {
+    return res.status(404).send('سفارش معتبری در وضعیت پرداخت یافت نشد.');
+  }
   const safeOrderId = encodeURIComponent(rawOrderId);
   
   // Create a beautiful HTML dummy payment page

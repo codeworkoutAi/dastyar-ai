@@ -3,5 +3,8 @@ services:
     name: Fa-Chatbox
     env: node
     plan: free
+    healthCheckPath: /api/health
+    autoDeploy: true
     buildCommand: npm install --include=dev && npm run build
     startCommand: npm run start
+

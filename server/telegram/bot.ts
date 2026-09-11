@@ -1,4 +1,5 @@
 import { Telegraf, Markup } from 'telegraf';
+import crypto from 'crypto';
 import db, { syncDatabase } from '../db/database';
 import { HttpsProxyAgent } from 'https-proxy-agent';
 import { SocksProxyAgent } from 'socks-proxy-agent';
@@ -460,12 +461,13 @@ async function sendStoreShowcase(ctx: any, page: number = 0, isEdit: boolean = f
 
   async function createOrderAndSendInvoice(ctx: any, user: any, product: any) {
     // Create Order
-    const orderId = 'ORD-' + Math.random().toString(36).substring(2, 10).toUpperCase();
+    const orderId = 'ORD-' + crypto.randomUUID().split('-')[0].toUpperCase();
     const insertStmt = db.prepare(`
       INSERT INTO orders (id, userId, productId, amount, paymentStatus) 
       VALUES (?, ?, ?, ?, 'pending')
     `);
     insertStmt.run(orderId, user.id, product.id, product.price);
+    syncDatabase();
 
     // Determine environment URL (Custom Domain, Render, Production, or Localhost)
     const rawUrl = getWebsiteUrl();
@@ -614,6 +616,7 @@ async function sendStoreShowcase(ctx: any, page: number = 0, isEdit: boolean = f
 
         const insertStmt = db.prepare('INSERT INTO users (telegramId, email, name, avatar, role) VALUES (?, ?, ?, ?, ?)');
         const info = insertStmt.run(tgId, email, name, defaultAvatar, role);
+        syncDatabase();
         user = { id: info.lastInsertRowid, telegramId: tgId, email, name, avatar: defaultAvatar, role };
       }
 
