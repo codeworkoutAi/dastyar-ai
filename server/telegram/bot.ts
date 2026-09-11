@@ -55,21 +55,26 @@ export function startTelegramBot() {
     }
   });
 
+  // Global Middleware to ensure user exists in DB before any action
+  bot.use(async (ctx, next) => {
+    if (ctx.from && ctx.from.id) {
+      const tgId = ctx.from.id.toString();
+      const name = ctx.from.first_name || 'کاربر';
+      try {
+        const existingUser = db.prepare('SELECT id FROM users WHERE telegramId = ?').get(tgId);
+        if (!existingUser) {
+          db.prepare('INSERT INTO users (telegramId, name, role, createdAt) VALUES (?, ?, ?, ?)').run(tgId, name, 'user', new Date().toISOString());
+          syncDatabase();
+        }
+      } catch (err) {}
+    }
+    return next();
+  });
+
   // Start Command
   bot.start(async (ctx) => {
     const tgId = ctx.from.id.toString();
     const name = ctx.from.first_name || 'کاربر';
-
-    // Ensure user exists in database for checkout
-    try {
-      const existingUser = db.prepare('SELECT * FROM users WHERE telegramId = ?').get(tgId);
-      if (!existingUser) {
-        db.prepare('INSERT INTO users (telegramId, name, role, createdAt) VALUES (?, ?, ?, ?)').run(tgId, name, 'user', new Date().toISOString());
-        syncDatabase();
-      }
-    } catch (err) {
-      console.error('[Bot] Error saving user on start:', err);
-    }
 
     // Check if start payload is for Web Login confirmation
     const payload = (ctx as any).payload || (ctx.message && 'text' in ctx.message ? (ctx.message.text as string).split(' ')[1] : '') || '';
