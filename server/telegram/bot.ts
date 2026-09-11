@@ -682,7 +682,21 @@ async function sendStoreShowcase(ctx: any, page: number = 0, isEdit: boolean = f
     const isAdminChat = ctx.chat.id.toString() === ADMIN_ID;
 
     if (ADMIN_ID && isAdminChat && ctx.message.reply_to_message) {
-      const targetUserId = adminMessageMap.get(ctx.message.reply_to_message.message_id);
+      let targetUserId = adminMessageMap.get(ctx.message.reply_to_message.message_id);
+
+      // Fallback: If bot restarted and map was cleared, try to extract ID from the replied text
+      if (!targetUserId && ctx.message.reply_to_message.text) {
+        const match = ctx.message.reply_to_message.text.match(/آیدی:\s*(\d+)/);
+        if (match && match[1]) {
+          targetUserId = match[1];
+        }
+      }
+
+      // Fallback 2: If replied to the forwarded message directly and user privacy allows
+      if (!targetUserId && ctx.message.reply_to_message.forward_from) {
+        targetUserId = ctx.message.reply_to_message.forward_from.id.toString();
+      }
+
       if (targetUserId) {
         try {
           await ctx.telegram.copyMessage(targetUserId, ctx.chat.id, ctx.message.message_id);
