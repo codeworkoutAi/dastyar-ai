@@ -4,6 +4,7 @@ import fs from 'fs';
 import dotenv from 'dotenv';
 import helmet from 'helmet';
 import cors from 'cors';
+import crypto from 'crypto';
 
 dotenv.config();
 
@@ -25,23 +26,50 @@ app.disable('x-powered-by');
 // Trust reverse proxy (Nginx / Cloud Run / Render) for accurate IP resolution
 app.set('trust proxy', 1);
 
+// Generate nonce for inline scripts
+app.use((req, res, next) => {
+  res.locals.nonce = crypto.randomBytes(16).toString('base64');
+  next();
+});
+
 // Security Headers Middleware (Helmet)
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
+      scriptSrc: ["'self'", (req, res) => `'nonce-${res.locals.nonce}'`],
       styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
       fontSrc: ["'self'", "data:", "https://fonts.gstatic.com"],
-      imgSrc: ["'self'", "data:", "blob:", "https:", "http:"],
-      connectSrc: ["'self'", "ws:", "wss:", "https:", "http:"],
+      imgSrc: [
+        "'self'", "data:", "blob:", 
+        "https://*.dicebear.com", 
+        "https://*.pollinations.ai", 
+        "https://*.google.com",
+        "https://*.telegram.org"
+      ],
+      connectSrc: [
+        "'self'", "ws:", "wss:", 
+        "https://api.groq.com", 
+        "https://generativelanguage.googleapis.com",
+        "https://api.openai.com",
+        "https://api.anthropic.com",
+        "https://api.openrouter.ai",
+        "https://api.kavenegar.com"
+      ],
     }
   },
   crossOriginEmbedderPolicy: false,
 }));
 
 // CORS configuration
-app.use(cors());
+app.use(cors({
+  origin: process.env.NODE_ENV === 'production' 
+    ? (process.env.WEB_URL || 'https://dastyarai.com')
+    : 'http://localhost:3000',
+  credentials: false,
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+}));
 
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));

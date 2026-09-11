@@ -348,7 +348,7 @@ export async function fetchAndProcessNews() {
     console.log(`[NewsCron] ${savedMsg}`);
     
     // Clear sitemap cache so the new article is immediately visible to crawlers
-    const { clearSitemapCache } = require('../seo/sitemap');
+    const { clearSitemapCache } = await import('../seo/sitemap');
     clearSitemapCache();
 
     appendCronLog('INFO', savedMsg, { id: info.lastInsertRowid, title: parsedData.title, tags: parsedData.tags });
