@@ -37,7 +37,13 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", (req, res) => `'nonce-${res.locals.nonce}'`],
+      scriptSrc: [
+        "'self'",
+        "'unsafe-inline'",  // Google Identity Services uses inline scripts in popup
+        "https://accounts.google.com/",
+        "https://accounts.gstatic.com/",
+        (req, res) => `'nonce-${res.locals.nonce}'`
+      ],
       scriptSrcAttr: ["'unsafe-inline'"],
       styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
       fontSrc: ["'self'", "data:", "https://fonts.gstatic.com"],
@@ -51,7 +57,10 @@ app.use(helmet({
         "https://api.openai.com",
         "https://api.anthropic.com",
         "https://api.openrouter.ai",
-        "https://api.kavenegar.com"
+        "https://api.kavenegar.com",
+        "https://accounts.google.com/",
+        "https://oauth2.googleapis.com/",
+        "https://www.googleapis.com/"
       ],
     }
   },
