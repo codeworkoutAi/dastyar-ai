@@ -1,9 +1,10 @@
 import express from 'express';
 import fs from 'fs';
 import path from 'path';
-import db from '../db/database';
+import db, { syncDatabase } from '../db/database';
 import { requireAuth, requireAdmin } from '../middleware/auth';
 import { bot } from '../telegram/bot';
+import { clearSitemapCache } from '../seo/sitemap';
 
 const router = express.Router();
 
@@ -60,6 +61,8 @@ router.post('/', requireAuth, requireAdmin, async (req, res) => {
     const insertStmt = db.prepare('INSERT INTO news (title, content, image, tags) VALUES (?, ?, ?, ?)');
     const info = insertStmt.run(title, content, image || null, tagsJson);
     const newId = Number(info.lastInsertRowid);
+    syncDatabase();
+    clearSitemapCache();
 
     // Broadcast to Telegram Channel
     const channelId = process.env.TELEGRAM_CHANNEL_ID;
@@ -103,6 +106,8 @@ router.put('/:id', requireAuth, requireAdmin, async (req, res) => {
 
     db.prepare('UPDATE news SET title = ?, content = ?, image = ?, tags = ? WHERE id = ?')
       .run(title, content, finalImage, tagsJson, id);
+    syncDatabase();
+    clearSitemapCache();
 
     // Broadcast to Telegram Channel if requested
     const channelId = process.env.TELEGRAM_CHANNEL_ID;
@@ -131,6 +136,8 @@ router.delete('/:id', requireAuth, requireAdmin, (req, res) => {
   try {
     const { id } = req.params;
     db.prepare('DELETE FROM news WHERE id = ?').run(id);
+    syncDatabase();
+    clearSitemapCache();
     res.json({ message: 'خبر حذف شد' });
   } catch (error) {
     console.error('[News API] Error deleting news:', error);

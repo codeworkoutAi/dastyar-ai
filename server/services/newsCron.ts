@@ -2,7 +2,7 @@ import cron from 'node-cron';
 import Parser from 'rss-parser';
 import fs from 'fs';
 import path from 'path';
-import db from '../db/database';
+import db, { syncDatabase } from '../db/database';
 import { getGeminiClient, getPollinationsImageUrl } from './utils';
 import { bot, getTelegramBot } from '../telegram/bot';
 
@@ -350,6 +350,7 @@ export async function fetchAndProcessNews() {
     // Clear sitemap cache so the new article is immediately visible to crawlers
     const { clearSitemapCache } = await import('../seo/sitemap');
     clearSitemapCache();
+    syncDatabase();
 
     appendCronLog('INFO', savedMsg, { id: info.lastInsertRowid, title: parsedData.title, tags: parsedData.tags });
 

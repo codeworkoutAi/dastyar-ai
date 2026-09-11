@@ -2,9 +2,15 @@ import request from 'supertest';
 import express from 'express';
 import modelsRouter from '../models';
 
+import { initializeSchema } from '../../db/schema';
+
 const app = express();
 app.use(express.json());
 app.use('/', modelsRouter);
+
+beforeAll(() => {
+  initializeSchema();
+});
 
 describe('GET /api/default-profiles (public endpoint)', () => {
   it('masks API keys — never returns real keys to client', async () => {

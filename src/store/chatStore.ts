@@ -326,6 +326,11 @@ stopGeneration: () => {
       } else {
         payloadSettings.tools.webSearch = false;
       }
+      
+      // KILL-SWITCH: Never allow web search if globally disabled
+      if (!globalWebSearchEnabled) {
+        payloadSettings.tools.webSearch = false;
+      }
 
       // Apply Smart Routing
       if (smartRoutingEnabled) {
