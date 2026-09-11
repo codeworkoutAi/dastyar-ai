@@ -513,11 +513,12 @@ stopGeneration: () => {
           }
         }
       } catch (readErr: any) {
-        if (readErr.name !== 'AbortError') {
-          console.warn('Stream read interrupted:', readErr);
-          if (!accumulatedContent && !streamHadError) {
-            throw readErr;
-          }
+        if (readErr.name === 'AbortError') {
+          throw readErr; // Pass AbortError to outer catch for proper cleanup
+        }
+        console.warn('Stream read interrupted:', readErr);
+        if (!accumulatedContent && !streamHadError) {
+          throw readErr;
         }
       } finally {
         // Always cancel reader to prevent memory leaks
@@ -602,7 +603,12 @@ stopGeneration: () => {
       }
     } catch (err: any) {
       if (err.name === 'AbortError') {
-        // Generation aborted by user
+        // Clean up empty assistant messages if aborted before they started typing
+        set({ conversations: get().conversations.map((c) => {
+            if (c.id !== targetConv!.id) return c;
+            const msgs = c.messages.filter((m) => m.id !== assistantMessageId || m.content.trim().length > 0);
+            return { ...c, messages: msgs };
+        }) });
       } else {
         console.error('Error during streaming:', err);
         const userFacingError = formatPersianErrorMessage(err);
