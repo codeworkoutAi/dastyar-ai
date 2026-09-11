@@ -270,7 +270,7 @@ export function StoreFront() {
             ) : error ? (
               <div className="p-6 rounded-2xl bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 font-bold flex flex-col items-center justify-center h-48">
                 <p>{error}</p>
-                <button onClick={fetchProducts} className="mt-4 px-4 py-2 bg-red-600 text-white rounded-xl text-sm">تلاش مجدد</button>
+                <button onClick={() => fetchProducts(0)} className="mt-4 px-4 py-2 bg-red-600 text-white rounded-xl text-sm">تلاش مجدد</button>
               </div>
             ) : products.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-64 opacity-50 bg-white dark:bg-zinc-900 rounded-3xl border border-zinc-200 dark:border-zinc-800">

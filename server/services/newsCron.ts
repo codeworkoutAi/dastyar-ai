@@ -503,14 +503,14 @@ export async function broadcastArticleById(articleId: number) {
 }
 
 export function initNewsCron() {
-  // Schedule to run exactly 3 times a day: 08:00 AM, 12:00 PM, and 20:00 (8:00 PM) (Asia/Tehran)
+  // Schedule to run 4 times a day: 08:00 AM, 12:00 PM, 14:00 (2:00 PM), and 20:00 (8:00 PM) (Asia/Tehran)
   cron.schedule('0 8,12,14,20 * * *', () => {
     fetchAndProcessNews();
   }, {
     timezone: 'Asia/Tehran'
   });
 
-  const initMsg = 'Scheduled AI News fetcher initialized for 08:00, 12:00, 20:00 (Asia/Tehran).';
+  const initMsg = 'Scheduled AI News fetcher initialized for 08:00, 12:00, 14:00, 20:00 (Asia/Tehran).';
   console.log(`[NewsCron] ${initMsg}`);
   appendCronLog('INFO', initMsg);
 }

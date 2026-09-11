@@ -1,11 +1,12 @@
 import express from 'express';
 import bcrypt from 'bcryptjs';
 import db, { syncDatabase } from '../db/database';
-import jwt from 'jsonwebtoken';
 import { requireAuth, JWT_SECRET } from '../middleware/auth';
 import { sendOtpSms } from '../services/kavenegar';
-import nodemailer from 'nodemailer';
+import { googleAuthLimiter } from '../middleware/rateLimiter';
+import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
+import nodemailer from 'nodemailer';
 import rateLimit from 'express-rate-limit';
 import { telegramAuthSessions } from '../services/telegramAuthSessions';
 
@@ -68,6 +69,7 @@ router.post('/send-otp', otpLimiter, async (req, res) => {
     // Save to DB
     const insertStmt = db.prepare('INSERT OR REPLACE INTO otps (phone, code, expiresAt) VALUES (?, ?, ?)');
     insertStmt.run(phone, code, expiresAt);
+    syncDatabase();
 
     // Send SMS
     const sent = await sendOtpSms(phone, code);
@@ -137,6 +139,8 @@ router.post('/verify-otp', verifyLimiter, async (req, res) => {
       }
     }
 
+    syncDatabase();
+
     // Generate JWT
     const token = jwt.sign(
       { id: user.id, phone: user.phone, role: user.role },
@@ -182,6 +186,7 @@ router.post('/register', registerLimiter, async (req, res) => {
 
     const insertStmt = db.prepare('INSERT INTO users (email, passwordHash, name, avatar, role) VALUES (?, ?, ?, ?, ?)');
     const info = insertStmt.run(email, passwordHash, name || '', defaultAvatar, role);
+    syncDatabase();
 
     const token = jwt.sign(
       { id: info.lastInsertRowid, email, role },
@@ -235,7 +240,7 @@ router.post('/login', verifyLimiter, async (req, res) => {
 });
 
 // POST /api/auth/google
-router.post('/google', async (req, res) => {
+router.post('/google', googleAuthLimiter, async (req, res) => {
   try {
     const { credential } = req.body;
     if (!credential) return res.status(400).json({ error: 'توکن گوگل دریافت نشد.' });
@@ -296,6 +301,8 @@ router.post('/google', async (req, res) => {
         user = { id: info.lastInsertRowid, email, googleId, name, avatar, role };
       }
     }
+
+    syncDatabase();
 
     const token = jwt.sign(
       { id: user.id, email: user.email, name: user.name, role: user.role },
@@ -365,7 +372,7 @@ router.get('/me', requireAuth, (req: any, res) => {
   const user = userStmt.get(req.user.id);
 
   if (!user) {
-    return res.status(404).json({ error: 'User not found' });
+    return res.status(404).json({ error: 'کاربر یافت نشد.' });
   }
 
   res.json({ user });
@@ -389,6 +396,7 @@ router.post('/forgot-password', forgotPasswordLimiter, async (req, res) => {
     const resetTokenExpiry = new Date(Date.now() + 15 * 60 * 1000).toISOString(); // 15 mins
 
     db.prepare('UPDATE users SET resetToken = ?, resetTokenExpiry = ? WHERE id = ?').run(resetToken, resetTokenExpiry, user.id);
+    syncDatabase();
 
     const configuredUrl = (process.env.APP_URL || process.env.WEBSITE_URL || process.env.WEB_URL || '').replace(/\/+$/, '');
     let safeAppUrl = configuredUrl;
@@ -457,7 +465,7 @@ router.post('/forgot-password', forgotPasswordLimiter, async (req, res) => {
         html: mailHtml
       });
     } else {
-      console.warn('[Auth API] Neither RESEND_API_KEY nor SMTP credentials set. Reset link:', resetUrl);
+      console.warn('[Auth API] Neither RESEND_API_KEY nor SMTP credentials set. Password reset requested for email:', user.email);
     }
 
     res.json({ message: 'لینک بازیابی رمز عبور به ایمیل شما ارسال شد.' });
@@ -490,6 +498,7 @@ router.post('/reset-password', resetPasswordLimiter, async (req, res) => {
     const passwordHash = await bcrypt.hash(newPassword, salt);
 
     db.prepare('UPDATE users SET passwordHash = ?, resetToken = NULL, resetTokenExpiry = NULL WHERE id = ?').run(passwordHash, user.id);
+    syncDatabase();
 
     res.json({ message: 'رمز عبور با موفقیت تغییر کرد. اکنون می‌توانید وارد شوید.' });
   } catch (error) {

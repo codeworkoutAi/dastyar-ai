@@ -121,8 +121,9 @@ router.post('/api/chat/stream', chatStreamLimiter, async (req, res) => {
       }
     }
 
-    // Benchmark / Safe High-Concurrency Load Simulation Mode
-    if (provider === 'benchmark' || req.headers['x-benchmark-sim'] === 'true' || apiConfig?.model === 'benchmark-simulation') {
+    // Benchmark / Safe High-Concurrency Load Simulation Mode (Only in development or if explicitly enabled)
+    const allowBenchmark = process.env.NODE_ENV !== 'production' || process.env.ENABLE_BENCHMARK === 'true';
+    if (allowBenchmark && (provider === 'benchmark' || req.headers['x-benchmark-sim'] === 'true' || apiConfig?.model === 'benchmark-simulation')) {
       const sampleWords = [
         'درود!', 'این', 'یک', 'پاسخ', 'آزمایشی', 'برای', 'سنجش', 'پایداری', 'و', 'تست',
         'فشار', 'سرور', 'در', 'شرایط', 'بارگذاری', 'سنگین', 'است.', 'ارتباط', 'استریم',

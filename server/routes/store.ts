@@ -1,4 +1,5 @@
 import express from 'express';
+import crypto from 'crypto';
 import rateLimit from 'express-rate-limit';
 import db, { syncDatabase } from '../db/database';
 import { requireAuth } from '../middleware/auth';
@@ -88,13 +89,14 @@ router.post('/checkout', checkoutLimiter, requireAuth, (req: any, res) => {
     }
 
     // Create an order
-    const orderId = 'ORD-' + Math.random().toString(36).substring(2, 10).toUpperCase();
+    const orderId = 'ORD-' + crypto.randomUUID().split('-')[0].toUpperCase();
     const insertStmt = db.prepare(`
       INSERT INTO orders (id, userId, productId, amount, paymentStatus) 
       VALUES (?, ?, ?, ?, 'pending')
     `);
     
     insertStmt.run(orderId, userId, productId, product.price);
+    syncDatabase();
 
     // Mock payment link (We will replace this with Zarinpal later)
     const paymentUrl = `/api/store/mock-payment?orderId=${orderId}`;
@@ -127,7 +129,7 @@ router.post('/checkout-manual', checkoutLimiter, requireAuth, (req: any, res) =>
       return res.status(400).json({ error: 'موجودی این محصول به اتمام رسیده است' });
     }
 
-    const orderId = 'ORD-' + Math.random().toString(36).substring(2, 10).toUpperCase();
+    const orderId = 'ORD-' + crypto.randomUUID().split('-')[0].toUpperCase();
     
     // We update the insert statement to include trackingNumber and paymentMethod if they exist in schema.
     // We already added them via migration.
@@ -137,6 +139,7 @@ router.post('/checkout-manual', checkoutLimiter, requireAuth, (req: any, res) =>
     `);
     
     insertStmt.run(orderId, userId, productId, product.price, trackingNumber);
+    syncDatabase();
 
     res.json({ message: 'فاکتور ایجاد شد', orderId });
 

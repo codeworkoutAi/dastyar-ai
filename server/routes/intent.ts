@@ -1,9 +1,10 @@
 import express from 'express';
 import { isSafeBaseUrl, getGeminiClient, normalizeBaseUrl, parseCustomHeaders } from '../services/utils';
+import { aiRouteLimiter } from '../middleware/rateLimiter';
 
 const router = express.Router();
 
-router.post('/api/chat/detect-intent', async (req, res) => {
+router.post('/api/chat/detect-intent', aiRouteLimiter, async (req, res) => {
   let userText = '';
   try {
     const { messages, apiConfig: rawApiConfig, settings } = req.body;

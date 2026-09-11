@@ -2,10 +2,11 @@ import express from 'express';
 import { Modality } from '@google/genai';
 import db from '../db/database';
 import { isSafeBaseUrl, getGeminiClient, sanitizeErrorMessage, getPollinationsImageUrl, translateAndEnhanceImagePrompt } from '../services/utils';
+import { aiRouteLimiter } from '../middleware/rateLimiter';
 
 const router = express.Router();
 
-router.post('/api/fetch-models', async (req, res) => {
+router.post('/api/fetch-models', aiRouteLimiter, async (req, res) => {
   try {
     let { baseUrl, apiKey, customHeaders, profileId } = req.body;
     if (!baseUrl || typeof baseUrl !== 'string' || !isSafeBaseUrl(baseUrl)) {
@@ -228,7 +229,7 @@ router.post('/api/fetch-models', async (req, res) => {
 });
 
 // 4. Image Generation endpoint
-router.post('/api/generate-image', async (req, res) => {
+router.post('/api/generate-image', aiRouteLimiter, async (req, res) => {
   try {
     const { prompt, englishPrompt, aspectRatio = '1:1', negativePrompt, engine, apiKey, settings } = req.body;
     if (!prompt && !englishPrompt) {
@@ -333,7 +334,7 @@ router.get('/api/proxy-image', async (req, res) => {
 });
 
 // 5. Enhance Prompt endpoint (Enhances Persian in rich Persian, or English in English)
-router.post('/api/enhance-prompt', async (req, res) => {
+router.post('/api/enhance-prompt', aiRouteLimiter, async (req, res) => {
   try {
     const { prompt, apiKey } = req.body;
     if (!prompt || typeof prompt !== 'string') {
@@ -456,7 +457,7 @@ function pcmToWavBuffer(pcmBuffer: Buffer, sampleRate = 24000, numChannels = 1, 
 }
 
 // 6. High-Quality Persian & Multilingual Text-to-Speech (TTS) endpoint
-router.post('/api/tts', async (req, res) => {
+router.post('/api/tts', aiRouteLimiter, async (req, res) => {
   try {
     const { text, lang } = req.body;
     if (!text || typeof text !== 'string' || !text.trim()) {
