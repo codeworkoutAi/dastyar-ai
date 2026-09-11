@@ -346,6 +346,11 @@ export async function fetchAndProcessNews() {
 
     const savedMsg = `News saved to database with ID: ${info.lastInsertRowid} using model ${usedModel}`;
     console.log(`[NewsCron] ${savedMsg}`);
+    
+    // Clear sitemap cache so the new article is immediately visible to crawlers
+    const { clearSitemapCache } = require('../seo/sitemap');
+    clearSitemapCache();
+
     appendCronLog('INFO', savedMsg, { id: info.lastInsertRowid, title: parsedData.title, tags: parsedData.tags });
 
     // Broadcast to Telegram

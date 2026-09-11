@@ -2,6 +2,7 @@ import express from 'express';
 import db, { syncDatabase } from '../db/database';
 import { requireAuth } from '../middleware/auth';
 import { bot, sendTelegramOrderSuccess } from '../telegram/bot';
+import { clearSitemapCache } from '../seo/sitemap';
 
 const router = express.Router();
 
@@ -45,6 +46,7 @@ router.post('/products', (req, res) => {
     const stmt = db.prepare('INSERT INTO products (title, description, longDescription, price, category, image, bannerImage, baseUrl, deliveryGuide) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)');
     const info = stmt.run(title, description || '', longDescription || '', price, category, image || null, bannerImage || null, baseUrl || null, deliveryGuide || null);
     syncDatabase();
+    clearSitemapCache();
 
     const newProduct = db.prepare('SELECT * FROM products WHERE id = ?').get(info.lastInsertRowid);
     res.status(201).json(newProduct);
@@ -72,6 +74,7 @@ router.put('/products/:id', (req, res) => {
     const stmt = db.prepare('UPDATE products SET title = ?, description = ?, longDescription = ?, price = ?, category = ?, image = ?, bannerImage = ?, baseUrl = ?, deliveryGuide = ? WHERE id = ?');
     stmt.run(title, description || '', longDescription || '', price, category, image || null, bannerImage || null, baseUrl || null, deliveryGuide || null, id);
     syncDatabase();
+    clearSitemapCache();
 
     const updatedProduct = db.prepare('SELECT * FROM products WHERE id = ?').get(id);
     res.json(updatedProduct);
@@ -94,6 +97,7 @@ router.delete('/products/:id', (req, res) => {
     db.prepare('DELETE FROM licenses WHERE productId = ? AND status = ?').run(id, 'available');
     db.prepare('DELETE FROM products WHERE id = ?').run(id);
     syncDatabase();
+    clearSitemapCache();
 
     res.json({ success: true, message: 'محصول با موفقیت حذف شد.' });
   } catch (error) {
