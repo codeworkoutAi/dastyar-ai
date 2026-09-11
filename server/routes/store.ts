@@ -1,9 +1,18 @@
 import express from 'express';
+import rateLimit from 'express-rate-limit';
 import db, { syncDatabase } from '../db/database';
 import { requireAuth } from '../middleware/auth';
 import { bot } from '../telegram/bot';
 
 const router = express.Router();
+
+const checkoutLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 20, // Limit each IP to 20 checkout requests per window
+  message: { error: 'تعداد درخواست‌های پرداخت بیش از حد مجاز است. لطفاً ۱۵ دقیقه دیگر دوباره تلاش کنید.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
 
 // GET /api/store/products
 router.get('/products', (req, res) => {
@@ -49,7 +58,7 @@ router.get('/products/:id', (req, res) => {
 });
 
 // POST /api/store/checkout
-router.post('/checkout', requireAuth, (req: any, res) => {
+router.post('/checkout', checkoutLimiter, requireAuth, (req: any, res) => {
   try {
     const { productId } = req.body;
     const userId = req.user.id;
@@ -98,7 +107,7 @@ router.post('/checkout', requireAuth, (req: any, res) => {
 });
 
 // POST /api/store/checkout-manual
-router.post('/checkout-manual', requireAuth, (req: any, res) => {
+router.post('/checkout-manual', checkoutLimiter, requireAuth, (req: any, res) => {
   try {
     const { productId, trackingNumber } = req.body;
     const userId = req.user.id;
