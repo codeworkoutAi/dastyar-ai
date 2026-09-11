@@ -21,10 +21,29 @@ interface AuthState {
   checkAuth: () => Promise<void>;
 }
 
+function getValidInitialToken(): string | null {
+  try {
+    const token = localStorage.getItem('token');
+    if (!token) return null;
+    const parts = token.split('.');
+    if (parts.length !== 3) return null;
+    const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
+    if (payload.exp && payload.exp * 1000 < Date.now()) {
+      localStorage.removeItem('token');
+      return null;
+    }
+    return token;
+  } catch {
+    return null;
+  }
+}
+
+const initialToken = getValidInitialToken();
+
 export const useAuthStore = create<AuthState>((set) => ({
   user: null,
-  token: localStorage.getItem('token'),
-  isAuthenticated: !!localStorage.getItem('token'),
+  token: initialToken,
+  isAuthenticated: !!initialToken,
   isAuthModalOpen: false,
 
   login: (user, token) => {

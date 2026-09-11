@@ -71,6 +71,11 @@ export const useChatStore = create<ChatState>((set, get) => ({
   },
 
   deleteConversation: (id) => {
+    if (get().activeId === id && abortController) {
+      abortController.abort();
+      abortController = null;
+      set({ isStreaming: false, routingState: 'idle' });
+    }
     const newConvs = get().conversations.filter(c => c.id !== id);
     saveConversations(newConvs);
     set({ conversations: newConvs });

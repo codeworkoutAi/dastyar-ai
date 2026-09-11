@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useDeferredValue } from 'react';
 import {
   AddCircleBoldIcon,
   MinimalisticMagnifierLinearIcon,
@@ -65,10 +65,11 @@ export const Sidebar: React.FC = React.memo(() => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Filter conversations based on search query
+  // Filter conversations based on deferred search query (React 19 non-blocking concurrent transition)
+  const deferredQuery = useDeferredValue(searchQuery);
   const filtered = conversations.filter((c) => {
-    if (!searchQuery.trim()) return true;
-    const q = searchQuery.toLowerCase();
+    if (!deferredQuery.trim()) return true;
+    const q = deferredQuery.toLowerCase();
     const matchesTitle = c.title.toLowerCase().includes(q);
     const matchesMessage = c.messages.some((m) => m.content.toLowerCase().includes(q));
     return matchesTitle || matchesMessage;
