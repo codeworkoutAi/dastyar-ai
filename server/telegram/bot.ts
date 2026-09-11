@@ -1,5 +1,5 @@
 import { Telegraf, Markup } from 'telegraf';
-import db from '../db/database';
+import db, { syncDatabase } from '../db/database';
 import { HttpsProxyAgent } from 'https-proxy-agent';
 import { SocksProxyAgent } from 'socks-proxy-agent';
 import jwt from 'jsonwebtoken';
@@ -59,6 +59,17 @@ export function startTelegramBot() {
   bot.start(async (ctx) => {
     const tgId = ctx.from.id.toString();
     const name = ctx.from.first_name || 'کاربر';
+
+    // Ensure user exists in database for checkout
+    try {
+      const existingUser = db.prepare('SELECT * FROM users WHERE telegramId = ?').get(tgId);
+      if (!existingUser) {
+        db.prepare('INSERT INTO users (telegramId, name, role, createdAt) VALUES (?, ?, ?, ?)').run(tgId, name, 'user', new Date().toISOString());
+        syncDatabase();
+      }
+    } catch (err) {
+      console.error('[Bot] Error saving user on start:', err);
+    }
 
     // Check if start payload is for Web Login confirmation
     const payload = (ctx as any).payload || (ctx.message && 'text' in ctx.message ? (ctx.message.text as string).split(' ')[1] : '') || '';
