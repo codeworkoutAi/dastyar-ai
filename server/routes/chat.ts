@@ -628,6 +628,14 @@ router.post('/api/chat/stream', chatStreamLimiter, async (req, res) => {
       }
 
       let response: any;
+      const abortController = new AbortController();
+      let streamTimeoutId: NodeJS.Timeout;
+
+      const resetStreamTimeout = () => {
+        clearTimeout(streamTimeoutId);
+        streamTimeoutId = setTimeout(() => abortController.abort(), 60000); // 60s timeout
+      };
+
       try {
         const requestBody: any = {
           model,
@@ -638,23 +646,26 @@ router.post('/api/chat/stream', chatStreamLimiter, async (req, res) => {
           stream_options: { include_usage: true },
         };
 
-        // Safe max_tokens calculation: Use user setting, otherwise default to 4096 for Groq to prevent errors, or 8192 for others
         const isGroq = endpoint.includes('api.groq.com');
         const safeDefaultTokens = isGroq ? 4096 : 8192;
         requestBody.max_tokens = typeof apiConfig?.maxTokens === 'number' && apiConfig.maxTokens > 0 ? apiConfig.maxTokens : safeDefaultTokens;
 
         if (endpoint.includes('api.openai.com')) {
-          // OpenAI officially supports max_completion_tokens
           requestBody.max_completion_tokens = requestBody.max_tokens;
           delete requestBody.max_tokens;
         }
+
+        resetStreamTimeout();
 
         response = await fetch(endpoint, {
           method: 'POST',
           headers,
           body: JSON.stringify(requestBody),
+          signal: abortController.signal,
         });
+        
       } catch (fetchErr: any) {
+        clearTimeout(streamTimeoutId!);
         console.error('Fetch error to custom endpoint:', fetchErr);
         sendChunk({ error: sanitizeErrorMessage(fetchErr) });
         sendChunk({ done: true });
@@ -662,6 +673,7 @@ router.post('/api/chat/stream', chatStreamLimiter, async (req, res) => {
       }
 
       if (!response.ok) {
+        clearTimeout(streamTimeoutId!);
         let errorText = '';
         try {
           errorText = await response.text();
@@ -672,6 +684,7 @@ router.post('/api/chat/stream', chatStreamLimiter, async (req, res) => {
       }
 
       if (!response.body) {
+        clearTimeout(streamTimeoutId!);
         sendChunk({ error: 'پاسخی از سرور دریافت نشد.' });
         sendChunk({ done: true });
         return finishStream();
@@ -685,9 +698,11 @@ router.post('/api/chat/stream', chatStreamLimiter, async (req, res) => {
 
       let fullAccumulatedCustom = '';
 
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
+      try {
+        while (true) {
+          resetStreamTimeout();
+          const { done, value } = await reader.read();
+          if (done) break;
 
         buffer += decoder.decode(value, { stream: true });
         const lines = buffer.split('\n');
@@ -739,9 +754,17 @@ router.post('/api/chat/stream', chatStreamLimiter, async (req, res) => {
               }
             } catch {
               // Non-fatal JSON parse error for partial chunks
-            }
           }
         }
+      } catch (readErr: any) {
+        if (readErr.name !== 'AbortError') {
+          console.error('Stream read error from provider:', readErr);
+          sendChunk({ error: 'ارتباط با سرور مدل هوش مصنوعی قطع شد.' });
+        } else {
+          sendChunk({ error: 'مهلت زمان پاسخ‌گویی به پایان رسید (Timeout).' });
+        }
+      } finally {
+        clearTimeout(streamTimeoutId!);
       }
 
       // Process any residual buffer
