@@ -62,9 +62,14 @@ app.use(helmet({
         "https://oauth2.googleapis.com/",
         "https://www.googleapis.com/"
       ],
+      frameSrc: [
+        "'self'", 
+        "https://accounts.google.com/"
+      ],
     }
   },
   crossOriginEmbedderPolicy: false,
+  crossOriginOpenerPolicy: { policy: "same-origin-allow-popups" },
 }));
 
 // CORS configuration
