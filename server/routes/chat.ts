@@ -754,8 +754,10 @@ router.post('/api/chat/stream', chatStreamLimiter, async (req, res) => {
               }
             } catch {
               // Non-fatal JSON parse error for partial chunks
+            }
           }
         }
+      }
       } catch (readErr: any) {
         if (readErr.name !== 'AbortError') {
           console.error('Stream read error from provider:', readErr);
