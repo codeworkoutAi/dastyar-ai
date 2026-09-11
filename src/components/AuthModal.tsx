@@ -5,7 +5,7 @@ import { GoogleOAuthProvider, useGoogleLogin } from '@react-oauth/google';
 
 function GoogleLoginButton({ onSuccess, onError, loading }: { onSuccess: (token: string) => void, onError: () => void, loading: boolean }) {
   const login = useGoogleLogin({
-    onSuccess: tokenResponse => onSuccess(tokenResponse.credential || tokenResponse.access_token),
+    onSuccess: tokenResponse => onSuccess(tokenResponse.access_token),
     onError: () => onError(),
     flow: 'implicit'
   });

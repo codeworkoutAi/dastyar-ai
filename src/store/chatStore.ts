@@ -309,9 +309,9 @@ stopGeneration: () => {
             ...c,
             messages: c.messages.map(m => m.id === assistantMessageId ? { ...m, content: rejectionMsg } : m)
           } : c
-        ), isGenerating: false });
+        ), isStreaming: false });
         get().setRoutingState('general');
-        saveConversations();
+        // Let the global subscriber handle saveConversations
         return;
       }
 

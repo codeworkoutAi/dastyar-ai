@@ -1,3 +1,4 @@
+import { describe, it, expect, beforeAll } from 'vitest';
 import request from 'supertest';
 import express from 'express';
 import modelsRouter from '../models';

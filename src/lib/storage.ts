@@ -1,5 +1,5 @@
 
-import { AppSettings, Conversation } from '../types';
+import { AppSettings, Conversation, CustomProfile } from '../types';
 import { encryptAPIKeys, decryptAPIKeys } from './crypto';
 
 const STORAGE_KEYS = {

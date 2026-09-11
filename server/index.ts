@@ -42,7 +42,7 @@ app.use(helmet({
         "'unsafe-inline'",  // Google Identity Services uses inline scripts in popup
         "https://accounts.google.com/",
         "https://accounts.gstatic.com/",
-        (req, res) => `'nonce-${res.locals.nonce}'`
+        (req, res: any) => `'nonce-${res.locals.nonce}'`
       ],
       scriptSrcAttr: ["'unsafe-inline'"],
       styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],

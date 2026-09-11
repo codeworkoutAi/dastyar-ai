@@ -33,7 +33,7 @@ if (syncUrl && authToken) {
     db = new Database(dbPath, {
       syncUrl,
       authToken
-    });
+    } as any);
   } catch (initErr: any) {
     if (initErr?.message?.includes('InvalidLocalState') || initErr?.message?.includes('metadata file exists')) {
       console.warn('[Database] Invalid local replica state detected. Cleaning up local replica files and retrying...');
@@ -48,7 +48,7 @@ if (syncUrl && authToken) {
       db = new Database(dbPath, {
         syncUrl,
         authToken
-      });
+      } as any);
     } else {
       throw initErr;
     }
