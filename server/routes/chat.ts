@@ -492,6 +492,7 @@ router.post('/api/chat/stream', chatStreamLimiter, async (req, res) => {
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',
       };
+      let injectedKey = '';
 
       if (apiConfig?.[provider]?.apiKey) {
         if (provider === 'anthropic') {
@@ -504,7 +505,6 @@ router.post('/api/chat/stream', chatStreamLimiter, async (req, res) => {
         // Secure Backend Injection for Default Free Models from DB or Env
         const requestedModel = apiConfig?.[provider]?.modelName || '';
         const profileId = apiConfig?.custom?.activeProfileId || apiConfig?.custom?.id || apiConfig?.[provider]?.id;
-        let injectedKey = '';
 
         if (profileId) {
           const row = db.prepare('SELECT apiKey FROM default_profiles WHERE id = ? AND isActive = 1').get(profileId) as any;
@@ -530,8 +530,10 @@ router.post('/api/chat/stream', chatStreamLimiter, async (req, res) => {
 
           if (allowedGroqModels.includes(requestedModel.toLowerCase()) && groqKey) {
             headers['Authorization'] = `Bearer ${groqKey}`;
+            injectedKey = groqKey;
           } else if (allowedGeminiModels.includes(requestedModel.toLowerCase()) && geminiKey) {
             headers['Authorization'] = `Bearer ${geminiKey}`;
+            injectedKey = geminiKey;
           }
         }
       }
