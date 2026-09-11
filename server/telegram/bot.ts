@@ -63,12 +63,15 @@ export function startTelegramBot() {
       try {
         const existingUser = db.prepare('SELECT id FROM users WHERE telegramId = ?').get(tgId);
         if (!existingUser) {
-          db.prepare('INSERT INTO users (telegramId, name, role, createdAt) VALUES (?, ?, ?, ?)').run(tgId, name, 'user', new Date().toISOString());
+          db.prepare('INSERT INTO users (telegramId, name) VALUES (?, ?)').run(tgId, name);
+          // Fire and forget sync
           syncDatabase();
         }
-      } catch (err) {}
+      } catch (err) {
+        console.error('[Bot] Middleware DB error:', err);
+      }
     }
-    return next();
+    await next();
   });
 
   // Start Command
