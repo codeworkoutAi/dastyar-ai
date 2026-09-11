@@ -41,11 +41,7 @@ app.use(helmet({
       styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
       fontSrc: ["'self'", "data:", "https://fonts.gstatic.com"],
       imgSrc: [
-        "'self'", "data:", "blob:", 
-        "https://*.dicebear.com", 
-        "https://*.pollinations.ai", 
-        "https://*.google.com",
-        "https://*.telegram.org"
+        "'self'", "data:", "blob:", "https:",
       ],
       connectSrc: [
         "'self'", "ws:", "wss:", 
