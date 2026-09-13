@@ -228,7 +228,6 @@ stopGeneration: () => {
             prompt: promptText, 
             settings: payloadSettings,
             engine: imageEngine,
-            referenceImage: imageUrl || undefined,
             apiKey: imageEngine === 'dalle-3' ? payloadSettings.providers.openai?.apiKey : imageEngine === 'imagen-3' ? payloadSettings.providers.gemini?.apiKey : undefined 
           }),
           signal: controller.signal,

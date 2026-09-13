@@ -1,7 +1,7 @@
 import express from 'express';
 import { Modality } from '@google/genai';
 import db from '../db/database';
-import { isSafeBaseUrl, getGeminiClient, sanitizeErrorMessage, getPollinationsImageUrl, translateAndEnhanceImagePrompt, describeImageWithGemini } from '../services/utils';
+import { isSafeBaseUrl, getGeminiClient, sanitizeErrorMessage, getPollinationsImageUrl, translateAndEnhanceImagePrompt } from '../services/utils';
 import { aiRouteLimiter } from '../middleware/rateLimiter';
 
 const router = express.Router();
@@ -231,7 +231,7 @@ router.post('/api/fetch-models', aiRouteLimiter, async (req, res) => {
 // 4. Image Generation endpoint
 router.post('/api/generate-image', aiRouteLimiter, async (req, res) => {
   try {
-    const { prompt, englishPrompt, aspectRatio = '1:1', negativePrompt, engine, apiKey, settings, referenceImage } = req.body;
+    const { prompt, englishPrompt, aspectRatio = '1:1', negativePrompt, engine, apiKey, settings } = req.body;
     if (!prompt && !englishPrompt) {
       console.warn('[ImageGen API] ❌ Error: Missing prompt');
       return res.status(400).json({ error: 'دستور ساخت تصویر الزامی است.' });
@@ -245,14 +245,6 @@ router.post('/api/generate-image', aiRouteLimiter, async (req, res) => {
     let enhancedPrompt = englishPrompt && typeof englishPrompt === 'string' && englishPrompt.trim().length > 5
       ? englishPrompt.trim()
       : await translateAndEnhanceImagePrompt(fullPrompt, settings?.providers?.gemini?.apiKey || apiKey);
-      
-    if (referenceImage) {
-      console.log('[ImageGen API] 🔍 Analyzing reference image with Gemini Vision...');
-      const imageDescription = await describeImageWithGemini(referenceImage, settings?.providers?.gemini?.apiKey || apiKey);
-      if (imageDescription) {
-        enhancedPrompt = `${enhancedPrompt}. The scene is heavily inspired by the following description: ${imageDescription}.`;
-      }
-    }
 
     if (engine === 'dalle-3') {
       const openAiKey = apiKey || settings?.providers?.openai?.apiKey;
