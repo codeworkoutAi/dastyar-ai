@@ -254,8 +254,7 @@ export function renderHtmlWithSeo(req: express.Request, res: express.Response, d
       html = html.replace('</head>', `${extraMetaTags}\n</head>`);
     }
     if (structuredData) {
-      const nonceAttr = (res as any).locals?.nonce ? ` nonce="${(res as any).locals.nonce}"` : '';
-      const schemaTag = `\n  <script type="application/ld+json" id="server-injected-schema"${nonceAttr}>\n  ${JSON.stringify(structuredData, null, 2)}\n  </script>\n</head>`;
+      const schemaTag = `\n  <script type="application/ld+json" id="server-injected-schema">\n  ${JSON.stringify(structuredData, null, 2)}\n  </script>\n</head>`;
       html = html.replace('</head>', schemaTag);
     }
 

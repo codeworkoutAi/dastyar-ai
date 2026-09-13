@@ -27,22 +27,22 @@ app.disable('x-powered-by');
 app.set('trust proxy', 1);
 
 // Generate nonce for inline scripts
-app.use((req, res, next) => {
-  res.locals.nonce = crypto.randomBytes(16).toString('base64');
-  next();
-});
+// Generate nonce for inline scripts (Disabled to allow unsafe-inline for Google Login)
+// app.use((req, res, next) => {
+//   res.locals.nonce = crypto.randomBytes(16).toString('base64');
+//   next();
+// });
 
 // Security Headers Middleware (Helmet)
 app.use(helmet({
-  contentSecurityPolicy: process.env.NODE_ENV === 'production' ? {
+  contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
       scriptSrc: [
         "'self'",
         "'unsafe-inline'",  // Google Identity Services uses inline scripts in popup
         "https://accounts.google.com/",
-        "https://accounts.gstatic.com/",
-        (req, res: any) => `'nonce-${res.locals.nonce}'`
+        "https://accounts.gstatic.com/"
       ],
       scriptSrcAttr: ["'unsafe-inline'"],
       styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
