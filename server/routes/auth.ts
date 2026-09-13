@@ -2,7 +2,6 @@ import express from 'express';
 import bcrypt from 'bcryptjs';
 import db, { syncDatabase } from '../db/database';
 import { requireAuth, JWT_SECRET } from '../middleware/auth';
-import { sendOtpSms } from '../services/kavenegar';
 import { googleAuthLimiter } from '../middleware/rateLimiter';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
@@ -13,10 +12,10 @@ import { telegramAuthSessions } from '../services/telegramAuthSessions';
 const router = express.Router();
 
 // Rate limiters
-const otpLimiter = rateLimit({
-  windowMs: 5 * 60 * 1000, // 5 minutes
-  max: 3, // Limit each IP to 3 OTP requests per window
-  message: { error: 'تعداد درخواست‌های پیامک بیش از حد مجاز است. لطفاً ۵ دقیقه دیگر دوباره تلاش کنید.' },
+const registerLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 10, // Limit each IP to 10 register attempts per window
+  message: { error: 'تعداد تلاش‌های ثبت‌نام بیش از حد مجاز است. لطفاً ۱۵ دقیقه دیگر دوباره تلاش کنید.' },
   standardHeaders: true,
   legacyHeaders: false,
 });
@@ -25,14 +24,6 @@ const verifyLimiter = rateLimit({
   windowMs: 5 * 60 * 1000, // 5 minutes
   max: 5, // Limit each IP to 5 verify/login attempts per window
   message: { error: 'تعداد تلاش‌های ورود بیش از حد مجاز است. لطفاً ۵ دقیقه دیگر دوباره تلاش کنید.' },
-  standardHeaders: true,
-  legacyHeaders: false,
-});
-
-const registerLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 10, // Limit each IP to 10 register attempts per window
-  message: { error: 'تعداد تلاش‌های ثبت‌نام بیش از حد مجاز است. لطفاً ۱۵ دقیقه دیگر دوباره تلاش کنید.' },
   standardHeaders: true,
   legacyHeaders: false,
 });
@@ -51,112 +42,6 @@ const resetPasswordLimiter = rateLimit({
   message: { error: 'تعداد تلاش‌های تغییر رمز بیش از حد مجاز است. لطفاً ۱۵ دقیقه دیگر دوباره تلاش کنید.' },
   standardHeaders: true,
   legacyHeaders: false,
-});
-
-// POST /api/auth/send-otp
-router.post('/send-otp', otpLimiter, async (req, res) => {
-  try {
-    const { phone } = req.body;
-
-    if (!phone || !/^09\d{9}$/.test(phone)) {
-      return res.status(400).json({ error: 'شماره موبایل نامعتبر است (مثال: 09123456789)' });
-    }
-
-    // Generate a 5-digit code
-    const code = Math.floor(10000 + Math.random() * 90000).toString();
-    const expiresAt = new Date(Date.now() + 2 * 60 * 1000).toISOString(); // 2 minutes
-
-    // Save to DB
-    const insertStmt = db.prepare('INSERT OR REPLACE INTO otps (phone, code, expiresAt) VALUES (?, ?, ?)');
-    insertStmt.run(phone, code, expiresAt);
-    syncDatabase();
-
-    // Send SMS
-    const sent = await sendOtpSms(phone, code);
-
-    if (sent) {
-      res.json({ message: 'کد تایید ارسال شد' });
-    } else {
-      res.status(500).json({ error: 'خطا در ارسال پیامک' });
-    }
-  } catch (error) {
-    console.error('[Auth API] Send OTP Error:', error);
-    res.status(500).json({ error: 'خطای سرور در ارسال کد' });
-  }
-});
-
-// POST /api/auth/verify-otp
-router.post('/verify-otp', verifyLimiter, async (req, res) => {
-  try {
-    const { phone, code, name, avatar } = req.body;
-
-    if (!phone || !code) {
-      return res.status(400).json({ error: 'شماره موبایل و کد تایید الزامی است' });
-    }
-
-    // Check OTP
-    const otpStmt = db.prepare('SELECT * FROM otps WHERE phone = ?');
-    const otpRecord = otpStmt.get(phone) as { code: string, expiresAt: string } | undefined;
-
-    if (!otpRecord) {
-      return res.status(400).json({ error: 'کد تاییدی برای این شماره یافت نشد' });
-    }
-
-    if (otpRecord.code !== code) {
-      return res.status(400).json({ error: 'کد تایید اشتباه است' });
-    }
-
-    if (new Date(otpRecord.expiresAt) < new Date()) {
-      return res.status(400).json({ error: 'کد تایید منقضی شده است' });
-    }
-
-    // OTP is valid, clear it
-    db.prepare('DELETE FROM otps WHERE phone = ?').run(phone);
-
-    // Get or Create User
-    const userStmt = db.prepare('SELECT * FROM users WHERE phone = ?');
-    let user = userStmt.get(phone) as any;
-
-    if (!user) {
-      // Check if this is the first user
-      const countStmt = db.prepare('SELECT COUNT(*) as count FROM users');
-      const { count } = countStmt.get() as { count: number };
-      const role = count === 0 ? 'admin' : 'user';
-
-      const randomColors = '264653,2a9d8f,e9c46a,f4a261,e76f51';
-      const defaultAvatar = avatar || `https://api.dicebear.com/9.x/shapes/svg?seed=${phone}`;
-
-      const insertUserStmt = db.prepare('INSERT INTO users (phone, name, avatar, role) VALUES (?, ?, ?, ?)');
-      const info = insertUserStmt.run(phone, name || '', defaultAvatar, role);
-
-      user = { id: info.lastInsertRowid, phone, name, avatar: defaultAvatar, role };
-    } else {
-      // Update name and avatar if provided
-      if (name || avatar) {
-        db.prepare('UPDATE users SET name = COALESCE(?, name), avatar = COALESCE(?, avatar) WHERE id = ?').run(name, avatar, user.id);
-        user.name = name || user.name;
-        user.avatar = avatar || user.avatar;
-      }
-    }
-
-    syncDatabase();
-
-    // Generate JWT
-    const token = jwt.sign(
-      { id: user.id, phone: user.phone, role: user.role },
-      JWT_SECRET,
-      { expiresIn: '7d' }
-    );
-
-    res.json({
-      message: 'ورود موفقیت‌آمیز',
-      token,
-      user: { id: user.id, phone: user.phone, name: user.name, avatar: user.avatar, role: user.role }
-    });
-  } catch (error) {
-    console.error('[Auth API] Verify OTP Error:', error);
-    res.status(500).json({ error: 'خطای سرور در تایید کد' });
-  }
 });
 
 // POST /api/auth/register (Email)

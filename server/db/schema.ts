@@ -281,5 +281,25 @@ export function initializeSchema() {
     console.error('[Database] Failed to seed default profiles:', seedErr);
   }
 
+  // Create Site Settings table
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS site_settings (
+      key TEXT PRIMARY KEY,
+      value TEXT NOT NULL,
+      updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  // Seed default site settings if missing
+  try {
+    const existingRow = db.prepare('SELECT value FROM site_settings WHERE key = ?').get('news_auto_publish');
+    if (!existingRow) {
+      console.log('[Database] Seeding initial news_auto_publish site setting (false)...');
+      db.prepare('INSERT INTO site_settings (key, value) VALUES (?, ?)').run('news_auto_publish', 'false');
+    }
+  } catch (err) {
+    console.error('[Database] Failed to seed site settings:', err);
+  }
+
   console.log('[Database] SQLite schema ready.');
 }

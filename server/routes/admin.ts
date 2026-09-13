@@ -525,4 +525,38 @@ router.delete('/default-profiles/:id', (req, res) => {
   }
 });
 
+// GET /api/admin/settings
+router.get('/settings', (req, res) => {
+  try {
+    const rows = db.prepare('SELECT key, value FROM site_settings').all() as { key: string; value: string }[];
+    const settings: Record<string, string> = {};
+    for (const row of rows) {
+      settings[row.key] = row.value;
+    }
+    res.json(settings);
+  } catch (error) {
+    console.error('[Admin API] Error fetching site settings:', error);
+    res.status(500).json({ error: 'خطا در دریافت تنظیمات سیستم' });
+  }
+});
+
+// PUT /api/admin/settings
+router.put('/settings', (req, res) => {
+  try {
+    const { key, value } = req.body;
+    if (!key || value === undefined || value === null) {
+      return res.status(400).json({ error: 'کلید و مقدار تنظیمات الزامی است.' });
+    }
+
+    db.prepare('INSERT OR REPLACE INTO site_settings (key, value, updatedAt) VALUES (?, ?, CURRENT_TIMESTAMP)').run(key, String(value));
+    syncDatabase();
+
+    const updatedRow = db.prepare('SELECT key, value FROM site_settings WHERE key = ?').get(key);
+    res.json(updatedRow);
+  } catch (error) {
+    console.error('[Admin API] Error updating site settings:', error);
+    res.status(500).json({ error: 'خطا در به‌روزرسانی تنظیمات سیستم' });
+  }
+});
+
 export default router;

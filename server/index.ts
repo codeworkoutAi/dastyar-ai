@@ -57,7 +57,6 @@ app.use(helmet({
         "https://api.openai.com",
         "https://api.anthropic.com",
         "https://api.openrouter.ai",
-        "https://api.kavenegar.com",
         "https://accounts.google.com/",
         "https://oauth2.googleapis.com/",
         "https://www.googleapis.com/"

@@ -162,6 +162,15 @@ export async function fetchAndProcessNews() {
   appendCronLog('INFO', startMsg);
 
   try {
+    // Check site_settings table for news_auto_publish toggle
+    const settingRow = db.prepare('SELECT value FROM site_settings WHERE key = ?').get('news_auto_publish') as { value: string } | undefined;
+    const isAutoPublish = settingRow ? settingRow.value === 'true' : false;
+    if (!isAutoPublish) {
+      const skipMsg = 'Automatic news publishing is disabled in site settings. Skipping news fetch task.';
+      console.log(`[NewsCron] ${skipMsg}`);
+      appendCronLog('INFO', skipMsg);
+      return;
+    }
     const apiKey = process.env.GEMINI_SEARCH_KEY || process.env.DEFAULT_GEMINI_KEY || process.env.GEMINI_API_KEY;
     const ai = getGeminiClient(apiKey, true);
 
@@ -389,6 +398,14 @@ export async function sendNewsToTelegram(
   currentBot: any,
   article: { id: number; title: string; content: string; image: string }
 ): Promise<boolean> {
+  const settingRow = db.prepare('SELECT value FROM site_settings WHERE key = ?').get('news_auto_publish') as { value: string } | undefined;
+  const isAutoPublish = settingRow ? settingRow.value === 'true' : (process.env.PAUSE_NEWS_BOT === 'false');
+  if (!isAutoPublish) {
+    console.log(`[NewsCron] Telegram news broadcasting is disabled in settings. Skipping broadcast for Article #${article.id}.`);
+    appendCronLog('INFO', `Telegram news broadcasting is disabled (Article #${article.id} skipped).`);
+    return false;
+  }
+
   const rawBase = (process.env.WEBSITE_URL || process.env.WEB_URL || process.env.APP_URL || 'http://localhost:3000').trim().replace(/\/$/, '');
   const baseUrl = (rawBase && !rawBase.includes('MY_APP_URL')) ? rawBase : 'http://localhost:3000';
   const articleUrl = `${baseUrl}/blog/${article.id}`;

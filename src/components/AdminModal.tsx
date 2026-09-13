@@ -123,6 +123,11 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
   const [adminModelSearchQuery, setAdminModelSearchQuery] = useState('');
   const [fetchModelsMessage, setFetchModelsMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
+  // Site Settings state
+  const [newsAutoPublish, setNewsAutoPublish] = useState<boolean>(false);
+  const [siteSettingsLoading, setSiteSettingsLoading] = useState<boolean>(false);
+  const [siteSettingsSaving, setSiteSettingsSaving] = useState<boolean>(false);
+
   const formRef = useRef<HTMLDivElement>(null);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>, type: 'image' | 'banner' = 'image') => {
@@ -376,6 +381,49 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
     }
   };
 
+  const fetchSiteSettings = async () => {
+    try {
+      setSiteSettingsLoading(true);
+      const res = await fetch('/api/admin/settings', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setNewsAutoPublish(data.news_auto_publish === 'true');
+      }
+    } catch (err) {
+      console.error('Failed to fetch site settings:', err);
+    } finally {
+      setSiteSettingsLoading(false);
+    }
+  };
+
+  const handleToggleNewsAutoPublish = async (newValue: boolean) => {
+    try {
+      setSiteSettingsSaving(true);
+      setNewsAutoPublish(newValue);
+      const res = await fetch('/api/admin/settings', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          key: 'news_auto_publish',
+          value: newValue ? 'true' : 'false'
+        })
+      });
+      if (!res.ok) {
+        setNewsAutoPublish(!newValue);
+        throw new Error('خطا در ذخیره تنظیمات');
+      }
+    } catch (err: any) {
+      alert(err.message || 'خطا در برقراری ارتباط');
+    } finally {
+      setSiteSettingsSaving(false);
+    }
+  };
+
   useEffect(() => {
     if (isOpen && token && user?.role === 'admin') {
       if (activeTab === 'products') {
@@ -388,6 +436,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
         fetchNews();
       } else if (activeTab === 'settings') {
         fetchDefaultProfiles();
+        fetchSiteSettings();
       }
     }
   }, [isOpen, token, user, activeTab]);
@@ -1409,6 +1458,49 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
                       })}
                     </div>
                   )}
+                </div>
+              </div>
+
+              {/* Site General Settings Section */}
+              <div className="bg-white dark:bg-zinc-800/50 p-5 sm:p-6 rounded-2xl border border-zinc-200 dark:border-zinc-700/50 shadow-sm">
+                <div className="flex items-center gap-3 pb-4 border-b border-zinc-100 dark:border-zinc-700/60 mb-5">
+                  <div className="w-10 h-10 rounded-xl bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0">
+                    <Sparkles className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-base sm:text-lg font-bold text-zinc-900 dark:text-zinc-100 font-rokh">
+                      تنظیمات انتشار خودکار اخبار هوش مصنوعی
+                    </h3>
+                    <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5 leading-relaxed">
+                      مدیریت استخراج خودکار اخبار از RSS، بازنویسی با Gemini و انتشار بر روی وبلاگ سایت و کانال تلگرام
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-xl bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-200/80 dark:border-zinc-700/60">
+                  <div className="flex flex-col gap-1">
+                    <span className="text-sm font-bold text-zinc-800 dark:text-zinc-200">
+                      انتشار خودکار اخبار در وبلاگ و تلگرام
+                    </span>
+                    <span className="text-xs text-zinc-500 dark:text-zinc-400">
+                      در صورت فعال بودن، سیستم هر چند ساعت یک‌بار اخبار جدید هوش مصنوعی را دریافت و منتشر می‌کند.
+                    </span>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => handleToggleNewsAutoPublish(!newsAutoPublish)}
+                    disabled={siteSettingsSaving || siteSettingsLoading}
+                    className={`relative inline-flex h-7 w-14 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                      newsAutoPublish ? 'bg-emerald-500' : 'bg-zinc-300 dark:bg-zinc-700'
+                    } disabled:opacity-50`}
+                  >
+                    <span
+                      className={`pointer-events-none inline-block h-6 w-6 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${
+                        newsAutoPublish ? 'translate-x-7' : 'translate-x-0'
+                      }`}
+                    />
+                  </button>
                 </div>
               </div>
 
