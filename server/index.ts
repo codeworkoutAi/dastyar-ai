@@ -66,7 +66,7 @@ app.use(helmet({
         "https://accounts.google.com/"
       ],
     }
-  } : false,
+  },
   crossOriginEmbedderPolicy: false,
   crossOriginOpenerPolicy: { policy: "same-origin-allow-popups" },
 }));
