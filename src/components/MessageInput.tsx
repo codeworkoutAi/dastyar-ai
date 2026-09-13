@@ -16,7 +16,8 @@ import {
 } from '@solar-icons/react';
 import { 
   ArrowUp, 
-  X
+  X,
+  Search
 } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
 import { toPersianDigits, isRtlText } from '../lib/persianUtils';
@@ -34,7 +35,7 @@ import { getModelDetails } from './CustomProviderCards';
 
 
 export const MessageInput: React.FC = React.memo(() => {
-  const { setVideoNotice } = useUIStore();
+  const { setVideoNotice, setIsImageStudioOpen, setImageStudioInitial } = useUIStore();
   const { settings } = useSettingsStore();
   const { isStreaming, stopGeneration, sendMessage, conversations, activeId } = useChatStore();
   const activeConversation = conversations.find(c => c.id === activeId);
@@ -697,7 +698,17 @@ export const MessageInput: React.FC = React.memo(() => {
   };
 
   const isRtl = isRtlText(text);
+  const hasImageAttachment = attachments.some(a => a.mimeType.startsWith('image/'));
   const canSend = (!!text.trim() || attachments.some(a => a.status === 'ready')) && !isStreaming;
+
+  const handleEditImage = () => {
+    const imgAtt = attachments.find(a => a.mimeType.startsWith('image/'));
+    if (!imgAtt || !imgAtt.dataUrl) return;
+    setImageStudioInitial({ prompt: text.trim() || 'ویرایش تصویر', engine: 'flux', referenceImage: imgAtt.dataUrl });
+    setIsImageStudioOpen(true);
+    setText('');
+    resetAttachments();
+  };
 
   const estimatedTokens = useMemo(() => {
     // Each media attachment is ~300 tokens; text is calculated per-char
@@ -1062,8 +1073,33 @@ export const MessageInput: React.FC = React.memo(() => {
               </Tooltip>
             )}
 
-            {/* Send Button */}
-            {!isStreaming && (
+            {/* Action Buttons */}
+            {!isStreaming && hasImageAttachment ? (
+              <div className="flex items-center gap-1.5 p-1 rounded-2xl bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700">
+                <Tooltip content="تحلیل محتوای این تصویر در چت">
+                  <button
+                    type="button"
+                    onClick={handleSend}
+                    disabled={!canSend}
+                    className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-[10px] sm:text-xs font-bold transition-all shadow-sm ${canSend ? 'bg-black dark:bg-white text-white dark:text-black hover:scale-105 active:scale-95 cursor-pointer' : 'opacity-50 cursor-not-allowed'}`}
+                  >
+                    <Search className="w-3.5 h-3.5" />
+                    <span className="hidden sm:inline">تحلیل</span>
+                  </button>
+                </Tooltip>
+                <Tooltip content="انتقال به استودیو تصویر برای ویرایش (Image-to-Image)">
+                  <button
+                    type="button"
+                    onClick={handleEditImage}
+                    disabled={!canSend}
+                    className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-[10px] sm:text-xs font-bold transition-all shadow-sm ${canSend ? 'bg-purple-600 text-white hover:bg-purple-500 hover:scale-105 active:scale-95 cursor-pointer' : 'bg-purple-600/50 text-white/50 cursor-not-allowed'}`}
+                  >
+                    <StarsMinimalisticBoldIcon className="w-3.5 h-3.5" />
+                    <span className="hidden sm:inline">ویرایش</span>
+                  </button>
+                </Tooltip>
+              </div>
+            ) : !isStreaming && (
               <Tooltip content={canSend ? 'ارسال پیام' : 'متنی بنویسید یا فایلی پیوست کنید'}>
                 <button
                   type="button"

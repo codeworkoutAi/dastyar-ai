@@ -9,7 +9,7 @@ interface UIState {
   isExploreOpen: boolean;
   videoNotice: string | null;
   metricsNotice: string | null;
-  imageStudioInitial: { prompt: string; engine: string } | null;
+  imageStudioInitial: { prompt: string; engine: string; referenceImage?: string } | null;
   simulatedPrompt: string | null;
   isAdminOpen: boolean;
   isAboutOpen: boolean;
@@ -24,7 +24,7 @@ interface UIState {
   setIsExploreOpen: (open: boolean) => void;
   setVideoNotice: (notice: string | null) => void;
   setMetricsNotice: (notice: string | null) => void;
-  setImageStudioInitial: (initial: { prompt: string; engine: string } | null) => void;
+  setImageStudioInitial: (initial: { prompt: string; engine: string; referenceImage?: string } | null) => void;
   setSimulatedPrompt: (prompt: string | null) => void;
   setIsAdminOpen: (open: boolean) => void;
   setIsAboutOpen: (open: boolean) => void;
