@@ -34,7 +34,7 @@ app.use((req, res, next) => {
 
 // Security Headers Middleware (Helmet)
 app.use(helmet({
-  contentSecurityPolicy: {
+  contentSecurityPolicy: process.env.NODE_ENV === 'production' ? {
     directives: {
       defaultSrc: ["'self'"],
       scriptSrc: [
@@ -66,7 +66,7 @@ app.use(helmet({
         "https://accounts.google.com/"
       ],
     }
-  },
+  } : false,
   crossOriginEmbedderPolicy: false,
   crossOriginOpenerPolicy: { policy: "same-origin-allow-popups" },
 }));
