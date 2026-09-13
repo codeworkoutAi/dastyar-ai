@@ -704,10 +704,9 @@ export const MessageInput: React.FC = React.memo(() => {
   const handleEditImage = () => {
     const imgAtt = attachments.find(a => a.mimeType.startsWith('image/'));
     if (!imgAtt || !imgAtt.dataUrl) return;
-    setImageStudioInitial({ prompt: text.trim() || 'ویرایش تصویر', engine: 'flux', referenceImage: imgAtt.dataUrl });
-    setIsImageStudioOpen(true);
-    setText('');
-    resetAttachments();
+    const promptText = text.trim() || 'ویرایش تصویر با حفظ ساختار اصلی';
+    setPendingImagePrompt('/image ' + promptText);
+    setShowImageEngineModal(true);
   };
 
   const estimatedTokens = useMemo(() => {
@@ -718,9 +717,14 @@ export const MessageInput: React.FC = React.memo(() => {
 
   const confirmImageGen = (engine: string) => {
     setShowImageEngineModal(false);
-    sendMessage(pendingImagePrompt, undefined, undefined, undefined, engine);
+    const readyAttachments = attachments.filter(a => a.dataUrl);
+    const imageUrls = readyAttachments.map(a => a.dataUrl);
+    const firstImageUrl = imageUrls[0] || undefined;
+    
+    sendMessage(pendingImagePrompt, firstImageUrl, undefined, undefined, engine);
     setText('');
     setPendingImagePrompt('');
+    resetAttachments();
   };
 
   return (

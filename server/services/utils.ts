@@ -229,7 +229,29 @@ Persian description: "${trimmed}"`;
   return `${trimmed}, highly detailed, sharp focus, 8k resolution, award winning composition`;
 }
 
+export async function describeImageWithGemini(base64Image: string, apiKey?: string): Promise<string> {
+  try {
+    const ai = getGeminiClient(apiKey);
+    const mimeMatch = base64Image.match(/^data:(image\/\w+);base64,/);
+    const mimeType = mimeMatch ? mimeMatch[1] : 'image/jpeg';
+    const base64Data = base64Image.replace(/^data:image\/\w+;base64,/, '');
 
+    const response = await ai.models.generateContent({
+      model: 'gemini-1.5-flash',
+      contents: [
+        { role: 'user', parts: [
+          { inlineData: { mimeType, data: base64Data } },
+          { text: "Describe this image in highly cinematic, meticulous detail. Focus on the main subject, lighting, mood, camera angle, style, and environment. Keep it concise but dense with visual keywords. Do not include any conversational text like 'This is an image of', just return the description directly in English." }
+        ]}
+      ]
+    });
+    
+    return response.text?.trim() || '';
+  } catch (err: any) {
+    console.error('[Gemini Vision] 💥 Failed to describe reference image:', err?.message || err);
+    return '';
+  }
+}
 
 // Helper to fetch live real-time web search results (Domestic Persian Feeds + Google News RSS / Web)
 

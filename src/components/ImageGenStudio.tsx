@@ -15,8 +15,7 @@ import {
   Send, Sliders,
   Sparkles,
   Trash2, Wand2,
-  X, Zap,
-  Paperclip
+  X, Zap
 } from 'lucide-react';
 import React, { useEffect, useRef, useState } from 'react';
 import { loadSettings } from '../lib/storage';
@@ -235,11 +234,6 @@ export function ImageGenStudio() {
   const [loading, setLoading] = useState(false);
   const [enhancing, setEnhancing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  const initialReferenceImage = imageStudioInitial?.referenceImage;
-  const [referenceImage, setReferenceImage] = useState<string | null>(null);
-  const [imageStrength, setImageStrength] = useState<number>(50);
-  const fileInputRef = useRef<HTMLInputElement>(null);
   
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [history, setHistory] = useState<ImageHistory[]>([]);
@@ -286,7 +280,6 @@ export function ImageGenStudio() {
     if (isOpen) {
       if (initialPrompt) setPrompt(initialPrompt);
       if (initialEngine) setEngine(initialEngine);
-      if (initialReferenceImage) setReferenceImage(initialReferenceImage);
       
       const saved = localStorage.getItem('image_gen_history');
       if (saved) {
@@ -295,7 +288,7 @@ export function ImageGenStudio() {
         } catch (e) {}
       }
     }
-  }, [isOpen, initialPrompt, initialEngine, initialReferenceImage]);
+  }, [isOpen, initialPrompt, initialEngine]);
 
   const saveHistory = (item: ImageHistory) => {
     const newHistory = [item, ...history].slice(0, 60);
@@ -417,8 +410,6 @@ export function ImageGenStudio() {
           englishPrompt: customEnglishPrompt,
           aspectRatio: activeRatio,
           engine: activeEngine,
-          referenceImage,
-          imageStrength,
           apiKey: activeEngine === 'dalle-3' ? settings.providers.openai?.apiKey : activeEngine === 'imagen-3' ? settings.providers.gemini?.apiKey : undefined,
           settings,
         }),
@@ -461,37 +452,6 @@ export function ImageGenStudio() {
     if (autoGenerate) {
       executeGenerate(item.prompt, item.style, item.engine, item.aspectRatio, item.englishPrompt);
     }
-  };
-
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const img = new Image();
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        let width = img.width;
-        let height = img.height;
-        if (width > 1024 || height > 1024) {
-          if (width > height) {
-            height = Math.round((height * 1024) / width);
-            width = 1024;
-          } else {
-            width = Math.round((width * 1024) / height);
-            height = 1024;
-          }
-        }
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext('2d');
-        ctx?.drawImage(img, 0, 0, width, height);
-        setReferenceImage(canvas.toDataURL('image/jpeg', 0.8));
-      };
-      img.src = event.target?.result as string;
-    };
-    reader.readAsDataURL(file);
-    if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   const handleRandomPrompt = () => {
@@ -628,29 +588,6 @@ export function ImageGenStudio() {
                       <span className="text-[10px] font-bold">{ar.name}</span>
                     </button>
                   ))}
-                </div>
-              </div>
-
-              {/* Image-to-Image Strength */}
-              <div className={`space-y-4 transition-all duration-300 ${referenceImage ? 'opacity-100' : 'opacity-50 pointer-events-none grayscale'}`}>
-                <div className="flex items-center justify-between">
-                  <label className="text-xs font-bold text-zinc-700 dark:text-zinc-400 flex items-center gap-2">
-                    <div className="w-1.5 h-1.5 rounded-full bg-purple-500"></div> میزان تغییر تصویر مرجع
-                  </label>
-                  <span className="text-[10px] font-mono text-purple-600 dark:text-purple-400 bg-purple-500/10 px-1.5 py-0.5 rounded-md">{imageStrength}%</span>
-                </div>
-                <input
-                  type="range"
-                  min="10"
-                  max="90"
-                  step="5"
-                  value={imageStrength}
-                  onChange={(e) => setImageStrength(parseInt(e.target.value))}
-                  className="w-full h-1.5 bg-zinc-200 dark:bg-white/10 rounded-lg appearance-none cursor-pointer accent-purple-500"
-                />
-                <div className="flex justify-between text-[9px] text-zinc-500 font-medium px-1">
-                  <span>تغییر جزئی</span>
-                  <span>تغییر کلی</span>
                 </div>
               </div>
 
@@ -1147,18 +1084,6 @@ export function ImageGenStudio() {
               {/* Clean Borderless Prompt Box */}
               <div className="relative flex items-end gap-2 bg-white/75 dark:bg-[#18181b]/75 backdrop-blur-md p-2 rounded-2xl transition-all shadow-md">
                 
-                {/* Upload Reference Image Button */}
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={loading}
-                  className="shrink-0 p-3 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 rounded-xl transition-all disabled:opacity-50 shadow-xs hover:shadow hover:-translate-y-0.5 cursor-pointer"
-                  title="بارگذاری تصویر مرجع (Img2Img)"
-                >
-                  <Paperclip className="w-5 h-5 text-zinc-500 hover:text-purple-500 transition-colors" />
-                </button>
-                <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
-
                 {/* Random Idea Dice Button */}
                 <button
                   type="button"
@@ -1181,21 +1106,12 @@ export function ImageGenStudio() {
                   <Wand2 className={`w-5 h-5 ${enhancing ? 'animate-pulse' : ''}`} />
                 </button>
 
-                <div className="flex-1 flex flex-col gap-2 relative min-w-0">
-                  {referenceImage && (
-                    <div className="relative self-start mt-2 ml-2 group animate-fadeIn">
-                      <img src={referenceImage} alt="Reference" className="w-12 h-12 sm:w-16 sm:h-16 object-cover rounded-xl border border-zinc-300 dark:border-zinc-700 shadow-sm" />
-                      <button onClick={() => setReferenceImage(null)} className="absolute -top-1.5 -right-1.5 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors shadow-sm opacity-0 group-hover:opacity-100" title="حذف تصویر مرجع">
-                        <X size={12} />
-                      </button>
-                    </div>
-                  )}
-                  <textarea
-                    value={prompt}
-                    onChange={(e) => {
-                      setPrompt(e.target.value);
-                      setActiveEnglishPrompt(null);
-                    }}
+                <textarea
+                  value={prompt}
+                  onChange={(e) => {
+                    setPrompt(e.target.value);
+                    setActiveEnglishPrompt(null);
+                  }}
                   placeholder="توصیف تصویر (فارسی یا انگلیسی)..."
                   className="flex-1 bg-transparent border-none outline-none focus:ring-0 focus:outline-none resize-none text-sm lg:text-base py-2.5 px-3 max-h-24 sm:max-h-32 min-h-[44px] custom-scrollbar placeholder:text-zinc-700 dark:text-zinc-400 dark:placeholder:text-zinc-700 dark:text-zinc-500 text-zinc-800 dark:text-zinc-100"
                   rows={Math.min(3, prompt.split('\n').length || 1)}
@@ -1206,7 +1122,6 @@ export function ImageGenStudio() {
                     }
                   }}
                 />
-                </div>
 
                 <button
                   onClick={handleGenerate}

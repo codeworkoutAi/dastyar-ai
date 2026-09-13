@@ -1,7 +1,7 @@
 import express from 'express';
 import { Modality } from '@google/genai';
 import db from '../db/database';
-import { isSafeBaseUrl, getGeminiClient, sanitizeErrorMessage, getPollinationsImageUrl, translateAndEnhanceImagePrompt } from '../services/utils';
+import { isSafeBaseUrl, getGeminiClient, sanitizeErrorMessage, getPollinationsImageUrl, translateAndEnhanceImagePrompt, describeImageWithGemini } from '../services/utils';
 import { aiRouteLimiter } from '../middleware/rateLimiter';
 
 const router = express.Router();
@@ -231,7 +231,7 @@ router.post('/api/fetch-models', aiRouteLimiter, async (req, res) => {
 // 4. Image Generation endpoint
 router.post('/api/generate-image', aiRouteLimiter, async (req, res) => {
   try {
-    const { prompt, englishPrompt, aspectRatio = '1:1', negativePrompt, engine, apiKey, settings, referenceImage, imageStrength } = req.body;
+    const { prompt, englishPrompt, aspectRatio = '1:1', negativePrompt, engine, apiKey, settings, referenceImage } = req.body;
     if (!prompt && !englishPrompt) {
       console.warn('[ImageGen API] ❌ Error: Missing prompt');
       return res.status(400).json({ error: 'دستور ساخت تصویر الزامی است.' });
@@ -245,6 +245,14 @@ router.post('/api/generate-image', aiRouteLimiter, async (req, res) => {
     let enhancedPrompt = englishPrompt && typeof englishPrompt === 'string' && englishPrompt.trim().length > 5
       ? englishPrompt.trim()
       : await translateAndEnhanceImagePrompt(fullPrompt, settings?.providers?.gemini?.apiKey || apiKey);
+      
+    if (referenceImage) {
+      console.log('[ImageGen API] 🔍 Analyzing reference image with Gemini Vision...');
+      const imageDescription = await describeImageWithGemini(referenceImage, settings?.providers?.gemini?.apiKey || apiKey);
+      if (imageDescription) {
+        enhancedPrompt = `${enhancedPrompt}. The scene is heavily inspired by the following description: ${imageDescription}.`;
+      }
+    }
 
     if (engine === 'dalle-3') {
       const openAiKey = apiKey || settings?.providers?.openai?.apiKey;
@@ -280,40 +288,6 @@ router.post('/api/generate-image', aiRouteLimiter, async (req, res) => {
         return res.json({ imageUrl: `data:image/jpeg;base64,${base64}`, enhancedPrompt });
       }
       throw new Error('خطا در دریافت تصویر از Imagen 3');
-    }
-
-    if (referenceImage) {
-      let dimW = 1024, dimH = 1024;
-      if (aspectRatio === '16:9') { dimW = 1024; dimH = 576; }
-      else if (aspectRatio === '9:16') { dimW = 576; dimH = 1024; }
-
-      let modelParam = 'flux-realism';
-      if (engine === 'turbo') modelParam = 'turbo';
-      else if (engine === 'flux-anime') modelParam = 'flux-anime';
-      else if (engine === 'flux-3d') modelParam = 'flux-3d';
-      else if (engine === 'sana') modelParam = 'sana';
-      else if (engine === 'flux') modelParam = 'flux-realism';
-
-      const response = await fetch('https://image.pollinations.ai/', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          prompt: enhancedPrompt,
-          image: referenceImage,
-          model: modelParam,
-          width: dimW,
-          height: dimH,
-          seed: Math.floor(Math.random() * 10000000),
-          nologo: true
-        })
-      });
-
-      if (!response.ok) throw new Error('خطا در دریافت تصویر از Pollinations (Img2Img)');
-      const buffer = await response.arrayBuffer();
-      const base64 = Buffer.from(buffer).toString('base64');
-      const imageUrl = `data:image/jpeg;base64,${base64}`;
-      console.log('[ImageGen API] ✅ Image-to-Image generated successfully');
-      return res.json({ imageUrl, rawImageUrl: imageUrl, enhancedPrompt });
     }
 
     const rawImageUrl = getPollinationsImageUrl(enhancedPrompt, aspectRatio, engine);
