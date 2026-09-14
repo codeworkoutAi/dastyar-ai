@@ -571,6 +571,90 @@ router.get('/financial-summary', (req, res) => {
   }
 });
 
+// GET /api/admin/provider-live-balances (Query live balance from proxy/provider APIs)
+router.get('/provider-live-balances', async (req, res) => {
+  try {
+    const profiles = db.prepare("SELECT id, name, modelName, baseUrl, apiKey FROM default_profiles WHERE isActive = 1").all() as any[];
+    const uniqueKeys = new Map<string, any>();
+    for (const p of profiles) {
+      if (p.baseUrl && p.apiKey) {
+        const keyId = `${p.baseUrl.trim()}_${p.apiKey.trim()}`;
+        if (!uniqueKeys.has(keyId)) {
+          uniqueKeys.set(keyId, p);
+        }
+      }
+    }
+
+    const results = [];
+    for (const p of uniqueKeys.values()) {
+      const baseUrl = p.baseUrl.trim().replace(/\/v1\/?$/, '');
+      const apiKey = p.apiKey.trim();
+      let liveData: any = null;
+
+      if (baseUrl.includes('router.cheap') || baseUrl.includes('one-api') || baseUrl.includes('new-api')) {
+        try {
+          const subRes = await fetch(`${baseUrl}/v1/dashboard/billing/subscription`, {
+            headers: { Authorization: `Bearer ${apiKey}` },
+            signal: AbortSignal.timeout(6000)
+          });
+          if (subRes.ok) {
+            const sub = await subRes.json();
+            const now = new Date();
+            const start = new Date(now.getFullYear() - 1, 0, 1).toISOString().split('T')[0];
+            const end = new Date(now.getFullYear() + 1, 11, 31).toISOString().split('T')[0];
+            const usageRes = await fetch(`${baseUrl}/v1/dashboard/billing/usage?start_date=${start}&end_date=${end}`, {
+              headers: { Authorization: `Bearer ${apiKey}` },
+              signal: AbortSignal.timeout(6000)
+            });
+            const usage = usageRes.ok ? await usageRes.json() : {};
+            const hardLimit = Number(sub.hard_limit_usd) || 0;
+            const totalUsed = (Number(usage.total_usage) || 0) / 100;
+            const remaining = Math.max(0, hardLimit - totalUsed);
+            liveData = {
+              supported: true,
+              providerName: p.name || 'router.cheap',
+              baseUrl: p.baseUrl,
+              hardLimitUsd: hardLimit,
+              totalUsedUsd: totalUsed,
+              remainingUsd: remaining
+            };
+          }
+        } catch (e: any) {
+          console.warn('[Admin API] Live balance check error for', p.baseUrl, e.message);
+        }
+      } else if (baseUrl.includes('openrouter.ai')) {
+        try {
+          const keyRes = await fetch('https://openrouter.ai/api/v1/auth/key', {
+            headers: { Authorization: `Bearer ${apiKey}` },
+            signal: AbortSignal.timeout(6000)
+          });
+          if (keyRes.ok) {
+            const keyData = await keyRes.json();
+            const data = keyData.data || {};
+            liveData = {
+              supported: true,
+              providerName: 'OpenRouter',
+              baseUrl: p.baseUrl,
+              hardLimitUsd: data.limit || 0,
+              totalUsedUsd: data.usage || 0,
+              remainingUsd: Math.max(0, (data.limit || 0) - (data.usage || 0))
+            };
+          }
+        } catch (e) {}
+      }
+
+      if (liveData) {
+        results.push(liveData);
+      }
+    }
+
+    res.json(results);
+  } catch (err: any) {
+    console.error('[Admin API] provider-live-balances error:', err);
+    res.status(500).json({ error: 'خطا در دریافت موجودی آنلاین کلیدها' });
+  }
+});
+
 // POST /api/admin/purchases (Record a new API purchase by admin)
 router.post('/purchases', (req, res) => {
   try {

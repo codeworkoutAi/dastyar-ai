@@ -48,10 +48,32 @@ export const AdminFinanceTab: React.FC = () => {
   const [purchaseCostToman, setPurchaseCostToman] = useState('');
   const [purchaseNotes, setPurchaseNotes] = useState('');
 
+  // Live Provider Balances
+  const [liveBalances, setLiveBalances] = useState<any[]>([]);
+  const [liveLoading, setLiveLoading] = useState(false);
+
   useEffect(() => {
     fetchData();
     fetchSettings();
+    fetchLiveBalances();
   }, []);
+
+  const fetchLiveBalances = async () => {
+    setLiveLoading(true);
+    try {
+      const res = await fetch('/api/admin/provider-live-balances', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setLiveBalances(data);
+      }
+    } catch (err) {
+      console.error('Failed to fetch live balances:', err);
+    } finally {
+      setLiveLoading(false);
+    }
+  };
 
   // Debounced live search
   useEffect(() => {
@@ -373,6 +395,56 @@ export const AdminFinanceTab: React.FC = () => {
             <span>{feedback.text}</span>
           </div>
           <button onClick={() => setFeedback(null)} className="text-zinc-400 hover:text-zinc-600">✕</button>
+        </div>
+      )}
+
+      {/* Live Provider API Balances Widget */}
+      {liveBalances && liveBalances.length > 0 && (
+        <div className="p-4 rounded-2xl bg-gradient-to-r from-blue-500/10 via-indigo-500/10 to-purple-500/10 border border-blue-500/30 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 animate-fadeIn">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-blue-500/20">
+              <DollarSign className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="font-bold text-xs text-zinc-900 dark:text-zinc-100">
+                  استعلام لایو موجودی کلید {liveBalances[0].providerName}:
+                </span>
+                <span className="text-base font-black text-emerald-600 dark:text-emerald-400 font-mono" dir="ltr">
+                  ${liveBalances[0].remainingUsd.toFixed(2)}
+                </span>
+                <span className="text-[11px] text-zinc-500 dark:text-zinc-400 font-mono">
+                  (سقف کل: ${liveBalances[0].hardLimitUsd} | مصرف‌شده: ${liveBalances[0].totalUsedUsd.toFixed(2)})
+                </span>
+              </div>
+              <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-1 leading-relaxed">
+                این موجودی به صورت زنده و مستقیم از سرور تأمین‌کننده ({liveBalances[0].baseUrl}) با API Key استعلام شده است.
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              onClick={fetchLiveBalances}
+              disabled={liveLoading}
+              className="px-3 py-2 rounded-xl bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700 text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-xs transition-all disabled:opacity-50"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${liveLoading ? 'animate-spin' : ''}`} />
+              <span>بروزرسانی استعلام</span>
+            </button>
+            {!hasPurchases && (
+              <button
+                onClick={() => {
+                  setPurchaseProvider(liveBalances[0].providerName);
+                  setPurchaseAmountUsd(String(liveBalances[0].hardLimitUsd || liveBalances[0].remainingUsd));
+                  setIsAddingPurchase(true);
+                  purchaseSectionRef.current?.scrollIntoView({ behavior: 'smooth' });
+                }}
+                className="px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-md shadow-blue-500/20 transition-all"
+              >
+                <span>ثبت در مخزن حسابداری</span>
+              </button>
+            )}
+          </div>
         </div>
       )}
 
