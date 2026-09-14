@@ -960,34 +960,34 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
               </div>
               <div>
                 <h2 className="text-base sm:text-lg font-extrabold text-zinc-900 dark:text-zinc-100 font-rokh">
-                  پنل مدیریت فروشگاه
+                  پنل مدیریت
                 </h2>
               </div>
             </div>
             <div className="flex items-center gap-2">
               <button
                 onClick={onClose}
-                className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-red-50 hover:bg-red-100 dark:bg-red-950/40 dark:hover:bg-red-900/50 text-red-600 dark:text-red-400 font-bold text-xs transition-all shadow-sm active:scale-95 border border-red-200/80 dark:border-red-800/60"
+                className="flex items-center gap-1.5 px-3 sm:px-4 py-2 rounded-xl bg-red-50 hover:bg-red-100 dark:bg-red-950/40 dark:hover:bg-red-900/50 text-red-600 dark:text-red-400 font-bold text-xs transition-all shadow-sm active:scale-95 border border-red-200/80 dark:border-red-800/60 shrink-0"
                 title="بستن پنل و بازگشت به محیط چت"
               >
                 <X className="w-4 h-4" />
-                <span>خروج از مدیریت</span>
+                <span>خروج</span>
               </button>
             </div>
           </div>
 
           {/* Tabs */}
-          <div className="flex items-center gap-6 px-4 sm:px-6">
+          <div className="flex items-center gap-4 sm:gap-6 px-4 sm:px-6 overflow-x-auto whitespace-nowrap scrollbar-none">
             <button
               onClick={() => setActiveTab('products')}
-              className={`pb-3 text-sm font-bold border-b-2 transition-colors ${activeTab === 'products' ? 'border-blue-600 text-blue-600 dark:border-blue-500 dark:text-blue-400' : 'border-transparent text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200'
+              className={`pb-3 text-sm font-bold border-b-2 transition-colors shrink-0 whitespace-nowrap ${activeTab === 'products' ? 'border-blue-600 text-blue-600 dark:border-blue-500 dark:text-blue-400' : 'border-transparent text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200'
                 }`}
             >
               محصولات
             </button>
             <button
               onClick={() => setActiveTab('orders')}
-              className={`pb-3 text-sm font-bold border-b-2 transition-colors flex items-center gap-2 ${activeTab === 'orders' ? 'border-blue-600 text-blue-600 dark:border-blue-500 dark:text-blue-400' : 'border-transparent text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200'
+              className={`pb-3 text-sm font-bold border-b-2 transition-colors flex items-center gap-2 shrink-0 whitespace-nowrap ${activeTab === 'orders' ? 'border-blue-600 text-blue-600 dark:border-blue-500 dark:text-blue-400' : 'border-transparent text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200'
                 }`}
             >
               <span>سفارشات</span>
@@ -999,32 +999,32 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
             </button>
             <button
               onClick={() => setActiveTab('users')}
-              className={`pb-3 text-sm font-bold border-b-2 transition-colors ${activeTab === 'users' ? 'border-blue-600 text-blue-600 dark:border-blue-500 dark:text-blue-400' : 'border-transparent text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200'
+              className={`pb-3 text-sm font-bold border-b-2 transition-colors shrink-0 whitespace-nowrap ${activeTab === 'users' ? 'border-blue-600 text-blue-600 dark:border-blue-500 dark:text-blue-400' : 'border-transparent text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200'
                 }`}
             >
               کاربران
             </button>
             <button
               onClick={() => setActiveTab('news')}
-              className={`pb-3 text-sm font-bold border-b-2 transition-colors ${activeTab === 'news' ? 'border-blue-600 text-blue-600 dark:border-blue-500 dark:text-blue-400' : 'border-transparent text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200'
+              className={`pb-3 text-sm font-bold border-b-2 transition-colors shrink-0 whitespace-nowrap ${activeTab === 'news' ? 'border-blue-600 text-blue-600 dark:border-blue-500 dark:text-blue-400' : 'border-transparent text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200'
                 }`}
             >
-              اخبار و وبلاگ
+              وبلاگ
             </button>
             <button
               onClick={() => setActiveTab('finance')}
-              className={`pb-3 text-sm font-bold border-b-2 transition-colors flex items-center gap-1.5 ${activeTab === 'finance' ? 'border-blue-600 text-blue-600 dark:border-blue-500 dark:text-blue-400' : 'border-transparent text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200'
+              className={`pb-3 text-sm font-bold border-b-2 transition-colors flex items-center gap-1.5 shrink-0 whitespace-nowrap ${activeTab === 'finance' ? 'border-blue-600 text-blue-600 dark:border-blue-500 dark:text-blue-400' : 'border-transparent text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200'
                 }`}
             >
               <Coins className="w-4 h-4" />
-              <span>مدیریت مالی و ارز</span>
+              <span>مالی و ارز</span>
             </button>
             <button
               onClick={() => setActiveTab('settings')}
-              className={`pb-3 text-sm font-bold border-b-2 transition-colors ${activeTab === 'settings' ? 'border-blue-600 text-blue-600 dark:border-blue-500 dark:text-blue-400' : 'border-transparent text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200'
+              className={`pb-3 text-sm font-bold border-b-2 transition-colors shrink-0 whitespace-nowrap ${activeTab === 'settings' ? 'border-blue-600 text-blue-600 dark:border-blue-500 dark:text-blue-400' : 'border-transparent text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200'
                 }`}
             >
-              تنظیمات سیستم
+              تنظیمات
             </button>
           </div>
         </div>

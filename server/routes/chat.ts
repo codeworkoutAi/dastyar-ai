@@ -524,7 +524,7 @@ router.post('/api/chat/stream', chatStreamLimiter, async (req, res) => {
         }
       }
 
-      if (userId && !hasCustomUserKey && accumulatedGeminiText && !isFreeModel) {
+      if (userId && !hasCustomUserKey && accumulatedGeminiText) {
         if (!geminiUsage || !geminiUsage.totalTokens) {
           const promptEstimate = Math.ceil(JSON.stringify(prunedMessages).length / 4);
           const completionEstimate = Math.ceil(accumulatedGeminiText.length / 4);
@@ -534,19 +534,23 @@ router.post('/api/chat/stream', chatStreamLimiter, async (req, res) => {
             totalTokens: promptEstimate + completionEstimate,
           };
         }
-        const costUsd = calculateModelCostUsd(successfulCandidate, geminiUsage.promptTokens || 0, geminiUsage.completionTokens || 0);
-        const deductResult = deductChatCost(
-          userId,
-          successfulCandidate,
-          geminiUsage.promptTokens || 0,
-          geminiUsage.completionTokens || 0,
-          costUsd
-        );
-        geminiUsage = {
-          ...geminiUsage,
-          costToman: deductResult.costToman,
-          balanceAfter: deductResult.balanceAfter,
-        };
+        if (isFreeModel) {
+          geminiUsage = { ...geminiUsage, costToman: 0 };
+        } else {
+          const costUsd = calculateModelCostUsd(successfulCandidate, geminiUsage.promptTokens || 0, geminiUsage.completionTokens || 0);
+          const deductResult = deductChatCost(
+            userId,
+            successfulCandidate,
+            geminiUsage.promptTokens || 0,
+            geminiUsage.completionTokens || 0,
+            costUsd
+          );
+          geminiUsage = {
+            ...geminiUsage,
+            costToman: deductResult.costToman,
+            balanceAfter: deductResult.balanceAfter,
+          };
+        }
       }
 
       sendChunk({ done: true, usage: geminiUsage });
@@ -874,7 +878,7 @@ router.post('/api/chat/stream', chatStreamLimiter, async (req, res) => {
         });
       }
 
-      if (userId && !hasCustomUserKey && fullAccumulatedCustom && !isFreeModel) {
+      if (userId && !hasCustomUserKey && fullAccumulatedCustom) {
         if (!openaiUsage || !openaiUsage.totalTokens) {
           const promptEstimate = Math.ceil(JSON.stringify(prunedMessages).length / 4);
           const completionEstimate = Math.ceil(fullAccumulatedCustom.length / 4);
@@ -884,20 +888,24 @@ router.post('/api/chat/stream', chatStreamLimiter, async (req, res) => {
             totalTokens: promptEstimate + completionEstimate,
           };
         }
-        const modelName = requestedModel || apiConfig?.[provider]?.modelName || 'custom';
-        const costUsd = calculateModelCostUsd(modelName, openaiUsage.promptTokens || 0, openaiUsage.completionTokens || 0);
-        const deductResult = deductChatCost(
-          userId,
-          modelName,
-          openaiUsage.promptTokens || 0,
-          openaiUsage.completionTokens || 0,
-          costUsd
-        );
-        openaiUsage = {
-          ...openaiUsage,
-          costToman: deductResult.costToman,
-          balanceAfter: deductResult.balanceAfter,
-        };
+        if (isFreeModel) {
+          openaiUsage = { ...openaiUsage, costToman: 0 };
+        } else {
+          const modelName = requestedModel || apiConfig?.[provider]?.modelName || 'custom';
+          const costUsd = calculateModelCostUsd(modelName, openaiUsage.promptTokens || 0, openaiUsage.completionTokens || 0);
+          const deductResult = deductChatCost(
+            userId,
+            modelName,
+            openaiUsage.promptTokens || 0,
+            openaiUsage.completionTokens || 0,
+            costUsd
+          );
+          openaiUsage = {
+            ...openaiUsage,
+            costToman: deductResult.costToman,
+            balanceAfter: deductResult.balanceAfter,
+          };
+        }
       }
 
       sendChunk({ done: true, usage: openaiUsage });

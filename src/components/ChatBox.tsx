@@ -25,7 +25,7 @@ import {
   BrainOutlineIcon
 } from '@solar-icons/react';
 import React, { useEffect, useRef, useState, useCallback, memo } from 'react';
-import { isRtlText } from '../lib/persianUtils';
+import { isRtlText, toPersianDigits } from '../lib/persianUtils';
 import { SpeakController, speakText } from '../lib/tts';
 import { useChatStore } from '../store/chatStore';
 import { useSettingsStore } from '../store/settingsStore';
@@ -604,9 +604,9 @@ export const ChatBox: React.FC = React.memo(() => {
                         </div>
 
                         <div className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shrink-0">
-                          <span className="text-zinc-500 font-sans">توکن:</span>
+                          <span className="text-zinc-500 font-sans">توکن مصرفی:</span>
                           <span className="font-mono text-zinc-700 dark:text-zinc-300" dir="ltr">
-                            {msg.metrics?.exactTotalTokens || msg.metrics?.approxTokens || 340}
+                            {toPersianDigits(msg.metrics?.exactTotalTokens || msg.metrics?.approxTokens || 340)}
                           </span>
                         </div>
 
@@ -614,7 +614,7 @@ export const ChatBox: React.FC = React.memo(() => {
                           <span className="text-zinc-500 font-sans">هزینه:</span>
                           <span className="font-mono text-emerald-600 dark:text-emerald-400" dir="rtl">
                             {typeof msg.metrics?.costToman === 'number'
-                              ? `${msg.metrics.costToman.toLocaleString('fa-IR')} تومان`
+                              ? (msg.metrics.costToman === 0 ? 'رایگان' : `${toPersianDigits(msg.metrics.costToman.toLocaleString('fa-IR'))} تومان`)
                               : `$${msg.metrics?.estimatedCostUSD || '0.00012'}`}
                           </span>
                         </div>

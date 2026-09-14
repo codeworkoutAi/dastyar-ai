@@ -136,7 +136,9 @@ export const ModelSelectorDropdown: React.FC = () => {
         }`}
       >
         <div className="flex flex-col items-start">
-          <span className="text-[10px] text-zinc-500 dark:text-zinc-400 font-medium leading-tight">مدل فعلی</span>
+          {!settings.tools.smartRouting && (
+            <span className="text-[10px] text-zinc-500 dark:text-zinc-400 font-medium leading-tight">مدل فعلی</span>
+          )}
           <div className="flex items-center gap-1.5">
             <span className={`font-bold text-sm leading-tight ${settings.tools.smartRouting ? 'text-blue-700 dark:text-blue-300' : 'text-zinc-800 dark:text-zinc-200'}`}>
               {settings.tools.smartRouting ? 'مسیریابی هوشمند' : (activeProfile ? (activeProfile.name || activeProfile.modelName) : 'انتخاب مدل')}
