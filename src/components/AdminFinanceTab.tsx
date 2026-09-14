@@ -377,79 +377,87 @@ export const AdminFinanceTab: React.FC = () => {
       {/* KPI Cards Header */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
         {/* Total USD Purchased */}
-        <div className="p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-800/40 border border-zinc-200 dark:border-zinc-800">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-medium text-zinc-500">مخزن کلیدها (خریداری شده)</span>
-            <div className="w-8 h-8 rounded-xl bg-blue-500/10 text-blue-500 flex items-center justify-center">
-              <DollarSign className="w-4 h-4" />
+        <div className="p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-800/40 border border-zinc-200 dark:border-zinc-800 flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-semibold text-zinc-500 dark:text-zinc-400">مخزن کلیدها (خریداری شده)</span>
+              <div className="w-8 h-8 rounded-xl bg-blue-500/10 text-blue-500 flex items-center justify-center shrink-0">
+                <DollarSign className="w-4 h-4" />
+              </div>
+            </div>
+            <div className="flex items-baseline gap-1.5 mt-1">
+              <span className="text-2xl font-black text-zinc-900 dark:text-white font-mono" dir="ltr">
+                ${(summary?.totalPurchasedUsd || 0).toFixed(2)}
+              </span>
+              <span className="text-xs font-medium text-zinc-400">اعتبار دلاری</span>
             </div>
           </div>
-          <div className="flex items-baseline gap-1">
-            <span className="text-2xl font-black text-zinc-900 dark:text-white" dir="ltr">
-              ${(summary?.totalPurchasedUsd || 0).toFixed(2)}
-            </span>
-            <span className="text-[11px] text-zinc-400">اعتبار دلاری</span>
-          </div>
-          <div className="text-[11px] text-zinc-400 mt-1">
-            پرداخت کل: {(summary?.totalSpentToman || 0).toLocaleString('fa-IR')} تومان
+          <div className="text-[11px] font-medium text-zinc-500 dark:text-zinc-400 mt-2.5 pt-2 border-t border-zinc-200/60 dark:border-zinc-700/50">
+            پرداخت کل: <span className="font-bold text-zinc-700 dark:text-zinc-300">{(summary?.totalSpentToman || 0).toLocaleString('fa-IR')}</span> تومان
           </div>
         </div>
 
         {/* Average Buy Rate vs Selling Rate */}
-        <div className="p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-800/40 border border-zinc-200 dark:border-zinc-800">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-medium text-zinc-500">نرخ خرید vs نرخ فروش</span>
-            <div className="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center">
-              <TrendingUp className="w-4 h-4" />
+        <div className="p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-800/40 border border-zinc-200 dark:border-zinc-800 flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-semibold text-zinc-500 dark:text-zinc-400">نرخ خرید vs نرخ فروش</span>
+              <div className="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center shrink-0">
+                <TrendingUp className="w-4 h-4" />
+              </div>
+            </div>
+            <div className="flex items-baseline gap-1.5 mt-1">
+              <span className="text-2xl font-black text-emerald-600 dark:text-emerald-400 font-mono" dir="ltr">
+                +{profitMarginPercent}%
+              </span>
+              <span className="text-xs font-medium text-zinc-400">حاشیه سود</span>
             </div>
           </div>
-          <div className="flex items-baseline gap-1.5">
-            <span className="text-xl font-black text-emerald-600 dark:text-emerald-400">
-              +{profitMarginPercent}%
-            </span>
-            <span className="text-xs font-bold text-zinc-500">حاشیه سود</span>
-          </div>
-          <div className="text-[11px] text-zinc-400 mt-1 flex justify-between">
-            <span>خرید: {avgBuyRate.toLocaleString('fa-IR')} ت</span>
-            <span>فروش: {currentSellingRateNum.toLocaleString('fa-IR')} ت</span>
+          <div className="text-[11px] font-medium text-zinc-500 dark:text-zinc-400 mt-2.5 pt-2 border-t border-zinc-200/60 dark:border-zinc-700/50 flex justify-between items-center">
+            <span>خرید: <b className="text-zinc-700 dark:text-zinc-300">{avgBuyRate.toLocaleString('fa-IR')}</b> ت</span>
+            <span>فروش: <b className="text-zinc-700 dark:text-zinc-300">{currentSellingRateNum.toLocaleString('fa-IR')}</b> ت</span>
           </div>
         </div>
 
         {/* Consumed USD / Tokens */}
-        <div className="p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-800/40 border border-zinc-200 dark:border-zinc-800">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-medium text-zinc-500">مصرف کاربران</span>
-            <div className="w-8 h-8 rounded-xl bg-purple-500/10 text-purple-500 flex items-center justify-center">
-              <Zap className="w-4 h-4" />
+        <div className="p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-800/40 border border-zinc-200 dark:border-zinc-800 flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-semibold text-zinc-500 dark:text-zinc-400">مصرف کاربران</span>
+              <div className="w-8 h-8 rounded-xl bg-purple-500/10 text-purple-500 flex items-center justify-center shrink-0">
+                <Zap className="w-4 h-4" />
+              </div>
+            </div>
+            <div className="flex items-baseline gap-1.5 mt-1">
+              <span className="text-2xl font-black text-zinc-900 dark:text-white font-mono" dir="ltr">
+                ${(summary?.totalConsumedUsd || 0).toFixed(4)}
+              </span>
+              <span className="text-xs font-medium text-zinc-400">دلار</span>
             </div>
           </div>
-          <div className="flex items-baseline gap-1">
-            <span className="text-2xl font-black text-zinc-900 dark:text-white" dir="ltr">
-              ${(summary?.totalConsumedUsd || 0).toFixed(4)}
-            </span>
-            <span className="text-[11px] text-zinc-400">دلار</span>
-          </div>
-          <div className="text-[11px] text-zinc-400 mt-1">
-            معادل {(summary?.totalTokensUsed || 0).toLocaleString('fa-IR')} توکن چت
+          <div className="text-[11px] font-medium text-zinc-500 dark:text-zinc-400 mt-2.5 pt-2 border-t border-zinc-200/60 dark:border-zinc-700/50">
+            معادل <span className="font-bold text-zinc-700 dark:text-zinc-300">{(summary?.totalTokensUsed || 0).toLocaleString('fa-IR')}</span> توکن چت
           </div>
         </div>
 
         {/* Remaining Treasury USD */}
-        <div className="p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-800/40 border border-zinc-200 dark:border-zinc-800">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-medium text-zinc-500">مانده اعتبار در مخزن</span>
-            <div className="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center">
-              <Coins className="w-4 h-4" />
+        <div className="p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-800/40 border border-zinc-200 dark:border-zinc-800 flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-semibold text-zinc-500 dark:text-zinc-400">مانده اعتبار در مخزن</span>
+              <div className="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center shrink-0">
+                <Coins className="w-4 h-4" />
+              </div>
+            </div>
+            <div className="flex items-baseline gap-1.5 mt-1">
+              <span className="text-2xl font-black text-amber-600 dark:text-amber-400 font-mono" dir="ltr">
+                ${(summary?.remainingTreasuryUsd || 0).toFixed(2)}
+              </span>
+              <span className="text-xs font-medium text-zinc-400">باقی‌مانده</span>
             </div>
           </div>
-          <div className="flex items-baseline gap-1">
-            <span className="text-2xl font-black text-amber-600 dark:text-amber-400" dir="ltr">
-              ${(summary?.remainingTreasuryUsd || 0).toFixed(2)}
-            </span>
-            <span className="text-[11px] text-zinc-400">باقی‌مانده</span>
-          </div>
-          <div className="text-[11px] text-zinc-400 mt-1">
-            درآمد چت: {(summary?.totalDeductedToman || 0).toLocaleString('fa-IR')} تومان
+          <div className="text-[11px] font-medium text-zinc-500 dark:text-zinc-400 mt-2.5 pt-2 border-t border-zinc-200/60 dark:border-zinc-700/50">
+            درآمد کسر شده: <span className="font-bold text-zinc-700 dark:text-zinc-300">{(summary?.totalDeductedToman || 0).toLocaleString('fa-IR')}</span> تومان
           </div>
         </div>
       </div>
@@ -473,39 +481,43 @@ export const AdminFinanceTab: React.FC = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
           {/* Selling Rate */}
-          <div className="space-y-1.5">
-            <label className="font-bold text-zinc-700 dark:text-zinc-300 block">
-              نرخ فروش هر ۱ دلار API به کاربران (تومان):
-            </label>
-            <div className="relative">
-              <input
-                type="number"
-                value={sellingRate}
-                onChange={(e) => setSellingRate(e.target.value)}
-                placeholder="200000"
-                className="w-full px-3 py-2 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-zinc-100 font-mono text-sm"
-              />
-              <span className="absolute left-3 top-2.5 text-zinc-400 text-xs">تومان</span>
+          <div className="space-y-1.5 flex flex-col justify-between">
+            <div>
+              <label className="text-xs font-semibold text-zinc-700 dark:text-zinc-300 block mb-1.5">
+                نرخ فروش هر ۱ دلار API به کاربران (تومان):
+              </label>
+              <div className="relative">
+                <input
+                  type="number"
+                  value={sellingRate}
+                  onChange={(e) => setSellingRate(e.target.value)}
+                  placeholder="200000"
+                  className="w-full pl-14 pr-3.5 py-2.5 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-zinc-100 text-xs font-bold focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
+                />
+                <span className="absolute left-3.5 top-2.5 text-zinc-400 dark:text-zinc-500 text-xs font-medium select-none pointer-events-none">تومان</span>
+              </div>
             </div>
-            <p className="text-[11px] text-zinc-500">
+            <p className="text-[11px] text-zinc-500 dark:text-zinc-400 leading-relaxed mt-1">
               سیستم هزینه توکن‌های هر پیام را با این نرخ به تومان تبدیل و کسر می‌کند.
             </p>
           </div>
 
           {/* Welcome Bonus Amount */}
-          <div className="space-y-1.5">
-            <label className="font-bold text-zinc-700 dark:text-zinc-300 block">
-              مبلغ اعتبار هدیه ثبت‌نام (تومان):
-            </label>
-            <div className="relative">
-              <input
-                type="number"
-                value={welcomeBonus}
-                onChange={(e) => setWelcomeBonus(e.target.value)}
-                placeholder="5000"
-                className="w-full px-3 py-2 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-zinc-100 font-mono text-sm"
-              />
-              <span className="absolute left-3 top-2.5 text-zinc-400 text-xs">تومان</span>
+          <div className="space-y-1.5 flex flex-col justify-between">
+            <div>
+              <label className="text-xs font-semibold text-zinc-700 dark:text-zinc-300 block mb-1.5">
+                مبلغ اعتبار هدیه ثبت‌نام (تومان):
+              </label>
+              <div className="relative">
+                <input
+                  type="number"
+                  value={welcomeBonus}
+                  onChange={(e) => setWelcomeBonus(e.target.value)}
+                  placeholder="50000"
+                  className="w-full pl-14 pr-3.5 py-2.5 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-zinc-100 text-xs font-bold focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
+                />
+                <span className="absolute left-3.5 top-2.5 text-zinc-400 dark:text-zinc-500 text-xs font-medium select-none pointer-events-none">تومان</span>
+              </div>
             </div>
             <div className="flex items-center gap-2 pt-1">
               <input
@@ -513,27 +525,29 @@ export const AdminFinanceTab: React.FC = () => {
                 id="bonus-enable"
                 checked={welcomeBonusEnabled}
                 onChange={(e) => setWelcomeBonusEnabled(e.target.checked)}
-                className="rounded border-zinc-400 text-blue-600 focus:ring-blue-500"
+                className="w-4 h-4 rounded border-zinc-400 text-blue-600 focus:ring-blue-500 cursor-pointer"
               />
-              <label htmlFor="bonus-enable" className="text-zinc-600 dark:text-zinc-400 text-[11px] cursor-pointer">
+              <label htmlFor="bonus-enable" className="text-zinc-600 dark:text-zinc-400 text-xs font-medium cursor-pointer">
                 اعتبار هدیه خوش‌آمدگویی فعال باشد
               </label>
             </div>
           </div>
 
           {/* Free Key Pool Info */}
-          <div className="space-y-1.5">
-            <label className="font-bold text-zinc-700 dark:text-zinc-300 block">
-              استخر کلیدهای رایگان (Round-Robin):
-            </label>
-            <textarea
-              rows={2}
-              value={freeKeyPool}
-              onChange={(e) => setFreeKeyPool(e.target.value)}
-              placeholder="کلیدهای متعدد Gemini یا Groq را با کاما یا خط جدید وارد کنید..."
-              className="w-full px-3 py-1.5 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-zinc-100 text-xs font-mono"
-            />
-            <p className="text-[10px] text-zinc-500">
+          <div className="space-y-1.5 flex flex-col justify-between">
+            <div>
+              <label className="text-xs font-semibold text-zinc-700 dark:text-zinc-300 block mb-1.5">
+                استخر کلیدهای رایگان (Round-Robin):
+              </label>
+              <textarea
+                rows={2}
+                value={freeKeyPool}
+                onChange={(e) => setFreeKeyPool(e.target.value)}
+                placeholder="کلیدهای متعدد Gemini یا Groq را با کاما یا خط جدید وارد کنید..."
+                className="w-full px-3 py-2 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-zinc-100 text-xs font-mono focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all resize-none"
+              />
+            </div>
+            <p className="text-[11px] text-zinc-500 dark:text-zinc-400 leading-relaxed mt-1">
               سیستم به نوبت (Round-Robin) از این کلیدها استفاده کرده و سقف درخواست را تقسیم می‌کند.
             </p>
           </div>
@@ -691,11 +705,11 @@ export const AdminFinanceTab: React.FC = () => {
               />
             </div>
             
-            <div className="flex w-full sm:w-auto gap-2 flex-wrap">
+            <div className="flex w-full sm:w-auto gap-2 flex-wrap items-center">
               <select
                 value={txTypeFilter}
                 onChange={(e) => setTxTypeFilter(e.target.value)}
-                className="px-2 py-1.5 flex-1 sm:flex-none bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 rounded-xl text-xs text-zinc-700 dark:text-zinc-300 outline-none"
+                className="h-9 px-2.5 flex-1 sm:flex-none bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 rounded-xl text-xs font-medium text-zinc-700 dark:text-zinc-300 outline-none cursor-pointer"
               >
                 <option value="all">همه تراکنش‌ها</option>
                 <option value="deposit">افزایش اعتبار (+)</option>
@@ -705,7 +719,7 @@ export const AdminFinanceTab: React.FC = () => {
               <select
                 value={dateFilter}
                 onChange={(e) => setDateFilter(e.target.value)}
-                className="px-2 py-1.5 flex-1 sm:flex-none bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 rounded-xl text-xs text-zinc-700 dark:text-zinc-300 outline-none"
+                className="h-9 px-2.5 flex-1 sm:flex-none bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 rounded-xl text-xs font-medium text-zinc-700 dark:text-zinc-300 outline-none cursor-pointer"
               >
                 <option value="all">همه زمان‌ها</option>
                 <option value="today">۲۴ ساعت گذشته</option>
@@ -716,7 +730,7 @@ export const AdminFinanceTab: React.FC = () => {
               <select
                 value={sortFilter}
                 onChange={(e) => setSortFilter(e.target.value)}
-                className="px-2 py-1.5 flex-1 sm:flex-none bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 rounded-xl text-xs text-zinc-700 dark:text-zinc-300 outline-none"
+                className="h-9 px-2.5 flex-1 sm:flex-none bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 rounded-xl text-xs font-medium text-zinc-700 dark:text-zinc-300 outline-none cursor-pointer"
               >
                 <option value="newest">جدیدترین</option>
                 <option value="oldest">قدیمی‌ترین</option>
@@ -724,17 +738,17 @@ export const AdminFinanceTab: React.FC = () => {
                 <option value="alpha_desc">الفبا (نزولی)</option>
               </select>
               
-              <div className="flex gap-1 items-center shrink-0">
+              <div className="flex gap-1.5 items-center shrink-0">
                 <button
                   onClick={exportToPDF}
-                  className="flex items-center justify-center p-1.5 px-3 rounded-xl bg-red-500/10 text-red-600 dark:text-red-400 hover:bg-red-500/20 font-bold text-xs transition-all cursor-pointer whitespace-nowrap"
+                  className="h-9 flex items-center justify-center px-3 rounded-xl bg-red-500/10 text-red-600 dark:text-red-400 hover:bg-red-500/20 font-bold text-xs transition-all cursor-pointer whitespace-nowrap"
                   title="چاپ / دانلود PDF"
                 >
                   <span>PDF / چاپ</span>
                 </button>
                 <button
                   onClick={exportToCSV}
-                  className="flex items-center justify-center p-1.5 px-3 rounded-xl bg-green-500/10 text-green-600 dark:text-green-400 hover:bg-green-500/20 font-bold text-xs transition-all cursor-pointer whitespace-nowrap"
+                  className="h-9 flex items-center justify-center px-3 rounded-xl bg-green-500/10 text-green-600 dark:text-green-400 hover:bg-green-500/20 font-bold text-xs transition-all cursor-pointer whitespace-nowrap"
                   title="دانلود اکسل / CSV"
                 >
                   <span>اکسل</span>
@@ -743,7 +757,7 @@ export const AdminFinanceTab: React.FC = () => {
 
               <button
                 onClick={() => { setPage(1); fetchData(); }}
-                className="flex items-center justify-center p-1.5 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 hover:bg-blue-500/20 font-bold text-xs transition-all cursor-pointer whitespace-nowrap shrink-0"
+                className="h-9 w-9 flex items-center justify-center rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 hover:bg-blue-500/20 font-bold text-xs transition-all cursor-pointer whitespace-nowrap shrink-0"
                 title="بروزرسانی دستی"
               >
                 <RefreshCw className="w-4 h-4" />
@@ -755,13 +769,13 @@ export const AdminFinanceTab: React.FC = () => {
         <div className="overflow-x-auto">
           <table className="w-full text-xs text-right">
             <thead>
-              <tr className="border-b border-zinc-200 dark:border-zinc-700 text-zinc-400">
-                <th className="py-2.5 px-3">کاربر</th>
-                <th className="py-2.5 px-3">نوع / مدل</th>
-                <th className="py-2.5 px-3">توکن مصرفی</th>
-                <th className="py-2.5 px-3">مبلغ کسر شده</th>
-                <th className="py-2.5 px-3">مانده حساب</th>
-                <th className="py-2.5 px-3">تاریخ</th>
+              <tr className="border-b border-zinc-200 dark:border-zinc-700/80 text-zinc-500 dark:text-zinc-400">
+                <th className="py-3 px-3.5 font-bold">کاربر</th>
+                <th className="py-3 px-3.5 font-bold">نوع / مدل</th>
+                <th className="py-3 px-3.5 font-bold">توکن مصرفی</th>
+                <th className="py-3 px-3.5 font-bold">مبلغ تراکنش</th>
+                <th className="py-3 px-3.5 font-bold">مانده حساب</th>
+                <th className="py-3 px-3.5 font-bold">تاریخ</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-200/60 dark:divide-zinc-800">
@@ -769,35 +783,57 @@ export const AdminFinanceTab: React.FC = () => {
                 transactions.map((tx: any) => {
                   const isPositive = tx.amount > 0;
                   return (
-                    <tr key={tx.id} className="hover:bg-zinc-100/50 dark:hover:bg-zinc-800/30">
-                      <td className="py-2.5 px-3 font-medium text-zinc-800 dark:text-zinc-200">
-                        <div className="flex flex-col">
-                          <span>{tx.userName || tx.userEmail || tx.userPhone || 'بدون نام'}</span>
-                          <span className="text-[10px] text-zinc-500 font-mono mt-0.5">
-                            کد کاربری: UC-{10000 + tx.userId}
+                    <tr key={tx.id} className="hover:bg-zinc-100/50 dark:hover:bg-zinc-800/30 transition-colors">
+                      <td className="py-3 px-3.5">
+                        <div className="flex flex-col gap-0.5">
+                          <span className="font-bold text-zinc-800 dark:text-zinc-200 text-xs">
+                            {tx.userName || tx.userEmail || tx.userPhone || 'بدون نام'}
+                          </span>
+                          <span className="text-[11px] text-zinc-400 font-normal">
+                            کد کاربری: <span className="font-mono font-semibold text-zinc-600 dark:text-zinc-400">UC-{10000 + tx.userId}</span>
                           </span>
                         </div>
                       </td>
-                      <td className="py-2.5 px-3">
-                        <span className="px-2 py-0.5 rounded-md bg-zinc-100 dark:bg-zinc-700 font-mono text-[10px]">
+                      <td className="py-3 px-3.5">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700/60 font-mono text-[11px] font-medium">
                           {tx.model || tx.description || tx.type}
                         </span>
                       </td>
-                      <td className="py-2.5 px-3 font-mono">
-                        {tx.promptTokens + tx.completionTokens > 0 
-                          ? `${(tx.promptTokens + tx.completionTokens).toLocaleString('fa-IR')} توکن` 
-                          : '—'}
+                      <td className="py-3 px-3.5">
+                        {tx.promptTokens + tx.completionTokens > 0 ? (
+                          <div className="flex items-center gap-1">
+                            <span className="font-semibold text-zinc-800 dark:text-zinc-200 text-xs">
+                              {(tx.promptTokens + tx.completionTokens).toLocaleString('fa-IR')}
+                            </span>
+                            <span className="text-[10px] text-zinc-400">توکن</span>
+                          </div>
+                        ) : (
+                          <span className="text-zinc-400">—</span>
+                        )}
                       </td>
-                      <td className={`py-2.5 px-3 font-mono font-bold ${
-                        isPositive ? 'text-emerald-600 dark:text-emerald-400' : 'text-zinc-800 dark:text-zinc-200'
-                      }`} dir="ltr">
-                        {isPositive ? `+${tx.amount.toLocaleString()}` : `${tx.amount.toLocaleString()}`} تومان
+                      <td className="py-3 px-3.5">
+                        <div className="flex items-center gap-1">
+                          <span className={`font-bold text-xs ${
+                            isPositive ? 'text-emerald-600 dark:text-emerald-400' : 'text-zinc-800 dark:text-zinc-200'
+                          }`}>
+                            {isPositive ? `+${Math.abs(tx.amount).toLocaleString('fa-IR')}` : `-${Math.abs(tx.amount).toLocaleString('fa-IR')}`}
+                          </span>
+                          <span className="text-[10px] text-zinc-400">تومان</span>
+                        </div>
                       </td>
-                      <td className="py-2.5 px-3 font-mono text-zinc-500">
-                        {tx.balanceAfter?.toLocaleString('fa-IR')} ت
+                      <td className="py-3 px-3.5">
+                        <div className="flex items-center gap-1">
+                          <span className="font-semibold text-zinc-600 dark:text-zinc-300 text-xs">
+                            {tx.balanceAfter != null ? tx.balanceAfter.toLocaleString('fa-IR') : '—'}
+                          </span>
+                          <span className="text-[10px] text-zinc-400">ت</span>
+                        </div>
                       </td>
-                      <td className="py-2.5 px-3 text-zinc-400 text-[10px]">
-                        {new Date(tx.createdAt).toLocaleTimeString('fa-IR', { hour: '2-digit', minute: '2-digit' })} - {new Date(tx.createdAt).toLocaleDateString('fa-IR')}
+                      <td className="py-3 px-3.5">
+                        <div className="flex flex-col text-[11px] text-zinc-500 dark:text-zinc-400 leading-tight">
+                          <span>{new Date(tx.createdAt).toLocaleTimeString('fa-IR', { hour: '2-digit', minute: '2-digit' })}</span>
+                          <span className="text-[10px] text-zinc-400 mt-0.5">{new Date(tx.createdAt).toLocaleDateString('fa-IR')}</span>
+                        </div>
                       </td>
                     </tr>
                   );

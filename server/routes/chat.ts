@@ -135,9 +135,7 @@ router.post('/api/chat/stream', chatStreamLimiter, async (req, res) => {
     
     if (provider === 'custom' && customProfileId) {
       // 1. Try to fetch from DB if it's a system default
-      const profileResult = await new Promise<any>((resolve) => {
-        db.get('SELECT * FROM default_profiles WHERE id = ?', [customProfileId], (err, row) => resolve(row));
-      });
+      const profileResult = db.prepare('SELECT * FROM default_profiles WHERE id = ?').get(customProfileId) as any;
       if (profileResult) {
         resolvedSystemProfile = profileResult;
         targetBaseUrl = profileResult.baseUrl;
