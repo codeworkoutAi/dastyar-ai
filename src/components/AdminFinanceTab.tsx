@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   Coins, 
   TrendingUp, 
@@ -21,6 +21,7 @@ import { useAuthStore } from '../store/authStore';
 
 export const AdminFinanceTab: React.FC = () => {
   const { token } = useAuthStore();
+  const purchaseSectionRef = useRef<HTMLDivElement>(null);
 
   const [summary, setSummary] = useState<any>(null);
   const [transactions, setTransactions] = useState<any[]>([]);
@@ -237,8 +238,9 @@ export const AdminFinanceTab: React.FC = () => {
     : 0;
 
   const currentSellingRateNum = parseInt(sellingRate, 10) || 200000;
-  const avgBuyRate = summary?.averagePurchaseRateToman || 50000;
-  const profitMarginPercent = avgBuyRate > 0 ? Math.round(((currentSellingRateNum - avgBuyRate) / avgBuyRate) * 100) : 300;
+  const hasPurchases = (summary?.totalPurchasedUsd || 0) > 0;
+  const avgBuyRate = summary?.averagePurchaseRateToman || 0;
+  const profitMarginPercent = (hasPurchases && avgBuyRate > 0) ? Math.round(((currentSellingRateNum - avgBuyRate) / avgBuyRate) * 100) : 0;
 
   const exportToCSV = () => {
     if (!transactions || transactions.length === 0) {
@@ -392,8 +394,20 @@ export const AdminFinanceTab: React.FC = () => {
               <span className="text-xs font-medium text-zinc-400">اعتبار دلاری</span>
             </div>
           </div>
-          <div className="text-[11px] font-medium text-zinc-500 dark:text-zinc-400 mt-2.5 pt-2 border-t border-zinc-200/60 dark:border-zinc-700/50">
-            پرداخت کل: <span className="font-bold text-zinc-700 dark:text-zinc-300">{(summary?.totalSpentToman || 0).toLocaleString('fa-IR')}</span> تومان
+          <div className="text-[11px] font-medium text-zinc-500 dark:text-zinc-400 mt-2.5 pt-2 border-t border-zinc-200/60 dark:border-zinc-700/50 flex items-center justify-between">
+            <span>پرداخت کل: <span className="font-bold text-zinc-700 dark:text-zinc-300">{(summary?.totalSpentToman || 0).toLocaleString('fa-IR')}</span> تومان</span>
+            {!hasPurchases && (
+              <button
+                type="button"
+                onClick={() => {
+                  setIsAddingPurchase(true);
+                  purchaseSectionRef.current?.scrollIntoView({ behavior: 'smooth' });
+                }}
+                className="text-[10px] text-blue-600 dark:text-blue-400 font-bold hover:underline cursor-pointer"
+              >
+                + ثبت فاکتور خرید
+              </button>
+            )}
           </div>
         </div>
 
@@ -408,14 +422,14 @@ export const AdminFinanceTab: React.FC = () => {
             </div>
             <div className="flex items-baseline gap-1.5 mt-1">
               <span className="text-2xl font-black text-emerald-600 dark:text-emerald-400 font-mono" dir="ltr">
-                +{profitMarginPercent}%
+                {hasPurchases ? `+${profitMarginPercent}%` : '—'}
               </span>
               <span className="text-xs font-medium text-zinc-400">حاشیه سود</span>
             </div>
           </div>
           <div className="text-[11px] font-medium text-zinc-500 dark:text-zinc-400 mt-2.5 pt-2 border-t border-zinc-200/60 dark:border-zinc-700/50 flex justify-between items-center">
-            <span>خرید: <b className="text-zinc-700 dark:text-zinc-300">{avgBuyRate.toLocaleString('fa-IR')}</b> ت</span>
-            <span>فروش: <b className="text-zinc-700 dark:text-zinc-300">{currentSellingRateNum.toLocaleString('fa-IR')}</b> ت</span>
+            <span>خرید: <b className="text-zinc-700 dark:text-zinc-300">{hasPurchases ? `${avgBuyRate.toLocaleString('fa-IR')} ت` : 'ثبت نشده'}</b></span>
+            <span>فروش: <b className="text-zinc-700 dark:text-zinc-300">{currentSellingRateNum.toLocaleString('fa-IR')} ت</b></span>
           </div>
         </div>
 
@@ -555,7 +569,7 @@ export const AdminFinanceTab: React.FC = () => {
       </div>
 
       {/* API Purchases Management Section */}
-      <div className="p-5 rounded-2xl bg-zinc-50 dark:bg-zinc-800/40 border border-zinc-200 dark:border-zinc-800 space-y-4">
+      <div ref={purchaseSectionRef} className="p-5 rounded-2xl bg-zinc-50 dark:bg-zinc-800/40 border border-zinc-200 dark:border-zinc-800 space-y-4">
         <div className="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-700/60 pb-3">
           <div className="flex items-center gap-2">
             <Layers className="w-5 h-5 text-emerald-500" />
