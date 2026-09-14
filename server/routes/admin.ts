@@ -655,6 +655,172 @@ router.get('/provider-live-balances', async (req, res) => {
   }
 });
 
+// GET /api/admin/analytics-summary (Aggregated charts and metrics data)
+router.get('/analytics-summary', (req, res) => {
+  try {
+    const period = (req.query.period as string) || '30d';
+    let days = 30;
+    if (period === '7d') days = 7;
+    else if (period === '1y') days = 365;
+
+    // 1. Daily usage stats (chats, tokens, revenue, cost)
+    const dailyUsageRows = db.prepare(`
+      SELECT 
+        DATE(createdAt) as date,
+        COUNT(*) as chatCount,
+        COALESCE(SUM(ABS(amount)), 0) as chatRevenueToman,
+        COALESCE(SUM(costUsd), 0) as costUsd,
+        COALESCE(SUM(promptTokens), 0) as promptTokens,
+        COALESCE(SUM(completionTokens), 0) as completionTokens,
+        COALESCE(SUM(promptTokens + completionTokens), 0) as totalTokens,
+        COUNT(DISTINCT userId) as activeUsers
+      FROM wallet_transactions
+      WHERE type = 'chat_usage'
+        AND createdAt >= datetime('now', '-' || ? || ' days')
+      GROUP BY DATE(createdAt)
+      ORDER BY date ASC
+    `).all(days) as any[];
+
+    // 2. Daily store orders
+    const dailyStoreRows = db.prepare(`
+      SELECT 
+        DATE(createdAt) as date,
+        COUNT(*) as orderCount,
+        COALESCE(SUM(totalAmount), 0) as storeRevenueToman
+      FROM orders
+      WHERE paymentStatus = 'success'
+        AND createdAt >= datetime('now', '-' || ? || ' days')
+      GROUP BY DATE(createdAt)
+      ORDER BY date ASC
+    `).all(days) as any[];
+
+    // 3. Daily user signups
+    const dailyUserRows = db.prepare(`
+      SELECT 
+        DATE(createdAt) as date,
+        COUNT(*) as newUsersCount
+      FROM users
+      WHERE createdAt >= datetime('now', '-' || ? || ' days')
+      GROUP BY DATE(createdAt)
+      ORDER BY date ASC
+    `).all(days) as any[];
+
+    // 4. Model distribution
+    const modelDistribution = db.prepare(`
+      SELECT 
+        COALESCE(model, 'نامشخص') as model,
+        COUNT(*) as requestCount,
+        COALESCE(SUM(promptTokens + completionTokens), 0) as totalTokens,
+        COALESCE(SUM(costUsd), 0) as totalCostUsd,
+        COALESCE(SUM(ABS(amount)), 0) as totalRevenueToman
+      FROM wallet_transactions
+      WHERE type = 'chat_usage'
+        AND createdAt >= datetime('now', '-' || ? || ' days')
+      GROUP BY model
+      ORDER BY totalTokens DESC
+    `).all(days) as any[];
+
+    // 5. Total overall stats for the period
+    const totalStats = db.prepare(`
+      SELECT 
+        COUNT(*) as totalChats,
+        COALESCE(SUM(ABS(amount)), 0) as totalChatRevenueToman,
+        COALESCE(SUM(costUsd), 0) as totalCostUsd,
+        COALESCE(SUM(promptTokens + completionTokens), 0) as totalTokens,
+        COUNT(DISTINCT userId) as uniqueActiveUsers
+      FROM wallet_transactions
+      WHERE type = 'chat_usage'
+        AND createdAt >= datetime('now', '-' || ? || ' days')
+    `).get(days) as any;
+
+    const totalStoreStats = db.prepare(`
+      SELECT 
+        COUNT(*) as totalOrders,
+        COALESCE(SUM(totalAmount), 0) as totalStoreRevenueToman
+      FROM orders
+      WHERE paymentStatus = 'success'
+        AND createdAt >= datetime('now', '-' || ? || ' days')
+    `).get(days) as any;
+
+    const totalNewUsers = db.prepare(`
+      SELECT COUNT(*) as count FROM users WHERE createdAt >= datetime('now', '-' || ? || ' days')
+    `).get(days) as any;
+
+    // Merge daily rows into a continuous timeline
+    const dateMap = new Map<string, any>();
+    const now = new Date();
+    for (let i = days - 1; i >= 0; i--) {
+      const d = new Date(now.getTime() - i * 86400000);
+      const dateStr = d.toISOString().split('T')[0];
+      dateMap.set(dateStr, {
+        date: dateStr,
+        chatCount: 0,
+        chatRevenueToman: 0,
+        storeRevenueToman: 0,
+        totalRevenueToman: 0,
+        costUsd: 0,
+        promptTokens: 0,
+        completionTokens: 0,
+        totalTokens: 0,
+        activeUsers: 0,
+        newUsersCount: 0
+      });
+    }
+
+    for (const r of dailyUsageRows) {
+      if (dateMap.has(r.date)) {
+        const item = dateMap.get(r.date);
+        item.chatCount = r.chatCount;
+        item.chatRevenueToman = r.chatRevenueToman;
+        item.costUsd = r.costUsd;
+        item.promptTokens = r.promptTokens;
+        item.completionTokens = r.completionTokens;
+        item.totalTokens = r.totalTokens;
+        item.activeUsers = r.activeUsers;
+        item.totalRevenueToman += r.chatRevenueToman;
+      }
+    }
+
+    for (const r of dailyStoreRows) {
+      if (dateMap.has(r.date)) {
+        const item = dateMap.get(r.date);
+        item.storeRevenueToman = r.storeRevenueToman;
+        item.totalRevenueToman += r.storeRevenueToman;
+      }
+    }
+
+    for (const r of dailyUserRows) {
+      if (dateMap.has(r.date)) {
+        const item = dateMap.get(r.date);
+        item.newUsersCount = r.newUsersCount;
+      }
+    }
+
+    const timeline = Array.from(dateMap.values());
+
+    res.json({
+      period,
+      days,
+      timeline,
+      modelDistribution,
+      summary: {
+        totalChats: totalStats?.totalChats || 0,
+        totalChatRevenueToman: totalStats?.totalChatRevenueToman || 0,
+        totalStoreRevenueToman: totalStoreStats?.totalStoreRevenueToman || 0,
+        totalRevenueToman: (totalStats?.totalChatRevenueToman || 0) + (totalStoreStats?.totalStoreRevenueToman || 0),
+        totalCostUsd: totalStats?.totalCostUsd || 0,
+        totalTokens: totalStats?.totalTokens || 0,
+        uniqueActiveUsers: totalStats?.uniqueActiveUsers || 0,
+        totalOrders: totalStoreStats?.totalOrders || 0,
+        totalNewUsers: totalNewUsers?.count || 0
+      }
+    });
+  } catch (error) {
+    console.error('[Admin API] Error fetching analytics summary:', error);
+    res.status(500).json({ error: 'خطا در تولید گزارشات تحلیلی' });
+  }
+});
+
 // POST /api/admin/purchases (Record a new API purchase by admin)
 router.post('/purchases', (req, res) => {
   try {

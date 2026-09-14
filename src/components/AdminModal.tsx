@@ -32,11 +32,13 @@ import {
   EyeOff,
   ShieldCheck,
   Activity,
-  Coins
+  Coins,
+  BarChart3
 } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import { toEnglishDigits } from '../lib/persianUtils';
 import { AdminFinanceTab } from './AdminFinanceTab';
+import { AdminAnalyticsTab } from './AdminAnalyticsTab';
 
 interface AdminModalProps {
   isOpen: boolean;
@@ -51,7 +53,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
   const [error, setError] = useState<string | null>(null);
 
   // Tabs state
-  const [activeTab, setActiveTab] = useState<'products' | 'orders' | 'users' | 'news' | 'finance' | 'settings'>('products');
+  const [activeTab, setActiveTab] = useState<'products' | 'orders' | 'users' | 'news' | 'finance' | 'analytics' | 'settings'>('products');
   const [orders, setOrders] = useState<any[]>([]);
   const [ordersLoading, setOrdersLoading] = useState(false);
 
@@ -1020,6 +1022,14 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
               <span>مالی و ارز</span>
             </button>
             <button
+              onClick={() => setActiveTab('analytics')}
+              className={`pb-3 text-sm font-bold border-b-2 transition-colors flex items-center gap-1.5 shrink-0 whitespace-nowrap ${activeTab === 'analytics' ? 'border-blue-600 text-blue-600 dark:border-blue-500 dark:text-blue-400' : 'border-transparent text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200'
+                }`}
+            >
+              <BarChart3 className="w-4 h-4" />
+              <span>نمودار و گزارشات</span>
+            </button>
+            <button
               onClick={() => setActiveTab('settings')}
               className={`pb-3 text-sm font-bold border-b-2 transition-colors shrink-0 whitespace-nowrap ${activeTab === 'settings' ? 'border-blue-600 text-blue-600 dark:border-blue-500 dark:text-blue-400' : 'border-transparent text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200'
                 }`}
@@ -1031,7 +1041,9 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-4 sm:p-6 custom-scrollbar bg-zinc-50 dark:bg-black/20" ref={formRef}>
-          {activeTab === 'finance' ? (
+          {activeTab === 'analytics' ? (
+            <AdminAnalyticsTab />
+          ) : activeTab === 'finance' ? (
             <AdminFinanceTab />
           ) : activeTab === 'users' ? (
             <div className="flex flex-col gap-6 animate-fadeIn">
