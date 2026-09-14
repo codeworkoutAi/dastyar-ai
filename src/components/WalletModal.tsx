@@ -12,7 +12,8 @@ import {
   CreditCard,
   Zap,
   TrendingDown,
-  ShieldCheck
+  ShieldCheck,
+  Loader2
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
@@ -28,6 +29,9 @@ export const WalletModal: React.FC = () => {
     transactions: any[];
   } | null>(null);
   const [loading, setLoading] = useState(false);
+  const [rechargingPackId, setRechargingPackId] = useState<string | null>(null);
+  const [customAmount, setCustomAmount] = useState('');
+  const [payError, setPayError] = useState<string | null>(null);
 
   useEffect(() => {
     if (isWalletOpen && token) {
@@ -52,6 +56,36 @@ export const WalletModal: React.FC = () => {
       console.error('Failed to fetch wallet info:', err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handlePayOnline = async (amount: number, packId?: string) => {
+    if (!token) {
+      setIsWalletOpen(false);
+      window.dispatchEvent(new CustomEvent('open-auth-modal'));
+      return;
+    }
+    setPayError(null);
+    setRechargingPackId(packId || 'custom');
+    try {
+      const res = await fetch('/api/store/wallet-topup', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ amount })
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'خطا در ایجاد درخواست پرداخت');
+      }
+      if (data.paymentUrl) {
+        window.location.href = data.paymentUrl;
+      }
+    } catch (err: any) {
+      setPayError(err.message || 'خطا در ارتباط با درگاه پرداخت');
+      setRechargingPackId(null);
     }
   };
 
@@ -191,6 +225,12 @@ export const WalletModal: React.FC = () => {
         <div className="flex-1 overflow-y-auto p-5">
           {activeTab === 'packages' ? (
             <div className="space-y-4">
+              {payError && (
+                <div className="p-3 rounded-2xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-300 text-xs">
+                  {payError}
+                </div>
+              )}
+
               <div className="flex items-center gap-2 p-3 rounded-2xl bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800/40 text-blue-700 dark:text-blue-300 text-xs">
                 <Sparkles className="w-4 h-4 shrink-0 text-blue-500" />
                 <span>بدون اشتراک ماهیانه؛ اعتبار شما هرگز منقضی نمی‌شود و تنها به ازای کلماتی که چت می‌کنید مصرف می‌گردد.</span>
@@ -200,7 +240,7 @@ export const WalletModal: React.FC = () => {
                 {rechargePacks.map((pack) => (
                   <div
                     key={pack.id}
-                    onClick={() => handleSelectPackage(pack)}
+                    onClick={() => handlePayOnline(pack.amount, pack.id)}
                     className="relative flex flex-col justify-between p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 hover:border-blue-500 dark:hover:border-blue-500 bg-zinc-50/50 dark:bg-zinc-800/30 hover:bg-white dark:hover:bg-zinc-800 transition-all cursor-pointer group"
                   >
                     {pack.badge && (
@@ -226,17 +266,54 @@ export const WalletModal: React.FC = () => {
                     </div>
 
                     <div className="mt-3 pt-3 border-t border-zinc-200/60 dark:border-zinc-700/60 flex items-center justify-between text-xs font-bold text-blue-600 dark:text-blue-400 group-hover:translate-x-[-2px] transition-transform">
-                      <span>انتخاب و شارژ</span>
-                      <ArrowUpRight className="w-4 h-4" />
+                      <span>{rechargingPackId === pack.id ? 'در حال اتصال به درگاه...' : 'پرداخت آنلاین و شارژ'}</span>
+                      {rechargingPackId === pack.id ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <ArrowUpRight className="w-4 h-4" />
+                      )}
                     </div>
                   </div>
                 ))}
               </div>
 
+              {/* Custom Amount Recharge */}
+              <div className="p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/40 dark:bg-zinc-800/20">
+                <label className="text-xs font-bold text-zinc-700 dark:text-zinc-300 block mb-2">
+                  یا شارژ با مبلغ دلخواه (تومان):
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    type="number"
+                    min="5000"
+                    step="1000"
+                    placeholder="حداقل ۵,۰۰۰ تومان"
+                    value={customAmount}
+                    onChange={(e) => setCustomAmount(e.target.value)}
+                    className="flex-1 px-3 py-2 text-xs rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white focus:outline-hidden focus:border-blue-500"
+                  />
+                  <button
+                    onClick={() => {
+                      const val = parseInt(customAmount, 10);
+                      if (val >= 5000) handlePayOnline(val, 'custom');
+                    }}
+                    disabled={rechargingPackId === 'custom' || !customAmount || parseInt(customAmount, 10) < 5000}
+                    className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors disabled:opacity-50 cursor-pointer"
+                  >
+                    {rechargingPackId === 'custom' ? (
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    ) : (
+                      <CreditCard className="w-3.5 h-3.5" />
+                    )}
+                    <span>پرداخت با شتاب</span>
+                  </button>
+                </div>
+              </div>
+
               <div className="pt-2 flex items-center justify-between text-xs text-zinc-500 dark:text-zinc-400">
                 <span className="flex items-center gap-1.5">
                   <ShieldCheck className="w-4 h-4 text-emerald-500" />
-                  پرداخت امن از طریق درگاه مستقیم یا کارت‌به‌کارت
+                  اتصال به درگاه رسمی شاپرک (زرین‌پال)
                 </span>
                 <button
                   onClick={() => {

@@ -4,6 +4,7 @@ import { requireAuth } from '../middleware/auth';
 import { bot, sendTelegramOrderSuccess } from '../telegram/bot';
 import { clearSitemapCache } from '../seo/sitemap';
 import { getAdminFinancialSummary, addApiPurchase, depositWallet } from '../services/walletService';
+import { getZarinpalConfig, testZarinpalMerchant } from '../services/zarinpalService';
 
 const router = express.Router();
 
@@ -557,6 +558,29 @@ router.put('/settings', (req, res) => {
   } catch (error) {
     console.error('[Admin API] Error updating site settings:', error);
     res.status(500).json({ error: 'خطا در به‌روزرسانی تنظیمات سیستم' });
+  }
+});
+
+// GET /api/admin/gateway-status
+router.get('/gateway-status', (req, res) => {
+  try {
+    const config = getZarinpalConfig();
+    res.json(config);
+  } catch (error) {
+    console.error('[Admin API] Error fetching gateway status:', error);
+    res.status(500).json({ error: 'خطا در دریافت وضعیت درگاه' });
+  }
+});
+
+// POST /api/admin/test-gateway
+router.post('/test-gateway', async (req, res) => {
+  try {
+    const { merchantId, sandbox } = req.body;
+    const result = await testZarinpalMerchant(merchantId, sandbox === true);
+    res.json(result);
+  } catch (error: any) {
+    console.error('[Admin API] Error testing gateway:', error);
+    res.status(500).json({ valid: false, message: 'خطا در تست درگاه: ' + error.message });
   }
 });
 

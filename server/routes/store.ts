@@ -4,8 +4,33 @@ import rateLimit from 'express-rate-limit';
 import db, { syncDatabase } from '../db/database';
 import { requireAuth } from '../middleware/auth';
 import { bot } from '../telegram/bot';
+import { requestZarinpalPayment, verifyZarinpalPayment, getZarinpalConfig } from '../services/zarinpalService';
+import { depositWallet } from '../services/walletService';
 
 const router = express.Router();
+
+function getSafeBaseUrl(req: express.Request): string {
+  const configuredUrl = (process.env.APP_URL || process.env.WEBSITE_URL || process.env.WEB_URL || '').replace(/\/+$/, '');
+  if (configuredUrl) return configuredUrl;
+  const host = req.get('host') || 'localhost:3000';
+  const protocol = req.protocol === 'https' || req.get('x-forwarded-proto') === 'https' ? 'https' : 'http';
+  return `${protocol}://${host}`;
+}
+
+export function getWalletTopupProductId(): number {
+  try {
+    const existing = db.prepare("SELECT id FROM products WHERE category = 'wallet_topup' LIMIT 1").get() as any;
+    if (existing && existing.id) return existing.id;
+    const ins = db.prepare(`
+      INSERT INTO products (title, description, price, category) 
+      VALUES ('شارژ کیف پول', 'افزایش موجودی کیف پول حساب کاربری', 0, 'wallet_topup')
+    `).run();
+    return Number(ins.lastInsertRowid);
+  } catch (err) {
+    console.error('[Store] getWalletTopupProductId error:', err);
+    return 1;
+  }
+}
 
 const checkoutLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
@@ -25,6 +50,7 @@ router.get('/products', (req, res) => {
         COUNT(CASE WHEN l.status = 'available' THEN 1 END) as stock
       FROM products p 
       LEFT JOIN licenses l ON p.id = l.productId
+      WHERE p.category IS NULL OR p.category != 'wallet_topup'
       GROUP BY p.id
       ORDER BY p.id DESC
     `).all();
@@ -60,7 +86,7 @@ router.get('/products/:id', (req, res) => {
 });
 
 // POST /api/store/checkout
-router.post('/checkout', checkoutLimiter, requireAuth, (req: any, res) => {
+router.post('/checkout', checkoutLimiter, requireAuth, async (req: any, res) => {
   try {
     const { productId } = req.body;
     const userId = req.user.id;
@@ -91,14 +117,42 @@ router.post('/checkout', checkoutLimiter, requireAuth, (req: any, res) => {
     // Create an order
     const orderId = 'ORD-' + crypto.randomUUID().split('-')[0].toUpperCase();
     const insertStmt = db.prepare(`
-      INSERT INTO orders (id, userId, productId, amount, paymentStatus) 
-      VALUES (?, ?, ?, ?, 'pending')
+      INSERT INTO orders (id, userId, productId, amount, paymentStatus, paymentMethod) 
+      VALUES (?, ?, ?, ?, 'pending', 'online')
     `);
     
     insertStmt.run(orderId, userId, productId, product.price);
     syncDatabase();
 
-    // Mock payment link (We will replace this with Zarinpal later)
+    const zarinpal = getZarinpalConfig();
+    const baseUrl = getSafeBaseUrl(req);
+
+    // If ZarinPal is configured and enabled, request real Authority
+    if (zarinpal.enabled) {
+      const userRow = db.prepare('SELECT email, phone FROM users WHERE id = ?').get(userId) as any;
+      const zpResult = await requestZarinpalPayment({
+        amountToman: product.price,
+        description: `خرید ${product.title} - شماره سفارش ${orderId}`,
+        callbackUrl: `${baseUrl}/api/store/zarinpal/callback?orderId=${orderId}`,
+        email: userRow?.email,
+        mobile: userRow?.phone
+      });
+
+      if (zpResult.success && zpResult.authority && zpResult.paymentUrl) {
+        db.prepare('UPDATE orders SET authority = ? WHERE id = ?').run(zpResult.authority, orderId);
+        syncDatabase();
+        return res.json({ message: 'فاکتور ایجاد شد', orderId, paymentUrl: zpResult.paymentUrl });
+      } else {
+        console.warn('[Store API] ZarinPal request failed:', zpResult.error);
+        if (process.env.NODE_ENV !== 'production') {
+          const paymentUrl = `/api/store/mock-payment?orderId=${orderId}`;
+          return res.json({ message: 'فاکتور ایجاد شد (آزمایشی)', orderId, paymentUrl });
+        }
+        return res.status(400).json({ error: zpResult.error || 'خطا در ایجاد تراکنش درگاه زرین‌پال' });
+      }
+    }
+
+    // Mock payment link (Fallback when ZarinPal is not configured yet)
     const paymentUrl = `/api/store/mock-payment?orderId=${orderId}`;
 
     res.json({ message: 'فاکتور ایجاد شد', orderId, paymentUrl });
@@ -106,6 +160,65 @@ router.post('/checkout', checkoutLimiter, requireAuth, (req: any, res) => {
   } catch (error) {
     console.error('[Store API] Checkout error:', error);
     res.status(500).json({ error: 'خطای سرور در ایجاد فاکتور' });
+  }
+});
+
+// POST /api/store/wallet-topup
+router.post('/wallet-topup', checkoutLimiter, requireAuth, async (req: any, res) => {
+  try {
+    const { amount } = req.body;
+    const userId = req.user.id;
+    const numAmount = parseInt(amount, 10);
+
+    if (isNaN(numAmount) || numAmount < 5000) {
+      return res.status(400).json({ error: 'حداقل مبلغ شارژ کیف پول ۵,۰۰۰ تومان است.' });
+    }
+    if (numAmount > 50_000_000) {
+      return res.status(400).json({ error: 'حداکثر مبلغ شارژ ۵۰,۰۰۰,۰۰۰ تومان است.' });
+    }
+
+    const productId = getWalletTopupProductId();
+    const orderId = 'TOP-' + crypto.randomUUID().split('-')[0].toUpperCase();
+
+    db.prepare(`
+      INSERT INTO orders (id, userId, productId, amount, paymentStatus, paymentMethod) 
+      VALUES (?, ?, ?, ?, 'pending', 'online')
+    `).run(orderId, userId, productId, numAmount);
+    syncDatabase();
+
+    const zarinpal = getZarinpalConfig();
+    const baseUrl = getSafeBaseUrl(req);
+
+    if (zarinpal.enabled) {
+      const userRow = db.prepare('SELECT email, phone FROM users WHERE id = ?').get(userId) as any;
+      const zpResult = await requestZarinpalPayment({
+        amountToman: numAmount,
+        description: `شارژ کیف پول حساب کاربری - سفارش ${orderId}`,
+        callbackUrl: `${baseUrl}/api/store/zarinpal/callback?orderId=${orderId}`,
+        email: userRow?.email,
+        mobile: userRow?.phone
+      });
+
+      if (zpResult.success && zpResult.authority && zpResult.paymentUrl) {
+        db.prepare('UPDATE orders SET authority = ? WHERE id = ?').run(zpResult.authority, orderId);
+        syncDatabase();
+        return res.json({ message: 'فاکتور شارژ ایجاد شد', orderId, paymentUrl: zpResult.paymentUrl });
+      } else {
+        console.warn('[Store API] ZarinPal topup error:', zpResult.error);
+        if (process.env.NODE_ENV !== 'production') {
+          const paymentUrl = `/api/store/mock-payment?orderId=${orderId}`;
+          return res.json({ message: 'فاکتور شارژ ایجاد شد (آزمایشی)', orderId, paymentUrl });
+        }
+        return res.status(400).json({ error: zpResult.error || 'خطا در ایجاد تراکنش شارژ زرین‌پال' });
+      }
+    }
+
+    const paymentUrl = `/api/store/mock-payment?orderId=${orderId}`;
+    res.json({ message: 'فاکتور شارژ ایجاد شد', orderId, paymentUrl });
+
+  } catch (err) {
+    console.error('[Store API] Wallet topup error:', err);
+    res.status(500).json({ error: 'خطای سرور در ایجاد فاکتور شارژ' });
   }
 });
 
@@ -199,13 +312,21 @@ router.get('/mock-callback', (req, res) => {
   const orderId = rawOrderId;
 
   if (status === 'success') {
-    // Keep the order as 'pending' for manual review by admin
     try {
       const orderStmt = db.prepare('SELECT * FROM orders WHERE id = ?');
       const order = orderStmt.get(orderId) as any;
       
       if (!order || order.paymentStatus !== 'pending') {
         return res.redirect('/store?payment=failed');
+      }
+
+      // Check if wallet top-up
+      const isWalletTopup = order.id.startsWith('TOP-') || order.productId === getWalletTopupProductId();
+      if (isWalletTopup) {
+        db.prepare("UPDATE orders SET paymentStatus = 'success', refId = 'MOCK-TOPUP' WHERE id = ?").run(orderId);
+        depositWallet(order.userId, order.amount, `شارژ آزمایشی کیف پول کاربری - سفارش ${orderId}`);
+        syncDatabase();
+        return res.redirect(`/store?tab=wallet&payment=success&orderId=${orderId}&refId=MOCK-TOPUP&amount=${order.amount}`);
       }
 
       const productStmt = db.prepare('SELECT category, title FROM products WHERE id = ?');
@@ -237,6 +358,111 @@ router.get('/mock-callback', (req, res) => {
     db.prepare('UPDATE orders SET paymentStatus = ? WHERE id = ?').run('failed', orderId);
     syncDatabase();
     res.redirect('/store?payment=failed');
+  }
+});
+
+// GET /api/store/zarinpal/callback (Handles the return from real Zarinpal gateway)
+router.get('/zarinpal/callback', async (req, res) => {
+  const rawOrderId = typeof req.query.orderId === 'string' ? req.query.orderId : '';
+  const authority = typeof req.query.Authority === 'string' ? req.query.Authority : '';
+  const status = typeof req.query.Status === 'string' ? req.query.Status : '';
+
+  if (!rawOrderId || !/^[a-zA-Z0-9_-]{1,64}$/.test(rawOrderId)) {
+    return res.redirect('/store?payment=failed&msg=invalid_order');
+  }
+  const orderId = rawOrderId;
+
+  const order = db.prepare('SELECT * FROM orders WHERE id = ?').get(orderId) as any;
+  if (!order) {
+    return res.redirect('/store?payment=failed&msg=order_not_found');
+  }
+
+  // Already verified and successful
+  if (order.paymentStatus === 'success') {
+    if (order.id.startsWith('TOP-') || order.productId === getWalletTopupProductId()) {
+      return res.redirect(`/store?tab=wallet&payment=success&orderId=${orderId}&refId=${order.refId || ''}`);
+    }
+    return res.redirect(`/store?payment=success&orderId=${orderId}&refId=${order.refId || ''}`);
+  }
+
+  // User cancelled or payment not OK
+  if (status !== 'OK' || !authority) {
+    db.prepare("UPDATE orders SET paymentStatus = 'failed', paymentMethod = 'zarinpal' WHERE id = ?").run(orderId);
+    syncDatabase();
+    return res.redirect(`/store?payment=failed&orderId=${orderId}`);
+  }
+
+  try {
+    const verifyRes = await verifyZarinpalPayment({
+      amountToman: order.amount,
+      authority
+    });
+
+    if (verifyRes.success && (verifyRes.code === 100 || verifyRes.code === 101)) {
+      const refId = String(verifyRes.refId || '');
+      const cardPan = verifyRes.cardPan || '';
+
+      const isWalletTopup = order.id.startsWith('TOP-') || order.productId === getWalletTopupProductId();
+
+      if (isWalletTopup) {
+        db.prepare("UPDATE orders SET paymentStatus = 'success', paymentMethod = 'zarinpal', authority = ?, refId = ?, cardPan = ? WHERE id = ?")
+          .run(authority, refId, cardPan, orderId);
+
+        depositWallet(order.userId, order.amount, `شارژ آنلاین کیف پول از طریق زرین‌پال - شماره تراکنش: ${refId}`);
+        syncDatabase();
+
+        return res.redirect(`/store?tab=wallet&payment=success&orderId=${orderId}&refId=${refId}&amount=${order.amount}`);
+      }
+
+      // Digital store product
+      let licenseId: number | null = null;
+      const product = db.prepare('SELECT * FROM products WHERE id = ?').get(order.productId) as any;
+
+      if (product && product.category !== 'package') {
+        const availLicense = db.prepare('SELECT id FROM licenses WHERE productId = ? AND status = ? LIMIT 1').get(product.id, 'available') as any;
+        if (availLicense) {
+          licenseId = availLicense.id;
+          db.prepare("UPDATE licenses SET status = 'sold' WHERE id = ?").run(licenseId);
+        }
+      }
+
+      db.prepare("UPDATE orders SET paymentStatus = 'success', paymentMethod = 'zarinpal', licenseId = ?, authority = ?, refId = ?, cardPan = ? WHERE id = ?")
+        .run(licenseId, authority, refId, cardPan, orderId);
+      syncDatabase();
+
+      // Telegram delivery notification
+      try {
+        const orderUser = db.prepare('SELECT telegramId FROM users WHERE id = ?').get(order.userId) as any;
+        if (orderUser?.telegramId && bot) {
+          let msg = `✅ **پرداخت شما با موفقیت انجام شد!**\n\n` +
+                    `📦 **محصول:** ${product?.title || ''}\n` +
+                    `🔢 **شماره سفارش:** \`${orderId}\`\n` +
+                    `🧾 **کد پیگیری شاپرک:** \`${refId}\`\n` +
+                    `💰 **مبلغ:** ${order.amount.toLocaleString('fa-IR')} تومان\n\n`;
+          if (licenseId) {
+            const lic = db.prepare('SELECT key FROM licenses WHERE id = ?').get(licenseId) as any;
+            if (lic?.key) {
+              msg += `🔑 **کد لایسنس شما:**\n\`${lic.key}\`\n\n`;
+            }
+          }
+          msg += `با تشکر از اعتماد شما به دستیار هوشمند.`;
+          bot.telegram.sendMessage(orderUser.telegramId, msg, { parse_mode: 'Markdown' }).catch(() => {});
+        }
+      } catch (tgErr) {
+        console.error('[Store] Telegram notify error:', tgErr);
+      }
+
+      return res.redirect(`/store?payment=success&orderId=${orderId}&refId=${refId}`);
+    } else {
+      db.prepare("UPDATE orders SET paymentStatus = 'failed', paymentMethod = 'zarinpal', authority = ? WHERE id = ?")
+        .run(authority, orderId);
+      syncDatabase();
+      const errMsg = encodeURIComponent(verifyRes.error || 'پرداخت مورد تایید قرار نگرفت');
+      return res.redirect(`/store?payment=failed&orderId=${orderId}&msg=${errMsg}`);
+    }
+  } catch (err: any) {
+    console.error('[Store] Error in Zarinpal callback:', err);
+    return res.redirect(`/store?payment=failed&orderId=${orderId}`);
   }
 });
 

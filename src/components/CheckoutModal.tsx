@@ -198,6 +198,18 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ product, isOpen, o
             </button>
           </div>
 
+          {paymentMethod === 'online' && (
+            <div className="p-3 bg-zinc-50 dark:bg-zinc-800/40 rounded-xl border border-zinc-200 dark:border-zinc-700/60 flex items-center gap-2.5 text-xs text-zinc-600 dark:text-zinc-300 animate-fadeIn">
+              <div className="w-8 h-8 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-600 dark:text-amber-400 font-black text-sm shrink-0">
+                💳
+              </div>
+              <div className="flex-1">
+                <span className="font-bold block text-zinc-800 dark:text-zinc-200">درگاه امن بانکی شاپرک (زرین‌پال)</span>
+                <span className="text-[11px] text-zinc-500 dark:text-zinc-400">پرداخت آنی و امن با تمامی کارت‌های عضو شبکه شتاب</span>
+              </div>
+            </div>
+          )}
+
           {paymentMethod === 'card' && (
             <div className="flex flex-col gap-3 animate-fadeIn">
               <div className="p-3 bg-blue-50 dark:bg-blue-900/10 rounded-xl border border-blue-100 dark:border-blue-900/30 text-center flex flex-col gap-1.5">

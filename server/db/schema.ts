@@ -192,11 +192,14 @@ export function initializeSchema() {
     )
   `);
 
-  // Migration: Add paymentMethod and trackingNumber to orders table
+  // Migration: Add paymentMethod, trackingNumber, authority, refId, and cardPan to orders table
   try {
     const tableInfo = db.prepare(`PRAGMA table_info(orders)`).all() as any[];
     const hasPaymentMethod = tableInfo.some(col => col.name === 'paymentMethod');
     const hasTrackingNumber = tableInfo.some(col => col.name === 'trackingNumber');
+    const hasAuthority = tableInfo.some(col => col.name === 'authority');
+    const hasRefId = tableInfo.some(col => col.name === 'refId');
+    const hasCardPan = tableInfo.some(col => col.name === 'cardPan');
 
     if (!hasPaymentMethod) {
       db.exec(`ALTER TABLE orders ADD COLUMN paymentMethod TEXT DEFAULT 'online'`);
@@ -205,6 +208,18 @@ export function initializeSchema() {
     if (!hasTrackingNumber) {
       db.exec(`ALTER TABLE orders ADD COLUMN trackingNumber TEXT`);
       console.log('[DB Schema] Added trackingNumber column to orders table.');
+    }
+    if (!hasAuthority) {
+      db.exec(`ALTER TABLE orders ADD COLUMN authority TEXT`);
+      console.log('[DB Schema] Added authority column to orders table.');
+    }
+    if (!hasRefId) {
+      db.exec(`ALTER TABLE orders ADD COLUMN refId TEXT`);
+      console.log('[DB Schema] Added refId column to orders table.');
+    }
+    if (!hasCardPan) {
+      db.exec(`ALTER TABLE orders ADD COLUMN cardPan TEXT`);
+      console.log('[DB Schema] Added cardPan column to orders table.');
     }
   } catch (e) {
     console.error('Migration error (orders):', e);

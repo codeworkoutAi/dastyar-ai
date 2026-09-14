@@ -33,6 +33,8 @@ export function StoreFront() {
   const navigate = useNavigate();
   const paymentStatus = searchParams.get('payment');
   const orderId = searchParams.get('orderId');
+  const refId = searchParams.get('refId');
+  const msg = searchParams.get('msg');
 
   useEffect(() => {
     fetchProducts();
@@ -232,12 +234,15 @@ export function StoreFront() {
               <CheckCircle2 className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
             </div>
             <div className="flex-1 text-center sm:text-right">
-              <h3 className="font-bold text-emerald-800 dark:text-emerald-300 mb-1">پرداخت با موفقیت انجام شد!</h3>
-              <p className="text-sm text-emerald-600 dark:text-emerald-400">شماره سفارش: <span className="font-mono">{orderId}</span></p>
+              <h3 className="font-bold text-emerald-800 dark:text-emerald-300 mb-1">پرداخت با موفقیت در شاپرک تأیید شد!</h3>
+              <p className="text-sm text-emerald-600 dark:text-emerald-400 flex flex-wrap items-center gap-x-3 gap-y-1">
+                <span>شماره سفارش: <span className="font-mono font-bold">{orderId}</span></span>
+                {refId && <span>شماره تراکنش بانکی (شاپرک): <span className="font-mono font-bold">{refId}</span></span>}
+              </p>
             </div>
             <button 
               onClick={() => navigate('/store', { replace: true })}
-              className="px-4 py-2 bg-emerald-600 text-white rounded-xl text-sm font-bold hover:bg-emerald-700 transition-colors shrink-0 w-full sm:w-auto"
+              className="px-4 py-2 bg-emerald-600 text-white rounded-xl text-sm font-bold hover:bg-emerald-700 transition-colors shrink-0 w-full sm:w-auto cursor-pointer"
             >
               متوجه شدم
             </button>
@@ -251,11 +256,13 @@ export function StoreFront() {
             </div>
             <div className="flex-1 text-center sm:text-right">
               <h3 className="font-bold text-red-800 dark:text-red-300 mb-1">پرداخت ناموفق بود</h3>
-              <p className="text-sm text-red-600 dark:text-red-400">در صورت کسر وجه، مبلغ تا ۷۲ ساعت آینده به حساب شما بازخواهد گشت.</p>
+              <p className="text-sm text-red-600 dark:text-red-400">
+                {msg ? decodeURIComponent(msg) : 'در صورت کسر وجه از حساب شما، مبلغ تا ۷۲ ساعت آینده به کارت شما بازخواهد گشت.'}
+              </p>
             </div>
             <button 
               onClick={() => navigate('/store', { replace: true })}
-              className="px-4 py-2 bg-red-600 text-white rounded-xl text-sm font-bold hover:bg-red-700 transition-colors shrink-0 w-full sm:w-auto"
+              className="px-4 py-2 bg-red-600 text-white rounded-xl text-sm font-bold hover:bg-red-700 transition-colors shrink-0 w-full sm:w-auto cursor-pointer"
             >
               بستن
             </button>

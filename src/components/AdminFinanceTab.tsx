@@ -15,7 +15,10 @@ import {
   User, 
   Clock, 
   Receipt,
-  Gift
+  Gift,
+  CreditCard,
+  ShieldCheck,
+  Loader2
 } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 
@@ -40,6 +43,13 @@ export const AdminFinanceTab: React.FC = () => {
   const [welcomeBonus, setWelcomeBonus] = useState('50000');
   const [welcomeBonusEnabled, setWelcomeBonusEnabled] = useState(true);
   const [freeKeyPool, setFreeKeyPool] = useState('');
+
+  // Zarinpal Gateway state
+  const [zarinpalMerchantId, setZarinpalMerchantId] = useState('');
+  const [zarinpalSandbox, setZarinpalSandbox] = useState(false);
+  const [gatewayEnabled, setGatewayEnabled] = useState(false);
+  const [testingGateway, setTestingGateway] = useState(false);
+  const [gatewayTestResult, setGatewayTestResult] = useState<{ valid: boolean; message: string } | null>(null);
 
   // New purchase form
   const [isAddingPurchase, setIsAddingPurchase] = useState(false);
@@ -152,15 +162,24 @@ export const AdminFinanceTab: React.FC = () => {
 
   const fetchSettings = async () => {
     try {
-      const res = await fetch('/api/admin/settings', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (res.ok) {
-        const settings = await res.json();
+      const [resSettings, resGateway] = await Promise.all([
+        fetch('/api/admin/settings', { headers: { Authorization: `Bearer ${token}` } }),
+        fetch('/api/admin/gateway-status', { headers: { Authorization: `Bearer ${token}` } })
+      ]);
+      if (resSettings.ok) {
+        const settings = await resSettings.json();
         if (settings.api_dollar_rate) setSellingRate(settings.api_dollar_rate);
         if (settings.welcome_bonus_amount) setWelcomeBonus(settings.welcome_bonus_amount);
         if (settings.welcome_bonus_enabled) setWelcomeBonusEnabled(settings.welcome_bonus_enabled === 'true');
         if (settings.free_key_pool) setFreeKeyPool(settings.free_key_pool);
+        if (settings.zarinpal_merchant_id) setZarinpalMerchantId(settings.zarinpal_merchant_id);
+        if (settings.zarinpal_sandbox !== undefined) setZarinpalSandbox(settings.zarinpal_sandbox === 'true');
+      }
+      if (resGateway.ok) {
+        const gw = await resGateway.json();
+        if (gw.merchantId) setZarinpalMerchantId(gw.merchantId);
+        if (gw.sandbox !== undefined) setZarinpalSandbox(gw.sandbox);
+        setGatewayEnabled(gw.enabled);
       }
     } catch (err) {}
   };
@@ -189,15 +208,44 @@ export const AdminFinanceTab: React.FC = () => {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
           body: JSON.stringify({ key: 'free_key_pool', value: freeKeyPool })
+        }),
+        fetch('/api/admin/settings', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ key: 'zarinpal_merchant_id', value: zarinpalMerchantId.trim() })
+        }),
+        fetch('/api/admin/settings', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ key: 'zarinpal_sandbox', value: String(zarinpalSandbox) })
         })
       ]);
 
-      setFeedback({ type: 'success', text: 'تنظیمات مالی و نرخ ارز با موفقیت ذخیره شد.' });
+      setGatewayEnabled(zarinpalMerchantId.trim().length >= 30);
+      setFeedback({ type: 'success', text: 'تنظیمات مالی و درگاه زرین‌پال با موفقیت ذخیره شد.' });
       fetchData();
     } catch (err: any) {
       setFeedback({ type: 'error', text: err.message || 'خطا در ذخیره تنظیمات' });
     } finally {
       setActionLoading(false);
+    }
+  };
+
+  const handleTestGateway = async () => {
+    setTestingGateway(true);
+    setGatewayTestResult(null);
+    try {
+      const res = await fetch('/api/admin/test-gateway', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ merchantId: zarinpalMerchantId.trim(), sandbox: zarinpalSandbox })
+      });
+      const data = await res.json();
+      setGatewayTestResult(data);
+    } catch (err: any) {
+      setGatewayTestResult({ valid: false, message: 'خطا در برقراری ارتباط با سرور: ' + err.message });
+    } finally {
+      setTestingGateway(false);
     }
   };
 
@@ -635,6 +683,104 @@ export const AdminFinanceTab: React.FC = () => {
             </div>
             <p className="text-[11px] text-zinc-500 dark:text-zinc-400 leading-relaxed mt-1">
               سیستم به نوبت (Round-Robin) از این کلیدها استفاده کرده و سقف درخواست را تقسیم می‌کند.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* ZarinPal Payment Gateway Section */}
+      <div className="p-5 rounded-2xl bg-zinc-50 dark:bg-zinc-800/40 border border-zinc-200 dark:border-zinc-800 space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-200 dark:border-zinc-700/60 pb-3">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center shrink-0 font-black">
+              <CreditCard className="w-4 h-4" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="text-sm font-bold text-zinc-900 dark:text-zinc-100">درگاه پرداخت اینترنتی شاپرک (زرین‌پال)</h3>
+                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                  gatewayEnabled
+                    ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
+                    : 'bg-zinc-200 dark:bg-zinc-700 text-zinc-600 dark:text-zinc-400'
+                }`}>
+                  {gatewayEnabled ? 'درگاه متصل و فعال' : 'غیرفعال (درگاه آزمایشی)'}
+                </span>
+              </div>
+              <p className="text-[11px] text-zinc-500">پذیرش پرداخت‌های ریالی کاربران با تمامی کارت‌های بانکی عضو شبکه شتاب (REST API v4)</p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleTestGateway}
+              disabled={testingGateway || !zarinpalMerchantId.trim()}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-zinc-200 dark:bg-zinc-700 hover:bg-zinc-300 dark:hover:bg-zinc-600 text-zinc-800 dark:text-zinc-200 font-bold text-xs transition-all cursor-pointer disabled:opacity-50"
+            >
+              {testingGateway ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ShieldCheck className="w-3.5 h-3.5 text-blue-500" />}
+              <span>تست اتصال به زرین‌پال</span>
+            </button>
+            <button
+              onClick={handleSaveSettings}
+              disabled={actionLoading}
+              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow-md transition-all cursor-pointer disabled:opacity-50"
+            >
+              <Save className="w-3.5 h-3.5" />
+              <span>ذخیره مرچنت</span>
+            </button>
+          </div>
+        </div>
+
+        {gatewayTestResult && (
+          <div className={`p-3 rounded-xl border text-xs flex items-center gap-2 ${
+            gatewayTestResult.valid
+              ? 'bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-800/40 text-emerald-700 dark:text-emerald-300'
+              : 'bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-800/40 text-red-700 dark:text-red-300'
+          }`}>
+            {gatewayTestResult.valid ? <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" /> : <AlertCircle className="w-4 h-4 text-red-500 shrink-0" />}
+            <span>{gatewayTestResult.message}</span>
+          </div>
+        )}
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+          {/* Merchant ID */}
+          <div className="md:col-span-2 space-y-1.5">
+            <label className="text-xs font-semibold text-zinc-700 dark:text-zinc-300 block mb-1.5">
+              کد مرچنت درگاه (Merchant ID):
+            </label>
+            <input
+              type="text"
+              dir="ltr"
+              value={zarinpalMerchantId}
+              onChange={(e) => setZarinpalMerchantId(e.target.value)}
+              placeholder="مثال: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+              className="w-full px-3.5 py-2.5 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-zinc-100 text-xs font-mono focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
+            />
+            <p className="text-[11px] text-zinc-500 dark:text-zinc-400 leading-relaxed">
+              شناسه ۳۶ کاراکتری اختصاصی درگاه زرین‌پال شما برای هدایت مستقیم به صفحه پرداخت شاپرک.
+            </p>
+          </div>
+
+          {/* Sandbox Toggle */}
+          <div className="space-y-1.5 flex flex-col justify-between">
+            <div>
+              <label className="text-xs font-semibold text-zinc-700 dark:text-zinc-300 block mb-1.5">
+                محیط آزمایشی (Sandbox):
+              </label>
+              <div className="flex items-center gap-2 pt-2">
+                <input
+                  type="checkbox"
+                  id="sandbox-toggle"
+                  checked={zarinpalSandbox}
+                  onChange={(e) => setZarinpalSandbox(e.target.checked)}
+                  className="w-4 h-4 rounded border-zinc-400 text-amber-600 focus:ring-amber-500 cursor-pointer"
+                />
+                <label htmlFor="sandbox-toggle" className="text-zinc-700 dark:text-zinc-300 text-xs font-medium cursor-pointer">
+                  استفاده از سرور تست زرین‌پال (Sandbox)
+                </label>
+              </div>
+            </div>
+            <p className="text-[11px] text-zinc-500 dark:text-zinc-400 leading-relaxed">
+              برای درگاه واقعی متصل به حساب بانکی، این گزینه باید غیرفعال باشد.
             </p>
           </div>
         </div>
