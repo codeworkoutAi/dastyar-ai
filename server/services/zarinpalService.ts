@@ -92,7 +92,7 @@ export function getZarinpalErrorMessage(code?: number): string {
     case -9:
       return 'خطای اعتبارسنجی داده‌های ارسالی به درگاه پرداخت.';
     case -10:
-      return 'آی‌پی یا کد مرچنت (Merchant ID) در زرین‌پال معتبر نیست.';
+      return 'آی‌پی سرور در پنل زرین‌پال تأیید نشده است (Terminal IP not valid). لطفاً در پنل زرین‌پال > مدیریت درگاه، آی‌پی سرور را ثبت کنید.';
     case -11:
       return 'مرچنت درگاه در زرین‌پال غیرفعال است.';
     case -12:
@@ -306,9 +306,17 @@ export async function testZarinpalMerchant(customMerchantId?: string, sandbox = 
       return { valid: true, message: 'اتصال به زرین‌پال با موفقیت برقرار شد و مرچنت کاملاً معتبر است.' };
     }
 
-    const errCode = json.errors?.code || json.data?.code;
-    if (errCode === -10 || errCode === -11) {
-      return { valid: false, message: 'کد مرچنت در زرین‌پال یافت نشد یا غیرفعال است.' };
+    const errCode = json.errors?.code ?? json.data?.code;
+    const rawMsg = json.errors?.message || '';
+
+    if (rawMsg.toLowerCase().includes('terminal ip') || errCode === -10) {
+      return {
+        valid: false,
+        message: 'کد مرچنت در زرین‌پال معتبر است، اما آی‌پی سرور (IP) در تنظیمات درگاه زرین‌پال ثبت نشده است (Terminal IP not valid). لطفاً در پنل زرین‌پال > درگاه‌های پرداخت، آی‌پی سرور خود را ثبت یا بررسی کنید.'
+      };
+    }
+    if (errCode === -11) {
+      return { valid: false, message: 'کد مرچنت درگاه در زرین‌پال غیرفعال است.' };
     }
 
     return { valid: false, message: getZarinpalErrorMessage(errCode) };
