@@ -420,29 +420,26 @@ function parsePoeticCouplets(children: React.ReactNode): Array<{ first: string; 
 
 const PoeticBlock: React.FC<{ couplets: Array<{ first: string; second: string }> }> = ({ couplets }) => {
   return (
-    <div
-      className="my-3 px-3.5 py-2.5 sm:px-5 sm:py-3.5 rounded-2xl bg-amber-500/[0.035] dark:bg-amber-400/[0.025] border border-amber-500/20 dark:border-amber-400/15 shadow-2xs backdrop-blur-xs select-text transition-all"
-      dir="rtl"
-    >
-      <div className="space-y-2 sm:space-y-2.5">
+    <div className="my-2 select-text" dir="rtl">
+      <div className="space-y-2">
         {couplets.map((couplet, idx) => (
           <div
             key={idx}
-            className="flex flex-col sm:grid sm:grid-cols-[1fr_auto_1fr] sm:items-center sm:gap-x-4 py-1 border-b border-amber-500/10 dark:border-amber-400/5 last:border-b-0"
+            className="flex flex-col sm:grid sm:grid-cols-[1fr_auto_1fr] sm:items-baseline sm:gap-x-6 py-0.5"
           >
             {/* مصرع اول */}
-            <div className="text-right text-[15px] sm:text-[16px] text-zinc-800 dark:text-zinc-100 font-medium leading-relaxed tracking-wide">
+            <div className="text-right text-[15px] sm:text-[16px] text-inherit font-medium leading-relaxed tracking-wide">
               {couplet.first}
             </div>
 
             {/* نشانگر متوازن بین دو مصرع */}
-            <div className="hidden sm:flex items-center justify-center text-amber-600/60 dark:text-amber-400/50 text-xs select-none px-2">
+            <div className="hidden sm:flex items-center justify-center opacity-40 text-xs select-none px-2">
               ✤
             </div>
 
             {/* مصرع دوم */}
-            <div className="text-left sm:text-left text-[15px] sm:text-[16px] text-zinc-800 dark:text-zinc-100 font-medium leading-relaxed tracking-wide pt-1 sm:pt-0 pl-1 sm:pl-0 flex items-center justify-end sm:justify-start gap-2">
-              <span className="sm:hidden text-amber-600/50 dark:text-amber-400/40 text-[10px]">✤</span>
+            <div className="text-left sm:text-left text-[15px] sm:text-[16px] text-inherit font-medium leading-relaxed tracking-wide pt-1 sm:pt-0 pl-1 sm:pl-0 flex items-center justify-end sm:justify-start gap-2">
+              <span className="sm:hidden opacity-30 text-[10px]">✤</span>
               <span>{couplet.second}</span>
             </div>
           </div>
