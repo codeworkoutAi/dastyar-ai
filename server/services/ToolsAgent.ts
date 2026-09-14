@@ -152,5 +152,15 @@ export class ToolsAgent {
       return '[ابزار دیجی‌کالا]\nمتاسفانه ارتباط با سرور دیجی‌کالا برقرار نشد. لطفا بعدا تلاش کنید.';
     }
   }
+
+  /**
+   * Fetches encyclopedic summaries from Wikipedia (Persian / English)
+   */
+  static async getWikipedia(query: string): Promise<string> {
+    const { WikipediaAgent } = await import('./WikipediaAgent');
+    const res = await WikipediaAgent.searchAndSummarize(query);
+    return WikipediaAgent.formatForContext(res);
+  }
 }
+
 

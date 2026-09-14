@@ -3,6 +3,7 @@ import rateLimit from 'express-rate-limit';
 import db from '../db/database';
 import { isSafeBaseUrl, getGeminiClient, extractCleanErrorMessage, sanitizeErrorMessage, formatContentsForGemini, sleep, getPollinationsImageUrl, translateAndEnhanceImagePrompt, normalizeBaseUrl, parseCustomHeaders } from '../services/utils';
 import { GoogleGroundingAgent } from '../services/GoogleGroundingAgent';
+import { WikipediaAgent } from '../services/WikipediaAgent';
 import { ToolsAgent } from '../services/ToolsAgent';
 import { responseCache, CACHE_TTL_MS, computeCacheKey, setCachedResponse } from '../services/CacheService';
 import { hasSufficientBalance, deductChatCost, calculateModelCostUsd, getUserWallet } from '../services/walletService';
@@ -303,9 +304,34 @@ router.post('/api/chat/stream', chatStreamLimiter, async (req, res) => {
         liveWebContext = await ToolsAgent.getDigikalaProduct(userText);
       } else if (apiConfig?.webSearch) {
         if (userText && userText.trim().length > 1) {
+          // 1. Automatic Wikipedia Encyclopedic Grounding (Persian & English)
+          let wikiContext = '';
+          const isEncyclopedic = WikipediaAgent.isEncyclopedicQuery(userText);
+          const hasWikiIntent = /ویکی|دانشنامه|wiki/i.test(userText);
+
+          if (isEncyclopedic || hasWikiIntent) {
+            console.log('[Backend] Query is encyclopedic/factual, fetching from Wikipedia...');
+            try {
+              const wikiRes = await WikipediaAgent.searchAndSummarize(userText);
+              if (wikiRes.found) {
+                wikiContext = WikipediaAgent.formatForContext(wikiRes);
+                console.log(`[Backend] Wikipedia summary found for "${wikiRes.title}" (${wikiRes.lang})`);
+              }
+            } catch (wErr) {
+              console.warn('[Backend] Wikipedia fetch error:', wErr);
+            }
+          }
+
+          // 2. Google Search Grounding (Live Web & News)
           console.log('[Backend] Executing Google Grounding Agent (Universal RAG for all providers)...');
-          liveWebContext = await GoogleGroundingAgent.search(userText);
-          console.log('[Backend] Google Grounding result length:', liveWebContext?.length || 0);
+          const googleContext = await GoogleGroundingAgent.search(userText);
+          console.log('[Backend] Google Grounding result length:', googleContext?.length || 0);
+
+          if (wikiContext && googleContext) {
+            liveWebContext = `${wikiContext}\n\n${googleContext}`;
+          } else {
+            liveWebContext = wikiContext || googleContext || '';
+          }
         }
       } else {
         console.log('[Backend] Web search & tools disabled.');

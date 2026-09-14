@@ -209,7 +209,7 @@ function parseLLMJsonResponse(text: string, userText: string) {
 
   // DEFINITIVE SOLUTION: Hybrid Heuristics Override
   // To bypass unpredictable free LLM models, we enforce a definitive regex fallback.
-  const definitiveWebSearchTriggers = /اخبار|خبر|قیمت|آب و هوا|آب‌وهوا|مقاله|تحقیق|درباره|سرچ|جستجو|امروز|تاریخ|جدیدترین|آپدیت|به روز|به‌روز|دسترسی به وب|دسترسی به اینترنت|وصل به اینترنت|اینترنت داری|به اینترنت وصلی|آنلاین هستی|وب رو چک کن|دسترسی داری/i;
+  const definitiveWebSearchTriggers = /اخبار|خبر|قیمت|آب و هوا|آب‌وهوا|مقاله|تحقیق|درباره|سرچ|جستجو|امروز|تاریخ|جدیدترین|آپدیت|به روز|به‌روز|دسترسی به وب|دسترسی به اینترنت|وصل به اینترنت|اینترنت داری|به اینترنت وصلی|آنلاین هستی|وب رو چک کن|دسترسی داری|ویکی|دانشنامه|کیست|چیست|کی بود|چه کسی بود|چه بود|تاریخچه|بیوگرافی|زندگینامه|تعریف/i;
   let isDefinitiveWebSearch = definitiveWebSearchTriggers.test(userText);
   let heuristicTool = 'none';
 
