@@ -161,6 +161,15 @@ export class ToolsAgent {
     const res = await WikipediaAgent.searchAndSummarize(query);
     return WikipediaAgent.formatForContext(res);
   }
+
+  /**
+   * Fetches domain-specific knowledge from SpecializedKnowledgeService
+   * (Religions, Quran, Bible, Ganjoor Poetry, Cinema, Sports, Health, Botany)
+   */
+  static async getSpecializedKnowledge(query: string): Promise<string> {
+    const { SpecializedKnowledgeService } = await import('./SpecializedKnowledgeService');
+    return SpecializedKnowledgeService.resolveSpecializedKnowledge(query);
+  }
 }
 
 

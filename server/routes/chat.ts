@@ -5,6 +5,7 @@ import { isSafeBaseUrl, getGeminiClient, extractCleanErrorMessage, sanitizeError
 import { GoogleGroundingAgent } from '../services/GoogleGroundingAgent';
 import { WikipediaAgent } from '../services/WikipediaAgent';
 import { ToolsAgent } from '../services/ToolsAgent';
+import { SpecializedKnowledgeService } from '../services/SpecializedKnowledgeService';
 import { responseCache, CACHE_TTL_MS, computeCacheKey, setCachedResponse } from '../services/CacheService';
 import { hasSufficientBalance, deductChatCost, calculateModelCostUsd, getUserWallet } from '../services/walletService';
 import { keyRotator } from '../services/keyRotator';
@@ -304,7 +305,18 @@ router.post('/api/chat/stream', chatStreamLimiter, async (req, res) => {
         liveWebContext = await ToolsAgent.getDigikalaProduct(userText);
       } else if (apiConfig?.webSearch) {
         if (userText && userText.trim().length > 1) {
-          // 1. Automatic Wikipedia Encyclopedic Grounding (Persian & English)
+          // 1. Specialized Knowledge Grounding (Religions/Quran/Bible, Ganjoor Poetry, Cinema, Sports, Health/Psychology, Botany)
+          let specializedContext = '';
+          try {
+            specializedContext = await SpecializedKnowledgeService.resolveSpecializedKnowledge(userText);
+            if (specializedContext) {
+              console.log('[Backend] Specialized knowledge grounding context retrieved');
+            }
+          } catch (skErr) {
+            console.warn('[Backend] Specialized knowledge grounding error:', skErr);
+          }
+
+          // 2. Automatic Wikipedia Encyclopedic Grounding (Persian & English)
           let wikiContext = '';
           const isEncyclopedic = WikipediaAgent.isEncyclopedicQuery(userText);
           const hasWikiIntent = /ویکی|دانشنامه|wiki/i.test(userText);
@@ -322,23 +334,21 @@ router.post('/api/chat/stream', chatStreamLimiter, async (req, res) => {
             }
           }
 
-          // 2. Google Search Grounding (Live Web & News)
+          // 3. Google Search Grounding (Live Web & News)
           console.log('[Backend] Executing Google Grounding Agent (Universal RAG for all providers)...');
           const googleContext = await GoogleGroundingAgent.search(userText);
           console.log('[Backend] Google Grounding result length:', googleContext?.length || 0);
 
-          if (wikiContext && googleContext) {
-            liveWebContext = `${wikiContext}\n\n${googleContext}`;
-          } else {
-            liveWebContext = wikiContext || googleContext || '';
-          }
+          const contextParts = [specializedContext, wikiContext, googleContext].filter(Boolean);
+          liveWebContext = contextParts.join('\n\n');
         }
       } else {
         console.log('[Backend] Web search & tools disabled.');
       }
     }
     const baseSystemPrompt = `شما «دستیار هوشمند» هستید؛ متمرکز، دقیق و مسلط به زبان فارسی. پاسخ‌ها را به فارسی شیوا، دسته‌بندی‌شده و ساختاریافته ارائه دهید. در موضوعات فنی و برنامه‌نویسی، کدهای استاندارد همراه با توضیحات موجز بنویسید. هرگز خود را با نام پلتفرم‌های متفرقه معرفی نکنید.\n\n${timeContext}`;
-    const systemInstruction = apiConfig?.systemInstruction ? `${apiConfig.systemInstruction}\n\n${timeContext}\n\nنکته نگارشی: همیشه اصول، مراحل و لیست‌های شماره‌دار را در خطوط مجزا تفکیک کن. حتماً اصول نگارش فارسی و **نیم‌فاصله‌ها** را رعایت کن (مثلاً: می‌رود، برنامه‌نویسی، بخش‌ها).` : `${baseSystemPrompt}\n\nنکته نگارشی: حتماً اصول نگارش فارسی و **نیم‌فاصله‌ها** (Zero-Width Non-Joiner) را با دقت تمام رعایت کن (مثال: می‌رود، برنامه‌نویسی، دسته‌بندی‌شده، کتاب‌ها).`;
+    const poetryRule = 'قاعده نگارش شعر: هنگام نوشتن شعر فارسی، هر بیت را در دو سطر متوالی (مصرع اول و سپس بلافاصله در سطر بعد مصرع دوم) بنویسید تا قالب دو ستونه کتاب شعر فعال شود.';
+    const systemInstruction = apiConfig?.systemInstruction ? `${apiConfig.systemInstruction}\n\n${timeContext}\n\nنکته نگارشی: همیشه اصول، مراحل و لیست‌های شماره‌دار را در خطوط مجزا تفکیک کن. حتماً اصول نگارش فارسی و **نیم‌فاصله‌ها** را رعایت کن (مثلاً: می‌رود، برنامه‌نویسی، بخش‌ها).\n${poetryRule}` : `${baseSystemPrompt}\n\nنکته نگارشی: حتماً اصول نگارش فارسی و **نیم‌فاصله‌ها** (Zero-Width Non-Joiner) را با دقت تمام رعایت کن (مثال: می‌رود، برنامه‌نویسی، دسته‌بندی‌شده، کتاب‌ها).\n${poetryRule}`;
 
     // Inject liveWebContext into the LAST user message instead of system prompt
     // This ensures that models (especially via OpenRouter/Custom providers) don't ignore it.

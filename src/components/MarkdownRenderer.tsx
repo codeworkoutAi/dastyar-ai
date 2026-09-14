@@ -337,6 +337,121 @@ function getCalloutType(text: string): { type: 'note' | 'tip' | 'warning' | 'cau
   return { type: 'none', title: '', cleanText: text };
 }
 
+// Safely detects Persian poetry couplets (ابیات شعر فارسی) for authentic two-column Divan book presentation
+function isValidHemistichPair(m1: string, m2: string): boolean {
+  // Check Persian characters
+  const persian1 = (m1.match(/[\u0600-\u06FF]/g) || []).length;
+  const persian2 = (m2.match(/[\u0600-\u06FF]/g) || []).length;
+  if (persian1 < 8 || persian2 < 8) return false;
+
+  // Length limits for hemistich (typically 10 to 65 chars)
+  if (m1.length < 10 || m1.length > 65 || m2.length < 10 || m2.length > 65) return false;
+
+  // Ratio of lengths should be reasonably balanced (min/max >= 0.5)
+  const ratio = Math.min(m1.length, m2.length) / Math.max(m1.length, m2.length);
+  if (ratio < 0.5) return false;
+
+  // Must not be list items, headers, code, or links
+  if (/^[-*#\d\.\>\:\—\–]/i.test(m1) || /^[-*#\d\.\>\:\—\–]/i.test(m2)) return false;
+  if (m1.endsWith(':') || m2.endsWith(':')) return false;
+  if (/https?:\/\//i.test(m1) || /https?:\/\//i.test(m2)) return false;
+
+  return true;
+}
+
+function parsePoeticCouplets(children: React.ReactNode): Array<{ first: string; second: string }> | null {
+  const lines: string[] = [];
+
+  const extractLines = (node: React.ReactNode) => {
+    if (typeof node === 'string') {
+      const parts = node.split(/\r?\n/);
+      for (let i = 0; i < parts.length; i++) {
+        if (i > 0) lines.push('');
+        if (parts[i]) {
+          if (lines.length === 0) lines.push(parts[i]);
+          else lines[lines.length - 1] += parts[i];
+        }
+      }
+    } else if (Array.isArray(node)) {
+      node.forEach(extractLines);
+    } else if (React.isValidElement(node)) {
+      if (node.type === 'br') {
+        lines.push('');
+      } else if (node.props && (node.props as any).children) {
+        extractLines((node.props as any).children);
+      }
+    }
+  };
+
+  extractLines(children);
+  const cleanLines = lines.map(l => l.trim()).filter(Boolean);
+
+  // Check Sub-case: A single line separated by ' / ' or ' // ' (e.g. "مصرع اول / مصرع دوم")
+  if (cleanLines.length === 1) {
+    const singleLine = cleanLines[0];
+    const slashParts = singleLine.split(/\s*[\/]{1,2}\s*/);
+    if (slashParts.length === 2) {
+      const p1 = slashParts[0].trim();
+      const p2 = slashParts[1].trim();
+      if (isValidHemistichPair(p1, p2)) {
+        return [{ first: p1, second: p2 }];
+      }
+    }
+    return null;
+  }
+
+  // Must have at least 2 lines and an even number of lines
+  if (cleanLines.length < 2 || cleanLines.length % 2 !== 0) {
+    return null;
+  }
+
+  const couplets: Array<{ first: string; second: string }> = [];
+  for (let i = 0; i < cleanLines.length; i += 2) {
+    const m1 = cleanLines[i];
+    const m2 = cleanLines[i + 1];
+    if (!isValidHemistichPair(m1, m2)) {
+      return null;
+    }
+    couplets.push({ first: m1, second: m2 });
+  }
+
+  return couplets.length > 0 ? couplets : null;
+}
+
+const PoeticBlock: React.FC<{ couplets: Array<{ first: string; second: string }> }> = ({ couplets }) => {
+  return (
+    <div
+      className="my-3 px-3.5 py-2.5 sm:px-5 sm:py-3.5 rounded-2xl bg-amber-500/[0.035] dark:bg-amber-400/[0.025] border border-amber-500/20 dark:border-amber-400/15 shadow-2xs backdrop-blur-xs select-text transition-all"
+      dir="rtl"
+    >
+      <div className="space-y-2 sm:space-y-2.5">
+        {couplets.map((couplet, idx) => (
+          <div
+            key={idx}
+            className="flex flex-col sm:grid sm:grid-cols-[1fr_auto_1fr] sm:items-center sm:gap-x-4 py-1 border-b border-amber-500/10 dark:border-amber-400/5 last:border-b-0"
+          >
+            {/* مصرع اول */}
+            <div className="text-right text-[15px] sm:text-[16px] text-zinc-800 dark:text-zinc-100 font-medium leading-relaxed tracking-wide">
+              {couplet.first}
+            </div>
+
+            {/* نشانگر متوازن بین دو مصرع */}
+            <div className="hidden sm:flex items-center justify-center text-amber-600/60 dark:text-amber-400/50 text-xs select-none px-2">
+              ✤
+            </div>
+
+            {/* مصرع دوم */}
+            <div className="text-left sm:text-left text-[15px] sm:text-[16px] text-zinc-800 dark:text-zinc-100 font-medium leading-relaxed tracking-wide pt-1 sm:pt-0 pl-1 sm:pl-0 flex items-center justify-end sm:justify-start gap-2">
+              <span className="sm:hidden text-amber-600/50 dark:text-amber-400/40 text-[10px]">✤</span>
+              <span>{couplet.second}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
 let katexCssLoaded = false;
 const loadKatexCss = () => {
   if (!katexCssLoaded) {
@@ -423,6 +538,12 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = React.memo(({
               );
             }
 
+            // Detect Persian Poetry Couplets (چیدمان اصیل دو ستونه کتاب شعر برای ابیات فارسی)
+            const poeticCouplets = parsePoeticCouplets(children);
+            if (poeticCouplets && poeticCouplets.length > 0) {
+              return <PoeticBlock couplets={poeticCouplets} />;
+            }
+
             const rtl = rawText ? isRtlText(rawText) : isOverallRtl;
             return (
               <p
@@ -452,6 +573,19 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = React.memo(({
             if (isBlock) {
               if (!codeString.trim()) return null; // Prevent completely empty block rendering
               
+              if (language === 'poem' || language === 'poetry' || language === 'sher') {
+                const poemLines = codeString.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+                const couplets: Array<{ first: string; second: string }> = [];
+                for (let i = 0; i < poemLines.length; i += 2) {
+                  if (i + 1 < poemLines.length) {
+                    couplets.push({ first: poemLines[i], second: poemLines[i + 1] });
+                  } else {
+                    couplets.push({ first: poemLines[i], second: '' });
+                  }
+                }
+                return <PoeticBlock couplets={couplets} />;
+              }
+
               if (language === 'reasoning') {
                   return (
                       <details className="my-4 rounded-xl border border-subtle bg-black/5 dark:bg-white/5 overflow-hidden group">
