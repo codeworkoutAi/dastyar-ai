@@ -19,7 +19,9 @@ import {
   Palette,
   Layers,
   Search,
-  Check
+  Check,
+  Menu,
+  X
 } from 'lucide-react';
 import { ThemeToggle } from '../../components/ThemeToggle';
 import { Footer } from '../../components/Footer';
@@ -29,6 +31,7 @@ export const LandingPage: React.FC = () => {
   const { isAuthenticated, setAuthModalOpen } = useAuthStore();
 
   const [activeFaq, setActiveFaq] = useState<number | null>(null);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
   const [showcaseModels, setShowcaseModels] = useState<string[]>(['Qwen 2.5 72B', 'Llama 3.1 405B', 'Mixtral 8x22B', 'Gemma 2', 'DBRX']);
   const [totalModels, setTotalModels] = useState<number>(42);
 
@@ -54,6 +57,7 @@ export const LandingPage: React.FC = () => {
   };
 
   const handleStartChat = () => {
+    setIsMobileMenuOpen(false);
     navigate('/chat');
   };
 
@@ -195,145 +199,269 @@ export const LandingPage: React.FC = () => {
       </div>
 
       {/* ---------------- 1. Standalone Sticky Header ---------------- */}
-      <header className="sticky top-0 z-50 w-full backdrop-blur-xl bg-white/80 dark:bg-[#07090e]/80 border-b border-zinc-200/80 dark:border-white/5 transition-all shadow-xs">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-18 flex items-center justify-between">
+      <header className="sticky top-0 z-50 w-full backdrop-blur-xl bg-white/85 dark:bg-[#07090e]/85 border-b border-zinc-200/80 dark:border-white/5 transition-all shadow-xs">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-16 sm:h-18 flex items-center justify-between gap-2">
           {/* Logo & Brand */}
-          <Link to="/" className="flex items-center gap-3 group">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-purple-600 p-[1.5px] shadow-lg shadow-blue-500/20 group-hover:scale-105 transition-transform">
+          <Link to="/" className="flex items-center gap-2 sm:gap-3 group shrink-0">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-purple-600 p-[1.5px] shadow-lg shadow-blue-500/20 group-hover:scale-105 transition-transform">
               <div className="w-full h-full bg-white dark:bg-zinc-950 rounded-[14px] flex items-center justify-center">
-                <Sparkles className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600 dark:text-blue-400" />
               </div>
             </div>
             <div className="flex flex-col text-right">
-              <span className="text-base sm:text-lg font-black tracking-tight text-zinc-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+              <span className="text-sm sm:text-base md:text-lg font-black tracking-tight text-zinc-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
                 دستیار هوشمند
               </span>
-              <span className="text-[10px] text-zinc-500 dark:text-zinc-400 font-medium">پلتفرم هوش مصنوعی فارسی</span>
+              <span className="text-[9px] sm:text-[10px] text-zinc-500 dark:text-zinc-400 font-medium">پلتفرم هوش مصنوعی فارسی</span>
             </div>
           </Link>
 
-          {/* Navigation Links */}
-          <nav className="hidden md:flex items-center gap-1.5 lg:gap-3 text-sm font-semibold text-zinc-600 dark:text-zinc-300">
+          {/* Navigation Links (Desktop) */}
+          <nav className="hidden md:flex items-center gap-1 lg:gap-2.5 text-xs lg:text-sm font-semibold text-zinc-600 dark:text-zinc-300">
             <Link
               to="/chat"
-              className="px-3 py-2 rounded-xl hover:text-blue-600 dark:hover:text-blue-400 hover:bg-zinc-100/80 dark:hover:bg-white/5 transition-all flex items-center gap-1.5"
+              className="px-2.5 lg:px-3 py-2 rounded-xl hover:text-blue-600 dark:hover:text-blue-400 hover:bg-zinc-100/80 dark:hover:bg-white/5 transition-all flex items-center gap-1.5"
             >
               <MessageSquare className="w-4 h-4 text-blue-500" />
               <span>چت‌باکس</span>
             </Link>
             <Link
               to="/store"
-              className="px-3 py-2 rounded-xl hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-zinc-100/80 dark:hover:bg-white/5 transition-all flex items-center gap-1.5"
+              className="px-2.5 lg:px-3 py-2 rounded-xl hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-zinc-100/80 dark:hover:bg-white/5 transition-all flex items-center gap-1.5"
             >
               <Store className="w-4 h-4 text-emerald-500" />
-              <span>فروشگاه اشتراک‌ها</span>
+              <span>فروشگاه</span>
             </Link>
             <Link
               to="/blog"
-              className="px-3 py-2 rounded-xl hover:text-purple-600 dark:hover:text-purple-400 hover:bg-zinc-100/80 dark:hover:bg-white/5 transition-all flex items-center gap-1.5"
+              className="px-2.5 lg:px-3 py-2 rounded-xl hover:text-purple-600 dark:hover:text-purple-400 hover:bg-zinc-100/80 dark:hover:bg-white/5 transition-all flex items-center gap-1.5"
             >
               <BookOpen className="w-4 h-4 text-purple-500" />
-              <span>مجله و اخبار AI</span>
+              <span>اخبار AI</span>
             </Link>
             <a
               href="#gallery"
-              className="px-3 py-2 rounded-xl hover:text-pink-600 dark:hover:text-pink-400 hover:bg-zinc-100/80 dark:hover:bg-white/5 transition-all flex items-center gap-1.5"
+              className="px-2.5 lg:px-3 py-2 rounded-xl hover:text-pink-600 dark:hover:text-pink-400 hover:bg-zinc-100/80 dark:hover:bg-white/5 transition-all flex items-center gap-1.5"
             >
               <ImageIcon className="w-4 h-4 text-pink-500" />
               <span>گالری تصاویر</span>
             </a>
             <a
               href="#pricing"
-              className="px-3 py-2 rounded-xl hover:text-amber-600 dark:hover:text-amber-400 hover:bg-zinc-100/80 dark:hover:bg-white/5 transition-all flex items-center gap-1.5"
+              className="px-2.5 lg:px-3 py-2 rounded-xl hover:text-amber-600 dark:hover:text-amber-400 hover:bg-zinc-100/80 dark:hover:bg-white/5 transition-all flex items-center gap-1.5"
             >
               <Coins className="w-4 h-4 text-amber-500" />
               <span>تعرفه‌ها</span>
             </a>
             <a
               href="#faq"
-              className="px-3 py-2 rounded-xl hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100/80 dark:hover:bg-white/5 transition-all"
+              className="px-2.5 lg:px-3 py-2 rounded-xl hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100/80 dark:hover:bg-white/5 transition-all"
             >
               سوالات متداول
             </a>
           </nav>
 
-          {/* Action CTA & Theme Toggle */}
-          <div className="flex items-center gap-2.5">
+          {/* Action CTA & Mobile Controls */}
+          <div className="flex items-center gap-1.5 sm:gap-2.5">
             <ThemeToggle />
 
             {isAuthenticated ? (
               <Link
                 to="/chat"
-                className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white px-4 py-2 rounded-xl text-xs sm:text-sm font-bold shadow-md shadow-blue-600/20 transition-all cursor-pointer"
+                className="inline-flex items-center gap-1.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-bold shadow-md shadow-blue-600/20 transition-all cursor-pointer"
               >
-                <span>ورود به محیط چت</span>
-                <ArrowLeft className="w-4 h-4" />
+                <span>ورود به چت</span>
+                <ArrowLeft className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               </Link>
             ) : (
               <>
                 <button
                   onClick={() => setAuthModalOpen(true)}
-                  className="hidden sm:inline-flex px-3.5 py-2 text-xs sm:text-sm font-bold text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-white/5 rounded-xl transition-all cursor-pointer"
+                  className="hidden sm:inline-flex px-3 py-2 text-xs sm:text-sm font-bold text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-white/5 rounded-xl transition-all cursor-pointer"
                 >
-                  ورود به حساب
+                  ورود
                 </button>
                 <button
                   onClick={handleStartChat}
-                  className="inline-flex items-center gap-1.5 bg-zinc-900 hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-100 text-white dark:text-zinc-950 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold shadow-md shadow-zinc-900/10 dark:shadow-white/5 transition-all cursor-pointer"
+                  className="inline-flex items-center gap-1 bg-zinc-900 hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-100 text-white dark:text-zinc-950 px-2.5 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-bold shadow-md shadow-zinc-900/10 dark:shadow-white/5 transition-all cursor-pointer"
                 >
-                  <span>شروع با ۵۰ هزار تومان هدیه</span>
-                  <ArrowLeft className="w-4 h-4" />
+                  <Gift className="w-3.5 h-3.5 text-emerald-400 dark:text-emerald-600 sm:hidden" />
+                  <span className="hidden sm:inline">شروع با ۵۰ هزار تومان هدیه</span>
+                  <span className="sm:hidden">شروع رایگان</span>
+                  <ArrowLeft className="w-3.5 h-3.5" />
                 </button>
               </>
             )}
+
+            {/* Mobile Hamburger Menu Toggle */}
+            <button
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              aria-label="منوی موبایل"
+              className="md:hidden p-2 rounded-xl text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-white/5 transition-colors focus:outline-none"
+            >
+              {isMobileMenuOpen ? (
+                <X className="w-5 h-5 text-red-500" />
+              ) : (
+                <Menu className="w-5 h-5" />
+              )}
+            </button>
           </div>
         </div>
+
+        {/* Mobile Navigation Drawer */}
+        {isMobileMenuOpen && (
+          <div className="md:hidden border-t border-zinc-200 dark:border-white/5 bg-white/95 dark:bg-[#07090e]/95 backdrop-blur-2xl shadow-xl animate-in slide-in-from-top-3 duration-200">
+            <div className="px-4 py-5 space-y-2">
+              <Link
+                to="/chat"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="flex items-center justify-between p-3 rounded-2xl bg-blue-50/70 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 font-bold text-sm"
+              >
+                <div className="flex items-center gap-2.5">
+                  <MessageSquare className="w-4 h-4" />
+                  <span>چت‌باکس هوشمند (Chat App)</span>
+                </div>
+                <ArrowLeft className="w-4 h-4" />
+              </Link>
+
+              <Link
+                to="/store"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="flex items-center justify-between p-3 rounded-2xl hover:bg-zinc-100 dark:hover:bg-white/5 text-zinc-800 dark:text-zinc-200 font-semibold text-sm transition-colors"
+              >
+                <div className="flex items-center gap-2.5">
+                  <Store className="w-4 h-4 text-emerald-500" />
+                  <span>فروشگاه اشتراک‌ها و محصولات</span>
+                </div>
+                <ArrowLeft className="w-4 h-4 text-zinc-400" />
+              </Link>
+
+              <Link
+                to="/blog"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="flex items-center justify-between p-3 rounded-2xl hover:bg-zinc-100 dark:hover:bg-white/5 text-zinc-800 dark:text-zinc-200 font-semibold text-sm transition-colors"
+              >
+                <div className="flex items-center gap-2.5">
+                  <BookOpen className="w-4 h-4 text-purple-500" />
+                  <span>مجله و آخرین اخبار AI</span>
+                </div>
+                <ArrowLeft className="w-4 h-4 text-zinc-400" />
+              </Link>
+
+              <a
+                href="#gallery"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="flex items-center justify-between p-3 rounded-2xl hover:bg-zinc-100 dark:hover:bg-white/5 text-zinc-800 dark:text-zinc-200 font-semibold text-sm transition-colors"
+              >
+                <div className="flex items-center gap-2.5">
+                  <ImageIcon className="w-4 h-4 text-pink-500" />
+                  <span>گالری تصاویر تولیدشده</span>
+                </div>
+                <ArrowLeft className="w-4 h-4 text-zinc-400" />
+              </a>
+
+              <a
+                href="#pricing"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="flex items-center justify-between p-3 rounded-2xl hover:bg-zinc-100 dark:hover:bg-white/5 text-zinc-800 dark:text-zinc-200 font-semibold text-sm transition-colors"
+              >
+                <div className="flex items-center gap-2.5">
+                  <Coins className="w-4 h-4 text-amber-500" />
+                  <span>تعرفه‌ها و شارژ اعتباری</span>
+                </div>
+                <ArrowLeft className="w-4 h-4 text-zinc-400" />
+              </a>
+
+              <a
+                href="#faq"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="flex items-center justify-between p-3 rounded-2xl hover:bg-zinc-100 dark:hover:bg-white/5 text-zinc-800 dark:text-zinc-200 font-semibold text-sm transition-colors"
+              >
+                <div className="flex items-center gap-2.5">
+                  <ChevronDown className="w-4 h-4 text-zinc-500" />
+                  <span>سوالات متداول</span>
+                </div>
+                <ArrowLeft className="w-4 h-4 text-zinc-400" />
+              </a>
+
+              {/* Mobile Auth Actions */}
+              <div className="pt-3 mt-3 border-t border-zinc-100 dark:border-white/5 flex flex-col gap-2">
+                {!isAuthenticated ? (
+                  <>
+                    <button
+                      onClick={() => {
+                        setIsMobileMenuOpen(false);
+                        setAuthModalOpen(true);
+                      }}
+                      className="w-full py-3 rounded-xl bg-zinc-100 dark:bg-white/5 text-zinc-900 dark:text-white font-bold text-xs sm:text-sm text-center"
+                    >
+                      ورود به حساب کاربری
+                    </button>
+                    <button
+                      onClick={handleStartChat}
+                      className="w-full py-3 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold text-xs sm:text-sm text-center shadow-md shadow-blue-600/20"
+                    >
+                      شروع با ۵۰,۰۰۰ تومان هدیه رایگان
+                    </button>
+                  </>
+                ) : (
+                  <button
+                    onClick={handleStartChat}
+                    className="w-full py-3 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold text-xs sm:text-sm text-center shadow-md shadow-blue-600/20"
+                  >
+                    ورود به محیط چت
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
       </header>
 
       {/* ---------------- 2. Hero Section With Rich Visuals ---------------- */}
-      <section className="relative z-10 pt-10 pb-16 sm:pt-16 sm:pb-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto flex flex-col items-center text-center">
+      <section className="relative z-10 pt-8 pb-12 sm:pt-14 sm:pb-20 px-3 sm:px-6 lg:px-8 max-w-7xl mx-auto flex flex-col items-center text-center">
         {/* Top Badges */}
-        <div className="inline-flex flex-wrap items-center justify-center gap-2 p-1.5 pr-2 pl-3 rounded-full bg-white/90 dark:bg-white/[0.04] border border-zinc-200 dark:border-white/10 shadow-sm backdrop-blur-xl mb-6">
-          <div className="flex items-center gap-1.5 bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 px-3 py-1 rounded-full text-xs font-black animate-pulse">
-            <Gift className="w-4 h-4" />
+        <div className="inline-flex flex-col sm:flex-row items-center justify-center gap-1.5 sm:gap-2 p-1.5 sm:pr-2 sm:pl-3 rounded-2xl sm:rounded-full bg-white/90 dark:bg-white/[0.04] border border-zinc-200 dark:border-white/10 shadow-xs backdrop-blur-xl mb-6 max-w-full">
+          <div className="flex items-center gap-1.5 bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 px-3 py-1 rounded-full text-[11px] sm:text-xs font-black animate-pulse text-center">
+            <Gift className="w-3.5 h-3.5 shrink-0" />
             <span>۵۰,۰۰۰ تومان اعتبار هدیه نقدی با ثبت‌نام اولیه</span>
           </div>
           <span className="text-xs text-zinc-400 font-medium hidden sm:inline">•</span>
-          <span className="text-xs text-zinc-600 dark:text-zinc-300 font-bold px-1">
+          <span className="text-[10px] sm:text-xs text-zinc-600 dark:text-zinc-300 font-bold px-1 text-center">
             پرداخت ریالی شتاب • بدون نیاز به ویزاکارت یا فیلترشکن
           </span>
         </div>
 
         {/* Main H1 Title */}
-        <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-[1.2] sm:leading-[1.15] max-w-4xl text-zinc-900 dark:text-white mb-6">
+        <h1 className="text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-black tracking-tight leading-[1.3] sm:leading-[1.18] max-w-4xl text-zinc-900 dark:text-white mb-4 sm:mb-6 px-1">
           دسترسی آسان به برترین <br className="hidden sm:inline" />
           <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-purple-600 to-emerald-500 dark:from-blue-400 dark:via-purple-400 dark:to-emerald-400">
             هوش‌های مصنوعی دنیا
           </span>
-          <span className="block mt-2 text-2xl sm:text-4xl font-bold text-zinc-700 dark:text-zinc-300">
+          <span className="block mt-2 text-lg sm:text-2xl md:text-3xl lg:text-4xl font-bold text-zinc-700 dark:text-zinc-300">
             به زبان فارسی و پرداخت به اندازه مصرف واقعی
           </span>
         </h1>
 
         {/* Subtitle */}
-        <p className="text-sm sm:text-base md:text-lg text-zinc-600 dark:text-zinc-400 max-w-2xl font-medium leading-relaxed mb-8">
+        <p className="text-xs sm:text-sm md:text-base text-zinc-600 dark:text-zinc-400 max-w-2xl font-medium leading-relaxed mb-6 sm:mb-8 px-2">
           دیگر نیازی به خرید اشتراک‌های ماهانه دلاری سنگین یا دغدغه قطع شدن فیلترشکن ندارید. با قوی‌ترین مدل‌های Claude 3.5، GPT-4o و Gemini به فارسی چت کنید و فقط هزینه کلمات مصرفی را به تومان بپردازید.
         </p>
 
         {/* Action Buttons */}
-        <div className="flex flex-col sm:flex-row items-center gap-3.5 w-full sm:w-auto mb-10">
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-3 w-full sm:w-auto mb-8 sm:mb-10 px-2 sm:px-0">
           <button
             onClick={handleStartChat}
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-3 px-8 py-4 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-black text-base sm:text-lg shadow-xl shadow-blue-600/25 hover:shadow-blue-600/35 transition-all cursor-pointer group"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-6 sm:px-8 py-3.5 sm:py-4 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-black text-sm sm:text-base md:text-lg shadow-xl shadow-blue-600/25 hover:shadow-blue-600/35 transition-all cursor-pointer group"
           >
-            <Sparkles className="w-5 h-5 text-amber-300 animate-pulse" />
-            <span>شروع گفتگو با ۵۰,۰۰۰ تومان هدیه</span>
-            <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1.5 transition-transform" />
+            <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-amber-300 animate-pulse" />
+            <span>شروع چت با ۵۰,۰۰۰ تومان هدیه</span>
+            <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5 group-hover:-translate-x-1.5 transition-transform" />
           </button>
 
           <Link
             to="/store"
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-4 rounded-2xl bg-white dark:bg-white/[0.04] hover:bg-zinc-100 dark:hover:bg-white/[0.08] text-zinc-800 dark:text-zinc-200 border border-zinc-200 dark:border-white/10 font-bold text-sm sm:text-base shadow-sm transition-all"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 sm:px-6 py-3.5 sm:py-4 rounded-2xl bg-white dark:bg-white/[0.04] hover:bg-zinc-100 dark:hover:bg-white/[0.08] text-zinc-800 dark:text-zinc-200 border border-zinc-200 dark:border-white/10 font-bold text-xs sm:text-sm md:text-base shadow-xs transition-all"
           >
             <Store className="w-4 h-4 text-emerald-500" />
             <span>فروشگاه محصولات و اکانت‌ها</span>
@@ -341,21 +469,21 @@ export const LandingPage: React.FC = () => {
         </div>
 
         {/* Hero Visual Mockup Combined With Rich 3D Visual */}
-        <div className="w-full max-w-5xl mt-8 sm:mt-12 relative">
-          <div className="relative rounded-3xl p-2 bg-gradient-to-b from-blue-500/20 via-purple-500/10 to-transparent border border-zinc-200/80 dark:border-white/10 shadow-2xl overflow-hidden backdrop-blur-2xl">
+        <div className="w-full max-w-5xl mt-4 sm:mt-8 relative">
+          <div className="relative rounded-2xl sm:rounded-3xl p-1.5 sm:p-2 bg-gradient-to-b from-blue-500/20 via-purple-500/10 to-transparent border border-zinc-200/80 dark:border-white/10 shadow-2xl overflow-hidden backdrop-blur-2xl">
             {/* Visual Hero Banner Image */}
-            <div className="relative h-48 sm:h-72 w-full rounded-2xl overflow-hidden mb-4">
+            <div className="relative h-36 sm:h-52 md:h-72 w-full rounded-xl sm:rounded-2xl overflow-hidden mb-3 sm:mb-4">
               <img
                 src="/images/hero-neural.jpg"
                 alt="هوش مصنوعی پیشرفته فارسی"
                 className="w-full h-full object-cover object-center"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#0c101a] via-[#0c101a]/40 to-transparent flex items-end p-6">
+              <div className="absolute inset-0 bg-gradient-to-t from-[#0c101a] via-[#0c101a]/40 to-transparent flex items-end p-3.5 sm:p-6">
                 <div className="text-right">
-                  <span className="px-3 py-1 rounded-full bg-blue-600 text-white text-xs font-bold shadow-md">
+                  <span className="px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full bg-blue-600 text-white text-[10px] sm:text-xs font-bold shadow-md inline-block">
                     موتور هوش مصنوعی چندگانه
                   </span>
-                  <h3 className="text-lg sm:text-2xl font-black text-white mt-2 drop-shadow-md">
+                  <h3 className="text-xs sm:text-lg md:text-2xl font-black text-white mt-1.5 sm:mt-2 drop-shadow-md">
                     پاسخ‌گویی آنی با سرعت مافوق صوت و بالاترین دقت نگارش فارسی
                   </h3>
                 </div>
@@ -363,47 +491,47 @@ export const LandingPage: React.FC = () => {
             </div>
 
             {/* Interactive Chat Bubble Mockup */}
-            <div className="bg-white/95 dark:bg-[#0c101a]/95 rounded-2xl p-4 sm:p-6 text-right border border-zinc-200/70 dark:border-white/5">
-              <div className="flex items-center justify-between pb-3 border-b border-zinc-100 dark:border-white/5 mb-4">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white">
-                    <Cpu className="w-4 h-4" />
+            <div className="bg-white/95 dark:bg-[#0c101a]/95 rounded-xl sm:rounded-2xl p-3 sm:p-6 text-right border border-zinc-200/70 dark:border-white/5">
+              <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-zinc-100 dark:border-white/5 mb-3 sm:mb-4">
+                <div className="flex items-center gap-2 sm:gap-2.5">
+                  <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white shrink-0">
+                    <Cpu className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                   </div>
                   <div>
                     <div className="text-xs sm:text-sm font-bold text-zinc-900 dark:text-zinc-100">
                       Claude 3.5 Sonnet
                     </div>
-                    <div className="text-[10px] text-emerald-500 font-bold flex items-center gap-1">
+                    <div className="text-[9px] sm:text-[10px] text-emerald-500 font-bold flex items-center gap-1">
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
                       آنلاین • متصل به وب
                     </div>
                   </div>
                 </div>
-                <div className="px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-500/30 text-xs font-bold text-emerald-600 dark:text-emerald-400">
+                <div className="px-2.5 py-1 rounded-full bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-500/30 text-[10px] sm:text-xs font-bold text-emerald-600 dark:text-emerald-400 whitespace-nowrap">
                   موجودی شما: ۵۰,۰۰۰ تومان (هدیه رایگان)
                 </div>
               </div>
 
               {/* User message */}
               <div className="flex justify-start mb-3">
-                <div className="max-w-[85%] bg-blue-600 text-white p-3.5 rounded-2xl rounded-tr-xs text-xs sm:text-sm leading-relaxed shadow-sm">
+                <div className="max-w-[90%] sm:max-w-[85%] bg-blue-600 text-white p-3 sm:p-3.5 rounded-2xl rounded-tr-xs text-xs sm:text-sm leading-relaxed shadow-xs text-right">
                   سلام! یک الگوریتم پایتون برای پردازش متن فارسی با هوش مصنوعی برام بنویس و سرعتش رو بگو.
                 </div>
               </div>
 
               {/* AI message */}
               <div className="flex justify-end mb-2">
-                <div className="max-w-[90%] bg-zinc-100 dark:bg-white/[0.04] border border-zinc-200/80 dark:border-white/5 p-4 rounded-2xl rounded-tl-xs text-xs sm:text-sm leading-relaxed text-zinc-800 dark:text-zinc-200">
+                <div className="max-w-[95%] sm:max-w-[90%] bg-zinc-100 dark:bg-white/[0.04] border border-zinc-200/80 dark:border-white/5 p-3 sm:p-4 rounded-2xl rounded-tl-xs text-xs sm:text-sm leading-relaxed text-zinc-800 dark:text-zinc-200 text-right">
                   <p className="mb-2 font-medium">
                     درود! برای پردازش فوق‌سریع زبان فارسی، مدل <strong>ParsBERT</strong> بهترین گزینه است:
                   </p>
-                  <div className="bg-zinc-900 text-emerald-400 p-2.5 rounded-xl font-mono text-[11px] dir-ltr text-left mb-3">
+                  <div className="bg-zinc-900 text-emerald-400 p-2 sm:p-2.5 rounded-xl font-mono text-[10px] sm:text-[11px] dir-ltr text-left mb-3 overflow-x-auto whitespace-pre">
                     from transformers import AutoTokenizer, AutoModel<br/>
                     tokenizer = AutoTokenizer.from_pretrained("HooshvareLab/bert-fa-base-uncased")
                   </div>
-                  <div className="pt-2 border-t border-zinc-200/60 dark:border-white/5 flex items-center justify-between text-[11px]">
+                  <div className="pt-2 border-t border-zinc-200/60 dark:border-white/5 flex flex-wrap items-center justify-between gap-1.5 text-[10px] sm:text-[11px]">
                     <span className="text-zinc-500 flex items-center gap-1">
-                      <Zap className="w-3.5 h-3.5 text-amber-500" />
+                      <Zap className="w-3.5 h-3.5 text-amber-500 shrink-0" />
                       سرعت: ۰.۹ ثانیه • ۲۹۰ توکن
                     </span>
                     <span className="font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 px-2 py-0.5 rounded-md">
@@ -418,37 +546,37 @@ export const LandingPage: React.FC = () => {
       </section>
 
       {/* ---------------- 3. Three Visual Portal Gateways ---------------- */}
-      <section className="relative z-10 py-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full">
-        <div className="text-center mb-10">
-          <h2 className="text-2xl sm:text-3xl font-black text-zinc-900 dark:text-white mb-3">
+      <section className="relative z-10 py-10 sm:py-14 px-3 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full">
+        <div className="text-center mb-8 sm:mb-10">
+          <h2 className="text-xl sm:text-2xl md:text-3xl font-black text-zinc-900 dark:text-white mb-2 sm:mb-3">
             شاهراه دسترسی به خدمات پلتفرم
           </h2>
-          <p className="text-sm text-zinc-600 dark:text-zinc-400 max-w-xl mx-auto">
+          <p className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400 max-w-xl mx-auto">
             مستقیماً به بخش دلخواه خود وارد شوید:
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {/* Card 1: Chatbox */}
-          <div className="group rounded-3xl overflow-hidden bg-white dark:bg-white/[0.02] border border-zinc-200 dark:border-white/5 hover:border-blue-500/40 shadow-md hover:shadow-2xl transition-all flex flex-col justify-between text-right">
-            <div className="relative h-44 w-full overflow-hidden">
+          <div className="group rounded-2xl sm:rounded-3xl overflow-hidden bg-white dark:bg-white/[0.02] border border-zinc-200 dark:border-white/5 hover:border-blue-500/40 shadow-xs hover:shadow-2xl transition-all flex flex-col justify-between text-right">
+            <div className="relative h-36 sm:h-44 w-full overflow-hidden">
               <img
                 src="/images/feature-developer.jpg"
                 alt="چت‌باکس هوش مصنوعی"
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex items-end p-4">
-                <span className="px-2.5 py-1 rounded-full bg-blue-600 text-white text-xs font-bold shadow-sm">
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex items-end p-3.5 sm:p-4">
+                <span className="px-2.5 py-0.5 sm:py-1 rounded-full bg-blue-600 text-white text-[11px] sm:text-xs font-bold shadow-xs">
                   گفتگوی هوشمند
                 </span>
               </div>
             </div>
-            <div className="p-6 flex-1 flex flex-col justify-between">
+            <div className="p-4 sm:p-6 flex-1 flex flex-col justify-between">
               <div>
-                <h3 className="text-lg font-black text-zinc-900 dark:text-white mb-2">
+                <h3 className="text-base sm:text-lg font-black text-zinc-900 dark:text-white mb-1.5 sm:mb-2">
                   چت‌باکس هوشمند (Chat App)
                 </h3>
-                <p className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed mb-6 font-medium">
+                <p className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed mb-4 sm:mb-6 font-medium">
                   چت با مدل‌های GPT-4o، Claude و Gemini، استخراج متن اسناد و PDF، جستجوی زنده در گوگل با ۵۰,۰۰۰ تومان هدیه اولیه.
                 </p>
               </div>
@@ -463,25 +591,25 @@ export const LandingPage: React.FC = () => {
           </div>
 
           {/* Card 2: Store */}
-          <div className="group rounded-3xl overflow-hidden bg-white dark:bg-white/[0.02] border border-zinc-200 dark:border-white/5 hover:border-emerald-500/40 shadow-md hover:shadow-2xl transition-all flex flex-col justify-between text-right">
-            <div className="relative h-44 w-full overflow-hidden">
+          <div className="group rounded-2xl sm:rounded-3xl overflow-hidden bg-white dark:bg-white/[0.02] border border-zinc-200 dark:border-white/5 hover:border-emerald-500/40 shadow-xs hover:shadow-2xl transition-all flex flex-col justify-between text-right">
+            <div className="relative h-36 sm:h-44 w-full overflow-hidden">
               <img
                 src="/images/store-portal.jpg"
                 alt="فروشگاه هوش مصنوعی"
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex items-end p-4">
-                <span className="px-2.5 py-1 rounded-full bg-emerald-600 text-white text-xs font-bold shadow-sm">
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex items-end p-3.5 sm:p-4">
+                <span className="px-2.5 py-0.5 sm:py-1 rounded-full bg-emerald-600 text-white text-[11px] sm:text-xs font-bold shadow-xs">
                   محصولات و لایسنس
                 </span>
               </div>
             </div>
-            <div className="p-6 flex-1 flex flex-col justify-between">
+            <div className="p-4 sm:p-6 flex-1 flex flex-col justify-between">
               <div>
-                <h3 className="text-lg font-black text-zinc-900 dark:text-white mb-2">
+                <h3 className="text-base sm:text-lg font-black text-zinc-900 dark:text-white mb-1.5 sm:mb-2">
                   فروشگاه اشتراک‌ها
                 </h3>
-                <p className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed mb-6 font-medium">
+                <p className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed mb-4 sm:mb-6 font-medium">
                   خرید رسمی اشتراک ChatGPT Plus، کلیدهای اختصاصی API و لایسنس‌های معتبر هوش مصنوعی با پرداخت ریالی و تحویل فوری.
                 </p>
               </div>
@@ -496,25 +624,25 @@ export const LandingPage: React.FC = () => {
           </div>
 
           {/* Card 3: Blog */}
-          <div className="group rounded-3xl overflow-hidden bg-white dark:bg-white/[0.02] border border-zinc-200 dark:border-white/5 hover:border-purple-500/40 shadow-md hover:shadow-2xl transition-all flex flex-col justify-between text-right">
-            <div className="relative h-44 w-full overflow-hidden">
+          <div className="group rounded-2xl sm:rounded-3xl overflow-hidden bg-white dark:bg-white/[0.02] border border-zinc-200 dark:border-white/5 hover:border-purple-500/40 shadow-xs hover:shadow-2xl transition-all flex flex-col justify-between text-right sm:col-span-2 lg:col-span-1">
+            <div className="relative h-36 sm:h-44 w-full overflow-hidden">
               <img
                 src="/images/blog-portal.jpg"
                 alt="وبلاگ هوش مصنوعی"
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex items-end p-4">
-                <span className="px-2.5 py-1 rounded-full bg-purple-600 text-white text-xs font-bold shadow-sm">
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex items-end p-3.5 sm:p-4">
+                <span className="px-2.5 py-0.5 sm:py-1 rounded-full bg-purple-600 text-white text-[11px] sm:text-xs font-bold shadow-xs">
                   اخبار و آموزش
                 </span>
               </div>
             </div>
-            <div className="p-6 flex-1 flex flex-col justify-between">
+            <div className="p-4 sm:p-6 flex-1 flex flex-col justify-between">
               <div>
-                <h3 className="text-lg font-black text-zinc-900 dark:text-white mb-2">
+                <h3 className="text-base sm:text-lg font-black text-zinc-900 dark:text-white mb-1.5 sm:mb-2">
                   مجله و اخبار لحظه‌ای AI
                 </h3>
-                <p className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed mb-6 font-medium">
+                <p className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed mb-4 sm:mb-6 font-medium">
                   تازه‌ترین رویدادهای هوش مصنوعی جهان، مقالات آموزشی، مقایسه مدل‌ها و ترفندهای مهندسی پرامپت به زبان فارسی روان.
                 </p>
               </div>
@@ -531,39 +659,39 @@ export const LandingPage: React.FC = () => {
       </section>
 
       {/* ---------------- 4. AI Image Generation Visual Showcase Gallery ---------------- */}
-      <section id="gallery" className="relative z-10 py-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full">
-        <div className="text-center mb-12">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-pink-50 dark:bg-pink-500/10 text-pink-600 dark:text-pink-400 text-xs font-bold mb-3">
+      <section id="gallery" className="relative z-10 py-12 sm:py-16 px-3 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full">
+        <div className="text-center mb-8 sm:mb-12">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-pink-50 dark:bg-pink-500/10 text-pink-600 dark:text-pink-400 text-[11px] sm:text-xs font-bold mb-2.5 sm:mb-3">
             <Palette className="w-3.5 h-3.5" />
             <span>استودیوی تولید تصویر هوشمند (Flux.1)</span>
           </div>
-          <h2 className="text-2xl sm:text-4xl font-black text-zinc-900 dark:text-white mb-4">
+          <h2 className="text-xl sm:text-3xl md:text-4xl font-black text-zinc-900 dark:text-white mb-3 sm:mb-4 px-1">
             تولید تصاویر شگفت‌انگیز با دستور متنی فارسی
           </h2>
-          <p className="text-sm sm:text-base text-zinc-600 dark:text-zinc-400 max-w-2xl mx-auto leading-relaxed">
+          <p className="text-xs sm:text-sm md:text-base text-zinc-600 dark:text-zinc-400 max-w-2xl mx-auto leading-relaxed px-2">
             فقط تصور کنید و بنویسید؛ هوش مصنوعی آن را با بالاترین کیفیت هنری و واقع‌گرایانه برای شما خلق می‌کند:
           </p>
         </div>
 
         {/* Image Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {galleryImages.map((img, idx) => (
             <div
               key={idx}
-              className="group rounded-3xl overflow-hidden bg-white dark:bg-white/[0.02] border border-zinc-200 dark:border-white/5 shadow-md hover:shadow-2xl transition-all flex flex-col text-right relative"
+              className="group rounded-2xl sm:rounded-3xl overflow-hidden bg-white dark:bg-white/[0.02] border border-zinc-200 dark:border-white/5 shadow-xs hover:shadow-2xl transition-all flex flex-col text-right relative"
             >
-              <div className="relative h-64 w-full overflow-hidden bg-zinc-900">
+              <div className="relative h-56 sm:h-64 w-full overflow-hidden bg-zinc-900">
                 <img
                   src={img.src}
                   alt={img.title}
                   className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent opacity-80 group-hover:opacity-95 transition-opacity flex flex-col justify-end p-5">
-                  <span className="text-[10px] font-bold text-pink-400 uppercase tracking-wider mb-1">
+                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent opacity-85 group-hover:opacity-95 transition-opacity flex flex-col justify-end p-4 sm:p-5">
+                  <span className="text-[9px] sm:text-[10px] font-bold text-pink-400 uppercase tracking-wider mb-1">
                     {img.tag}
                   </span>
-                  <h4 className="text-base font-black text-white mb-1.5">{img.title}</h4>
-                  <p className="text-xs text-zinc-300 line-clamp-2 leading-relaxed font-medium">
+                  <h4 className="text-sm sm:text-base font-black text-white mb-1">{img.title}</h4>
+                  <p className="text-[11px] sm:text-xs text-zinc-300 line-clamp-2 leading-relaxed font-medium">
                     «{img.prompt}»
                   </p>
                 </div>
@@ -574,51 +702,51 @@ export const LandingPage: React.FC = () => {
       </section>
 
       {/* ---------------- 5. Models Showcase with Visual Cards ---------------- */}
-      <section className="relative z-10 py-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full">
-        <div className="text-center mb-12">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 text-xs font-bold mb-3">
+      <section className="relative z-10 py-12 sm:py-16 px-3 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full">
+        <div className="text-center mb-8 sm:mb-12">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 text-[11px] sm:text-xs font-bold mb-2.5 sm:mb-3">
             <Sparkles className="w-3.5 h-3.5" />
             <span>قدرتمندترین مدل‌های هوش مصنوعی</span>
           </div>
-          <h2 className="text-2xl sm:text-4xl font-black text-zinc-900 dark:text-white mb-4">
+          <h2 className="text-xl sm:text-3xl md:text-4xl font-black text-zinc-900 dark:text-white mb-3 sm:mb-4 px-1">
             بهترین مغزهای هوش مصنوعی در اختیار شما
           </h2>
-          <p className="text-sm sm:text-base text-zinc-600 dark:text-zinc-400 max-w-2xl mx-auto leading-relaxed">
+          <p className="text-xs sm:text-sm md:text-base text-zinc-600 dark:text-zinc-400 max-w-2xl mx-auto leading-relaxed px-2">
             بر اساس زمینه کاری خود بهترین هوش مصنوعی را انتخاب کنید:
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
           {topModels.map((model) => (
             <div
               key={model.id}
-              className="rounded-3xl overflow-hidden bg-white dark:bg-white/[0.02] border border-zinc-200 dark:border-white/5 shadow-xs hover:shadow-xl transition-all text-right flex flex-col justify-between"
+              className="rounded-2xl sm:rounded-3xl overflow-hidden bg-white dark:bg-white/[0.02] border border-zinc-200 dark:border-white/5 shadow-xs hover:shadow-xl transition-all text-right flex flex-col justify-between"
             >
-              <div className="relative h-40 w-full overflow-hidden">
+              <div className="relative h-36 sm:h-40 w-full overflow-hidden">
                 <img
                   src={model.image}
                   alt={model.name}
                   className="w-full h-full object-cover"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#0c101a] via-[#0c101a]/40 to-transparent flex items-end p-3.5">
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-white/20 backdrop-blur-md text-white">
+                <div className="absolute inset-0 bg-gradient-to-t from-[#0c101a] via-[#0c101a]/40 to-transparent flex items-end p-3 sm:p-3.5">
+                  <span className="text-[9px] sm:text-[10px] font-bold px-2 py-0.5 rounded-full bg-white/20 backdrop-blur-md text-white">
                     {model.badge}
                   </span>
                 </div>
               </div>
 
-              <div className="p-5 flex-1 flex flex-col justify-between">
+              <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between">
                 <div>
-                  <div className="text-[10px] font-black uppercase text-zinc-400 tracking-wider mb-1">
+                  <div className="text-[9px] sm:text-[10px] font-black uppercase text-zinc-400 tracking-wider mb-1">
                     {model.company}
                   </div>
-                  <h3 className="text-base font-black text-zinc-900 dark:text-white mb-1">
+                  <h3 className="text-sm sm:text-base font-black text-zinc-900 dark:text-white mb-1">
                     {model.name}
                   </h3>
-                  <div className="text-xs font-bold text-blue-600 dark:text-blue-400 mb-3">
+                  <div className="text-xs font-bold text-blue-600 dark:text-blue-400 mb-2 sm:mb-3">
                     {model.tag}
                   </div>
-                  <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed mb-5 font-medium">
+                  <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed mb-4 sm:mb-5 font-medium">
                     {model.desc}
                   </p>
                 </div>
@@ -636,53 +764,53 @@ export const LandingPage: React.FC = () => {
       </section>
 
       {/* ---------------- 5.5 Multi-Routing Engine Showcase ---------------- */}
-      <section className="relative z-10 py-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full">
-        <div className="rounded-3xl p-8 sm:p-12 bg-gradient-to-r from-blue-900 via-indigo-900 to-purple-900 border border-white/10 shadow-2xl relative overflow-hidden flex flex-col md:flex-row items-center gap-10">
+      <section className="relative z-10 py-10 sm:py-16 px-3 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full">
+        <div className="rounded-2xl sm:rounded-3xl p-5 sm:p-8 md:p-12 bg-gradient-to-r from-blue-900 via-indigo-900 to-purple-900 border border-white/10 shadow-2xl relative overflow-hidden flex flex-col md:flex-row items-center gap-6 sm:gap-10">
           <div className="absolute inset-0 bg-[url('/images/noise.png')] opacity-10 mix-blend-overlay pointer-events-none"></div>
           <div className="absolute -top-24 -left-24 w-64 h-64 bg-blue-500/30 blur-[100px] rounded-full pointer-events-none"></div>
           <div className="absolute -bottom-24 -right-24 w-64 h-64 bg-purple-500/30 blur-[100px] rounded-full pointer-events-none"></div>
           
-          <div className="flex-1 text-right relative z-10">
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 backdrop-blur-md text-white text-xs font-bold mb-5 border border-white/20">
-              <Layers className="w-4 h-4 text-blue-300" />
+          <div className="flex-1 text-right relative z-10 w-full">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md text-white text-[11px] sm:text-xs font-bold mb-3 sm:mb-5 border border-white/20">
+              <Layers className="w-3.5 h-3.5 text-blue-300" />
               <span>موتور مسیریابی هوشمند (Smart Router)</span>
             </div>
-            <h2 className="text-3xl sm:text-4xl font-black text-white mb-5 leading-tight">
-              دسترسی یکپارچه به بیش از <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-emerald-400 font-extrabold text-5xl mx-1 drop-shadow-sm">{totalModels.toLocaleString('fa-IR')}</span> مدل برتر دنیا
+            <h2 className="text-xl sm:text-3xl md:text-4xl font-black text-white mb-3 sm:mb-5 leading-tight">
+              دسترسی یکپارچه به بیش از <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-emerald-400 font-extrabold text-3xl sm:text-5xl mx-1 drop-shadow-sm">{totalModels.toLocaleString('fa-IR')}</span> مدل برتر دنیا
             </h2>
-            <p className="text-blue-100/90 text-sm sm:text-base leading-relaxed max-w-xl font-medium">
+            <p className="text-blue-100/90 text-xs sm:text-sm md:text-base leading-relaxed max-w-xl font-medium">
               سیستم ما با استفاده از موتور پیشرفته <strong>Multi-Routing</strong>، درخواست شما را تحلیل کرده و به صورت خودکار آن را به بهینه‌ترین، سریع‌ترین و ارزان‌ترین مدل هدایت می‌کند تا ضمن کاهش چشمگیر هزینه‌ها، بالاترین کیفیت پاسخ‌گویی را تجربه کنید.
             </p>
             
-            <div className="mt-8 flex flex-wrap gap-2 justify-start" dir="ltr">
+            <div className="mt-5 sm:mt-8 flex flex-wrap gap-1.5 sm:gap-2 justify-start" dir="ltr">
               {[...showcaseModels, 'و ده‌ها مدل دیگر...'].map((tag, i) => (
-                <span key={i} className="px-3 py-1.5 bg-white/10 border border-white/10 rounded-lg text-white text-xs font-mono font-bold shadow-sm backdrop-blur-sm">
+                <span key={i} className="px-2.5 py-1 sm:px-3 sm:py-1.5 bg-white/10 border border-white/10 rounded-lg text-white text-[11px] sm:text-xs font-mono font-bold shadow-xs backdrop-blur-sm">
                   {tag}
                 </span>
               ))}
             </div>
           </div>
           
-          <div className="flex-1 relative z-10 w-full max-w-sm">
-            <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-5 shadow-2xl relative">
-              <div className="flex justify-between items-center mb-4 pb-3 border-b border-white/10" dir="ltr">
-                <span className="flex h-3 w-3 relative">
+          <div className="flex-1 relative z-10 w-full max-w-full sm:max-w-sm mx-auto md:mx-0">
+            <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-4 sm:p-5 shadow-2xl relative">
+              <div className="flex justify-between items-center mb-3 sm:mb-4 pb-2.5 sm:pb-3 border-b border-white/10" dir="ltr">
+                <span className="flex h-2.5 w-2.5 sm:h-3 sm:w-3 relative">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 sm:h-3 sm:w-3 bg-emerald-500"></span>
                 </span>
-                <span className="text-white font-bold text-sm">Routing Status</span>
+                <span className="text-white font-bold text-xs sm:text-sm">Routing Status</span>
               </div>
-              <div className="space-y-3" dir="ltr">
-                <div className="flex items-center justify-between text-xs p-2.5 rounded-xl bg-white/5 border border-white/5 text-white/90 font-mono">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+              <div className="space-y-2.5 sm:space-y-3" dir="ltr">
+                <div className="flex items-center justify-between text-[11px] sm:text-xs p-2 sm:p-2.5 rounded-xl bg-white/5 border border-white/5 text-white/90 font-mono">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
                   <span>Routing to OpenRouter</span>
                 </div>
-                <div className="flex items-center justify-between text-xs p-2.5 rounded-xl bg-blue-500/20 border border-blue-500/30 text-blue-100 font-mono font-bold">
-                  <Zap className="w-4 h-4 text-amber-400 animate-pulse" />
+                <div className="flex items-center justify-between text-[11px] sm:text-xs p-2 sm:p-2.5 rounded-xl bg-blue-500/20 border border-blue-500/30 text-blue-100 font-mono font-bold">
+                  <Zap className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
                   <span>Model Selected: Qwen-72B</span>
                 </div>
-                <div className="flex items-center justify-between text-xs p-2.5 rounded-xl bg-white/5 border border-white/5 text-white/90 font-mono">
-                  <Coins className="w-4 h-4 text-emerald-400" />
+                <div className="flex items-center justify-between text-[11px] sm:text-xs p-2 sm:p-2.5 rounded-xl bg-white/5 border border-white/5 text-white/90 font-mono">
+                  <Coins className="w-3.5 h-3.5 text-emerald-400" />
                   <span>Cost per 1k tokens: ~0.00$</span>
                 </div>
               </div>
@@ -692,10 +820,10 @@ export const LandingPage: React.FC = () => {
       </section>
 
       {/* ---------------- 6. Economic Comparison ---------------- */}
-      <section className="relative z-10 py-16 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto w-full">
-        <div className="rounded-3xl p-6 sm:p-10 bg-gradient-to-br from-white to-zinc-50 dark:from-zinc-900/90 dark:to-zinc-950 border border-zinc-200/80 dark:border-white/10 shadow-xl text-right">
-          <div className="text-center mb-8">
-            <h2 className="text-xl sm:text-3xl font-black text-zinc-900 dark:text-white mb-3">
+      <section className="relative z-10 py-10 sm:py-16 px-3 sm:px-6 lg:px-8 max-w-5xl mx-auto w-full">
+        <div className="rounded-2xl sm:rounded-3xl p-4 sm:p-8 md:p-10 bg-gradient-to-br from-white to-zinc-50 dark:from-zinc-900/90 dark:to-zinc-950 border border-zinc-200/80 dark:border-white/10 shadow-xl text-right">
+          <div className="text-center mb-6 sm:mb-8">
+            <h2 className="text-lg sm:text-2xl md:text-3xl font-black text-zinc-900 dark:text-white mb-2 sm:mb-3">
               چرا مدل اعتباری (Pay-As-You-Go) به‌صرفه‌ترین انتخاب است؟
             </h2>
             <p className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400 max-w-xl mx-auto">
@@ -703,49 +831,49 @@ export const LandingPage: React.FC = () => {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="p-5 sm:p-6 rounded-2xl bg-zinc-100/70 dark:bg-white/[0.02] border border-zinc-200/80 dark:border-white/5 text-right flex flex-col justify-between">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+            <div className="p-4 sm:p-6 rounded-xl sm:rounded-2xl bg-zinc-100/70 dark:bg-white/[0.02] border border-zinc-200/80 dark:border-white/5 text-right flex flex-col justify-between">
               <div>
-                <div className="text-xs font-bold text-red-500 mb-1">اشتراک ماهانه سنتی (خارجی)</div>
-                <h3 className="text-lg font-black text-zinc-800 dark:text-zinc-200 mb-4">
+                <div className="text-[11px] sm:text-xs font-bold text-red-500 mb-1">اشتراک ماهانه سنتی (خارجی)</div>
+                <h3 className="text-base sm:text-lg font-black text-zinc-800 dark:text-zinc-200 mb-3 sm:mb-4">
                   ماهانه ۲۰ دلار (~۱,۵۰۰,۰۰۰ تومان)
                 </h3>
-                <ul className="space-y-2.5 text-xs text-zinc-600 dark:text-zinc-400 font-medium">
+                <ul className="space-y-2 sm:space-y-2.5 text-xs text-zinc-600 dark:text-zinc-400 font-medium">
                   <li className="flex items-center gap-2 text-red-600 dark:text-red-400">
-                    <span>✕</span>
+                    <span className="shrink-0">✕</span>
                     <span>پرداخت مبلغ کامل حتی اگر در ماه فقط چند پیام ارسال کنید</span>
                   </li>
                   <li className="flex items-center gap-2 text-red-600 dark:text-red-400">
-                    <span>✕</span>
+                    <span className="shrink-0">✕</span>
                     <span>نیاز به مسترکارت یا ویزاکارت بین‌المللی و کارمزد صرافی</span>
                   </li>
                   <li className="flex items-center gap-2 text-red-600 dark:text-red-400">
-                    <span>✕</span>
+                    <span className="shrink-0">✕</span>
                     <span>انقضای سهمیه با اتمام ماه میلادی</span>
                   </li>
                 </ul>
               </div>
             </div>
 
-            <div className="p-5 sm:p-6 rounded-2xl bg-gradient-to-br from-emerald-500/10 via-emerald-500/5 to-transparent border border-emerald-500/30 text-right flex flex-col justify-between shadow-md">
+            <div className="p-4 sm:p-6 rounded-xl sm:rounded-2xl bg-gradient-to-br from-emerald-500/10 via-emerald-500/5 to-transparent border border-emerald-500/30 text-right flex flex-col justify-between shadow-md">
               <div>
                 <div className="inline-block px-2 py-0.5 rounded-md bg-emerald-500 text-white text-[10px] font-bold mb-1">
                   پیشنهاد هوشمندانه
                 </div>
-                <h3 className="text-lg font-black text-zinc-900 dark:text-white mb-4">
+                <h3 className="text-base sm:text-lg font-black text-zinc-900 dark:text-white mb-3 sm:mb-4">
                   شروع با ۵۰,۰۰۰ تومان هدیه + شارژ ریالی با مبالغ دلخواه
                 </h3>
-                <ul className="space-y-2.5 text-xs text-zinc-700 dark:text-zinc-300 font-medium">
+                <ul className="space-y-2 sm:space-y-2.5 text-xs text-zinc-700 dark:text-zinc-300 font-medium">
                   <li className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 font-bold">
-                    <span>✓</span>
+                    <span className="shrink-0">✓</span>
                     <span>پرداخت دقیقاً به اندازه تعداد توکن‌های مصرفی هر چت</span>
                   </li>
                   <li className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 font-bold">
-                    <span>✓</span>
+                    <span className="shrink-0">✓</span>
                     <span>پرداخت با کارت‌های بانکی عضو شتاب بدون واسطه</span>
                   </li>
                   <li className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 font-bold">
-                    <span>✓</span>
+                    <span className="shrink-0">✓</span>
                     <span>اعتبار شما هرگز منقضی نمی‌شود و تا همیشه محفوظ است</span>
                   </li>
                 </ul>
@@ -756,48 +884,48 @@ export const LandingPage: React.FC = () => {
       </section>
 
       {/* ---------------- 7. Pricing Packages ---------------- */}
-      <section id="pricing" className="relative z-10 py-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full">
-        <div className="text-center mb-12">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs font-bold mb-3">
+      <section id="pricing" className="relative z-10 py-10 sm:py-16 px-3 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full">
+        <div className="text-center mb-8 sm:mb-12">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[11px] sm:text-xs font-bold mb-2.5 sm:mb-3">
             <Coins className="w-3.5 h-3.5" />
             <span>بسته‌های شارژ اعتباری</span>
           </div>
-          <h2 className="text-2xl sm:text-4xl font-black text-zinc-900 dark:text-white mb-4">
+          <h2 className="text-xl sm:text-3xl md:text-4xl font-black text-zinc-900 dark:text-white mb-3 sm:mb-4 px-1">
             تعرفه‌های شفاف، اقتصادی و منعطف
           </h2>
-          <p className="text-sm sm:text-base text-zinc-600 dark:text-zinc-400 max-w-xl mx-auto">
+          <p className="text-xs sm:text-sm md:text-base text-zinc-600 dark:text-zinc-400 max-w-xl mx-auto px-2">
             هر زمان به توکن بیشتری نیاز داشتید، با یک کلیک حساب خود را شارژ کنید:
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 max-w-5xl mx-auto">
           {packages.map((pkg, idx) => (
             <div
               key={idx}
-              className={`rounded-3xl p-6 sm:p-7 text-right flex flex-col justify-between transition-all ${
+              className={`rounded-2xl sm:rounded-3xl p-5 sm:p-6 md:p-7 text-right flex flex-col justify-between transition-all ${
                 pkg.isPopular
-                  ? 'bg-white dark:bg-zinc-900 border-2 border-emerald-500 shadow-xl relative scale-100 sm:scale-105 z-20'
+                  ? 'bg-white dark:bg-zinc-900 border-2 border-emerald-500 shadow-xl relative scale-100 md:scale-105 z-20'
                   : 'bg-white dark:bg-white/[0.02] border border-zinc-200 dark:border-white/5 shadow-xs'
               }`}
             >
               <div>
                 {pkg.isPopular && (
-                  <div className="inline-block px-3 py-1 rounded-full bg-emerald-500 text-white text-[10px] font-black mb-3">
+                  <div className="inline-block px-2.5 py-0.5 rounded-full bg-emerald-500 text-white text-[10px] font-black mb-2.5 sm:mb-3">
                     محبوب‌ترین انتخاب
                   </div>
                 )}
-                <h3 className="text-lg font-black text-zinc-900 dark:text-white mb-2">{pkg.title}</h3>
+                <h3 className="text-base sm:text-lg font-black text-zinc-900 dark:text-white mb-1.5 sm:mb-2">{pkg.title}</h3>
                 <div className="flex items-baseline gap-1 mb-2">
-                  <span className="text-3xl font-black text-zinc-900 dark:text-white">{pkg.price}</span>
+                  <span className="text-2xl sm:text-3xl font-black text-zinc-900 dark:text-white">{pkg.price}</span>
                   <span className="text-xs text-zinc-500 font-bold">تومان</span>
                 </div>
-                <div className="text-xs font-bold text-emerald-600 dark:text-emerald-400 mb-4 bg-emerald-50 dark:bg-emerald-500/10 px-2.5 py-1 rounded-lg inline-block">
+                <div className="text-[11px] sm:text-xs font-bold text-emerald-600 dark:text-emerald-400 mb-3 sm:mb-4 bg-emerald-50 dark:bg-emerald-500/10 px-2.5 py-1 rounded-lg inline-block">
                   {pkg.tokenEstimate}
                 </div>
-                <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed mb-6 font-medium">
+                <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed mb-4 sm:mb-6 font-medium">
                   {pkg.desc}
                 </p>
-                <div className="space-y-2.5 pt-4 border-t border-zinc-100 dark:border-white/5 mb-6">
+                <div className="space-y-2 sm:space-y-2.5 pt-3 sm:pt-4 border-t border-zinc-100 dark:border-white/5 mb-5 sm:mb-6">
                   {pkg.features.map((feat, fIdx) => (
                     <div key={fIdx} className="flex items-center gap-2 text-xs font-medium text-zinc-700 dark:text-zinc-300">
                       <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
@@ -823,9 +951,9 @@ export const LandingPage: React.FC = () => {
       </section>
 
       {/* ---------------- 8. FAQ Section ---------------- */}
-      <section id="faq" className="relative z-10 py-16 px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto w-full">
-        <div className="text-center mb-12">
-          <h2 className="text-2xl sm:text-3xl font-black text-zinc-900 dark:text-white mb-3">
+      <section id="faq" className="relative z-10 py-10 sm:py-16 px-3 sm:px-6 lg:px-8 max-w-4xl mx-auto w-full">
+        <div className="text-center mb-8 sm:mb-12">
+          <h2 className="text-xl sm:text-2xl md:text-3xl font-black text-zinc-900 dark:text-white mb-2 sm:mb-3">
             سوالات متداول
           </h2>
           <p className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400">
@@ -833,27 +961,27 @@ export const LandingPage: React.FC = () => {
           </p>
         </div>
 
-        <div className="space-y-3">
+        <div className="space-y-2.5 sm:space-y-3">
           {faqs.map((faq, idx) => (
             <div
               key={idx}
-              className="rounded-2xl bg-white dark:bg-white/[0.02] border border-zinc-200 dark:border-white/5 overflow-hidden transition-all text-right"
+              className="rounded-xl sm:rounded-2xl bg-white dark:bg-white/[0.02] border border-zinc-200 dark:border-white/5 overflow-hidden transition-all text-right"
             >
               <button
                 onClick={() => toggleFaq(idx)}
-                className="w-full p-4 sm:p-5 flex items-center justify-between text-right cursor-pointer gap-4"
+                className="w-full p-3.5 sm:p-5 flex items-center justify-between text-right cursor-pointer gap-3 sm:gap-4"
               >
-                <span className="text-sm sm:text-base font-bold text-zinc-900 dark:text-zinc-100">
+                <span className="text-xs sm:text-sm md:text-base font-bold text-zinc-900 dark:text-zinc-100">
                   {faq.q}
                 </span>
                 <ChevronDown
-                  className={`w-5 h-5 text-zinc-400 transition-transform shrink-0 ${
+                  className={`w-4 h-4 sm:w-5 sm:h-5 text-zinc-400 transition-transform shrink-0 ${
                     activeFaq === idx ? 'rotate-180 text-blue-600 dark:text-blue-400' : ''
                   }`}
                 />
               </button>
               {activeFaq === idx && (
-                <div className="px-4 sm:px-5 pb-5 text-xs sm:text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed pt-1 border-t border-zinc-100 dark:border-white/5 animate-fadeIn">
+                <div className="px-3.5 sm:px-5 pb-4 sm:pb-5 text-xs sm:text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed pt-1 border-t border-zinc-100 dark:border-white/5 animate-fadeIn">
                   {faq.a}
                 </div>
               )}
@@ -863,22 +991,22 @@ export const LandingPage: React.FC = () => {
       </section>
 
       {/* ---------------- 9. Bottom CTA Banner ---------------- */}
-      <section className="relative z-10 py-16 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto w-full text-center">
-        <div className="rounded-3xl p-8 sm:p-12 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white shadow-2xl relative overflow-hidden">
+      <section className="relative z-10 py-10 sm:py-16 px-3 sm:px-6 lg:px-8 max-w-5xl mx-auto w-full text-center">
+        <div className="rounded-2xl sm:rounded-3xl p-6 sm:p-10 md:p-12 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white shadow-2xl relative overflow-hidden">
           <div className="absolute top-0 right-0 w-96 h-96 bg-white/10 rounded-full blur-3xl pointer-events-none" />
-          <h2 className="text-2xl sm:text-4xl font-black mb-4 relative z-10">
+          <h2 className="text-xl sm:text-3xl md:text-4xl font-black mb-3 sm:mb-4 relative z-10">
             آماده‌اید سرعت و هوش مصنوعی واقعی را تجربه کنید؟
           </h2>
-          <p className="text-sm sm:text-base text-blue-100 max-w-xl mx-auto mb-8 relative z-10 leading-relaxed font-medium">
+          <p className="text-xs sm:text-sm md:text-base text-blue-100 max-w-xl mx-auto mb-6 sm:mb-8 relative z-10 leading-relaxed font-medium">
             همین حالا ثبت‌نام کنید و ۵۰,۰۰۰ تومان اعتبار هدیه رایگان برای چت با GPT-4o و Claude 3.5 دریافت کنید.
           </p>
           <button
             onClick={handleStartChat}
-            className="inline-flex items-center gap-2 bg-white text-zinc-900 hover:bg-zinc-100 px-8 py-4 rounded-2xl font-black text-base shadow-xl transition-all cursor-pointer relative z-10 hover:scale-105 active:scale-95"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-white text-zinc-900 hover:bg-zinc-100 px-6 sm:px-8 py-3.5 sm:py-4 rounded-xl sm:rounded-2xl font-black text-sm sm:text-base shadow-xl transition-all cursor-pointer relative z-10 hover:scale-105 active:scale-95"
           >
-            <Sparkles className="w-5 h-5 text-blue-600" />
+            <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" />
             <span>شروع چت با ۵۰,۰۰۰ تومان هدیه</span>
-            <ArrowLeft className="w-5 h-5" />
+            <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
           </button>
         </div>
       </section>
