@@ -97,6 +97,8 @@ export function getZarinpalErrorMessage(code?: number): string {
       return 'مرچنت درگاه در زرین‌پال غیرفعال است.';
     case -12:
       return 'تعداد تلاش‌ها بیش از حد مجاز است. لطفاً کمی بعد تلاش کنید.';
+    case -14:
+      return 'دامنه آدرس بازگشت (Callback URL) با دامنه ثبت‌شده در زرین‌پال مغایرت دارد یا مبلغ کمتر از حد مجاز است.';
     case -15:
       return 'درگاه پرداخت در حال حاضر با مشکل موقت مواجه است.';
     case -16:
@@ -272,7 +274,11 @@ export async function verifyZarinpalPayment(options: PaymentVerifyOptions): Prom
 /**
  * Test merchant connectivity
  */
-export async function testZarinpalMerchant(customMerchantId?: string, sandbox = false): Promise<{ valid: boolean; message: string }> {
+export async function testZarinpalMerchant(
+  customMerchantId?: string, 
+  sandbox = false,
+  customCallbackUrl?: string
+): Promise<{ valid: boolean; message: string }> {
   const config = getZarinpalConfig();
   const merchantId = (customMerchantId || config.merchantId || '').trim();
 
@@ -281,14 +287,15 @@ export async function testZarinpalMerchant(customMerchantId?: string, sandbox = 
   }
 
   const endpoints = getEndpoints(sandbox);
+  const callbackUrl = customCallbackUrl || process.env.APP_URL || process.env.WEBSITE_URL || 'https://dastyarai.com/api/store/zarinpal/callback';
 
   try {
     const testPayload = {
       merchant_id: merchantId,
-      amount: 1000,
+      amount: 10000,
       currency: 'IRT',
-      description: 'تست اتصال درگاه چت‌باکس',
-      callback_url: 'https://example.com/test'
+      description: 'تست اتصال درگاه دستیار هوشمند',
+      callback_url: callbackUrl
     };
 
     const response = await fetch(endpoints.request, {
@@ -303,7 +310,7 @@ export async function testZarinpalMerchant(customMerchantId?: string, sandbox = 
     const json = await response.json();
 
     if (json.data && json.data.code === 100) {
-      return { valid: true, message: 'اتصال به زرین‌پال با موفقیت برقرار شد و مرچنت کاملاً معتبر است.' };
+      return { valid: true, message: 'اتصال به زرین‌پال با موفقیت برقرار شد و مرچنت کاملاً معتبر و فعال است.' };
     }
 
     const errCode = json.errors?.code ?? json.data?.code;
@@ -319,6 +326,12 @@ export async function testZarinpalMerchant(customMerchantId?: string, sandbox = 
     }
     if (errCode === -11) {
       return { valid: false, message: 'کد مرچنت درگاه در زرین‌پال غیرفعال است.' };
+    }
+    if (errCode === -14) {
+      return {
+        valid: false,
+        message: `خطای -14 زرین‌پال: دامنه آدرس بازگشت (Callback URL) با دامنه ثبت‌شده برای این درگاه در پنل زرین‌پال مطابقت ندارد. آدرس بازگشت تستی: ${callbackUrl}`
+      };
     }
 
     return { valid: false, message: getZarinpalErrorMessage(errCode) };

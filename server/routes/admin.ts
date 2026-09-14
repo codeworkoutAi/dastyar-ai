@@ -577,7 +577,13 @@ router.get('/gateway-status', async (req, res) => {
 router.post('/test-gateway', async (req, res) => {
   try {
     const { merchantId, sandbox } = req.body;
-    const result = await testZarinpalMerchant(merchantId, sandbox === true);
+    const configuredUrl = (process.env.APP_URL || process.env.WEBSITE_URL || process.env.WEB_URL || '').replace(/\/+$/, '');
+    const host = req.get('host') || 'dastyarai.com';
+    const protocol = req.protocol === 'https' || req.get('x-forwarded-proto') === 'https' ? 'https' : 'http';
+    const baseUrl = configuredUrl || (host.includes('localhost') ? 'https://dastyarai.com' : `${protocol}://${host}`);
+    const callbackUrl = `${baseUrl}/api/store/zarinpal/callback`;
+
+    const result = await testZarinpalMerchant(merchantId, sandbox === true, callbackUrl);
     res.json(result);
   } catch (error: any) {
     console.error('[Admin API] Error testing gateway:', error);
