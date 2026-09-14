@@ -10,7 +10,10 @@ export const ModelSelectorDropdown: React.FC = () => {
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Get active profile ID
-  const activeProfileId = settings.activeProvider === 'custom' ? settings.activeCustomProfileId : null;
+  let activeProfileId = settings.providers.activeProvider === 'custom' ? settings.providers.custom.activeProfileId : null;
+  if (settings.tools.smartRouting) {
+    activeProfileId = settings.tools.routingRoles?.default || activeProfileId;
+  }
 
   // Gather profiles. We only want to show System Default profiles in the main dropdown (to hide BYOK).
   const allProfiles = settings.providers.custom.profiles || [];
@@ -37,8 +40,14 @@ export const ModelSelectorDropdown: React.FC = () => {
     updateSettings(s => ({
       ...s,
       tools: { ...s.tools, smartRouting: false },
-      activeProvider: 'custom',
-      activeCustomProfileId: profileId,
+      providers: {
+        ...s.providers,
+        activeProvider: 'custom',
+        custom: {
+          ...s.providers.custom,
+          activeProfileId: profileId,
+        },
+      },
     }));
     setIsOpen(false);
   };
@@ -64,14 +73,16 @@ export const ModelSelectorDropdown: React.FC = () => {
 
   const getProviderIconUrl = (modelName: string) => {
     const lower = modelName.toLowerCase();
-    if (lower.includes('gpt')) return "https://api.iconify.design/logos:openai-icon.svg";
-    if (lower.includes('gemini')) return "https://api.iconify.design/logos:google-gemini.svg";
-    if (lower.includes('claude')) return "https://api.iconify.design/logos:anthropic-icon.svg";
-    if (lower.includes('llama') || lower.includes('meta')) return "https://api.iconify.design/logos:meta-icon.svg";
-    if (lower.includes('mistral')) return "https://api.iconify.design/logos:mistral-ai-icon.svg";
-    if (lower.includes('cohere')) return "https://api.iconify.design/logos:cohere-icon.svg";
-    if (lower.includes('hugging') || lower.includes('allam')) return "https://api.iconify.design/logos:huggingface-icon.svg";
-    return "https://api.iconify.design/lucide:bot.svg?color=%23888888";
+    if (lower.includes('deepseek')) return "/icons/deepseek.svg";
+    if (lower.includes('qwen') || lower.includes('qwq')) return "/icons/qwen.svg";
+    if (lower.includes('gpt') || lower.includes('openai') || lower.includes('o1') || lower.includes('o3') || lower.includes('o4')) return "/icons/openai.svg";
+    if (lower.includes('gemini') || lower.includes('gemma')) return "/icons/gemini.svg";
+    if (lower.includes('claude') || lower.includes('anthropic')) return "/icons/claude.svg";
+    if (lower.includes('llama') || lower.includes('meta')) return "/icons/meta.svg";
+    if (lower.includes('mistral') || lower.includes('codestral')) return "/icons/mistral.svg";
+    if (lower.includes('cohere')) return "/icons/cohere.svg";
+    if (lower.includes('hugging') || lower.includes('allam')) return "/icons/huggingface.svg";
+    return "/icons/bot.svg";
   };
 
   const renderProfileItem = (p: CustomProfile) => {
@@ -88,7 +99,7 @@ export const ModelSelectorDropdown: React.FC = () => {
         }`}
       >
         <div className="flex gap-3 items-center w-full">
-          <div className="shrink-0 w-8 h-8 rounded-full bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 flex items-center justify-center overflow-hidden">
+          <div className="shrink-0 w-8 h-8 rounded-full bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700/80 flex items-center justify-center overflow-hidden shadow-xs">
             <img src={iconUrl} alt="Model Icon" className="w-5 h-5 object-contain" />
           </div>
           <div className="flex flex-col gap-1 items-start flex-1">
