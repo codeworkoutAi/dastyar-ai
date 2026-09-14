@@ -355,7 +355,7 @@ export async function fetchAndProcessNews() {
 
     const savedMsg = `News saved to database with ID: ${info.lastInsertRowid} using model ${usedModel}`;
     console.log(`[NewsCron] ${savedMsg}`);
-    
+
     // Clear sitemap cache so the new article is immediately visible to crawlers
     const { clearSitemapCache } = await import('../seo/sitemap');
     clearSitemapCache();
@@ -521,7 +521,7 @@ export async function broadcastArticleById(articleId: number) {
 
 export function initNewsCron() {
   // Schedule to run 4 times a day: 08:00 AM, 12:00 PM, 14:00 (2:00 PM), and 20:00 (8:00 PM) (Asia/Tehran)
-  cron.schedule('0 8,12,14,20 * * *', () => {
+  cron.schedule('0 8 * * *', () => {
     fetchAndProcessNews();
   }, {
     timezone: 'Asia/Tehran'
