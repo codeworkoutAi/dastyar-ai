@@ -33,11 +33,12 @@ interface ImageHistory {
 }
 
 const IMAGE_ENGINES = [
-  { id: 'flux', name: 'Flux.1 Realism', tag: 'واقع‌گرایانه', desc: 'خروجی فوق‌العاده باکیفیت، طبیعی و پرجزئیات', tier: 'free' },
-  { id: 'sana', name: 'Sana (NVIDIA)', tag: 'فوق‌سریع', desc: 'مدل نسل جدید انویدیا با رزولوشن بالا و سرعت آنی', tier: 'free' },
-  { id: 'turbo', name: 'SDXL Turbo', tag: 'آنی', desc: 'تولید سریع تصاویر', tier: 'free' },
-  { id: 'dalle-3', name: 'DALL-E 3', tag: 'ویژه', desc: 'نیازمند API Key (درک متن و هوش بالا)', tier: 'pro' },
-  { id: 'imagen-3', name: 'Imagen 3 (Gemini)', tag: 'رسمی', desc: 'نیازمند API Key جمنای (کیفیت استودیو گوگل)', tier: 'pro' },
+  { id: 'flux', name: 'Flux.1 Realism (Pro)', tag: 'فوق‌واقع‌گرایانه', desc: 'خروجی فوق‌العاده باکیفیت، طبیعی و پرجزئیات نسل جدید فلوکس', tier: 'free' },
+  { id: 'sana', name: 'Sana (NVIDIA 1.0)', tag: 'فوق‌سریع ۴K', desc: 'مدل انقلابی انویدیا با معماری خطی، سرعت آنی و وضوح فوق‌العاده', tier: 'free' },
+  { id: 'turbo', name: 'SDXL Turbo v2', tag: 'آنی', desc: 'تولید سریع و بدون وقفه تصاویر در یک مرحله', tier: 'free' },
+  { id: 'flux-anime', name: 'Flux Anime & Art', tag: 'انیمه و هنر', desc: 'طراحی تخصصی سبک انیمه ژاپنی، فانتزی و تصویرگری دیجیتال', tier: 'free' },
+  { id: 'dalle-3', name: 'DALL-E 3', tag: 'ویژه OpenAI', desc: 'نیازمند API Key (درک عمیق زبان و هوش بالای دال-ای ۳)', tier: 'pro' },
+  { id: 'imagen-3', name: 'Imagen 3 (Google)', tag: 'رسمی گوگل', desc: 'نیازمند API Key جمنای (کیفیت استودیویی Imagen 3.0 گوگل)', tier: 'pro' },
 ];
 
 const STYLE_PRESETS = [
@@ -266,6 +267,7 @@ export function ImageGenStudio() {
   // Settings
   const settings = loadSettings();
   const hasOpenAiKey = !!settings.providers.openai?.apiKey;
+  const hasGeminiKey = !!(settings.providers.gemini?.apiKey || settings.providers.custom?.profiles?.some(p => p.type === 'gemini' && p.apiKey));
 
   // Horizontal Inspiration Scroll Ref & Navigation
   const inspirationScrollRef = useRef<HTMLDivElement>(null);
@@ -384,9 +386,15 @@ export function ImageGenStudio() {
     
     // Check Pro lock
     const selectedEngineConf = IMAGE_ENGINES.find(e => e.id === activeEngine);
-    if (selectedEngineConf?.tier === 'pro' && !hasOpenAiKey) {
-      setError('برای استفاده از این مدل باید کلید OpenAI API را در تنظیمات وارد کنید.');
-      return;
+    if (selectedEngineConf?.tier === 'pro') {
+      if (activeEngine === 'dalle-3' && !hasOpenAiKey) {
+        setError('برای استفاده از مدل DALL-E 3 باید کلید OpenAI API را در بخش تنظیمات وارد کنید.');
+        return;
+      }
+      if (activeEngine === 'imagen-3' && !hasGeminiKey) {
+        setError('برای استفاده از مدل Imagen 3 باید کلید Gemini API را در بخش تنظیمات وارد کنید.');
+        return;
+      }
     }
 
     setLoading(true);
@@ -598,7 +606,9 @@ export function ImageGenStudio() {
                 </label>
                 <div className="flex flex-col gap-2">
                   {IMAGE_ENGINES.map((eng) => {
-                    const isLocked = eng.tier === 'pro' && !hasOpenAiKey;
+                    const isLocked = eng.tier === 'pro' && (
+                      eng.id === 'dalle-3' ? !hasOpenAiKey : !hasGeminiKey
+                    );
                     const isSelected = engine === eng.id;
 
                     return (
@@ -606,7 +616,10 @@ export function ImageGenStudio() {
                         key={eng.id}
                         onClick={() => {
                           if (isLocked) {
-                            alert('برای استفاده از این مدل باید کلید OpenAI API خود را در تنظیمات وارد کنید.');
+                            alert(eng.id === 'dalle-3' 
+                              ? 'برای استفاده از DALL-E 3 باید کلید OpenAI API خود را در تنظیمات وارد کنید.' 
+                              : 'برای استفاده از Imagen 3 باید کلید Gemini API خود را در تنظیمات وارد کنید.'
+                            );
                             return;
                           }
                           setEngine(eng.id);
@@ -936,44 +949,18 @@ export function ImageGenStudio() {
                 )}
               </div>
             ) : imageUrl ? (
-              /* --- SINGLE CANVAS IMAGE PREVIEW & ACTIONS BELOW --- */
-              <div className="flex flex-col items-center gap-3.5 max-w-full max-h-full animate-scaleIn pb-24 sm:pb-28">
-                {/* Clean Image Container without any overlay buttons blocking the artwork */}
+              /* --- SINGLE CANVAS IMAGE PREVIEW --- */
+              <div className="flex flex-col items-center justify-center max-w-full max-h-full animate-scaleIn pb-28 sm:pb-32">
+                {/* Clean Hero Image Container */}
                 <div className="relative rounded-2xl overflow-hidden shadow-2xl ring-1 ring-black/10 dark:ring-white/10">
                   <img 
                     src={toSafeImageUrl(imageUrl)} 
                     alt="Generated" 
-                    className="max-w-full max-h-[46vh] lg:max-h-[58vh] object-contain bg-black/10 backdrop-blur-3xl rounded-2xl"
+                    className="max-w-full max-h-[70vh] lg:max-h-[75vh] object-contain bg-black/10 backdrop-blur-3xl rounded-2xl"
                     onError={() => {
                       setError('خطا در نمایش فایل تصویر. لطفاً مجدداً دکمه تولید را فشار دهید.');
                     }}
                   />
-                </div>
-                
-                {/* Dedicated Action Toolbar BELOW the Image */}
-                <div className="flex items-center justify-center gap-3 z-10">
-                  <button 
-                    onClick={() => handleGenerate()}
-                    disabled={loading}
-                    className="flex items-center gap-2 px-4 py-2.5 bg-zinc-900/90 hover:bg-black dark:bg-zinc-800 dark:hover:bg-zinc-700 text-white rounded-xl transition-all font-bold text-xs sm:text-sm shadow-md border border-zinc-700/50 dark:border-white/10 hover:scale-105 cursor-pointer disabled:opacity-50"
-                    title="تولید مجدد با این پرامپت (تنوع جدید)"
-                  >
-                    <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-                    <span>تنوع جدید</span>
-                  </button>
-
-                  {onInsertToChat && (
-                    <button 
-                      onClick={() => {
-                        onInsertToChat(prompt, imageUrl);
-                        onClose();
-                      }}
-                      className="flex items-center gap-2 px-5 py-2.5 bg-purple-600 hover:bg-purple-500 text-white rounded-xl transition-all font-bold text-xs sm:text-sm shadow-md shadow-purple-600/30 border border-purple-400/30 hover:scale-105 cursor-pointer"
-                    >
-                      <Send className="w-4 h-4" />
-                      <span>ارسال به چت</span>
-                    </button>
-                  )}
                 </div>
               </div>
             ) : loading ? (
@@ -1011,6 +998,50 @@ export function ImageGenStudio() {
             <div className="absolute bottom-0 left-0 right-0 p-3 lg:p-6 bg-gradient-to-t from-zinc-100 via-zinc-100/95 dark:from-[#0a0a0a] dark:via-[#0a0a0a]/95 to-transparent pt-12 z-20">
               <div className="max-w-4xl mx-auto flex flex-col gap-2.5">
                 
+                {/* Docked Action Bar when an image is generated (positioned cleanly right above prompt input) */}
+                {imageUrl && !loading && (
+                  <div className="flex items-center justify-between gap-2 px-1 animate-fadeIn">
+                    <div className="flex items-center gap-2">
+                      <button 
+                        type="button"
+                        onClick={() => handleGenerate()}
+                        disabled={loading}
+                        className="flex items-center gap-2 px-3.5 sm:px-4 py-2 bg-white/90 dark:bg-zinc-800/90 hover:bg-white dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-100 rounded-xl transition-all font-bold text-xs sm:text-sm shadow-sm border border-zinc-200 dark:border-white/10 hover:scale-102 active:scale-98 cursor-pointer disabled:opacity-50"
+                        title="تولید مجدد با این پرامپت (تنوع جدید)"
+                      >
+                        <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
+                        <span>تنوع جدید</span>
+                      </button>
+
+                      <a
+                        href={toSafeImageUrl(imageUrl)}
+                        download="ai-generated-image.png"
+                        target="_blank"
+                        rel="noreferrer"
+                        className="flex items-center gap-1.5 px-3 sm:px-3.5 py-2 bg-white/90 dark:bg-zinc-800/90 hover:bg-white dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-100 rounded-xl transition-all font-bold text-xs sm:text-sm shadow-sm border border-zinc-200 dark:border-white/10 hover:scale-102 active:scale-98 cursor-pointer"
+                        title="دانلود تصویر با کیفیت بالا"
+                      >
+                        <Download className="w-3.5 h-3.5" />
+                        <span className="hidden sm:inline">دانلود تصویر</span>
+                      </a>
+                    </div>
+
+                    {onInsertToChat && (
+                      <button 
+                        type="button"
+                        onClick={() => {
+                          onInsertToChat(prompt, imageUrl);
+                          onClose();
+                        }}
+                        className="flex items-center gap-2 px-4 sm:px-5 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white rounded-xl transition-all font-bold text-xs sm:text-sm shadow-md shadow-purple-600/30 border border-purple-400/30 hover:scale-102 active:scale-98 cursor-pointer"
+                      >
+                        <Send className="w-3.5 h-3.5" />
+                        <span>ارسال به چت</span>
+                      </button>
+                    )}
+                  </div>
+                )}
+
                 {/* Compact Horizontal Inspiration Rail (Single sleek row with smooth scroll & chevrons) */}
                 {!imageUrl && !loading && (
                   <div className="relative flex items-center gap-1.5 w-full">

@@ -284,11 +284,21 @@ router.post('/api/generate-image', aiRouteLimiter, async (req, res) => {
       if (!geminiKey) throw new Error('کلید API برای جمنای تنظیم نشده است.');
       
       const ai = getGeminiClient(geminiKey);
-      const response = await ai.models.generateImages({
-        model: 'imagen-3.0-generate-001',
-        prompt: enhancedPrompt,
-        config: { numberOfImages: 1, aspectRatio: aspectRatio as any }
-      });
+      let response;
+      try {
+        response = await ai.models.generateImages({
+          model: 'imagen-3.0-generate-002',
+          prompt: enhancedPrompt,
+          config: { numberOfImages: 1, aspectRatio: aspectRatio as any }
+        });
+      } catch (err002) {
+        console.warn('[ImageGen API] imagen-3.0-generate-002 fallback to 001:', err002);
+        response = await ai.models.generateImages({
+          model: 'imagen-3.0-generate-001',
+          prompt: enhancedPrompt,
+          config: { numberOfImages: 1, aspectRatio: aspectRatio as any }
+        });
+      }
       if (response.generatedImages && response.generatedImages[0].image.imageBytes) {
         const base64 = response.generatedImages[0].image.imageBytes;
         return res.json({ imageUrl: `data:image/jpeg;base64,${base64}`, enhancedPrompt });
