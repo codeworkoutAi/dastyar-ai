@@ -497,8 +497,8 @@ export function ImageGenStudio() {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm sm:p-4 transition-all" dir="rtl">
-      <div className="bg-[#f8f9fa] dark:bg-[#121212] w-full h-full sm:h-[90vh] sm:max-h-[900px] max-w-7xl sm:rounded-3xl shadow-2xl flex flex-col lg:flex-row overflow-hidden relative border border-zinc-200 dark:border-white/10 animate-scaleIn">
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm sm:p-3 lg:p-4 transition-all" dir="rtl">
+      <div className="bg-[#f8f9fa] dark:bg-[#121212] w-full h-full sm:h-[95vh] sm:max-h-[1100px] max-w-[96vw] xl:max-w-[1550px] sm:rounded-3xl shadow-2xl flex flex-col lg:flex-row overflow-hidden relative border border-zinc-200 dark:border-white/10 animate-scaleIn">
         
         {/* Mobile Header (Only visible on small screens) */}
         <div className="lg:hidden flex items-center justify-between p-4 border-b border-zinc-200 dark:border-white/10 bg-white/50 dark:bg-[#1e1f20]/50 backdrop-blur-md z-10">
@@ -668,20 +668,20 @@ export function ImageGenStudio() {
         )}
 
         {/* --- 2. MAIN CONTENT AREA (CANVAS OR FULLSCREEN GALLERY) --- */}
-        <div className="flex-1 relative flex flex-col bg-zinc-100 dark:bg-[#0a0a0a] overflow-hidden">
+        <div className="flex-1 relative flex flex-col bg-zinc-100 dark:bg-[#0a0a0a] overflow-hidden min-h-0">
           
           {/* Top Navigation Bar */}
           {!showHistory ? (
             /* Canvas Top Bar */
-            <div className="hidden lg:flex absolute top-4 left-4 right-4 justify-between items-center z-20 pointer-events-none">
+            <div className="hidden lg:flex absolute top-3.5 left-4 right-4 justify-between items-center z-20 pointer-events-none">
               {/* Top Left: Gallery Button */}
               <div className="pointer-events-auto">
                 <button 
                   onClick={() => setShowHistory(true)} 
-                  className="flex items-center gap-2 px-4 py-2 rounded-xl backdrop-blur-md border bg-white/80 dark:bg-black/60 text-zinc-700 dark:text-zinc-300 border-zinc-200 dark:border-white/10 hover:bg-white dark:hover:bg-black transition-all shadow-sm cursor-pointer hover:border-purple-500/40"
+                  className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl backdrop-blur-md border bg-white/80 dark:bg-black/60 text-zinc-700 dark:text-zinc-300 border-zinc-200 dark:border-white/10 hover:bg-white dark:hover:bg-black transition-all shadow-xs cursor-pointer hover:border-purple-500/40"
                 >
                   <History className="w-4 h-4 text-purple-500" />
-                  <span className="text-sm font-bold">گالری من</span>
+                  <span className="text-xs sm:text-sm font-bold">گالری من</span>
                   {history.length > 0 && (
                     <span className="bg-purple-500/15 text-purple-600 dark:text-purple-400 text-[10px] px-2 py-0.5 rounded-full font-mono font-bold">
                       {history.length}
@@ -690,7 +690,7 @@ export function ImageGenStudio() {
                 </button>
               </div>
 
-              {/* Top Right: Canvas Controls (New Canvas + Download) */}
+              {/* Top Right: Canvas Controls (New Canvas) */}
               <div className="pointer-events-auto flex items-center gap-2">
                 {(imageUrl || error) && (
                   <button
@@ -698,26 +698,12 @@ export function ImageGenStudio() {
                       setImageUrl(null);
                       setError(null);
                     }}
-                    className="flex items-center gap-2 px-3.5 py-2 rounded-xl backdrop-blur-md border bg-white/80 dark:bg-black/60 text-zinc-800 dark:text-zinc-200 border-zinc-200 dark:border-white/10 hover:bg-purple-50 dark:hover:bg-purple-950/40 hover:text-purple-600 dark:hover:text-purple-400 hover:border-purple-500/40 transition-all shadow-sm cursor-pointer hover:scale-105 active:scale-95"
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl backdrop-blur-md border bg-white/80 dark:bg-black/60 text-zinc-800 dark:text-zinc-200 border-zinc-200 dark:border-white/10 hover:bg-purple-50 dark:hover:bg-purple-950/40 hover:text-purple-600 dark:hover:text-purple-400 hover:border-purple-500/40 transition-all shadow-xs cursor-pointer hover:scale-105 active:scale-95"
                     title="پاک کردن بوم و بازگشت به ویترین ایده‌ها"
                   >
-                    <Sparkles className="w-4 h-4 text-purple-500" />
-                    <span className="text-sm font-bold">بوم جدید</span>
+                    <Sparkles className="w-3.5 h-3.5 text-purple-500" />
+                    <span className="text-xs sm:text-sm font-bold">بوم جدید</span>
                   </button>
-                )}
-
-                {imageUrl && (
-                  <a
-                    href={toSafeImageUrl(imageUrl)}
-                    download="persian-ai-image.png"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="flex items-center gap-2 px-4 py-2 rounded-xl backdrop-blur-md border bg-white/80 dark:bg-black/60 text-zinc-800 dark:text-zinc-200 border-zinc-200 dark:border-white/10 hover:bg-white dark:hover:bg-black transition-all shadow-sm hover:scale-105 cursor-pointer"
-                    title="دانلود کیفیت اصلی"
-                  >
-                    <Download className="w-4 h-4 text-purple-500" />
-                    <span className="text-sm font-bold">دانلود تصویر</span>
-                  </a>
                 )}
               </div>
             </div>
@@ -847,7 +833,7 @@ export function ImageGenStudio() {
           )}
 
           {/* Main Body Area */}
-          <div className="flex-1 overflow-y-auto p-4 lg:p-8 flex items-center justify-center relative min-h-[40vh] lg:min-h-[50vh] pb-36 lg:pb-40 custom-scrollbar">
+          <div className={`flex-1 min-h-0 w-full flex items-center justify-center relative ${showHistory ? 'overflow-y-auto p-4 lg:p-8 custom-scrollbar' : 'overflow-hidden p-2 sm:p-4 lg:p-6'}`}>
             {showHistory ? (
               /* --- PRO GALLERY VIEW WITH DYNAMIC GRID DENSITY --- */
               <div className="w-full max-w-6xl h-full flex flex-col animate-fadeIn">
@@ -949,19 +935,16 @@ export function ImageGenStudio() {
                 )}
               </div>
             ) : imageUrl ? (
-              /* --- SINGLE CANVAS IMAGE PREVIEW --- */
-              <div className="flex flex-col items-center justify-center max-w-full max-h-full animate-scaleIn pb-28 sm:pb-32">
-                {/* Clean Hero Image Container */}
-                <div className="relative rounded-2xl overflow-hidden shadow-2xl ring-1 ring-black/10 dark:ring-white/10">
-                  <img 
-                    src={toSafeImageUrl(imageUrl)} 
-                    alt="Generated" 
-                    className="max-w-full max-h-[70vh] lg:max-h-[75vh] object-contain bg-black/10 backdrop-blur-3xl rounded-2xl"
-                    onError={() => {
-                      setError('خطا در نمایش فایل تصویر. لطفاً مجدداً دکمه تولید را فشار دهید.');
-                    }}
-                  />
-                </div>
+              /* --- SINGLE CANVAS IMAGE PREVIEW (FILLS ENTIRE AVAILABLE CANVAS) --- */
+              <div className="w-full h-full flex items-center justify-center animate-scaleIn min-h-0 overflow-hidden">
+                <img 
+                  src={toSafeImageUrl(imageUrl)} 
+                  alt="Generated Artwork" 
+                  className="max-w-full max-h-full w-auto h-auto object-contain rounded-2xl sm:rounded-3xl shadow-2xl ring-1 ring-black/10 dark:ring-white/10 select-none drop-shadow-2xl"
+                  onError={() => {
+                    setError('خطا در نمایش فایل تصویر. لطفاً مجدداً دکمه تولید را فشار دهید.');
+                  }}
+                />
               </div>
             ) : loading ? (
               /* --- LOADING STATE --- */
@@ -993,9 +976,9 @@ export function ImageGenStudio() {
             )}
           </div>
 
-          {/* --- FLOATING PROMPT BAR (Hidden in Fullscreen Gallery Mode) --- */}
+          {/* --- DOCKED BOTTOM PROMPT BAR --- */}
           {!showHistory && (
-            <div className="absolute bottom-0 left-0 right-0 p-3 lg:p-6 bg-gradient-to-t from-zinc-100 via-zinc-100/95 dark:from-[#0a0a0a] dark:via-[#0a0a0a]/95 to-transparent pt-12 z-20">
+            <div className="shrink-0 w-full p-2.5 sm:p-4 bg-gradient-to-t from-zinc-100 via-zinc-100/95 dark:from-[#0a0a0a] dark:via-[#0a0a0a]/95 to-transparent z-20">
               <div className="max-w-4xl mx-auto flex flex-col gap-2.5">
                 
                 {/* Docked Action Bar when an image is generated (positioned cleanly right above prompt input) */}
