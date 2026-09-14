@@ -354,7 +354,10 @@ export function initializeSchema() {
       }
     };
 
-    seedSetting('news_auto_publish', 'false');
+    seedSetting('news_auto_publish', 'true');
+    try {
+      db.prepare("UPDATE site_settings SET value = 'true' WHERE key = 'news_auto_publish'").run();
+    } catch {}
     seedSetting('api_dollar_rate', '200000'); // 200,000 Tomans per $1 API by default
     seedSetting('welcome_bonus_amount', '50000'); // 50,000 Tomans welcome credit
     // Ensure existing database has 50000 if previously 5000

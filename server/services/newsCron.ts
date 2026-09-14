@@ -157,14 +157,14 @@ async function fetchSourceArticleDetails(url: string): Promise<{ fullContent: st
 }
 
 export async function fetchAndProcessNews() {
-  const startMsg = `Starting news fetch task (Scheduled run at 08:00, 12:00, or 20:00 Asia/Tehran)...`;
+  const startMsg = `Starting news fetch task (Daily scheduled run at 08:00 AM Asia/Tehran)...`;
   console.log(`[NewsCron] ${startMsg}`);
   appendCronLog('INFO', startMsg);
 
   try {
-    // Check site_settings table for news_auto_publish toggle
+    // Check site_settings table for news_auto_publish toggle (default to true)
     const settingRow = db.prepare('SELECT value FROM site_settings WHERE key = ?').get('news_auto_publish') as { value: string } | undefined;
-    const isAutoPublish = settingRow ? settingRow.value === 'true' : false;
+    const isAutoPublish = settingRow ? settingRow.value !== 'false' : true;
     if (!isAutoPublish) {
       const skipMsg = 'Automatic news publishing is disabled in site settings. Skipping news fetch task.';
       console.log(`[NewsCron] ${skipMsg}`);
@@ -399,7 +399,7 @@ export async function sendNewsToTelegram(
   article: { id: number; title: string; content: string; image: string }
 ): Promise<boolean> {
   const settingRow = db.prepare('SELECT value FROM site_settings WHERE key = ?').get('news_auto_publish') as { value: string } | undefined;
-  const isAutoPublish = settingRow ? settingRow.value === 'true' : (process.env.PAUSE_NEWS_BOT === 'false');
+  const isAutoPublish = settingRow ? settingRow.value !== 'false' : true;
   if (!isAutoPublish) {
     console.log(`[NewsCron] Telegram news broadcasting is disabled in settings. Skipping broadcast for Article #${article.id}.`);
     appendCronLog('INFO', `Telegram news broadcasting is disabled (Article #${article.id} skipped).`);
@@ -520,14 +520,16 @@ export async function broadcastArticleById(articleId: number) {
 }
 
 export function initNewsCron() {
-  // Schedule to run 4 times a day: 08:00 AM, 12:00 PM, 14:00 (2:00 PM), and 20:00 (8:00 PM) (Asia/Tehran)
+  // Schedule to run every day at exactly 08:00 AM (Asia/Tehran)
   cron.schedule('0 8 * * *', () => {
+    console.log('[NewsCron] Triggering daily 08:00 AM news broadcast (Asia/Tehran)...');
+    appendCronLog('INFO', 'Daily 08:00 AM news fetcher triggered.');
     fetchAndProcessNews();
   }, {
     timezone: 'Asia/Tehran'
   });
 
-  const initMsg = 'Scheduled AI News fetcher initialized for 08:00, 12:00, 14:00, 20:00 (Asia/Tehran).';
+  const initMsg = 'Scheduled AI News fetcher initialized for daily 08:00 AM (Asia/Tehran).';
   console.log(`[NewsCron] ${initMsg}`);
   appendCronLog('INFO', initMsg);
 }

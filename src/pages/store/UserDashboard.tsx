@@ -289,9 +289,9 @@ export const UserDashboard = () => {
         {/* Row 2: 4 Key Metric Cards (KPI) */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {/* Card 1: Wallet Balance */}
-          <div className="p-5 rounded-3xl bg-gradient-to-br from-emerald-500/10 via-teal-500/5 to-transparent dark:from-emerald-500/15 dark:via-transparent border border-emerald-200/80 dark:border-emerald-500/20 shadow-xs flex flex-col justify-between">
+          <div className="p-5 rounded-3xl bg-gradient-to-br from-emerald-500/10 via-teal-500/5 to-transparent dark:bg-zinc-900 border border-emerald-200/80 dark:border-zinc-800 hover:dark:border-emerald-500/40 shadow-xs flex flex-col justify-between transition-colors">
             <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-bold text-emerald-800 dark:text-emerald-300 flex items-center gap-1.5">
+              <span className="text-xs font-bold text-emerald-800 dark:text-emerald-400 flex items-center gap-1.5">
                 <Wallet size={16} className="text-emerald-600 dark:text-emerald-400" />
                 موجودی کیف پول
               </span>
@@ -309,20 +309,20 @@ export const UserDashboard = () => {
               </span>
               <span className="text-xs font-bold text-zinc-500 dark:text-zinc-400">تومان</span>
             </div>
-            <div className="text-[11px] text-zinc-500 dark:text-zinc-400 flex items-center justify-between pt-2 border-t border-emerald-100 dark:border-emerald-500/10 mt-2">
+            <div className="text-[11px] text-zinc-500 dark:text-zinc-400 flex items-center justify-between pt-2 border-t border-emerald-100 dark:border-zinc-800 mt-2">
               <span>مدل پرداختی:</span>
               <span className="font-bold text-emerald-600 dark:text-emerald-400">Pay-As-You-Go</span>
             </div>
           </div>
 
           {/* Card 2: Total Tokens */}
-          <div className="p-5 rounded-3xl bg-gradient-to-br from-blue-500/10 via-indigo-500/5 to-transparent dark:from-blue-500/15 dark:via-transparent border border-blue-200/80 dark:border-blue-500/20 shadow-xs flex flex-col justify-between">
+          <div className="p-5 rounded-3xl bg-gradient-to-br from-blue-500/10 via-indigo-500/5 to-transparent dark:bg-zinc-900 border border-blue-200/80 dark:border-zinc-800 hover:dark:border-blue-500/40 shadow-xs flex flex-col justify-between transition-colors">
             <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-bold text-blue-800 dark:text-blue-300 flex items-center gap-1.5">
+              <span className="text-xs font-bold text-blue-800 dark:text-blue-400 flex items-center gap-1.5">
                 <Zap size={16} className="text-blue-600 dark:text-blue-400" />
                 کل توکن‌های مصرفی
               </span>
-              <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 font-bold">
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-950/60 dark:border dark:border-blue-800/40 text-blue-700 dark:text-blue-400 font-bold">
                 تجمعی
               </span>
             </div>
@@ -332,20 +332,20 @@ export const UserDashboard = () => {
               </span>
               <span className="text-xs font-bold text-zinc-500 dark:text-zinc-400">توکن</span>
             </div>
-            <div className="text-[11px] text-zinc-500 dark:text-zinc-400 flex items-center justify-between pt-2 border-t border-blue-100 dark:border-blue-500/10 mt-2">
+            <div className="text-[11px] text-zinc-500 dark:text-zinc-400 flex items-center justify-between pt-2 border-t border-blue-100 dark:border-zinc-800 mt-2">
               <span>ورودی: {toPersianDigits((walletData?.stats?.promptTokens || 0).toLocaleString('fa-IR'))}</span>
               <span>خروجی: {toPersianDigits((walletData?.stats?.completionTokens || 0).toLocaleString('fa-IR'))}</span>
             </div>
           </div>
 
           {/* Card 3: Total Spent */}
-          <div className="p-5 rounded-3xl bg-gradient-to-br from-purple-500/10 via-violet-500/5 to-transparent dark:from-purple-500/15 dark:via-transparent border border-purple-200/80 dark:border-purple-500/20 shadow-xs flex flex-col justify-between">
+          <div className="p-5 rounded-3xl bg-gradient-to-br from-purple-500/10 via-violet-500/5 to-transparent dark:bg-zinc-900 border border-purple-200/80 dark:border-zinc-800 hover:dark:border-purple-500/40 shadow-xs flex flex-col justify-between transition-colors">
             <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-bold text-purple-800 dark:text-purple-300 flex items-center gap-1.5">
+              <span className="text-xs font-bold text-purple-800 dark:text-purple-400 flex items-center gap-1.5">
                 <Coins size={16} className="text-purple-600 dark:text-purple-400" />
                 کل هزینه کسر شده
               </span>
-              <span className="text-[10px] px-2 py-0.5 rounded-full bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 font-bold">
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-purple-100 dark:bg-purple-950/60 dark:border dark:border-purple-800/40 text-purple-700 dark:text-purple-400 font-bold">
                 چت AI
               </span>
             </div>
@@ -355,7 +355,7 @@ export const UserDashboard = () => {
               </span>
               <span className="text-xs font-bold text-zinc-500 dark:text-zinc-400">تومان</span>
             </div>
-            <div className="text-[11px] text-zinc-500 dark:text-zinc-400 flex items-center justify-between pt-2 border-t border-purple-100 dark:border-purple-500/10 mt-2">
+            <div className="text-[11px] text-zinc-500 dark:text-zinc-400 flex items-center justify-between pt-2 border-t border-purple-100 dark:border-zinc-800 mt-2">
               <span>میانگین هر پیام:</span>
               <span className="font-bold text-purple-600 dark:text-purple-400">
                 {walletData?.stats?.totalMessages ? toPersianDigits(Math.round((walletData.stats.totalSpentToman / walletData.stats.totalMessages)).toLocaleString('fa-IR')) : '۰'} ت
@@ -364,13 +364,13 @@ export const UserDashboard = () => {
           </div>
 
           {/* Card 4: Total Messages */}
-          <div className="p-5 rounded-3xl bg-gradient-to-br from-amber-500/10 via-orange-500/5 to-transparent dark:from-amber-500/15 dark:via-transparent border border-amber-200/80 dark:border-amber-500/20 shadow-xs flex flex-col justify-between">
+          <div className="p-5 rounded-3xl bg-gradient-to-br from-amber-500/10 via-orange-500/5 to-transparent dark:bg-zinc-900 border border-amber-200/80 dark:border-zinc-800 hover:dark:border-amber-500/40 shadow-xs flex flex-col justify-between transition-colors">
             <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-bold text-amber-800 dark:text-amber-300 flex items-center gap-1.5">
+              <span className="text-xs font-bold text-amber-800 dark:text-amber-400 flex items-center gap-1.5">
                 <MessageSquare size={16} className="text-amber-600 dark:text-amber-400" />
                 گفتگوهای انجام‌شده
               </span>
-              <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 font-bold">
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/60 dark:border dark:border-amber-800/40 text-amber-700 dark:text-amber-400 font-bold">
                 پیام‌ها
               </span>
             </div>
@@ -380,7 +380,7 @@ export const UserDashboard = () => {
               </span>
               <span className="text-xs font-bold text-zinc-500 dark:text-zinc-400">پیام</span>
             </div>
-            <div className="text-[11px] text-zinc-500 dark:text-zinc-400 flex items-center justify-between pt-2 border-t border-amber-100 dark:border-amber-500/10 mt-2">
+            <div className="text-[11px] text-zinc-500 dark:text-zinc-400 flex items-center justify-between pt-2 border-t border-amber-100 dark:border-zinc-800 mt-2">
               <span>سفارش‌های فروشگاه:</span>
               <span className="font-bold text-zinc-700 dark:text-zinc-300">{toPersianDigits(purchases.length)} مورد</span>
             </div>

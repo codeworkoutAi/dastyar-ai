@@ -163,4 +163,26 @@ router.get('/admin/cron-logs', requireAuth, requireAdmin, (req, res) => {
   }
 });
 
+// GET /api/news/cron-trigger (External Cron webhook for cron-job.org at 08:00 AM)
+router.get('/cron-trigger', async (req, res) => {
+  try {
+    const { fetchAndProcessNews } = await import('../services/newsCron');
+    fetchAndProcessNews().catch(err => console.error('[News API] cron-trigger background error:', err));
+    res.json({ status: 'ok', message: 'عملیات واکشی و انتشار اخبار هوش مصنوعی آغاز شد.' });
+  } catch (error: any) {
+    res.status(500).json({ error: error?.message || 'خطا در فعال‌سازی واکشی اخبار' });
+  }
+});
+
+// POST /api/news/admin/trigger (Admin: Trigger immediate news fetch)
+router.post('/admin/trigger', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const { fetchAndProcessNews } = await import('../services/newsCron');
+    fetchAndProcessNews().catch(err => console.error('[News API] admin trigger error:', err));
+    res.json({ message: 'واکشی اخبار آغاز شد. نتیجه تا لحظاتی دیگر در لاگ‌ها و کانال ثبت می‌شود.' });
+  } catch (error: any) {
+    res.status(500).json({ error: error?.message || 'خطا در اجرای واکشی' });
+  }
+});
+
 export default router;
