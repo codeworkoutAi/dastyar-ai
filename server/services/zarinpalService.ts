@@ -310,9 +310,11 @@ export async function testZarinpalMerchant(customMerchantId?: string, sandbox = 
     const rawMsg = json.errors?.message || '';
 
     if (rawMsg.toLowerCase().includes('terminal ip') || errCode === -10) {
+      const serverIp = await getServerPublicIp();
+      const ipText = serverIp ? ` (آی‌پی خروجی سرور شما هم‌اکنون: ${serverIp})` : '';
       return {
         valid: false,
-        message: 'کد مرچنت در زرین‌پال معتبر است، اما آی‌پی سرور (IP) در تنظیمات درگاه زرین‌پال ثبت نشده است (Terminal IP not valid). لطفاً در پنل زرین‌پال > درگاه‌های پرداخت، آی‌پی سرور خود را ثبت یا بررسی کنید.'
+        message: `کد مرچنت در زرین‌پال معتبر است، اما آی‌پی سرور در تنظیمات درگاه ثبت نشده است${ipText}. لطفاً در پنل زرین‌پال > تنظیمات فنی، این آی‌پی را به لیست آی‌پی‌های سرور اضافه کنید.`
       };
     }
     if (errCode === -11) {
@@ -323,4 +325,25 @@ export async function testZarinpalMerchant(customMerchantId?: string, sandbox = 
   } catch (err: any) {
     return { valid: false, message: 'خطا در ارتباط با زرین‌پال: ' + err.message };
   }
+}
+
+/**
+ * Utility to fetch current server outbound public IP
+ */
+export async function getServerPublicIp(): Promise<string | null> {
+  try {
+    const res = await fetch('https://api.ipify.org?format=json', { signal: AbortSignal.timeout(3000) });
+    if (res.ok) {
+      const data = await res.json();
+      return data.ip || null;
+    }
+  } catch (e) {}
+  try {
+    const res2 = await fetch('https://ifconfig.me/ip', { signal: AbortSignal.timeout(3000) });
+    if (res2.ok) {
+      const text = await res2.text();
+      return text.trim() || null;
+    }
+  } catch (e2) {}
+  return null;
 }

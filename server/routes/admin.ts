@@ -4,7 +4,7 @@ import { requireAuth } from '../middleware/auth';
 import { bot, sendTelegramOrderSuccess } from '../telegram/bot';
 import { clearSitemapCache } from '../seo/sitemap';
 import { getAdminFinancialSummary, addApiPurchase, depositWallet } from '../services/walletService';
-import { getZarinpalConfig, testZarinpalMerchant } from '../services/zarinpalService';
+import { getZarinpalConfig, testZarinpalMerchant, getServerPublicIp } from '../services/zarinpalService';
 
 const router = express.Router();
 
@@ -562,10 +562,11 @@ router.put('/settings', (req, res) => {
 });
 
 // GET /api/admin/gateway-status
-router.get('/gateway-status', (req, res) => {
+router.get('/gateway-status', async (req, res) => {
   try {
     const config = getZarinpalConfig();
-    res.json(config);
+    const serverIp = await getServerPublicIp();
+    res.json({ ...config, serverIp });
   } catch (error) {
     console.error('[Admin API] Error fetching gateway status:', error);
     res.status(500).json({ error: 'خطا در دریافت وضعیت درگاه' });

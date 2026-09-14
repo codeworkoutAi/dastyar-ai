@@ -50,6 +50,7 @@ export const AdminFinanceTab: React.FC = () => {
   const [gatewayEnabled, setGatewayEnabled] = useState(false);
   const [testingGateway, setTestingGateway] = useState(false);
   const [gatewayTestResult, setGatewayTestResult] = useState<{ valid: boolean; message: string } | null>(null);
+  const [detectedServerIp, setDetectedServerIp] = useState<string | null>(null);
 
   // New purchase form
   const [isAddingPurchase, setIsAddingPurchase] = useState(false);
@@ -179,6 +180,7 @@ export const AdminFinanceTab: React.FC = () => {
         const gw = await resGateway.json();
         if (gw.merchantId) setZarinpalMerchantId(gw.merchantId);
         if (gw.sandbox !== undefined) setZarinpalSandbox(gw.sandbox);
+        if (gw.serverIp) setDetectedServerIp(gw.serverIp);
         setGatewayEnabled(gw.enabled);
       }
     } catch (err) {}
@@ -738,6 +740,28 @@ export const AdminFinanceTab: React.FC = () => {
           }`}>
             {gatewayTestResult.valid ? <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" /> : <AlertCircle className="w-4 h-4 text-red-500 shrink-0" />}
             <span>{gatewayTestResult.message}</span>
+          </div>
+        )}
+
+        {detectedServerIp && (
+          <div className="p-3 rounded-xl bg-blue-50/70 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800/40 text-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+            <div className="flex items-center gap-2 text-blue-700 dark:text-blue-300">
+              <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
+              <span>آی‌پی عمومی این سرور برای ثبت در زرین‌پال:</span>
+              <code className="font-mono font-bold bg-white dark:bg-zinc-800 px-2 py-0.5 rounded border border-blue-200 dark:border-blue-700 select-all" dir="ltr">
+                {detectedServerIp}
+              </code>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                navigator.clipboard.writeText(detectedServerIp);
+                alert(`آی‌پی ${detectedServerIp} کپی شد.`);
+              }}
+              className="px-3 py-1 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-bold text-[11px] transition-colors cursor-pointer"
+            >
+              کپی این آی‌پی
+            </button>
           </div>
         )}
 
