@@ -936,23 +936,26 @@ export function ImageGenStudio() {
                 )}
               </div>
             ) : imageUrl ? (
-              /* --- SINGLE CANVAS IMAGE PREVIEW --- */
-              <div className="relative group max-w-full max-h-full rounded-2xl overflow-hidden shadow-2xl animate-scaleIn ring-1 ring-white/10">
-                <img 
-                  src={toSafeImageUrl(imageUrl)} 
-                  alt="Generated" 
-                  className="max-w-full max-h-[55vh] lg:max-h-[72vh] object-contain bg-black/10 backdrop-blur-3xl"
-                  onError={() => {
-                    setError('خطا در نمایش فایل تصویر. لطفاً مجدداً دکمه تولید را فشار دهید.');
-                  }}
-                />
+              /* --- SINGLE CANVAS IMAGE PREVIEW & ACTIONS BELOW --- */
+              <div className="flex flex-col items-center gap-3.5 max-w-full max-h-full animate-scaleIn pb-24 sm:pb-28">
+                {/* Clean Image Container without any overlay buttons blocking the artwork */}
+                <div className="relative rounded-2xl overflow-hidden shadow-2xl ring-1 ring-black/10 dark:ring-white/10">
+                  <img 
+                    src={toSafeImageUrl(imageUrl)} 
+                    alt="Generated" 
+                    className="max-w-full max-h-[46vh] lg:max-h-[58vh] object-contain bg-black/10 backdrop-blur-3xl rounded-2xl"
+                    onError={() => {
+                      setError('خطا در نمایش فایل تصویر. لطفاً مجدداً دکمه تولید را فشار دهید.');
+                    }}
+                  />
+                </div>
                 
-                {/* Floating Overlay Controls (Re-roll + Send to Chat) */}
-                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all duration-300 transform sm:translate-y-2 sm:group-hover:translate-y-0">
+                {/* Dedicated Action Toolbar BELOW the Image */}
+                <div className="flex items-center justify-center gap-3 z-10">
                   <button 
                     onClick={() => handleGenerate()}
                     disabled={loading}
-                    className="flex items-center gap-1.5 px-4 py-3 bg-zinc-900/90 hover:bg-black backdrop-blur-xl text-white rounded-2xl transition-all font-bold text-xs sm:text-sm shadow-2xl border border-white/20 hover:scale-105 cursor-pointer disabled:opacity-50"
+                    className="flex items-center gap-2 px-4 py-2.5 bg-zinc-900/90 hover:bg-black dark:bg-zinc-800 dark:hover:bg-zinc-700 text-white rounded-xl transition-all font-bold text-xs sm:text-sm shadow-md border border-zinc-700/50 dark:border-white/10 hover:scale-105 cursor-pointer disabled:opacity-50"
                     title="تولید مجدد با این پرامپت (تنوع جدید)"
                   >
                     <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
@@ -965,7 +968,7 @@ export function ImageGenStudio() {
                         onInsertToChat(prompt, imageUrl);
                         onClose();
                       }}
-                      className="flex items-center gap-2 px-5 py-3 bg-purple-600/95 hover:bg-purple-500 backdrop-blur-xl text-white rounded-2xl transition-all font-bold text-xs sm:text-sm shadow-2xl border border-purple-400/30 hover:scale-105 cursor-pointer"
+                      className="flex items-center gap-2 px-5 py-2.5 bg-purple-600 hover:bg-purple-500 text-white rounded-xl transition-all font-bold text-xs sm:text-sm shadow-md shadow-purple-600/30 border border-purple-400/30 hover:scale-105 cursor-pointer"
                     >
                       <Send className="w-4 h-4" />
                       <span>ارسال به چت</span>
