@@ -14,6 +14,7 @@ interface UIState {
   isAdminOpen: boolean;
   isAboutOpen: boolean;
   isContactOpen: boolean;
+  isWalletOpen: boolean;
 
   setSidebarOpen: (open: boolean) => void;
   toggleSidebar: () => void;
@@ -29,6 +30,7 @@ interface UIState {
   setIsAdminOpen: (open: boolean) => void;
   setIsAboutOpen: (open: boolean) => void;
   setIsContactOpen: (open: boolean) => void;
+  setIsWalletOpen: (open: boolean) => void;
 }
 
 export const useUIStore = create<UIState>((set) => ({
@@ -45,6 +47,7 @@ export const useUIStore = create<UIState>((set) => ({
   isAdminOpen: false,
   isAboutOpen: false,
   isContactOpen: false,
+  isWalletOpen: false,
 
   setSidebarOpen: (open) => set({ sidebarOpen: open }),
   toggleSidebar: () => set((state) => ({ sidebarOpen: !state.sidebarOpen })),
@@ -60,4 +63,5 @@ export const useUIStore = create<UIState>((set) => ({
   setIsAdminOpen: (open) => set({ isAdminOpen: open }),
   setIsAboutOpen: (open) => set({ isAboutOpen: open }),
   setIsContactOpen: (open) => set({ isContactOpen: open }),
+  setIsWalletOpen: (open) => set({ isWalletOpen: open }),
 }));

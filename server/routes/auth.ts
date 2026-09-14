@@ -8,6 +8,7 @@ import crypto from 'crypto';
 import nodemailer from 'nodemailer';
 import rateLimit from 'express-rate-limit';
 import { telegramAuthSessions } from '../services/telegramAuthSessions';
+import { grantWelcomeBonusIfEligible, getUserWallet, getUserTransactions, getUserUsageStats, getApiDollarRate } from '../services/walletService';
 
 const router = express.Router();
 
@@ -73,8 +74,11 @@ router.post('/register', registerLimiter, async (req, res) => {
     const info = insertStmt.run(email, passwordHash, name || '', defaultAvatar, role);
     syncDatabase();
 
+    const userId = Number(info.lastInsertRowid);
+    const bonusResult = grantWelcomeBonusIfEligible(userId);
+
     const token = jwt.sign(
-      { id: info.lastInsertRowid, email, role },
+      { id: userId, email, role },
       JWT_SECRET,
       { expiresIn: '7d' }
     );
@@ -82,7 +86,15 @@ router.post('/register', registerLimiter, async (req, res) => {
     res.status(201).json({
       message: 'ثبت‌نام موفقیت‌آمیز بود',
       token,
-      user: { id: info.lastInsertRowid, email, name, avatar: defaultAvatar, role }
+      user: { 
+        id: userId, 
+        email, 
+        name, 
+        avatar: defaultAvatar, 
+        role,
+        walletBalance: bonusResult.newBalance,
+        hasReceivedWelcomeBonus: bonusResult.granted
+      }
     });
   } catch (error) {
     console.error('[Auth API] Register Error:', error);
@@ -113,10 +125,21 @@ router.post('/login', verifyLimiter, async (req, res) => {
       { expiresIn: '7d' }
     );
 
+    const wallet = getUserWallet(user.id);
+
     res.json({
       message: 'ورود موفقیت‌آمیز',
       token,
-      user: { id: user.id, email: user.email, phone: user.phone, name: user.name, avatar: user.avatar, role: user.role }
+      user: { 
+        id: user.id, 
+        email: user.email, 
+        phone: user.phone, 
+        name: user.name, 
+        avatar: user.avatar, 
+        role: user.role,
+        walletBalance: wallet.walletBalance,
+        hasReceivedWelcomeBonus: wallet.hasReceivedWelcomeBonus
+      }
     });
   } catch (error) {
     console.error('[Auth API] Login Error:', error);
@@ -183,9 +206,14 @@ router.post('/google', googleAuthLimiter, async (req, res) => {
 
         const insertUserStmt = db.prepare('INSERT INTO users (email, googleId, name, avatar, role) VALUES (?, ?, ?, ?, ?)');
         const info = insertUserStmt.run(email, googleId, name, avatar, role);
-        user = { id: info.lastInsertRowid, email, googleId, name, avatar, role };
+        user = { id: Number(info.lastInsertRowid), email, googleId, name, avatar, role };
+        grantWelcomeBonusIfEligible(user.id);
       }
     }
+
+    const wallet = getUserWallet(user.id);
+    user.walletBalance = wallet.walletBalance;
+    user.hasReceivedWelcomeBonus = wallet.hasReceivedWelcomeBonus;
 
     syncDatabase();
 
@@ -253,14 +281,45 @@ router.get('/telegram/check', (req, res) => {
 
 // GET /api/auth/me
 router.get('/me', requireAuth, (req: any, res) => {
-  const userStmt = db.prepare('SELECT id, phone, email, name, avatar, role FROM users WHERE id = ?');
-  const user = userStmt.get(req.user.id);
+  const userStmt = db.prepare('SELECT id, phone, email, name, avatar, role, walletBalance, hasReceivedWelcomeBonus FROM users WHERE id = ?');
+  let user = userStmt.get(req.user.id) as any;
 
   if (!user) {
     return res.status(404).json({ error: 'کاربر یافت نشد.' });
   }
 
+  // Grant welcome bonus if eligible and not received yet
+  if (!user.hasReceivedWelcomeBonus) {
+    const bonus = grantWelcomeBonusIfEligible(user.id);
+    if (bonus.granted) {
+      user.walletBalance = bonus.newBalance;
+      user.hasReceivedWelcomeBonus = 1;
+    }
+  }
+
   res.json({ user });
+});
+
+// GET /api/auth/wallet
+router.get('/wallet', requireAuth, (req: any, res) => {
+  try {
+    const userId = req.user.id;
+    const wallet = getUserWallet(userId);
+    const sellingRate = getApiDollarRate();
+    const stats = getUserUsageStats(userId);
+    const transactions = getUserTransactions(userId, 100);
+
+    res.json({
+      walletBalance: wallet.walletBalance,
+      hasReceivedWelcomeBonus: wallet.hasReceivedWelcomeBonus,
+      sellingRate,
+      stats,
+      transactions
+    });
+  } catch (err) {
+    console.error('[Auth API] Get Wallet Error:', err);
+    res.status(500).json({ error: 'خطا در دریافت اطلاعات کیف پول' });
+  }
 });
 
 // POST /api/auth/forgot-password

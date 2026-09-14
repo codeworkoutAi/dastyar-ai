@@ -56,6 +56,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
     soundEnabled: false, 
     showPerformanceMetrics: true, 
     smartRouting: true, 
+    reasoningMode: false,
     routingRoles: { 
       default: 'default-groq-qwen-27b', 
       coding: 'default-groq-gpt-oss-120b', 

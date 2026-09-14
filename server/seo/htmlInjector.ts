@@ -179,8 +179,8 @@ export function renderHtmlWithSeo(req: express.Request, res: express.Response, d
               }
             ]
           };
-        } else if (urlPath === '/') {
-          // Home page FAQPage Schema for GEO / AI Answer Engines
+        } else if (urlPath === '/' || urlPath === '/landing' || urlPath === '/chat') {
+          // Home / Landing page FAQPage Schema for GEO / AI Answer Engines
           structuredData = {
             '@context': 'https://schema.org',
             '@type': 'FAQPage',

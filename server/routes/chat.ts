@@ -5,6 +5,10 @@ import { isSafeBaseUrl, getGeminiClient, extractCleanErrorMessage, sanitizeError
 import { GoogleGroundingAgent } from '../services/GoogleGroundingAgent';
 import { ToolsAgent } from '../services/ToolsAgent';
 import { responseCache, CACHE_TTL_MS, computeCacheKey, setCachedResponse } from '../services/CacheService';
+import { hasSufficientBalance, deductChatCost, calculateModelCostUsd, getUserWallet } from '../services/walletService';
+import { keyRotator } from '../services/keyRotator';
+import jwt from 'jsonwebtoken';
+import { JWT_SECRET } from '../middleware/auth';
 const router = express.Router();
 
 const chatStreamLimiter = rateLimit({
@@ -107,9 +111,57 @@ router.post('/api/chat/stream', chatStreamLimiter, async (req, res) => {
       return finishStream();
     }
 
+    // Extract authenticated user if token provided
+    let userId: number | null = null;
+    const authHeader = req.headers.authorization;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      try {
+        const token = authHeader.split(' ')[1];
+        const decoded = jwt.verify(token, JWT_SECRET) as any;
+        if (decoded?.id) userId = decoded.id;
+      } catch (e) {}
+    }
+
     let provider = apiConfig?.activeProvider || 'gemini';
+    const customProfileId = apiConfig?.custom?.activeProfileId;
+    let model = req.body.model || apiConfig?.[provider]?.modelName || '';
 
     // Auto-detect native official providers from custom profiles based on Base URL
+    let isFreeModel = false;
+    let targetBaseUrl = '';
+    let targetModel = model;
+    let targetApiKey = '';
+    let resolvedSystemProfile = null;
+    
+    if (provider === 'custom' && customProfileId) {
+      // 1. Try to fetch from DB if it's a system default
+      const profileResult = await new Promise<any>((resolve) => {
+        db.get('SELECT * FROM default_profiles WHERE id = ?', [customProfileId], (err, row) => resolve(row));
+      });
+      if (profileResult) {
+        resolvedSystemProfile = profileResult;
+        targetBaseUrl = profileResult.baseUrl;
+        targetModel = profileResult.modelName;
+        targetApiKey = profileResult.apiKey;
+        if (profileResult.name?.includes('رایگان') || profileResult.name?.toLowerCase().includes('free')) {
+          isFreeModel = true;
+        }
+      }
+    }
+
+    const hasCustomUserKey = Boolean(apiConfig?.[provider]?.apiKey && apiConfig[provider].apiKey.trim() !== '');
+
+    if (userId && !hasCustomUserKey) {
+      const userWallet = getUserWallet(userId);
+      if (userWallet.walletBalance <= 0) {
+        sendChunk({
+          error: 'اعتبار کیف پول شما به پایان رسیده است. لطفاً برای ادامه گفت‌وگو حساب خود را شارژ کنید.',
+          done: true
+        });
+        return finishStream();
+      }
+    }
+
     if (provider === 'custom' && apiConfig?.custom?.baseUrl) {
       const bUrl = apiConfig.custom.baseUrl.toLowerCase();
       if (bUrl.includes('anthropic.com')) {
@@ -331,7 +383,9 @@ router.post('/api/chat/stream', chatStreamLimiter, async (req, res) => {
         'gemini-flash-latest',
       ].filter((v, i, a) => a.indexOf(v) === i);
 
-      let geminiUsage: { promptTokens?: number; completionTokens?: number; totalTokens?: number } | undefined = undefined;
+      let geminiUsage: { promptTokens?: number; completionTokens?: number; totalTokens?: number; costToman?: number; balanceAfter?: number } | undefined = undefined;
+      let accumulatedGeminiText = '';
+      let successfulCandidate = '';
 
       for (const candidate of candidateModels) {
         if (hasSentAnyChunk) break;
@@ -470,6 +524,31 @@ router.post('/api/chat/stream', chatStreamLimiter, async (req, res) => {
             error: frontendMsg,
           });
         }
+      }
+
+      if (userId && !hasCustomUserKey && accumulatedGeminiText && !isFreeModel) {
+        if (!geminiUsage || !geminiUsage.totalTokens) {
+          const promptEstimate = Math.ceil(JSON.stringify(prunedMessages).length / 4);
+          const completionEstimate = Math.ceil(accumulatedGeminiText.length / 4);
+          geminiUsage = {
+            promptTokens: promptEstimate,
+            completionTokens: completionEstimate,
+            totalTokens: promptEstimate + completionEstimate,
+          };
+        }
+        const costUsd = calculateModelCostUsd(successfulCandidate, geminiUsage.promptTokens || 0, geminiUsage.completionTokens || 0);
+        const deductResult = deductChatCost(
+          userId,
+          successfulCandidate,
+          geminiUsage.promptTokens || 0,
+          geminiUsage.completionTokens || 0,
+          costUsd
+        );
+        geminiUsage = {
+          ...geminiUsage,
+          costToman: deductResult.costToman,
+          balanceAfter: deductResult.balanceAfter,
+        };
       }
 
       sendChunk({ done: true, usage: geminiUsage });
@@ -695,9 +774,9 @@ router.post('/api/chat/stream', chatStreamLimiter, async (req, res) => {
       const decoder = new TextDecoder('utf-8');
       let buffer = '';
       let isReasoningPhase = false;
-      let openaiUsage: { promptTokens?: number; completionTokens?: number; totalTokens?: number } | undefined = undefined;
-
+      let openaiUsage: { promptTokens?: number; completionTokens?: number; totalTokens?: number; costToman?: number; balanceAfter?: number } | undefined = undefined;
       let fullAccumulatedCustom = '';
+      let requestedModel = '';
 
       try {
         while (true) {
@@ -795,6 +874,32 @@ router.post('/api/chat/stream', chatStreamLimiter, async (req, res) => {
           usage: openaiUsage,
           timestamp: Date.now(),
         });
+      }
+
+      if (userId && !hasCustomUserKey && fullAccumulatedCustom && !isFreeModel) {
+        if (!openaiUsage || !openaiUsage.totalTokens) {
+          const promptEstimate = Math.ceil(JSON.stringify(prunedMessages).length / 4);
+          const completionEstimate = Math.ceil(fullAccumulatedCustom.length / 4);
+          openaiUsage = {
+            promptTokens: promptEstimate,
+            completionTokens: completionEstimate,
+            totalTokens: promptEstimate + completionEstimate,
+          };
+        }
+        const modelName = requestedModel || apiConfig?.[provider]?.modelName || 'custom';
+        const costUsd = calculateModelCostUsd(modelName, openaiUsage.promptTokens || 0, openaiUsage.completionTokens || 0);
+        const deductResult = deductChatCost(
+          userId,
+          modelName,
+          openaiUsage.promptTokens || 0,
+          openaiUsage.completionTokens || 0,
+          costUsd
+        );
+        openaiUsage = {
+          ...openaiUsage,
+          costToman: deductResult.costToman,
+          balanceAfter: deductResult.balanceAfter,
+        };
       }
 
       sendChunk({ done: true, usage: openaiUsage });

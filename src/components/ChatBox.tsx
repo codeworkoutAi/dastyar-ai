@@ -573,6 +573,7 @@ export const ChatBox: React.FC = React.memo(() => {
                               content={msg.content}
                               isStreaming={msg.isStreaming}
                               usePersianDigits={usePersianDigits}
+                              stripReasoning={!settings.tools.reasoningMode}
                             />
                           </div>
                         </>
@@ -611,8 +612,10 @@ export const ChatBox: React.FC = React.memo(() => {
 
                         <div className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shrink-0">
                           <span className="text-zinc-500 font-sans">هزینه:</span>
-                          <span className="font-mono text-emerald-400" dir="ltr">
-                            ${msg.metrics?.estimatedCostUSD || '0.00012'}
+                          <span className="font-mono text-emerald-600 dark:text-emerald-400" dir="rtl">
+                            {typeof msg.metrics?.costToman === 'number'
+                              ? `${msg.metrics.costToman.toLocaleString('fa-IR')} تومان`
+                              : `$${msg.metrics?.estimatedCostUSD || '0.00012'}`}
                           </span>
                         </div>
                       </div>

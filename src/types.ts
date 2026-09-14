@@ -11,6 +11,8 @@ export interface MessageMetrics {
   completionTokens?: number;
   approxTokens?: number;
   estimatedCostUSD?: string;
+  costToman?: number;
+  balanceAfter?: number;
 }
 
 export interface ChatMessage {
@@ -79,6 +81,7 @@ export interface AppSettings {
     soundEnabled: boolean; 
     showPerformanceMetrics: boolean; 
     smartRouting: boolean; 
+    reasoningMode?: boolean;
     routingRoles?: { 
       default: string; defaultProvider?: string;
       coding: string; codingProvider?: string;

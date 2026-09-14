@@ -1,18 +1,42 @@
 import React, { useState, useEffect } from 'react';
 import { useAuthStore } from '../../store/authStore';
+import { useUIStore } from '../../store/uiStore';
 import { 
   ShoppingBag, User as UserIcon, LifeBuoy, 
   Key, Package, CheckCircle2, XCircle, Clock, Save, Lock, LogOut,
-  Receipt, Printer, ArrowRight, Home, ExternalLink, ShieldCheck, ChevronLeft
+  Receipt, Printer, ArrowRight, Home, ExternalLink, ShieldCheck, ChevronLeft,
+  Wallet, Zap, Coins, Cpu, MessageSquare, Plus, ArrowUpRight, ArrowDownLeft,
+  Filter, Sparkles, RefreshCw, BarChart2, Gift, CreditCard
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
+import { toPersianDigits } from '../../lib/persianUtils';
 
 export const UserDashboard = () => {
-  const { user, token, checkAuth, logout } = useAuthStore();
+  const { user, token, checkAuth, logout, setWalletBalance } = useAuthStore();
+  const { setIsWalletOpen } = useUIStore();
   
   const [purchases, setPurchases] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+
+  // Wallet & Usage Stats
+  const [walletData, setWalletData] = useState<{
+    walletBalance: number;
+    hasReceivedWelcomeBonus: boolean;
+    sellingRate: number;
+    stats: {
+      totalTokens: number;
+      promptTokens: number;
+      completionTokens: number;
+      totalSpentToman: number;
+      totalMessages: number;
+      modelBreakdown: { model: string; messageCount: number; tokens: number; costToman: number }[];
+    };
+    transactions: any[];
+  } | null>(null);
+  const [walletLoading, setWalletLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState<'wallet' | 'orders' | 'redeem'>('wallet');
+  const [txFilter, setTxFilter] = useState<'all' | 'chat' | 'deposits'>('all');
 
   const navigate = useNavigate();
 
@@ -55,7 +79,29 @@ export const UserDashboard = () => {
       return;
     }
     fetchPurchases();
+    fetchWalletData();
   }, [token]);
+
+  const fetchWalletData = async () => {
+    if (!token) return;
+    setWalletLoading(true);
+    try {
+      const res = await fetch('/api/auth/wallet', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setWalletData(data);
+        if (typeof data.walletBalance === 'number') {
+          setWalletBalance(data.walletBalance);
+        }
+      }
+    } catch (err) {
+      console.error('Error fetching wallet stats:', err);
+    } finally {
+      setWalletLoading(false);
+    }
+  };
 
   const fetchPurchases = async () => {
     setLoading(true);
@@ -211,33 +257,137 @@ export const UserDashboard = () => {
 
       <main className="max-w-6xl mx-auto px-4 md:px-8 mt-8 space-y-6">
         
-        {/* Row 1: Welcome & Highlights */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 p-6 md:p-8 rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 shadow-xs flex flex-col justify-center">
-            <h2 className="text-lg md:text-xl font-semibold text-zinc-900 dark:text-white mb-1.5">
-              خوش آمدید، {user.name?.split(' ')[0] || 'کاربر عزیز'} 👋
+        {/* Row 1: Welcome & Quick Action Bar */}
+        <div className="p-6 md:p-7 rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <h2 className="text-lg md:text-2xl font-black text-zinc-900 dark:text-white mb-1.5 flex items-center gap-2">
+              <span>خوش آمدید، {user.name?.split(' ')[0] || 'کاربر عزیز'}</span>
+              <span className="text-xl">👋</span>
             </h2>
-            <p className="text-sm text-zinc-500 dark:text-zinc-400 leading-relaxed max-w-xl">
-              اینجا مرکز مدیریت یکپارچه حساب کاربری شماست. می‌توانید سفارش‌های خود را پیگیری کنید، اطلاعات حساب را بروزرسانی کنید و کدهای فعال‌سازی خود را وارد نمایید.
+            <p className="text-xs md:text-sm text-zinc-500 dark:text-zinc-400 leading-relaxed max-w-2xl">
+              مرکز مدیریت یکپارچه حساب کاربری، مانده کیف پول، مصرف توکن‌های هوش مصنوعی و سفارش‌های فروشگاه.
             </p>
           </div>
-          
-          <div className="p-4 md:p-5 rounded-3xl bg-gradient-to-br from-blue-600 via-indigo-600 to-violet-600 text-white shadow-md shadow-blue-500/10 flex items-center justify-between relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-white opacity-10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2"></div>
-            <div className="relative z-10 flex items-center gap-3">
-              <div className="p-2.5 bg-white/20 backdrop-blur-md rounded-2xl text-white">
-                <ShoppingBag size={20} />
-              </div>
-              <span className="font-semibold text-sm">سفارش‌های شما</span>
+          <div className="flex items-center gap-2.5 shrink-0">
+            <Link
+              to="/chat"
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold shadow-md shadow-blue-600/20 transition-all cursor-pointer"
+            >
+              <MessageSquare size={15} />
+              <span>ورود به چت‌باکس</span>
+            </Link>
+            <button
+              onClick={() => setIsWalletOpen(true)}
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-md shadow-emerald-600/20 transition-all cursor-pointer"
+            >
+              <Plus size={15} />
+              <span>شارژ کیف پول</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Row 2: 4 Key Metric Cards (KPI) */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {/* Card 1: Wallet Balance */}
+          <div className="p-5 rounded-3xl bg-gradient-to-br from-emerald-500/10 via-teal-500/5 to-transparent dark:from-emerald-500/15 dark:via-transparent border border-emerald-200/80 dark:border-emerald-500/20 shadow-xs flex flex-col justify-between">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-xs font-bold text-emerald-800 dark:text-emerald-300 flex items-center gap-1.5">
+                <Wallet size={16} className="text-emerald-600 dark:text-emerald-400" />
+                موجودی کیف پول
+              </span>
+              <button
+                onClick={() => setIsWalletOpen(true)}
+                className="text-[11px] font-bold text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 hover:underline flex items-center gap-1 cursor-pointer"
+              >
+                <Plus size={12} />
+                شارژ سریع
+              </button>
             </div>
-            <div className="relative z-10 flex items-baseline gap-1.5">
-              <span className="text-2xl font-bold">{purchases.length}</span>
-              <span className="text-blue-100 text-xs">مورد</span>
+            <div className="flex items-baseline gap-1.5 my-1">
+              <span className="text-2xl lg:text-3xl font-black text-emerald-600 dark:text-emerald-400 tracking-tight">
+                {toPersianDigits((user.walletBalance ?? walletData?.walletBalance ?? 0).toLocaleString('fa-IR'))}
+              </span>
+              <span className="text-xs font-bold text-zinc-500 dark:text-zinc-400">تومان</span>
+            </div>
+            <div className="text-[11px] text-zinc-500 dark:text-zinc-400 flex items-center justify-between pt-2 border-t border-emerald-100 dark:border-emerald-500/10 mt-2">
+              <span>مدل پرداختی:</span>
+              <span className="font-bold text-emerald-600 dark:text-emerald-400">Pay-As-You-Go</span>
+            </div>
+          </div>
+
+          {/* Card 2: Total Tokens */}
+          <div className="p-5 rounded-3xl bg-gradient-to-br from-blue-500/10 via-indigo-500/5 to-transparent dark:from-blue-500/15 dark:via-transparent border border-blue-200/80 dark:border-blue-500/20 shadow-xs flex flex-col justify-between">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-xs font-bold text-blue-800 dark:text-blue-300 flex items-center gap-1.5">
+                <Zap size={16} className="text-blue-600 dark:text-blue-400" />
+                کل توکن‌های مصرفی
+              </span>
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 font-bold">
+                تجمعی
+              </span>
+            </div>
+            <div className="flex items-baseline gap-1.5 my-1">
+              <span className="text-2xl lg:text-3xl font-black text-blue-600 dark:text-blue-400 tracking-tight">
+                {toPersianDigits((walletData?.stats?.totalTokens || 0).toLocaleString('fa-IR'))}
+              </span>
+              <span className="text-xs font-bold text-zinc-500 dark:text-zinc-400">توکن</span>
+            </div>
+            <div className="text-[11px] text-zinc-500 dark:text-zinc-400 flex items-center justify-between pt-2 border-t border-blue-100 dark:border-blue-500/10 mt-2">
+              <span>ورودی: {toPersianDigits((walletData?.stats?.promptTokens || 0).toLocaleString('fa-IR'))}</span>
+              <span>خروجی: {toPersianDigits((walletData?.stats?.completionTokens || 0).toLocaleString('fa-IR'))}</span>
+            </div>
+          </div>
+
+          {/* Card 3: Total Spent */}
+          <div className="p-5 rounded-3xl bg-gradient-to-br from-purple-500/10 via-violet-500/5 to-transparent dark:from-purple-500/15 dark:via-transparent border border-purple-200/80 dark:border-purple-500/20 shadow-xs flex flex-col justify-between">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-xs font-bold text-purple-800 dark:text-purple-300 flex items-center gap-1.5">
+                <Coins size={16} className="text-purple-600 dark:text-purple-400" />
+                کل هزینه کسر شده
+              </span>
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 font-bold">
+                چت AI
+              </span>
+            </div>
+            <div className="flex items-baseline gap-1.5 my-1">
+              <span className="text-2xl lg:text-3xl font-black text-purple-600 dark:text-purple-400 tracking-tight">
+                {toPersianDigits((walletData?.stats?.totalSpentToman || 0).toLocaleString('fa-IR'))}
+              </span>
+              <span className="text-xs font-bold text-zinc-500 dark:text-zinc-400">تومان</span>
+            </div>
+            <div className="text-[11px] text-zinc-500 dark:text-zinc-400 flex items-center justify-between pt-2 border-t border-purple-100 dark:border-purple-500/10 mt-2">
+              <span>میانگین هر پیام:</span>
+              <span className="font-bold text-purple-600 dark:text-purple-400">
+                {walletData?.stats?.totalMessages ? toPersianDigits(Math.round((walletData.stats.totalSpentToman / walletData.stats.totalMessages)).toLocaleString('fa-IR')) : '۰'} ت
+              </span>
+            </div>
+          </div>
+
+          {/* Card 4: Total Messages */}
+          <div className="p-5 rounded-3xl bg-gradient-to-br from-amber-500/10 via-orange-500/5 to-transparent dark:from-amber-500/15 dark:via-transparent border border-amber-200/80 dark:border-amber-500/20 shadow-xs flex flex-col justify-between">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-xs font-bold text-amber-800 dark:text-amber-300 flex items-center gap-1.5">
+                <MessageSquare size={16} className="text-amber-600 dark:text-amber-400" />
+                گفتگوهای انجام‌شده
+              </span>
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 font-bold">
+                پیام‌ها
+              </span>
+            </div>
+            <div className="flex items-baseline gap-1.5 my-1">
+              <span className="text-2xl lg:text-3xl font-black text-amber-600 dark:text-amber-400 tracking-tight">
+                {toPersianDigits((walletData?.stats?.totalMessages || 0).toLocaleString('fa-IR'))}
+              </span>
+              <span className="text-xs font-bold text-zinc-500 dark:text-zinc-400">پیام</span>
+            </div>
+            <div className="text-[11px] text-zinc-500 dark:text-zinc-400 flex items-center justify-between pt-2 border-t border-amber-100 dark:border-amber-500/10 mt-2">
+              <span>سفارش‌های فروشگاه:</span>
+              <span className="font-bold text-zinc-700 dark:text-zinc-300">{toPersianDigits(purchases.length)} مورد</span>
             </div>
           </div>
         </div>
 
-        {/* Row 2: Main Bento Grid */}
+        {/* Row 3: Main Bento Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           
           {/* Left Column: Account Settings */}
@@ -328,107 +478,361 @@ export const UserDashboard = () => {
             
           </div>
 
-          {/* Right Column: Actions & Orders */}
+          {/* Right Column: Segmented Tabs & Main Content */}
           <div className="lg:col-span-2 flex flex-col gap-6">
             
-            {/* Redeem Section */}
-            <div className="p-5 md:p-6 rounded-3xl bg-gradient-to-br from-slate-900 via-indigo-950 to-zinc-900 dark:from-zinc-900 dark:via-zinc-900 dark:to-zinc-800 border border-indigo-950/40 dark:border-zinc-700/80 shadow-md text-white relative overflow-hidden">
-              <div className="absolute top-0 left-0 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl -translate-y-1/2 -translate-x-1/2"></div>
-              
-              <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-5">
-                <div className="flex-1">
-                  <h3 className="font-bold text-base mb-1.5 flex items-center gap-2">
-                    <Key size={18} className="text-blue-400" />
-                    فعال‌سازی لایسنس (Redeem)
-                  </h3>
-                  <p className="text-zinc-300 dark:text-zinc-400 text-[11px] leading-relaxed max-w-md">
-                    اگر کدی از طریق تلگرام یا سایر پلتفرم‌ها دریافت کرده‌اید، برای اتصال خدمات به این حساب وارد کنید.
-                  </p>
-                </div>
-                
-                <form onSubmit={handleRedeem} className="flex-1 flex flex-col sm:flex-row gap-2.5 w-full">
-                  <input 
-                    type="text" 
-                    value={redeemCode}
-                    onChange={(e) => setRedeemCode(e.target.value)}
-                    placeholder="X7Y9-ABCD-1234"
-                    dir="ltr"
-                    className="flex-1 px-3.5 py-2.5 rounded-xl bg-white/10 border border-white/15 text-white placeholder:text-zinc-400 focus:bg-white/15 focus:border-blue-400/60 focus:ring-2 focus:ring-blue-400/20 outline-none transition-all font-mono text-sm"
-                  />
-                  <button 
-                    type="submit" 
-                    disabled={isRedeeming || !redeemCode.trim()}
-                    className="px-5 py-2.5 bg-white text-zinc-900 hover:bg-zinc-100 rounded-xl font-bold text-xs shadow-sm hover:shadow transition-all disabled:opacity-50 shrink-0"
-                  >
-                    {isRedeeming ? '...' : 'فعال‌سازی'}
-                  </button>
-                </form>
-              </div>
-              
-              {redeemMessage && (
-                <div className={`mt-3 px-3 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 ${redeemMessage.type === 'success' ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-red-500/20 text-red-300 border border-red-500/30'}`}>
-                  {redeemMessage.type === 'success' ? <CheckCircle2 size={14}/> : <XCircle size={14}/>}
-                  {redeemMessage.text}
-                </div>
-              )}
+            {/* Segmented Navigation Tabs */}
+            <div className="flex items-center gap-2 p-1.5 rounded-2xl bg-zinc-100 dark:bg-zinc-800/70 border border-zinc-200/80 dark:border-zinc-700/60 shadow-xs">
+              <button
+                type="button"
+                onClick={() => setActiveTab('wallet')}
+                className={`flex-1 py-2.5 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                  activeTab === 'wallet'
+                    ? 'bg-white dark:bg-zinc-900 text-blue-600 dark:text-blue-400 shadow-sm border border-zinc-200/80 dark:border-zinc-700'
+                    : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200'
+                }`}
+              >
+                <Zap size={15} className={activeTab === 'wallet' ? 'text-blue-500' : ''} />
+                <span>مصرف توکن و کیف پول</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveTab('orders')}
+                className={`flex-1 py-2.5 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                  activeTab === 'orders'
+                    ? 'bg-white dark:bg-zinc-900 text-blue-600 dark:text-blue-400 shadow-sm border border-zinc-200/80 dark:border-zinc-700'
+                    : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200'
+                }`}
+              >
+                <Package size={15} className={activeTab === 'orders' ? 'text-blue-500' : ''} />
+                <span>سفارش‌ها ({toPersianDigits(purchases.length)})</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveTab('redeem')}
+                className={`flex-1 py-2.5 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                  activeTab === 'redeem'
+                    ? 'bg-white dark:bg-zinc-900 text-blue-600 dark:text-blue-400 shadow-sm border border-zinc-200/80 dark:border-zinc-700'
+                    : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200'
+                }`}
+              >
+                <Key size={15} className={activeTab === 'redeem' ? 'text-blue-500' : ''} />
+                <span>فعال‌سازی کد</span>
+              </button>
             </div>
 
-            {/* Orders Section */}
-            <div className="p-5 md:p-6 rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 shadow-xs flex-1 flex flex-col min-h-[400px]">
-              <div className="flex items-center justify-between mb-4 pb-3 border-b border-zinc-100 dark:border-zinc-800/80">
-                <div className="flex items-center gap-2.5">
-                  <Package size={16} className="text-zinc-500 dark:text-zinc-400" />
-                  <h3 className="font-bold text-sm text-zinc-900 dark:text-white">تاریخچه سفارش‌ها</h3>
-                </div>
-                <Link to="/store" className="text-[11px] font-semibold text-blue-600 hover:text-blue-700 dark:text-blue-400 flex items-center gap-1">
-                  مشاهده فروشگاه <ChevronLeft size={12} />
-                </Link>
-              </div>
-              
-              <div className="flex-1 overflow-y-auto max-h-[500px] pr-2 -mr-2 space-y-3 hide-scrollbar">
-                {loading ? (
-                  <div className="flex justify-center p-8"><div className="w-8 h-8 border-2 border-zinc-200 border-t-blue-600 rounded-full animate-spin"></div></div>
-                ) : purchases.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-10 text-center">
-                    <div className="w-14 h-14 bg-zinc-50 dark:bg-zinc-800 rounded-full flex items-center justify-center mb-3 text-zinc-400">
-                      <ShoppingBag size={20} />
+            {/* TAB 1: Token Usage & Wallet Transactions */}
+            {activeTab === 'wallet' && (
+              <div className="flex flex-col gap-6">
+                {/* Model Breakdown Section */}
+                {walletData?.stats?.modelBreakdown && walletData.stats.modelBreakdown.length > 0 && (
+                  <div className="p-5 md:p-6 rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 shadow-xs">
+                    <div className="flex items-center justify-between mb-4 pb-3 border-b border-zinc-100 dark:border-zinc-800/80">
+                      <div className="flex items-center gap-2.5">
+                        <BarChart2 size={16} className="text-indigo-500" />
+                        <h3 className="font-bold text-sm text-zinc-900 dark:text-white">تفکیک مصرف بر اساس مدل‌های هوش مصنوعی</h3>
+                      </div>
+                      <span className="text-[11px] text-zinc-500">
+                        {toPersianDigits(walletData.stats.modelBreakdown.length)} مدل فعال
+                      </span>
                     </div>
-                    <p className="text-xs font-semibold text-zinc-600 dark:text-zinc-400 mb-1">هیچ سفارشی ثبت نشده است</p>
-                    <p className="text-[11px] text-zinc-400">اولین خرید خود را از فروشگاه انجام دهید.</p>
+
+                    <div className="space-y-4">
+                      {walletData.stats.modelBreakdown.map((mb, idx) => {
+                        const pct = walletData.stats.totalTokens > 0 
+                          ? Math.round((mb.tokens / walletData.stats.totalTokens) * 100) 
+                          : 0;
+                        const colors = [
+                          'from-blue-500 to-indigo-600',
+                          'from-purple-500 to-pink-600',
+                          'from-emerald-500 to-teal-600',
+                          'from-amber-500 to-orange-600'
+                        ];
+                        const barColor = colors[idx % colors.length];
+
+                        return (
+                          <div key={mb.model} className="space-y-1.5">
+                            <div className="flex items-center justify-between text-xs">
+                              <span className="font-bold text-zinc-800 dark:text-zinc-200 dir-ltr">{mb.model}</span>
+                              <div className="flex items-center gap-3 text-[11px] text-zinc-500 dark:text-zinc-400">
+                                <span>{toPersianDigits(mb.messageCount)} پیام</span>
+                                <span>•</span>
+                                <span>{toPersianDigits(mb.tokens.toLocaleString('fa-IR'))} توکن</span>
+                                <span>•</span>
+                                <span className="font-bold text-emerald-600 dark:text-emerald-400">
+                                  {toPersianDigits(mb.costToman.toLocaleString('fa-IR'))} تومان
+                                </span>
+                              </div>
+                            </div>
+                            <div className="w-full h-2 rounded-full bg-zinc-100 dark:bg-zinc-800 overflow-hidden">
+                              <div 
+                                className={`h-full rounded-full bg-gradient-to-r ${barColor} transition-all duration-500`}
+                                style={{ width: `${Math.max(4, pct)}%` }}
+                              />
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
-                ) : (
-                  purchases.map(p => (
-                    <div key={p.orderId} className="p-3.5 rounded-2xl border border-zinc-200/70 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-800/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3 transition-all hover:bg-white dark:hover:bg-zinc-800/50 hover:border-zinc-300 dark:hover:border-zinc-700 hover:shadow-xs">
-                      <div className="flex items-center gap-3">
-                        {p.image ? (
-                          <img src={p.image} className="w-10 h-10 rounded-xl object-cover shadow-xs shrink-0" />
-                        ) : (
-                          <div className="w-10 h-10 rounded-xl bg-zinc-200 dark:bg-zinc-800 flex items-center justify-center text-zinc-400 shrink-0"><Package size={18}/></div>
-                        )}
-                        <div>
-                          <h4 className="font-bold text-xs text-zinc-900 dark:text-white mb-1">{p.title}</h4>
-                          <div className="text-[11px] text-zinc-500 dark:text-zinc-400 flex items-center gap-2">
-                            <span dir="ltr">{new Date(p.orderDate).toLocaleDateString('fa-IR')}</span>
-                            <span className="font-bold">{p.amount.toLocaleString('fa-IR')} تومان</span>
+                )}
+
+                {/* Transactions Table Section */}
+                <div className="p-5 md:p-6 rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 shadow-xs flex flex-col min-h-[420px]">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 pb-3 border-b border-zinc-100 dark:border-zinc-800/80">
+                    <div className="flex items-center gap-2.5">
+                      <Clock size={16} className="text-zinc-500 dark:text-zinc-400" />
+                      <h3 className="font-bold text-sm text-zinc-900 dark:text-white">ریز تراکنش‌ها و تاریخچه مصرف</h3>
+                    </div>
+
+                    {/* Filter Buttons */}
+                    <div className="flex items-center gap-1 bg-zinc-100 dark:bg-zinc-800 p-1 rounded-xl">
+                      <button
+                        type="button"
+                        onClick={() => setTxFilter('all')}
+                        className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
+                          txFilter === 'all'
+                            ? 'bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white shadow-xs'
+                            : 'text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200'
+                        }`}
+                      >
+                        همه
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setTxFilter('chat')}
+                        className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
+                          txFilter === 'chat'
+                            ? 'bg-white dark:bg-zinc-900 text-blue-600 dark:text-blue-400 shadow-xs'
+                            : 'text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200'
+                        }`}
+                      >
+                        مصرف چت
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setTxFilter('deposits')}
+                        className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
+                          txFilter === 'deposits'
+                            ? 'bg-white dark:bg-zinc-900 text-emerald-600 dark:text-emerald-400 shadow-xs'
+                            : 'text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200'
+                        }`}
+                      >
+                        واریزی و هدیه
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="flex-1 overflow-y-auto max-h-[500px] pr-1 -mr-1 space-y-2.5 hide-scrollbar">
+                    {walletLoading ? (
+                      <div className="flex justify-center p-12">
+                        <div className="w-8 h-8 border-2 border-zinc-200 border-t-blue-600 rounded-full animate-spin" />
+                      </div>
+                    ) : !walletData?.transactions || walletData.transactions.length === 0 ? (
+                      <div className="flex flex-col items-center justify-center py-12 text-center">
+                        <div className="w-14 h-14 bg-blue-50 dark:bg-blue-900/20 text-blue-500 rounded-2xl flex items-center justify-center mb-3">
+                          <Zap size={24} />
+                        </div>
+                        <h4 className="font-bold text-sm text-zinc-800 dark:text-zinc-200 mb-1">هنوز تراکنشی ثبت نشده است</h4>
+                        <p className="text-xs text-zinc-500 max-w-sm mb-4 leading-relaxed">
+                          با ۵۰,۰۰۰ تومان اعتبار هدیه رایگان خود، اولین گفتگوی هوشمند را با مدل‌های پیشرفته آغاز کنید.
+                        </p>
+                        <Link
+                          to="/chat"
+                          className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow-md shadow-blue-600/20 transition-all"
+                        >
+                          شروع گفتگو در چت‌باکس
+                        </Link>
+                      </div>
+                    ) : (
+                      walletData.transactions
+                        .filter(tx => {
+                          if (txFilter === 'chat') return tx.type === 'chat_usage';
+                          if (txFilter === 'deposits') return tx.type !== 'chat_usage';
+                          return true;
+                        })
+                        .map(tx => {
+                          const isChat = tx.type === 'chat_usage';
+                          const isBonus = tx.type === 'welcome_bonus';
+
+                          return (
+                            <div
+                              key={tx.id}
+                              className="p-3.5 rounded-2xl border border-zinc-200/70 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-800/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3 transition-all hover:bg-white dark:hover:bg-zinc-800/60 hover:border-zinc-300 dark:hover:border-zinc-700"
+                            >
+                              <div className="flex items-center gap-3">
+                                <div
+                                  className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
+                                    isChat
+                                      ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
+                                      : isBonus
+                                      ? 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400'
+                                      : 'bg-teal-50 dark:bg-teal-900/30 text-teal-600 dark:text-teal-400'
+                                  }`}
+                                >
+                                  {isChat ? <Cpu size={18} /> : isBonus ? <Gift size={18} /> : <ArrowDownLeft size={18} />}
+                                </div>
+                                <div>
+                                  <div className="flex items-center gap-2">
+                                    <h4 className="font-bold text-xs text-zinc-900 dark:text-white">
+                                      {isChat ? `پردازش هوش مصنوعی (${tx.model || 'عمومی'})` : tx.description || 'تراکنش کیف پول'}
+                                    </h4>
+                                    {isChat && tx.model && (
+                                      <span className="text-[10px] px-2 py-0.5 rounded-md bg-zinc-200/60 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-300 font-mono dir-ltr">
+                                        {tx.model}
+                                      </span>
+                                    )}
+                                  </div>
+                                  <div className="text-[11px] text-zinc-500 dark:text-zinc-400 flex items-center gap-2 mt-1">
+                                    <span dir="ltr">
+                                      {new Date(tx.createdAt).toLocaleDateString('fa-IR', {
+                                        year: 'numeric',
+                                        month: 'short',
+                                        day: 'numeric',
+                                        hour: '2-digit',
+                                        minute: '2-digit'
+                                      })}
+                                    </span>
+                                    {isChat && (
+                                      <>
+                                        <span>•</span>
+                                        <span>
+                                          {toPersianDigits((tx.promptTokens || 0) + (tx.completionTokens || 0))} توکن
+                                        </span>
+                                      </>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+
+                              <div className="flex items-center gap-3 sm:flex-col sm:items-end justify-between border-t border-zinc-100 dark:border-zinc-800 sm:border-0 pt-2 sm:pt-0">
+                                <span
+                                  className={`text-xs font-black ${
+                                    isChat
+                                      ? 'text-red-600 dark:text-red-400'
+                                      : 'text-emerald-600 dark:text-emerald-400'
+                                  }`}
+                                >
+                                  {isChat ? '-' : '+'}
+                                  {toPersianDigits(Math.abs(tx.amount).toLocaleString('fa-IR'))} تومان
+                                </span>
+                                <span className="text-[10px] text-zinc-400 font-medium">
+                                  مانده: {toPersianDigits(Number(tx.balanceAfter || 0).toLocaleString('fa-IR'))} ت
+                                </span>
+                              </div>
+                            </div>
+                          );
+                        })
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* TAB 2: Store Orders History */}
+            {activeTab === 'orders' && (
+              <div className="p-5 md:p-6 rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 shadow-xs flex-1 flex flex-col min-h-[400px]">
+                <div className="flex items-center justify-between mb-4 pb-3 border-b border-zinc-100 dark:border-zinc-800/80">
+                  <div className="flex items-center gap-2.5">
+                    <Package size={16} className="text-zinc-500 dark:text-zinc-400" />
+                    <h3 className="font-bold text-sm text-zinc-900 dark:text-white">تاریخچه سفارش‌های فروشگاه</h3>
+                  </div>
+                  <Link to="/store" className="text-[11px] font-semibold text-blue-600 hover:text-blue-700 dark:text-blue-400 flex items-center gap-1">
+                    مشاهده فروشگاه <ChevronLeft size={12} />
+                  </Link>
+                </div>
+                
+                <div className="flex-1 overflow-y-auto max-h-[500px] pr-2 -mr-2 space-y-3 hide-scrollbar">
+                  {loading ? (
+                    <div className="flex justify-center p-8"><div className="w-8 h-8 border-2 border-zinc-200 border-t-blue-600 rounded-full animate-spin"></div></div>
+                  ) : purchases.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-10 text-center">
+                      <div className="w-14 h-14 bg-zinc-50 dark:bg-zinc-800 rounded-full flex items-center justify-center mb-3 text-zinc-400">
+                        <ShoppingBag size={20} />
+                      </div>
+                      <p className="text-xs font-semibold text-zinc-600 dark:text-zinc-400 mb-1">هیچ سفارشی ثبت نشده است</p>
+                      <p className="text-[11px] text-zinc-400">اولین خرید خود را از فروشگاه انجام دهید.</p>
+                    </div>
+                  ) : (
+                    purchases.map(p => (
+                      <div key={p.orderId} className="p-3.5 rounded-2xl border border-zinc-200/70 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-800/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3 transition-all hover:bg-white dark:hover:bg-zinc-800/50 hover:border-zinc-300 dark:hover:border-zinc-700 hover:shadow-xs">
+                        <div className="flex items-center gap-3">
+                          {p.image ? (
+                            <img src={p.image} className="w-10 h-10 rounded-xl object-cover shadow-xs shrink-0" />
+                          ) : (
+                            <div className="w-10 h-10 rounded-xl bg-zinc-200 dark:bg-zinc-800 flex items-center justify-center text-zinc-400 shrink-0"><Package size={18}/></div>
+                          )}
+                          <div>
+                            <h4 className="font-bold text-xs text-zinc-900 dark:text-white mb-1">{p.title}</h4>
+                            <div className="text-[11px] text-zinc-500 dark:text-zinc-400 flex items-center gap-2">
+                              <span dir="ltr">{new Date(p.orderDate).toLocaleDateString('fa-IR')}</span>
+                              <span className="font-bold">{p.amount.toLocaleString('fa-IR')} تومان</span>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                      
-                      <div className="flex items-center gap-2 sm:flex-col sm:items-end justify-between border-t border-zinc-100 dark:border-zinc-800 sm:border-0 pt-2.5 sm:pt-0">
-                        {getStatusBadge(p.paymentStatus)}
                         
-                        <button 
-                          onClick={() => setSelectedInvoice(p)}
-                          className="flex items-center gap-1.5 px-2.5 py-1.5 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 rounded-lg text-[11px] font-semibold transition-colors"
-                        >
-                          <Receipt size={12} /> فاکتور
-                        </button>
+                        <div className="flex items-center gap-2 sm:flex-col sm:items-end justify-between border-t border-zinc-100 dark:border-zinc-800 sm:border-0 pt-2.5 sm:pt-0">
+                          {getStatusBadge(p.paymentStatus)}
+                          
+                          <button 
+                            onClick={() => setSelectedInvoice(p)}
+                            className="flex items-center gap-1.5 px-2.5 py-1.5 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 rounded-lg text-[11px] font-semibold transition-colors"
+                          >
+                            <Receipt size={12} /> فاکتور
+                          </button>
+                        </div>
                       </div>
-                    </div>
-                  ))
+                    ))
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* TAB 3: Redeem License Section */}
+            {activeTab === 'redeem' && (
+              <div className="p-5 md:p-6 rounded-3xl bg-gradient-to-br from-slate-900 via-indigo-950 to-zinc-900 dark:from-zinc-900 dark:via-zinc-900 dark:to-zinc-800 border border-indigo-950/40 dark:border-zinc-700/80 shadow-md text-white relative overflow-hidden">
+                <div className="absolute top-0 left-0 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl -translate-y-1/2 -translate-x-1/2"></div>
+                
+                <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-5">
+                  <div className="flex-1">
+                    <h3 className="font-bold text-base mb-1.5 flex items-center gap-2">
+                      <Key size={18} className="text-blue-400" />
+                      فعال‌سازی لایسنس (Redeem)
+                    </h3>
+                    <p className="text-zinc-300 dark:text-zinc-400 text-[11px] leading-relaxed max-w-md">
+                      اگر کدی از طریق تلگرام یا سایر پلتفرم‌ها دریافت کرده‌اید، برای اتصال خدمات به این حساب وارد کنید.
+                    </p>
+                  </div>
+                  
+                  <form onSubmit={handleRedeem} className="flex-1 flex flex-col sm:flex-row gap-2.5 w-full">
+                    <input 
+                      type="text" 
+                      value={redeemCode}
+                      onChange={(e) => setRedeemCode(e.target.value)}
+                      placeholder="X7Y9-ABCD-1234"
+                      dir="ltr"
+                      className="flex-1 px-3.5 py-2.5 rounded-xl bg-white/10 border border-white/15 text-white placeholder:text-zinc-400 focus:bg-white/15 focus:border-blue-400/60 focus:ring-2 focus:ring-blue-400/20 outline-none transition-all font-mono text-sm"
+                    />
+                    <button 
+                      type="submit" 
+                      disabled={isRedeeming || !redeemCode.trim()}
+                      className="px-5 py-2.5 bg-white text-zinc-900 hover:bg-zinc-100 rounded-xl font-bold text-xs shadow-sm hover:shadow transition-all disabled:opacity-50 shrink-0 cursor-pointer"
+                    >
+                      {isRedeeming ? '...' : 'فعال‌سازی'}
+                    </button>
+                  </form>
+                </div>
+                
+                {redeemMessage && (
+                  <div className={`mt-3 px-3 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 ${redeemMessage.type === 'success' ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-red-500/20 text-red-300 border border-red-500/30'}`}>
+                    {redeemMessage.type === 'success' ? <CheckCircle2 size={14}/> : <XCircle size={14}/>}
+                    {redeemMessage.text}
+                  </div>
                 )}
               </div>
-            </div>
+            )}
 
             {/* Support Card */}
             <div className="p-5 md:p-6 rounded-3xl bg-gradient-to-r from-blue-50/80 to-indigo-50/60 dark:from-blue-950/20 dark:to-indigo-950/20 border border-blue-100 dark:border-blue-900/30 flex flex-col sm:flex-row items-center justify-between gap-4">
@@ -443,7 +847,7 @@ export const UserDashboard = () => {
               </div>
               <button 
                 onClick={() => window.dispatchEvent(new CustomEvent('open-contact-modal'))}
-                className="w-full sm:w-auto px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-semibold shadow-sm shadow-blue-500/20 transition-all"
+                className="w-full sm:w-auto px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-semibold shadow-sm shadow-blue-500/20 transition-all cursor-pointer"
               >
                 ارسال پیام
               </button>

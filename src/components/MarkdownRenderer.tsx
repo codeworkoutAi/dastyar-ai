@@ -69,6 +69,7 @@ interface MarkdownRendererProps {
   content: string;
   isStreaming?: boolean;
   usePersianDigits?: boolean;
+  stripReasoning?: boolean;
 }
 
 // Universal Solar Icon mapping for common emojis
@@ -263,11 +264,12 @@ function extractNodeText(node: React.ReactNode): string {
 }
 
 // Smart formatter to break inline numbered principles/lists into distinct lines
-function formatInlineListsAndPrinciples(text: string): string {
+function formatInlineListsAndPrinciples(text: string, stripReasoning = false): string {
   if (!text) return '';
 
   // 0. Pre-process <think> tags into ```reasoning code blocks (handles unclosed tags during streaming)
   let tempText = text.replace(/<think>([\s\S]*?)(<\/think>|$)/gi, (match, content) => {
+    if (stripReasoning) return '';
     return `\n\n\`\`\`reasoning\n${content.trim()}\n\`\`\`\n\n`;
   });
 
@@ -343,10 +345,12 @@ const loadKatexCss = () => {
   }
 };
 
+
 export const MarkdownRenderer: React.FC<MarkdownRendererProps> = React.memo(({
   content,
   isStreaming = false,
   usePersianDigits = false,
+  stripReasoning = false,
 }) => {
   React.useEffect(() => {
     if (content && (content.includes('$') || content.includes('\\'))) {
@@ -354,7 +358,7 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = React.memo(({
     }
   }, [content]);
 
-  const formattedContent = formatInlineListsAndPrinciples(content);
+  const formattedContent = formatInlineListsAndPrinciples(content, stripReasoning);
   const processedContent = usePersianDigits ? toPersianDigits(formattedContent) : formattedContent;
   const isOverallRtl = isRtlText(processedContent);
 

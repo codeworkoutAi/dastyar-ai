@@ -5,7 +5,7 @@ import { useAuthStore } from '../store/authStore';
 import React, { useState, useEffect } from 'react';
 import { CloseOutlineIcon, DisketteOutlineIcon, GlobalOutlineIcon, CpuOutlineIcon, UserCircleOutlineIcon, PaletteOutlineIcon, SettingsOutlineIcon, InfoCircleOutlineIcon, TrashBinMinimalisticOutlineIcon, DownloadOutlineIcon, UploadOutlineIcon, StarsOutlineIcon, UserOutlineIcon } from '@solar-icons/react';
 import { AppSettings, Conversation, FontFamily, ThemeMode, CustomProfile } from '../types';
-import { CustomProviderCards, getModelDetails } from './CustomProviderCards';
+import { getModelDetails } from './CustomProviderCards';
 import { EyeOutlineIcon, CodeOutlineIcon, BrainOutlineIcon } from '@solar-icons/react';
 
 type TabType = 'providers' | 'persona' | 'appearance' | 'tools' | 'data';
@@ -550,14 +550,9 @@ export const SettingsModal: React.FC = () => {
                 </div>
 
                 <div className="grid grid-cols-1 gap-2 sm:gap-3 mb-6 sm:mb-8">
-                  <CustomProviderCards
-                    tempSettings={tempSettings}
-                    setTempSettings={setTempSettings}
-                    cachedModels={cachedModels}
-                    fetchingModels={fetchingModels}
-                    handleFetchModels={handleFetchModels}
-                    fetchError={testResult?.success === false ? testResult.message : null}
-                  />
+                  <div className="bg-blue-500/10 text-blue-400 p-4 rounded-xl text-sm leading-relaxed">
+                    در این بخش می‌توانید مسیریابی هوشمند (Smart Routing) را تنظیم کنید تا چت‌باکس به طور خودکار بهترین مدل را برای پیام‌های مختلف انتخاب کند. پروفایل‌ها و مدل‌های پایه توسط مدیر سیستم تنظیم می‌شوند.
+                  </div>
                 </div>
 
                 {/* Smart Routing Block (Collapsible) */}
@@ -810,6 +805,23 @@ export const SettingsModal: React.FC = () => {
                       }}
                     />
                   </div>
+                  
+                  <div className="flex items-center justify-between p-4 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl">
+                    <div>
+                      <div className="font-medium text-sm flex items-center gap-2">
+                        <span>تفکر عمیق (Deep Thinking/Reasoning)</span>
+                        <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">جدید</span>
+                      </div>
+                      <div className="text-xs text-zinc-700 dark:text-zinc-400">تحلیل عمیق و استدلال مرحله‌به‌مرحله قبل از پاسخ (در مدل‌های پشتیبانی شده)</div>
+                    </div>
+                    <ToggleSwitch 
+                      checked={!!tempSettings.tools.reasoningMode} 
+                      onChange={(v) => {
+                        setTempSettings({ ...tempSettings, tools: { ...tempSettings.tools, reasoningMode: v } });
+                      }} 
+                    />
+                  </div>
+
                   <div className="flex items-center justify-between p-4 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl">
                     <div>
                       <div className="font-medium text-sm">ارسال با Enter</div>

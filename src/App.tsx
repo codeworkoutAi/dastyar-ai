@@ -8,6 +8,7 @@ import { useUIStore } from './store/uiStore';
 import { ChatApp } from './pages/chat/ChatApp';
 
 // Lazy-loaded Pages
+const LandingPage = lazy(() => import('./pages/landing/LandingPage').then(m => ({ default: m.LandingPage })));
 const StoreFront = lazy(() => import('./pages/store/StoreFront').then(m => ({ default: m.StoreFront })));
 const UserDashboard = lazy(() => import('./pages/store/UserDashboard').then(m => ({ default: m.UserDashboard })));
 const Blog = lazy(() => import('./pages/blog/Blog').then(m => ({ default: m.Blog })));
@@ -24,6 +25,7 @@ const AuthModal = lazy(() => import('./components/AuthModal'));
 const AdminModal = lazy(() => import('./components/AdminModal').then(m => ({ default: m.AdminModal })));
 const AboutModal = lazy(() => import('./components/AboutModal').then(m => ({ default: m.AboutModal })));
 const ContactModal = lazy(() => import('./components/ContactModal').then(m => ({ default: m.ContactModal })));
+const WalletModal = lazy(() => import('./components/WalletModal').then(m => ({ default: m.WalletModal })));
 
 export default function App() {
   const { settings, systemIsDark, syncSystemProfiles } = useSettingsStore();
@@ -62,11 +64,18 @@ export default function App() {
     root.dir = direction;
   }, [isDarkMode, settings.appearance.font, settings.appearance.fontSize, direction]);
 
+  function HomeRoute() {
+    const isAuthenticated = useAuthStore(state => state.isAuthenticated);
+    return isAuthenticated ? <ChatApp /> : <LandingPage />;
+  }
+
   return (
     <BrowserRouter>
       <Suspense fallback={null}>
         <Routes>
-          <Route path="/" element={<ChatApp />} />
+          <Route path="/" element={<HomeRoute />} />
+          <Route path="/landing" element={<LandingPage />} />
+          <Route path="/chat" element={<ChatApp />} />
           <Route path="/store" element={<StoreFront />} />
           <Route path="/store/:id" element={<StoreFront />} />
           <Route path="/blog" element={<Blog />} />
@@ -85,6 +94,7 @@ export default function App() {
         <AdminModal isOpen={isAdminOpen} onClose={() => setIsAdminOpen(false)} />
         <AboutModal />
         <ContactModal />
+        <WalletModal />
         <ReloadPrompt />
       </Suspense>
     </BrowserRouter>

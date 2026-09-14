@@ -25,7 +25,7 @@ import { getStorageUsage } from '../lib/storage';
 import { calculateSessionStats } from '../utils/pricing';
 import { Tooltip } from './Tooltip';
 import { useAuthStore } from '../store/authStore';
-import { User, LogOut, ShieldCheck, Settings, ChevronUp, LayoutDashboard, Store, BookOpen, Compass, Palette, HelpCircle, MessageSquarePlus, Search } from 'lucide-react';
+import { User, LogOut, ShieldCheck, Settings, ChevronUp, LayoutDashboard, Store, BookOpen, Compass, Palette, HelpCircle, MessageSquarePlus, Search, Coins } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useUIStore } from '../store/uiStore';
 import { useSettingsStore } from '../store/settingsStore';
@@ -39,7 +39,7 @@ interface GroupedConversations {
 }
 
 export const Sidebar: React.FC = React.memo(() => {
-  const { sidebarOpen, setSidebarOpen, setIsImageStudioOpen, setIsExploreOpen, setIsUiGuideOpen, setIsAdminOpen, setIsSettingsOpen } = useUIStore();
+  const { sidebarOpen, setSidebarOpen, setIsImageStudioOpen, setIsExploreOpen, setIsUiGuideOpen, setIsAdminOpen, setIsSettingsOpen, setIsWalletOpen } = useUIStore();
   const { settings } = useSettingsStore();
   const { conversations, activeId, setActiveId, createChat, deleteConversation, updateConversation, clearAllConversations } = useChatStore();
 
@@ -653,6 +653,34 @@ export const Sidebar: React.FC = React.memo(() => {
             </div>
           ) : null}
         </div>
+
+        {/* Wallet Status Widget for Authenticated Users */}
+        {user && (
+          <div className="mx-3 mb-2 p-2.5 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-emerald-500/5 to-transparent border border-emerald-500/20 flex items-center justify-between shadow-xs">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                <Coins className="w-4 h-4" />
+              </div>
+              <div className="flex flex-col text-right">
+                <span className="text-[10px] text-zinc-500 dark:text-zinc-400 font-medium">کیف پول</span>
+                <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400">
+                  {usePersianDigits
+                    ? toPersianDigits((user?.walletBalance || 0).toLocaleString('fa-IR'))
+                    : (user?.walletBalance || 0).toLocaleString()} تومان
+                </span>
+              </div>
+            </div>
+            <button
+              onClick={() => {
+                setIsWalletOpen(true);
+                if (window.innerWidth < 768) setSidebarOpen(false);
+              }}
+              className="px-2.5 py-1 text-[11px] font-bold bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg transition-colors shadow-xs cursor-pointer"
+            >
+              شارژ
+            </button>
+          </div>
+        )}
 
         {/* Bottom Storage & Metrics (فوتر خلوت) */}
         <div className="p-3 border-t border-zinc-200/80 dark:border-zinc-800/80 bg-zinc-50/80 dark:bg-zinc-900/80 shrink-0">

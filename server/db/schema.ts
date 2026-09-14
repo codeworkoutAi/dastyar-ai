@@ -65,8 +65,16 @@ export function initializeSchema() {
         console.log('[Database] Adding botState column to users table...');
         db.exec("ALTER TABLE users ADD COLUMN botState TEXT DEFAULT 'normal';");
       }
+      if (usersTableInfo.length > 0 && !usersTableInfo.some(col => col.name === 'walletBalance')) {
+        console.log('[Database] Adding walletBalance column to users table...');
+        db.exec("ALTER TABLE users ADD COLUMN walletBalance INTEGER DEFAULT 0;");
+      }
+      if (usersTableInfo.length > 0 && !usersTableInfo.some(col => col.name === 'hasReceivedWelcomeBonus')) {
+        console.log('[Database] Adding hasReceivedWelcomeBonus column to users table...');
+        db.exec("ALTER TABLE users ADD COLUMN hasReceivedWelcomeBonus INTEGER DEFAULT 0;");
+      }
     } catch (e) {
-      console.error('[Database] Failed to add botState column:', e);
+      console.error('[Database] Failed to add wallet columns to users:', e);
     }
 
   } catch (e) {}
@@ -86,8 +94,9 @@ export function initializeSchema() {
       resetTokenExpiry DATETIME,
       role TEXT DEFAULT 'user',
       botState TEXT DEFAULT 'normal',
+      walletBalance INTEGER DEFAULT 0,
+      hasReceivedWelcomeBonus INTEGER DEFAULT 0,
       createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
-      -- Note: CHECK constraint is not updated due to SQLite limitations, but we ensure one of the IDs is present.
     )
   `);
 
@@ -290,13 +299,58 @@ export function initializeSchema() {
     )
   `);
 
+  // Create Wallet Transactions table
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS wallet_transactions (
+      id TEXT PRIMARY KEY,
+      userId INTEGER NOT NULL,
+      type TEXT NOT NULL, -- 'deposit', 'chat_usage', 'bonus', 'refund'
+      amount INTEGER NOT NULL, -- in Tomans (positive for credit, negative for debit)
+      balanceAfter INTEGER NOT NULL,
+      model TEXT,
+      promptTokens INTEGER DEFAULT 0,
+      completionTokens INTEGER DEFAULT 0,
+      costUsd REAL DEFAULT 0,
+      description TEXT,
+      createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE
+    )
+  `);
+
+  // Create API Purchases table (Admin multi-provider purchase logs)
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS api_purchases (
+      id TEXT PRIMARY KEY,
+      providerName TEXT NOT NULL,
+      amountUsd REAL NOT NULL,
+      costToman INTEGER NOT NULL,
+      unitRateToman REAL NOT NULL,
+      notes TEXT,
+      createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
   // Seed default site settings if missing
   try {
-    const existingRow = db.prepare('SELECT value FROM site_settings WHERE key = ?').get('news_auto_publish');
-    if (!existingRow) {
-      console.log('[Database] Seeding initial news_auto_publish site setting (false)...');
-      db.prepare('INSERT INTO site_settings (key, value) VALUES (?, ?)').run('news_auto_publish', 'false');
-    }
+    const seedSetting = (key: string, defaultValue: string) => {
+      const existing = db.prepare('SELECT value FROM site_settings WHERE key = ?').get(key);
+      if (!existing) {
+        db.prepare('INSERT INTO site_settings (key, value) VALUES (?, ?)').run(key, defaultValue);
+      }
+    };
+
+    seedSetting('news_auto_publish', 'false');
+    seedSetting('api_dollar_rate', '200000'); // 200,000 Tomans per $1 API by default
+    seedSetting('welcome_bonus_amount', '50000'); // 50,000 Tomans welcome credit
+    // Ensure existing database has 50000 if previously 5000
+    try {
+      const existingBonus = db.prepare("SELECT value FROM site_settings WHERE key = 'welcome_bonus_amount'").get() as any;
+      if (existingBonus?.value === '5000') {
+        db.prepare("UPDATE site_settings SET value = '50000' WHERE key = 'welcome_bonus_amount'").run();
+      }
+    } catch {}
+    seedSetting('welcome_bonus_enabled', 'true');
+    seedSetting('free_key_pool', ''); // Comma- or newline-separated free keys for round-robin
   } catch (err) {
     console.error('[Database] Failed to seed site settings:', err);
   }

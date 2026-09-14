@@ -44,19 +44,33 @@ router.post('/api/fetch-models', aiRouteLimiter, async (req, res) => {
       } catch (e) {}
     }
 
-    // Smart endpoint normalization
+    // Smart and modular endpoint normalization for any OpenAI-compatible provider
     let endpoint = baseUrl.trim().replace(/\/+$/, '');
+    endpoint = endpoint.replace(/\/chat\/completions$/, '').replace(/\/+$/, '');
     if (endpoint.endsWith('/models')) {
       // already points to models
     } else if (endpoint.endsWith('/openai') || endpoint.endsWith('/v1')) {
       endpoint = `${endpoint}/models`;
     } else {
-      endpoint = `${endpoint}/models`;
+      // Try /v1/models if standard OpenAI-compatible host without /v1
+      endpoint = `${endpoint}/v1/models`;
     }
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10000);
 
-    const response = await fetch(endpoint, { headers, signal: controller.signal });
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 12000);
+
+    let response: Response;
+    try {
+      response = await fetch(endpoint, { headers, signal: controller.signal });
+      if (response.status === 404 && endpoint.endsWith('/v1/models')) {
+        // Fallback to /models if /v1/models returned 404
+        const fallbackEndpoint = baseUrl.trim().replace(/\/+$/, '') + '/models';
+        response = await fetch(fallbackEndpoint, { headers, signal: controller.signal });
+      }
+    } catch (fetchErr: any) {
+      clearTimeout(timeoutId);
+      throw fetchErr;
+    }
     clearTimeout(timeoutId);
 
     const contentType = response.headers.get('content-type') || '';

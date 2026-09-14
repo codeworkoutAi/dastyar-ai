@@ -25,6 +25,7 @@ import { Tooltip } from './Tooltip';
 import { useUIStore } from '../store/uiStore';
 import { useSettingsStore } from '../store/settingsStore';
 import { useChatStore } from '../store/chatStore';
+import { useAuthStore } from '../store/authStore';
 
 import { CameraCaptureModal } from './CameraCaptureModal';
 import { getModelIntro } from './ChatBox';
@@ -601,6 +602,12 @@ export const MessageInput: React.FC = React.memo(() => {
     const hasContent = !!text.trim() || readyAttachments.length > 0;
     if (!hasContent || isStreaming) return;
 
+    // If guest user tries to chat, prompt them to login/register to claim 5,000 Toman welcome credit
+    if (!useAuthStore.getState().isAuthenticated) {
+      useAuthStore.getState().setAuthModalOpen(true);
+      return;
+    }
+
     if (text.trim()) {
       setSentHistory(prev => [...prev, text.trim()]);
     }
@@ -1091,19 +1098,7 @@ export const MessageInput: React.FC = React.memo(() => {
           </div>
         </div>
 
-        {isEmpty && (
-          <div className="flex justify-center mt-6 mb-2 animate-fadeIn">
-            <div className="flex items-center justify-center gap-2 text-xs text-zinc-700 dark:text-zinc-400 bg-white/50 dark:bg-black/20 border border-zinc-200 dark:border-white/10 px-4 py-2 rounded-2xl backdrop-blur-md shadow-sm">
-              <span>مدل فعال:</span>
-              <span className="font-bold text-blue-600 dark:text-blue-400">{modelIntro.title}</span>
-              {modelDetails.isFree && (
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
-                  رایگان
-                </span>
-              )}
-            </div>
-          </div>
-        )}
+
 
         {/* Footer info: Disclaimer */}
         <div className={`flex items-center justify-center flex-wrap gap-2 text-[10px] sm:text-[11px] opacity-75 select-none px-2 ${isEmpty ? 'hidden' : ''}`}>

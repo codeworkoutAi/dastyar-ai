@@ -6,6 +6,8 @@ import { ErrorCapsule } from '../../components/ErrorCapsule';
 import { InfoCircleBoldIcon } from '@solar-icons/react';
 import { useUIStore } from '../../store/uiStore';
 import { useChatStore } from '../../store/chatStore';
+import { useAuthStore } from '../../store/authStore';
+import { GuestLanding } from '../../components/GuestLanding';
 
 import { useEffect } from 'react';
 import { setPageSeo } from '../../lib/seo';
@@ -13,6 +15,7 @@ import { setPageSeo } from '../../lib/seo';
 export function ChatApp() {
   const { videoNotice, metricsNotice } = useUIStore();
   const { conversations, activeId } = useChatStore();
+  const isAuthenticated = useAuthStore(state => state.isAuthenticated);
 
   useEffect(() => {
     setPageSeo({
@@ -77,10 +80,10 @@ export function ChatApp() {
           <div className="flex-none w-full transition-all duration-500 ease-in-out">
             <MessageInput />
           </div>
-          
-          <ErrorCapsule />
+            
+            <ErrorCapsule />
 
-          {/* Floating Action Notices */}
+            {/* Floating Action Notices */}
           {metricsNotice && (
             <div className="absolute bottom-28 right-4 md:right-8 bg-zinc-50 dark:bg-zinc-900/95 dark:bg-black/95 text-zinc-900 dark:text-zinc-100 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-800 dark:border-white/10 px-4 py-2.5 rounded-2xl shadow-xl backdrop-blur-xl flex items-center gap-3 animate-slideUp z-50">
               <InfoCircleBoldIcon className="w-5 h-5 text-zinc-700 dark:text-zinc-400" />
@@ -88,13 +91,13 @@ export function ChatApp() {
             </div>
           )}
           
-          {videoNotice && (
-            <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-blue-500/90 text-white px-4 py-2 rounded-2xl shadow-lg backdrop-blur-md flex items-center gap-2 animate-bounce z-50 text-sm font-bold">
-              <InfoCircleBoldIcon className="w-5 h-5" />
-              <span>{videoNotice}</span>
-            </div>
-          )}
-        </main>
+            {videoNotice && (
+              <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-blue-500/90 text-white px-4 py-2 rounded-2xl shadow-lg backdrop-blur-md flex items-center gap-2 animate-bounce z-50 text-sm font-bold">
+                <InfoCircleBoldIcon className="w-5 h-5" />
+                <span>{videoNotice}</span>
+              </div>
+            )}
+          </main>
       </div>
     </div>
   );

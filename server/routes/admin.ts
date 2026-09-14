@@ -3,6 +3,7 @@ import db, { syncDatabase } from '../db/database';
 import { requireAuth } from '../middleware/auth';
 import { bot, sendTelegramOrderSuccess } from '../telegram/bot';
 import { clearSitemapCache } from '../seo/sitemap';
+import { getAdminFinancialSummary, addApiPurchase, depositWallet } from '../services/walletService';
 
 const router = express.Router();
 
@@ -556,6 +557,174 @@ router.put('/settings', (req, res) => {
   } catch (error) {
     console.error('[Admin API] Error updating site settings:', error);
     res.status(500).json({ error: 'خطا در به‌روزرسانی تنظیمات سیستم' });
+  }
+});
+
+// GET /api/admin/financial-summary
+router.get('/financial-summary', (req, res) => {
+  try {
+    const summary = getAdminFinancialSummary();
+    res.json(summary);
+  } catch (error) {
+    console.error('[Admin API] Error fetching financial summary:', error);
+    res.status(500).json({ error: 'خطا در دریافت خلاصه مالی سیستم' });
+  }
+});
+
+// POST /api/admin/purchases (Record a new API purchase by admin)
+router.post('/purchases', (req, res) => {
+  try {
+    const { providerName, amountUsd, costToman, notes } = req.body;
+    if (!providerName || !amountUsd || !costToman) {
+      return res.status(400).json({ error: 'نام تأمین‌کننده، مبلغ دلاری و مبلغ پرداختی تومانی الزامی است.' });
+    }
+
+    const created = addApiPurchase(
+      String(providerName),
+      parseFloat(amountUsd),
+      parseInt(costToman, 10),
+      notes ? String(notes) : undefined
+    );
+
+    res.status(201).json(created);
+  } catch (error) {
+    console.error('[Admin API] Error recording API purchase:', error);
+    res.status(500).json({ error: 'خطا در ثبت خرید ارزی' });
+  }
+});
+
+// DELETE /api/admin/purchases/:id
+router.delete('/purchases/:id', (req, res) => {
+  try {
+    const { id } = req.params;
+    db.prepare('DELETE FROM api_purchases WHERE id = ?').run(id);
+    syncDatabase();
+    res.json({ success: true, message: 'رکورد خرید با موفقیت حذف شد.' });
+  } catch (error) {
+    console.error('[Admin API] Error deleting API purchase:', error);
+    res.status(500).json({ error: 'خطا در حذف رکورد خرید' });
+  }
+});
+
+// GET /api/admin/wallet-transactions (View recent user transactions)
+router.get('/wallet-transactions', (req, res) => {
+  try {
+    const limit = Math.min(500, parseInt(req.query.limit as string, 10) || 100);
+    const search = req.query.search ? String(req.query.search).trim().toLowerCase() : '';
+    const typeFilter = req.query.type as string;
+    const dateFilter = req.query.date as string;
+    const sort = req.query.sort as string; // 'newest', 'oldest', 'alpha_asc', 'alpha_desc'
+    
+    let query = `
+      SELECT wt.*, u.name as userName, u.email as userEmail, u.phone as userPhone, u.telegramId as userTelegramId
+      FROM wallet_transactions wt
+      LEFT JOIN users u ON wt.userId = u.id
+      WHERE 1=1
+    `;
+    
+    const params: any[] = [];
+    
+    if (search) {
+      let isUcSearch = false;
+      let targetId = -1;
+      if (search.startsWith('uc-')) {
+        const num = parseInt(search.replace('uc-', ''), 10);
+        if (!isNaN(num)) {
+          targetId = num - 10000;
+          isUcSearch = true;
+        }
+      } else if (/^\d+$/.test(search) && parseInt(search, 10) > 10000) {
+        targetId = parseInt(search, 10) - 10000;
+        isUcSearch = true;
+      }
+
+      if (isUcSearch) {
+        query += ` AND u.id = ?`;
+        params.push(targetId);
+      } else {
+        query += ` AND (LOWER(IFNULL(wt.model, '')) LIKE ? OR LOWER(IFNULL(u.name, '')) LIKE ? OR LOWER(IFNULL(u.email, '')) LIKE ? OR LOWER(IFNULL(u.phone, '')) LIKE ? OR LOWER(IFNULL(wt.type, '')) LIKE ? OR IFNULL(u.telegramId, '') LIKE ?)`;
+        const searchParam = `%${search}%`;
+        params.push(searchParam, searchParam, searchParam, searchParam, searchParam, searchParam);
+      }
+    }
+
+    if (typeFilter === 'deposit') {
+      query += ` AND wt.amount > 0`;
+    } else if (typeFilter === 'deduct') {
+      query += ` AND wt.amount < 0`;
+    }
+
+    if (dateFilter === 'today') {
+      query += ` AND wt.createdAt >= datetime('now', '-1 day')`;
+    } else if (dateFilter === 'week') {
+      query += ` AND wt.createdAt >= datetime('now', '-7 days')`;
+    } else if (dateFilter === 'month') {
+      query += ` AND wt.createdAt >= datetime('now', '-30 days')`;
+    }
+    
+    if (sort === 'oldest') {
+      query += ` ORDER BY wt.createdAt ASC`;
+    } else if (sort === 'alpha_asc') {
+      query += ` ORDER BY u.name ASC, wt.createdAt DESC`;
+    } else if (sort === 'alpha_desc') {
+      query += ` ORDER BY u.name DESC, wt.createdAt DESC`;
+    } else {
+      query += ` ORDER BY wt.createdAt DESC`;
+    }
+
+    const offset = parseInt(req.query.offset as string, 10) || 0;
+    query += ` LIMIT ? OFFSET ?`;
+    params.push(limit, offset);
+    
+    const transactions = db.prepare(query).all(...params);
+
+    res.json(transactions);
+  } catch (error) {
+    console.error('[Admin API] Error fetching transactions:', error);
+    res.status(500).json({ error: 'خطا در دریافت تراکنش‌ها' });
+  }
+});
+
+// POST /api/admin/users/:id/wallet (Manual credit or debit of a user wallet)
+router.post('/users/:id/wallet', (req, res) => {
+  try {
+    const { id } = req.params;
+    const { amount, type, description } = req.body; // type: 'deposit' | 'deduct'
+
+    const user = db.prepare('SELECT id, walletBalance FROM users WHERE id = ?').get(id) as any;
+    if (!user) {
+      return res.status(404).json({ error: 'کاربر یافت نشد.' });
+    }
+
+    const numAmount = parseInt(amount, 10);
+    if (isNaN(numAmount) || numAmount <= 0) {
+      return res.status(400).json({ error: 'مبلغ باید عددی مثبت باشد.' });
+    }
+
+    const currentBalance = user.walletBalance || 0;
+    const isDeposit = type === 'deposit';
+    const newBalance = isDeposit ? currentBalance + numAmount : Math.max(0, currentBalance - numAmount);
+
+    db.prepare('UPDATE users SET walletBalance = ? WHERE id = ?').run(newBalance, id);
+
+    const txId = `tx-adm-${Date.now()}`;
+    db.prepare(`
+      INSERT INTO wallet_transactions (id, userId, type, amount, balanceAfter, description)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `).run(
+      txId,
+      id,
+      isDeposit ? 'deposit' : 'chat_usage',
+      isDeposit ? numAmount : -numAmount,
+      newBalance,
+      description || (isDeposit ? 'شارژ دستی توسط ادمین' : 'کسر دستی توسط ادمین')
+    );
+
+    syncDatabase();
+    res.json({ success: true, newBalance });
+  } catch (error) {
+    console.error('[Admin API] Error updating user wallet:', error);
+    res.status(500).json({ error: 'خطا در بروزرسانی کیف پول کاربر' });
   }
 });
 

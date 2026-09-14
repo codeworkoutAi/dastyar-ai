@@ -7,6 +7,8 @@ interface User {
   name?: string;
   avatar?: string;
   role: string;
+  walletBalance?: number;
+  hasReceivedWelcomeBonus?: boolean;
 }
 
 interface AuthState {
@@ -17,6 +19,7 @@ interface AuthState {
   login: (user: User, token: string) => void;
   logout: () => void;
   updateUser: (updates: Partial<User>) => void;
+  setWalletBalance: (balance: number) => void;
   setAuthModalOpen: (isOpen: boolean) => void;
   checkAuth: () => Promise<void>;
 }
@@ -59,6 +62,12 @@ export const useAuthStore = create<AuthState>((set) => ({
   updateUser: (updates) => {
     set((state) => ({
       user: state.user ? { ...state.user, ...updates } : null
+    }));
+  },
+
+  setWalletBalance: (balance) => {
+    set((state) => ({
+      user: state.user ? { ...state.user, walletBalance: balance } : null
     }));
   },
 

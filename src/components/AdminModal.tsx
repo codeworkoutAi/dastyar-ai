@@ -31,10 +31,12 @@ import {
   Code2,
   EyeOff,
   ShieldCheck,
-  Activity
+  Activity,
+  Coins
 } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import { toEnglishDigits } from '../lib/persianUtils';
+import { AdminFinanceTab } from './AdminFinanceTab';
 
 interface AdminModalProps {
   isOpen: boolean;
@@ -49,13 +51,14 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
   const [error, setError] = useState<string | null>(null);
 
   // Tabs state
-  const [activeTab, setActiveTab] = useState<'products' | 'orders' | 'users' | 'news' | 'settings'>('products');
+  const [activeTab, setActiveTab] = useState<'products' | 'orders' | 'users' | 'news' | 'finance' | 'settings'>('products');
   const [orders, setOrders] = useState<any[]>([]);
   const [ordersLoading, setOrdersLoading] = useState(false);
 
   // Users state
   const [users, setUsers] = useState<any[]>([]);
   const [usersLoading, setUsersLoading] = useState(false);
+  const [userSearchQuery, setUserSearchQuery] = useState('');
 
   // Orders management state
   const [orderSearch, setOrderSearch] = useState('');
@@ -237,10 +240,12 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
 
   const handleSelectAdminModel = (modelId: string, modelObj?: any) => {
     setProfileFormModelName(modelId);
-    if (!profileFormName.trim() || profileFormName === 'کارت جدید' || profileFormName.includes('(رایگان)')) {
+    if (!profileFormName.trim() || profileFormName === 'کارت جدید') {
       const cleanName = modelObj?.name || modelId.split('/').pop() || modelId;
-      setProfileFormName(`${cleanName} (رایگان)`);
+      setProfileFormName(cleanName);
     }
+    setFetchedModelsList([]);
+    setAdminModelSearchQuery('');
   };
 
   const handleSaveDefaultProfile = async (e: React.FormEvent) => {
@@ -1007,6 +1012,14 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
               اخبار و وبلاگ
             </button>
             <button
+              onClick={() => setActiveTab('finance')}
+              className={`pb-3 text-sm font-bold border-b-2 transition-colors flex items-center gap-1.5 ${activeTab === 'finance' ? 'border-blue-600 text-blue-600 dark:border-blue-500 dark:text-blue-400' : 'border-transparent text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200'
+                }`}
+            >
+              <Coins className="w-4 h-4" />
+              <span>مدیریت مالی و ارز</span>
+            </button>
+            <button
               onClick={() => setActiveTab('settings')}
               className={`pb-3 text-sm font-bold border-b-2 transition-colors ${activeTab === 'settings' ? 'border-blue-600 text-blue-600 dark:border-blue-500 dark:text-blue-400' : 'border-transparent text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200'
                 }`}
@@ -1018,7 +1031,9 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-4 sm:p-6 custom-scrollbar bg-zinc-50 dark:bg-black/20" ref={formRef}>
-          {activeTab === 'users' ? (
+          {activeTab === 'finance' ? (
+            <AdminFinanceTab />
+          ) : activeTab === 'users' ? (
             <div className="flex flex-col gap-6 animate-fadeIn">
               <div className="flex items-center justify-between">
                 <h3 className="text-lg font-bold text-zinc-800 dark:text-zinc-200 flex items-center gap-2">
@@ -1033,6 +1048,23 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
                 >
                   <RefreshCw className={`w-4 h-4 ${usersLoading ? 'animate-spin' : ''}`} />
                 </button>
+              </div>
+
+              {/* Users Search */}
+              <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-4 shadow-sm flex flex-col sm:flex-row gap-4 items-center">
+                <div className="relative w-full sm:w-96 shrink-0">
+                  <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                    <Search className="h-5 w-5 text-zinc-400" />
+                  </div>
+                  <input
+                    type="text"
+                    placeholder="جستجوی کاربر (نام، ایمیل، تلفن، شناسه، تلگرام)..."
+                    value={userSearchQuery}
+                    onChange={(e) => setUserSearchQuery(e.target.value)}
+                    className="block w-full pr-10 pl-3 py-2 border border-zinc-200 dark:border-zinc-700 rounded-xl leading-5 bg-zinc-50 dark:bg-zinc-800/50 text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                    dir="rtl"
+                  />
+                </div>
               </div>
 
               {error && (
@@ -1057,10 +1089,24 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800/50">
-                      {users.length > 0 ? (
-                        users.map((u) => (
+                      {users
+                        .filter(u => {
+                          if (!userSearchQuery) return true;
+                          const q = userSearchQuery.toLowerCase();
+                          const ucId = `uc-${10000 + u.id}`;
+                          const rawId = u.id.toString();
+                          return (
+                            (u.name && u.name.toLowerCase().includes(q)) ||
+                            (u.email && u.email.toLowerCase().includes(q)) ||
+                            (u.phone && u.phone.includes(q)) ||
+                            (u.telegramId && u.telegramId.includes(q)) ||
+                            ucId.includes(q) ||
+                            rawId === q
+                          );
+                        })
+                        .map((u) => (
                           <tr key={u.id} className="hover:bg-zinc-50 dark:hover:bg-zinc-800/20 transition-colors">
-                            <td className="py-4 px-6 font-mono text-zinc-500">{u.id}</td>
+                            <td className="py-4 px-6 font-mono text-zinc-500">UC-{10000 + u.id}</td>
                             <td className="py-4 px-6">
                               <div className="font-bold text-zinc-800 dark:text-zinc-200">{u.name || 'نامشخص'}</div>
                             </td>
@@ -1110,10 +1156,31 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
                             </td>
                           </tr>
                         ))
-                      ) : (
+                      }
+                      {users.length === 0 && (
                         <tr>
                           <td colSpan={7} className="py-12 text-center text-zinc-500">
                             {usersLoading ? 'در حال دریافت اطلاعات...' : 'هیچ کاربری یافت نشد.'}
+                          </td>
+                        </tr>
+                      )}
+                      {users.length > 0 && users.filter(u => {
+                          if (!userSearchQuery) return true;
+                          const q = userSearchQuery.toLowerCase();
+                          const ucId = `uc-${10000 + u.id}`;
+                          const rawId = u.id.toString();
+                          return (
+                            (u.name && u.name.toLowerCase().includes(q)) ||
+                            (u.email && u.email.toLowerCase().includes(q)) ||
+                            (u.phone && u.phone.includes(q)) ||
+                            (u.telegramId && u.telegramId.includes(q)) ||
+                            ucId.includes(q) ||
+                            rawId === q
+                          );
+                        }).length === 0 && (
+                        <tr>
+                          <td colSpan={7} className="py-12 text-center text-zinc-500">
+                            کاربری با این جستجو یافت نشد.
                           </td>
                         </tr>
                       )}
@@ -1133,10 +1200,10 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
                     </div>
                     <div>
                       <h3 className="text-base sm:text-lg font-bold text-zinc-900 dark:text-zinc-100 font-rokh">
-                        مدل‌های هوش مصنوعی پیش‌فرض سیستم (کارت‌های رایگان)
+                        مدل‌های هوش مصنوعی پیش‌فرض سیستم
                       </h3>
                       <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5 leading-relaxed">
-                        این کارت‌ها به صورت عمومی و رایگان برای تمامی کاربران نمایش داده می‌شوند. کلیدهای API در سرور نگهداری شده و کاربران همچنین می‌توانند کارت‌های سفارشی خود را بدون تداخل اضافه کنند.
+                        این کارت‌ها به صورت عمومی برای تمامی کاربران نمایش داده می‌شوند. کلیدهای API در سرور نگهداری شده و کاربران همچنین می‌توانند کارت‌های سفارشی خود را بدون تداخل اضافه کنند.
                       </p>
                     </div>
                   </div>
@@ -1197,18 +1264,59 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
                       </div>
 
                       <div>
-                        <label className="block text-zinc-700 dark:text-zinc-300 font-bold mb-1.5">
-                          شناسه مدل (Model Name) <span className="text-red-500">*</span>
-                        </label>
-                        <input
-                          type="text"
-                          value={profileFormModelName}
-                          onChange={(e) => setProfileFormModelName(e.target.value)}
-                          placeholder="مثال: qwen/qwen3.6-27b یا gemini-3.1-flash-lite"
-                          className="w-full px-3.5 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-blue-500 transition-colors"
-                          dir="ltr"
-                          required
-                        />
+                        <div className="flex items-center justify-between mb-1.5">
+                          <label className="block text-zinc-700 dark:text-zinc-300 font-bold">
+                            شناسه مدل (Model Name) <span className="text-red-500">*</span>
+                          </label>
+                          <button
+                            type="button"
+                            onClick={handleFetchModelsForAdmin}
+                            disabled={fetchingModelsForAdmin || !profileFormBaseUrl.trim()}
+                            className="text-[10px] bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 px-2 py-1 rounded border border-blue-200 dark:border-blue-800 hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors disabled:opacity-50"
+                          >
+                            {fetchingModelsForAdmin ? 'در حال دریافت...' : 'دریافت لیست مدل‌ها'}
+                          </button>
+                        </div>
+                        {fetchModelsMessage && (
+                          <div className={`mb-2 p-2 rounded text-xs font-bold ${fetchModelsMessage.type === 'success' ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30' : 'bg-red-50 text-red-600 dark:bg-red-900/30'}`}>
+                            {fetchModelsMessage.text}
+                          </div>
+                        )}
+                        {fetchedModelsList.length > 0 ? (
+                          <div className="space-y-2">
+                            <input
+                              type="text"
+                              value={adminModelSearchQuery}
+                              onChange={(e) => setAdminModelSearchQuery(e.target.value)}
+                              placeholder="جستجو در لیست..."
+                              className="w-full px-3 py-1.5 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-900 text-xs text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-blue-500 transition-colors"
+                              dir="ltr"
+                            />
+                            <div className="max-h-40 overflow-y-auto custom-scrollbar border border-zinc-200 dark:border-zinc-700 rounded-xl bg-white dark:bg-zinc-800 p-1">
+                              {fetchedModelsList.filter(m => m.id.toLowerCase().includes(adminModelSearchQuery.toLowerCase()) || (m.name && m.name.toLowerCase().includes(adminModelSearchQuery.toLowerCase()))).map(m => (
+                                <button
+                                  key={m.id}
+                                  type="button"
+                                  onClick={() => handleSelectAdminModel(m.id, m)}
+                                  className={`w-full text-left px-3 py-2 rounded-lg text-[11px] font-mono mb-1 transition-colors ${profileFormModelName === m.id ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300' : 'hover:bg-zinc-100 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300'}`}
+                                  dir="ltr"
+                                >
+                                  {m.id}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        ) : (
+                          <input
+                            type="text"
+                            value={profileFormModelName}
+                            onChange={(e) => setProfileFormModelName(e.target.value)}
+                            placeholder="مثال: qwen/qwen3.6-27b یا gemini-3.1-flash-lite"
+                            className="w-full px-3.5 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-blue-500 transition-colors"
+                            dir="ltr"
+                            required
+                          />
+                        )}
                       </div>
 
                       <div>

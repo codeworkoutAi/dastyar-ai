@@ -5,6 +5,7 @@ import { create } from 'zustand';
 import { Conversation, ChatMessage } from '../types';
 import { loadConversations, saveConversations, loadActiveConversationId, saveActiveConversationId, createNewConversation } from '../lib/storage';
 import { useSettingsStore } from './settingsStore';
+import { useAuthStore } from './authStore';
 import { buildOptimizedContext } from '../lib/tokenOptimizer';
 
 let abortController: AbortController | null = null;
@@ -411,9 +412,15 @@ stopGeneration: () => {
       // Debug: Log webSearch value before sending to backend
       console.log('[Frontend] Sending to backend - webSearch:', payloadSettings.tools?.webSearch);
 
+      const authToken = useAuthStore.getState().token;
+      const streamHeaders: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (authToken) {
+        streamHeaders['Authorization'] = `Bearer ${authToken}`;
+      }
+
       const response = await fetch('/api/chat/stream', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: streamHeaders,
         body: JSON.stringify({
           messages: contextMessages,
           settings: payloadSettings,
@@ -439,7 +446,7 @@ stopGeneration: () => {
       let buffer = '';
       let accumulatedContent = '';
       let streamHadError = false;
-      let serverUsage: { promptTokens?: number; completionTokens?: number; totalTokens?: number } | undefined = undefined;
+      let serverUsage: { promptTokens?: number; completionTokens?: number; totalTokens?: number; costToman?: number; balanceAfter?: number } | undefined = undefined;
 
       try {
         while (true) {
@@ -492,6 +499,9 @@ stopGeneration: () => {
 
               if (data.usage) {
                 serverUsage = data.usage;
+                if (typeof data.usage.balanceAfter === 'number') {
+                  useAuthStore.getState().setWalletBalance(data.usage.balanceAfter);
+                }
               }
 
               if (data.imageUrl) {
@@ -509,6 +519,9 @@ stopGeneration: () => {
               if (data.done) {
                 if (data.usage) {
                   serverUsage = data.usage;
+                  if (typeof data.usage.balanceAfter === 'number') {
+                    useAuthStore.getState().setWalletBalance(data.usage.balanceAfter);
+                  }
                 }
                 break;
               }
@@ -587,7 +600,13 @@ stopGeneration: () => {
         completionTokens,
         approxTokens,
         estimatedCostUSD,
+        costToman: serverUsage?.costToman,
+        balanceAfter: serverUsage?.balanceAfter,
       };
+
+      if (typeof serverUsage?.balanceAfter === 'number') {
+        useAuthStore.getState().setWalletBalance(serverUsage.balanceAfter);
+      }
 
       // Mark streaming as completed with the FULL accumulated content and metrics (only if no stream error occurred)
       if (!streamHadError) {

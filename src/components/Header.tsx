@@ -26,6 +26,7 @@ import { useAuthStore } from '../store/authStore';
 import { ShieldCheck } from 'lucide-react';
 import { SmartRoutingAnimation } from './ChatBox';
 import { ThemeToggle } from './ThemeToggle';
+import { ModelSelectorDropdown } from './ModelSelectorDropdown';
 
 export const SmartRoutingBadge: React.FC<{ isStreaming: boolean }> = ({ isStreaming }) => {
   return (
@@ -158,114 +159,10 @@ export const Header: React.FC = React.memo(() => {
           </div>
         </div>
 
-        {/* 2. Absolute Center - Interactive Model Label Pill */}
+        {/* 2. Absolute Center - Model Selector */}
         <div className="absolute inset-0 flex justify-center items-center pointer-events-none z-40">
-          <div className="pointer-events-auto min-w-[120px] max-w-[280px] sm:max-w-sm w-auto relative flex justify-center" ref={dropdownRef}>
-            {isStreaming && settings.tools.smartRouting ? (
-              <div className="flex items-center justify-center transition-all w-full" dir="ltr">
-                {providerInfo.name}
-              </div>
-            ) : isStreaming ? (
-              <div
-                className="group flex items-center justify-center gap-2.5 px-2.5 py-2 sm:px-3 sm:py-2 rounded-xl sm:rounded-2xl transition-all w-full"
-                dir="ltr"
-              >
-                {providerInfo.icon ? (
-                  <>
-                    {providerInfo.icon}
-                    <span className="font-extrabold text-sm sm:text-base text-[var(--accent-text)] truncate mt-0.5">
-                      {providerInfo.name}
-                    </span>
-                  </>
-                ) : (
-                  typeof providerInfo.name === 'string' ? (
-                    <span className="font-extrabold text-sm sm:text-base text-[var(--accent-text)] truncate mt-0.5">
-                      {providerInfo.name}
-                    </span>
-                  ) : (
-                    providerInfo.name
-                  )
-                )}
-                <AltArrowDownOutlineIcon className="w-3.5 h-3.5 text-[var(--text-main)] opacity-30 shrink-0" />
-              </div>
-            ) : (
-              <Tooltip content="تغییر سریع مدل یا باز کردن تنظیمات" className="w-full">
-                <button
-                  onClick={() => setShowModelDropdown(!showModelDropdown)}
-                  className="group flex items-center justify-center gap-2.5 px-2.5 py-2 sm:px-3 sm:py-2 clay-btn rounded-xl sm:rounded-2xl hover:opacity-90 transition-all shadow-sm cursor-pointer w-full"
-                  dir="ltr"
-                >
-                  {providerInfo.icon ? (
-                    <>
-                      {providerInfo.icon}
-                      <span className="font-extrabold text-sm sm:text-base text-[var(--accent-text)] truncate mt-0.5">
-                        {providerInfo.name}
-                      </span>
-                    </>
-                  ) : (
-                    typeof providerInfo.name === 'string' ? (
-                      <span className="font-extrabold text-sm sm:text-base text-[var(--accent-text)] truncate mt-0.5">
-                        {providerInfo.name}
-                      </span>
-                    ) : (
-                      providerInfo.name
-                    )
-                  )}
-                  <AltArrowDownOutlineIcon className={`w-3.5 h-3.5 text-[var(--text-main)] opacity-50 group-hover:opacity-100 transition-all shrink-0 ${showModelDropdown ? 'rotate-180' : ''}`} />
-                </button>
-              </Tooltip>
-            )}
-
-            {/* Dropdown Menu */}
-            {showModelDropdown && (
-              <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 w-56 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-2xl p-2 z-50 flex flex-col gap-1 overflow-hidden" dir="rtl">
-                <button
-                  onClick={() => {
-                    setSettings({ ...settings, tools: { ...settings.tools, smartRouting: !settings.tools.smartRouting } });
-                    setShowModelDropdown(false);
-                  }}
-                  className={`flex items-center justify-center px-3 py-2.5 rounded-xl text-sm font-medium transition-colors cursor-pointer w-full text-center ${settings.tools.smartRouting ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400 font-semibold' : 'hover:bg-zinc-100 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300'}`}
-                >
-                  مسیریابی هوشمند
-                </button>
-
-                <div className="h-px bg-white dark:bg-zinc-800 my-1 mx-2" />
-
-                {/* Models List */}
-                {dropdownModels.map((model) => (
-                  <button
-                    key={model.id}
-                    dir="ltr"
-                    onClick={() => {
-                      const newSettings = { ...settings };
-                      newSettings.tools.smartRouting = false;
-                      newSettings.providers.activeProvider = 'custom';
-                      newSettings.providers.custom.activeProfileId = model.id;
-                      setSettings(newSettings);
-                      setShowModelDropdown(false);
-                    }}
-                    className={`flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium transition-colors cursor-pointer w-full text-left ${!settings.tools.smartRouting && settings.providers.activeProvider === 'custom' && settings.providers.custom.activeProfileId === model.id ? 'bg-white dark:bg-zinc-800 text-white' : 'hover:bg-zinc-100 dark:hover:bg-zinc-700/60 text-zinc-700 dark:text-zinc-400'}`}
-                  >
-                    {model.icon}
-                    <div className="flex flex-col min-w-0 items-start">
-                      <span className="truncate w-full">{model.name}</span>
-                    </div>
-                  </button>
-                ))}
-
-                <div className="h-px bg-white dark:bg-zinc-800 my-1 mx-2" />
-                <button
-                  onClick={() => {
-                    setShowModelDropdown(false);
-                    setIsSettingsOpen(true);
-                  }}
-                  className="flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-xs font-medium transition-colors hover:bg-zinc-100 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-400 cursor-pointer w-full mt-1"
-                >
-                  <SettingsMinimalisticLinearIcon className="w-4 h-4 shrink-0" />
-                  تنظیمات پیشرفته...
-                </button>
-              </div>
-            )}
+          <div className="pointer-events-auto min-w-[120px] max-w-[280px] sm:max-w-sm w-auto relative flex justify-center">
+            <ModelSelectorDropdown />
           </div>
         </div>
 
