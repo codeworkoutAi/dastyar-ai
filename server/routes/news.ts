@@ -5,8 +5,49 @@ import db, { syncDatabase } from '../db/database';
 import { requireAuth, requireAdmin } from '../middleware/auth';
 import { bot } from '../telegram/bot';
 import { clearSitemapCache } from '../seo/sitemap';
+import { sendNewsToTelegram } from '../services/newsCron';
 
 const router = express.Router();
+
+// ALL /api/news/cron-trigger (External Cron webhook for cron-job.org or monitoring)
+// Must be defined BEFORE /:id so Express doesn't treat 'cron-trigger' as a news article ID
+router.all('/cron-trigger', async (req, res) => {
+  try {
+    const { fetchAndProcessNews } = await import('../services/newsCron');
+    fetchAndProcessNews().catch(err => console.error('[News API] cron-trigger background error:', err));
+    res.json({ status: 'ok', message: 'عملیات واکشی و انتشار اخبار هوش مصنوعی آغاز شد.' });
+  } catch (error: any) {
+    res.status(500).json({ error: error?.message || 'خطا در فعال‌سازی واکشی اخبار' });
+  }
+});
+
+// GET /api/news/admin/cron-logs (Admin: Get latest bot logs)
+router.get('/admin/cron-logs', requireAuth, requireAdmin, (req, res) => {
+  try {
+    const logPath = path.join(process.cwd(), 'server', 'data', 'news-cron.log');
+    if (!fs.existsSync(logPath)) {
+      return res.json({ logs: 'هنوز فایلی ثبت نشده است.' });
+    }
+    const content = fs.readFileSync(logPath, 'utf8');
+    const lines = content.trim().split('\n');
+    const recent = lines.slice(-200).join('\n');
+    res.json({ logs: recent });
+  } catch (error) {
+    console.error('[News API] Error reading cron logs:', error);
+    res.status(500).json({ error: 'خطا در خواندن فایل لاگ' });
+  }
+});
+
+// POST /api/news/admin/trigger (Admin: Trigger immediate news fetch)
+router.post('/admin/trigger', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const { fetchAndProcessNews } = await import('../services/newsCron');
+    fetchAndProcessNews().catch(err => console.error('[News API] admin trigger error:', err));
+    res.json({ message: 'واکشی اخبار آغاز شد. نتیجه تا لحظاتی دیگر در لاگ‌ها و کانال ثبت می‌شود.' });
+  } catch (error: any) {
+    res.status(500).json({ error: error?.message || 'خطا در اجرای واکشی' });
+  }
+});
 
 // GET /api/news (Public: List all news)
 router.get('/', (req, res) => {
@@ -32,8 +73,8 @@ router.get('/tag/:tag', (req, res) => {
   }
 });
 
-// GET /api/news/:id (Public: Get single news)
-router.get('/:id', (req, res) => {
+// GET /api/news/:id (Public: Get single news - constrained to numeric ID)
+router.get('/:id(\\d+)', (req, res) => {
   try {
     const { id } = req.params;
     const item = db.prepare('SELECT * FROM news WHERE id = ?').get(id);
@@ -46,8 +87,6 @@ router.get('/:id', (req, res) => {
     res.status(500).json({ error: 'خطای سرور' });
   }
 });
-
-import { sendNewsToTelegram } from '../services/newsCron';
 
 // POST /api/news (Admin: Create news and broadcast to Telegram)
 router.post('/', requireAuth, requireAdmin, async (req, res) => {
@@ -88,7 +127,7 @@ router.post('/', requireAuth, requireAdmin, async (req, res) => {
 });
 
 // PUT /api/news/:id (Admin: Edit news and optional rebroadcast)
-router.put('/:id', requireAuth, requireAdmin, async (req, res) => {
+router.put('/:id(\\d+)', requireAuth, requireAdmin, async (req, res) => {
   try {
     const { id } = req.params;
     const { title, content, image, tags, rebroadcastTelegram } = req.body;
@@ -133,7 +172,7 @@ router.put('/:id', requireAuth, requireAdmin, async (req, res) => {
 });
 
 // DELETE /api/news/:id (Admin: Delete news)
-router.delete('/:id', requireAuth, requireAdmin, (req, res) => {
+router.delete('/:id(\\d+)', requireAuth, requireAdmin, (req, res) => {
   try {
     const { id } = req.params;
     db.prepare('DELETE FROM news WHERE id = ?').run(id);
@@ -143,45 +182,6 @@ router.delete('/:id', requireAuth, requireAdmin, (req, res) => {
   } catch (error) {
     console.error('[News API] Error deleting news:', error);
     res.status(500).json({ error: 'خطا در حذف خبر' });
-  }
-});
-
-// GET /api/news/admin/cron-logs (Admin: Get latest bot logs)
-router.get('/admin/cron-logs', requireAuth, requireAdmin, (req, res) => {
-  try {
-    const logPath = path.join(process.cwd(), 'server', 'data', 'news-cron.log');
-    if (!fs.existsSync(logPath)) {
-      return res.json({ logs: 'هنوز فایلی ثبت نشده است.' });
-    }
-    const content = fs.readFileSync(logPath, 'utf8');
-    const lines = content.trim().split('\n');
-    const recent = lines.slice(-200).join('\n');
-    res.json({ logs: recent });
-  } catch (error) {
-    console.error('[News API] Error reading cron logs:', error);
-    res.status(500).json({ error: 'خطا در خواندن فایل لاگ' });
-  }
-});
-
-// GET /api/news/cron-trigger (External Cron webhook for cron-job.org at 08:00 AM)
-router.get('/cron-trigger', async (req, res) => {
-  try {
-    const { fetchAndProcessNews } = await import('../services/newsCron');
-    fetchAndProcessNews().catch(err => console.error('[News API] cron-trigger background error:', err));
-    res.json({ status: 'ok', message: 'عملیات واکشی و انتشار اخبار هوش مصنوعی آغاز شد.' });
-  } catch (error: any) {
-    res.status(500).json({ error: error?.message || 'خطا در فعال‌سازی واکشی اخبار' });
-  }
-});
-
-// POST /api/news/admin/trigger (Admin: Trigger immediate news fetch)
-router.post('/admin/trigger', requireAuth, requireAdmin, async (req, res) => {
-  try {
-    const { fetchAndProcessNews } = await import('../services/newsCron');
-    fetchAndProcessNews().catch(err => console.error('[News API] admin trigger error:', err));
-    res.json({ message: 'واکشی اخبار آغاز شد. نتیجه تا لحظاتی دیگر در لاگ‌ها و کانال ثبت می‌شود.' });
-  } catch (error: any) {
-    res.status(500).json({ error: error?.message || 'خطا در اجرای واکشی' });
   }
 });
 
