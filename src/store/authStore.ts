@@ -1,5 +1,26 @@
 import { create } from 'zustand';
 
+type AuthChangeListener = (userId: number | null) => void;
+const authChangeListeners: AuthChangeListener[] = [];
+
+export function onAuthChange(listener: AuthChangeListener): () => void {
+  authChangeListeners.push(listener);
+  return () => {
+    const idx = authChangeListeners.indexOf(listener);
+    if (idx !== -1) authChangeListeners.splice(idx, 1);
+  };
+}
+
+function notifyAuthChange(userId: number | null) {
+  for (const listener of authChangeListeners) {
+    try {
+      listener(userId);
+    } catch (e) {
+      console.error('[AuthStore] Listener error:', e);
+    }
+  }
+}
+
 interface User {
   id: number;
   phone?: string;
@@ -22,6 +43,22 @@ interface AuthState {
   setWalletBalance: (balance: number) => void;
   setAuthModalOpen: (isOpen: boolean) => void;
   checkAuth: () => Promise<void>;
+}
+
+export function getInitialUserIdFromToken(): number | null {
+  try {
+    const token = localStorage.getItem('token');
+    if (!token) return null;
+    const parts = token.split('.');
+    if (parts.length !== 3) return null;
+    const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
+    if (payload.exp && payload.exp * 1000 < Date.now()) {
+      return null;
+    }
+    return payload.id || payload.userId || null;
+  } catch {
+    return null;
+  }
 }
 
 function getValidInitialToken(): string | null {
@@ -52,11 +89,13 @@ export const useAuthStore = create<AuthState>((set) => ({
   login: (user, token) => {
     localStorage.setItem('token', token);
     set({ user, token, isAuthenticated: true, isAuthModalOpen: false });
+    notifyAuthChange(user.id);
   },
 
   logout: () => {
     localStorage.removeItem('token');
     set({ user: null, token: null, isAuthenticated: false });
+    notifyAuthChange(null);
   },
 
   updateUser: (updates) => {
@@ -75,7 +114,10 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   checkAuth: async () => {
     const token = localStorage.getItem('token');
-    if (!token) return;
+    if (!token) {
+      notifyAuthChange(null);
+      return;
+    }
 
     try {
       const res = await fetch('/api/auth/me', {
@@ -84,12 +126,15 @@ export const useAuthStore = create<AuthState>((set) => ({
       if (res.ok) {
         const data = await res.json();
         set({ user: data.user, isAuthenticated: true });
+        notifyAuthChange(data.user.id);
       } else {
         localStorage.removeItem('token');
         set({ user: null, token: null, isAuthenticated: false });
+        notifyAuthChange(null);
       }
     } catch (err) {
       console.error('[Auth] Validation failed:', err);
     }
   }
 }));
+

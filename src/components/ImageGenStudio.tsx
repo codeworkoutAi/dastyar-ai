@@ -21,6 +21,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { loadSettings } from '../lib/storage';
 import { useChatStore } from '../store/chatStore';
 import { useUIStore } from '../store/uiStore';
+import { useAuthStore } from '../store/authStore';
 
 
 
@@ -279,25 +280,35 @@ export function ImageGenStudio() {
     }
   };
 
+  const user = useAuthStore(s => s.user);
+  const galleryKey = user?.id ? `image_gen_history_uc_${10000 + user.id}` : 'image_gen_history_guest';
+
   useEffect(() => {
     if (isOpen) {
       if (initialPrompt) setPrompt(initialPrompt);
       if (initialEngine) setEngine(initialEngine);
       
-      const saved = localStorage.getItem('image_gen_history');
+      let saved = localStorage.getItem(galleryKey);
+      if (!saved && !user?.id) {
+        saved = localStorage.getItem('image_gen_history');
+      }
       if (saved) {
         try {
           setHistory(JSON.parse(saved));
-        } catch (e) {}
+        } catch (e) {
+          setHistory([]);
+        }
+      } else {
+        setHistory([]);
       }
     }
-  }, [isOpen, initialPrompt, initialEngine]);
+  }, [isOpen, initialPrompt, initialEngine, galleryKey]);
 
   const saveHistory = (item: ImageHistory) => {
     try {
       const newHistory = [item, ...history].slice(0, 50);
       setHistory(newHistory);
-      localStorage.setItem('image_gen_history', JSON.stringify(newHistory));
+      localStorage.setItem(galleryKey, JSON.stringify(newHistory));
     } catch (quotaErr) {
       console.warn('[ImageGenStudio] LocalStorage quota exceeded, stripping older base64 images');
       try {
@@ -309,7 +320,7 @@ export function ImageGenStudio() {
           return h;
         });
         setHistory(trimmed);
-        localStorage.setItem('image_gen_history', JSON.stringify(trimmed));
+        localStorage.setItem(galleryKey, JSON.stringify(trimmed));
       } catch {
         // Last resort: keep only in-memory
         const minimal = [item, ...history].slice(0, 8);
@@ -321,7 +332,7 @@ export function ImageGenStudio() {
   const clearHistory = () => {
     if (confirm('آیا از پاک کردن تمام تصاویر گالری اطمینان دارید؟ این عملیات غیرقابل بازگشت است.')) {
       setHistory([]);
-      localStorage.removeItem('image_gen_history');
+      localStorage.removeItem(galleryKey);
       setSelectedDetailImage(null);
     }
   };
@@ -330,11 +341,12 @@ export function ImageGenStudio() {
     if (e) e.stopPropagation();
     const updated = history.filter(item => item.timestamp !== timestamp);
     setHistory(updated);
-    localStorage.setItem('image_gen_history', JSON.stringify(updated));
+    localStorage.setItem(galleryKey, JSON.stringify(updated));
     if (selectedDetailImage?.timestamp === timestamp) {
       setSelectedDetailImage(null);
     }
   };
+
 
   const copyPromptText = (text: string, id: string, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();

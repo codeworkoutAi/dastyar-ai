@@ -1,10 +1,28 @@
 
 import { AppSettings, Conversation, CustomProfile } from '../types';
 import { encryptAPIKeys, decryptAPIKeys } from './crypto';
+import { getInitialUserIdFromToken } from '../store/authStore';
+
+const initialUid = getInitialUserIdFromToken();
+let currentUserScope = initialUid ? `uc_${10000 + initialUid}` : 'guest';
+
+export function setCurrentUserScope(userId?: number | null): void {
+  currentUserScope = userId ? `uc_${10000 + userId}` : 'guest';
+}
+
+export function getCurrentUserScope(): string {
+  return currentUserScope;
+}
+
+function getConversationsKey(): string {
+  return `persian_ai_conversations_${currentUserScope}`;
+}
+
+function getActiveIdKey(): string {
+  return `persian_ai_active_id_${currentUserScope}`;
+}
 
 const STORAGE_KEYS = {
-  CONVERSATIONS: 'persian_ai_conversations',
-  ACTIVE_ID: 'persian_ai_active_id',
   SETTINGS: 'persian_ai_settings_v2',
 };
 
@@ -67,7 +85,12 @@ export const DEFAULT_SETTINGS: AppSettings = {
 
 export function loadConversations(): Conversation[] {
   try {
-    const raw = localStorage.getItem(STORAGE_KEYS.CONVERSATIONS);
+    const key = getConversationsKey();
+    let raw = localStorage.getItem(key);
+    if (!raw && currentUserScope === 'guest') {
+      const legacy = localStorage.getItem('persian_ai_conversations');
+      if (legacy) raw = legacy;
+    }
     if (!raw) return [];
     return JSON.parse(raw);
   } catch {
@@ -99,14 +122,15 @@ function stripOlderImages(conversations: Conversation[]): Conversation[] {
 }
 
 export function saveConversations(conversations: Conversation[]): void {
+  const key = getConversationsKey();
   try {
-    localStorage.setItem(STORAGE_KEYS.CONVERSATIONS, JSON.stringify(conversations));
+    localStorage.setItem(key, JSON.stringify(conversations));
   } catch (err) {
     if (err instanceof DOMException && (err.name === 'QuotaExceededError' || err.code === 22)) {
       console.warn('LocalStorage quota exceeded. Stripping images from older conversations...');
       try {
         const cleaned = stripOlderImages(conversations);
-        localStorage.setItem(STORAGE_KEYS.CONVERSATIONS, JSON.stringify(cleaned));
+        localStorage.setItem(key, JSON.stringify(cleaned));
         return;
       } catch (retryErr) {
         console.error('Failed to save conversations even after stripping images.', retryErr);
@@ -117,14 +141,15 @@ export function saveConversations(conversations: Conversation[]): void {
 }
 
 export function loadActiveConversationId(): string | null {
-  return localStorage.getItem(STORAGE_KEYS.ACTIVE_ID);
+  return localStorage.getItem(getActiveIdKey());
 }
 
 export function saveActiveConversationId(id: string | null): void {
+  const key = getActiveIdKey();
   if (id) {
-    localStorage.setItem(STORAGE_KEYS.ACTIVE_ID, id);
+    localStorage.setItem(key, id);
   } else {
-    localStorage.removeItem(STORAGE_KEYS.ACTIVE_ID);
+    localStorage.removeItem(key);
   }
 }
 

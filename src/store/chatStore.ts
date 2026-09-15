@@ -3,9 +3,9 @@ import { formatPersianErrorMessage } from '../lib/persianUtils';
 
 import { create } from 'zustand';
 import { Conversation, ChatMessage } from '../types';
-import { loadConversations, saveConversations, loadActiveConversationId, saveActiveConversationId, createNewConversation } from '../lib/storage';
+import { loadConversations, saveConversations, loadActiveConversationId, saveActiveConversationId, createNewConversation, setCurrentUserScope } from '../lib/storage';
 import { useSettingsStore } from './settingsStore';
-import { useAuthStore } from './authStore';
+import { useAuthStore, onAuthChange } from './authStore';
 import { buildOptimizedContext } from '../lib/tokenOptimizer';
 
 let abortController: AbortController | null = null;
@@ -18,6 +18,7 @@ interface ChatState {
   isStreaming: boolean;
   routingState: 'idle' | 'general' | 'vision' | 'coding';
   
+  switchUserContext: (userId: number | null) => void;
   setConversations: (conversations: Conversation[]) => void;
   setActiveId: (id: string | null) => void;
   setActiveError: (error: { message: string; timestamp: number } | null) => void;
@@ -44,6 +45,20 @@ export const useChatStore = create<ChatState>((set, get) => ({
   activeError: null,
   isStreaming: false,
   routingState: 'idle',
+
+  switchUserContext: (userId) => {
+    setCurrentUserScope(userId);
+    const convs = loadConversations();
+    const active = loadActiveConversationId();
+    const validActive = active && convs.some(c => c.id === active) ? active : (convs.length > 0 ? convs[0].id : null);
+    set({
+      conversations: convs,
+      activeId: validActive,
+      activeError: null,
+      isStreaming: false,
+      routingState: 'idle'
+    });
+  },
 
   setConversations: (conversations) => {
     saveConversations(conversations);
@@ -722,4 +737,9 @@ useChatStore.subscribe((state, prevState) => {
   if (prevState && state.conversations !== prevState.conversations) {
     saveConversations(state.conversations);
   }
+});
+
+// User Context Switcher: Automatically switch conversation context on login/logout
+onAuthChange((userId) => {
+  useChatStore.getState().switchUserContext(userId);
 });
