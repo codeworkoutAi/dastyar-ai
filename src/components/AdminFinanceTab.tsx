@@ -464,11 +464,22 @@ export const AdminFinanceTab: React.FC = () => {
                   ${liveBalances[0].remainingUsd.toFixed(2)}
                 </span>
                 <span className="text-[11px] text-zinc-500 dark:text-zinc-400 font-mono">
-                  (سقف کل: ${liveBalances[0].hardLimitUsd} | مصرف‌شده: ${liveBalances[0].totalUsedUsd.toFixed(2)})
+                  (سقف: ${liveBalances[0].hardLimitUsd} | مصرف: ${liveBalances[0].totalUsedUsd.toFixed(2)})
                 </span>
+                {liveBalances[0].baseTokens !== undefined && (
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-bold font-mono" dir="rtl">
+                    <span>~{liveBalances[0].baseTokens.toLocaleString('fa-IR')} توکن سهمیه</span>
+                    {liveBalances[0].economyTokens ? (
+                      <span className="text-[10px] text-zinc-500 dark:text-zinc-400 font-normal">
+                        (معادل ~{(liveBalances[0].economyTokens / 1000000).toFixed(1)}M توکن در مدل‌های اقتصادی)
+                      </span>
+                    ) : null}
+                  </span>
+                )}
               </div>
               <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-1 leading-relaxed">
                 این موجودی به صورت زنده و مستقیم از سرور تأمین‌کننده ({liveBalances[0].baseUrl}) با API Key استعلام شده است.
+                {liveBalances[0].baseTokens ? ` (هر ۱ دلار = ۵۰۰٬۰۰۰ واحد سهمیه پایه One-API)` : ''}
               </p>
             </div>
           </div>

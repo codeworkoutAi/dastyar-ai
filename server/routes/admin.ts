@@ -641,13 +641,19 @@ router.get('/provider-live-balances', async (req, res) => {
             const hardLimit = Number(sub.hard_limit_usd) || 0;
             const totalUsed = (Number(usage.total_usage) || 0) / 100;
             const remaining = Math.max(0, hardLimit - totalUsed);
+            // 1 USD in One-API / Router.Cheap = 500,000 base quota tokens
+            const baseTokens = Math.round(remaining * 500000);
+            // In modern economy models (e.g. DeepSeek-V3 / GPT-4o-mini @ ~$0.15/1M tokens)
+            const economyTokens = Math.round((remaining / 0.15) * 1000000);
             liveData = {
               supported: true,
               providerName: p.name || 'router.cheap',
               baseUrl: p.baseUrl,
               hardLimitUsd: hardLimit,
               totalUsedUsd: totalUsed,
-              remainingUsd: remaining
+              remainingUsd: remaining,
+              baseTokens,
+              economyTokens
             };
           }
         } catch (e: any) {
@@ -662,13 +668,18 @@ router.get('/provider-live-balances', async (req, res) => {
           if (keyRes.ok) {
             const keyData = await keyRes.json();
             const data = keyData.data || {};
+            const remUsd = Math.max(0, (data.limit || 0) - (data.usage || 0));
+            const baseTokens = Math.round(remUsd * 500000);
+            const economyTokens = Math.round((remUsd / 0.15) * 1000000);
             liveData = {
               supported: true,
               providerName: 'OpenRouter',
               baseUrl: p.baseUrl,
               hardLimitUsd: data.limit || 0,
               totalUsedUsd: data.usage || 0,
-              remainingUsd: Math.max(0, (data.limit || 0) - (data.usage || 0))
+              remainingUsd: remUsd,
+              baseTokens,
+              economyTokens
             };
           }
         } catch (e) {}
