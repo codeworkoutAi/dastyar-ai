@@ -1,4 +1,5 @@
 import { GoogleGenAI } from '@google/genai';
+import db from '../db/database';
 
 const FORBIDDEN_HOSTNAMES = new Set([
   'localhost',
@@ -117,7 +118,7 @@ export function getGeminiClient(customApiKey?: string, allowFallbackToEnv: boole
   });
 }
 
-// Helper to get Pollinations image URL
+// Helper to get Pollinations image URL (legacy GET format for compatibility)
 export function getPollinationsImageUrl(prompt: string, aspectRatio = '1:1', engine = 'flux') {
   let styledPrompt = prompt;
   if (engine === 'flux-anime') {
@@ -148,6 +149,119 @@ export function getPollinationsImageUrl(prompt: string, aspectRatio = '1:1', eng
   return `https://image.pollinations.ai/prompt/${encoded}?width=${dimW}&height=${dimH}&model=${modelParam}&nologo=true&seed=${Math.floor(Math.random() * 10000000)}`;
 }
 
+export interface PollinationsImageResult {
+  dataUrl: string;
+  rawUrl: string;
+}
+
+// Ultra-fast direct image generator using Pollinations POST JSON API
+export async function generatePollinationsImage(
+  prompt: string,
+  aspectRatio: string = '1:1',
+  engine: string = 'flux'
+): Promise<PollinationsImageResult> {
+  let styledPrompt = prompt;
+  if (engine === 'flux-anime') {
+    styledPrompt = `${prompt}, masterpiece anime aesthetic, vibrant digital art, crisp anime illustration`;
+  } else if (engine === 'flux-3d') {
+    styledPrompt = `${prompt}, 3d octane render, unreal engine 5, isometric 3d style, smooth clay render, cinematic lighting`;
+  } else if (engine === 'turbo') {
+    styledPrompt = `${prompt}, fast rendering, high quality, crisp focus`;
+  } else if (engine === 'sana') {
+    styledPrompt = `${prompt}, ultra high resolution, highly detailed, photorealistic, pristine quality`;
+  } else if (engine === 'albedobase-xl') {
+    styledPrompt = `${prompt}, photorealistic, 8k uhd, highly detailed, realistic skin texture, cinematic lighting`;
+  }
+
+  let dimW = 1024, dimH = 1024;
+  if (aspectRatio === '16:9') { dimW = 1024; dimH = 576; }
+  else if (aspectRatio === '9:16') { dimW = 576; dimH = 1024; }
+
+  let modelParam = 'flux-realism';
+  if (engine === 'turbo') modelParam = 'turbo';
+  else if (engine === 'flux-anime') modelParam = 'flux-anime';
+  else if (engine === 'flux-3d') modelParam = 'flux-3d';
+  else if (engine === 'sana') modelParam = 'sana';
+  else if (engine === 'albedobase-xl') modelParam = 'albedobase-xl';
+  else if (engine === 'flux') modelParam = 'flux-realism';
+
+  const seed = Math.floor(Math.random() * 10000000);
+  const rawUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(styledPrompt)}?width=${dimW}&height=${dimH}&model=${modelParam}&nologo=true&seed=${seed}`;
+
+  // Candidate models for automatic failover if the selected model encounters high load
+  const candidateModels = [modelParam];
+  if (modelParam !== 'flux-realism') candidateModels.push('flux-realism');
+  if (modelParam !== 'flux') candidateModels.push('flux');
+  if (modelParam !== 'sana') candidateModels.push('sana');
+
+  for (const currentModel of candidateModels) {
+    try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 25000);
+
+      const res = await fetch('https://image.pollinations.ai/', {
+        method: 'POST',
+        signal: controller.signal,
+        headers: {
+          'Content-Type': 'application/json',
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+        },
+        body: JSON.stringify({
+          prompt: styledPrompt,
+          model: currentModel,
+          width: dimW,
+          height: dimH,
+          seed,
+          nologo: true,
+        }),
+      });
+
+      clearTimeout(timeout);
+
+      if (res.ok) {
+        const buffer = await res.arrayBuffer();
+        if (buffer.byteLength > 1000) {
+          const contentType = res.headers.get('content-type') || 'image/jpeg';
+          const base64 = Buffer.from(buffer).toString('base64');
+          return {
+            dataUrl: `data:${contentType};base64,${base64}`,
+            rawUrl,
+          };
+        }
+      } else {
+        console.warn(`[Pollinations POST] Model ${currentModel} returned HTTP ${res.status}`);
+      }
+    } catch (err: any) {
+      console.warn(`[Pollinations POST] Error with model ${currentModel}:`, err?.message || err);
+    }
+  }
+
+  // Fallback: If POST fails completely, try direct GET on server
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 20000);
+    const getRes = await fetch(rawUrl, {
+      signal: controller.signal,
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+      },
+    });
+    clearTimeout(timeout);
+    if (getRes.ok) {
+      const buffer = await getRes.arrayBuffer();
+      const contentType = getRes.headers.get('content-type') || 'image/jpeg';
+      const base64 = Buffer.from(buffer).toString('base64');
+      return {
+        dataUrl: `data:${contentType};base64,${base64}`,
+        rawUrl,
+      };
+    }
+  } catch (getErr) {
+    console.warn('[Pollinations GET Fallback] Failed:', getErr);
+  }
+
+  throw new Error('سرور تولید تصویر در حال حاضر پاسخگو نیست. لطفاً مجدداً امتحان کنید.');
+}
 
 // Helper to translate and enhance image prompts into professional English prompts
 export async function translateAndEnhanceImagePrompt(rawPrompt: string, apiKey?: string): Promise<string> {
@@ -162,7 +276,7 @@ export async function translateAndEnhanceImagePrompt(rawPrompt: string, apiKey?:
   }
 
   const systemInstruction = `You are a master AI image prompt engineer and translator.
-Convert the user's Persian image description into a highly detailed, cinematic, and professional English prompt optimized for state-of-the-art AI image generators (Flux.1 / Midjourney).
+Convert the user's Persian image description into a highly detailed, cinematic, and professional English prompt optimized for state-of-the-art AI image generators (Flux.1 / SDXL).
 Rules:
 1. Understand the core subject, style, and mood accurately (e.g. pencil sketch, ancient warrior, cherry blossoms, cyberpunk, etc.).
 2. Translate and expand with descriptive visual details, lighting, atmosphere, texture, and artistic technique.
@@ -170,32 +284,70 @@ Rules:
 
 Persian description: "${trimmed}"`;
 
-  // 1. Primary: Try Gemini (gemini-3.6-flash then gemini-3.1-flash-lite)
-  try {
-    const ai = getGeminiClient(apiKey);
-    const candidateModels = ['gemini-3.6-flash', 'gemini-3.1-flash-lite'];
-    for (const model of candidateModels) {
-      try {
-        const response = await ai.models.generateContent({
-          model,
-          contents: systemInstruction,
-        });
-        const enhanced = response.text?.trim();
-        if (enhanced && enhanced.length > 5 && !/[\u0600-\u06FF]/.test(enhanced)) {
-          return enhanced;
+  // 1. Primary: Try Gemini with customApiKey (if provided by user)
+  if (apiKey) {
+    try {
+      const ai = getGeminiClient(apiKey, false);
+      const candidateModels = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-3.1-flash-lite'];
+      for (const model of candidateModels) {
+        try {
+          const response = await ai.models.generateContent({
+            model,
+            contents: systemInstruction,
+          });
+          const enhanced = response.text?.trim();
+          if (enhanced && enhanced.length > 5 && !/[\u0600-\u06FF]/.test(enhanced)) {
+            return enhanced;
+          }
+        } catch (mErr: any) {
+          // try next candidate
         }
-      } catch (mErr: any) {
-        // try next candidate
       }
+    } catch (e: any) {
+      // fallback to system profile
     }
-  } catch (e: any) {
-    console.warn('[Translate Prompt] Gemini failed, attempting Groq fallback:', e?.message || e);
   }
 
-  // 2. Fallback: Try Groq (openai/gpt-oss-120b or openai/gpt-oss-20b)
+  // 2. Secondary: Try active system profile from database (default_profiles)
+  try {
+    const profile = db.prepare("SELECT apiKey, baseUrl, modelName FROM default_profiles WHERE isActive = 1 AND apiKey != '' AND (modelName LIKE '%gemini%' OR baseUrl LIKE '%googleapis%' OR baseUrl LIKE '%groq%' OR baseUrl LIKE '%router.cheap%') ORDER BY CASE WHEN modelName LIKE '%gemini%' THEN 0 ELSE 1 END LIMIT 1").get() as any;
+    if (profile?.apiKey) {
+      let baseUrl = (profile.baseUrl || '').replace(/\/+$/, '');
+      if (!baseUrl.endsWith('/chat/completions')) {
+        baseUrl = `${baseUrl}/chat/completions`;
+      }
+      const res = await fetch(baseUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${profile.apiKey}`,
+        },
+        body: JSON.stringify({
+          model: profile.modelName,
+          messages: [{ role: 'user', content: systemInstruction }],
+          temperature: 0.5,
+          max_tokens: 300,
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        let text = data?.choices?.[0]?.message?.content?.trim();
+        if (text) {
+          text = text.replace(/^```[a-z]*\s*/i, '').replace(/\s*```$/i, '').replace(/^["']|["']$/g, '').trim();
+          if (text.length > 5 && !/[\u0600-\u06FF]/.test(text)) {
+            return text;
+          }
+        }
+      }
+    }
+  } catch (dbErr) {
+    console.warn('[translateAndEnhanceImagePrompt] Database system profile error:', dbErr);
+  }
+
+  // 3. Fallback: Try Groq from environment if configured
   const groqKey = process.env.DEFAULT_GROQ_KEY || process.env.GROQ_API_KEY;
   if (groqKey) {
-    const groqModels = ['openai/gpt-oss-120b', 'openai/gpt-oss-20b', 'qwen/qwen3.6-27b'];
+    const groqModels = ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant', 'allam-2-7b'];
     for (const model of groqModels) {
       try {
         const groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
@@ -215,20 +367,17 @@ Persian description: "${trimmed}"`;
           const data = await groqRes.json();
           let text = data?.choices?.[0]?.message?.content?.trim();
           if (text) {
-            // Strip markdown quotes/fences if present
             text = text.replace(/^```[a-z]*\s*/i, '').replace(/\s*```$/i, '').replace(/^["']|["']$/g, '').trim();
             if (text.length > 5 && !/[\u0600-\u06FF]/.test(text)) {
               return text;
             }
           }
         }
-      } catch (groqErr: any) {
-        // try next
-      }
+      } catch (groqErr: any) {}
     }
   }
 
-  // 3. Clean fallback without forcing "photorealistic" which ruins non-photo styles
+  // 4. Clean fallback without forcing "photorealistic" which ruins non-photo styles
   return `${trimmed}, highly detailed, sharp focus, 8k resolution, award winning composition`;
 }
 

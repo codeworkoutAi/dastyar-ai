@@ -294,9 +294,18 @@ export function ImageGenStudio() {
   }, [isOpen, initialPrompt, initialEngine]);
 
   const saveHistory = (item: ImageHistory) => {
-    const newHistory = [item, ...history].slice(0, 60);
-    setHistory(newHistory);
-    localStorage.setItem('image_gen_history', JSON.stringify(newHistory));
+    try {
+      const newHistory = [item, ...history].slice(0, 50);
+      setHistory(newHistory);
+      localStorage.setItem('image_gen_history', JSON.stringify(newHistory));
+    } catch (quotaErr) {
+      console.warn('[ImageGenStudio] LocalStorage quota exceeded, keeping in-memory only');
+      try {
+        const trimmed = [item, ...history].slice(0, 15);
+        setHistory(trimmed);
+        localStorage.setItem('image_gen_history', JSON.stringify(trimmed));
+      } catch {}
+    }
   };
 
   const clearHistory = () => {
@@ -433,7 +442,7 @@ export function ImageGenStudio() {
         const finalLoadedUrl = await preloadImage(data.imageUrl);
         setImageUrl(finalLoadedUrl);
         saveHistory({
-          url: finalLoadedUrl,
+          url: data.rawImageUrl || finalLoadedUrl,
           prompt: activePrompt,
           enhancedPrompt: data.enhancedPrompt,
           engine: activeEngine,

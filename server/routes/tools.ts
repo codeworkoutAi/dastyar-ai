@@ -1,7 +1,7 @@
 import express from 'express';
 import { Modality } from '@google/genai';
 import db from '../db/database';
-import { isSafeBaseUrl, getGeminiClient, sanitizeErrorMessage, getPollinationsImageUrl, translateAndEnhanceImagePrompt } from '../services/utils';
+import { isSafeBaseUrl, getGeminiClient, sanitizeErrorMessage, getPollinationsImageUrl, translateAndEnhanceImagePrompt, generatePollinationsImage } from '../services/utils';
 import { aiRouteLimiter } from '../middleware/rateLimiter';
 
 const router = express.Router();
@@ -306,11 +306,9 @@ router.post('/api/generate-image', aiRouteLimiter, async (req, res) => {
       throw new Error('خطا در دریافت تصویر از Imagen 3');
     }
 
-    const rawImageUrl = getPollinationsImageUrl(enhancedPrompt, aspectRatio, engine);
-    console.log('[ImageGen API] ✅ Image generated successfully URL:', rawImageUrl);
-    // Use secure proxy URL by default to avoid Iranian ISP cipher mismatches & filtering
-    const imageUrl = `/api/proxy-image?url=${encodeURIComponent(rawImageUrl)}`;
-    res.json({ imageUrl, rawImageUrl, enhancedPrompt });
+    const { dataUrl, rawUrl } = await generatePollinationsImage(enhancedPrompt, aspectRatio, engine);
+    console.log('[ImageGen API] ✅ Image generated successfully via high-speed POST:', rawUrl);
+    res.json({ imageUrl: dataUrl, rawImageUrl: rawUrl, enhancedPrompt });
   } catch (err: any) {
     console.error('[ImageGen API] 💥 Error in image generation:', err);
     res.status(500).json({ error: sanitizeErrorMessage(err) });
