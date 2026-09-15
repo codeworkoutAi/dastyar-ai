@@ -128,6 +128,8 @@ export function getPollinationsImageUrl(prompt: string, aspectRatio = '1:1', eng
     styledPrompt = `${prompt}, fast rendering, high quality, crisp focus`;
   } else if (engine === 'sana') {
     styledPrompt = `${prompt}, ultra high resolution, highly detailed, photorealistic, pristine quality`;
+  } else if (engine === 'albedobase-xl') {
+    styledPrompt = `${prompt}, photorealistic, 8k uhd, highly detailed, realistic skin texture, cinematic lighting`;
   }
 
   const encoded = encodeURIComponent(styledPrompt);
@@ -140,6 +142,7 @@ export function getPollinationsImageUrl(prompt: string, aspectRatio = '1:1', eng
   else if (engine === 'flux-anime') modelParam = 'flux-anime';
   else if (engine === 'flux-3d') modelParam = 'flux-3d';
   else if (engine === 'sana') modelParam = 'sana';
+  else if (engine === 'albedobase-xl') modelParam = 'albedobase-xl';
   else if (engine === 'flux') modelParam = 'flux-realism';
 
   return `https://image.pollinations.ai/prompt/${encoded}?width=${dimW}&height=${dimH}&model=${modelParam}&nologo=true&seed=${Math.floor(Math.random() * 10000000)}`;

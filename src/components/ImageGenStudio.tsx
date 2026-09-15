@@ -34,6 +34,7 @@ interface ImageHistory {
 
 const IMAGE_ENGINES = [
   { id: 'flux', name: 'Flux.1 Realism (Pro)', tag: 'فوق‌واقع‌گرایانه', desc: 'خروجی فوق‌العاده باکیفیت، طبیعی و پرجزئیات نسل جدید فلوکس', tier: 'free' },
+  { id: 'albedobase-xl', name: 'AlbedoBase XL (SDXL)', tag: 'واقع‌گرایانه SDXL', desc: 'مدل برتر SDXL برای چهره‌پردازی، پرتره‌های طبیعی و بافت سینمایی', tier: 'free' },
   { id: 'sana', name: 'Sana (NVIDIA 1.0)', tag: 'فوق‌سریع ۴K', desc: 'مدل انقلابی انویدیا با معماری خطی، سرعت آنی و وضوح فوق‌العاده', tier: 'free' },
   { id: 'turbo', name: 'SDXL Turbo v2', tag: 'آنی', desc: 'تولید سریع و بدون وقفه تصاویر در یک مرحله', tier: 'free' },
   { id: 'flux-anime', name: 'Flux Anime & Art', tag: 'انیمه و هنر', desc: 'طراحی تخصصی سبک انیمه ژاپنی، فانتزی و تصویرگری دیجیتال', tier: 'free' },
