@@ -504,7 +504,7 @@ export const ChatBox: React.FC = React.memo(() => {
                               isRtlText(msg.content) ? 'text-right' : 'text-left'
                             }`}
                             dir={isRtlText(msg.content) ? 'rtl' : 'ltr'}
-                            style={{ unicodeBidi: 'isolate' }}
+                            style={{ unicodeBidi: 'isolate', fontSize: 'var(--chat-font-size)' }}
                           >
                             {msg.content}
                           </div>
@@ -642,20 +642,15 @@ export const ChatBox: React.FC = React.memo(() => {
                       )}
 
                       {isUser && !isStreaming && (
-                        <Tooltip content="ویرایش و ارسال مجدد">
+                        <Tooltip content="بازگشت متن به کادر پیام">
                           <button
                             onClick={() => {
-                              setEditingMessageId(msg.id);
-                              setEditingText(msg.content);
+                              window.dispatchEvent(new CustomEvent('set-chat-input-text', { detail: { text: msg.content } }));
                             }}
-                            className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
-                              editingMessageId === msg.id
-                                ? 'text-sky-400 bg-sky-500/15'
-                                : 'text-zinc-700 dark:text-zinc-400 hover:text-zinc-900 dark:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-700/80'
-                            }`}
-                            aria-label="ویرایش پیام"
+                            className="p-1.5 rounded-lg text-zinc-700 dark:text-zinc-400 hover:text-sky-500 dark:hover:text-sky-400 hover:bg-sky-500/10 dark:hover:bg-sky-500/10 transition-colors cursor-pointer"
+                            aria-label="بازگشت متن به کادر پیام"
                           >
-                            <PenLinearIcon className="w-4 h-4" />
+                            <RestartLinearIcon className="w-4 h-4" />
                           </button>
                         </Tooltip>
                       )}

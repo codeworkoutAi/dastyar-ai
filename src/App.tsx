@@ -61,6 +61,7 @@ export default function App() {
     }
     root.setAttribute('data-font', settings.appearance.font);
     root.style.fontSize = settings.appearance.fontSize + 'px';
+    root.style.setProperty('--chat-font-size', settings.appearance.fontSize + 'px');
     root.dir = direction;
   }, [isDarkMode, settings.appearance.font, settings.appearance.fontSize, direction]);
 

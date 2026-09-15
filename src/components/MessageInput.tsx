@@ -154,6 +154,27 @@ export const MessageInput: React.FC = React.memo(() => {
     }
   }, [text]);
 
+  // Listen for return-to-input events from chat messages
+  useEffect(() => {
+    const handleSetInputText = (e: CustomEvent<{ text: string }>) => {
+      if (e.detail?.text) {
+        setText(e.detail.text);
+        setTimeout(() => {
+          if (textareaRef.current) {
+            textareaRef.current.focus();
+            textareaRef.current.style.height = 'auto';
+            textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 180)}px`;
+            textareaRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+        }, 50);
+      }
+    };
+    window.addEventListener('set-chat-input-text' as any, handleSetInputText);
+    return () => {
+      window.removeEventListener('set-chat-input-text' as any, handleSetInputText);
+    };
+  }, []);
+
   const formatFileSize = (bytes: number) => {
     if (bytes < 1024) return bytes + ' B';
     if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
@@ -670,23 +691,27 @@ export const MessageInput: React.FC = React.memo(() => {
     }
 
     if (e.key === 'Enter') {
-      if (!e.shiftKey) {
-        e.preventDefault();
-        if (slashMenuOpen) {
-          const filtered = slashCommands.filter(c => c.cmd.startsWith(slashQuery));
-          if (filtered.length > 0) {
-             const match = filtered[0];
-             const words = text.split(' ');
-             words.pop();
-             setText(words.join(' ') + (words.length > 0 ? ' ' : '') + match.text);
-             setSlashMenuOpen(false);
-             return;
-          }
-        }
-        if (enterToSend) {
-          handleSend();
+      if (slashMenuOpen) {
+        const filtered = slashCommands.filter(c => c.cmd.startsWith(slashQuery));
+        if (filtered.length > 0) {
+          e.preventDefault();
+          const match = filtered[0];
+          const words = text.split(' ');
+          words.pop();
+          setText(words.join(' ') + (words.length > 0 ? ' ' : '') + match.text);
+          setSlashMenuOpen(false);
+          return;
         }
       }
+
+      // Shortcut: Ctrl+Enter or Cmd+Enter allows quick desktop send
+      if (e.ctrlKey || e.metaKey) {
+        e.preventDefault();
+        handleSend();
+        return;
+      }
+
+      // Natural Enter: creates a new line smoothly without sending!
     }
   };
 

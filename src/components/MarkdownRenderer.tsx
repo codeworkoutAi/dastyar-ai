@@ -480,7 +480,7 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = React.memo(({
         isStreaming ? 'streaming-cursor' : ''
       }`}
       dir={isOverallRtl ? 'rtl' : 'ltr'}
-      style={{ unicodeBidi: 'isolate' }}
+      style={{ unicodeBidi: 'isolate', fontSize: 'var(--chat-font-size)' }}
     >
       <ReactMarkdown
         remarkPlugins={[remarkGfm, remarkMath, remarkBreaks]}

@@ -706,27 +706,28 @@ img.emoji {
 
 /* Optimize heading sizes for Persian typography (Vazirmatn/Mikhak) */
 .markdown-body h1, .prose h1 {
-  font-size: 1.0rem !important;
+  font-size: 1.25em !important;
   line-height: 1.4 !important;
   margin-top: 1.1em !important;
   margin-bottom: 0.5em !important;
 }
 .markdown-body h2, .prose h2 {
-  font-size: 0.95rem !important;
+  font-size: 1.15em !important;
   line-height: 1.4 !important;
   margin-top: 1em !important;
   margin-bottom: 0.4em !important;
 }
 .markdown-body h3, .prose h3 {
-  font-size: 0.9rem !important;
+  font-size: 1.05em !important;
   line-height: 1.5 !important;
   margin-top: 0.9em !important;
   margin-bottom: 0.3em !important;
 }
 .markdown-body h4, .prose h4 {
-  font-size: 0.85rem !important;
+  font-size: 0.95em !important;
   line-height: 1.5 !important;
 }
+
 
 
 .markdown-body pre,
