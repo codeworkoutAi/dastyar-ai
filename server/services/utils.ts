@@ -154,7 +154,7 @@ export interface PollinationsImageResult {
   rawUrl: string;
 }
 
-// Ultra-fast direct image generator using Pollinations POST JSON API
+// Ultra-fast direct image generator using Pollinations API on the server side
 export async function generatePollinationsImage(
   prompt: string,
   aspectRatio: string = '1:1',
@@ -186,36 +186,25 @@ export async function generatePollinationsImage(
   else if (engine === 'flux') modelParam = 'flux-realism';
 
   const seed = Math.floor(Math.random() * 10000000);
-  const rawUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(styledPrompt)}?width=${dimW}&height=${dimH}&model=${modelParam}&nologo=true&seed=${seed}`;
+  const encodedPrompt = encodeURIComponent(styledPrompt);
+  
+  // Base raw URL for reference
+  const rawUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=${dimW}&height=${dimH}&model=${modelParam}&nologo=true&seed=${seed}`;
 
-  // Candidate models for automatic failover if the selected model encounters high load
-  const candidateModels = [modelParam];
-  if (modelParam !== 'flux-realism') candidateModels.push('flux-realism');
-  if (modelParam !== 'flux') candidateModels.push('flux');
-  if (modelParam !== 'sana') candidateModels.push('sana');
-
-  for (const currentModel of candidateModels) {
+  // Helper to attempt a single model fetch with timeout
+  const tryModel = async (model: string, timeoutMs: number): Promise<PollinationsImageResult> => {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), timeoutMs);
+    const targetUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=${dimW}&height=${dimH}&model=${model}&nologo=true&seed=${seed}`;
+    
     try {
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 25000);
-
-      const res = await fetch('https://image.pollinations.ai/', {
-        method: 'POST',
+      const res = await fetch(targetUrl, {
+        method: 'GET',
         signal: controller.signal,
         headers: {
-          'Content-Type': 'application/json',
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-        },
-        body: JSON.stringify({
-          prompt: styledPrompt,
-          model: currentModel,
-          width: dimW,
-          height: dimH,
-          seed,
-          nologo: true,
-        }),
+        }
       });
-
       clearTimeout(timeout);
 
       if (res.ok) {
@@ -225,39 +214,35 @@ export async function generatePollinationsImage(
           const base64 = Buffer.from(buffer).toString('base64');
           return {
             dataUrl: `data:${contentType};base64,${base64}`,
-            rawUrl,
+            rawUrl: targetUrl,
           };
         }
-      } else {
-        console.warn(`[Pollinations POST] Model ${currentModel} returned HTTP ${res.status}`);
       }
+      throw new Error(`Model ${model} returned HTTP ${res.status} or tiny response`);
     } catch (err: any) {
-      console.warn(`[Pollinations POST] Error with model ${currentModel}:`, err?.message || err);
+      clearTimeout(timeout);
+      throw err;
     }
-  }
+  };
 
-  // Fallback: If POST fails completely, try direct GET on server
+  // Pick a single fallback model (different from primary)
+  const fallbackModel = modelParam === 'flux-realism' ? 'sana' : 'flux-realism';
+
+  // Strategy: Race primary model (18s timeout) against fallback (delayed start after 12s)
+  // This gives the primary model a fair chance while starting fallback early if it's slow
   try {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 20000);
-    const getRes = await fetch(rawUrl, {
-      signal: controller.signal,
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-      },
-    });
-    clearTimeout(timeout);
-    if (getRes.ok) {
-      const buffer = await getRes.arrayBuffer();
-      const contentType = getRes.headers.get('content-type') || 'image/jpeg';
-      const base64 = Buffer.from(buffer).toString('base64');
-      return {
-        dataUrl: `data:${contentType};base64,${base64}`,
-        rawUrl,
-      };
-    }
-  } catch (getErr) {
-    console.warn('[Pollinations GET Fallback] Failed:', getErr);
+    const result = await Promise.any([
+      tryModel(modelParam, 18000),
+      new Promise<PollinationsImageResult>((resolve, reject) => {
+        // Give primary 12s head start before trying fallback
+        setTimeout(() => {
+          tryModel(fallbackModel, 15000).then(resolve).catch(reject);
+        }, 12000);
+      }),
+    ]);
+    return result;
+  } catch (aggregateErr: any) {
+    console.warn('[Pollinations] All model attempts failed:', aggregateErr?.errors?.map((e: any) => e?.message) || aggregateErr?.message);
   }
 
   throw new Error('سرور تولید تصویر در حال حاضر پاسخگو نیست. لطفاً مجدداً امتحان کنید.');

@@ -299,12 +299,22 @@ export function ImageGenStudio() {
       setHistory(newHistory);
       localStorage.setItem('image_gen_history', JSON.stringify(newHistory));
     } catch (quotaErr) {
-      console.warn('[ImageGenStudio] LocalStorage quota exceeded, keeping in-memory only');
+      console.warn('[ImageGenStudio] LocalStorage quota exceeded, stripping older base64 images');
       try {
-        const trimmed = [item, ...history].slice(0, 15);
+        // Keep newest items with full base64, strip older ones to save quota
+        const trimmed = [item, ...history].slice(0, 20).map((h, idx) => {
+          if (idx > 8 && h.url.startsWith('data:') && h.url.length > 5000) {
+            return { ...h, url: '' }; // Strip heavy base64 from older items
+          }
+          return h;
+        });
         setHistory(trimmed);
         localStorage.setItem('image_gen_history', JSON.stringify(trimmed));
-      } catch {}
+      } catch {
+        // Last resort: keep only in-memory
+        const minimal = [item, ...history].slice(0, 8);
+        setHistory(minimal);
+      }
     }
   };
 
@@ -441,8 +451,10 @@ export function ImageGenStudio() {
         // Preload image in memory with fallback retry before showing
         const finalLoadedUrl = await preloadImage(data.imageUrl);
         setImageUrl(finalLoadedUrl);
+        // Always store the base64 data URL in gallery history to ensure reliable display
+        // (raw Pollinations URLs would generate NEW images on each load, breaking gallery)
         saveHistory({
-          url: data.rawImageUrl || finalLoadedUrl,
+          url: finalLoadedUrl,
           prompt: activePrompt,
           enhancedPrompt: data.enhancedPrompt,
           engine: activeEngine,
@@ -869,12 +881,21 @@ export function ImageGenStudio() {
                           onClick={() => setSelectedDetailImage(item)}
                           className="group relative aspect-square rounded-2xl sm:rounded-3xl overflow-hidden bg-zinc-200 dark:bg-zinc-800 cursor-pointer border border-zinc-200/80 dark:border-white/10 shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
                         >
-                          <img 
-                            src={toSafeImageUrl(item.url)} 
-                            alt={item.prompt} 
-                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" 
-                            loading="lazy" 
-                          />
+                          {item.url ? (
+                            <img 
+                              src={toSafeImageUrl(item.url)} 
+                              alt={item.prompt} 
+                              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" 
+                              loading="lazy" 
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center bg-zinc-100 dark:bg-zinc-900">
+                              <div className="text-center p-3">
+                                <ImageIcon className="w-8 h-8 text-zinc-400 mx-auto mb-1" />
+                                <p className="text-[10px] text-zinc-500 line-clamp-2">{item.prompt}</p>
+                              </div>
+                            </div>
+                          )}
                           
                           {/* Permanent Badges (Corner Tags) */}
                           <div className="absolute top-2.5 right-2.5 flex items-center gap-1.5 z-10 pointer-events-none">

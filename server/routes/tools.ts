@@ -307,7 +307,7 @@ router.post('/api/generate-image', aiRouteLimiter, async (req, res) => {
     }
 
     const { dataUrl, rawUrl } = await generatePollinationsImage(enhancedPrompt, aspectRatio, engine);
-    console.log('[ImageGen API] ✅ Image generated successfully via high-speed POST:', rawUrl);
+    console.log('[ImageGen API] ✅ Image generated successfully:', rawUrl);
     res.json({ imageUrl: dataUrl, rawImageUrl: rawUrl, enhancedPrompt });
   } catch (err: any) {
     console.error('[ImageGen API] 💥 Error in image generation:', err);
