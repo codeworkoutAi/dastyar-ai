@@ -219,6 +219,12 @@ export const LandingPage: React.FC = () => {
   const [gallerySlide, setGallerySlide] = useState<number>(0);
   const [isGalleryPaused, setIsGalleryPaused] = useState<boolean>(false);
 
+  // 3D Spotlight Professions Stage State & Typewriter
+  const [activeProfessionIdx, setActiveProfessionIdx] = useState<number>(0);
+  const [isProfessionsPaused, setIsProfessionsPaused] = useState<boolean>(false);
+  const [typedPrompt, setTypedPrompt] = useState<string>('');
+  const [copiedProfessionPrompt, setCopiedProfessionPrompt] = useState<boolean>(false);
+
   // Comprehensive FAQ list (10 rich, practical questions)
   const faqs = [
     {
@@ -532,6 +538,47 @@ export const LandingPage: React.FC = () => {
     }, 3800);
     return () => clearInterval(timer);
   }, [isGalleryPaused, dynamicGallery]);
+
+  // Typewriter effect for active profession prompt
+  useEffect(() => {
+    const list = dynamicProfessions && dynamicProfessions.length > 0 ? dynamicProfessions : professionCards;
+    const currentCard = list[activeProfessionIdx] || list[0];
+    if (!currentCard?.prompt) return;
+    const fullText = currentCard.prompt;
+    setTypedPrompt('');
+    setCopiedProfessionPrompt(false);
+
+    let i = 0;
+    const step = Math.max(1, Math.floor(fullText.length / 35));
+    const timer = setInterval(() => {
+      i += step;
+      if (i >= fullText.length) {
+        setTypedPrompt(fullText);
+        clearInterval(timer);
+      } else {
+        setTypedPrompt(fullText.slice(0, i));
+      }
+    }, 25);
+
+    return () => clearInterval(timer);
+  }, [activeProfessionIdx, dynamicProfessions]);
+
+  // Auto-play interval for Professions Spotlight Stage
+  useEffect(() => {
+    if (isProfessionsPaused) return;
+    const list = dynamicProfessions && dynamicProfessions.length > 0 ? dynamicProfessions : professionCards;
+    if (!list || list.length <= 1) return;
+    const timer = setInterval(() => {
+      setActiveProfessionIdx((prev) => (prev + 1) % list.length);
+    }, 5500);
+    return () => clearInterval(timer);
+  }, [isProfessionsPaused, dynamicProfessions]);
+
+  const copyProfessionPrompt = (text: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedProfessionPrompt(true);
+    setTimeout(() => setCopiedProfessionPrompt(false), 2500);
+  };
 
   const copyPromptToClipboard = (text: string, index: number) => {
     navigator.clipboard.writeText(text);
@@ -956,66 +1003,187 @@ export const LandingPage: React.FC = () => {
           </p>
         </div>
 
-        {/* Dynamic Fluid Intrinsic Grid + Touch Scroll-Snap on Mobile */}
-        <div 
-          className="flex sm:grid gap-6 overflow-x-auto sm:overflow-x-visible pb-4 sm:pb-0 scrollbar-none snap-x snap-mandatory"
-          style={{
-            gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 320px), 1fr))'
-          }}
-        >
-          {dynamicProfessions.map((card, idx) => {
-            const Icon = (typeof card.icon === 'string' ? ICON_MAP[card.icon] : card.icon) || GraduationCap;
-            const accent = getAccentStyles(card.accentColor);
-            return (
-              <div
-                key={card.id || idx}
-                className="min-w-[85vw] sm:min-w-0 snap-center clay-card-thick overflow-hidden transition-all duration-300 flex flex-col justify-between hover:-translate-y-1.5"
-              >
-                <div>
-                  {/* Clean Visual Banner with Puffy Rounded Frame */}
-                  <div className="relative aspect-[16/10] overflow-hidden m-3 rounded-2xl bg-[#eef1f6] dark:bg-[#151923] shadow-inner">
-                    <img
-                      src={card.image}
-                      alt={card.title}
-                      className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
-                      loading="lazy"
-                    />
-                    <div 
-                      className="absolute top-2.5 right-2.5 px-3 py-1 rounded-full text-[10px] font-bold backdrop-blur-md flex items-center gap-1.5 clay-pill-thick bg-black/60 text-white"
+        {/* ---------------- 3D Spotlight Stage with Typewriter Animated Prompts ---------------- */}
+        {(() => {
+          const professionList = dynamicProfessions && dynamicProfessions.length > 0 ? dynamicProfessions : professionCards;
+          const currentProfession = professionList[activeProfessionIdx] || professionList[0];
+          const CurrentIcon = (typeof currentProfession.icon === 'string' ? ICON_MAP[currentProfession.icon] : currentProfession.icon) || GraduationCap;
+
+          return (
+            <div className="space-y-6">
+              {/* Category Quick Selector Bar (Puffy Clay Pills) */}
+              <div className="flex items-center justify-start sm:justify-center gap-2 overflow-x-auto pb-2 scrollbar-none px-1">
+                {professionList.map((p, idx) => {
+                  const Icon = (typeof p.icon === 'string' ? ICON_MAP[p.icon] : p.icon) || GraduationCap;
+                  const isActive = activeProfessionIdx === idx;
+                  return (
+                    <button
+                      key={p.id || idx}
+                      type="button"
+                      onClick={() => setActiveProfessionIdx(idx)}
+                      className={`inline-flex items-center gap-2 px-4 py-2 rounded-2xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap active:scale-95 ${
+                        isActive
+                          ? 'clay-btn-primary-thick text-white shadow-lg scale-105'
+                          : 'clay-btn-thick text-[#525d75] dark:text-[#9aa5bc] hover:text-[#0f1420] dark:hover:text-white'
+                      }`}
                     >
-                      <Icon className="w-3 h-3" />
-                      <span>{card.badge}</span>
+                      <Icon className="w-3.5 h-3.5" />
+                      <span>{p.badge}</span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Main 3D Spotlight Stage Card */}
+              <div
+                className="relative clay-card-elevated p-6 sm:p-8 rounded-[32px] overflow-hidden transition-all duration-500 hover:shadow-2xl"
+                onMouseEnter={() => setIsProfessionsPaused(true)}
+                onMouseLeave={() => setIsProfessionsPaused(false)}
+                onTouchStart={() => setIsProfessionsPaused(true)}
+                onTouchEnd={() => setIsProfessionsPaused(false)}
+              >
+                {/* Stage Header with Navigation Buttons */}
+                <div className="flex items-center justify-between gap-4 mb-6">
+                  <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full clay-pill-thick bg-blue-500/10 text-blue-600 dark:text-blue-400 text-xs font-bold">
+                    <CurrentIcon className="w-4 h-4" />
+                    <span>تخصص انتخابی: {currentProfession.badge}</span>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setActiveProfessionIdx((prev) => (prev - 1 + professionList.length) % professionList.length)}
+                      className="w-10 h-10 rounded-2xl clay-btn-thick flex items-center justify-center text-[#0f1420] dark:text-white transition-all cursor-pointer active:scale-95 shadow-sm"
+                      aria-label="تخصص قبلی"
+                      title="تخصص قبلی"
+                    >
+                      <ChevronRight className="w-5 h-5" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setActiveProfessionIdx((prev) => (prev + 1) % professionList.length)}
+                      className="w-10 h-10 rounded-2xl clay-btn-thick flex items-center justify-center text-[#0f1420] dark:text-white transition-all cursor-pointer active:scale-95 shadow-sm"
+                      aria-label="تخصص بعدی"
+                      title="تخصص بعدی"
+                    >
+                      <ChevronLeft className="w-5 h-5" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Grid inside Spotlight Card */}
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 items-center">
+                  {/* Preserved Visual Frame Image */}
+                  <div className="lg:col-span-5 relative">
+                    <div className="relative aspect-[16/11] overflow-hidden rounded-[24px] bg-[#eef1f6] dark:bg-[#151923] shadow-inner clay-card-thick p-1">
+                      <img
+                        key={currentProfession.image}
+                        src={currentProfession.image}
+                        alt={currentProfession.title}
+                        className="w-full h-full object-cover rounded-[20px] transition-all duration-700 hover:scale-105"
+                        loading="lazy"
+                      />
                     </div>
                   </div>
 
-                  {/* Card Content */}
-                  <div className="p-5 pt-2 space-y-2.5">
-                    <h3
-                      className="font-bold text-sm sm:text-base text-[#0f1420] dark:text-white"
-                      style={{ fontFamily: "'Estedad', sans-serif" }}
-                    >
-                      {card.title}
-                    </h3>
-                    <p className="text-xs text-[#525d75] dark:text-[#9aa5bc] leading-relaxed">
-                      {card.desc}
-                    </p>
+                  {/* Content & Typewriter Animated Prompt */}
+                  <div className="lg:col-span-7 space-y-4">
+                    <div>
+                      <h3
+                        className="text-xl sm:text-2xl font-black text-[#0f1420] dark:text-white tracking-tight mb-2"
+                        style={{ fontFamily: "'Estedad', sans-serif" }}
+                      >
+                        {currentProfession.title}
+                      </h3>
+                      <p className="text-xs sm:text-sm text-[#525d75] dark:text-[#9aa5bc] leading-relaxed">
+                        {currentProfession.desc}
+                      </p>
+                    </div>
+
+                    {/* Typewriter Prompt Inset Box */}
+                    <div className="clay-inset-thick p-4 sm:p-5 rounded-2xl space-y-2.5">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2 text-xs font-bold text-[#2563eb] dark:text-[#60a5fa]">
+                          <Sparkles className="w-3.5 h-3.5 animate-pulse" />
+                          <span>پرامپت تخصصی آماده برای آزمایش:</span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => copyProfessionPrompt(currentProfession.prompt)}
+                          className="inline-flex items-center gap-1.5 text-[11px] font-bold clay-btn-thick px-3 py-1 rounded-xl text-[#525d75] dark:text-[#9aa5bc] hover:text-[#0f1420] dark:hover:text-white transition-all cursor-pointer"
+                        >
+                          {copiedProfessionPrompt ? (
+                            <>
+                              <Check className="w-3 h-3 text-[#10b981]" />
+                              <span className="text-[#10b981] font-bold">کپی شد!</span>
+                            </>
+                          ) : (
+                            <>
+                              <Copy className="w-3 h-3" />
+                              <span>کپی پرامپت</span>
+                            </>
+                          )}
+                        </button>
+                      </div>
+
+                      {/* Typewriter text with blinking cursor */}
+                      <div className="min-h-[64px] sm:min-h-[72px] bg-black/5 dark:bg-white/5 p-3 rounded-xl border border-black/5 dark:border-white/5">
+                        <p className="text-xs sm:text-sm font-mono text-[#0f1420] dark:text-white leading-relaxed select-all">
+                          <span>{typedPrompt}</span>
+                          <span className="inline-block w-1.5 h-4 bg-[#2563eb] dark:bg-[#60a5fa] ms-1 animate-pulse align-middle" />
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Action Button: Directly Send Prompt to Chat */}
+                    <div className="pt-2">
+                      <Link
+                        to={`/chat?prompt=${encodeURIComponent(currentProfession.prompt)}`}
+                        className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-6 py-3.5 rounded-2xl clay-btn-primary-thick text-sm font-bold text-white shadow-xl hover:brightness-110 active:scale-95 transition-all"
+                      >
+                        <span>شروع گفتگو و آزمایش این پرامپت در چت‌باکس</span>
+                        <ArrowLeft className="w-4 h-4" />
+                      </Link>
+                    </div>
                   </div>
                 </div>
-
-                {/* Card Action Link */}
-                <div className="p-5 pt-0">
-                  <Link
-                    to={`/chat?prompt=${encodeURIComponent(card.prompt)}`}
-                    className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl clay-btn-thick text-xs font-bold transition-all text-[#0f1420] dark:text-white active:scale-95 cursor-pointer"
-                  >
-                    <span>شروع گفتگو</span>
-                    <ArrowLeft className="w-3.5 h-3.5 text-[#2563eb] dark:text-[#60a5fa]" />
-                  </Link>
-                </div>
               </div>
-            );
-          })}
-        </div>
+
+              {/* Bottom Miniature Cards Grid (Quick Jump to any of the 6 Professions) */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+                {professionList.map((p, idx) => {
+                  const isActive = activeProfessionIdx === idx;
+                  return (
+                    <button
+                      key={p.id || idx}
+                      type="button"
+                      onClick={() => setActiveProfessionIdx(idx)}
+                      className={`p-2 rounded-2xl transition-all duration-300 text-right cursor-pointer flex items-center gap-2.5 active:scale-95 ${
+                        isActive
+                          ? 'clay-card-elevated border-2 border-[#2563eb] dark:border-[#60a5fa] scale-102 shadow-md'
+                          : 'clay-card-thick opacity-70 hover:opacity-100'
+                      }`}
+                    >
+                      <img
+                        src={p.image}
+                        alt={p.title}
+                        className="w-10 h-10 rounded-xl object-cover shrink-0"
+                      />
+                      <div className="overflow-hidden">
+                        <span className="block text-[11px] font-bold text-[#0f1420] dark:text-white truncate">
+                          {p.badge}
+                        </span>
+                        <span className="block text-[9px] text-[#717b91] truncate">
+                          مشاهده پرامپت
+                        </span>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })()}
       </section>
 
       {/* ---------------- 4. Hyperrealistic Image Gallery Showcase (ANIMATED 3D CLAY CAROUSEL) ---------------- */}
