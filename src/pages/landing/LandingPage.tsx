@@ -698,7 +698,7 @@ export const LandingPage: React.FC = () => {
       {/* ---------------- 2. Hero Section (Thick 3D Claymorphism) ---------------- */}
       <section className="pt-12 pb-16 sm:pt-20 sm:pb-24 px-4 sm:px-6 max-w-5xl mx-auto flex flex-col items-center text-center">
         {/* Top Feature Pill */}
-        <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full clay-pill-thick bg-white/90 dark:bg-[#141824]/90 text-xs font-bold mb-6">
+        <div className="reveal-pop inline-flex items-center gap-2.5 px-4 py-2 rounded-full clay-pill-thick bg-white/90 dark:bg-[#141824]/90 text-xs font-bold mb-6">
           <span className="w-2.5 h-2.5 rounded-full bg-[#10b981] animate-pulse" />
           <span className="text-[#0f1420] dark:text-[#e4e7ee]">
             {dynamicHero?.featurePill || `${toPersianDigits('50,000')} تومان اعتبار نقدی هدیه | بدون نیاز به فیلترشکن و پرداخت ریالی`}
@@ -707,7 +707,7 @@ export const LandingPage: React.FC = () => {
 
         {/* Headline (Refined, Proportional Typography) */}
         <h1
-          className="text-2xl sm:text-3xl md:text-5xl font-black text-[#0f1420] dark:text-white leading-[1.3] max-w-2xl mb-4"
+          className="reveal-init stagger-1 text-2xl sm:text-3xl md:text-5xl font-black text-[#0f1420] dark:text-white leading-[1.3] max-w-2xl mb-4"
           style={{ fontFamily: "'Estedad', sans-serif" }}
         >
           {dynamicHero?.title || (
@@ -719,12 +719,12 @@ export const LandingPage: React.FC = () => {
         </h1>
 
         {/* Subtitle */}
-        <p className="text-xs sm:text-sm text-[#525d75] dark:text-[#9aa5bc] max-w-xl font-normal leading-relaxed mb-8">
+        <p className="reveal-init stagger-2 text-xs sm:text-sm text-[#525d75] dark:text-[#9aa5bc] max-w-xl font-normal leading-relaxed mb-8">
           {dynamicHero?.subtitle || 'بدون نیاز به خرید اشتراک‌های ماهانه دلاری یا دغدغه فیلترشکن؛ با پرچمداران Claude 3.5، GPT-4o و Gemini به فارسی گفتگو کنید و هزینه را به اندازه مصرف واقعی به تومان بپردازید.'}
         </p>
 
         {/* Action CTAs */}
-        <div className="flex flex-col sm:flex-row items-center gap-3.5 w-full sm:w-auto mb-10 sm:mb-12">
+        <div className="reveal-init stagger-3 flex flex-col sm:flex-row items-center gap-3.5 w-full sm:w-auto mb-10 sm:mb-12">
           <Link
             to={dynamicHero?.primaryBtnLink || '/chat'}
             className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl clay-btn-primary-thick font-black text-xs sm:text-sm shadow-xl transition-all group active:scale-95 cursor-pointer"
@@ -743,7 +743,7 @@ export const LandingPage: React.FC = () => {
         </div>
 
         {/* Hero Visual Mockup Console (Sculpted Thick Clay) */}
-        <div className="w-full max-w-4xl clay-card-elevated overflow-hidden text-right">
+        <div className="reveal-init stagger-2 w-full max-w-4xl clay-card-elevated overflow-hidden text-right">
           {/* Top Console Bar */}
           <div className="flex flex-wrap items-center justify-between gap-3 px-5 sm:px-7 py-3.5 border-b border-black/5 dark:border-white/5 bg-white/40 dark:bg-black/20 backdrop-blur-xs">
             <div className="flex items-center gap-2">
@@ -820,7 +820,7 @@ export const LandingPage: React.FC = () => {
 
       {/* ---------------- 3. Bento Grid: Visual Features (Thick 3D Claymorphic) ---------------- */}
       <section id="models" className="py-16 sm:py-20 px-4 sm:px-6 max-w-6xl mx-auto border-t border-black/5 dark:border-white/5">
-        <div className="text-center max-w-2xl mx-auto mb-12 sm:mb-16">
+        <div className="reveal-init text-center max-w-2xl mx-auto mb-12 sm:mb-16">
           <h2
             className="text-2xl sm:text-4xl font-black text-[#0f1420] dark:text-white tracking-tight mb-3"
             style={{ fontFamily: "'Estedad', sans-serif" }}
@@ -932,7 +932,7 @@ export const LandingPage: React.FC = () => {
       {/* ---------------- 3.5. Manifesto & Targeted Professions ---------------- */}
       <section id="manifesto" className="py-16 sm:py-20 px-4 sm:px-6 max-w-6xl mx-auto border-t border-black/5 dark:border-white/5">
         {/* Dignified Manifesto Header & Content */}
-        <div className="clay-card-elevated p-6 sm:p-10 mb-14">
+        <div className="reveal-init clay-card-elevated p-6 sm:p-10 mb-14">
           <div className="max-w-3xl">
             <span className="inline-block px-3.5 py-1 rounded-full clay-pill-thick text-[11px] font-bold bg-blue-500/10 text-blue-600 dark:text-blue-400 mb-3.5">
               {dynamicManifesto?.badge || 'بیانیه شفافیت و فلسفه طراحی'}
@@ -988,7 +988,7 @@ export const LandingPage: React.FC = () => {
         </div>
 
         {/* 6 Targeted Professions & Ready-to-Test Prompts (IMAGES PRESERVED) */}
-        <div className="text-center max-w-2xl mx-auto mb-10 sm:mb-12">
+        <div className="reveal-init text-center max-w-2xl mx-auto mb-10 sm:mb-12">
           <span className="text-xs font-bold text-[#717b91] uppercase tracking-widest block mb-1">
             TARGET AUDIENCE & USE CASES
           </span>
@@ -1191,7 +1191,7 @@ export const LandingPage: React.FC = () => {
         const galleryList = (dynamicGallery && dynamicGallery.length > 0) ? dynamicGallery : galleryImages;
         return (
           <section id="gallery" className="py-16 sm:py-20 px-4 sm:px-6 max-w-6xl mx-auto border-t border-black/5 dark:border-white/5">
-            <div className="flex flex-col md:flex-row items-start md:items-end justify-between gap-4 mb-8 sm:mb-10">
+            <div className="reveal-init flex flex-col md:flex-row items-start md:items-end justify-between gap-4 mb-8 sm:mb-10">
               <div>
                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full clay-pill-thick text-[10px] font-bold bg-blue-500/10 text-blue-600 dark:text-blue-400 mb-2">
                   <Sparkles className="w-3 h-3" />
@@ -1525,7 +1525,7 @@ export const LandingPage: React.FC = () => {
 
         {/* Custom Amount Top-up Banner in Clay */}
         {dynamicPricingHeader?.customTopupBanner?.enabled !== false && (
-          <div className="mt-10 p-6 sm:p-8 rounded-3xl clay-card-thick max-w-3xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-6 transition-all">
+          <div className="reveal-pop mt-10 p-6 sm:p-8 rounded-3xl clay-card-thick max-w-3xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-6 transition-all">
             <div className="flex items-center gap-4 text-right">
               <div className="w-12 h-12 rounded-2xl clay-btn-emerald-thick flex items-center justify-center shrink-0 shadow-md">
                 <Coins className="w-6 h-6" />
@@ -1558,7 +1558,7 @@ export const LandingPage: React.FC = () => {
         )}
 
         {/* Security & Instant Credit Note in Sculpted Clay */}
-        <div className="mt-8 p-4 rounded-2xl clay-card-thick max-w-2xl mx-auto flex flex-col sm:flex-row items-center justify-center gap-4 text-xs font-bold text-[#525d75] dark:text-[#9aa5bc]">
+        <div className="reveal-init mt-8 p-4 rounded-2xl clay-card-thick max-w-2xl mx-auto flex flex-col sm:flex-row items-center justify-center gap-4 text-xs font-bold text-[#525d75] dark:text-[#9aa5bc]">
           <div className="flex items-center gap-2">
             <ShieldCheck className="w-4 h-4 text-[#10b981]" />
             <span>شارژ آنی کیف پول بلافاصله پس از پرداخت شتاب</span>
