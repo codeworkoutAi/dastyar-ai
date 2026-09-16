@@ -662,7 +662,7 @@ export const LandingPage: React.FC = () => {
   }, [dynamicProfessions, dynamicGallery, dynamicPlans, dynamicFaqs]);
 
   return (
-    <div className="min-h-screen clay-landing-bg text-[#0f1420] dark:text-[#f3f5f9] selection:bg-[#2563eb] selection:text-white transition-colors overflow-x-hidden" dir="rtl">
+    <div className="min-h-screen clay-landing-bg text-[#0f1420] dark:text-[#f3f5f9] selection:bg-[#2563eb] selection:text-white dark:selection:bg-[#f97316] dark:selection:text-white transition-colors overflow-x-hidden" dir="rtl">
 
       {/* ---------------- 1. Claymorphic Floating Header ---------------- */}
       <header className="sticky top-2 sm:top-3 z-50 max-w-6xl mx-2 sm:mx-4 md:mx-auto px-4 sm:px-6 h-16 flex items-center justify-between clay-card-thick backdrop-blur-xl transition-all">
@@ -788,7 +788,7 @@ export const LandingPage: React.FC = () => {
           {dynamicHero?.title || (
             <>
               دسترسی مستقیم و بدون واسطه به <br className="hidden sm:inline" />
-              <span className="text-[#2563eb] dark:text-[#60a5fa]">برترین هوش‌های مصنوعی</span> جهان
+              <span className="text-[#2563eb] dark:text-[#f97316]">برترین هوش‌های مصنوعی</span> جهان
             </>
           )}
         </h1>
@@ -829,7 +829,7 @@ export const LandingPage: React.FC = () => {
             </div>
             <div className="flex items-center gap-2">
               <span className="text-[11px] font-mono font-bold text-[#525d75] dark:text-[#9aa5bc]">{activeScenario.model}</span>
-              <span className="text-[10px] px-2.5 py-0.5 rounded-full clay-pill-thick bg-blue-500/10 text-blue-600 dark:text-blue-400 font-bold">
+              <span className="text-[10px] px-2.5 py-0.5 rounded-full clay-pill-thick bg-blue-500/10 text-blue-600 dark:bg-orange-500/15 dark:text-orange-400 font-bold">
                 {activeScenario.modelBadge}
               </span>
             </div>
@@ -884,7 +884,7 @@ export const LandingPage: React.FC = () => {
             <span className="text-[11px] font-bold text-[#525d75] dark:text-[#9aa5bc]">پاسخ‌دهی آنی بدون تاخیر فیلترشکن</span>
             <Link
               to="/chat"
-              className="inline-flex items-center gap-1.5 clay-btn-thick px-3 py-1.5 rounded-xl text-xs font-bold text-[#2563eb] dark:text-[#60a5fa] hover:brightness-110"
+              className="inline-flex items-center gap-1.5 clay-btn-thick px-3 py-1.5 rounded-xl text-xs font-bold text-[#2563eb] dark:text-[#f97316] hover:brightness-110"
             >
               <span>تست همین سناریو در چت‌باکس</span>
               <ArrowLeft className="w-3.5 h-3.5" />
@@ -996,7 +996,7 @@ export const LandingPage: React.FC = () => {
             </div>
             <div className="flex flex-wrap items-center justify-between gap-3 pt-4 border-t border-black/5 dark:border-white/5">
               <span className="text-xs font-medium text-[#717b91]">خلق آثار سینمایی، معماری، پرتره و حیات‌وحش</span>
-              <a href="#gallery" className="text-xs font-bold text-[#2563eb] dark:text-[#60a5fa] hover:underline">
+              <a href="#gallery" className="text-xs font-bold text-[#2563eb] dark:text-[#f97316] hover:underline">
                 مشاهده ۶ شاهکار گالری زیر ↓
               </a>
             </div>
@@ -1009,7 +1009,7 @@ export const LandingPage: React.FC = () => {
         {/* Dignified Manifesto Header & Content */}
         <div className="reveal-init clay-card-elevated p-6 sm:p-10 mb-14">
           <div className="max-w-3xl">
-            <span className="inline-block px-3.5 py-1 rounded-full clay-pill-thick text-[11px] font-bold bg-blue-500/10 text-blue-600 dark:text-blue-400 mb-3.5">
+            <span className="inline-block px-3.5 py-1 rounded-full clay-pill-thick text-[11px] font-bold bg-blue-500/10 text-blue-600 dark:bg-orange-500/15 dark:text-orange-400 mb-3.5">
               {dynamicManifesto?.badge || 'بیانیه شفافیت و فلسفه طراحی'}
             </span>
             <h2
@@ -1047,7 +1047,7 @@ export const LandingPage: React.FC = () => {
               const ReasonIcon = (typeof r.icon === 'string' ? ICON_MAP[r.icon] : r.icon) || (rIdx === 0 ? Coins : rIdx === 1 ? Zap : ShieldCheck);
               return (
                 <div key={r.id || rIdx} className={`p-5 rounded-2xl clay-card-thick ${rIdx === 0 ? 'reveal-from-right stagger-1' : rIdx === 1 ? 'reveal-pop stagger-2' : 'reveal-from-left stagger-3'}`}>
-                  <div className="w-9 h-9 rounded-xl clay-btn-thick flex items-center justify-center text-[#2563eb] dark:text-[#60a5fa] mb-3">
+                  <div className="w-9 h-9 rounded-xl clay-btn-thick flex items-center justify-center text-[#2563eb] dark:text-[#f97316] mb-3">
                     <ReasonIcon className="w-4 h-4" />
                   </div>
                   <h3 className="font-bold text-xs sm:text-sm text-[#0f1420] dark:text-white mb-1.5" style={{ fontFamily: "'Estedad', sans-serif" }}>
@@ -1119,7 +1119,7 @@ export const LandingPage: React.FC = () => {
               >
                 {/* Stage Header with Navigation Buttons */}
                 <div className="flex items-center justify-between gap-4 mb-6">
-                  <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full clay-pill-thick bg-blue-500/10 text-blue-600 dark:text-blue-400 text-xs font-bold">
+                  <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full clay-pill-thick bg-blue-500/10 text-blue-600 dark:bg-orange-500/15 dark:text-orange-400 text-xs font-bold">
                     <CurrentIcon className="w-4 h-4" />
                     <span>تخصص انتخابی: {currentProfession.badge}</span>
                   </div>
@@ -1178,7 +1178,7 @@ export const LandingPage: React.FC = () => {
                     {/* Typewriter Prompt Inset Box */}
                     <div className="clay-inset-thick p-4 sm:p-5 rounded-2xl space-y-2.5">
                       <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2 text-xs font-bold text-[#2563eb] dark:text-[#60a5fa]">
+                        <div className="flex items-center gap-2 text-xs font-bold text-[#2563eb] dark:text-[#f97316]">
                           <Sparkles className="w-3.5 h-3.5 animate-pulse" />
                           <span>پرامپت تخصصی آماده برای آزمایش:</span>
                         </div>
@@ -1205,7 +1205,7 @@ export const LandingPage: React.FC = () => {
                       <div className="min-h-[64px] sm:min-h-[72px] bg-black/5 dark:bg-white/5 p-3 rounded-xl border border-black/5 dark:border-white/5">
                         <p className="text-xs sm:text-sm font-mono text-[#0f1420] dark:text-white leading-relaxed select-all">
                           <span>{typedPrompt}</span>
-                          <span className="inline-block w-1.5 h-4 bg-[#2563eb] dark:bg-[#60a5fa] ms-1 animate-pulse align-middle" />
+                          <span className="inline-block w-1.5 h-4 bg-[#2563eb] dark:bg-[#f97316] ms-1 animate-pulse align-middle" />
                         </p>
                       </div>
                     </div>
@@ -1237,7 +1237,7 @@ export const LandingPage: React.FC = () => {
                       onClick={() => setActiveProfessionIdx(idx)}
                       className={`${thumbAnim} ${staggerClass} p-2 rounded-2xl transition-all duration-300 text-right cursor-pointer flex items-center gap-2.5 active:scale-95 ${
                         isActive
-                          ? 'clay-card-elevated border-2 border-[#2563eb] dark:border-[#60a5fa] scale-102 shadow-md'
+                          ? 'clay-card-elevated border-2 border-[#2563eb] dark:border-[#f97316] scale-102 shadow-md dark:shadow-[0_0_20px_rgba(249,115,22,0.25)]'
                           : 'clay-card-thick opacity-70 hover:opacity-100'
                       }`}
                     >
@@ -1270,7 +1270,7 @@ export const LandingPage: React.FC = () => {
           <section id="gallery" className="py-16 sm:py-20 px-4 sm:px-6 max-w-6xl mx-auto border-t border-black/5 dark:border-white/5">
             <div className="reveal-init flex flex-col md:flex-row items-start md:items-end justify-between gap-4 mb-8 sm:mb-10">
               <div>
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full clay-pill-thick text-[10px] font-bold bg-blue-500/10 text-blue-600 dark:text-blue-400 mb-2">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full clay-pill-thick text-[10px] font-bold bg-blue-500/10 text-blue-600 dark:bg-orange-500/15 dark:text-orange-400 mb-2">
                   <Sparkles className="w-3 h-3" />
                   <span>AI IMAGE STUDIO SHOWCASE • انیمیشن تعاملی</span>
                 </div>
@@ -1307,7 +1307,7 @@ export const LandingPage: React.FC = () => {
 
                 <Link
                   to="/chat"
-                  className="inline-flex items-center gap-1.5 clay-btn-thick px-4 py-2.5 rounded-xl text-xs font-bold text-[#2563eb] dark:text-[#60a5fa] hover:brightness-110 active:scale-95"
+                  className="inline-flex items-center gap-1.5 clay-btn-thick px-4 py-2.5 rounded-xl text-xs font-bold text-[#2563eb] dark:text-[#f97316] hover:brightness-110 active:scale-95"
                 >
                   <span>ورود به استودیو</span>
                   <ArrowLeft className="w-3.5 h-3.5" />
@@ -1377,7 +1377,7 @@ export const LandingPage: React.FC = () => {
                           )}
                         </button>
 
-                        <Link to="/chat" className="text-[11px] font-black text-[#2563eb] dark:text-[#60a5fa] hover:underline">
+                        <Link to="/chat" className="text-[11px] font-black text-[#2563eb] dark:text-[#f97316] hover:underline">
                           تست این سبک
                         </Link>
                       </div>
@@ -1524,7 +1524,7 @@ export const LandingPage: React.FC = () => {
                   <div
                     key={pkg.id || idx}
                     className={`${pAnim} ${staggerClass} p-6 sm:p-7 flex flex-col justify-between transition-all duration-300 ${pkg.isPopular
-                        ? 'clay-card-elevated ring-2 ring-blue-500/50 -translate-y-2'
+                        ? 'clay-card-elevated ring-2 ring-blue-500/50 dark:ring-orange-500/60 dark:shadow-[0_0_35px_rgba(249,115,22,0.25)] -translate-y-2'
                         : 'clay-card-thick'
                       }`}
                   >
@@ -1539,7 +1539,7 @@ export const LandingPage: React.FC = () => {
                     <div className="mb-4">
                       <span
                         className={`inline-block px-3 py-1 rounded-full text-[11px] font-bold clay-pill-thick ${pkg.isPopular
-                            ? 'bg-blue-500/20 text-blue-600 dark:text-blue-400'
+                            ? 'bg-blue-500/20 text-blue-600 dark:bg-orange-500/20 dark:text-orange-400'
                             : 'bg-black/5 dark:bg-white/10 text-[#525d75] dark:text-[#9aa5bc]'
                           }`}
                       >
@@ -1646,7 +1646,7 @@ export const LandingPage: React.FC = () => {
           </div>
           <span className="hidden sm:inline opacity-40">•</span>
           <div className="flex items-center gap-2">
-            <CreditCard className="w-4 h-4 text-[#2563eb] dark:text-[#60a5fa]" />
+            <CreditCard className="w-4 h-4 text-[#2563eb] dark:text-[#f97316]" />
             <span>تسویه امن با درگاه‌های رسمی بانکی شاپرک</span>
           </div>
         </div>
@@ -1686,7 +1686,7 @@ export const LandingPage: React.FC = () => {
                   </span>
                   <div className="w-8 h-8 rounded-xl clay-btn-thick flex items-center justify-center shrink-0">
                     <ChevronDown
-                      className={`w-4 h-4 text-[#525d75] dark:text-[#9aa5bc] transition-transform duration-300 ${isOpen ? 'rotate-180 text-[#2563eb] dark:text-[#60a5fa]' : ''
+                      className={`w-4 h-4 text-[#525d75] dark:text-[#9aa5bc] transition-transform duration-300 ${isOpen ? 'rotate-180 text-[#2563eb] dark:text-[#f97316]' : ''
                         }`}
                     />
                   </div>
@@ -1736,7 +1736,7 @@ export const LandingPage: React.FC = () => {
                     to={ctaData.secondaryBtnLink || '/store'}
                     className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-2xl clay-btn-thick font-bold text-sm text-[#0f1420] dark:text-white transition-all active:scale-95 cursor-pointer"
                   >
-                    <Store className="w-4 h-4 text-[#2563eb] dark:text-[#60a5fa]" />
+                    <Store className="w-4 h-4 text-[#2563eb] dark:text-[#f97316]" />
                     <span>{ctaData.secondaryBtnText || 'مشاهده فروشگاه'}</span>
                   </Link>
                 </div>
