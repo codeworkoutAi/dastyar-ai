@@ -31,7 +31,7 @@ export default function App() {
   const { settings, systemIsDark, syncSystemProfiles } = useSettingsStore();
   const checkAuth = useAuthStore(state => state.checkAuth);
   const setAuthModalOpen = useAuthStore(state => state.setAuthModalOpen);
-  const { isAdminOpen, setIsAdminOpen } = useUIStore();
+  const { isAdminOpen, setIsAdminOpen, setIsWalletOpen } = useUIStore();
 
   const isDarkMode = settings.appearance.theme === 'dark' || (settings.appearance.theme === 'system' && systemIsDark);
   const direction = settings.appearance.direction === 'auto' ? (settings.appearance.uiLanguage === 'fa' ? 'rtl' : 'ltr') : settings.appearance.direction;
@@ -42,12 +42,15 @@ export default function App() {
 
     // Listen for custom event to open auth modal
     const handleOpenAuth = () => setAuthModalOpen(true);
+    const handleOpenWallet = () => setIsWalletOpen(true);
     window.addEventListener('open-auth-modal', handleOpenAuth);
+    window.addEventListener('open-wallet-modal', handleOpenWallet);
     
     return () => {
       window.removeEventListener('open-auth-modal', handleOpenAuth);
+      window.removeEventListener('open-wallet-modal', handleOpenWallet);
     };
-  }, [checkAuth, setAuthModalOpen, syncSystemProfiles]);
+  }, [checkAuth, setAuthModalOpen, setIsWalletOpen, syncSystemProfiles]);
 
   useEffect(() => {
     const root = document.documentElement;

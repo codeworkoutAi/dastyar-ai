@@ -586,6 +586,65 @@ export const LandingPage: React.FC = () => {
     setTimeout(() => setCopiedPromptIndex(null), 2500);
   };
 
+  // Bulletproof Scroll-driven entrance animations observer
+  useEffect(() => {
+    const selector = '.reveal-init, .reveal-from-right, .reveal-from-left, .reveal-pop';
+    const elements = Array.from(document.querySelectorAll(selector)) as HTMLElement[];
+
+    if (!elements.length) return;
+
+    // Immediately reveal elements that are already in or near the viewport
+    const revealVisibleElements = () => {
+      const windowHeight = window.innerHeight || 800;
+      elements.forEach((el) => {
+        const rect = el.getBoundingClientRect();
+        if (rect.top < windowHeight + 100 && rect.bottom > -100) {
+          el.classList.add('reveal-active');
+        }
+      });
+    };
+
+    // Run on initial tick for smooth entrance
+    revealVisibleElements();
+    const tickTimer = setTimeout(revealVisibleElements, 50);
+
+    let observer: IntersectionObserver | null = null;
+    if (typeof IntersectionObserver !== 'undefined') {
+      observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              entry.target.classList.add('reveal-active');
+            }
+          });
+        },
+        {
+          threshold: 0.05,
+          rootMargin: '0px 0px 80px 0px',
+        }
+      );
+
+      elements.forEach((el) => observer?.observe(el));
+    } else {
+      elements.forEach((el) => el.classList.add('reveal-active'));
+    }
+
+    // Backup listener on window scroll
+    window.addEventListener('scroll', revealVisibleElements, { passive: true });
+
+    // Safety fallback: ensure all elements become visible so nothing is ever permanently hidden
+    const safetyTimer = setTimeout(() => {
+      elements.forEach((el) => el.classList.add('reveal-active'));
+    }, 1200);
+
+    return () => {
+      clearTimeout(tickTimer);
+      clearTimeout(safetyTimer);
+      observer?.disconnect();
+      window.removeEventListener('scroll', revealVisibleElements);
+    };
+  }, [dynamicProfessions, dynamicGallery, dynamicPlans, dynamicFaqs]);
+
   return (
     <div className="min-h-screen clay-landing-bg text-[#0f1420] dark:text-[#f3f5f9] selection:bg-[#2563eb] selection:text-white transition-colors" dir="rtl">
 
@@ -834,7 +893,7 @@ export const LandingPage: React.FC = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Bento Card 1: Multi-Model Flagship (Double Column) */}
-          <div className="md:col-span-2 clay-card-thick p-6 sm:p-8 flex flex-col justify-between">
+          <div className="reveal-from-right stagger-1 md:col-span-2 clay-card-thick p-6 sm:p-8 flex flex-col justify-between">
             <div>
               <div className="w-12 h-12 rounded-2xl clay-btn-primary-thick flex items-center justify-center text-white mb-5 shadow-md">
                 <Cpu className="w-5 h-5" />
@@ -868,7 +927,7 @@ export const LandingPage: React.FC = () => {
           </div>
 
           {/* Bento Card 2: No VPN & Shetab Banking */}
-          <div className="clay-card-thick p-6 sm:p-8 flex flex-col justify-between">
+          <div className="reveal-from-left stagger-2 clay-card-thick p-6 sm:p-8 flex flex-col justify-between">
             <div>
               <div className="w-12 h-12 rounded-2xl clay-btn-emerald-thick flex items-center justify-center text-white mb-5 shadow-md">
                 <ShieldCheck className="w-5 h-5" />
@@ -889,7 +948,7 @@ export const LandingPage: React.FC = () => {
           </div>
 
           {/* Bento Card 3: Deep Document Analysis */}
-          <div className="clay-card-thick p-6 sm:p-8 flex flex-col justify-between">
+          <div className="reveal-from-right stagger-3 clay-card-thick p-6 sm:p-8 flex flex-col justify-between">
             <div>
               <div className="w-12 h-12 rounded-2xl clay-btn-amber-thick flex items-center justify-center text-white mb-5 shadow-md">
                 <FileText className="w-5 h-5" />
@@ -907,7 +966,7 @@ export const LandingPage: React.FC = () => {
           </div>
 
           {/* Bento Card 4: High-End Image Studio Showcase (Double Column) */}
-          <div className="md:col-span-2 clay-card-thick p-6 sm:p-8 flex flex-col justify-between">
+          <div className="reveal-from-left stagger-4 md:col-span-2 clay-card-thick p-6 sm:p-8 flex flex-col justify-between">
             <div>
               <div className="w-12 h-12 rounded-2xl clay-btn-primary-thick flex items-center justify-center text-white mb-5 shadow-md">
                 <ImageIcon className="w-5 h-5" />
@@ -971,7 +1030,7 @@ export const LandingPage: React.FC = () => {
             ]).map((r: any, rIdx: number) => {
               const ReasonIcon = (typeof r.icon === 'string' ? ICON_MAP[r.icon] : r.icon) || (rIdx === 0 ? Coins : rIdx === 1 ? Zap : ShieldCheck);
               return (
-                <div key={r.id || rIdx} className="p-5 rounded-2xl clay-card-thick">
+                <div key={r.id || rIdx} className={`p-5 rounded-2xl clay-card-thick ${rIdx === 0 ? 'reveal-from-right stagger-1' : rIdx === 1 ? 'reveal-pop stagger-2' : 'reveal-from-left stagger-3'}`}>
                   <div className="w-9 h-9 rounded-xl clay-btn-thick flex items-center justify-center text-[#2563eb] dark:text-[#60a5fa] mb-3">
                     <ReasonIcon className="w-4 h-4" />
                   </div>
@@ -1012,7 +1071,7 @@ export const LandingPage: React.FC = () => {
           return (
             <div className="space-y-6">
               {/* Category Quick Selector Bar (Puffy Clay Pills) */}
-              <div className="flex items-center justify-start sm:justify-center gap-2 overflow-x-auto pb-2 scrollbar-none px-1">
+              <div className="reveal-init stagger-1 flex items-center justify-start sm:justify-center gap-2 overflow-x-auto pb-2 scrollbar-none px-1">
                 {professionList.map((p, idx) => {
                   const Icon = (typeof p.icon === 'string' ? ICON_MAP[p.icon] : p.icon) || GraduationCap;
                   const isActive = activeProfessionIdx === idx;
@@ -1036,7 +1095,7 @@ export const LandingPage: React.FC = () => {
 
               {/* Main 3D Spotlight Stage Card */}
               <div
-                className="relative clay-card-elevated p-6 sm:p-8 rounded-[32px] overflow-hidden transition-all duration-500 hover:shadow-2xl"
+                className="reveal-pop stagger-2 relative clay-card-elevated p-6 sm:p-8 rounded-[32px] overflow-hidden transition-all duration-500 hover:shadow-2xl"
                 onMouseEnter={() => setIsProfessionsPaused(true)}
                 onMouseLeave={() => setIsProfessionsPaused(false)}
                 onTouchStart={() => setIsProfessionsPaused(true)}
@@ -1153,12 +1212,14 @@ export const LandingPage: React.FC = () => {
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
                 {professionList.map((p, idx) => {
                   const isActive = activeProfessionIdx === idx;
+                  const thumbAnim = idx % 2 === 0 ? 'reveal-from-right' : 'reveal-from-left';
+                  const staggerClass = `stagger-${(idx % 6) + 1}`;
                   return (
                     <button
                       key={p.id || idx}
                       type="button"
                       onClick={() => setActiveProfessionIdx(idx)}
-                      className={`p-2 rounded-2xl transition-all duration-300 text-right cursor-pointer flex items-center gap-2.5 active:scale-95 ${
+                      className={`${thumbAnim} ${staggerClass} p-2 rounded-2xl transition-all duration-300 text-right cursor-pointer flex items-center gap-2.5 active:scale-95 ${
                         isActive
                           ? 'clay-card-elevated border-2 border-[#2563eb] dark:border-[#60a5fa] scale-102 shadow-md'
                           : 'clay-card-thick opacity-70 hover:opacity-100'
@@ -1240,7 +1301,7 @@ export const LandingPage: React.FC = () => {
 
             {/* Animated 3D Claymorphic Carousel Viewport */}
             <div
-              className="relative overflow-hidden w-full py-4 [--items-per-row:1] sm:[--items-per-row:2] lg:[--items-per-row:3]"
+              className="reveal-init stagger-1 relative overflow-hidden w-full py-4 [--items-per-row:1] sm:[--items-per-row:2] lg:[--items-per-row:3]"
               onMouseEnter={() => setIsGalleryPaused(true)}
               onMouseLeave={() => setIsGalleryPaused(false)}
               onTouchStart={() => setIsGalleryPaused(true)}
@@ -1440,14 +1501,17 @@ export const LandingPage: React.FC = () => {
 
           return (
             <div className={`${gridLayoutClass} transition-all duration-300`}>
-              {cardsToRender.map((pkg: any, idx: number) => (
-                <div
-                  key={pkg.id || idx}
-                  className={`p-6 sm:p-7 flex flex-col justify-between transition-all duration-300 ${pkg.isPopular
-                      ? 'clay-card-elevated ring-2 ring-blue-500/50 -translate-y-2'
-                      : 'clay-card-thick'
-                    }`}
-                >
+              {cardsToRender.map((pkg: any, idx: number) => {
+                const pAnim = pkg.isPopular ? 'reveal-pop' : (idx % 2 === 0 ? 'reveal-from-right' : 'reveal-from-left');
+                const staggerClass = `stagger-${(idx % 4) + 1}`;
+                return (
+                  <div
+                    key={pkg.id || idx}
+                    className={`${pAnim} ${staggerClass} p-6 sm:p-7 flex flex-col justify-between transition-all duration-300 ${pkg.isPopular
+                        ? 'clay-card-elevated ring-2 ring-blue-500/50 -translate-y-2'
+                        : 'clay-card-thick'
+                      }`}
+                  >
                   <div>
                     {/* Optional Header Image / Media (Preserved) */}
                     {pkg.image && (
@@ -1517,8 +1581,9 @@ export const LandingPage: React.FC = () => {
                   >
                     {pkg.ctaText}
                   </button>
-                </div>
-              ))}
+                  </div>
+                );
+              })}
             </div>
           );
         })()}
@@ -1573,7 +1638,7 @@ export const LandingPage: React.FC = () => {
 
       {/* ---------------- 6. Extensive FAQ Section (10 Rich Questions in Claymorphic Style) ---------------- */}
       <section id="faq" className="py-16 sm:py-20 px-4 sm:px-6 max-w-4xl mx-auto border-t border-black/5 dark:border-white/5">
-        <div className="text-center mb-10 sm:mb-14">
+        <div className="reveal-init text-center mb-10 sm:mb-14">
           <span className="text-xs font-bold text-[#717b91] uppercase tracking-widest block mb-1">
             FREQUENTLY ASKED QUESTIONS
           </span>
@@ -1594,7 +1659,7 @@ export const LandingPage: React.FC = () => {
             return (
               <div
                 key={i}
-                className="clay-card-thick overflow-hidden transition-all duration-300"
+                className={`clay-card-thick overflow-hidden transition-all duration-300 ${i % 2 === 0 ? 'reveal-from-right' : 'reveal-from-left'} stagger-${(i % 4) + 1}`}
               >
                 <button
                   onClick={() => setActiveFaq(isOpen ? null : i)}
@@ -1634,7 +1699,7 @@ export const LandingPage: React.FC = () => {
         };
         return (
           <section className="py-16 sm:py-20 px-4 sm:px-6 max-w-4xl mx-auto text-center">
-            <div className="clay-card-elevated p-8 sm:p-14">
+            <div className="reveal-pop clay-card-elevated p-8 sm:p-14">
               <div className="max-w-xl mx-auto space-y-5">
                 <h2 className="text-2xl sm:text-4xl font-black text-[#0f1420] dark:text-white tracking-tight" style={{ fontFamily: "'Estedad', sans-serif" }}>
                   {ctaData.title}
