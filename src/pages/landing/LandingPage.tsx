@@ -15,6 +15,8 @@ import {
   Globe,
   Image as ImageIcon,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   Cpu,
   Layers,
   Search,
@@ -212,6 +214,10 @@ export const LandingPage: React.FC = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
   const [activeScenario, setActiveScenario] = useState<DemoScenario>(DEMO_SCENARIOS[0]);
   const [copiedPromptIndex, setCopiedPromptIndex] = useState<number | null>(null);
+
+  // Animated 3D Gallery Carousel State & Auto-play
+  const [gallerySlide, setGallerySlide] = useState<number>(0);
+  const [isGalleryPaused, setIsGalleryPaused] = useState<boolean>(false);
 
   // Comprehensive FAQ list (10 rich, practical questions)
   const faqs = [
@@ -515,6 +521,17 @@ export const LandingPage: React.FC = () => {
       }
     });
   }, []);
+
+  // Auto-play interval for Gallery Carousel (pauses on hover)
+  useEffect(() => {
+    if (isGalleryPaused) return;
+    const list = (dynamicGallery && dynamicGallery.length > 0) ? dynamicGallery : galleryImages;
+    if (!list || list.length <= 1) return;
+    const timer = setInterval(() => {
+      setGallerySlide((prev) => (prev + 1) % list.length);
+    }, 3800);
+    return () => clearInterval(timer);
+  }, [isGalleryPaused, dynamicGallery]);
 
   const copyPromptToClipboard = (text: string, index: number) => {
     navigator.clipboard.writeText(text);
@@ -1001,86 +1018,152 @@ export const LandingPage: React.FC = () => {
         </div>
       </section>
 
-      {/* ---------------- 4. Hyperrealistic Image Gallery Showcase (ALL IMAGES PRESERVED) ---------------- */}
-      <section id="gallery" className="py-16 sm:py-20 px-4 sm:px-6 max-w-6xl mx-auto border-t border-black/5 dark:border-white/5">
-        <div className="flex flex-col md:flex-row items-start md:items-end justify-between gap-4 mb-10 sm:mb-12">
-          <div>
-            <span className="text-xs font-bold text-[#717b91] uppercase tracking-widest block mb-1">
-              AI IMAGE STUDIO SHOWCASE
-            </span>
-            <h2
-              className="text-2xl sm:text-4xl font-black text-[#0f1420] dark:text-white tracking-tight"
-              style={{ fontFamily: "'Estedad', sans-serif" }}
-            >
-              آثار تولیدشده در استودیوی تصویرساز
-            </h2>
-          </div>
-          <Link
-            to="/chat"
-            className="inline-flex items-center gap-1.5 text-xs font-bold text-[#2563eb] dark:text-[#60a5fa] hover:underline underline-offset-4"
-          >
-            <span>ورود به استودیو و تولید اثر جدید</span>
-            <ArrowLeft className="w-3.5 h-3.5" />
-          </Link>
-        </div>
-
-        {/* Compact, High-Density Clay Gallery Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {((dynamicGallery && dynamicGallery.length > 0) ? dynamicGallery : galleryImages).map((img: any, idx: number) => (
-            <div
-              key={idx}
-              className="clay-card-thick overflow-hidden transition-all duration-300 flex flex-col justify-between hover:-translate-y-1.5"
-            >
-              {/* Preserved Image with Sculpted Frame */}
-              <div className="relative aspect-[4/3] overflow-hidden m-3 rounded-2xl bg-[#eef1f6] dark:bg-[#151923] shadow-inner">
-                <img
-                  src={img.src}
-                  alt={img.title}
-                  className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
-                  loading="lazy"
-                />
-                <div className="absolute top-2.5 right-2.5 px-3 py-1 rounded-full clay-pill-thick bg-black/75 text-white text-[10px] font-bold backdrop-blur-md">
-                  {img.tag}
+      {/* ---------------- 4. Hyperrealistic Image Gallery Showcase (ANIMATED 3D CLAY CAROUSEL) ---------------- */}
+      {(() => {
+        const galleryList = (dynamicGallery && dynamicGallery.length > 0) ? dynamicGallery : galleryImages;
+        return (
+          <section id="gallery" className="py-16 sm:py-20 px-4 sm:px-6 max-w-6xl mx-auto border-t border-black/5 dark:border-white/5">
+            <div className="flex flex-col md:flex-row items-start md:items-end justify-between gap-4 mb-8 sm:mb-10">
+              <div>
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full clay-pill-thick text-[10px] font-bold bg-blue-500/10 text-blue-600 dark:text-blue-400 mb-2">
+                  <Sparkles className="w-3 h-3" />
+                  <span>AI IMAGE STUDIO SHOWCASE • انیمیشن تعاملی</span>
                 </div>
+                <h2
+                  className="text-2xl sm:text-4xl font-black text-[#0f1420] dark:text-white tracking-tight"
+                  style={{ fontFamily: "'Estedad', sans-serif" }}
+                >
+                  آثار تولیدشده در استودیوی تصویرساز
+                </h2>
               </div>
 
-              <div className="p-4 sm:p-5 pt-0 flex-1 flex flex-col justify-between space-y-3">
-                <div>
-                  <h3 className="font-bold text-sm sm:text-base text-[#0f1420] dark:text-white mb-1.5" style={{ fontFamily: "'Estedad', sans-serif" }}>
-                    {img.title}
-                  </h3>
-                  <p className="text-[11px] text-[#525d75] dark:text-[#9aa5bc] line-clamp-2 leading-relaxed font-mono" dir="ltr">
-                    {img.prompt}
-                  </p>
-                </div>
-
-                <div className="pt-3 border-t border-black/5 dark:border-white/5 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                {/* Carousel Navigation Buttons (Claymorphic) */}
+                <div className="flex items-center gap-2">
                   <button
-                    onClick={() => copyPromptToClipboard(img.prompt, idx)}
-                    className="inline-flex items-center gap-1.5 text-[11px] font-bold clay-btn-thick px-3 py-1.5 rounded-xl text-[#525d75] dark:text-[#9aa5bc] hover:text-[#0f1420] dark:hover:text-white transition-all cursor-pointer"
+                    type="button"
+                    onClick={() => setGallerySlide((prev) => (prev - 1 + galleryList.length) % galleryList.length)}
+                    className="w-10 h-10 rounded-2xl clay-btn-thick flex items-center justify-center text-[#0f1420] dark:text-white transition-all cursor-pointer active:scale-95 shadow-sm"
+                    aria-label="تصویر قبلی"
+                    title="تصویر قبلی"
                   >
-                    {copiedPromptIndex === idx ? (
-                      <>
-                        <Check className="w-3.5 h-3.5 text-[#10b981]" />
-                        <span className="text-[#10b981] font-bold">کپی شد!</span>
-                      </>
-                    ) : (
-                      <>
-                        <Copy className="w-3.5 h-3.5" />
-                        <span>کپی پرامپت</span>
-                      </>
-                    )}
+                    <ChevronRight className="w-5 h-5" />
                   </button>
-
-                  <Link to="/chat" className="text-[11px] font-black text-[#2563eb] dark:text-[#60a5fa] hover:underline">
-                    تست این سبک
-                  </Link>
+                  <button
+                    type="button"
+                    onClick={() => setGallerySlide((prev) => (prev + 1) % galleryList.length)}
+                    className="w-10 h-10 rounded-2xl clay-btn-thick flex items-center justify-center text-[#0f1420] dark:text-white transition-all cursor-pointer active:scale-95 shadow-sm"
+                    aria-label="تصویر بعدی"
+                    title="تصویر بعدی"
+                  >
+                    <ChevronLeft className="w-5 h-5" />
+                  </button>
                 </div>
+
+                <Link
+                  to="/chat"
+                  className="inline-flex items-center gap-1.5 clay-btn-thick px-4 py-2.5 rounded-xl text-xs font-bold text-[#2563eb] dark:text-[#60a5fa] hover:brightness-110 active:scale-95"
+                >
+                  <span>ورود به استودیو</span>
+                  <ArrowLeft className="w-3.5 h-3.5" />
+                </Link>
               </div>
             </div>
-          ))}
-        </div>
-      </section>
+
+            {/* Animated 3D Claymorphic Carousel Viewport */}
+            <div
+              className="relative overflow-hidden w-full py-4 [--items-per-row:1] sm:[--items-per-row:2] lg:[--items-per-row:3]"
+              onMouseEnter={() => setIsGalleryPaused(true)}
+              onMouseLeave={() => setIsGalleryPaused(false)}
+              onTouchStart={() => setIsGalleryPaused(true)}
+              onTouchEnd={() => setIsGalleryPaused(false)}
+            >
+              <div
+                dir="ltr"
+                className="flex transition-transform duration-700 ease-out gap-6"
+                style={{
+                  transform: `translateX(calc(-${gallerySlide} * (100% + 1.5rem) / var(--items-per-row, 1)))`
+                }}
+              >
+                {galleryList.map((img: any, idx: number) => (
+                  <div
+                    key={idx}
+                    dir="rtl"
+                    className="w-full sm:w-[calc(50%-0.75rem)] lg:w-[calc(33.333%-1rem)] shrink-0 clay-card-thick overflow-hidden transition-all duration-300 flex flex-col justify-between hover:-translate-y-2 hover:shadow-xl"
+                  >
+                    {/* Preserved Image with Sculpted Frame */}
+                    <div className="relative aspect-[4/3] overflow-hidden m-3 rounded-2xl bg-[#eef1f6] dark:bg-[#151923] shadow-inner">
+                      <img
+                        src={img.src}
+                        alt={img.title}
+                        className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
+                        loading="lazy"
+                      />
+                      <div className="absolute top-2.5 right-2.5 px-3 py-1 rounded-full clay-pill-thick bg-black/75 text-white text-[10px] font-bold backdrop-blur-md">
+                        {img.tag}
+                      </div>
+                    </div>
+
+                    <div className="p-4 sm:p-5 pt-0 flex-1 flex flex-col justify-between space-y-3">
+                      <div>
+                        <h3 className="font-bold text-sm sm:text-base text-[#0f1420] dark:text-white mb-1.5" style={{ fontFamily: "'Estedad', sans-serif" }}>
+                          {img.title}
+                        </h3>
+                        <p className="text-[11px] text-[#525d75] dark:text-[#9aa5bc] line-clamp-2 leading-relaxed font-mono" dir="ltr">
+                          {img.prompt}
+                        </p>
+                      </div>
+
+                      <div className="pt-3 border-t border-black/5 dark:border-white/5 flex items-center justify-between">
+                        <button
+                          onClick={() => copyPromptToClipboard(img.prompt, idx)}
+                          className="inline-flex items-center gap-1.5 text-[11px] font-bold clay-btn-thick px-3 py-1.5 rounded-xl text-[#525d75] dark:text-[#9aa5bc] hover:text-[#0f1420] dark:hover:text-white transition-all cursor-pointer"
+                        >
+                          {copiedPromptIndex === idx ? (
+                            <>
+                              <Check className="w-3.5 h-3.5 text-[#10b981]" />
+                              <span className="text-[#10b981] font-bold">کپی شد!</span>
+                            </>
+                          ) : (
+                            <>
+                              <Copy className="w-3.5 h-3.5" />
+                              <span>کپی پرامپت</span>
+                            </>
+                          )}
+                        </button>
+
+                        <Link to="/chat" className="text-[11px] font-black text-[#2563eb] dark:text-[#60a5fa] hover:underline">
+                          تست این سبک
+                        </Link>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Carousel Indicator Dots */}
+            <div className="flex items-center justify-center gap-2 mt-4">
+              {galleryList.map((_, dotIdx) => {
+                const isActive = gallerySlide === dotIdx;
+                return (
+                  <button
+                    key={dotIdx}
+                    type="button"
+                    onClick={() => setGallerySlide(dotIdx)}
+                    className={`transition-all duration-300 cursor-pointer ${
+                      isActive
+                        ? 'clay-btn-primary-thick !w-8 !h-3 !rounded-full shadow-md'
+                        : 'clay-btn-thick !w-3 !h-3 !rounded-full opacity-60 hover:opacity-100'
+                    }`}
+                    aria-label={`رفتن به اسلاید ${dotIdx + 1}`}
+                  />
+                );
+              })}
+            </div>
+          </section>
+        );
+      })()}
 
       {/* ---------------- 5. Transparent Hybrid Pricing Section (Thick 3D Claymorphic) ---------------- */}
       <section id="pricing" className="py-16 sm:py-20 px-4 sm:px-6 max-w-6xl mx-auto border-t border-black/5 dark:border-white/5">
