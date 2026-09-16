@@ -13,7 +13,9 @@ import {
   Zap,
   TrendingDown,
   ShieldCheck,
-  Loader2
+  Loader2,
+  Gift,
+  Tag
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
@@ -96,50 +98,8 @@ export const WalletModal: React.FC = () => {
   // Estimate tokens: sellingRate Tomans = 1,000,000 tokens of standard model
   const approxRemainingTokens = Math.max(0, Math.round((currentBalance / sellingRate) * 1_000_000));
 
-  const rechargePacks = [
-    {
-      id: 'pack-20k',
-      amount: 20000,
-      title: 'بسته پایه',
-      tokenEstimate: 'حدود ۱۰۰,۰۰۰ توکن',
-      description: 'مناسب برای کارهای روزمره و پرسش‌های سریع',
-      badge: null,
-      color: 'blue'
-    },
-    {
-      id: 'pack-50k',
-      amount: 50000,
-      title: 'بسته استاندارد',
-      tokenEstimate: 'حدود ۲۵۰,۰۰۰ توکن',
-      description: 'پرطرفدارترین بسته برای پژوهش و کدنویسی',
-      badge: 'محبوب‌ترین',
-      color: 'emerald'
-    },
-    {
-      id: 'pack-100k',
-      amount: 100000,
-      title: 'بسته پیشرفته',
-      tokenEstimate: 'حدود ۵۰۰,۰۰۰ توکن',
-      description: 'برای استفاده فشرده از مدل‌های برتر مثل Claude و GPT-4o',
-      badge: null,
-      color: 'purple'
-    },
-    {
-      id: 'pack-200k',
-      amount: 200000,
-      title: 'بسته حرفه‌ای',
-      tokenEstimate: 'بیش از ۱,۰۰۰,۰۰۰ توکن',
-      description: 'حداکثر ظرفیت برای پردازش اسناد حجیم و پروژه‌های سنگین',
-      badge: 'به‌صرفه‌ترین',
-      color: 'amber'
-    }
-  ];
-
-  const handleSelectPackage = (pack: typeof rechargePacks[0]) => {
-    setIsWalletOpen(false);
-    // Navigate to store or open checkout with message
-    navigate('/store');
-  };
+  // Custom amount preset options
+  const PRESET_AMOUNTS = [20000, 50000, 100000, 200000, 500000];
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-sm animate-fadeIn" dir="rtl">
@@ -201,7 +161,7 @@ export const WalletModal: React.FC = () => {
                 : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'
             }`}
           >
-            بسته‌های شارژ اعتباری
+            شارژ و افزایش اعتبار
             {activeTab === 'packages' && (
               <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600 dark:bg-blue-400 rounded-full" />
             )}
@@ -231,89 +191,130 @@ export const WalletModal: React.FC = () => {
                 </div>
               )}
 
-              <div className="flex items-center gap-2 p-3 rounded-2xl bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800/40 text-blue-700 dark:text-blue-300 text-xs">
-                <Sparkles className="w-4 h-4 shrink-0 text-blue-500" />
-                <span>بدون اشتراک ماهیانه؛ اعتبار شما هرگز منقضی نمی‌شود و تنها به ازای کلماتی که چت می‌کنید مصرف می‌گردد.</span>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {rechargePacks.map((pack) => (
-                  <div
-                    key={pack.id}
-                    onClick={() => handlePayOnline(pack.amount, pack.id)}
-                    className="relative flex flex-col justify-between p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 hover:border-blue-500 dark:hover:border-blue-500 bg-zinc-50/50 dark:bg-zinc-800/30 hover:bg-white dark:hover:bg-zinc-800 transition-all cursor-pointer group"
-                  >
-                    {pack.badge && (
-                      <span className="absolute -top-2.5 left-4 text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-600 text-white shadow-md">
-                        {pack.badge}
-                      </span>
-                    )}
-
-                    <div>
-                      <div className="flex items-center justify-between mb-1.5">
-                        <span className="font-bold text-sm text-zinc-900 dark:text-zinc-100">{pack.title}</span>
-                        <div className="flex items-baseline gap-1 text-blue-600 dark:text-blue-400 font-black text-base">
-                          <span>{pack.amount.toLocaleString('fa-IR')}</span>
-                          <span className="text-xs font-normal">تومان</span>
-                        </div>
-                      </div>
-                      <div className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 mb-1" dir="rtl">
-                        {pack.tokenEstimate}
-                      </div>
-                      <p className="text-[11px] text-zinc-500 dark:text-zinc-400 leading-relaxed">
-                        {pack.description}
-                      </p>
-                    </div>
-
-                    <div className="mt-3 pt-3 border-t border-zinc-200/60 dark:border-zinc-700/60 flex items-center justify-between text-xs font-bold text-blue-600 dark:text-blue-400 group-hover:translate-x-[-2px] transition-transform">
-                      <span>{rechargingPackId === pack.id ? 'در حال اتصال به درگاه...' : 'پرداخت آنلاین و شارژ'}</span>
-                      {rechargingPackId === pack.id ? (
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                      ) : (
-                        <ArrowUpRight className="w-4 h-4" />
-                      )}
-                    </div>
+              {/* Special Offer Card / Promo Section */}
+              <div className="relative overflow-hidden rounded-2xl border border-amber-300/80 dark:border-amber-500/40 bg-linear-to-br from-amber-500/10 via-orange-500/5 to-transparent p-4">
+                <div className="flex items-start gap-3">
+                  <div className="p-2 rounded-xl bg-amber-500/15 dark:bg-amber-400/20 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5">
+                    <Gift className="w-5 h-5" />
                   </div>
-                ))}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-xs font-black text-zinc-900 dark:text-zinc-100">
+                        پیشنهاد ویژه و آفرهای تخفیف
+                      </span>
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-700 dark:text-amber-300">
+                        آفر فعال
+                      </span>
+                    </div>
+                    <p className="text-xs text-zinc-600 dark:text-zinc-300 leading-relaxed">
+                      {currentBalance < 20000 ? (
+                        <span>
+                          موجودی شما رو به اتمام است! با هر شارژ بالای ۵۰,۰۰۰ تومان، <strong className="text-amber-600 dark:text-amber-400">۲۰٪ بونوس هدیه اعتباری</strong> به کیف پول شما اضافه می‌شود.
+                        </span>
+                      ) : (
+                        <span>
+                          اعتبار شما با تعرفه مستقیم آزاد و بدون تاریخ انقضا محاسبه می‌شود. در زمان اتمام بسته یا مناسبت‌های خاص، تخفیف‌ها و آفرهای اختصاصی در این بخش برای شما فعال خواهند شد.
+                        </span>
+                      )}
+                    </p>
+                  </div>
+                </div>
               </div>
 
-              {/* Custom Amount Recharge */}
-              <div className="p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/40 dark:bg-zinc-800/20">
-                <label className="text-xs font-bold text-zinc-700 dark:text-zinc-300 block mb-2">
-                  یا شارژ با مبلغ دلخواه (تومان):
-                </label>
-                <div className="flex gap-2">
-                  <input
-                    type="number"
-                    min="5000"
-                    step="1000"
-                    placeholder="حداقل ۵,۰۰۰ تومان"
-                    value={customAmount}
-                    onChange={(e) => setCustomAmount(e.target.value)}
-                    className="flex-1 px-3 py-2 text-xs rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white focus:outline-hidden focus:border-blue-500"
-                  />
+              {/* Custom Top-up Card */}
+              <div className="p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-800/30 space-y-3.5">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold text-zinc-800 dark:text-zinc-200 flex items-center gap-1.5">
+                    <CreditCard className="w-4 h-4 text-emerald-500" />
+                    <span>افزایش موجودی و شارژ کیف پول (تومان)</span>
+                  </label>
+                  <span className="text-[11px] text-zinc-400">حداقل ۵,۰۰۰ تومان</span>
+                </div>
+
+                {/* Quick Presets */}
+                <div>
+                  <div className="text-[11px] text-zinc-500 dark:text-zinc-400 mb-1.5 font-medium">مبالغ پیشنهادی سریع:</div>
+                  <div className="flex flex-wrap gap-2">
+                    {PRESET_AMOUNTS.map((amt) => {
+                      const isSelected = customAmount === amt.toString();
+                      return (
+                        <button
+                          key={amt}
+                          type="button"
+                          onClick={() => setCustomAmount(amt.toString())}
+                          className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer border ${
+                            isSelected
+                              ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
+                              : 'bg-white dark:bg-zinc-800/80 border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 hover:border-blue-400'
+                          }`}
+                        >
+                          {amt.toLocaleString('fa-IR')} تومان
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Input & Action */}
+                <div className="flex flex-col sm:flex-row gap-2 pt-1">
+                  <div className="relative flex-1">
+                    <input
+                      type="number"
+                      min="5000"
+                      step="1000"
+                      placeholder="مثلاً ۵۰,۰۰۰"
+                      value={customAmount}
+                      onChange={(e) => setCustomAmount(e.target.value)}
+                      className="w-full pl-12 pr-3 py-2.5 text-sm font-semibold rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white focus:outline-hidden focus:border-blue-500 transition-colors"
+                    />
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-zinc-400 pointer-events-none">
+                      تومان
+                    </span>
+                  </div>
+
                   <button
                     onClick={() => {
                       const val = parseInt(customAmount, 10);
                       if (val >= 5000) handlePayOnline(val, 'custom');
                     }}
                     disabled={rechargingPackId === 'custom' || !customAmount || parseInt(customAmount, 10) < 5000}
-                    className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors disabled:opacity-50 cursor-pointer"
+                    className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer shadow-xs shrink-0"
                   >
                     {rechargingPackId === 'custom' ? (
-                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <span>در حال انتقال...</span>
+                      </>
                     ) : (
-                      <CreditCard className="w-3.5 h-3.5" />
+                      <>
+                        <CreditCard className="w-4 h-4" />
+                        <span>پرداخت آنلاین با شتاب</span>
+                      </>
                     )}
-                    <span>پرداخت با شتاب</span>
                   </button>
                 </div>
+
+                {/* Tokens Estimation info */}
+                {customAmount && parseInt(customAmount, 10) >= 5000 && (
+                  <div className="text-[11px] text-zinc-500 dark:text-zinc-400 flex items-center gap-1.5 pt-1">
+                    <Sparkles className="w-3.5 h-3.5 text-blue-500" />
+                    <span>
+                      معادل تقریبی: <strong className="text-emerald-600 dark:text-emerald-400">{(parseInt(customAmount, 10) * 5).toLocaleString('fa-IR')} توکن چت هوشمند</strong>
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              {/* General Policy Note */}
+              <div className="flex items-center gap-2 p-3 rounded-2xl bg-blue-50/60 dark:bg-blue-950/20 border border-blue-200/60 dark:border-blue-800/30 text-blue-700 dark:text-blue-300 text-[11px]">
+                <Sparkles className="w-4 h-4 shrink-0 text-blue-500" />
+                <span>اعتبار شما هرگز منقضی نمی‌شود و تنها به میزان مصرف کلمات و درخواست‌های ارسالی کسر می‌گردد.</span>
               </div>
 
               <div className="pt-2 flex items-center justify-between text-xs text-zinc-500 dark:text-zinc-400">
                 <span className="flex items-center gap-1.5">
                   <ShieldCheck className="w-4 h-4 text-emerald-500" />
-                  اتصال به درگاه رسمی شاپرک (زرین‌پال)
+                  اتصال امن به درگاه رسمی شاپرک (زرین‌پال)
                 </span>
                 <button
                   onClick={() => {

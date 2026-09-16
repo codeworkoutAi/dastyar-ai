@@ -199,26 +199,6 @@ export const Header: React.FC = React.memo(() => {
               </Tooltip>
             )}
 
-            {/* Wallet Balance Pill for Logged-in Users */}
-            {user && (
-              <Tooltip content={`موجودی کیف پول: ${(user.walletBalance || 0).toLocaleString('fa-IR')} تومان (کلیک برای شارژ سریع با مبلغ دلخواه)`}>
-                <button
-                  id="header-wallet-btn"
-                  onClick={() => setIsWalletOpen(true)}
-                  className="clay-btn h-11 px-2.5 sm:px-3 flex items-center gap-1.5 hover:opacity-90 rounded-xl sm:rounded-2xl cursor-pointer text-emerald-600 dark:text-emerald-400 font-bold text-xs transition-all active:scale-95"
-                  aria-label="کیف پول و شارژ اعتبار"
-                >
-                  <Coins className="w-4 h-4 text-emerald-500 shrink-0" />
-                  <span className="hidden md:inline font-mono" dir="rtl">
-                    {(user.walletBalance || 0).toLocaleString('fa-IR')} <span className="text-[10px] font-normal text-zinc-500">تومان</span>
-                  </span>
-                  <span className="w-5 h-5 rounded-lg bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-xs font-black shrink-0">
-                    +
-                  </span>
-                </button>
-              </Tooltip>
-            )}
-
             {/* Theme Toggle Button */}
             <ThemeToggle variant="clay" />
 
