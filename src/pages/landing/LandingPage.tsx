@@ -586,67 +586,83 @@ export const LandingPage: React.FC = () => {
     setTimeout(() => setCopiedPromptIndex(null), 2500);
   };
 
-  // Bulletproof Scroll-driven entrance animations observer
+  // True Scroll-driven entrance animations observer
   useEffect(() => {
     const selector = '.reveal-init, .reveal-from-right, .reveal-from-left, .reveal-pop';
-    const elements = Array.from(document.querySelectorAll(selector)) as HTMLElement[];
 
-    if (!elements.length) return;
+    let observer: IntersectionObserver | null = null;
 
-    // Immediately reveal elements that are already in or near the viewport
-    const revealVisibleElements = () => {
+    const setupObserver = () => {
+      const elements = Array.from(document.querySelectorAll(selector)) as HTMLElement[];
+      if (!elements.length) return;
+
       const windowHeight = window.innerHeight || 800;
+
+      // Only reveal elements that are truly inside the initial visible screen (above the fold)
       elements.forEach((el) => {
         const rect = el.getBoundingClientRect();
-        if (rect.top < windowHeight + 100 && rect.bottom > -100) {
+        if (rect.top < windowHeight - 40 && rect.bottom > 0) {
           el.classList.add('reveal-active');
+        }
+      });
+
+      if (typeof IntersectionObserver !== 'undefined') {
+        observer?.disconnect();
+        observer = new IntersectionObserver(
+          (entries) => {
+            entries.forEach((entry) => {
+              if (entry.isIntersecting) {
+                entry.target.classList.add('reveal-active');
+                observer?.unobserve(entry.target);
+              }
+            });
+          },
+          {
+            threshold: 0.08,
+            rootMargin: '0px 0px -40px 0px',
+          }
+        );
+
+        elements.forEach((el) => {
+          if (!el.classList.contains('reveal-active')) {
+            observer?.observe(el);
+          }
+        });
+      }
+    };
+
+    // Run setup on mount and with short delays to catch any dynamic data rendered later
+    setupObserver();
+    const t1 = setTimeout(setupObserver, 120);
+    const t2 = setTimeout(setupObserver, 600);
+
+    // Fallback scroll listener for maximum reliability across browsers
+    const handleScroll = () => {
+      const windowHeight = window.innerHeight || 800;
+      const elements = Array.from(document.querySelectorAll(selector)) as HTMLElement[];
+      elements.forEach((el) => {
+        if (!el.classList.contains('reveal-active')) {
+          const rect = el.getBoundingClientRect();
+          if (rect.top < windowHeight - 30) {
+            el.classList.add('reveal-active');
+            observer?.unobserve(el);
+          }
         }
       });
     };
 
-    // Run on initial tick for smooth entrance
-    revealVisibleElements();
-    const tickTimer = setTimeout(revealVisibleElements, 50);
-
-    let observer: IntersectionObserver | null = null;
-    if (typeof IntersectionObserver !== 'undefined') {
-      observer = new IntersectionObserver(
-        (entries) => {
-          entries.forEach((entry) => {
-            if (entry.isIntersecting) {
-              entry.target.classList.add('reveal-active');
-            }
-          });
-        },
-        {
-          threshold: 0.05,
-          rootMargin: '0px 0px 80px 0px',
-        }
-      );
-
-      elements.forEach((el) => observer?.observe(el));
-    } else {
-      elements.forEach((el) => el.classList.add('reveal-active'));
-    }
-
-    // Backup listener on window scroll
-    window.addEventListener('scroll', revealVisibleElements, { passive: true });
-
-    // Safety fallback: ensure all elements become visible so nothing is ever permanently hidden
-    const safetyTimer = setTimeout(() => {
-      elements.forEach((el) => el.classList.add('reveal-active'));
-    }, 1200);
+    window.addEventListener('scroll', handleScroll, { passive: true });
 
     return () => {
-      clearTimeout(tickTimer);
-      clearTimeout(safetyTimer);
+      clearTimeout(t1);
+      clearTimeout(t2);
       observer?.disconnect();
-      window.removeEventListener('scroll', revealVisibleElements);
+      window.removeEventListener('scroll', handleScroll);
     };
   }, [dynamicProfessions, dynamicGallery, dynamicPlans, dynamicFaqs]);
 
   return (
-    <div className="min-h-screen clay-landing-bg text-[#0f1420] dark:text-[#f3f5f9] selection:bg-[#2563eb] selection:text-white transition-colors" dir="rtl">
+    <div className="min-h-screen clay-landing-bg text-[#0f1420] dark:text-[#f3f5f9] selection:bg-[#2563eb] selection:text-white transition-colors overflow-x-hidden" dir="rtl">
 
       {/* ---------------- 1. Claymorphic Floating Header ---------------- */}
       <header className="sticky top-2 sm:top-3 z-50 max-w-6xl mx-2 sm:mx-4 md:mx-auto px-4 sm:px-6 h-16 flex items-center justify-between clay-card-thick backdrop-blur-xl transition-all">

@@ -1169,29 +1169,29 @@ img.emoji {
 
 .reveal-init {
   opacity: 0;
-  transform: translateY(35px) scale(0.96);
-  transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+  transform: translateY(40px) scale(0.95);
+  transition: opacity 0.85s cubic-bezier(0.16, 1, 0.3, 1), transform 0.85s cubic-bezier(0.16, 1, 0.3, 1);
   will-change: opacity, transform;
 }
 
 .reveal-from-right {
   opacity: 0;
-  transform: translateX(45px) translateY(20px) scale(0.96);
-  transition: opacity 0.85s cubic-bezier(0.16, 1, 0.3, 1), transform 0.85s cubic-bezier(0.16, 1, 0.3, 1);
+  transform: translateX(75px) translateY(30px) scale(0.92);
+  transition: opacity 0.9s cubic-bezier(0.16, 1, 0.3, 1), transform 0.9s cubic-bezier(0.16, 1, 0.3, 1);
   will-change: opacity, transform;
 }
 
 .reveal-from-left {
   opacity: 0;
-  transform: translateX(-45px) translateY(20px) scale(0.96);
-  transition: opacity 0.85s cubic-bezier(0.16, 1, 0.3, 1), transform 0.85s cubic-bezier(0.16, 1, 0.3, 1);
+  transform: translateX(-75px) translateY(30px) scale(0.92);
+  transition: opacity 0.9s cubic-bezier(0.16, 1, 0.3, 1), transform 0.9s cubic-bezier(0.16, 1, 0.3, 1);
   will-change: opacity, transform;
 }
 
 .reveal-pop {
   opacity: 0;
-  transform: scale(0.88);
-  transition: opacity 0.75s cubic-bezier(0.16, 1, 0.3, 1), transform 0.75s cubic-bezier(0.16, 1, 0.3, 1);
+  transform: translateY(45px) scale(0.88);
+  transition: opacity 0.85s cubic-bezier(0.16, 1, 0.3, 1), transform 0.85s cubic-bezier(0.16, 1, 0.3, 1);
   will-change: opacity, transform;
 }
 
@@ -1201,12 +1201,12 @@ img.emoji {
 }
 
 /* Stagger Delays for Grid Cascades */
-.stagger-1 { transition-delay: 80ms !important; }
-.stagger-2 { transition-delay: 160ms !important; }
-.stagger-3 { transition-delay: 240ms !important; }
-.stagger-4 { transition-delay: 320ms !important; }
-.stagger-5 { transition-delay: 400ms !important; }
-.stagger-6 { transition-delay: 480ms !important; }
+.stagger-1 { transition-delay: 100ms !important; }
+.stagger-2 { transition-delay: 200ms !important; }
+.stagger-3 { transition-delay: 300ms !important; }
+.stagger-4 { transition-delay: 400ms !important; }
+.stagger-5 { transition-delay: 500ms !important; }
+.stagger-6 { transition-delay: 600ms !important; }
 
 @media (prefers-reduced-motion: reduce) {
   .reveal-init,
