@@ -75,9 +75,21 @@ export const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({ produc
             )}
             <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-transparent" />
             <div className="absolute bottom-3.5 right-5 left-5">
-              <span className="inline-block mb-1.5 text-[11px] font-bold px-2.5 py-0.5 bg-blue-600 text-white rounded-md shadow-sm">
-                {product.category === 'api' ? 'کلید API' : product.category === 'account' ? 'اکانت پرمیوم' : 'پکیج آموزشی'}
-              </span>
+              <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+                <span className="inline-block text-[11px] font-bold px-2.5 py-0.5 bg-blue-600 text-white rounded-md shadow-sm">
+                  {product.category === 'plan' ? 'پلن تعرفه' : product.category === 'api' ? 'کلید API' : product.category === 'account' ? 'اکانت پرمیوم' : 'پکیج آموزشی'}
+                </span>
+                {product.badge && (
+                  <span className="inline-block text-[11px] font-black px-2.5 py-0.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-md shadow-sm">
+                    {product.badge}
+                  </span>
+                )}
+                {product.tokenEstimate && (
+                  <span className="inline-block text-[11px] font-medium px-2 py-0.5 bg-zinc-800/80 text-blue-300 rounded-md border border-blue-500/30">
+                    {usePersianDigits ? toPersianDigits(product.tokenEstimate) : product.tokenEstimate}
+                  </span>
+                )}
+              </div>
               <h2 className="text-base sm:text-lg md:text-xl font-bold text-white leading-snug drop-shadow-sm">
                 {usePersianDigits ? toPersianDigits(product.title) : product.title}
               </h2>
@@ -175,10 +187,10 @@ export const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({ produc
                 onBuy(product);
                 onClose();
               }}
-              disabled={product.category !== 'package' && product.stock <= 0}
+              disabled={product.category !== 'package' && product.category !== 'plan' && product.stock <= 0}
               className="flex-1 sm:flex-none px-6 py-2.5 rounded-xl bg-blue-600 text-white text-xs sm:text-sm font-bold hover:bg-blue-700 transition-colors shadow-md shadow-blue-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {product.category !== 'package' && product.stock <= 0 ? 'ناموجود' : 'ادامه به پرداخت'}
+              {product.category !== 'package' && product.category !== 'plan' && product.stock <= 0 ? 'ناموجود' : 'ادامه به پرداخت'}
             </button>
           </div>
         </div>

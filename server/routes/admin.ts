@@ -3,8 +3,11 @@ import db, { syncDatabase } from '../db/database';
 import { requireAuth } from '../middleware/auth';
 import { bot, sendTelegramOrderSuccess } from '../telegram/bot';
 import { clearSitemapCache } from '../seo/sitemap';
-import { getAdminFinancialSummary, addApiPurchase, depositWallet } from '../services/walletService';
+import { getAdminFinancialSummary, addApiPurchase, depositWallet, getPlanCreditAmount } from '../services/walletService';
 import { getZarinpalConfig, testZarinpalMerchant, getServerPublicIp } from '../services/zarinpalService';
+import { getFullSiteDesign, saveSectionData, resetSectionData } from '../services/landingService';
+import fs from 'fs';
+import path from 'path';
 
 const router = express.Router();
 
@@ -22,12 +25,57 @@ router.use(requireAuth, requireAdmin);
 // GET /api/admin/products
 router.get('/products', (req, res) => {
   try {
+    // Auto-seed default pricing plans if not yet created
+    try {
+      const planCountRow = db.prepare("SELECT COUNT(*) as count FROM products WHERE category = 'plan'").get() as any;
+      if (!planCountRow || planCountRow.count === 0) {
+        const insertPlan = db.prepare(`
+          INSERT INTO products (title, price, category, badge, tokenEstimate, description, features, isPopular, showOnLanding)
+          VALUES (?, ?, 'plan', ?, ?, ?, ?, ?, 1)
+        `);
+
+        insertPlan.run(
+          'بسته برنزی (استارتر)',
+          49000,
+          'مقرون‌به‌صرفه',
+          '~۴۰۰,۰۰۰ توکن سهمیه | حدود ۳۰۰ تا ۴۰۰ پاسخ هوشمند',
+          'انتخابی عالی برای پاسخ به سوالات درسی، نگارش ایمیل و خلاصه مقالات هفتگی.',
+          'دسترسی به Claude 3.5 و GPT-4o\nبدون تاریخ انقضا\nمحاسبه شفاف و دقیق به اندازه مصرف',
+          0
+        );
+
+        insertPlan.run(
+          'بسته نقره‌ای',
+          149000,
+          'پرفروش‌ترین (۲۰٪ شارژ هدیه)',
+          '~۱,۸۰۰,۰۰۰ توکن سهمیه | معادل بیش از ۱,۵۰۰ پاسخ مفصل',
+          'محبوب‌ترین انتخاب برای نویسندگان، پژوهشگران، وکلا و تولیدکنندگان محتوا.',
+          '۲۰٪ اعتبار رایگان اضافه\nتحلیل عمیق کتاب و اسناد PDF\nاستودیوی تصویرسازی بدون سقف\nپشتیبانی در اولویت',
+          1
+        );
+
+        insertPlan.run(
+          'بسته طلایی (حرفه‌ای)',
+          349000,
+          'بیشترین ارزش (۳۰٪ شارژ هدیه)',
+          '~۵,۵۰۰,۰۰۰ توکن سهمیه | معادل بیش از ۵,۰۰۰ پیام عمیق',
+          'ویژه توسعه‌دهندگان، معماران نرم‌افزار، تحلیل‌گران داده و تیم‌های کاری.',
+          '۳۰٪ شارژ تشویقی نقدی\nبالاترین اولویت سرعت پردازش\nکدنویسی پیچیده و تحلیل دیتاست\nاعتبار بدون انقضا',
+          0
+        );
+        syncDatabase();
+      }
+    } catch (e) {
+      console.warn('[Admin API] Could not auto-seed plans:', e);
+    }
+
     const products = db.prepare(`
       SELECT p.*, COUNT(l.id) as stock 
       FROM products p 
       LEFT JOIN licenses l ON p.id = l.productId AND l.status = 'available'
+      WHERE p.category IS NULL OR p.category != 'wallet_topup'
       GROUP BY p.id
-      ORDER BY p.createdAt DESC
+      ORDER BY p.id DESC
     `).all();
     res.json(products);
   } catch (error) {
@@ -39,14 +87,37 @@ router.get('/products', (req, res) => {
 // POST /api/admin/products
 router.post('/products', (req, res) => {
   try {
-    const { title, description, longDescription, price, category, image, bannerImage, baseUrl, deliveryGuide } = req.body;
+    const { 
+      title, description, longDescription, price, category, image, bannerImage, baseUrl, deliveryGuide,
+      badge, features, tokenEstimate, isPopular, showOnLanding
+    } = req.body;
     
     if (!title || price === undefined || price === null || !category) {
       return res.status(400).json({ error: 'عنوان، قیمت و دسته‌بندی الزامی است.' });
     }
 
-    const stmt = db.prepare('INSERT INTO products (title, description, longDescription, price, category, image, bannerImage, baseUrl, deliveryGuide) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)');
-    const info = stmt.run(title, description || '', longDescription || '', price, category, image || null, bannerImage || null, baseUrl || null, deliveryGuide || null);
+    const stmt = db.prepare(`
+      INSERT INTO products (
+        title, description, longDescription, price, category, image, bannerImage, baseUrl, deliveryGuide,
+        badge, features, tokenEstimate, isPopular, showOnLanding
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `);
+    const info = stmt.run(
+      title,
+      description || '',
+      longDescription || '',
+      price,
+      category,
+      image || null,
+      bannerImage || null,
+      baseUrl || null,
+      deliveryGuide || null,
+      badge || null,
+      features || null,
+      tokenEstimate || null,
+      isPopular ? 1 : 0,
+      showOnLanding === false ? 0 : 1
+    );
     syncDatabase();
     clearSitemapCache();
 
@@ -62,7 +133,10 @@ router.post('/products', (req, res) => {
 router.put('/products/:id', (req, res) => {
   try {
     const { id } = req.params;
-    const { title, description, longDescription, price, category, image, bannerImage, baseUrl, deliveryGuide } = req.body;
+    const { 
+      title, description, longDescription, price, category, image, bannerImage, baseUrl, deliveryGuide,
+      badge, features, tokenEstimate, isPopular, showOnLanding
+    } = req.body;
     
     if (!title || price === undefined || price === null || !category) {
       return res.status(400).json({ error: 'عنوان، قیمت و دسته‌بندی الزامی است.' });
@@ -73,8 +147,30 @@ router.put('/products/:id', (req, res) => {
       return res.status(404).json({ error: 'محصول یافت نشد.' });
     }
 
-    const stmt = db.prepare('UPDATE products SET title = ?, description = ?, longDescription = ?, price = ?, category = ?, image = ?, bannerImage = ?, baseUrl = ?, deliveryGuide = ? WHERE id = ?');
-    stmt.run(title, description || '', longDescription || '', price, category, image || null, bannerImage || null, baseUrl || null, deliveryGuide || null, id);
+    const stmt = db.prepare(`
+      UPDATE products SET 
+        title = ?, description = ?, longDescription = ?, price = ?, category = ?, 
+        image = ?, bannerImage = ?, baseUrl = ?, deliveryGuide = ?,
+        badge = ?, features = ?, tokenEstimate = ?, isPopular = ?, showOnLanding = ?
+      WHERE id = ?
+    `);
+    stmt.run(
+      title,
+      description || '',
+      longDescription || '',
+      price,
+      category,
+      image || null,
+      bannerImage || null,
+      baseUrl || null,
+      deliveryGuide || null,
+      badge || null,
+      features || null,
+      tokenEstimate || null,
+      isPopular ? 1 : 0,
+      showOnLanding === false ? 0 : 1,
+      id
+    );
     syncDatabase();
     clearSitemapCache();
 
@@ -257,7 +353,11 @@ router.put('/orders/:id/status', (req, res) => {
     let warning: string | null = null;
 
     if (status === 'success') {
-      if (order.productCategory !== 'package' && !licenseId) {
+      if (order.productCategory === 'plan') {
+        const product = db.prepare('SELECT * FROM products WHERE id = ?').get(order.productId) as any;
+        const creditAmount = getPlanCreditAmount(product);
+        depositWallet(order.userId, creditAmount, `تایید سفارش ${product?.title || 'بسته تعرفه'} توسط مدیریت - سفارش ${id}`);
+      } else if (order.productCategory !== 'package' && !licenseId) {
         const availLicense = db.prepare(
           'SELECT id, key FROM licenses WHERE productId = ? AND status = ? LIMIT 1'
         ).get(order.productId, 'available') as any;
@@ -1017,6 +1117,104 @@ router.post('/users/:id/wallet', (req, res) => {
   } catch (error) {
     console.error('[Admin API] Error updating user wallet:', error);
     res.status(500).json({ error: 'خطا در بروزرسانی کیف پول کاربر' });
+  }
+});
+
+// ==========================================
+// SITE DESIGN & CMS STUDIO ENDPOINTS
+// ==========================================
+
+// GET /api/admin/site-design
+router.get('/site-design', (_req, res) => {
+  try {
+    const design = getFullSiteDesign();
+    res.json(design);
+  } catch (error) {
+    console.error('[Admin API] Error fetching site design:', error);
+    res.status(500).json({ error: 'خطا در دریافت تنظیمات طراحی سایت' });
+  }
+});
+
+// PUT /api/admin/site-design/:sectionKey
+router.put('/site-design/:sectionKey', (req, res) => {
+  try {
+    const { sectionKey } = req.params;
+    const { data } = req.body;
+
+    const allowedKeys = [
+      'landing_hero',
+      'landing_manifesto', 
+      'landing_professions', 
+      'landing_gallery',
+      'landing_pricing_header',
+      'landing_faqs', 
+      'landing_cta', 
+      'landing_gift_card', 
+      'store_design', 
+      'blog_design', 
+      'footer_settings'
+    ];
+    if (!allowedKeys.includes(sectionKey)) {
+      return res.status(400).json({ error: 'کلید بخش نامعتبر است.' });
+    }
+
+    if (!data) {
+      return res.status(400).json({ error: 'اطلاعات بخش الزامی است.' });
+    }
+
+    const saved = saveSectionData(sectionKey, data);
+    res.json({ success: true, data: saved });
+  } catch (error) {
+    console.error(`[Admin API] Error updating site design section ${req.params.sectionKey}:`, error);
+    res.status(500).json({ error: 'خطا در ذخیره بخش طراحی سایت' });
+  }
+});
+
+// POST /api/admin/site-design/reset/:sectionKey
+router.post('/site-design/reset/:sectionKey', (req, res) => {
+  try {
+    const { sectionKey } = req.params;
+    const restored = resetSectionData(sectionKey);
+    if (!restored) {
+      return res.status(400).json({ error: 'امکان بازگردانی این بخش وجود ندارد.' });
+    }
+    res.json({ success: true, data: restored });
+  } catch (error) {
+    console.error(`[Admin API] Error resetting section ${req.params.sectionKey}:`, error);
+    res.status(500).json({ error: 'خطا در بازگردانی تنظیمات به پیش‌فرض' });
+  }
+});
+
+// POST /api/admin/site-design/upload-image
+router.post('/site-design/upload-image', (req, res) => {
+  try {
+    const { base64, folder = 'custom', filename } = req.body;
+    if (!base64 || typeof base64 !== 'string') {
+      return res.status(400).json({ error: 'تصویر معتبر ارسال نشده است.' });
+    }
+
+    const matches = base64.match(/^data:image\/([a-zA-Z0-9+]+);base64,(.+)$/);
+    if (!matches || matches.length !== 3) {
+      return res.status(400).json({ error: 'فرمت Base64 تصویر نامعتبر است.' });
+    }
+
+    const ext = matches[1] === 'jpeg' ? 'jpg' : matches[1];
+    const buffer = Buffer.from(matches[2], 'base64');
+
+    const targetDir = path.join(process.cwd(), 'public', 'images', folder);
+    if (!fs.existsSync(targetDir)) {
+      fs.mkdirSync(targetDir, { recursive: true });
+    }
+
+    const safeFilename = filename ? `${filename.replace(/[^a-zA-Z0-9-_]/g, '')}-${Date.now()}.${ext}` : `img-${Date.now()}.${ext}`;
+    const filePath = path.join(targetDir, safeFilename);
+    fs.writeFileSync(filePath, buffer);
+
+    const publicUrl = `/images/${folder}/${safeFilename}`;
+    res.json({ success: true, url: publicUrl });
+  } catch (error) {
+    console.error('[Admin API] Error uploading site image:', error);
+    res.status(500).json({ error: 'خطا در ذخیره فایل تصویر' });
   }
 });
 

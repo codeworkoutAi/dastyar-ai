@@ -5,7 +5,7 @@ import db, { syncDatabase } from '../db/database';
 import { requireAuth } from '../middleware/auth';
 import { bot } from '../telegram/bot';
 import { requestZarinpalPayment, verifyZarinpalPayment, getZarinpalConfig } from '../services/zarinpalService';
-import { depositWallet } from '../services/walletService';
+import { depositWallet, getPlanCreditAmount } from '../services/walletService';
 
 const router = express.Router();
 
@@ -110,7 +110,7 @@ router.post('/checkout', checkoutLimiter, requireAuth, async (req: any, res) => 
       return res.status(404).json({ error: 'محصول پیدا نشد' });
     }
 
-    if (product.category !== 'package' && product.stock <= 0) {
+    if (product.category !== 'package' && product.category !== 'plan' && product.stock <= 0) {
       return res.status(400).json({ error: 'موجودی این محصول به اتمام رسیده است' });
     }
 
@@ -238,7 +238,7 @@ router.post('/checkout-manual', checkoutLimiter, requireAuth, (req: any, res) =>
     `).get(productId) as any;
 
     if (!product) return res.status(404).json({ error: 'محصول پیدا نشد' });
-    if (product.category !== 'package' && product.stock <= 0) {
+    if (product.category !== 'package' && product.category !== 'plan' && product.stock <= 0) {
       return res.status(400).json({ error: 'موجودی این محصول به اتمام رسیده است' });
     }
 
@@ -320,17 +320,22 @@ router.get('/mock-callback', (req, res) => {
         return res.redirect('/store?payment=failed');
       }
 
-      // Check if wallet top-up
+      // Check if wallet top-up or digital pricing plan
       const isWalletTopup = order.id.startsWith('TOP-') || order.productId === getWalletTopupProductId();
-      if (isWalletTopup) {
-        db.prepare("UPDATE orders SET paymentStatus = 'success', refId = 'MOCK-TOPUP' WHERE id = ?").run(orderId);
-        depositWallet(order.userId, order.amount, `شارژ آزمایشی کیف پول کاربری - سفارش ${orderId}`);
-        syncDatabase();
-        return res.redirect(`/store?tab=wallet&payment=success&orderId=${orderId}&refId=MOCK-TOPUP&amount=${order.amount}`);
-      }
+      const product = db.prepare('SELECT * FROM products WHERE id = ?').get(order.productId) as any;
+      const isPlan = product?.category === 'plan';
 
-      const productStmt = db.prepare('SELECT category, title FROM products WHERE id = ?');
-      const product = productStmt.get(order.productId) as any;
+      if (isWalletTopup || isPlan) {
+        const creditAmount = isPlan ? getPlanCreditAmount(product) : order.amount;
+        const desc = isPlan 
+          ? `خرید ${product?.title || 'بسته تعرفه'} - سفارش ${orderId}`
+          : `شارژ آزمایشی کیف پول کاربری - سفارش ${orderId}`;
+
+        db.prepare("UPDATE orders SET paymentStatus = 'success', refId = 'MOCK-PAY' WHERE id = ?").run(orderId);
+        depositWallet(order.userId, creditAmount, desc);
+        syncDatabase();
+        return res.redirect(`/store?tab=wallet&payment=success&orderId=${orderId}&refId=MOCK-PAY&amount=${creditAmount}`);
+      }
 
       // Send Telegram notification that order is pending review
       try {
@@ -402,23 +407,43 @@ router.get('/zarinpal/callback', async (req, res) => {
       const refId = String(verifyRes.refId || '');
       const cardPan = verifyRes.cardPan || '';
 
+      const product = db.prepare('SELECT * FROM products WHERE id = ?').get(order.productId) as any;
       const isWalletTopup = order.id.startsWith('TOP-') || order.productId === getWalletTopupProductId();
+      const isPlan = product?.category === 'plan';
 
-      if (isWalletTopup) {
+      if (isWalletTopup || isPlan) {
+        const creditAmount = isPlan ? getPlanCreditAmount(product) : order.amount;
+        const desc = isPlan 
+          ? `خرید آنلاین ${product?.title || 'بسته تعرفه'} - شماره تراکنش: ${refId}`
+          : `شارژ آنلاین کیف پول از طریق زرین‌پال - شماره تراکنش: ${refId}`;
+
         db.prepare("UPDATE orders SET paymentStatus = 'success', paymentMethod = 'zarinpal', authority = ?, refId = ?, cardPan = ? WHERE id = ?")
           .run(authority, refId, cardPan, orderId);
 
-        depositWallet(order.userId, order.amount, `شارژ آنلاین کیف پول از طریق زرین‌پال - شماره تراکنش: ${refId}`);
+        depositWallet(order.userId, creditAmount, desc);
         syncDatabase();
 
-        return res.redirect(`/store?tab=wallet&payment=success&orderId=${orderId}&refId=${refId}&amount=${order.amount}`);
+        // Telegram delivery notification
+        try {
+          const orderUser = db.prepare('SELECT telegramId FROM users WHERE id = ?').get(order.userId) as any;
+          if (orderUser?.telegramId && bot) {
+            let msg = `✅ **پرداخت شما با موفقیت انجام شد!**\n\n` +
+                      `📦 **پلن خریداری‌شده:** ${product?.title || ''}\n` +
+                      `💰 **اعتبار شارژشده به کیف پول:** ${creditAmount.toLocaleString('fa-IR')} تومان\n` +
+                      `🔢 **شماره سفارش:** \`${orderId}\`\n` +
+                      `🧾 **کد پیگیری شاپرک:** \`${refId}\`\n\n` +
+                      `اعتبار این بسته بلافاصله به کیف پول شما اضافه شد و در محیط چت فعال است.`;
+            bot.telegram.sendMessage(orderUser.telegramId, msg, { parse_mode: 'Markdown' }).catch(() => {});
+          }
+        } catch (tgErr) {}
+
+        return res.redirect(`/store?tab=wallet&payment=success&orderId=${orderId}&refId=${refId}&amount=${creditAmount}`);
       }
 
       // Digital store product
       let licenseId: number | null = null;
-      const product = db.prepare('SELECT * FROM products WHERE id = ?').get(order.productId) as any;
 
-      if (product && product.category !== 'package') {
+      if (product && product.category !== 'package' && product.category !== 'plan') {
         const availLicense = db.prepare('SELECT id FROM licenses WHERE productId = ? AND status = ? LIMIT 1').get(product.id, 'available') as any;
         if (availLicense) {
           licenseId = availLicense.id;

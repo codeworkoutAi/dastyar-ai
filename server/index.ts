@@ -95,6 +95,7 @@ import authRouter from './routes/auth';
 import adminRouter from './routes/admin';
 import storeRouter from './routes/store';
 import newsRouter from './routes/news';
+import landingRouter from './routes/landing';
 import { startTelegramBot } from './telegram/bot';
 import { initNewsCron } from './services/newsCron';
 
@@ -110,6 +111,7 @@ app.use('/', modelsRouter);
 app.use('/', chatRouter);
 app.use('/', toolsRouter);
 app.use('/', intentRouter);
+app.use('/api', landingRouter);
 app.use('/api/auth', authRouter);
 app.use('/api/admin', adminRouter);
 app.use('/api/store', storeRouter);

@@ -33,12 +33,14 @@ import {
   ShieldCheck,
   Activity,
   Coins,
-  BarChart3
+  BarChart3,
+  Palette
 } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import { toEnglishDigits } from '../lib/persianUtils';
 import { AdminFinanceTab } from './AdminFinanceTab';
 import { AdminAnalyticsTab } from './AdminAnalyticsTab';
+import { AdminDesignStudioTab } from './AdminDesignStudioTab';
 
 interface AdminModalProps {
   isOpen: boolean;
@@ -53,7 +55,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
   const [error, setError] = useState<string | null>(null);
 
   // Tabs state
-  const [activeTab, setActiveTab] = useState<'products' | 'orders' | 'users' | 'news' | 'finance' | 'analytics' | 'settings'>('products');
+  const [activeTab, setActiveTab] = useState<'products' | 'orders' | 'users' | 'news' | 'finance' | 'analytics' | 'settings' | 'design'>('products');
   const [orders, setOrders] = useState<any[]>([]);
   const [ordersLoading, setOrdersLoading] = useState(false);
 
@@ -85,6 +87,11 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
   const [bannerImage, setBannerImage] = useState<string>('');
   const [baseUrl, setBaseUrl] = useState('');
   const [deliveryGuide, setDeliveryGuide] = useState('');
+  const [badge, setBadge] = useState('');
+  const [features, setFeatures] = useState('');
+  const [tokenEstimate, setTokenEstimate] = useState('');
+  const [isPopular, setIsPopular] = useState(false);
+  const [showOnLanding, setShowOnLanding] = useState(true);
 
   // Licenses state
   const [selectedProductForLicenses, setSelectedProductForLicenses] = useState<any>(null);
@@ -520,11 +527,11 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
       } else {
         setOrderFeedback({
           type: 'success',
-          text: status === 'success'
-            ? 'سفارش تایید شد و لایسنس به صورت خودکار تخصیص یافت.'
+          text: data.message || (status === 'success'
+            ? 'سفارش با موفقیت تایید شد.'
             : status === 'failed'
-              ? 'سفارش رد شد و در صورت وجود لایسنس، به انبار بازگشت.'
-              : 'وضعیت سفارش به حالت در انتظار تغییر یافت.'
+              ? 'سفارش رد شد.'
+              : 'وضعیت سفارش به حالت در انتظار تغییر یافت.')
         });
       }
 
@@ -804,7 +811,12 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
           image,
           bannerImage,
           baseUrl,
-          deliveryGuide
+          deliveryGuide,
+          badge,
+          features,
+          tokenEstimate,
+          isPopular,
+          showOnLanding
         })
       });
 
@@ -821,6 +833,11 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
       setBannerImage('');
       setBaseUrl('');
       setDeliveryGuide('');
+      setBadge('');
+      setFeatures('');
+      setTokenEstimate('');
+      setIsPopular(false);
+      setShowOnLanding(true);
       setCategory('account');
       setIsAdding(false);
       setEditingProductId(null);
@@ -841,6 +858,11 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
     setBannerImage(p.bannerImage || '');
     setBaseUrl(p.baseUrl || '');
     setDeliveryGuide(p.deliveryGuide || '');
+    setBadge(p.badge || '');
+    setFeatures(p.features || '');
+    setTokenEstimate(p.tokenEstimate || '');
+    setIsPopular(Boolean(p.isPopular));
+    setShowOnLanding(p.showOnLanding === undefined ? true : Boolean(p.showOnLanding));
     setEditingProductId(p.id);
     setIsAdding(true);
     setTimeout(() => {
@@ -870,6 +892,10 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
 
   // License Management Methods
   const openLicenseManager = async (p: any) => {
+    if (p.category === 'plan') {
+      handleEditClick(p);
+      return;
+    }
     setSelectedProductForLicenses(p);
     setNewLicensesText('');
     await fetchLicenses(p.id);
@@ -1036,12 +1062,22 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
             >
               تنظیمات
             </button>
+            <button
+              onClick={() => setActiveTab('design')}
+              className={`pb-3 text-sm font-bold border-b-2 transition-colors flex items-center gap-1.5 shrink-0 whitespace-nowrap ${activeTab === 'design' ? 'border-blue-600 text-blue-600 dark:border-blue-500 dark:text-blue-400' : 'border-transparent text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200'
+                }`}
+            >
+              <Palette className="w-4 h-4" />
+              <span>طراحی و صفحات</span>
+            </button>
           </div>
         </div>
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-4 sm:p-6 custom-scrollbar bg-zinc-50 dark:bg-black/20" ref={formRef}>
-          {activeTab === 'analytics' ? (
+          {activeTab === 'design' ? (
+            <AdminDesignStudioTab />
+          ) : activeTab === 'analytics' ? (
             <AdminAnalyticsTab />
           ) : activeTab === 'finance' ? (
             <AdminFinanceTab />
@@ -1817,7 +1853,8 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
                             >
                               <option value="account">اکانت پرمیوم</option>
                               <option value="api">کلید API</option>
-                              <option value="package">پکیج آموزشی</option>
+                              <option value="package">پکیج دانلودی / آموزشی</option>
+                              <option value="plan">پلن و بسته تعرفه (Pricing Plan)</option>
                             </select>
                           </div>
                         </div>
@@ -1844,71 +1881,151 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
                           />
                         </div>
 
-                        <div className="flex flex-col gap-1.5">
-                          <label className="text-xs font-bold text-zinc-600 dark:text-zinc-400">توضیحات کامل (پاپ‌آپ)</label>
-                          <textarea
-                            value={longDescription}
-                            onChange={(e) => setLongDescription(e.target.value)}
-                            className="w-full px-4 py-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/50 focus:border-zinc-400 dark:focus:border-zinc-500 focus:ring-1 focus:ring-zinc-400 dark:focus:ring-zinc-500 text-sm outline-none transition-all min-h-[150px]"
-                            placeholder="توضیحات کامل محصول که در پاپ‌آپ نمایش داده می‌شود..."
-                          />
-                        </div>
+                        {category === 'plan' ? (
+                          <div className="space-y-4 p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-800/40 border border-zinc-200 dark:border-zinc-700/50">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                              <div className="flex flex-col gap-1.5">
+                                <label className="text-xs font-bold text-zinc-600 dark:text-zinc-400">بج یا نشان بالای کارت (اختیاری)</label>
+                                <input
+                                  type="text"
+                                  value={badge}
+                                  onChange={(e) => setBadge(e.target.value)}
+                                  className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-sm outline-none"
+                                  placeholder="مثال: پرفروش‌ترین (۲۰٪ شارژ هدیه) یا اقتصادی"
+                                />
+                              </div>
 
-                        <div className="flex flex-col gap-1.5">
-                          <label className="text-xs font-bold text-zinc-600 dark:text-zinc-400">آدرس سرور / Base URL (اختیاری برای کلید API)</label>
-                          <input
-                            type="text"
-                            value={baseUrl}
-                            onChange={(e) => setBaseUrl(e.target.value)}
-                            className="w-full px-4 py-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/50 focus:border-zinc-400 dark:focus:border-zinc-500 focus:ring-1 focus:ring-zinc-400 dark:focus:ring-zinc-500 text-sm outline-none transition-all"
-                            placeholder="مثال: https://api.openai.com/v1/chat/completions"
-                            dir="ltr"
-                          />
-                        </div>
+                              <div className="flex flex-col gap-1.5">
+                                <label className="text-xs font-bold text-zinc-600 dark:text-zinc-400">سهمیه توکن یا پیام (اختیاری)</label>
+                                <input
+                                  type="text"
+                                  value={tokenEstimate}
+                                  onChange={(e) => setTokenEstimate(e.target.value)}
+                                  className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-sm outline-none"
+                                  placeholder="مثال: ~۱,۸۰۰,۰۰۰ توکن سهمیه | بیش از ۱,۵۰۰ پاسخ مفصل"
+                                />
+                              </div>
+                            </div>
 
-                        <div className="flex flex-col gap-1.5">
-                          <label className="text-xs font-bold text-zinc-600 dark:text-zinc-400">راهنمای تحویل / Delivery Guide (اختیاری)</label>
-                          <textarea
-                            value={deliveryGuide}
-                            onChange={(e) => setDeliveryGuide(e.target.value)}
-                            className="w-full px-4 py-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/50 focus:border-zinc-400 dark:focus:border-zinc-500 focus:ring-1 focus:ring-zinc-400 dark:focus:ring-zinc-500 text-sm outline-none transition-all min-h-[100px]"
-                            placeholder="راهنمای استفاده یا اطلاعات بیشتر که پس از خرید به کاربر نمایش داده می‌شود..."
-                          />
-                        </div>
+                            <div className="flex flex-col gap-1.5">
+                              <label className="text-xs font-bold text-zinc-600 dark:text-zinc-400">تصویر یا آیکون هدر کارت (کاملاً اختیاری)</label>
+                              <div className="flex items-center gap-4">
+                                <label className="flex-1 px-4 py-2.5 rounded-xl bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-sm cursor-pointer hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors text-center text-zinc-600 dark:text-zinc-300">
+                                  <span>{image ? 'تغییر تصویر/آیکون هدر' : 'انتخاب تصویر هدر (اختیاری)'}</span>
+                                  <input type="file" accept="image/*" className="hidden" onChange={(e) => handleImageChange(e, 'image')} />
+                                </label>
+                                {image && (
+                                  <div className="relative w-12 h-12 rounded-lg overflow-hidden border border-zinc-200 dark:border-zinc-700 shrink-0">
+                                    <img src={image} alt="Header Preview" className="w-full h-full object-cover" />
+                                    <button type="button" onClick={() => setImage('')} className="absolute top-0 right-0 bg-red-500 text-white w-4 h-4 flex items-center justify-center rounded-bl-lg text-[10px]" title="حذف تصویر">✕</button>
+                                  </div>
+                                )}
+                              </div>
+                              <span className="text-[11px] text-zinc-400">اگر خالی بماند، کارت به صورت مینیمال و متنی بدون تصویر نمایش داده می‌شود.</span>
+                            </div>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                          <div className="flex flex-col gap-1.5">
-                            <label className="text-xs font-bold text-zinc-600 dark:text-zinc-400">تصویر محصول (مربعی)</label>
-                            <div className="flex items-center gap-4">
-                              <label className="flex-1 px-4 py-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/50 text-sm cursor-pointer hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors text-center text-zinc-600 dark:text-zinc-400">
-                                <span>{image ? 'تغییر تصویر' : 'انتخاب تصویر'}</span>
-                                <input type="file" accept="image/*" className="hidden" onChange={(e) => handleImageChange(e, 'image')} />
+                            <div className="flex flex-col gap-1.5">
+                              <label className="text-xs font-bold text-zinc-600 dark:text-zinc-400">ویژگی‌های بسته (هر مورد در یک سطر جدید)</label>
+                              <textarea
+                                rows={4}
+                                value={features}
+                                onChange={(e) => setFeatures(e.target.value)}
+                                className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-sm outline-none leading-relaxed"
+                                placeholder={`۲۰٪ اعتبار رایگان اضافه\nتحلیل عمیق کتاب و اسناد PDF\nاستودیو تصویرسازی بدون سقف\nپشتیبانی در اولویت`}
+                              />
+                            </div>
+
+                            <div className="pt-2 flex flex-col sm:flex-row items-start sm:items-center gap-4 border-t border-zinc-200/60 dark:border-zinc-700/60">
+                              <label className="flex items-center gap-2 cursor-pointer">
+                                <input
+                                  type="checkbox"
+                                  checked={isPopular}
+                                  onChange={(e) => setIsPopular(e.target.checked)}
+                                  className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 border-zinc-300 dark:border-zinc-700"
+                                />
+                                <span className="text-xs font-bold text-zinc-800 dark:text-zinc-200">بسته برگزیده و محبوب (کارت سفید و برجسته)</span>
                               </label>
-                              {image && (
-                                <div className="relative w-12 h-12 rounded-lg overflow-hidden border border-zinc-200 dark:border-zinc-700 shrink-0">
-                                  <img src={image} alt="Preview" className="w-full h-full object-cover" />
-                                  <button type="button" onClick={() => setImage('')} className="absolute top-0 right-0 bg-red-500 text-white w-4 h-4 flex items-center justify-center rounded-bl-lg text-[10px]">✕</button>
-                                </div>
-                              )}
+
+                              <label className="flex items-center gap-2 cursor-pointer">
+                                <input
+                                  type="checkbox"
+                                  checked={showOnLanding}
+                                  onChange={(e) => setShowOnLanding(e.target.checked)}
+                                  className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 border-zinc-300 dark:border-zinc-700"
+                                />
+                                <span className="text-xs font-bold text-zinc-800 dark:text-zinc-200">نمایش در بخش تعرفه‌های صفحه اصلی</span>
+                              </label>
                             </div>
                           </div>
-
-                          <div className="flex flex-col gap-1.5">
-                            <label className="text-xs font-bold text-zinc-600 dark:text-zinc-400">تصویر بنر (عریض - اختیاری)</label>
-                            <div className="flex items-center gap-4">
-                              <label className="flex-1 px-4 py-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/50 text-sm cursor-pointer hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors text-center text-zinc-600 dark:text-zinc-400">
-                                <span>{bannerImage ? 'تغییر بنر' : 'انتخاب بنر'}</span>
-                                <input type="file" accept="image/*" className="hidden" onChange={(e) => handleImageChange(e, 'banner')} />
-                              </label>
-                              {bannerImage && (
-                                <div className="relative w-12 h-12 rounded-lg overflow-hidden border border-zinc-200 dark:border-zinc-700 shrink-0">
-                                  <img src={bannerImage} alt="Preview" className="w-full h-full object-cover" />
-                                  <button type="button" onClick={() => setBannerImage('')} className="absolute top-0 right-0 bg-red-500 text-white w-4 h-4 flex items-center justify-center rounded-bl-lg text-[10px]">✕</button>
-                                </div>
-                              )}
+                        ) : (
+                          <>
+                            <div className="flex flex-col gap-1.5">
+                              <label className="text-xs font-bold text-zinc-600 dark:text-zinc-400">توضیحات کامل (پاپ‌آپ)</label>
+                              <textarea
+                                value={longDescription}
+                                onChange={(e) => setLongDescription(e.target.value)}
+                                className="w-full px-4 py-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/50 focus:border-zinc-400 dark:focus:border-zinc-500 focus:ring-1 focus:ring-zinc-400 dark:focus:ring-zinc-500 text-sm outline-none transition-all min-h-[150px]"
+                                placeholder="توضیحات کامل محصول که در پاپ‌آپ نمایش داده می‌شود..."
+                              />
                             </div>
-                          </div>
-                        </div>
+
+                            <div className="flex flex-col gap-1.5">
+                              <label className="text-xs font-bold text-zinc-600 dark:text-zinc-400">آدرس سرور / Base URL (اختیاری برای کلید API)</label>
+                              <input
+                                type="text"
+                                value={baseUrl}
+                                onChange={(e) => setBaseUrl(e.target.value)}
+                                className="w-full px-4 py-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/50 focus:border-zinc-400 dark:focus:border-zinc-500 focus:ring-1 focus:ring-zinc-400 dark:focus:ring-zinc-500 text-sm outline-none transition-all"
+                                placeholder="مثال: https://api.openai.com/v1/chat/completions"
+                                dir="ltr"
+                              />
+                            </div>
+
+                            <div className="flex flex-col gap-1.5">
+                              <label className="text-xs font-bold text-zinc-600 dark:text-zinc-400">راهنمای تحویل / Delivery Guide (اختیاری)</label>
+                              <textarea
+                                value={deliveryGuide}
+                                onChange={(e) => setDeliveryGuide(e.target.value)}
+                                className="w-full px-4 py-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/50 focus:border-zinc-400 dark:focus:border-zinc-500 focus:ring-1 focus:ring-zinc-400 dark:focus:ring-zinc-500 text-sm outline-none transition-all min-h-[100px]"
+                                placeholder="راهنمای استفاده یا اطلاعات بیشتر که پس از خرید به کاربر نمایش داده می‌شود..."
+                              />
+                            </div>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                              <div className="flex flex-col gap-1.5">
+                                <label className="text-xs font-bold text-zinc-600 dark:text-zinc-400">تصویر محصول (مربعی)</label>
+                                <div className="flex items-center gap-4">
+                                  <label className="flex-1 px-4 py-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/50 text-sm cursor-pointer hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors text-center text-zinc-600 dark:text-zinc-400">
+                                    <span>{image ? 'تغییر تصویر' : 'انتخاب تصویر'}</span>
+                                    <input type="file" accept="image/*" className="hidden" onChange={(e) => handleImageChange(e, 'image')} />
+                                  </label>
+                                  {image && (
+                                    <div className="relative w-12 h-12 rounded-lg overflow-hidden border border-zinc-200 dark:border-zinc-700 shrink-0">
+                                      <img src={image} alt="Preview" className="w-full h-full object-cover" />
+                                      <button type="button" onClick={() => setImage('')} className="absolute top-0 right-0 bg-red-500 text-white w-4 h-4 flex items-center justify-center rounded-bl-lg text-[10px]">✕</button>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+
+                              <div className="flex flex-col gap-1.5">
+                                <label className="text-xs font-bold text-zinc-600 dark:text-zinc-400">تصویر بنر (عریض - اختیاری)</label>
+                                <div className="flex items-center gap-4">
+                                  <label className="flex-1 px-4 py-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/50 text-sm cursor-pointer hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors text-center text-zinc-600 dark:text-zinc-400">
+                                    <span>{bannerImage ? 'تغییر بنر' : 'انتخاب بنر'}</span>
+                                    <input type="file" accept="image/*" className="hidden" onChange={(e) => handleImageChange(e, 'banner')} />
+                                  </label>
+                                  {bannerImage && (
+                                    <div className="relative w-12 h-12 rounded-lg overflow-hidden border border-zinc-200 dark:border-zinc-700 shrink-0">
+                                      <img src={bannerImage} alt="Preview" className="w-full h-full object-cover" />
+                                      <button type="button" onClick={() => setBannerImage('')} className="absolute top-0 right-0 bg-red-500 text-white w-4 h-4 flex items-center justify-center rounded-bl-lg text-[10px]">✕</button>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          </>
+                        )}
 
                         <div className="flex justify-end pt-2">
                           <button type="submit" className="px-6 py-2.5 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 font-bold rounded-xl hover:opacity-90 transition-opacity">
@@ -1931,7 +2048,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
                     </div>
                   ) : (
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
-                      {products.map(p => (
+                      {products.filter((p: any) => p.category !== 'wallet_topup').map((p: any) => (
                         <div key={p.id} className="group flex flex-col bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-sm hover:shadow-md hover:border-zinc-300 dark:hover:border-zinc-700 transition-all overflow-hidden relative">
 
                           {/* Actions (Absolute top-left) */}
@@ -1963,9 +2080,16 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
                                 <BoxLinearIcon className="w-10 h-10 opacity-50" />
                               </div>
                             )}
-                            <span className="absolute bottom-3 right-3 text-xs px-2.5 py-1 bg-white/90 dark:bg-zinc-900/90 text-zinc-800 dark:text-zinc-200 font-medium rounded-lg shadow-sm backdrop-blur-sm">
-                              {p.category}
-                            </span>
+                            <div className="absolute bottom-3 right-3 flex items-center gap-1.5">
+                              <span className="text-xs px-2.5 py-1 bg-white/90 dark:bg-zinc-900/90 text-zinc-800 dark:text-zinc-200 font-medium rounded-lg shadow-sm backdrop-blur-sm">
+                                {p.category === 'plan' ? 'پلن تعرفه' : p.category === 'package' ? 'پکیج' : p.category === 'api' ? 'کلید API' : 'اکانت'}
+                              </span>
+                              {p.isPopular ? (
+                                <span className="text-[10px] px-2 py-0.5 bg-amber-500 text-white font-bold rounded-md shadow-xs">
+                                  برگزیده
+                                </span>
+                              ) : null}
+                            </div>
                           </div>
 
                           {/* Details */}
@@ -1980,23 +2104,41 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
                                 <span className="text-[10px] text-zinc-400 dark:text-zinc-500 mb-1">قیمت</span>
                                 <span className="text-[15px] font-black text-zinc-900 dark:text-zinc-100">{p.price.toLocaleString()} <span className="text-xs font-normal text-zinc-500">تومان</span></span>
                               </div>
-                              <div className="flex items-center gap-2">
-                                <div className="flex flex-col items-end mr-2">
-                                  <span className="text-[10px] text-zinc-400 dark:text-zinc-500 mb-1">{p.category === 'package' ? 'وضعیت' : 'موجودی'}</span>
-                                  <span className="text-[13px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 px-2 py-0.5 rounded-md">
-                                    {p.category === 'package' ? 'موجود' : `${p.stock || 0} عدد`}
+
+                              {p.category === 'plan' ? (
+                                <div className="flex items-center gap-1.5">
+                                  <span className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-100/90 dark:bg-emerald-950/60 rounded-xl border border-emerald-200 dark:border-emerald-800/80 shadow-2xs">
+                                    <Sparkles className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                                    <span>شارژ آنی و خودکار</span>
                                   </span>
-                                </div>
-                                {p.category !== 'package' && (
                                   <button
-                                    onClick={() => openLicenseManager(p)}
-                                    className="p-2 text-blue-600 bg-blue-50 hover:bg-blue-100 dark:text-blue-400 dark:bg-blue-900/20 dark:hover:bg-blue-900/40 rounded-xl transition-colors"
-                                    title="مدیریت لایسنس‌ها"
+                                    type="button"
+                                    onClick={() => handleEditClick(p)}
+                                    className="p-2 text-zinc-600 hover:text-blue-600 bg-zinc-100 hover:bg-blue-50 dark:text-zinc-400 dark:bg-zinc-800 dark:hover:bg-blue-900/30 rounded-xl transition-colors"
+                                    title="ویرایش مشخصات پلن"
                                   >
-                                    <Key size={18} />
+                                    <Edit2 size={15} />
                                   </button>
-                                )}
-                              </div>
+                                </div>
+                              ) : (
+                                <div className="flex items-center gap-2">
+                                  <div className="flex flex-col items-end mr-2">
+                                    <span className="text-[10px] text-zinc-400 dark:text-zinc-500 mb-1">{p.category === 'package' ? 'وضعیت' : 'موجودی'}</span>
+                                    <span className="text-[13px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 px-2 py-0.5 rounded-md">
+                                      {p.category === 'package' ? 'موجود' : `${p.stock || 0} عدد`}
+                                    </span>
+                                  </div>
+                                  {p.category !== 'package' && (
+                                    <button
+                                      onClick={() => openLicenseManager(p)}
+                                      className="p-2 text-blue-600 bg-blue-50 hover:bg-blue-100 dark:text-blue-400 dark:bg-blue-900/20 dark:hover:bg-blue-900/40 rounded-xl transition-colors"
+                                      title="مدیریت لایسنس‌ها"
+                                    >
+                                      <Key size={18} />
+                                    </button>
+                                  )}
+                                </div>
+                              )}
                             </div>
                           </div>
                         </div>
@@ -2413,7 +2555,13 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
                                     {o.productTitle}
                                   </span>
                                   <span className="text-[10px] text-blue-600 dark:text-blue-400 font-semibold">
-                                    {o.productCategory === 'package' ? 'پکیج دانلودی' : o.productCategory === 'api' ? 'کلید API' : 'اکانت پرمیوم'}
+                                    {o.productCategory === 'package'
+                                      ? 'پکیج دانلودی'
+                                      : o.productCategory === 'api'
+                                        ? 'کلید API'
+                                        : o.productCategory === 'plan'
+                                          ? 'بسته تعرفه چت‌باکس'
+                                          : 'اکانت پرمیوم'}
                                   </span>
                                 </div>
                               </td>
@@ -2459,6 +2607,18 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
                                   <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400">
                                     پکیج دانلودی
                                   </span>
+                                ) : o.productCategory === 'plan' ? (
+                                  o.paymentStatus === 'success' ? (
+                                    <span className="px-2.5 py-1 rounded-xl text-[10px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 flex items-center gap-1.5 w-fit">
+                                      <Sparkles className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                                      <span>شارژ مستقیم کیف پول</span>
+                                    </span>
+                                  ) : (
+                                    <span className="px-2.5 py-1 rounded-xl text-[10px] font-bold bg-amber-50 text-amber-800 dark:bg-amber-950/50 dark:text-amber-300 border border-amber-200 dark:border-amber-800 flex items-center gap-1.5 w-fit">
+                                      <Clock className="w-3 h-3 text-amber-600 shrink-0" />
+                                      <span>در انتظار تایید و شارژ</span>
+                                    </span>
+                                  )
                                 ) : o.licenseKey ? (
                                   <div className="flex items-center gap-1 max-w-[170px] bg-zinc-100 dark:bg-zinc-800 p-1 px-2 rounded-lg border border-zinc-200 dark:border-zinc-700">
                                     <span className="font-mono text-[11px] text-zinc-800 dark:text-zinc-200 truncate dir-ltr flex-1" title={o.licenseKey}>
@@ -2696,8 +2856,18 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
                         </div>
                       </div>
 
-                      {/* License Management Section (if not package) */}
-                      {selectedOrder.productCategory !== 'package' && (
+                      {/* Plan Wallet Info or License Management Section */}
+                      {selectedOrder.productCategory === 'plan' ? (
+                        <div className="p-4 rounded-2xl bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 space-y-2">
+                          <div className="flex items-center gap-2 text-emerald-800 dark:text-emerald-300">
+                            <Sparkles className="w-4 h-4 text-emerald-600 shrink-0" />
+                            <span className="text-xs font-bold">بسته شارژ اعتباری چت‌باکس (کیف پول)</span>
+                          </div>
+                          <p className="text-[11px] text-emerald-700 dark:text-emerald-400 leading-relaxed">
+                            این سفارش از نوع پلن تعرفه چت‌باکس است و به لایسنس نیاز ندارد. با تایید این سفارش، اعتبار نقدی و سهمیه توکن‌های این بسته مستقیماً به کیف پول مشتری واریز شده و در محیط چت فعال می‌گردد.
+                          </p>
+                        </div>
+                      ) : selectedOrder.productCategory !== 'package' && (
                         <div className="p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-800/40 border border-zinc-200/80 dark:border-zinc-700/50 space-y-3">
                           <div className="flex items-center justify-between">
                             <span className="text-xs font-bold text-zinc-800 dark:text-zinc-200 flex items-center gap-1.5">

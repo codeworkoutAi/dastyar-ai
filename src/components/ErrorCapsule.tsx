@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { AlertCircle, RotateCw, Settings, X } from 'lucide-react';
+import { AlertCircle, RotateCw, Settings, X, Coins } from 'lucide-react';
 import { useChatStore } from '../store/chatStore';
 import { useUIStore } from '../store/uiStore';
 
 export const ErrorCapsule: React.FC = React.memo(() => {
   const { activeError: error, setActiveError, regenerate } = useChatStore();
-  const { setIsSettingsOpen } = useUIStore();
+  const { setIsSettingsOpen, setIsWalletOpen } = useUIStore();
   const onDismiss = () => setActiveError(null);
   const onRetry = () => {
     setActiveError(null);
@@ -14,6 +14,10 @@ export const ErrorCapsule: React.FC = React.memo(() => {
   const onOpenSettings = () => {
     setActiveError(null);
     setIsSettingsOpen(true);
+  };
+  const onOpenWallet = () => {
+    setActiveError(null);
+    setIsWalletOpen(true);
   };
   const durationSeconds = 15;
 
@@ -84,7 +88,16 @@ export const ErrorCapsule: React.FC = React.memo(() => {
           </span>
 
           <div className="flex items-center gap-2 mr-auto">
-            {onOpenSettings && (
+            {(error.insufficientBalance || error.message?.includes('کیف پول') || error.message?.includes('اعتبار')) ? (
+              <button
+                type="button"
+                onClick={onOpenWallet}
+                className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs px-3.5 py-1.5 rounded-xl flex items-center gap-1.5 font-bold cursor-pointer transition-all shadow-md active:scale-95"
+              >
+                <Coins className="w-3.5 h-3.5 text-white" />
+                <span>شارژ فوری کیف پول</span>
+              </button>
+            ) : onOpenSettings && (
               <button
                 type="button"
                 onClick={onOpenSettings}

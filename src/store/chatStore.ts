@@ -14,14 +14,14 @@ let abortController: AbortController | null = null;
 interface ChatState {
   conversations: Conversation[];
   activeId: string | null;
-  activeError: { message: string; timestamp: number } | null;
+  activeError: { message: string; timestamp: number; insufficientBalance?: boolean } | null;
   isStreaming: boolean;
   routingState: 'idle' | 'general' | 'vision' | 'coding';
   
   switchUserContext: (userId: number | null) => void;
   setConversations: (conversations: Conversation[]) => void;
   setActiveId: (id: string | null) => void;
-  setActiveError: (error: { message: string; timestamp: number } | null) => void;
+  setActiveError: (error: { message: string; timestamp: number; insufficientBalance?: boolean } | null) => void;
   setIsStreaming: (isStreaming: boolean) => void;
   setRoutingState: (state: 'idle' | 'general' | 'vision' | 'coding') => void;
   
@@ -485,7 +485,11 @@ stopGeneration: () => {
               if (data.error) {
                 streamHadError = true;
                 const persianError = formatPersianErrorMessage(data.error);
-                get().setActiveError({ message: persianError, timestamp: Date.now() });
+                get().setActiveError({
+                  message: persianError,
+                  timestamp: Date.now(),
+                  insufficientBalance: Boolean(data.insufficientBalance || data.error.includes('کیف پول') || data.error.includes('اعتبار'))
+                });
                 set({ conversations: get().conversations.map((c) => {
                     if (c.id !== targetConv!.id) return c;
                     // Remove empty assistant message so chat area stays 100% clean and pristine

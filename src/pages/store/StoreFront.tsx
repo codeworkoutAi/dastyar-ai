@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useSearchParams, useNavigate, useParams } from 'react-router-dom';
-import { Home, Store, Settings, Key, CheckCircle2, XCircle, BookOpen, Package } from 'lucide-react';
+import { Home, Store, Settings, Key, CheckCircle2, XCircle, BookOpen, Package, Zap, Sparkles } from 'lucide-react';
 import { CheckoutModal } from '../../components/CheckoutModal';
 import { ProductDetailsModal } from '../../components/ProductDetailsModal';
 import { Footer } from '../../components/Footer';
@@ -26,6 +26,7 @@ export function StoreFront() {
   };
   const { user } = useAuthStore();
   const [products, setProducts] = useState<any[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
@@ -285,52 +286,139 @@ export function StoreFront() {
                 <h2 className="text-xl font-bold mb-2">هنوز محصولی اضافه نشده است</h2>
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                {products.map(p => (
-                  <div key={p.id} className="group flex flex-col bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl shadow-sm hover:shadow-lg hover:border-zinc-300 dark:hover:border-zinc-700 transition-all overflow-hidden cursor-pointer" onClick={() => setDetailsProduct(p)}>
-                    <div className="w-full h-48 bg-zinc-100 dark:bg-zinc-800 relative flex-shrink-0">
-                      {p.bannerImage || p.image ? (
-                        <img src={p.bannerImage || p.image} alt={p.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-zinc-400">
-                          <Store className="w-12 h-12 opacity-30" />
-                        </div>
-                      )}
-                      <span className="absolute top-4 right-4 text-xs font-bold px-3 py-1.5 bg-white/90 dark:bg-zinc-900/90 text-zinc-800 dark:text-zinc-200 rounded-lg shadow-sm backdrop-blur-sm">
-                        {p.category === 'api' ? 'کلید API' : p.category === 'account' ? 'اکانت پرمیوم' : 'پکیج'}
-                      </span>
-                    </div>
-                    
-                    <div className="flex flex-col flex-1 p-5">
-                      <h3 className="font-bold text-lg text-zinc-900 dark:text-zinc-100 mb-2 leading-tight line-clamp-2" title={p.title}>{p.title}</h3>
-                      {p.description && (
-                        <p className="text-sm text-zinc-500 dark:text-zinc-400 line-clamp-2 mb-4 leading-relaxed">{p.description}</p>
-                      )}
-                      
-                      <div className="mt-auto pt-4 border-t border-zinc-100 dark:border-zinc-800/60 flex items-center justify-between">
-                        <div className="flex flex-col">
-                          <span className="text-[11px] text-zinc-500 mb-1">مبلغ پرداختی</span>
-                          <span className="text-lg font-bold text-zinc-900 dark:text-zinc-100">{formatPrice(p.price)} <span className="text-xs font-normal text-zinc-500">تومان</span></span>
-                        </div>
-                        <button 
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            if (!user) {
-                              window.dispatchEvent(new CustomEvent('open-auth-modal'));
-                            } else {
-                              setSelectedProduct(p);
-                              navigate(`/store/${p.id}`);
-                            }
-                          }}
-                          disabled={p.category !== 'package' && p.stock <= 0}
-                          className="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          {p.category !== 'package' && p.stock <= 0 ? 'ناموجود' : 'خرید'}
-                        </button>
+              <div className="space-y-6">
+                {/* Category Filter Tabs */}
+                <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
+                  {[
+                    { id: 'all', label: 'همه محصولات' },
+                    { id: 'plan', label: 'پلن‌ها و بسته‌ها' },
+                    { id: 'account', label: 'اکانت‌های پرمیوم' },
+                    { id: 'api', label: 'کلیدهای API' },
+                    { id: 'package', label: 'پکیج‌های آموزشی' },
+                  ].map((cat) => (
+                    <button
+                      key={cat.id}
+                      onClick={() => setSelectedCategory(cat.id)}
+                      className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition-all cursor-pointer ${
+                        selectedCategory === cat.id
+                          ? 'bg-blue-600 text-white shadow-md shadow-blue-500/25'
+                          : 'bg-white dark:bg-zinc-800/80 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 border border-zinc-200/80 dark:border-zinc-800'
+                      }`}
+                    >
+                      {cat.label}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Products Grid (Dynamic Self-Healing Layout) */}
+                {(() => {
+                  const filtered = products.filter(p => selectedCategory === 'all' || p.category === selectedCategory);
+                  if (filtered.length === 0) {
+                    return (
+                      <div className="flex flex-col items-center justify-center py-16 opacity-60 bg-white dark:bg-zinc-900 rounded-3xl border border-zinc-200 dark:border-zinc-800">
+                        <Store size={40} className="mb-3 text-zinc-400" />
+                        <p className="text-sm font-bold text-zinc-500">محصولی در این دسته‌بندی یافت نشد.</p>
                       </div>
+                    );
+                  }
+
+                  const gridLayout = filtered.length === 1
+                    ? 'max-w-md mx-auto grid grid-cols-1 gap-6'
+                    : filtered.length === 2
+                      ? 'max-w-3xl mx-auto grid grid-cols-1 sm:grid-cols-2 gap-6'
+                      : filtered.length === 3
+                        ? 'max-w-5xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6'
+                        : 'grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6';
+
+                  return (
+                    <div className={`${gridLayout} transition-all duration-300`}>
+                      {filtered.map(p => (
+                      <div 
+                        key={p.id} 
+                        className="group flex flex-col bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl shadow-sm hover:shadow-lg hover:border-zinc-300 dark:hover:border-zinc-700 transition-all overflow-hidden cursor-pointer" 
+                        onClick={() => setDetailsProduct(p)}
+                      >
+                        <div className="w-full h-48 bg-zinc-100 dark:bg-zinc-800 relative flex-shrink-0 overflow-hidden">
+                          {p.bannerImage || p.image ? (
+                            <img src={p.bannerImage || p.image} alt={p.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                          ) : p.category === 'plan' ? (
+                            <div className="w-full h-full bg-gradient-to-br from-blue-600/15 via-indigo-600/10 to-purple-600/15 flex flex-col items-center justify-center text-blue-600 dark:text-blue-400 gap-2">
+                              <Sparkles className="w-12 h-12 opacity-40" />
+                              <span className="text-xs font-bold opacity-60">اشتراک ویژه</span>
+                            </div>
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-zinc-400">
+                              <Store className="w-12 h-12 opacity-30" />
+                            </div>
+                          )}
+                          
+                          <span className="absolute top-3.5 right-3.5 text-[11px] font-bold px-2.5 py-1 bg-white/90 dark:bg-zinc-900/90 text-zinc-800 dark:text-zinc-200 rounded-lg shadow-sm backdrop-blur-sm">
+                            {p.category === 'plan' ? 'پلن تعرفه' : p.category === 'api' ? 'کلید API' : p.category === 'account' ? 'اکانت پرمیوم' : 'پکیج'}
+                          </span>
+
+                          {p.badge && (
+                            <span className="absolute top-3.5 left-3.5 text-[11px] font-black px-2.5 py-1 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg shadow-sm">
+                              {p.badge}
+                            </span>
+                          )}
+                        </div>
+                        
+                        <div className="flex flex-col flex-1 p-5">
+                          <h3 className="font-bold text-lg text-zinc-900 dark:text-zinc-100 mb-1.5 leading-tight line-clamp-2" title={p.title}>
+                            {usePersianDigits ? toPersianDigits(p.title) : p.title}
+                          </h3>
+
+                          {p.tokenEstimate && (
+                            <div className="flex items-center gap-1 text-xs font-semibold text-blue-600 dark:text-blue-400 mb-2.5">
+                              <Zap size={13} className="shrink-0" />
+                              <span>{usePersianDigits ? toPersianDigits(p.tokenEstimate) : p.tokenEstimate}</span>
+                            </div>
+                          )}
+
+                          {p.description && (
+                            <p className="text-sm text-zinc-500 dark:text-zinc-400 line-clamp-2 mb-3 leading-relaxed">{p.description}</p>
+                          )}
+
+                          {p.category === 'plan' && p.features && (
+                            <div className="mb-4 space-y-1.5 pt-1 border-t border-zinc-100 dark:border-zinc-800/60">
+                              {p.features.split('\n').filter(Boolean).slice(0, 3).map((feat: string, idx: number) => (
+                                <div key={idx} className="flex items-center gap-1.5 text-xs text-zinc-600 dark:text-zinc-400">
+                                  <CheckCircle2 size={13} className="text-emerald-500 shrink-0" />
+                                  <span className="truncate">{usePersianDigits ? toPersianDigits(feat.trim()) : feat.trim()}</span>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                          
+                          <div className="mt-auto pt-4 border-t border-zinc-100 dark:border-zinc-800/60 flex items-center justify-between">
+                            <div className="flex flex-col">
+                              <span className="text-[11px] text-zinc-500 mb-0.5">مبلغ پرداختی</span>
+                              <span className="text-lg font-bold text-zinc-900 dark:text-zinc-100">
+                                {formatPrice(p.price)} <span className="text-xs font-normal text-zinc-500">تومان</span>
+                              </span>
+                            </div>
+                            <button 
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                if (!user) {
+                                  window.dispatchEvent(new CustomEvent('open-auth-modal'));
+                                } else {
+                                  setSelectedProduct(p);
+                                  navigate(`/store/${p.id}`);
+                                }
+                              }}
+                              disabled={p.category !== 'package' && p.category !== 'plan' && p.stock <= 0}
+                              className="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                            >
+                              {p.category !== 'package' && p.category !== 'plan' && p.stock <= 0 ? 'ناموجود' : 'خرید'}
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
                     </div>
-                  </div>
-                ))}
+                  );
+                })()}
               </div>
             )}
         </>

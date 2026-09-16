@@ -225,6 +225,31 @@ export function depositWallet(userId: number, amountToman: number, description: 
 }
 
 /**
+ * Calculate the wallet credit granted for a pricing plan product,
+ * including bonus credits (e.g. 20% or 30% bonus on higher tiers).
+ */
+export function getPlanCreditAmount(product: any): number {
+  if (!product) return 0;
+  const price = Number(product.price) || 0;
+  // Standard plan tiered gifts
+  if (price === 149000) return 180000;
+  if (price === 349000) return 450000;
+  if (price === 49000) return 49000;
+
+  // If badge contains percentage (e.g. ۲۰٪ or ۳۰٪)
+  if (product.badge && typeof product.badge === 'string') {
+    const match = product.badge.match(/(\d+)٪/);
+    if (match) {
+      const pct = parseInt(match[1], 10);
+      if (!isNaN(pct) && pct > 0) {
+        return Math.round(price * (1 + pct / 100));
+      }
+    }
+  }
+  return price;
+}
+
+/**
  * Get user transaction history
  */
 export function getUserTransactions(userId: number, limit: number = 50): any[] {

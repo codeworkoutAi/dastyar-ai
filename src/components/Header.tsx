@@ -23,7 +23,7 @@ import { useUIStore } from '../store/uiStore';
 import { useSettingsStore } from '../store/settingsStore';
 import { useChatStore } from '../store/chatStore';
 import { useAuthStore } from '../store/authStore';
-import { ShieldCheck } from 'lucide-react';
+import { ShieldCheck, Coins } from 'lucide-react';
 import { SmartRoutingAnimation } from './ChatBox';
 import { ThemeToggle } from './ThemeToggle';
 import { ModelSelectorDropdown } from './ModelSelectorDropdown';
@@ -40,7 +40,7 @@ export const SmartRoutingBadge: React.FC<{ isStreaming: boolean }> = ({ isStream
 };
 
 export const Header: React.FC = React.memo(() => {
-  const { toggleSidebar, setIsSettingsOpen, setIsExportOpen, setIsAdminOpen } = useUIStore();
+  const { toggleSidebar, setIsSettingsOpen, setIsExportOpen, setIsAdminOpen, setIsWalletOpen } = useUIStore();
   const { user } = useAuthStore();
   const { settings, setSettings } = useSettingsStore();
   const { activeId, conversations, isStreaming, routingState } = useChatStore();
@@ -199,6 +199,26 @@ export const Header: React.FC = React.memo(() => {
               </Tooltip>
             )}
 
+            {/* Wallet Balance Pill for Logged-in Users */}
+            {user && (
+              <Tooltip content={`موجودی کیف پول: ${(user.walletBalance || 0).toLocaleString('fa-IR')} تومان (کلیک برای شارژ سریع با مبلغ دلخواه)`}>
+                <button
+                  id="header-wallet-btn"
+                  onClick={() => setIsWalletOpen(true)}
+                  className="clay-btn h-11 px-2.5 sm:px-3 flex items-center gap-1.5 hover:opacity-90 rounded-xl sm:rounded-2xl cursor-pointer text-emerald-600 dark:text-emerald-400 font-bold text-xs transition-all active:scale-95"
+                  aria-label="کیف پول و شارژ اعتبار"
+                >
+                  <Coins className="w-4 h-4 text-emerald-500 shrink-0" />
+                  <span className="hidden md:inline font-mono" dir="rtl">
+                    {(user.walletBalance || 0).toLocaleString('fa-IR')} <span className="text-[10px] font-normal text-zinc-500">تومان</span>
+                  </span>
+                  <span className="w-5 h-5 rounded-lg bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-xs font-black shrink-0">
+                    +
+                  </span>
+                </button>
+              </Tooltip>
+            )}
+
             {/* Theme Toggle Button */}
             <ThemeToggle variant="clay" />
 
@@ -245,7 +265,22 @@ export const Header: React.FC = React.memo(() => {
             </Tooltip>
 
             {showMobileMenu && (
-              <div className="absolute top-full mt-2 left-0 w-48 clay-card shadow-2xl z-50 flex flex-col gap-1 p-2 animate-fadeIn border border-subtle" dir="rtl">
+              <div className="absolute top-full mt-2 left-0 w-52 clay-card shadow-2xl z-50 flex flex-col gap-1 p-2 animate-fadeIn border border-subtle" dir="rtl">
+                {user && (
+                  <button
+                    onClick={() => { setIsWalletOpen(true); setShowMobileMenu(false); }}
+                    className="flex items-center justify-between p-2.5 rounded-xl bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/60 text-right cursor-pointer text-emerald-700 dark:text-emerald-300"
+                  >
+                    <div className="flex items-center gap-2">
+                      <Coins className="w-4 h-4 text-emerald-500" />
+                      <span className="text-xs font-bold">کیف پول و شارژ</span>
+                    </div>
+                    <span className="text-xs font-mono font-bold" dir="rtl">
+                      {(user.walletBalance || 0).toLocaleString('fa-IR')} <span className="text-[10px] font-normal">ت</span>
+                    </span>
+                  </button>
+                )}
+
                 {activeConversation && activeConversation.messages.length > 0 && (
                   <button onClick={() => { setIsExportOpen(true); setShowMobileMenu(false); }} className="flex items-center gap-2 p-2 rounded-lg hover:bg-[var(--bg-main)] transition-colors text-right cursor-pointer">
                     <DownloadMinimalisticLinearIcon className="w-4 h-4 text-emerald-400" />

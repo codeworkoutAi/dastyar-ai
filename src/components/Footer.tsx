@@ -1,9 +1,29 @@
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useUIStore } from '../store/uiStore';
-import { Send, Twitter, Github, Bot, Settings, Book, MessageSquare, ShoppingBag } from 'lucide-react';
+import { Send, Twitter, Github, Bot, Settings, Book, MessageSquare, ShoppingBag, Mail } from 'lucide-react';
 
 export function Footer() {
   const { setIsAboutOpen, setIsContactOpen, setIsSettingsOpen } = useUIStore();
+
+  const [footerData, setFooterData] = useState({
+    brandTitle: 'دستیار هوشمند',
+    brandDesc: 'پنجره‌ای رو به آینده. همراه هوشمند شما برای خلق، یادگیری و کشف ناشناخته‌ها در دنیای بی‌کران هوش مصنوعی.',
+    supportEmail: 'support@dastyarai.com',
+    telegramChannel: 'https://t.me/dastyarai',
+    copyrightText: 'دستیار هوشمند. تمامی حقوق محفوظ است.'
+  });
+
+  useEffect(() => {
+    fetch('/api/landing-content')
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.footer && d.footer.brandTitle) {
+          setFooterData(d.footer);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   return (
     <footer className="relative mt-20 border-t border-zinc-200/50 dark:border-zinc-800/50 bg-white/50 dark:bg-zinc-950/50 backdrop-blur-xl">
@@ -17,12 +37,24 @@ export function Footer() {
             <div className="flex items-center gap-2">
               <Bot className="w-8 h-8 text-emerald-600" />
               <h2 className="text-xl font-black bg-gradient-to-l from-emerald-600 to-teal-600 bg-clip-text text-transparent">
-                دستیار هوشمند
+                {footerData.brandTitle || 'دستیار هوشمند'}
               </h2>
             </div>
             <p className="text-zinc-600 dark:text-zinc-400 text-sm leading-relaxed max-w-sm">
-              پنجره‌ای رو به آینده. همراه هوشمند شما برای خلق، یادگیری و کشف ناشناخته‌ها در دنیای بی‌کران هوش مصنوعی.
+              {footerData.brandDesc}
             </p>
+            {footerData.supportEmail && (
+              <div className="pt-1">
+                <a
+                  href={`mailto:${footerData.supportEmail}`}
+                  className="inline-flex items-center gap-1.5 text-xs text-zinc-500 hover:text-emerald-600 dark:hover:text-emerald-400 font-mono transition-colors"
+                  dir="ltr"
+                >
+                  <Mail size={13} />
+                  <span>{footerData.supportEmail}</span>
+                </a>
+              </div>
+            )}
           </div>
 
           {/* Quick Links */}
@@ -69,7 +101,7 @@ export function Footer() {
             </ul>
           </div>
 
-          {/* Trust Seal (eNamad) - Left Column */}
+          {/* Trust Seal (eNamad) - Left Column - Strictly Preserved */}
           <div className="space-y-4 flex flex-col items-start md:items-start text-right">
             <h3 className="font-bold text-zinc-900 dark:text-zinc-100 mb-4">نماد اعتماد</h3>
             <div className="p-2.5 bg-white dark:bg-zinc-900 rounded-2xl shadow-sm border border-zinc-200 dark:border-zinc-800 hover:shadow-md transition-shadow">
@@ -84,13 +116,21 @@ export function Footer() {
         {/* Bottom Bar */}
         <div className="mt-12 pt-8 border-t border-zinc-200/50 dark:border-zinc-800/50 flex flex-col-reverse md:flex-row items-center justify-between gap-4">
           <p className="text-xs text-zinc-500 font-medium">
-            © {new Date().getFullYear()} دستیار هوشمند. تمامی حقوق محفوظ است.
+            © {new Date().getFullYear()} {footerData.copyrightText || 'دستیار هوشمند. تمامی حقوق محفوظ است.'}
           </p>
           
           <div className="flex items-center gap-4 text-zinc-400">
-            <a href="#" className="p-2 hover:text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-950/50 rounded-full transition-all hover:scale-110">
-              <Send size={18} />
-            </a>
+            {footerData.telegramChannel && (
+              <a
+                href={footerData.telegramChannel.startsWith('http') ? footerData.telegramChannel : `https://t.me/${footerData.telegramChannel.replace('@', '')}`}
+                target="_blank"
+                rel="noreferrer"
+                className="p-2 hover:text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-950/50 rounded-full transition-all hover:scale-110"
+                title="کانال و پشتیبانی تلگرام"
+              >
+                <Send size={18} />
+              </a>
+            )}
             <a href="#" className="p-2 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-950/50 rounded-full transition-all hover:scale-110">
               <Twitter size={18} />
             </a>

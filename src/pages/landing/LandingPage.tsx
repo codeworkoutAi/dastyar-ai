@@ -30,12 +30,19 @@ import {
   CreditCard,
   Lock,
   Compass,
-  FileCheck
+  FileCheck,
+  GraduationCap,
+  PenTool,
+  Scale,
+  TrendingUp,
+  Stethoscope
 } from 'lucide-react';
 import { ThemeToggle } from '../../components/ThemeToggle';
 import { Footer } from '../../components/Footer';
+import { CheckoutModal } from '../../components/CheckoutModal';
 import { toPersianDigits } from '../../lib/persianUtils';
 import { setPageSeo } from '../../lib/seo';
+import { useUIStore } from '../../store/uiStore';
 
 interface DemoScenario {
   id: string;
@@ -108,9 +115,98 @@ export function checkTokenQuota(limiter: TokenLimiter, tokensNeeded: number): bo
   }
 ];
 
+const ICON_MAP: Record<string, any> = {
+  GraduationCap,
+  Terminal,
+  PenTool,
+  Scale,
+  TrendingUp,
+  Stethoscope,
+  Coins,
+  Zap,
+  ShieldCheck,
+  Sparkles
+};
+
+const COLOR_NAME_TO_HEX: Record<string, string> = {
+  indigo: '#4f46e5',
+  emerald: '#059669',
+  purple: '#9333ea',
+  amber: '#d97706',
+  slate: '#475569',
+};
+
+const resolveAccentHex = (accent?: string): string => {
+  if (!accent) return '#475569';
+  if (accent.startsWith('#')) return accent;
+  return COLOR_NAME_TO_HEX[accent] || '#475569';
+};
+
+const getAccentStyles = (accent?: string) => {
+  const hex = resolveAccentHex(accent);
+  return {
+    hex,
+    badgeStyle: {
+      backgroundColor: `${hex}1f`,
+      color: hex,
+      borderColor: `${hex}45`,
+    },
+    btnStyle: {
+      backgroundColor: hex,
+      color: '#ffffff',
+    },
+    cardStyle: {
+      '--card-accent': hex,
+    } as React.CSSProperties
+  };
+};
+
+const getCtaThemeStyles = (theme?: string) => {
+  switch (theme) {
+    case 'indigo':
+      return {
+        card: 'bg-indigo-950 dark:bg-indigo-900 border border-indigo-700/40 text-white shadow-indigo-900/20',
+        primaryBtn: 'bg-white text-indigo-950 hover:bg-indigo-50',
+        secondaryBtn: 'border-white/20 hover:bg-white/10 text-white'
+      };
+    case 'emerald':
+      return {
+        card: 'bg-emerald-950 dark:bg-emerald-900 border border-emerald-700/40 text-white shadow-emerald-900/20',
+        primaryBtn: 'bg-white text-emerald-950 hover:bg-emerald-50',
+        secondaryBtn: 'border-white/20 hover:bg-white/10 text-white'
+      };
+    case 'amber':
+      return {
+        card: 'bg-amber-950 dark:bg-amber-900 border border-amber-700/40 text-white shadow-amber-900/20',
+        primaryBtn: 'bg-white text-amber-950 hover:bg-amber-50',
+        secondaryBtn: 'border-white/20 hover:bg-white/10 text-white'
+      };
+    case 'slate':
+      return {
+        card: 'bg-slate-900 dark:bg-slate-850 border border-slate-700/50 text-white shadow-slate-900/20',
+        primaryBtn: 'bg-white text-slate-950 hover:bg-slate-100',
+        secondaryBtn: 'border-white/20 hover:bg-white/10 text-white'
+      };
+    case 'white':
+      return {
+        card: 'bg-white dark:bg-[#0f121a] border border-[#d8dce6] dark:border-[#1e2433] text-[#0f1420] dark:text-white shadow-xl',
+        primaryBtn: 'bg-[#111622] hover:bg-[#202636] dark:bg-white dark:hover:bg-[#e4e7ee] text-white dark:text-[#0a0c10]',
+        secondaryBtn: 'border-[#d8dce6] dark:border-[#1e2433] hover:bg-[#f8f9fb] dark:hover:bg-[#131722] text-[#0f1420] dark:text-white'
+      };
+    case 'dark':
+    default:
+      return {
+        card: 'bg-[#111622] dark:bg-white text-white dark:text-[#0a0c10] shadow-xl',
+        primaryBtn: 'bg-white text-[#0a0c10] hover:bg-[#eef1f6] dark:bg-[#0a0c10] dark:text-white dark:hover:bg-[#1a202d]',
+        secondaryBtn: 'border-white/20 dark:border-[#0a0c10]/20 hover:bg-white/10 dark:hover:bg-[#0a0c10]/10 text-inherit'
+      };
+  }
+};
+
 export const LandingPage: React.FC = () => {
   const navigate = useNavigate();
   const { isAuthenticated, setAuthModalOpen } = useAuthStore();
+  const { setIsWalletOpen } = useUIStore();
 
   const [activeFaq, setActiveFaq] = useState<number | null>(0);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
@@ -161,43 +257,103 @@ export const LandingPage: React.FC = () => {
     }
   ];
 
-  // Professional English Prompts with Matching Masterpiece Images
+  const [copiedProfessionId, setCopiedProfessionId] = useState<string | null>(null);
+
+  // 6 Targeted Professional Personas & Ready-to-Test Prompts
+  const professionCards = [
+    {
+      id: 'academic',
+      title: 'دانشجویان، اساتید و پژوهشگران',
+      icon: GraduationCap,
+      image: '/images/professions/academic.jpg',
+      badge: 'پژوهش و دانشگاه',
+      desc: 'تحلیل مقالات ISI، استخراج فصول و ساختار پایان‌نامه، ترجمه تخصصی روان و رفرنس‌دهی علمی.',
+      prompt: 'یک ساختار استاندارد ۵ فصلی برای پروپوزال کارشناسی ارشد با موضوع "کاربرد هوش مصنوعی در بهینه‌سازی سیستم‌های مالی" تنظیم کن و فرضیات پژوهش را بنویس.'
+    },
+    {
+      id: 'developer',
+      title: 'برنامه‌نویسان و مهندسان نرم‌افزار',
+      icon: Terminal,
+      image: '/images/professions/developer.jpg',
+      badge: 'فناوری و توسعه',
+      desc: 'دیباگ سریع خطاهای کدنویسی، نگارش کوئری‌های SQL و معماری پروژه‌های نرم‌افزاری با استدلال عمیق.',
+      prompt: 'یک کامپوننت React با تایپ‌اسکریپت برای پیاده‌سازی Infinite Scroll بنویس که با Intersection Observer کار کند و مدیریت خطای شبکه داشته باشد.'
+    },
+    {
+      id: 'content',
+      title: 'تولیدکنندگان محتوا و متخصصان سئو',
+      icon: PenTool,
+      image: '/images/professions/content.jpg',
+      badge: 'تولید محتوا و سئو',
+      desc: 'نگارش مقالات سئوشده ۲,۰۰۰ کلمه‌ای با لحن کاملاً فاخر و روان فارسی، سناریونویسی و ایده‌پردازی تقویم.',
+      prompt: 'یک ساختار مقاله جامع ۲۰۰۰ کلمه‌ای سئوشده با تگ‌های H2 و H3 درباره "راهنمای جامع سئو معنایی (Semantic SEO) در سال ۲۰۲۶" تدوین کن.'
+    },
+    {
+      id: 'legal',
+      title: 'وکلا، کارشناسان حقوقی و مدیران قرارداد',
+      icon: Scale,
+      image: '/images/professions/legal.jpg',
+      badge: 'حقوق و قراردادها',
+      desc: 'تحلیل بندبه‌بند قراردادهای تجاری و پیمانکاری، کشف تعهدات و ریسک‌های پنهان، و تنظیم پیش‌نویس لوایح رسمی.',
+      prompt: 'مهم‌ترین بندهای رفع تعهد و جریمه دیرکرد (Liquidated Damages) را در یک قرارداد توسعه نرم‌افزار همراه با تبصره فورس‌ماژور بنویس.'
+    },
+    {
+      id: 'business',
+      title: 'مدیران، استارتاپ‌ها و تحلیل‌گران بازار',
+      icon: TrendingUp,
+      image: '/images/professions/business.jpg',
+      badge: 'کسب‌وکار و استراتژی',
+      desc: 'تحلیل گزارش‌های فروش و اکسل، تدوین طرح کسب‌وکار (Business Plan) و مکاتبات رسمی تجاری.',
+      prompt: 'یک ایمیل رسمی و متقاعدکننده به مدیرعامل یک شرکت همکار بنویس و پیشنهاد جلسه استراتژیک برای همکاری تجاری مشترک را مطرح کن.'
+    },
+    {
+      id: 'medical',
+      title: 'پزشکان، داروسازان و محققان سلامت',
+      icon: Stethoscope,
+      image: '/images/professions/medical.jpg',
+      badge: 'پزشکی و سلامت',
+      desc: 'خلاصه‌سازی پژوهش‌های بالینی و ژورنال‌های معتبر، ترجمه دقیق اصطلاحات و تنظیم مطالعات موردی.',
+      prompt: 'جدیدترین پروتکل‌های بالینی در مدیریت دیابت نوع ۲ بر اساس استانداردهای ADA را به صورت دسته‌بندی‌شده و خلاصه بالینی شرح بده.'
+    }
+  ];
+
+  // Professional Imagery for Studio Gallery (Manifesto-aligned)
   const galleryImages = [
     {
-      src: '/images/gallery/tehran-2150.jpg',
-      title: 'تهران در سال ۲۱۵۰',
-      tag: 'معماری سایبرپانک',
-      prompt: 'Cinematic photorealistic masterpiece of futuristic Tehran in year 2150, iconic Milad tower and Azadi monument reimagined in sleek neo-cyberpunk architecture, flying autonomous hovercrafts with neon light trails, misty atmospheric golden hour, 8k resolution, Octane render'
+      src: '/images/gallery/journal-cover.jpg',
+      title: 'طراحی جلد ژورنال علمی',
+      tag: 'انتشارات پژوهشی',
+      prompt: 'Minimalist abstract scientific journal cover art, elegant synaptic neural network pathways connecting soft glowing data nodes, deep navy slate and warm gold tones, refined clean scientific illustration, calm and uncluttered'
     },
     {
-      src: '/images/gallery/persian-cyber-knight.jpg',
-      title: 'سردار سایبرنتیک هخامنشی',
-      tag: 'حماسی و کانسپت',
-      prompt: 'Cinematic portrait of an ancient Persian warrior in cybernetic high-tech battle armor, engraved golden Farvahar patterns and glowing cyan energy lines, holding a sleek plasma scimitar sword, atmospheric smoke and rim lighting, dark background, ultra-detailed 8k'
+      src: '/images/gallery/tech-editorial.jpg',
+      title: 'تصویر شاخص وبلاگ فناوری',
+      tag: 'سئو و تولید محتوا',
+      prompt: 'Clean modern isometric editorial tech blog illustration, minimalist floating geometric cubes and digital paper workflow diagrams, matte titanium finish, soft diffused studio light, uncluttered, professional aesthetic'
     },
     {
-      src: '/images/gallery/crystal-tree.jpg',
-      title: 'درخت بلورین شب‌تاب',
-      tag: 'طبیعت جادویی',
-      prompt: 'Bioluminescent crystal tree in an enchanted dark forest at night, glowing amethyst and diamond branches, floating cyan fireflies and glowing dust, soft volumetric light rays, hyperrealistic cinematic fantasy nature photography, 8k resolution, octane render'
+      src: '/images/gallery/legal-emblem.jpg',
+      title: 'تندیس مفهومی حقوق و عدالت',
+      tag: 'حقوقی و سازمانی',
+      prompt: 'Minimalist modern 3D sculptural emblem of justice balance scales, matte dark stone and brushed gold brass accents, clean minimalist dark studio background, elegant corporate symbol, uncluttered'
     },
     {
-      src: '/images/gallery/space-fox.jpg',
-      title: 'روباه فضانورد کیهانی',
-      tag: 'علمی تخیلی سینمایی',
-      prompt: 'Cinematic macro close-up portrait of a majestic cosmic space fox with fur woven from stardust and nebulae, wearing an intricate vintage astronaut helmet with brass fittings, deep space background with swirling galaxies and glittering constellations'
+      src: '/images/gallery/business-trends.jpg',
+      title: 'تصویرسازی تحلیل رشد مالی',
+      tag: 'گزارش‌های شرکتی',
+      prompt: 'Minimalist 3D architectural financial analytics chart, subtle glowing upward curved graph line on dark navy slate pedestal, refined glass milestone cubes, corporate growth indicator, clean studio lighting, uncluttered'
     },
     {
-      src: '/images/gallery/crystal-cheetah.jpg',
-      title: 'یوزپلنگ طلایی و بلورین',
-      tag: 'حیات‌وحش مفهومی',
-      prompt: 'Action shot of a sleek Asiatic cheetah made of shimmering gold and crystal running gracefully across desert sand dunes at sunset, warm cinematic golden hour light, flying sand dust, photorealistic wildlife masterpiece, 8k resolution'
+      src: '/images/gallery/academic-book.jpg',
+      title: 'طراحی جلد کتاب مرجع دانشگاهی',
+      tag: 'آموزش عالی',
+      prompt: 'Refined modern academic textbook cover art, minimalist abstract geometric composition of intersecting arches and steps representing knowledge and education, warm ivory and rich slate blue, elegant and serene'
     },
     {
-      src: '/images/gallery/floating-sanctuary.jpg',
-      title: 'قصر آسمانی و کهن',
-      tag: 'معماری رویایی',
-      prompt: 'A breathtaking ancient palace floating on a giant moss-covered celestial rock in the clouds, waterfalls pouring off the edge into golden sunset mist, ethereal floating architecture with Persian arches and domes, cherry blossom trees, 8k resolution'
+      src: '/images/gallery/biotech-dna.jpg',
+      title: 'تصویرسازی زیست‌فناوری و ژنتیک',
+      tag: 'پزشکی و سلامت',
+      prompt: 'Clean minimalist 3D medical visualization of a glowing DNA double helix structure, floating in pristine clinical atmosphere with soft cyan and white luminous glow, ultra-clean laboratory background, uncluttered'
     }
   ];
 
@@ -258,6 +414,53 @@ export const LandingPage: React.FC = () => {
       ctaAction: () => navigate('/dashboard')
     }
   ];
+
+  // Dynamic Live Content State (Managed via Admin CMS Studio)
+  const [dynamicHero, setDynamicHero] = useState<any>(null);
+  const [dynamicManifesto, setDynamicManifesto] = useState<any>(null);
+  const [dynamicProfessions, setDynamicProfessions] = useState<any[]>(professionCards);
+  const [dynamicGallery, setDynamicGallery] = useState<any[]>(galleryImages);
+  const [dynamicPricingHeader, setDynamicPricingHeader] = useState<any>(null);
+  const [dynamicFaqs, setDynamicFaqs] = useState<any[]>(faqs);
+  const [dynamicCta, setDynamicCta] = useState<any>(null);
+  const [dynamicGiftCard, setDynamicGiftCard] = useState<any>(null);
+  const [dynamicPlans, setDynamicPlans] = useState<any[]>([]);
+  const [selectedPlanForCheckout, setSelectedPlanForCheckout] = useState<any>(null);
+
+  useEffect(() => {
+    fetch('/api/landing-content')
+      .then((res) => {
+        if (!res.ok) throw new Error('Failed to fetch');
+        return res.json();
+      })
+      .then((data) => {
+        if (data.hero) setDynamicHero(data.hero);
+        if (data.manifesto && data.manifesto.title) setDynamicManifesto(data.manifesto);
+        if (data.professions && Array.isArray(data.professions) && data.professions.length > 0) {
+          const activeOnes = data.professions.filter((p: any) => p.enabled !== false);
+          if (activeOnes.length > 0) setDynamicProfessions(activeOnes);
+        }
+        if (data.gallery && Array.isArray(data.gallery) && data.gallery.length > 0) {
+          setDynamicGallery(data.gallery);
+        }
+        if (data.pricingHeader) {
+          setDynamicPricingHeader(data.pricingHeader);
+        }
+        if (data.faqs && Array.isArray(data.faqs) && data.faqs.length > 0) {
+          setDynamicFaqs(data.faqs);
+        }
+        if (data.cta && data.cta.title) {
+          setDynamicCta(data.cta);
+        }
+        if (data.giftCard) {
+          setDynamicGiftCard(data.giftCard);
+        }
+        if (data.plans && Array.isArray(data.plans) && data.plans.length > 0) {
+          setDynamicPlans(data.plans);
+        }
+      })
+      .catch((err) => console.warn('[Landing] Using local static fallback:', err));
+  }, []);
 
   // SEO & GEO (Generative Engine Optimization) Initialization
   useEffect(() => {
@@ -321,7 +524,7 @@ export const LandingPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-[#f7f8fa] dark:bg-[#0a0c10] text-[#1a1f2c] dark:text-[#f1f3f7] selection:bg-[#252b3b] selection:text-white transition-colors" dir="rtl">
-      
+
       {/* ---------------- 1. Architectural Header (Solid, No Gradient) ---------------- */}
       <header className="sticky top-0 z-50 w-full bg-white/95 dark:bg-[#0d1017]/95 border-b border-[#e2e5eb] dark:border-[#1e2433] backdrop-blur-md transition-all">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
@@ -435,40 +638,44 @@ export const LandingPage: React.FC = () => {
         {/* Top Feature Pill */}
         <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white dark:bg-[#121620] border border-[#d8dce6] dark:border-[#212838] shadow-xs text-xs font-semibold mb-6">
           <span className="w-2 h-2 rounded-full bg-[#10b981]" />
-          <span className="text-[#111622] dark:text-[#e4e7ee]">{toPersianDigits('50,000')} تومان اعتبار نقدی هدیه</span>
-          <span className="text-[#9aa5bc]">|</span>
-          <span className="text-[#525d75] dark:text-[#9aa5bc] font-normal">بدون نیاز به فیلترشکن و پرداخت ریالی</span>
+          <span className="text-[#111622] dark:text-[#e4e7ee]">
+            {dynamicHero?.featurePill || `${toPersianDigits('50,000')} تومان اعتبار نقدی هدیه | بدون نیاز به فیلترشکن و پرداخت ریالی`}
+          </span>
         </div>
 
-        {/* Headline */}
+        {/* Headline (Refined, Proportional Typography) */}
         <h1
-          className="text-3xl sm:text-5xl md:text-6xl font-black text-[#0f1420] dark:text-white leading-[1.25] sm:leading-[1.18] max-w-3xl mb-5"
+          className="text-2xl sm:text-3xl md:text-4xl font-black text-[#0f1420] dark:text-white leading-[1.3] max-w-2xl mb-4"
           style={{ fontFamily: "'Estedad', sans-serif" }}
         >
-          دسترسی مستقیم و بدون واسطه به <br />
-          <span className="text-[#4b556b] dark:text-[#8895ad]">برترین هوش‌های مصنوعی</span> جهان
+          {dynamicHero?.title || (
+            <>
+              دسترسی مستقیم و بدون واسطه به <br className="hidden sm:inline" />
+              <span className="text-[#525d75] dark:text-[#9aa5bc]">برترین هوش‌های مصنوعی</span> جهان
+            </>
+          )}
         </h1>
 
         {/* Subtitle */}
-        <p className="text-sm sm:text-base text-[#525d75] dark:text-[#9aa5bc] max-w-2xl font-normal leading-relaxed mb-8">
-          بدون نیاز به خرید اشتراک‌های ماهانه دلاری یا دغدغه قطع شدن فیلترشکن؛ با پرچمداران Claude 3.5، GPT-4o و Gemini به فارسی گفتگو کنید، اسناد و کدهای حجیم را تحلیل نمایید و هزینه را به اندازه مصرف کلمات به تومان بپردازید.
+        <p className="text-xs sm:text-sm text-[#525d75] dark:text-[#9aa5bc] max-w-xl font-normal leading-relaxed mb-6">
+          {dynamicHero?.subtitle || 'بدون نیاز به خرید اشتراک‌های ماهانه دلاری یا دغدغه فیلترشکن؛ با پرچمداران Claude 3.5، GPT-4o و Gemini به فارسی گفتگو کنید و هزینه را به اندازه مصرف واقعی به تومان بپردازید.'}
         </p>
 
         {/* Action CTAs */}
-        <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto mb-12">
+        <div className="flex flex-col sm:flex-row items-center gap-2.5 w-full sm:w-auto mb-8 sm:mb-10">
           <Link
-            to="/chat"
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-6 py-3.5 rounded-xl bg-[#111622] hover:bg-[#1e2638] dark:bg-white dark:hover:bg-[#e4e7ee] text-white dark:text-[#0a0c10] font-bold text-sm shadow-sm transition-all group"
+            to={dynamicHero?.primaryBtnLink || '/chat'}
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-[#111622] hover:bg-[#1e2638] dark:bg-white dark:hover:bg-[#e4e7ee] text-white dark:text-[#0a0c10] font-bold text-xs sm:text-sm shadow-xs transition-all group"
           >
-            <span>شروع گفتگو با ۵۰ هزار تومان هدیه</span>
-            <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+            <span>{dynamicHero?.primaryBtnText || 'شروع گفتگو با ۵۰ هزار تومان هدیه'}</span>
+            <ArrowLeft className="w-3.5 h-3.5 group-hover:-translate-x-1 transition-transform" />
           </Link>
           <a
-            href="#pricing"
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-white dark:bg-[#121620] hover:bg-[#eef1f6] dark:hover:bg-[#1a202d] text-[#333c4e] dark:text-[#ccd3e0] border border-[#d8dce6] dark:border-[#212838] font-bold text-sm transition-all"
+            href={dynamicHero?.secondaryBtnLink || '#pricing'}
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-white dark:bg-[#121620] hover:bg-[#eef1f6] dark:hover:bg-[#1a202d] text-[#333c4e] dark:text-[#ccd3e0] border border-[#d8dce6] dark:border-[#212838] font-bold text-xs sm:text-sm transition-all"
           >
-            <Coins className="w-4 h-4 text-[#717b91]" />
-            <span>مشاهده بسته‌ها و تعرفه‌ها</span>
+            <Coins className="w-3.5 h-3.5 text-[#717b91]" />
+            <span>{dynamicHero?.secondaryBtnText || 'مشاهده بسته‌ها و تعرفه‌ها'}</span>
           </a>
         </div>
 
@@ -492,18 +699,17 @@ export const LandingPage: React.FC = () => {
 
           {/* Chips Selector */}
           <div className="flex items-center gap-2 px-4 sm:px-6 py-3 border-b border-[#e6e9f0] dark:border-[#1b202e] bg-white dark:bg-[#0f121a] overflow-x-auto [scrollbar-width:none]">
-            {DEMO_SCENARIOS.map((sc) => {
-              const Icon = sc.icon;
+            {((dynamicHero?.demoScenarios && dynamicHero.demoScenarios.length > 0) ? dynamicHero.demoScenarios : DEMO_SCENARIOS).map((sc: any) => {
+              const Icon = typeof sc.icon === 'function' ? sc.icon : Sparkles;
               const isActive = activeScenario.id === sc.id;
               return (
                 <button
                   key={sc.id}
                   onClick={() => setActiveScenario(sc)}
-                  className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
-                    isActive
+                  className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${isActive
                       ? 'bg-[#111622] text-white dark:bg-white dark:text-[#0a0c10]'
                       : 'text-[#525d75] dark:text-[#9aa5bc] hover:bg-[#eef1f6] dark:hover:bg-[#161a25]'
-                  }`}
+                    }`}
                 >
                   <Icon className="w-3.5 h-3.5" />
                   <span>{sc.label}</span>
@@ -660,6 +866,147 @@ export const LandingPage: React.FC = () => {
         </div>
       </section>
 
+      {/* ---------------- 3.5. Manifesto & Targeted Professions ---------------- */}
+      <section id="manifesto" className="py-16 sm:py-20 px-4 sm:px-6 max-w-6xl mx-auto border-t border-[#e2e5eb] dark:border-[#1e2433]">
+        {/* Dignified Manifesto Header & Content */}
+        <div className="rounded-2xl p-6 sm:p-10 bg-white dark:bg-[#0f121a] border border-[#d8dce6] dark:border-[#1e2433] shadow-xs mb-14">
+          <div className="max-w-3xl">
+            <span className="inline-block px-3 py-1 rounded-md text-[11px] font-bold bg-[#eef1f6] dark:bg-[#181d2a] text-[#111622] dark:text-[#ccd3e0] mb-3">
+              {dynamicManifesto?.badge || 'بیانیه شفافیت و فلسفه طراحی'}
+            </span>
+            <h2
+              className="text-2xl sm:text-3xl font-black text-[#0f1420] dark:text-white tracking-tight mb-4"
+              style={{ fontFamily: "'Estedad', sans-serif" }}
+            >
+              {dynamicManifesto?.title || 'ابزار کار واقعی یا اسباب سرگرمی؟ چرا تمرکز ما بر کارایی و حل مسائل روزمره است'}
+            </h2>
+            <p className="text-xs sm:text-sm text-[#525d75] dark:text-[#9aa5bc] leading-relaxed mb-6">
+              {dynamicManifesto?.subtitle || 'امروزه بسیاری از سرویس‌ها به سمت قابلیت‌های جانبی و پرهزینه‌ای مانند ساخت تصاویر، کلیپ‌های ویدیویی یا ویرایش‌های پیچیده گرافیکی رفته‌اند. هرچند این قابلیت‌ها جذابیت‌های بصری دارند، اما تجربه کاربردی نشان می‌دهد:'}
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-6 border-t border-[#e6e9f0] dark:border-[#1b202e]">
+            {(dynamicManifesto?.reasons || [
+              {
+                id: 'r1',
+                icon: 'Coins',
+                title: 'مصرف بسیار بالای اعتبار و هزینه‌های سنگین',
+                desc: 'تولید یک کلیپ کوتاه چندثانیه‌ای یا تصویرسازی‌های سنگین، بخش عمده‌ای از اعتبار کاربر را به یک‌باره مصرف می‌کند؛ در حالی که همان میزان اعتبار می‌تواند پاسخگوی صدها پرسش علمی و پژوهشی باشد.'
+              },
+              {
+                id: 'r2',
+                icon: 'Zap',
+                title: 'زمان انتظار طولانی و عدم قطعیت در خروجی',
+                desc: 'فناوری‌های تولید ویدیو و پردازش‌های سنگین گرافیکی به دلیل ماهیت پیچیده، با تأخیرهای چنددقیقه‌ای و گاه نتایج غیردقیق همراه هستند که برای محیط‌های جدی کاری و تحصیلی بهینه نیستند.'
+              },
+              {
+                id: 'r3',
+                icon: 'ShieldCheck',
+                title: 'تعهد ما به بازدهی و بهره‌وری پایدار',
+                desc: 'ما تمام توان مهندسی خود را بر توسعه یک دستیار پایدار، با پاسخ‌دهی فوق‌سریع و درک عمیق زبان فارسی متمرکز کرده‌ایم تا هر ریال از اعتبار شما، مستقیماً صرف پیشرفت کار و صرفه‌جویی در زمان شود.'
+              }
+            ]).map((r: any, rIdx: number) => {
+              const ReasonIcon = (typeof r.icon === 'string' ? ICON_MAP[r.icon] : r.icon) || (rIdx === 0 ? Coins : rIdx === 1 ? Zap : ShieldCheck);
+              return (
+                <div key={r.id || rIdx} className="p-4 rounded-xl bg-[#f8f9fb] dark:bg-[#131722] border border-[#e2e5eb] dark:border-[#1b202e]">
+                  <div className="w-8 h-8 rounded-lg bg-[#eef1f6] dark:bg-[#1b202e] flex items-center justify-center text-[#0f1420] dark:text-white mb-3">
+                    <ReasonIcon className="w-4 h-4" />
+                  </div>
+                  <h3 className="font-bold text-xs sm:text-sm text-[#0f1420] dark:text-white mb-1.5" style={{ fontFamily: "'Estedad', sans-serif" }}>
+                    {r.title}
+                  </h3>
+                  <p className="text-[11px] sm:text-xs text-[#525d75] dark:text-[#9aa5bc] leading-relaxed">
+                    {r.desc}
+                  </p>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* 6 Targeted Professions & Ready-to-Test Prompts */}
+        <div className="text-center max-w-2xl mx-auto mb-10 sm:mb-12">
+          <span className="text-xs font-bold text-[#717b91] uppercase tracking-widest block mb-1">
+            TARGET AUDIENCE & USE CASES
+          </span>
+          <h2
+            className="text-2xl sm:text-4xl font-black text-[#0f1420] dark:text-white tracking-tight mb-3"
+            style={{ fontFamily: "'Estedad', sans-serif" }}
+          >
+            دستیار هوشمند؛ همراه تخصصی کدام حرفه‌هاست؟
+          </h2>
+          <p className="text-xs sm:text-sm text-[#525d75] dark:text-[#9aa5bc]">
+            برای هر تخصص، یک پرامپت آماده طراحی شده است؛ کافیست کلیک کنید تا پاسخ آن را مستقیماً در چت‌باکس بسنجید.
+          </p>
+        </div>
+
+        {/* Dynamic Fluid Intrinsic Grid + Touch Scroll-Snap on Mobile */}
+        <div 
+          className="flex sm:grid gap-5 overflow-x-auto sm:overflow-x-visible pb-4 sm:pb-0 scrollbar-none snap-x snap-mandatory"
+          style={{
+            gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 320px), 1fr))'
+          }}
+        >
+          {dynamicProfessions.map((card, idx) => {
+            const Icon = (typeof card.icon === 'string' ? ICON_MAP[card.icon] : card.icon) || GraduationCap;
+            const isCopied = copiedProfessionId === card.id;
+            const accent = getAccentStyles(card.accentColor);
+            return (
+              <div
+                key={card.id || idx}
+                className="min-w-[85vw] sm:min-w-0 snap-center rounded-2xl overflow-hidden bg-white dark:bg-[#0f121a] border border-[#d8dce6] dark:border-[#1e2433] shadow-xs transition-all flex flex-col justify-between hover:shadow-md"
+                onMouseEnter={(e) => (e.currentTarget.style.borderColor = `${accent.hex}80`)}
+                onMouseLeave={(e) => (e.currentTarget.style.borderColor = '')}
+              >
+                <div>
+                  {/* Clean Visual Banner */}
+                  <div className="relative aspect-[16/10] overflow-hidden bg-[#eef1f6] dark:bg-[#151923]">
+                    <img
+                      src={card.image}
+                      alt={card.title}
+                      className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+                      loading="lazy"
+                    />
+                    <div 
+                      className="absolute top-2.5 right-2.5 px-2.5 py-0.5 rounded-md text-[10px] font-bold backdrop-blur-xs flex items-center gap-1.5 border"
+                      style={accent.badgeStyle}
+                    >
+                      <Icon className="w-3 h-3" />
+                      <span>{card.badge}</span>
+                    </div>
+                  </div>
+
+                  {/* Card Content */}
+                  <div className="p-4 sm:p-5 space-y-3">
+                    <h3
+                      className="font-bold text-sm sm:text-base text-[#0f1420] dark:text-white"
+                      style={{ fontFamily: "'Estedad', sans-serif" }}
+                    >
+                      {card.title}
+                    </h3>
+                    <p className="text-xs text-[#525d75] dark:text-[#9aa5bc] leading-relaxed">
+                      {card.desc}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Card Action Link */}
+                <div className="p-4 sm:p-5 pt-0">
+                  <Link
+                    to={`/chat?prompt=${encodeURIComponent(card.prompt)}`}
+                    className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all shadow-xs hover:brightness-110 hover:shadow-md"
+                    style={accent.btnStyle}
+                  >
+                    <span>شروع گفتگو</span>
+                    <ArrowLeft className="w-3.5 h-3.5" />
+                  </Link>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
       {/* ---------------- 4. Hyperrealistic Image Gallery Showcase ---------------- */}
       <section id="gallery" className="py-16 sm:py-20 px-4 sm:px-6 max-w-6xl mx-auto border-t border-[#e2e5eb] dark:border-[#1e2433]">
         <div className="flex flex-col md:flex-row items-start md:items-end justify-between gap-4 mb-10 sm:mb-12">
@@ -683,55 +1030,55 @@ export const LandingPage: React.FC = () => {
           </Link>
         </div>
 
-        {/* 6 Real High-Res Gallery Images with English Prompts */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {galleryImages.map((img, idx) => (
+        {/* Compact, High-Density Gallery Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
+          {((dynamicGallery && dynamicGallery.length > 0) ? dynamicGallery : galleryImages).map((img: any, idx: number) => (
             <div
               key={idx}
-              className="rounded-2xl overflow-hidden bg-white dark:bg-[#0f121a] border border-[#d8dce6] dark:border-[#1e2433] shadow-xs hover:shadow-md transition-all flex flex-col"
+              className="rounded-xl overflow-hidden bg-white dark:bg-[#0f121a] border border-[#d8dce6] dark:border-[#1e2433] shadow-xs hover:border-[#b0b8c9] dark:hover:border-[#2d374d] transition-all flex flex-col"
             >
-              <div className="relative aspect-square overflow-hidden bg-[#eef1f6] dark:bg-[#151923]">
+              <div className="relative aspect-[4/3] overflow-hidden bg-[#eef1f6] dark:bg-[#151923]">
                 <img
                   src={img.src}
                   alt={img.title}
-                  className="w-full h-full object-cover transition-transform duration-300 hover:scale-102"
+                  className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
                   loading="lazy"
                 />
-                <div className="absolute top-3 right-3 px-2.5 py-1 rounded-md bg-[#0a0c10]/80 text-white text-[10px] font-semibold backdrop-blur-xs">
+                <div className="absolute top-2.5 right-2.5 px-2 py-0.5 rounded-md bg-[#0a0c10]/85 text-white text-[10px] font-medium backdrop-blur-xs">
                   {img.tag}
                 </div>
               </div>
 
-              <div className="p-5 flex-1 flex flex-col justify-between space-y-3">
+              <div className="p-3.5 flex-1 flex flex-col justify-between space-y-2.5">
                 <div>
-                  <h3 className="font-bold text-sm sm:text-base text-[#0f1420] dark:text-white mb-1.5" style={{ fontFamily: "'Estedad', sans-serif" }}>
+                  <h3 className="font-bold text-xs sm:text-sm text-[#0f1420] dark:text-white mb-1" style={{ fontFamily: "'Estedad', sans-serif" }}>
                     {img.title}
                   </h3>
-                  <p className="text-[11px] text-[#525d75] dark:text-[#9aa5bc] line-clamp-2 leading-relaxed font-mono" dir="ltr">
+                  <p className="text-[10px] text-[#525d75] dark:text-[#9aa5bc] line-clamp-2 leading-relaxed font-mono" dir="ltr">
                     {img.prompt}
                   </p>
                 </div>
 
-                <div className="pt-3 border-t border-[#e6e9f0] dark:border-[#1b202e] flex items-center justify-between">
+                <div className="pt-2.5 border-t border-[#e6e9f0] dark:border-[#1b202e] flex items-center justify-between">
                   <button
                     onClick={() => copyPromptToClipboard(img.prompt, idx)}
-                    className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#525d75] dark:text-[#9aa5bc] hover:text-[#111622] dark:hover:text-white transition-colors cursor-pointer"
+                    className="inline-flex items-center gap-1 text-[10px] font-semibold text-[#525d75] dark:text-[#9aa5bc] hover:text-[#111622] dark:hover:text-white transition-colors cursor-pointer"
                   >
                     {copiedPromptIndex === idx ? (
                       <>
-                        <Check className="w-3.5 h-3.5 text-[#10b981]" />
-                        <span className="text-[#10b981] font-bold">پرامپت کپی شد!</span>
+                        <Check className="w-3 h-3 text-[#10b981]" />
+                        <span className="text-[#10b981] font-bold">کپی شد!</span>
                       </>
                     ) : (
                       <>
-                        <Copy className="w-3.5 h-3.5" />
-                        <span>کپی پرامپت انگلیسی</span>
+                        <Copy className="w-3 h-3" />
+                        <span>کپی پرامپت</span>
                       </>
                     )}
                   </button>
 
-                  <Link to="/chat" className="text-[11px] font-bold text-[#111622] dark:text-white hover:underline">
-                    تست این استایل
+                  <Link to="/chat" className="text-[10px] font-bold text-[#111622] dark:text-white hover:underline">
+                    تست این سبک
                   </Link>
                 </div>
               </div>
@@ -744,97 +1091,231 @@ export const LandingPage: React.FC = () => {
       <section id="pricing" className="py-16 sm:py-20 px-4 sm:px-6 max-w-6xl mx-auto border-t border-[#e2e5eb] dark:border-[#1e2433]">
         <div className="text-center max-w-2xl mx-auto mb-12 sm:mb-16">
           <span className="text-xs font-bold text-[#717b91] uppercase tracking-widest block mb-1">
-            TRANSPARENT PRICING
+            {dynamicPricingHeader?.badge || 'TRANSPARENT PRICING'}
           </span>
           <h2
             className="text-2xl sm:text-4xl font-black text-[#0f1420] dark:text-white tracking-tight mb-3"
             style={{ fontFamily: "'Estedad', sans-serif" }}
           >
-            تعرفه‌ها بر اساس تومان و سهمیه توکن
+            {dynamicPricingHeader?.title || 'تعرفه‌ها بر اساس تومان و سهمیه توکن'}
           </h2>
           <p className="text-xs sm:text-sm text-[#525d75] dark:text-[#9aa5bc]">
-            بدون کسر ماهانه خودکار و بدون هزینه‌های مخفی. هر بسته مستقیماً به کیف پول شما اضافه می‌شود و تاریخ انقضا ندارد.
+            {dynamicPricingHeader?.subtitle || 'بدون کسر ماهانه خودکار و بدون هزینه‌های مخفی. هر بسته مستقیماً به کیف پول شما اضافه می‌شود و تاریخ انقضا ندارد.'}
           </p>
         </div>
 
-        {/* Pricing Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
-          {packages.map((pkg, idx) => (
-            <div
-              key={idx}
-              className={`rounded-2xl p-6 flex flex-col justify-between transition-all ${
-                pkg.isPopular
-                  ? 'bg-[#111622] text-white dark:bg-white dark:text-[#0a0c10] shadow-md border-2 border-[#111622] dark:border-white'
-                  : 'bg-white dark:bg-[#0f121a] border border-[#d8dce6] dark:border-[#1e2433] text-[#111622] dark:text-white shadow-xs'
-              }`}
-            >
-              <div>
-                <div className="mb-4">
-                  <span
-                    className={`inline-block px-2.5 py-1 rounded-lg text-[11px] font-bold ${
-                      pkg.isPopular
-                        ? 'bg-white/10 text-white dark:bg-[#0a0c10]/10 dark:text-[#0a0c10]'
-                        : 'bg-[#eef1f6] dark:bg-[#181d2a] text-[#525d75] dark:text-[#9aa5bc]'
-                    }`}
-                  >
-                    {pkg.badge}
-                  </span>
-                </div>
+        {/* Pricing Grid (Dynamic Self-Healing Fluid Layout) */}
+        {(() => {
+          const freeCard = dynamicGiftCard ? {
+            id: 'free-welcome',
+            title: dynamicGiftCard.title || 'هدیه ثبت‌نام',
+            price: dynamicGiftCard.price || 'رایگان',
+            rawPrice: 0,
+            badge: dynamicGiftCard.badge || 'هدیه بدون قیدوشرط',
+            tokenEstimate: dynamicGiftCard.tokenEstimate || `~${toPersianDigits('150,000')} توکن سهمیه`,
+            messagesCount: dynamicGiftCard.messagesCount || `حدود ${toPersianDigits('150')} تا ${toPersianDigits('200')} پیام کامل`,
+            desc: dynamicGiftCard.desc || 'بلافاصله پس از ثبت‌نام به کیف پول شما واریز می‌شود تا قدرت مدل‌ها را آزادانه آزمایش کنید.',
+            features: Array.isArray(dynamicGiftCard.features)
+              ? dynamicGiftCard.features
+              : typeof dynamicGiftCard.features === 'string'
+                ? dynamicGiftCard.features.split('\n').filter(Boolean)
+                : ['دسترسی کامل به تمام مدل‌ها', 'بدون نیاز به کارت بانکی', 'تحلیل اسناد و جستجوی زنده وب'],
+            isPopular: false,
+            image: null,
+            ctaText: dynamicGiftCard.ctaText || 'شروع با اعتبار هدیه',
+            ctaAction: () => (isAuthenticated ? navigate('/chat') : setAuthModalOpen(true))
+          } : {
+            id: 'free-welcome',
+            title: 'هدیه ثبت‌نام',
+            price: 'رایگان',
+            rawPrice: 0,
+            badge: 'هدیه بدون قیدوشرط',
+            tokenEstimate: `~${toPersianDigits('150,000')} توکن سهمیه`,
+            messagesCount: `حدود ${toPersianDigits('150')} تا ${toPersianDigits('200')} پیام کامل`,
+            desc: 'بلافاصله پس از ثبت‌نام به کیف پول شما واریز می‌شود تا قدرت مدل‌ها را آزادانه آزمایش کنید.',
+            features: ['دسترسی کامل به تمام مدل‌ها', 'بدون نیاز به کارت بانکی', 'تحلیل اسناد و جستجوی زنده وب'],
+            isPopular: false,
+            image: null,
+            ctaText: 'شروع با اعتبار هدیه',
+            ctaAction: () => (isAuthenticated ? navigate('/chat') : setAuthModalOpen(true))
+          };
 
-                <h3 className="text-base font-bold mb-2" style={{ fontFamily: "'Estedad', sans-serif" }}>
-                  {pkg.title}
-                </h3>
+          const isFreeCardEnabled = dynamicGiftCard ? dynamicGiftCard.enabled !== false : true;
 
-                <div className="flex items-baseline gap-1.5 mb-4">
-                  <span className="text-3xl font-black tracking-tight" style={{ fontFamily: "'Estedad', sans-serif" }}>
-                    {pkg.price}
-                  </span>
-                  {pkg.rawPrice > 0 && <span className="text-xs font-normal opacity-70">تومان</span>}
-                </div>
+          let cardsToRender: any[] = packages;
+          if (dynamicPlans && dynamicPlans.length > 0) {
+            const dbCards = dynamicPlans.map((p) => {
+              let featureList: string[] = [];
+              if (p.features) {
+                featureList = p.features.split('\n').map((s: string) => s.trim()).filter(Boolean);
+              } else if (p.longDescription) {
+                featureList = p.longDescription.split('\n').map((s: string) => s.trim()).filter(Boolean);
+              } else if (p.description) {
+                featureList = [p.description];
+              }
 
-                {/* Token / Messages Box */}
+              return {
+                id: p.id,
+                title: p.title,
+                price: toPersianDigits(p.price ? p.price.toLocaleString() : '۰'),
+                rawPrice: p.price || 0,
+                badge: p.badge || (p.isPopular ? `پرفروش‌ترین (${toPersianDigits('20')}٪ شارژ هدیه)` : 'بسته ویژه'),
+                tokenEstimate: p.tokenEstimate || `~${toPersianDigits('1,000,000')} توکن سهمیه`,
+                messagesCount: '',
+                desc: p.description || '',
+                features: featureList,
+                isPopular: Boolean(p.isPopular),
+                image: p.image || null,
+                ctaText: `خرید ${p.title}`,
+                ctaAction: () => {
+                  if (!isAuthenticated) {
+                    setAuthModalOpen(true);
+                  } else {
+                    setSelectedPlanForCheckout(p);
+                  }
+                }
+              };
+            });
+            cardsToRender = isFreeCardEnabled ? [freeCard, ...dbCards] : dbCards;
+          } else {
+            cardsToRender = isFreeCardEnabled ? packages : packages.filter(p => p.rawPrice > 0);
+          }
+
+          const count = cardsToRender.length;
+          const gridLayoutClass = count === 1
+            ? 'max-w-md mx-auto grid grid-cols-1 gap-6'
+            : count === 2
+              ? 'max-w-3xl mx-auto grid grid-cols-1 sm:grid-cols-2 gap-6'
+              : count === 3
+                ? 'max-w-5xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6'
+                : count === 4
+                  ? 'max-w-6xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5'
+                  : 'max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-5';
+
+          return (
+            <div className={`${gridLayoutClass} transition-all duration-300`}>
+              {cardsToRender.map((pkg: any, idx: number) => (
                 <div
-                  className={`p-3 rounded-xl mb-4 text-xs space-y-1 ${
-                    pkg.isPopular
-                      ? 'bg-white/10 dark:bg-[#0a0c10]/5'
-                      : 'bg-[#f8f9fb] dark:bg-[#131722] text-[#333c4e] dark:text-[#ccd3e0]'
-                  }`}
+                  key={pkg.id || idx}
+                  className={`rounded-2xl p-6 flex flex-col justify-between transition-all ${pkg.isPopular
+                      ? 'bg-[#111622] text-white dark:bg-white dark:text-[#0a0c10] shadow-md border-2 border-[#111622] dark:border-white'
+                      : 'bg-white dark:bg-[#0f121a] border border-[#d8dce6] dark:border-[#1e2433] text-[#111622] dark:text-white shadow-xs'
+                    }`}
                 >
-                  <div className="font-bold" style={{ fontFamily: "'Estedad', sans-serif" }}>
-                    {pkg.tokenEstimate}
+                  <div>
+                    {/* Optional Header Image / Media (Requested by User) */}
+                    {pkg.image && (
+                      <div className="mb-4 w-full h-32 rounded-xl overflow-hidden bg-[#eef1f6] dark:bg-[#151923] border border-black/5 dark:border-white/5">
+                        <img src={pkg.image} alt={pkg.title} className="w-full h-full object-cover" loading="lazy" />
+                      </div>
+                    )}
+
+                    <div className="mb-4">
+                      <span
+                        className={`inline-block px-2.5 py-1 rounded-lg text-[11px] font-bold ${pkg.isPopular
+                            ? 'bg-white/10 text-white dark:bg-[#0a0c10]/10 dark:text-[#0a0c10]'
+                            : 'bg-[#eef1f6] dark:bg-[#181d2a] text-[#525d75] dark:text-[#9aa5bc]'
+                          }`}
+                      >
+                        {pkg.badge}
+                      </span>
+                    </div>
+
+                    <h3 className="text-base font-bold mb-2" style={{ fontFamily: "'Estedad', sans-serif" }}>
+                      {pkg.title}
+                    </h3>
+
+                    <div className="flex items-baseline gap-1.5 mb-4">
+                      <span className="text-3xl font-black tracking-tight" style={{ fontFamily: "'Estedad', sans-serif" }}>
+                        {pkg.price}
+                      </span>
+                      {pkg.rawPrice > 0 && <span className="text-xs font-normal opacity-70">تومان</span>}
+                    </div>
+
+                    {/* Token / Messages Box */}
+                    {pkg.tokenEstimate && (
+                      <div
+                        className={`p-3 rounded-xl mb-4 text-xs space-y-1 ${pkg.isPopular
+                            ? 'bg-white/10 dark:bg-[#0a0c10]/5'
+                            : 'bg-[#f8f9fb] dark:bg-[#131722] text-[#333c4e] dark:text-[#ccd3e0]'
+                          }`}
+                      >
+                        <div className="font-bold" style={{ fontFamily: "'Estedad', sans-serif" }}>
+                          {pkg.tokenEstimate}
+                        </div>
+                        {pkg.messagesCount ? <div className="text-[11px] opacity-80">{pkg.messagesCount}</div> : null}
+                      </div>
+                    )}
+
+                    {pkg.desc && (
+                      <p className="text-xs opacity-80 leading-relaxed mb-6">{pkg.desc}</p>
+                    )}
+
+                    {pkg.features && pkg.features.length > 0 && (
+                      <ul className="space-y-2.5 text-xs mb-8">
+                        {pkg.features.map((feat: string, fIdx: number) => (
+                          <li key={fIdx} className="flex items-center gap-2">
+                            <Check className="w-3.5 h-3.5 shrink-0 text-[#10b981]" />
+                            <span>{feat}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
                   </div>
-                  <div className="text-[11px] opacity-80">{pkg.messagesCount}</div>
+
+                  <button
+                    type="button"
+                    onClick={pkg.ctaAction}
+                    className={`w-full py-3 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-xs ${pkg.isPopular
+                        ? 'bg-white text-[#0a0c10] hover:bg-[#eef1f6] dark:bg-[#0a0c10] dark:text-white dark:hover:bg-[#1a202d]'
+                        : 'bg-[#111622] hover:bg-[#1f273b] text-white dark:bg-white dark:hover:bg-[#e4e7ee] dark:text-[#0a0c10]'
+                      }`}
+                    style={{ fontFamily: "'Estedad', sans-serif" }}
+                  >
+                    {pkg.ctaText}
+                  </button>
                 </div>
-
-                <p className="text-xs opacity-80 leading-relaxed mb-6">{pkg.desc}</p>
-
-                <ul className="space-y-2.5 text-xs mb-8">
-                  {pkg.features.map((feat, fIdx) => (
-                    <li key={fIdx} className="flex items-center gap-2">
-                      <Check className={`w-3.5 h-3.5 shrink-0 ${pkg.isPopular ? 'text-[#10b981]' : 'text-[#10b981]'}`} />
-                      <span>{feat}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
-              <button
-                onClick={pkg.ctaAction}
-                className={`w-full py-3 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-xs ${
-                  pkg.isPopular
-                    ? 'bg-white text-[#0a0c10] hover:bg-[#eef1f6] dark:bg-[#0a0c10] dark:text-white dark:hover:bg-[#1a202d]'
-                    : 'bg-[#111622] hover:bg-[#1f273b] text-white dark:bg-white dark:hover:bg-[#e4e7ee] dark:text-[#0a0c10]'
-                }`}
-                style={{ fontFamily: "'Estedad', sans-serif" }}
-              >
-                {pkg.ctaText}
-              </button>
+              ))}
             </div>
-          ))}
-        </div>
+          );
+        })()}
+
+        {/* Custom Amount Top-up Banner */}
+        {dynamicPricingHeader?.customTopupBanner?.enabled !== false && (
+          <div className="mt-8 p-5 sm:p-6 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-blue-500/5 to-transparent border border-emerald-500/20 dark:border-emerald-500/30 max-w-3xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-5 transition-all">
+            <div className="flex items-center gap-3.5 text-right">
+              <div className="w-11 h-11 rounded-2xl bg-emerald-500/15 border border-emerald-500/25 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                <Coins className="w-5 h-5" />
+              </div>
+              <div>
+                <h4 className="font-bold text-sm text-[#0f1420] dark:text-white mb-1" style={{ fontFamily: "'Estedad', sans-serif" }}>
+                  {dynamicPricingHeader?.customTopupBanner?.title || 'پلن‌های ثابت مناسب شما نیست؟ شارژ با هر مبلغ دلخواه'}
+                </h4>
+                <p className="text-xs text-[#525d75] dark:text-[#9aa5bc] leading-relaxed">
+                  {dynamicPricingHeader?.customTopupBanner?.desc || 'کیف پول خود را به هر میزانی که مایلید (حداقل ۵,۰۰۰ تومان) شارژ کنید و فقط به ازای توکن‌های مصرفی کسر اعتبار شوید.'}
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                if (isAuthenticated) {
+                  setIsWalletOpen(true);
+                } else {
+                  setAuthModalOpen(true);
+                }
+              }}
+              className="shrink-0 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-all shadow-md hover:shadow-lg flex items-center gap-2 cursor-pointer active:scale-95"
+              style={{ fontFamily: "'Estedad', sans-serif" }}
+            >
+              <CreditCard className="w-4 h-4" />
+              <span>{dynamicPricingHeader?.customTopupBanner?.btnText || 'شارژ با مبلغ دلخواه'}</span>
+            </button>
+          </div>
+        )}
 
         {/* Security & Instant Credit Note */}
-        <div className="mt-8 p-4 rounded-xl bg-white dark:bg-[#0f121a] border border-[#d8dce6] dark:border-[#1e2433] max-w-2xl mx-auto flex flex-col sm:flex-row items-center justify-center gap-4 text-xs text-[#525d75] dark:text-[#9aa5bc]">
+        <div className="mt-6 p-4 rounded-xl bg-white dark:bg-[#0f121a] border border-[#d8dce6] dark:border-[#1e2433] max-w-2xl mx-auto flex flex-col sm:flex-row items-center justify-center gap-4 text-xs text-[#525d75] dark:text-[#9aa5bc]">
           <div className="flex items-center gap-1.5 font-medium">
             <ShieldCheck className="w-4 h-4 text-[#10b981]" />
             <span>شارژ آنی کیف پول بلافاصله پس از پرداخت شتاب</span>
@@ -865,7 +1346,7 @@ export const LandingPage: React.FC = () => {
         </div>
 
         <div className="space-y-3">
-          {faqs.map((faq, i) => {
+          {dynamicFaqs.map((faq, i) => {
             const isOpen = activeFaq === i;
             return (
               <div
@@ -880,9 +1361,8 @@ export const LandingPage: React.FC = () => {
                     {faq.q}
                   </span>
                   <ChevronDown
-                    className={`w-4 h-4 text-[#717b91] shrink-0 transition-transform duration-200 ${
-                      isOpen ? 'rotate-180 text-[#0f1420] dark:text-white' : ''
-                    }`}
+                    className={`w-4 h-4 text-[#717b91] shrink-0 transition-transform duration-200 ${isOpen ? 'rotate-180 text-[#0f1420] dark:text-white' : ''
+                      }`}
                   />
                 </button>
                 {isOpen && (
@@ -897,38 +1377,61 @@ export const LandingPage: React.FC = () => {
       </section>
 
       {/* ---------------- 7. Final Call to Action ---------------- */}
-      <section className="py-16 sm:py-20 px-4 sm:px-6 max-w-4xl mx-auto text-center">
-        <div className="rounded-2xl p-8 sm:p-12 bg-[#111622] dark:bg-white text-white dark:text-[#0a0c10] shadow-xl">
-          <div className="max-w-xl mx-auto space-y-4">
-            <h2 className="text-2xl sm:text-4xl font-black tracking-tight" style={{ fontFamily: "'Estedad', sans-serif" }}>
-              همین حالا با {toPersianDigits('50,000')} تومان هدیه شروع کنید
-            </h2>
-            <p className="text-xs sm:text-sm opacity-80 leading-relaxed">
-              ثبت‌نام در کمتر از ۳۰ ثانیه بدون نیاز به وارد کردن کارت بانکی؛ بلافاصله وارد محیط چت شوید و لذت کار با برترین مدل‌های جهان را تجربه کنید.
-            </p>
-            <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-3">
-              <Link
-                to="/chat"
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-xl bg-white text-[#0a0c10] hover:bg-[#eef1f6] dark:bg-[#0a0c10] dark:text-white dark:hover:bg-[#1a202d] font-bold text-sm shadow-sm transition-all"
-                style={{ fontFamily: "'Estedad', sans-serif" }}
-              >
-                <span>ورود به محیط چت</span>
-                <ArrowLeft className="w-4 h-4" />
-              </Link>
-              <Link
-                to="/store"
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl border border-white/20 dark:border-[#0a0c10]/20 hover:bg-white/10 dark:hover:bg-[#0a0c10]/10 text-inherit font-bold text-sm transition-all"
-              >
-                <Store className="w-4 h-4" />
-                <span>مشاهده فروشگاه</span>
-              </Link>
+      {(() => {
+        const ctaData = dynamicCta || {
+          title: `همین حالا با ${toPersianDigits('50,000')} تومان هدیه شروع کنید`,
+          desc: 'ثبت‌نام در کمتر از ۳۰ ثانیه بدون نیاز به وارد کردن کارت بانکی؛ بلافاصله وارد محیط چت شوید و لذت کار با برترین مدل‌های جهان را تجربه کنید.',
+          primaryBtnText: 'ورود به محیط چت',
+          primaryBtnLink: '/chat',
+          secondaryBtnText: 'مشاهده فروشگاه',
+          secondaryBtnLink: '/store',
+          theme: 'dark'
+        };
+        const ctaStyles = getCtaThemeStyles(ctaData.theme);
+        return (
+          <section className="py-16 sm:py-20 px-4 sm:px-6 max-w-4xl mx-auto text-center">
+            <div className={`rounded-2xl p-8 sm:p-12 ${ctaStyles.card} transition-all`}>
+              <div className="max-w-xl mx-auto space-y-4">
+                <h2 className="text-2xl sm:text-4xl font-black tracking-tight" style={{ fontFamily: "'Estedad', sans-serif" }}>
+                  {ctaData.title}
+                </h2>
+                <p className="text-xs sm:text-sm opacity-80 leading-relaxed">
+                  {ctaData.desc}
+                </p>
+                <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-3">
+                  <Link
+                    to={ctaData.primaryBtnLink || '/chat'}
+                    className={`w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-xl ${ctaStyles.primaryBtn} font-bold text-sm shadow-sm transition-all`}
+                    style={{ fontFamily: "'Estedad', sans-serif" }}
+                  >
+                    <span>{ctaData.primaryBtnText || 'ورود به محیط چت'}</span>
+                    <ArrowLeft className="w-4 h-4" />
+                  </Link>
+                  <Link
+                    to={ctaData.secondaryBtnLink || '/store'}
+                    className={`w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl border ${ctaStyles.secondaryBtn} font-bold text-sm transition-all`}
+                  >
+                    <Store className="w-4 h-4" />
+                    <span>{ctaData.secondaryBtnText || 'مشاهده فروشگاه'}</span>
+                  </Link>
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
-      </section>
+          </section>
+        );
+      })()}
 
       {/* ---------------- 8. Footer Component ---------------- */}
       <Footer />
+
+      {/* Checkout Modal for Plan Products */}
+      {selectedPlanForCheckout && (
+        <CheckoutModal
+          product={selectedPlanForCheckout}
+          isOpen={Boolean(selectedPlanForCheckout)}
+          onClose={() => setSelectedPlanForCheckout(null)}
+        />
+      )}
     </div>
   );
 };

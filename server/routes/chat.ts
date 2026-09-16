@@ -156,6 +156,7 @@ router.post('/api/chat/stream', chatStreamLimiter, async (req, res) => {
       if (userWallet.walletBalance <= 0) {
         sendChunk({
           error: 'اعتبار کیف پول شما به پایان رسیده است. لطفاً برای ادامه گفت‌وگو حساب خود را شارژ کنید.',
+          insufficientBalance: true,
           done: true
         });
         return finishStream();
