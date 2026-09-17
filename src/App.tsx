@@ -28,79 +28,79 @@ const ContactModal = lazy(() => import('./components/ContactModal').then(m => ({
 const WalletModal = lazy(() => import('./components/WalletModal').then(m => ({ default: m.WalletModal })));
 
 export default function App() {
-  const { settings, systemIsDark, syncSystemProfiles } = useSettingsStore();
-  const checkAuth = useAuthStore(state => state.checkAuth);
-  const setAuthModalOpen = useAuthStore(state => state.setAuthModalOpen);
-  const { isAdminOpen, setIsAdminOpen, setIsWalletOpen } = useUIStore();
+ const { settings, systemIsDark, syncSystemProfiles } = useSettingsStore();
+ const checkAuth = useAuthStore(state => state.checkAuth);
+ const setAuthModalOpen = useAuthStore(state => state.setAuthModalOpen);
+ const { isAdminOpen, setIsAdminOpen, setIsWalletOpen } = useUIStore();
 
-  const isDarkMode = settings.appearance.theme === 'dark' || (settings.appearance.theme === 'system' && systemIsDark);
-  const direction = settings.appearance.direction === 'auto' ? (settings.appearance.uiLanguage === 'fa' ? 'rtl' : 'ltr') : settings.appearance.direction;
+ const isDarkMode = settings.appearance.theme === 'dark' || (settings.appearance.theme === 'system' && systemIsDark);
+ const direction = settings.appearance.direction === 'auto' ? (settings.appearance.uiLanguage === 'fa' ? 'rtl' : 'ltr') : settings.appearance.direction;
 
-  useEffect(() => {
-    checkAuth();
-    syncSystemProfiles();
+ useEffect(() => {
+ checkAuth();
+ syncSystemProfiles();
 
-    // Listen for custom event to open auth modal
-    const handleOpenAuth = () => setAuthModalOpen(true);
-    const handleOpenWallet = () => setIsWalletOpen(true);
-    window.addEventListener('open-auth-modal', handleOpenAuth);
-    window.addEventListener('open-wallet-modal', handleOpenWallet);
-    
-    return () => {
-      window.removeEventListener('open-auth-modal', handleOpenAuth);
-      window.removeEventListener('open-wallet-modal', handleOpenWallet);
-    };
-  }, [checkAuth, setAuthModalOpen, setIsWalletOpen, syncSystemProfiles]);
+ // Listen for custom event to open auth modal
+ const handleOpenAuth = () => setAuthModalOpen(true);
+ const handleOpenWallet = () => setIsWalletOpen(true);
+ window.addEventListener('open-auth-modal', handleOpenAuth);
+ window.addEventListener('open-wallet-modal', handleOpenWallet);
+ 
+ return () => {
+ window.removeEventListener('open-auth-modal', handleOpenAuth);
+ window.removeEventListener('open-wallet-modal', handleOpenWallet);
+ };
+ }, [checkAuth, setAuthModalOpen, setIsWalletOpen, syncSystemProfiles]);
 
-  useEffect(() => {
-    const root = document.documentElement;
-    if (isDarkMode) root.classList.add('dark');
-    else root.classList.remove('dark');
+ useEffect(() => {
+ const root = document.documentElement;
+ if (isDarkMode) root.classList.add('dark');
+ else root.classList.remove('dark');
 
-    if (settings.appearance.font === 'hybrid') {
-      root.style.setProperty('--font-primary', 'var(--font-ui)');
-    } else {
-      root.style.setProperty('--font-primary', "'" + settings.appearance.font + "', sans-serif");
-    }
-    root.setAttribute('data-font', settings.appearance.font);
-    root.style.fontSize = settings.appearance.fontSize + 'px';
-    root.style.setProperty('--chat-font-size', settings.appearance.fontSize + 'px');
-    root.dir = direction;
-  }, [isDarkMode, settings.appearance.font, settings.appearance.fontSize, direction]);
+ if (settings.appearance.font === 'hybrid') {
+ root.style.setProperty('--font-primary', 'var(--font-ui)');
+ } else {
+ root.style.setProperty('--font-primary',"'" + settings.appearance.font +"', sans-serif");
+ }
+ root.setAttribute('data-font', settings.appearance.font);
+ root.style.fontSize = settings.appearance.fontSize + 'px';
+ root.style.setProperty('--chat-font-size', settings.appearance.fontSize + 'px');
+ root.dir = direction;
+ }, [isDarkMode, settings.appearance.font, settings.appearance.fontSize, direction]);
 
-  function HomeRoute() {
-    const isAuthenticated = useAuthStore(state => state.isAuthenticated);
-    return isAuthenticated ? <ChatApp /> : <LandingPage />;
-  }
+ function HomeRoute() {
+ const isAuthenticated = useAuthStore(state => state.isAuthenticated);
+ return isAuthenticated ? <ChatApp /> : <LandingPage />;
+ }
 
-  return (
-    <BrowserRouter>
-      <Suspense fallback={null}>
-        <Routes>
-          <Route path="/" element={<HomeRoute />} />
-          <Route path="/landing" element={<LandingPage />} />
-          <Route path="/chat" element={<ChatApp />} />
-          <Route path="/store" element={<StoreFront />} />
-          <Route path="/store/:id" element={<StoreFront />} />
-          <Route path="/blog" element={<Blog />} />
-          <Route path="/blog/:id" element={<Blog />} />
-          <Route path="/blog/tag/:tagName" element={<TagArchive />} />
-          <Route path="/dashboard" element={<UserDashboard />} />
-        </Routes>
+ return (
+ <BrowserRouter>
+ <Suspense fallback={null}>
+ <Routes>
+ <Route path="/" element={<HomeRoute />} />
+ <Route path="/landing" element={<LandingPage />} />
+ <Route path="/chat" element={<ChatApp />} />
+ <Route path="/store" element={<StoreFront />} />
+ <Route path="/store/:id" element={<StoreFront />} />
+ <Route path="/blog" element={<Blog />} />
+ <Route path="/blog/:id" element={<Blog />} />
+ <Route path="/blog/tag/:tagName" element={<TagArchive />} />
+ <Route path="/dashboard" element={<UserDashboard />} />
+ </Routes>
 
-        {/* Global Modals */}
-        <ExploreHub />
-        <SettingsModal />
-        <ExportModal />
-        <ImageGenStudio />
-        <UiGuideModal />
-        <AuthModal />
-        <AdminModal isOpen={isAdminOpen} onClose={() => setIsAdminOpen(false)} />
-        <AboutModal />
-        <ContactModal />
-        <WalletModal />
-        <ReloadPrompt />
-      </Suspense>
-    </BrowserRouter>
-  );
+ {/* Global Modals */}
+ <ExploreHub />
+ <SettingsModal />
+ <ExportModal />
+ <ImageGenStudio />
+ <UiGuideModal />
+ <AuthModal />
+ <AdminModal isOpen={isAdminOpen} onClose={() => setIsAdminOpen(false)} />
+ <AboutModal />
+ <ContactModal />
+ <WalletModal />
+ <ReloadPrompt />
+ </Suspense>
+ </BrowserRouter>
+ );
 }

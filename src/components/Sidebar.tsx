@@ -466,18 +466,17 @@ export const Sidebar: React.FC = React.memo(() => {
           )}
         </div>
 
-        {/* ---------------- 2. نوار ابزارهای سریع (سر جای اصلی بالای سرچ - مونوکروم) ---------------- */}
-        {/* ---------------- 2. نوار ابزارهای سریع (سر جای اصلی بالای سرچ - مونوکروم) ---------------- */}
+        {/* ---------------- 2. نوار ابزارهای سریع (آیکون‌های سه‌بعدی برجسته) ---------------- */}
         <div className="px-3 pt-2.5 pb-1 mb-3.5 shrink-0">
-          <div className="flex items-center justify-between p-1 bg-zinc-100/60 dark:bg-zinc-800/40 rounded-xl border border-zinc-200/50 dark:border-zinc-800/60">
+          <div className="flex items-center justify-between gap-1.5 px-0.5">
             <Tooltip content="فروشگاه محصولات" position="top" align="start">
               <Link
                 to="/store"
                 onClick={() => { if (window.innerWidth < 768) setSidebarOpen(false); }}
-                className="p-2 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 transition-all duration-200 cursor-pointer flex items-center justify-center rounded-lg hover:bg-white dark:hover:bg-zinc-700/60 shadow-none hover:shadow-xs"
+                className="clay-icon-btn w-10 h-10 flex items-center justify-center cursor-pointer clay-icon"
                 aria-label="فروشگاه محصولات و اشتراک"
               >
-                <Store className="w-4 h-4" strokeWidth={1.8} />
+                <Store className="w-5 h-5 text-zinc-600 dark:text-zinc-400" strokeWidth={1.8} />
               </Link>
             </Tooltip>
 
@@ -485,10 +484,10 @@ export const Sidebar: React.FC = React.memo(() => {
               <Link
                 to="/blog"
                 onClick={() => { if (window.innerWidth < 768) setSidebarOpen(false); }}
-                className="p-2 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 transition-all duration-200 cursor-pointer flex items-center justify-center rounded-lg hover:bg-white dark:hover:bg-zinc-700/60 shadow-none hover:shadow-xs"
+                className="clay-icon-btn w-10 h-10 flex items-center justify-center cursor-pointer clay-icon"
                 aria-label="وبلاگ هوش مصنوعی"
               >
-                <BookOpen className="w-4 h-4" strokeWidth={1.8} />
+                <BookOpen className="w-5 h-5 text-zinc-600 dark:text-zinc-400" strokeWidth={1.8} />
               </Link>
             </Tooltip>
 
@@ -496,10 +495,10 @@ export const Sidebar: React.FC = React.memo(() => {
               <button
                 id="sidebar-explore-hub-btn"
                 onClick={() => { setIsExploreOpen(true); if (window.innerWidth < 768) setSidebarOpen(false); }}
-                className="p-2 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 transition-all duration-200 cursor-pointer flex items-center justify-center rounded-lg hover:bg-white dark:hover:bg-zinc-700/60 shadow-none hover:shadow-xs"
+                className="clay-icon-btn w-10 h-10 flex items-center justify-center cursor-pointer clay-icon"
                 aria-label="کاوش در پرامپت‌ها و ایده‌ها"
               >
-                <Compass className="w-4 h-4" strokeWidth={1.8} />
+                <Compass className="w-5 h-5 text-zinc-600 dark:text-zinc-400" strokeWidth={1.8} />
               </button>
             </Tooltip>
 
@@ -507,10 +506,10 @@ export const Sidebar: React.FC = React.memo(() => {
               <button
                 id="sidebar-image-studio-btn"
                 onClick={() => { setIsImageStudioOpen(true); if (window.innerWidth < 768) setSidebarOpen(false); }}
-                className="p-2 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 transition-all duration-200 cursor-pointer flex items-center justify-center rounded-lg hover:bg-white dark:hover:bg-zinc-700/60 shadow-none hover:shadow-xs"
+                className="clay-icon-btn w-10 h-10 flex items-center justify-center cursor-pointer clay-icon"
                 aria-label="استودیو خلق تصویر"
               >
-                <Palette className="w-4 h-4" strokeWidth={1.8} />
+                <Palette className="w-5 h-5 text-zinc-600 dark:text-zinc-400" strokeWidth={1.8} />
               </button>
             </Tooltip>
 
@@ -518,10 +517,10 @@ export const Sidebar: React.FC = React.memo(() => {
               <button
                 id="sidebar-ui-guide-btn"
                 onClick={() => { setIsUiGuideOpen(true); if (window.innerWidth < 768) setSidebarOpen(false); }}
-                className="p-2 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 transition-all duration-200 cursor-pointer flex items-center justify-center rounded-lg hover:bg-white dark:hover:bg-zinc-700/60 shadow-none hover:shadow-xs"
+                className="clay-icon-btn w-10 h-10 flex items-center justify-center cursor-pointer clay-icon"
                 aria-label="راهنمای تصویری برنامه"
               >
-                <HelpCircle className="w-4 h-4" strokeWidth={1.8} />
+                <HelpCircle className="w-5 h-5 text-zinc-600 dark:text-zinc-400" strokeWidth={1.8} />
               </button>
             </Tooltip>
           </div>
@@ -529,20 +528,20 @@ export const Sidebar: React.FC = React.memo(() => {
 
         {/* ---------------- 3. اکشن اصلی: دکمه گفتگوی جدید + سرچ ---------------- */}
         <div className="px-3 pt-0.5 pb-2 shrink-0 space-y-2.5">
-          {/* دکمه گفتگوی جدید - عریض و شاخص */}
+          {/* دکمه گفتگوی جدید - ظریف و زیبا */}
           <button
             id="sidebar-new-chat-btn"
             onClick={() => {
               createChat(settings.providers[settings.providers.activeProvider]?.modelName);
               if (window.innerWidth < 768) setSidebarOpen(false);
             }}
-            className="w-full py-2.5 px-3.5 text-white bg-blue-600 hover:bg-blue-500 active:bg-blue-700 transition-all duration-200 cursor-pointer flex items-center justify-between rounded-xl shadow-xs hover:shadow-sm font-semibold text-xs group"
+            className="w-full py-2 px-3 clay-surface rounded-xl cursor-pointer flex items-center justify-between text-xs font-bold text-zinc-800 dark:text-zinc-200 hover:text-blue-600 dark:hover:text-blue-400 group transition-all"
           >
             <div className="flex items-center gap-2">
-              <MessageSquarePlus className="w-4 h-4 transition-transform group-hover:scale-110" strokeWidth={2} />
+              <MessageSquarePlus className="w-4 h-4 transition-transform group-hover:scale-110 text-blue-600 dark:text-blue-400" strokeWidth={2} />
               <span>گفتگوی جدید</span>
             </div>
-            <span className="text-[10px] opacity-75 font-mono dir-ltr font-normal bg-white/15 px-1.5 py-0.5 rounded-md">
+            <span className="text-[10px] opacity-60 font-mono dir-ltr font-normal bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/5 px-1.5 py-0.5 rounded-md text-zinc-500 dark:text-zinc-400">
               Ctrl+K
             </span>
           </button>
@@ -683,8 +682,8 @@ export const Sidebar: React.FC = React.memo(() => {
         )}
 
         {/* Bottom Storage & Metrics (فوتر خلوت) */}
-        <div className="p-3 border-t border-zinc-200/80 dark:border-zinc-800/80 bg-zinc-50/80 dark:bg-zinc-900/80 shrink-0">
-          <div className="flex items-center justify-between text-[11px] text-zinc-500 dark:text-zinc-400 px-1">
+        <div className="mx-3 mb-3 p-2 clay-surface-inset rounded-xl shrink-0 border-t-0">
+          <div className="flex items-center justify-between text-[10px] sm:text-[11px] text-zinc-500 dark:text-zinc-400 px-1">
             <div className="flex items-center gap-1.5 truncate">
               <DatabaseLinearIcon className="w-3.5 h-3.5 text-blue-500 shrink-0" />
               <span>حافظه: {usePersianDigits ? toPersianDigits(storageStats.usedKb) : storageStats.usedKb} KB</span>

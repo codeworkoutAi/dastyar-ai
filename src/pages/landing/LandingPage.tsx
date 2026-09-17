@@ -213,14 +213,14 @@ const getCtaThemeStyles = (theme?: string) => {
       };
     case 'white':
       return {
-        card: 'bg-white dark:bg-[#0f121a] border border-[#d8dce6] dark:border-[#1e2433] text-[#0f1420] dark:text-white shadow-xl',
+        card: 'bg-white dark:bg-[#0f121a] border border-[#d8dce6] dark:border-[#1e2433] text-[#0f1420] dark:text-white ',
         primaryBtn: 'bg-[#111622] hover:bg-[#202636] dark:bg-white dark:hover:bg-[#e4e7ee] text-white dark:text-[#0a0c10]',
         secondaryBtn: 'border-[#d8dce6] dark:border-[#1e2433] hover:bg-[#f8f9fb] dark:hover:bg-[#131722] text-[#0f1420] dark:text-white'
       };
     case 'dark':
     default:
       return {
-        card: 'bg-[#111622] dark:bg-white text-white dark:text-[#0a0c10] shadow-xl',
+        card: 'bg-[#111622] dark:bg-white text-white dark:text-[#0a0c10] ',
         primaryBtn: 'bg-white text-[#0a0c10] hover:bg-[#eef1f6] dark:bg-[#0a0c10] dark:text-white dark:hover:bg-[#1a202d]',
         secondaryBtn: 'border-white/20 dark:border-[#0a0c10]/20 hover:bg-white/10 dark:hover:bg-[#0a0c10]/10 text-inherit'
       };
@@ -704,7 +704,7 @@ export const LandingPage: React.FC = () => {
       <header className="sticky top-2 sm:top-3 z-50 max-w-6xl mx-2 sm:mx-4 md:mx-auto px-4 sm:px-6 h-16 flex items-center justify-between clay-card-thick backdrop-blur-xl transition-all">
         {/* Brand */}
         <Link to="/" className="flex items-center gap-2.5 sm:gap-3 group shrink-0">
-          <div className="w-9 h-9 rounded-2xl clay-btn-primary-thick flex items-center justify-center font-bold text-sm shadow-md transition-transform group-hover:scale-105 shrink-0">
+          <div className="w-9 h-9 rounded-2xl clay-btn-primary-thick flex items-center justify-center font-bold text-sm  transition-transform group-hover:scale-105 shrink-0">
             <Sparkles className="w-4 h-4" />
           </div>
           <div className="flex flex-col text-right">
@@ -744,7 +744,7 @@ export const LandingPage: React.FC = () => {
           {isAuthenticated ? (
             <Link
               to="/chat"
-              className="inline-flex items-center gap-1.5 clay-btn-primary-thick px-3.5 sm:px-4 py-2 rounded-xl text-xs font-bold shadow-md transition-all active:scale-95 whitespace-nowrap"
+              className="inline-flex items-center gap-1.5 clay-btn-primary-thick px-3.5 sm:px-4 py-2 rounded-xl text-xs font-bold  transition-all active:scale-95 whitespace-nowrap"
             >
               <span>ورود به چت</span>
               <ArrowLeft className="w-3.5 h-3.5" />
@@ -752,7 +752,7 @@ export const LandingPage: React.FC = () => {
           ) : (
             <button
               onClick={() => setAuthModalOpen(true)}
-              className="inline-flex items-center gap-1.5 clay-btn-primary-thick px-3.5 sm:px-4 py-2 rounded-xl text-xs font-bold shadow-md transition-all active:scale-95 whitespace-nowrap cursor-pointer"
+              className="inline-flex items-center gap-1.5 clay-btn-primary-thick px-3.5 sm:px-4 py-2 rounded-xl text-xs font-bold  transition-all active:scale-95 whitespace-nowrap cursor-pointer"
             >
               <span>ورود / ثبت‌نام</span>
             </button>
@@ -801,8 +801,8 @@ export const LandingPage: React.FC = () => {
       <section className="pt-12 pb-16 sm:pt-20 sm:pb-24 px-4 sm:px-6 max-w-5xl mx-auto flex flex-col items-center text-center">
         {/* Top Feature Pill (Only rendered if configured) */}
         {Boolean(dynamicHero?.featurePill) && (
-          <div className="reveal-pop inline-flex items-center gap-2.5 px-4 py-2 rounded-full clay-pill-thick bg-white/90 dark:bg-[#141824]/90 text-xs font-bold mb-6">
-            <div className="w-5 h-5 rounded-full clay-crown-badge flex items-center justify-center text-[#df9f40] shadow-sm">
+          <div className="reveal-pop inline-flex items-center gap-2.5 px-4 py-2 clay-pill-thick text-xs font-bold mb-6">
+            <div className="w-5 h-5 rounded-full clay-crown-badge flex items-center justify-center text-[#df9f40] ">
               <Crown className="w-3 h-3 fill-[#df9f40]" />
             </div>
             <span className="text-[#0f1420] dark:text-[#e4e7ee]">
@@ -813,7 +813,7 @@ export const LandingPage: React.FC = () => {
 
         {/* Headline (Refined, Proportional Typography) */}
         <h1
-          className="reveal-init stagger-1 text-2xl sm:text-3xl md:text-5xl font-black text-[#0f1420] dark:text-white leading-[1.3] max-w-2xl mb-4"
+          className="reveal-init stagger-1 text-2xl sm:text-3xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-l from-indigo-600 to-cyan-500 dark:from-indigo-400 dark:to-cyan-400 leading-[1.3] max-w-2xl py-2 px-1 mb-2"
           style={{ fontFamily: "'Estedad', sans-serif" }}
         >
           {dynamicHero?.title || (
@@ -829,100 +829,113 @@ export const LandingPage: React.FC = () => {
           {dynamicHero?.subtitle || 'بدون نیاز به خرید اشتراک‌های ماهانه دلاری یا دغدغه فیلترشکن؛ با پرچمداران Claude 3.5، GPT-4o و Gemini به فارسی گفتگو کنید و هزینه را به اندازه مصرف واقعی به تومان بپردازید.'}
         </p>
 
-        {/* Action CTAs */}
-        <div className="reveal-init stagger-3 flex flex-col sm:flex-row items-center justify-center gap-3.5 w-full sm:w-auto mb-10 sm:mb-12">
-          <Link
-            to={dynamicHero?.primaryBtnLink || '/chat'}
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-2xl clay-btn-primary-thick font-black text-xs sm:text-sm shadow-xl transition-all group active:scale-95 cursor-pointer"
-            style={{ fontFamily: "'Estedad', sans-serif" }}
-          >
-            <span>{dynamicHero?.primaryBtnText || 'شروع گفتگو با هوش مصنوعی'}</span>
-            <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-          </Link>
-          {Boolean(dynamicHero?.secondaryBtnText) && (
-            <a
-              href={dynamicHero?.secondaryBtnLink || '#pricing'}
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl clay-btn-thick font-bold text-xs sm:text-sm text-[#0f1420] dark:text-white transition-all active:scale-95 cursor-pointer"
-            >
-              <Coins className="w-4 h-4 text-amber-500" />
-              <span>{dynamicHero?.secondaryBtnText}</span>
-            </a>
-          )}
-        </div>
+        {/* Infinite Scrolling Models Banner (Replacing Control Console) */}
+        <div className="reveal-init stagger-3 w-full max-w-5xl mx-auto mt-8 mb-12 relative">
+          
+          <style>{`
+            @keyframes marquee-rtl {
+              0% { transform: translateX(0); }
+              100% { transform: translateX(50%); }
+            }
+            .animate-marquee-rtl {
+              animation: marquee-rtl 25s linear infinite;
+              display: flex;
+              width: max-content;
+            }
+            .animate-marquee-rtl:hover {
+              animation-play-state: paused;
+            }
+          `}</style>
+          
+          <div className="clay-card-elevated p-8 sm:p-10 overflow-hidden flex flex-col items-center text-center relative">
+            {/* Glow removed as requested */}
 
-        {/* Hero Visual Mockup Console (Sculpted Thick Clay) */}
-        <div className="reveal-init stagger-2 w-full max-w-4xl clay-card-elevated overflow-hidden text-right">
-          {/* Top Console Bar with 4 Signature Clay Dots */}
-          <div className="flex flex-wrap items-center justify-between gap-3 px-5 sm:px-7 py-3.5 border-b border-black/5 dark:border-white/5 bg-white/40 dark:bg-black/20 backdrop-blur-xs">
-            <div className="flex items-center gap-2">
-              <div className="w-3.5 h-3.5 rounded-full clay-gold-circle shadow-xs" title="کهربایی طلایی" />
-              <div className="w-3.5 h-3.5 rounded-full clay-rose-circle shadow-xs" title="رز خاکی" />
-              <div className="w-3.5 h-3.5 rounded-full clay-charcoal-circle shadow-xs" title="ذغالی گرافیتی" />
-              <div className="w-3.5 h-3.5 rounded-full clay-indigo-circle shadow-xs" title="سرمه‌ای ایندیگو" />
-              <span className="text-[11px] font-bold text-[#525d75] dark:text-[#9aa5bc] mr-2">محیط چت تعاملی دستیار هوشمند</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-[11px] font-mono font-bold text-[#525d75] dark:text-[#9aa5bc]">{activeScenario.model}</span>
-              <span className="text-[10px] px-2.5 py-0.5 rounded-full clay-pill-thick bg-blue-500/10 text-blue-600 dark:bg-white/10 dark:text-zinc-200 font-bold">
-                {activeScenario.modelBadge}
-              </span>
-            </div>
-          </div>
+            {/* Banner Title */}
+            <h2 className="text-xl sm:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-rose-500 to-orange-500 dark:from-rose-400 dark:to-orange-400 py-2 px-1 mb-1 relative z-10" style={{ fontFamily: "'Estedad', sans-serif" }}>
+              یک کلید برای تمام پرچمداران جهان
+            </h2>
+            <p className="text-xs sm:text-sm text-[#525d75] dark:text-[#9aa5bc] max-w-xl mx-auto mb-10 relative z-10 leading-relaxed">
+              بدون نیاز به ده‌ها اکانت ارزی. پلتفرم ما جامع‌ترین درگاه را با پشتیبانی کامل از تمامی مدل‌های قدرتمند هوش مصنوعی در اختیار شما قرار می‌دهد.
+            </p>
 
-          {/* Chips Selector */}
-          <div className="flex items-center gap-2.5 px-4 sm:px-6 py-3.5 border-b border-black/5 dark:border-white/5 overflow-x-auto [scrollbar-width:none]">
-            {((dynamicHero?.demoScenarios && dynamicHero.demoScenarios.length > 0) ? dynamicHero.demoScenarios : DEMO_SCENARIOS).map((sc: any) => {
-              const Icon = typeof sc.icon === 'function' ? sc.icon : Sparkles;
-              const isActive = activeScenario.id === sc.id;
-              return (
-                <button
-                  key={sc.id}
-                  onClick={() => setActiveScenario(sc)}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-2xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${isActive
-                      ? 'clay-indigo text-white !rounded-xl shadow-md'
-                      : 'clay-btn-thick !rounded-xl text-[#525d75] dark:text-[#9aa5bc]'
-                    }`}
-                >
-                  <Icon className="w-3.5 h-3.5" />
-                  <span>{sc.label}</span>
-                </button>
-              );
-            })}
-          </div>
+            {/* Marquee Track */}
+            <div className="w-full overflow-hidden relative z-10 [mask-image:linear-gradient(to_right,transparent,black_15%,black_85%,transparent)]">
+              <div className="animate-marquee-rtl gap-4 sm:gap-6 pr-4">
+                {/* Duplicated list for seamless loop */}
+                {[...Array(2)].map((_, i) => (
+                  <React.Fragment key={i}>
+                    {/* GPT-4o */}
+                    <div className="flex items-center gap-3 px-5 py-3 rounded-2xl clay-inset-thick transition-transform hover:-translate-y-0.5 cursor-pointer shrink-0">
+                      <div className="w-10 h-10 rounded-xl bg-black/5 dark:bg-white/5 flex items-center justify-center text-[#10a37f]  border border-black/5 dark:border-white/5">
+                        <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 opacity-90"><path d="M22.2819 9.8211a5.9847 5.9847 0 0 0-.5157-4.9108 6.0462 6.0462 0 0 0-6.5098-2.9A6.0651 6.0651 0 0 0 4.9807 4.1818a5.9847 5.9847 0 0 0-3.9977 2.9 6.0462 6.0462 0 0 0 .7427 7.0966 5.98 5.98 0 0 0 .511 4.9107 6.051 6.051 0 0 0 6.5146 2.9001A6.0651 6.0651 0 0 0 19.0192 19.818a5.9847 5.9847 0 0 0 3.9977-2.9 6.0462 6.0462 0 0 0-.735-7.0968zM8.7505 18.2588a4.5078 4.5078 0 0 1-2.4828-4.2238l.0047-.1165 4.5492 2.627v5.253a4.5204 4.5204 0 0 1-2.0711-3.5397zm-3.518-7.9044a4.5078 4.5078 0 0 1 1.0506-4.739 4.4962 4.4962 0 0 1 3.5332-1.2828L5.2671 6.959v5.254l-4.5492-2.6264zm10.0526-7.234a4.5078 4.5078 0 0 1 4.2238 2.4828 4.4962 4.4962 0 0 1-.225 3.7388L14.7347 6.716 10.1855 4.089v-5.253a4.5078 4.5078 0 0 1 5.1016 1.8344zm3.4897 7.9044a4.5078 4.5078 0 0 1-1.0506 4.739 4.4962 4.4962 0 0 1-3.5332 1.2828l4.5492-2.6264V9.022l4.5492 2.6264zm-10.0526 7.234a4.5078 4.5078 0 0 1-4.2238-2.4828 4.4962 4.4962 0 0 1 .225-3.7388L9.2653 17.284 13.8145 19.911v5.253a4.5078 4.5078 0 0 1-5.1016-1.8344zM16.3262 10.038l-4.269 2.4646-4.269-2.4646V5.109l4.269 2.4646 4.269-2.4646v4.929z" /></svg>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-sm font-black text-[#0f1420] dark:text-white" style={{ fontFamily: "'Estedad', sans-serif" }}>GPT-4o</div>
+                        <div className="text-[10px] font-bold text-[#525d75] dark:text-[#9aa5bc]">OpenAI</div>
+                      </div>
+                    </div>
+                    
+                    {/* Claude 3.5 */}
+                    <div className="flex items-center gap-3 px-5 py-3 rounded-2xl clay-inset-thick transition-transform hover:-translate-y-0.5 cursor-pointer shrink-0">
+                      <div className="w-10 h-10 rounded-xl bg-black/5 dark:bg-white/5 flex items-center justify-center text-[#d97757]  border border-black/5 dark:border-white/5">
+                        <svg viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6 opacity-90"><path d="M18.8 20.5H22L12 3H8.8L-0 20.5H3.2L12 4.6L18.8 20.5ZM12.2 16.5H15.4L13.8 13.3L12.2 16.5Z"/></svg>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-sm font-black text-[#0f1420] dark:text-white" style={{ fontFamily: "'Estedad', sans-serif" }}>Claude 3.5</div>
+                        <div className="text-[10px] font-bold text-[#525d75] dark:text-[#9aa5bc]">Anthropic</div>
+                      </div>
+                    </div>
 
-          {/* Console Body Area */}
-          <div className="p-5 sm:p-7 space-y-4 text-xs sm:text-sm leading-relaxed">
-            {/* User Message */}
-            <div className="flex items-start gap-3 justify-end">
-              <div className="max-w-xl clay-card-thick !rounded-2xl !rounded-tr-xs p-4 sm:p-5 text-[#0f1420] dark:text-[#f3f5f9]">
-                <p className="font-semibold leading-relaxed">{activeScenario.userPrompt}</p>
+                    {/* Gemini Flash */}
+                    <div className="flex items-center gap-3 px-5 py-3 rounded-2xl clay-inset-thick transition-transform hover:-translate-y-0.5 cursor-pointer shrink-0">
+                      <div className="w-10 h-10 rounded-xl bg-black/5 dark:bg-white/5 flex items-center justify-center text-[#4285f4]  border border-black/5 dark:border-white/5">
+                        <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 opacity-90"><path d="M12.025 24C12.025 17.5 17.5 12.025 24 12.025C17.5 12.025 12.025 6.5 12.025 0C12.025 6.5 6.5 12.025 0 12.025C6.5 12.025 12.025 17.5 12.025 24Z"/></svg>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-sm font-black text-[#0f1420] dark:text-white" style={{ fontFamily: "'Estedad', sans-serif" }}>Gemini 1.5</div>
+                        <div className="text-[10px] font-bold text-[#525d75] dark:text-[#9aa5bc]">Google</div>
+                      </div>
+                    </div>
+
+                    {/* Flux Studio */}
+                    <div className="flex items-center gap-3 px-5 py-3 rounded-2xl clay-inset-thick transition-transform hover:-translate-y-0.5 cursor-pointer shrink-0">
+                      <div className="w-10 h-10 rounded-xl bg-black/5 dark:bg-white/5 flex items-center justify-center text-[#ec4899]  border border-black/5 dark:border-white/5">
+                        <svg viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6 opacity-90"><path d="M19 3H5C3.89543 3 3 3.89543 3 5V19C3 20.1046 3.89543 21 5 21H19C20.1046 21 21 20.1046 21 19V5C21 3.89543 20.1046 3 19 3ZM15 11H11V15H9V11H7V9H9V7H11V9H15V11Z"/></svg>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-sm font-black text-[#0f1420] dark:text-white" style={{ fontFamily: "'Estedad', sans-serif" }}>Flux 8K</div>
+                        <div className="text-[10px] font-bold text-[#525d75] dark:text-[#9aa5bc]">Black Forest</div>
+                      </div>
+                    </div>
+
+                    {/* DeepSeek */}
+                    <div className="flex items-center gap-3 px-5 py-3 rounded-2xl clay-inset-thick transition-transform hover:-translate-y-0.5 cursor-pointer shrink-0">
+                      <div className="w-10 h-10 rounded-xl bg-black/5 dark:bg-white/5 flex items-center justify-center text-[#2563eb]  border border-black/5 dark:border-white/5">
+                        <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 opacity-90"><path d="M12 21.5c-5.238 0-9.5-4.262-9.5-9.5S6.762 2.5 12 2.5s9.5 4.262 9.5 9.5-4.262 9.5-9.5 9.5zm0-17C7.86 4.5 4.5 7.86 4.5 12s3.36 7.5 7.5 7.5 7.5-3.36 7.5-7.5-3.36-7.5-7.5-7.5zM12 17c-2.757 0-5-2.243-5-5s2.243-5 5-5 5 2.243 5 5-2.243 5-5 5z"/></svg>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-sm font-black text-[#0f1420] dark:text-white" style={{ fontFamily: "'Estedad', sans-serif" }}>DeepSeek V3</div>
+                        <div className="text-[10px] font-bold text-[#525d75] dark:text-[#9aa5bc]">DeepSeek</div>
+                      </div>
+                    </div>
+                  </React.Fragment>
+                ))}
               </div>
-              <div className="w-8 h-8 rounded-2xl clay-btn-thick flex items-center justify-center shrink-0 text-[#0f1420] dark:text-white font-black text-xs">
-                شما
-              </div>
             </div>
 
-            {/* AI Response */}
-            <div className="flex items-start gap-3 justify-start">
-              <div className="w-8 h-8 rounded-2xl clay-btn-primary-thick flex items-center justify-center shrink-0 font-bold text-xs shadow-md">
-                <Sparkles className="w-4 h-4" />
-              </div>
-              <div className="flex-1 max-w-2xl clay-card-thick !rounded-2xl !rounded-tl-xs p-5 sm:p-6 text-[#0f1420] dark:text-[#f3f5f9] leading-relaxed shadow-lg overflow-x-auto text-right">
-                <MarkdownRenderer content={formatDemoAiResponse(activeScenario.aiResponse, activeScenario.id)} isUser={false} />
-              </div>
+            {/* Action Button inside Banner */}
+            <div className="mt-10 relative z-10">
+              <Link
+                to="/chat"
+                className="group relative inline-flex items-center justify-center gap-3 px-10 py-3.5 clay-btn-primary-thick font-black text-sm overflow-hidden"
+                style={{ fontFamily: "'Estedad', sans-serif" }}
+              >
+                <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 pointer-events-none" />
+                <span>شروع</span>
+                <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1.5 transition-transform" />
+              </Link>
             </div>
-          </div>
 
-          {/* Bottom Bar */}
-          <div className="flex items-center justify-between px-5 sm:px-7 py-3.5 border-t border-black/5 dark:border-white/5 bg-white/40 dark:bg-black/20">
-            <span className="text-[11px] font-bold text-[#525d75] dark:text-[#9aa5bc]">پاسخ‌دهی آنی بدون تاخیر فیلترشکن</span>
-            <Link
-              to="/chat"
-              className="inline-flex items-center gap-1.5 clay-btn-thick px-3 py-1.5 rounded-xl text-xs font-bold text-[#2563eb] dark:text-white hover:brightness-110"
-            >
-              <span>تست همین سناریو در چت‌باکس</span>
-              <ArrowLeft className="w-3.5 h-3.5" />
-            </Link>
           </div>
         </div>
       </section>
@@ -931,7 +944,7 @@ export const LandingPage: React.FC = () => {
       <section id="models" className="py-16 sm:py-20 px-4 sm:px-6 max-w-6xl mx-auto border-t border-black/5 dark:border-white/5">
         <div className="reveal-init text-center max-w-2xl mx-auto mb-12 sm:mb-16">
           <h2
-            className="text-2xl sm:text-4xl font-black text-[#0f1420] dark:text-white tracking-tight mb-3"
+            className="text-2xl sm:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-teal-500 dark:from-emerald-400 dark:to-teal-400 tracking-tight py-2 px-1 mb-1"
             style={{ fontFamily: "'Estedad', sans-serif" }}
           >
             امکانات پیشرفته و قابلیت‌های اصلی
@@ -1053,11 +1066,11 @@ export const LandingPage: React.FC = () => {
         {/* Dignified Manifesto Header & Content */}
         <div className="reveal-init clay-card-elevated p-6 sm:p-10 mb-14">
           <div className="max-w-3xl">
-            <span className="inline-block px-3.5 py-1 rounded-full clay-pill-thick text-[11px] font-bold bg-blue-500/10 text-blue-600 dark:bg-white/10 dark:text-zinc-200 mb-3.5">
+            <span className="inline-block px-3.5 py-1 clay-pill-thick text-[11px] font-bold text-blue-600 dark:text-zinc-200 mb-3.5">
               {dynamicManifesto?.badge || 'بیانیه شفافیت و فلسفه طراحی'}
             </span>
             <h2
-              className="text-2xl sm:text-3xl font-black text-[#0f1420] dark:text-white tracking-tight mb-4"
+              className="text-2xl sm:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-violet-600 to-fuchsia-500 dark:from-violet-400 dark:to-fuchsia-400 tracking-tight py-2 px-1 mb-2"
               style={{ fontFamily: "'Estedad', sans-serif" }}
             >
               {dynamicManifesto?.title || 'ابزار کار واقعی یا اسباب سرگرمی؟ چرا تمرکز ما بر کارایی و حل مسائل روزمره است'}
@@ -1112,7 +1125,7 @@ export const LandingPage: React.FC = () => {
             TARGET AUDIENCE & USE CASES
           </span>
           <h2
-            className="text-2xl sm:text-4xl font-black text-[#0f1420] dark:text-white tracking-tight mb-3"
+            className="text-2xl sm:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-500 to-orange-500 dark:from-amber-400 dark:to-orange-400 tracking-tight py-2 px-1 mb-1"
             style={{ fontFamily: "'Estedad', sans-serif" }}
           >
             دستیار هوشمند؛ همراه تخصصی کدام حرفه‌هاست؟
@@ -1132,7 +1145,7 @@ export const LandingPage: React.FC = () => {
             <div className="space-y-6">
               {/* Main 3D Spotlight Stage Card */}
               <div
-                className="reveal-pop stagger-2 relative clay-card-elevated p-6 sm:p-8 rounded-[32px] overflow-hidden transition-all duration-500 hover:shadow-2xl"
+                className="reveal-pop stagger-2 relative clay-card-elevated p-6 sm:p-8 rounded-[32px] overflow-hidden transition-all duration-500"
                 onMouseEnter={() => setIsProfessionsPaused(true)}
                 onMouseLeave={() => setIsProfessionsPaused(false)}
                 onTouchStart={() => setIsProfessionsPaused(true)}
@@ -1140,7 +1153,7 @@ export const LandingPage: React.FC = () => {
               >
                 {/* Stage Header with Navigation Buttons */}
                 <div className="flex items-center justify-between gap-4 mb-6">
-                  <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full clay-pill-thick bg-white/80 dark:bg-black/40 text-xs font-bold shadow-sm">
+                  <div className="inline-flex items-center gap-2 px-3.5 py-1.5 clay-pill-thick text-xs font-bold">
                     <div className="w-2.5 h-2.5 rounded-full clay-gold-circle" />
                     <span>تخصص انتخابی: {currentProfession.badge}</span>
                   </div>
@@ -1149,7 +1162,7 @@ export const LandingPage: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => setActiveProfessionIdx((prev) => (prev - 1 + professionList.length) % professionList.length)}
-                      className="w-10 h-10 rounded-2xl clay-btn-thick flex items-center justify-center text-[#0f1420] dark:text-white transition-all cursor-pointer active:scale-95 shadow-sm"
+                      className="w-10 h-10 rounded-2xl clay-btn-thick flex items-center justify-center text-[#0f1420] dark:text-white transition-all cursor-pointer active:scale-95 "
                       aria-label="تخصص قبلی"
                       title="تخصص قبلی"
                     >
@@ -1158,7 +1171,7 @@ export const LandingPage: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => setActiveProfessionIdx((prev) => (prev + 1) % professionList.length)}
-                      className="w-10 h-10 rounded-2xl clay-btn-thick flex items-center justify-center text-[#0f1420] dark:text-white transition-all cursor-pointer active:scale-95 shadow-sm"
+                      className="w-10 h-10 rounded-2xl clay-btn-thick flex items-center justify-center text-[#0f1420] dark:text-white transition-all cursor-pointer active:scale-95 "
                       aria-label="تخصص بعدی"
                       title="تخصص بعدی"
                     >
@@ -1171,7 +1184,7 @@ export const LandingPage: React.FC = () => {
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 items-center">
                   {/* Preserved Visual Frame Image */}
                   <div className="lg:col-span-5 relative">
-                    <div className="relative aspect-[16/11] overflow-hidden rounded-[24px] bg-[#eef1f6] dark:bg-[#151923] shadow-inner clay-card-thick p-1">
+                    <div className="relative aspect-[16/11] overflow-hidden rounded-[24px]  clay-card-thick p-1">
                       <img
                         key={currentProfession.image}
                         src={currentProfession.image}
@@ -1238,7 +1251,7 @@ export const LandingPage: React.FC = () => {
                     <div className="pt-2">
                       <Link
                         to={`/chat?prompt=${encodeURIComponent(currentProfession.prompt)}`}
-                        className="group w-full sm:w-auto inline-flex items-center justify-center gap-3 px-7 py-3.5 rounded-2xl btn-flowing-glow text-sm font-black text-white shadow-xl cursor-pointer select-none"
+                        className="group w-full sm:w-auto inline-flex items-center justify-center gap-3 px-7 py-3.5 rounded-2xl btn-flowing-glow text-sm font-black text-white  cursor-pointer select-none"
                         style={{ fontFamily: "'Estedad', 'Vazirmatn', sans-serif" }}
                       >
                         {/* Flowing shimmer light sweep reflection */}
@@ -1259,16 +1272,16 @@ export const LandingPage: React.FC = () => {
                   const thumbAnim = idx % 2 === 0 ? 'reveal-from-right' : 'reveal-from-left';
                   const staggerClass = `stagger-${(idx % 6) + 1}`;
                   return (
-                    <button
-                      key={p.id || idx}
-                      type="button"
-                      onClick={() => setActiveProfessionIdx(idx)}
-                      className={`${thumbAnim} ${staggerClass} p-2 rounded-2xl transition-all duration-300 text-right cursor-pointer flex items-center gap-2.5 active:scale-95 ${
-                        isActive
-                          ? 'clay-card-elevated border-2 border-[#2563eb] dark:border-white/50 scale-102 shadow-md'
-                          : 'clay-card-thick opacity-70 hover:opacity-100'
-                      }`}
-                    >
+                    <div key={p.id || idx} className={`${thumbAnim} ${staggerClass}`}>
+                      <button
+                        type="button"
+                        onClick={() => setActiveProfessionIdx(idx)}
+                        className={`w-full p-2 rounded-2xl transition-all duration-300 text-right cursor-pointer flex items-center gap-2.5 active:scale-95 ${
+                          isActive
+                            ? 'clay-card-elevated border-2 border-[#2563eb] dark:border-white/50 scale-102 '
+                            : 'clay-card-thick opacity-70 hover:opacity-100'
+                        }`}
+                      >
                       <img
                         src={p.image}
                         alt={p.title}
@@ -1283,6 +1296,7 @@ export const LandingPage: React.FC = () => {
                         </span>
                       </div>
                     </button>
+                    </div>
                   );
                 })}
               </div>
@@ -1310,56 +1324,48 @@ export const LandingPage: React.FC = () => {
 
         return (
           <section id="gallery" className="py-16 sm:py-20 px-4 sm:px-6 max-w-6xl mx-auto border-t border-black/5 dark:border-white/5">
-            <div className="reveal-init flex flex-col md:flex-row items-start md:items-end justify-between gap-4 mb-8 sm:mb-10">
+            <div className="reveal-init flex flex-col items-center gap-4 mb-8 sm:mb-10 w-full">
               <div>
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full clay-pill-thick text-[10px] font-bold bg-blue-500/10 text-blue-600 dark:bg-white/10 dark:text-zinc-200 mb-2">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full clay-pill-thick text-[10px] font-bold bg-blue-500/10 text-blue-600 dark:bg-white/10 dark:text-zinc-200">
                   <Sparkles className="w-3 h-3" />
                   <span>AI IMAGE STUDIO SHOWCASE • انیمیشن تعاملی</span>
                 </div>
-                <h2
-                  className="text-2xl sm:text-4xl font-black text-[#0f1420] dark:text-white tracking-tight"
-                  style={{ fontFamily: "'Estedad', sans-serif" }}
-                >
-                  آثار تولیدشده در استودیوی تصویرساز
-                </h2>
               </div>
 
-              <div className="flex items-center gap-3">
-                {/* Carousel Navigation Buttons (Claymorphic) */}
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setGalleryTransition(true);
-                      setGallerySlide((prev) => prev - 1);
-                    }}
-                    className="w-10 h-10 rounded-2xl clay-btn-thick flex items-center justify-center text-[#0f1420] dark:text-white transition-all cursor-pointer active:scale-95 shadow-sm"
-                    aria-label="تصویر قبلی"
-                    title="تصویر قبلی"
-                  >
-                    <ChevronRight className="w-5 h-5" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setGalleryTransition(true);
-                      setGallerySlide((prev) => prev + 1);
-                    }}
-                    className="w-10 h-10 rounded-2xl clay-btn-thick flex items-center justify-center text-[#0f1420] dark:text-white transition-all cursor-pointer active:scale-95 shadow-sm"
-                    aria-label="تصویر بعدی"
-                    title="تصویر بعدی"
-                  >
-                    <ChevronLeft className="w-5 h-5" />
-                  </button>
-                </div>
+              <div className="flex items-center justify-between w-full gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setGalleryTransition(true);
+                    setGallerySlide((prev) => prev - 1);
+                  }}
+                  className="w-10 h-10 rounded-2xl clay-btn-thick flex items-center justify-center text-[#0f1420] dark:text-white transition-all cursor-pointer active:scale-95  shrink-0"
+                  aria-label="تصویر قبلی"
+                  title="تصویر قبلی"
+                >
+                  <ChevronRight className="w-5 h-5" />
+                </button>
 
                 <Link
                   to="/chat"
-                  className="inline-flex items-center gap-1.5 clay-btn-thick px-4 py-2.5 rounded-xl text-xs font-bold text-[#2563eb] dark:text-white hover:brightness-110 active:scale-95"
+                  className="inline-flex items-center justify-center gap-1.5 clay-btn-thick px-4 py-2.5 rounded-xl text-xs font-bold text-[#2563eb] dark:text-white hover:brightness-110 active:scale-95 text-center"
                 >
                   <span>ورود به استودیو</span>
                   <ArrowLeft className="w-3.5 h-3.5" />
                 </Link>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setGalleryTransition(true);
+                    setGallerySlide((prev) => prev + 1);
+                  }}
+                  className="w-10 h-10 rounded-2xl clay-btn-thick flex items-center justify-center text-[#0f1420] dark:text-white transition-all cursor-pointer active:scale-95  shrink-0"
+                  aria-label="تصویر بعدی"
+                  title="تصویر بعدی"
+                >
+                  <ChevronLeft className="w-5 h-5" />
+                </button>
               </div>
             </div>
 
@@ -1383,17 +1389,17 @@ export const LandingPage: React.FC = () => {
                   <div
                     key={idx}
                     dir="rtl"
-                    className="w-full sm:w-[calc(50%-0.75rem)] lg:w-[calc(33.333%-1rem)] shrink-0 clay-card-thick overflow-hidden transition-all duration-300 flex flex-col justify-between hover:-translate-y-2 hover:shadow-xl"
+                    className="w-full sm:w-[calc(50%-0.75rem)] lg:w-[calc(33.333%-1rem)] shrink-0 clay-card-thick overflow-hidden transition-all duration-300 flex flex-col justify-between hover:-translate-y-2 hover:"
                   >
                     {/* Preserved Image with Sculpted Frame */}
-                    <div className="relative aspect-[4/3] overflow-hidden m-3 rounded-2xl bg-[#eef1f6] dark:bg-[#151923] shadow-inner">
+                    <div className="relative aspect-[4/3] overflow-hidden m-3 rounded-2xl clay-inset-thick">
                       <img
                         src={img.src}
                         alt={img.title}
                         className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
                         loading="lazy"
                       />
-                      <div className="absolute top-2.5 right-2.5 px-3 py-1 rounded-full clay-pill-thick bg-black/75 text-white text-[10px] font-bold backdrop-blur-md">
+                      <div className="absolute top-2.5 right-2.5 px-3 py-1 rounded-full clay-charcoal text-[10px] font-bold">
                         {img.tag}
                       </div>
                     </div>
@@ -1450,7 +1456,7 @@ export const LandingPage: React.FC = () => {
                     }}
                     className={`transition-all duration-300 cursor-pointer ${
                       isActive
-                        ? 'clay-btn-primary-thick !w-8 !h-3 !rounded-full shadow-md'
+                        ? 'clay-btn-primary-thick !w-8 !h-3 !rounded-full '
                         : 'clay-btn-thick !w-3 !h-3 !rounded-full opacity-60 hover:opacity-100'
                     }`}
                     aria-label={`رفتن به اسلاید ${dotIdx + 1}`}
@@ -1469,7 +1475,7 @@ export const LandingPage: React.FC = () => {
             {dynamicPricingHeader?.badge || 'TRANSPARENT PRICING'}
           </span>
           <h2
-            className="text-2xl sm:text-4xl font-black text-[#0f1420] dark:text-white tracking-tight mb-3"
+            className="text-2xl sm:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-sky-500 to-blue-500 dark:from-sky-400 dark:to-blue-400 tracking-tight py-2 px-1 mb-1"
             style={{ fontFamily: "'Estedad', sans-serif" }}
           >
             {dynamicPricingHeader?.title || 'تعرفه‌ها بر اساس تومان و سهمیه توکن'}
@@ -1576,14 +1582,14 @@ export const LandingPage: React.FC = () => {
                   <div
                     key={pkg.id || idx}
                     className={`${pAnim} ${staggerClass} p-6 sm:p-7 flex flex-col justify-between transition-all duration-300 ${pkg.isPopular
-                        ? 'clay-card-elevated ring-2 ring-[#df9f40]/70 dark:ring-[#df9f40]/60 shadow-[0_14px_38px_rgba(223,159,64,0.22)] -translate-y-2'
+                        ? 'clay-card-elevated ring-2 ring-[#df9f40]/70 dark:ring-[#df9f40]/60 -translate-y-2'
                         : 'clay-card-thick'
                       }`}
                   >
                   <div>
                     {/* Optional Header Image / Media (Preserved) */}
                     {pkg.image && (
-                      <div className="mb-4 w-full h-32 rounded-2xl overflow-hidden bg-[#eef1f6] dark:bg-[#151923] shadow-inner">
+                      <div className="mb-4 w-full h-32 rounded-2xl overflow-hidden clay-inset-thick">
                         <img src={pkg.image} alt={pkg.title} className="w-full h-full object-cover" loading="lazy" />
                       </div>
                     )}
@@ -1604,17 +1610,17 @@ export const LandingPage: React.FC = () => {
                       </span>
 
                       {pkg.isPopular && (
-                        <div className="w-8 h-8 rounded-full clay-crown-badge flex items-center justify-center text-[#df9f40] shadow-sm">
+                        <div className="w-8 h-8 rounded-full clay-crown-badge flex items-center justify-center text-[#df9f40] ">
                           <Crown className="w-4 h-4 fill-[#df9f40]" />
                         </div>
                       )}
                     </div>
 
-                    <h3 className="text-base sm:text-lg font-black mb-2 text-[#0f1420] dark:text-white" style={{ fontFamily: "'Estedad', sans-serif" }}>
+                    <h3 className="text-base sm:text-lg font-black mb-2 text-[#0f1420] dark:text-white text-center" style={{ fontFamily: "'Estedad', sans-serif" }}>
                       {pkg.title}
                     </h3>
 
-                    <div className="flex items-baseline gap-1.5 mb-4">
+                    <div className="flex items-baseline justify-center gap-1.5 mb-4">
                       <span className="text-3xl sm:text-4xl font-black tracking-tight text-[#0f1420] dark:text-white" style={{ fontFamily: "'Estedad', sans-serif" }}>
                         {pkg.price}
                       </span>
@@ -1652,8 +1658,8 @@ export const LandingPage: React.FC = () => {
                   <button
                     type="button"
                     onClick={pkg.ctaAction}
-                    className={`w-full py-3.5 rounded-2xl text-xs font-black transition-all cursor-pointer shadow-md active:scale-95 ${pkg.isPopular
-                        ? 'clay-gold text-white font-black shadow-lg hover:brightness-105'
+                    className={`w-full py-3.5 rounded-2xl text-xs font-black transition-all cursor-pointer active:scale-95 ${pkg.isPopular
+                        ? 'clay-gold text-white hover:brightness-105'
                         : idx === 1
                           ? 'clay-rose text-white font-bold hover:brightness-105'
                           : idx === 3
@@ -1675,7 +1681,7 @@ export const LandingPage: React.FC = () => {
         {dynamicPricingHeader?.customTopupBanner?.enabled !== false && (
           <div className="reveal-pop mt-10 p-6 sm:p-8 rounded-3xl clay-card-thick max-w-3xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-6 transition-all">
             <div className="flex items-center gap-4 text-right">
-              <div className="w-12 h-12 rounded-2xl clay-btn-emerald-thick flex items-center justify-center shrink-0 shadow-md">
+              <div className="w-12 h-12 rounded-2xl clay-btn-emerald-thick flex items-center justify-center shrink-0">
                 <Coins className="w-6 h-6" />
               </div>
               <div>
@@ -1696,7 +1702,7 @@ export const LandingPage: React.FC = () => {
                   setAuthModalOpen(true);
                 }
               }}
-              className="shrink-0 px-5 py-3 rounded-2xl clay-btn-emerald-thick text-xs font-black transition-all shadow-md flex items-center gap-2 cursor-pointer active:scale-95"
+              className="shrink-0 px-5 py-3 rounded-2xl clay-btn-emerald-thick text-xs font-black transition-all flex items-center gap-2 cursor-pointer active:scale-95"
               style={{ fontFamily: "'Estedad', sans-serif" }}
             >
               <CreditCard className="w-4 h-4" />
@@ -1726,7 +1732,7 @@ export const LandingPage: React.FC = () => {
             FREQUENTLY ASKED QUESTIONS
           </span>
           <h2
-            className="text-2xl sm:text-4xl font-black text-[#0f1420] dark:text-white tracking-tight mb-3"
+            className="text-2xl sm:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-fuchsia-500 to-rose-500 dark:from-fuchsia-400 dark:to-rose-400 tracking-tight py-2 px-1 mb-1"
             style={{ fontFamily: "'Estedad', sans-serif" }}
           >
             پرسش‌ها و پاسخ‌های متداول
@@ -1736,82 +1742,63 @@ export const LandingPage: React.FC = () => {
           </p>
         </div>
 
-        <div className="space-y-4">
-          {dynamicFaqs.map((faq, i) => {
-            const isOpen = activeFaq === i;
-            return (
-              <div
-                key={i}
-                className={`clay-card-thick overflow-hidden transition-all duration-300 ${i % 2 === 0 ? 'reveal-from-right' : 'reveal-from-left'} stagger-${(i % 4) + 1}`}
-              >
-                <button
-                  onClick={() => setActiveFaq(isOpen ? null : i)}
-                  className="w-full p-5 text-right flex items-center justify-between gap-4 cursor-pointer hover:opacity-90 transition-opacity"
-                >
-                  <span className="font-bold text-xs sm:text-sm text-[#0f1420] dark:text-white" style={{ fontFamily: "'Estedad', sans-serif" }}>
-                    {faq.q}
-                  </span>
-                  <div className="w-8 h-8 rounded-xl clay-btn-thick flex items-center justify-center shrink-0">
-                    <ChevronDown
-                      className={`w-4 h-4 text-[#525d75] dark:text-[#9aa5bc] transition-transform duration-300 ${isOpen ? 'rotate-180 text-[#2563eb] dark:text-[#f97316]' : ''
+        <div className="clay-card-thick p-2 sm:p-6 overflow-hidden reveal-from-bottom">
+          <div className="flex flex-col">
+            {dynamicFaqs.map((faq, i) => {
+              const isOpen = activeFaq === i;
+              const isLast = i === dynamicFaqs.length - 1;
+              
+              // A vibrant palette for the questions
+              const palettes = [
+                { text: 'text-indigo-500 dark:text-indigo-400', iconBg: 'bg-indigo-500/10 dark:bg-indigo-400/20' },
+                { text: 'text-emerald-500 dark:text-emerald-400', iconBg: 'bg-emerald-500/10 dark:bg-emerald-400/20' },
+                { text: 'text-rose-500 dark:text-rose-400', iconBg: 'bg-rose-500/10 dark:bg-rose-400/20' },
+                { text: 'text-amber-500 dark:text-amber-400', iconBg: 'bg-amber-500/10 dark:bg-amber-400/20' },
+                { text: 'text-sky-500 dark:text-sky-400', iconBg: 'bg-sky-500/10 dark:bg-sky-400/20' },
+                { text: 'text-violet-500 dark:text-violet-400', iconBg: 'bg-violet-500/10 dark:bg-violet-400/20' },
+                { text: 'text-fuchsia-500 dark:text-fuchsia-400', iconBg: 'bg-fuchsia-500/10 dark:bg-fuchsia-400/20' },
+              ];
+              const theme = palettes[i % palettes.length];
+
+              return (
+                <div key={i} className={`flex flex-col ${!isLast ? 'border-b border-black/5 dark:border-white/10' : ''}`}>
+                  <button
+                    onClick={() => setActiveFaq(isOpen ? null : i)}
+                    className="w-full py-5 px-3 sm:px-4 text-right flex items-center justify-between gap-4 cursor-pointer group transition-all duration-300 hover:bg-black/5 dark:hover:bg-white/5 rounded-xl"
+                  >
+                    <span 
+                      className={`font-bold text-sm sm:text-base transition-all duration-300 ${theme.text} ${isOpen ? 'scale-[1.02] transform' : 'opacity-90 group-hover:opacity-100'}`} 
+                      style={{ fontFamily: "'Estedad', sans-serif" }}
+                    >
+                      {faq.q}
+                    </span>
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 transition-all duration-300 ${
+                      isOpen ? theme.iconBg : 'bg-black/5 dark:bg-white/10 group-hover:dark:bg-white/20'
+                    }`}>
+                      <ChevronDown
+                        className={`w-4 h-4 transition-transform duration-300 ${
+                          isOpen ? 'rotate-180 ' + theme.text : 'text-[#525d75] dark:text-[#9aa5bc]'
                         }`}
-                    />
+                      />
+                    </div>
+                  </button>
+                  <div 
+                    className={`grid transition-all duration-300 ease-in-out ${
+                      isOpen ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'
+                    }`}
+                  >
+                    <div className="overflow-hidden">
+                      <div className="px-3 sm:px-4 pb-6 pt-1 text-xs sm:text-sm text-[#525d75] dark:text-[#9aa5bc] leading-loose">
+                        {faq.a}
+                      </div>
+                    </div>
                   </div>
-                </button>
-                {isOpen && (
-                  <div className="px-5 pb-5 pt-2 text-xs text-[#525d75] dark:text-[#9aa5bc] leading-relaxed border-t border-black/5 dark:border-white/5">
-                    {faq.a}
-                  </div>
-                )}
-              </div>
-            );
-          })}
+                </div>
+              );
+            })}
+          </div>
         </div>
       </section>
-
-      {/* ---------------- 7. Final Call to Action (Thick Clay Mega Banner) ---------------- */}
-      {(() => {
-        const ctaData = dynamicCta || {
-          title: `همین حالا با ${toPersianDigits('50,000')} تومان هدیه شروع کنید`,
-          desc: 'ثبت‌نام در کمتر از ۳۰ ثانیه بدون نیاز به وارد کردن کارت بانکی؛ بلافاصله وارد محیط چت شوید و لذت کار با برترین مدل‌های جهان را تجربه کنید.',
-          primaryBtnText: 'ورود به محیط چت',
-          primaryBtnLink: '/chat',
-          secondaryBtnText: 'مشاهده فروشگاه',
-          secondaryBtnLink: '/store',
-          theme: 'dark'
-        };
-        return (
-          <section className="py-16 sm:py-20 px-4 sm:px-6 max-w-4xl mx-auto text-center">
-            <div className="reveal-pop clay-card-elevated p-8 sm:p-14">
-              <div className="max-w-xl mx-auto space-y-5">
-                <h2 className="text-2xl sm:text-4xl font-black text-[#0f1420] dark:text-white tracking-tight" style={{ fontFamily: "'Estedad', sans-serif" }}>
-                  {ctaData.title}
-                </h2>
-                <p className="text-xs sm:text-sm text-[#525d75] dark:text-[#9aa5bc] leading-relaxed">
-                  {ctaData.desc}
-                </p>
-                <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-3.5">
-                  <Link
-                    to={ctaData.primaryBtnLink || '/chat'}
-                    className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-2xl clay-btn-primary-thick font-black text-sm shadow-xl transition-all active:scale-95 cursor-pointer"
-                    style={{ fontFamily: "'Estedad', sans-serif" }}
-                  >
-                    <span>{ctaData.primaryBtnText || 'ورود به محیط چت'}</span>
-                    <ArrowLeft className="w-4 h-4" />
-                  </Link>
-                  <Link
-                    to={ctaData.secondaryBtnLink || '/store'}
-                    className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-2xl clay-btn-thick font-bold text-sm text-[#0f1420] dark:text-white transition-all active:scale-95 cursor-pointer"
-                  >
-                    <Store className="w-4 h-4 text-[#2563eb] dark:text-[#f97316]" />
-                    <span>{ctaData.secondaryBtnText || 'مشاهده فروشگاه'}</span>
-                  </Link>
-                </div>
-              </div>
-            </div>
-          </section>
-        );
-      })()}
 
       {/* ---------------- 8. Footer Component ---------------- */}
       <Footer />

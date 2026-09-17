@@ -63,6 +63,7 @@ router.post('/api/chat/stream', chatStreamLimiter, async (req, res) => {
     imageUrl?: string;
     imageUrls?: string[];
     usage?: { promptTokens?: number; completionTokens?: number; totalTokens?: number };
+    insufficientBalance?: boolean;
   }) => {
     if (isEnded || res.writableEnded || res.destroyed) return;
     try {
