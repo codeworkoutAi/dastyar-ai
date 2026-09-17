@@ -4,18 +4,14 @@ import { useUIStore } from '../store/uiStore';
 import { 
   Coins, 
   X, 
-  ArrowUpRight, 
   Sparkles, 
-  Clock, 
-  CheckCircle2, 
-  HelpCircle,
   CreditCard,
-  Zap,
-  TrendingDown,
   ShieldCheck,
   Loader2,
   Gift,
-  Tag
+  Zap,
+  Clock,
+  TrendingDown
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 

@@ -524,7 +524,7 @@ export const LandingPage: React.FC = () => {
       featureList: [
         'گفتگوی فارسی روان با برترین مدل‌های هوش مصنوعی جهان',
         'اتصال مستقیم بدون نیاز به فیلترشکن یا شماره مجازی',
-        '۵۰٬۰۰۰ تومان اعتبار هدیه نقدی اولیه برای شروع',
+        'دسترسی سریع و تست رایگان مدل‌های پیشرو هوش مصنوعی',
         'مدل پرداخت ریالی Pay-As-You-Go به اندازه مصرف واقعی کلمات',
         'تحلیل عمیق اسناد متنی، کتاب و فایل‌های PDF',
         'استودیوی تصویرساز هایپررئال با پرامپت فارسی',
@@ -799,15 +799,17 @@ export const LandingPage: React.FC = () => {
 
       {/* ---------------- 2. Hero Section (Thick 3D Claymorphism) ---------------- */}
       <section className="pt-12 pb-16 sm:pt-20 sm:pb-24 px-4 sm:px-6 max-w-5xl mx-auto flex flex-col items-center text-center">
-        {/* Top Feature Pill */}
-        <div className="reveal-pop inline-flex items-center gap-2.5 px-4 py-2 rounded-full clay-pill-thick bg-white/90 dark:bg-[#141824]/90 text-xs font-bold mb-6">
-          <div className="w-5 h-5 rounded-full clay-crown-badge flex items-center justify-center text-[#df9f40] shadow-sm">
-            <Crown className="w-3 h-3 fill-[#df9f40]" />
+        {/* Top Feature Pill (Only rendered if configured) */}
+        {Boolean(dynamicHero?.featurePill) && (
+          <div className="reveal-pop inline-flex items-center gap-2.5 px-4 py-2 rounded-full clay-pill-thick bg-white/90 dark:bg-[#141824]/90 text-xs font-bold mb-6">
+            <div className="w-5 h-5 rounded-full clay-crown-badge flex items-center justify-center text-[#df9f40] shadow-sm">
+              <Crown className="w-3 h-3 fill-[#df9f40]" />
+            </div>
+            <span className="text-[#0f1420] dark:text-[#e4e7ee]">
+              {dynamicHero?.featurePill}
+            </span>
           </div>
-          <span className="text-[#0f1420] dark:text-[#e4e7ee]">
-            {dynamicHero?.featurePill || 'دسترسی بدون فیلترشکن | پرداخت مستقیم ریالی و کار با برترین مدل‌ها'}
-          </span>
-        </div>
+        )}
 
         {/* Headline (Refined, Proportional Typography) */}
         <h1
@@ -828,22 +830,24 @@ export const LandingPage: React.FC = () => {
         </p>
 
         {/* Action CTAs */}
-        <div className="reveal-init stagger-3 flex flex-col sm:flex-row items-center gap-3.5 w-full sm:w-auto mb-10 sm:mb-12">
+        <div className="reveal-init stagger-3 flex flex-col sm:flex-row items-center justify-center gap-3.5 w-full sm:w-auto mb-10 sm:mb-12">
           <Link
             to={dynamicHero?.primaryBtnLink || '/chat'}
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl clay-btn-primary-thick font-black text-xs sm:text-sm shadow-xl transition-all group active:scale-95 cursor-pointer"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-2xl clay-btn-primary-thick font-black text-xs sm:text-sm shadow-xl transition-all group active:scale-95 cursor-pointer"
             style={{ fontFamily: "'Estedad', sans-serif" }}
           >
             <span>{dynamicHero?.primaryBtnText || 'شروع گفتگو با هوش مصنوعی'}</span>
             <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
           </Link>
-          <a
-            href={dynamicHero?.secondaryBtnLink || '#pricing'}
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl clay-btn-thick font-bold text-xs sm:text-sm text-[#0f1420] dark:text-white transition-all active:scale-95 cursor-pointer"
-          >
-            <Coins className="w-4 h-4 text-amber-500" />
-            <span>{dynamicHero?.secondaryBtnText || 'مشاهده بسته‌ها و تعرفه‌ها'}</span>
-          </a>
+          {Boolean(dynamicHero?.secondaryBtnText) && (
+            <a
+              href={dynamicHero?.secondaryBtnLink || '#pricing'}
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl clay-btn-thick font-bold text-xs sm:text-sm text-[#0f1420] dark:text-white transition-all active:scale-95 cursor-pointer"
+            >
+              <Coins className="w-4 h-4 text-amber-500" />
+              <span>{dynamicHero?.secondaryBtnText}</span>
+            </a>
+          )}
         </div>
 
         {/* Hero Visual Mockup Console (Sculpted Thick Clay) */}

@@ -180,12 +180,12 @@ export const DEFAULT_LANDING_GIFT_CARD = {
 };
 
 export const DEFAULT_LANDING_HERO = {
-  featurePill: '۵۰,۰۰۰ تومان اعتبار نقدی هدیه | بدون نیاز به فیلترشکن و پرداخت ریالی',
+  featurePill: '',
   title: 'دسترسی مستقیم و بدون واسطه به برترین هوش‌های مصنوعی جهان',
   subtitle: 'بدون نیاز به خرید اشتراک‌های ماهانه دلاری یا دغدغه فیلترشکن؛ با پرچمداران Claude 3.5، GPT-4o و Gemini به فارسی گفتگو کنید و هزینه را به اندازه مصرف واقعی به تومان بپردازید.',
-  primaryBtnText: 'شروع گفتگو با ۵۰ هزار تومان هدیه',
+  primaryBtnText: 'شروع گفتگو با هوش مصنوعی',
   primaryBtnLink: '/chat',
-  secondaryBtnText: 'مشاهده بسته‌ها و تعرفه‌ها',
+  secondaryBtnText: '',
   secondaryBtnLink: '#pricing',
   demoScenarios: [
     {
