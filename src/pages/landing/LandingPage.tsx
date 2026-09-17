@@ -43,9 +43,30 @@ import {
 import { ThemeToggle } from '../../components/ThemeToggle';
 import { Footer } from '../../components/Footer';
 import { CheckoutModal } from '../../components/CheckoutModal';
+import { MarkdownRenderer } from '../../components/MarkdownRenderer';
 import { toPersianDigits } from '../../lib/persianUtils';
 import { setPageSeo } from '../../lib/seo';
 import { useUIStore } from '../../store/uiStore';
+
+function formatDemoAiResponse(response: string, scenarioId?: string): string {
+  if (!response) return '';
+  const trimmed = response.trim();
+  if (trimmed.includes('```')) {
+    return trimmed;
+  }
+  if (
+    scenarioId === 'developer' ||
+    scenarioId === 'coding' ||
+    trimmed.startsWith('import ') ||
+    trimmed.startsWith('export ') ||
+    trimmed.startsWith('const ') ||
+    trimmed.startsWith('function ') ||
+    trimmed.includes('IntersectionObserver')
+  ) {
+    return `\`\`\`typescript\n${trimmed}\n\`\`\``;
+  }
+  return trimmed;
+}
 
 interface DemoScenario {
   id: string;
@@ -877,8 +898,8 @@ export const LandingPage: React.FC = () => {
               <div className="w-8 h-8 rounded-2xl clay-btn-primary-thick flex items-center justify-center shrink-0 font-bold text-xs shadow-md">
                 <Sparkles className="w-4 h-4" />
               </div>
-              <div className="flex-1 max-w-2xl clay-card-thick !rounded-2xl !rounded-tl-xs p-5 sm:p-6 text-[#0f1420] dark:text-[#f3f5f9] whitespace-pre-wrap leading-relaxed shadow-lg">
-                {activeScenario.aiResponse}
+              <div className="flex-1 max-w-2xl clay-card-thick !rounded-2xl !rounded-tl-xs p-5 sm:p-6 text-[#0f1420] dark:text-[#f3f5f9] leading-relaxed shadow-lg overflow-x-auto text-right">
+                <MarkdownRenderer content={formatDemoAiResponse(activeScenario.aiResponse, activeScenario.id)} isUser={false} />
               </div>
             </div>
           </div>
