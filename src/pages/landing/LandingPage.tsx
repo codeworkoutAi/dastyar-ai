@@ -855,7 +855,7 @@ export const LandingPage: React.FC = () => {
               <div className="w-3.5 h-3.5 rounded-full clay-rose-circle shadow-xs" title="رز خاکی" />
               <div className="w-3.5 h-3.5 rounded-full clay-charcoal-circle shadow-xs" title="ذغالی گرافیتی" />
               <div className="w-3.5 h-3.5 rounded-full clay-indigo-circle shadow-xs" title="سرمه‌ای ایندیگو" />
-              <span className="text-[11px] font-mono font-bold text-[#525d75] dark:text-[#9aa5bc] mr-2">محیط چت تعاملی دستیار هوشمند</span>
+              <span className="text-[11px] font-bold text-[#525d75] dark:text-[#9aa5bc] mr-2">محیط چت تعاملی دستیار هوشمند</span>
             </div>
             <div className="flex items-center gap-2">
               <span className="text-[11px] font-mono font-bold text-[#525d75] dark:text-[#9aa5bc]">{activeScenario.model}</span>
@@ -1219,22 +1219,29 @@ export const LandingPage: React.FC = () => {
                       </div>
 
                       {/* Typewriter text with blinking cursor */}
-                      <div className="min-h-[64px] sm:min-h-[72px] bg-black/5 dark:bg-white/5 p-3 rounded-xl border border-black/5 dark:border-white/5">
-                        <p className="text-xs sm:text-sm font-mono text-[#0f1420] dark:text-white leading-relaxed select-all">
+                      <div className="min-h-[68px] sm:min-h-[76px] bg-black/5 dark:bg-white/[0.04] p-3.5 sm:p-4 rounded-xl border border-black/5 dark:border-white/10 flex items-center">
+                        <p
+                          className="text-xs sm:text-sm font-medium text-[#0f1420] dark:text-[#f1f5f9] leading-7 sm:leading-8 select-all text-right w-full"
+                          style={{ fontFamily: "'Vazirmatn', -apple-system, BlinkMacSystemFont, sans-serif" }}
+                        >
                           <span>{typedPrompt}</span>
-                          <span className="inline-block w-1.5 h-4 bg-[#2563eb] dark:bg-white ms-1 animate-pulse align-middle" />
+                          <span className="inline-block w-1.5 h-4.5 bg-blue-600 dark:bg-blue-400 ms-1.5 animate-pulse align-middle rounded-sm" />
                         </p>
                       </div>
                     </div>
 
-                    {/* Action Button: Directly Send Prompt to Chat */}
+                    {/* Action Button: Directly Send Prompt to Chat (Flowing Glowing Dynamic CTA) */}
                     <div className="pt-2">
                       <Link
                         to={`/chat?prompt=${encodeURIComponent(currentProfession.prompt)}`}
-                        className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-6 py-3.5 rounded-2xl clay-btn-primary-thick text-sm font-bold text-white shadow-xl hover:brightness-110 active:scale-95 transition-all"
+                        className="group w-full sm:w-auto inline-flex items-center justify-center gap-3 px-7 py-3.5 rounded-2xl btn-flowing-glow text-sm font-black text-white shadow-xl cursor-pointer select-none"
+                        style={{ fontFamily: "'Estedad', 'Vazirmatn', sans-serif" }}
                       >
-                        <span>شروع گفتگو و آزمایش این پرامپت در چت‌باکس</span>
-                        <ArrowLeft className="w-4 h-4" />
+                        {/* Flowing shimmer light sweep reflection */}
+                        <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out pointer-events-none" />
+                        <Sparkles className="w-4 h-4 text-cyan-200 animate-pulse shrink-0" />
+                        <span className="tracking-tight">شروع گفتگو و آزمایش این پرامپت در چت‌باکس</span>
+                        <ArrowLeft className="w-4 h-4 transition-transform duration-300 group-hover:-translate-x-1.5 shrink-0" />
                       </Link>
                     </div>
                   </div>

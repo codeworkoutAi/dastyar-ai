@@ -1099,6 +1099,58 @@ img.emoji {
     inset 3px 3px 6px rgba(0, 0, 0, 0.2);
 }
 
+/* Flowing Glowing Animated CTA Button (Dynamic high-end 3D gradient aura) */
+@keyframes flowGradient {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes pulseGlowRing {
+  0%, 100% {
+    box-shadow: 
+      0 8px 24px -4px rgba(37, 99, 235, 0.45),
+      0 0 16px rgba(124, 58, 237, 0.35),
+      inset 0 1px 2px rgba(255, 255, 255, 0.4);
+  }
+  50% {
+    box-shadow: 
+      0 12px 32px -4px rgba(37, 99, 235, 0.7),
+      0 0 28px rgba(124, 58, 237, 0.55),
+      inset 0 1px 3px rgba(255, 255, 255, 0.6);
+  }
+}
+
+.btn-flowing-glow {
+  background: linear-gradient(120deg, #1d4ed8, #4f46e5, #7c3aed, #0284c7, #1d4ed8);
+  background-size: 260% 260%;
+  animation: flowGradient 5s ease infinite, pulseGlowRing 3s ease-in-out infinite;
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-flowing-glow:hover {
+  transform: translateY(-2px) scale(1.02);
+  filter: brightness(1.12);
+  box-shadow: 
+    0 16px 36px -4px rgba(37, 99, 235, 0.8),
+    0 0 35px rgba(124, 58, 237, 0.7),
+    inset 0 1px 3px rgba(255, 255, 255, 0.75);
+}
+
+.btn-flowing-glow:active {
+  transform: translateY(1px) scale(0.98);
+}
+
 /* Emerald 3D Clay Button */
 .clay-btn-emerald-thick {
   background: linear-gradient(145deg, #059669, #047857);
