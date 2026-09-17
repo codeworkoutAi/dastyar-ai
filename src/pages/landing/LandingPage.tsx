@@ -10,6 +10,7 @@ import {
   ShieldCheck,
   Gift,
   Coins,
+  Crown,
   CheckCircle2,
   Zap,
   Globe,
@@ -774,7 +775,9 @@ export const LandingPage: React.FC = () => {
       <section className="pt-12 pb-16 sm:pt-20 sm:pb-24 px-4 sm:px-6 max-w-5xl mx-auto flex flex-col items-center text-center">
         {/* Top Feature Pill */}
         <div className="reveal-pop inline-flex items-center gap-2.5 px-4 py-2 rounded-full clay-pill-thick bg-white/90 dark:bg-[#141824]/90 text-xs font-bold mb-6">
-          <span className="w-2.5 h-2.5 rounded-full bg-[#10b981] animate-pulse" />
+          <div className="w-5 h-5 rounded-full clay-crown-badge flex items-center justify-center text-[#df9f40] shadow-sm">
+            <Crown className="w-3 h-3 fill-[#df9f40]" />
+          </div>
           <span className="text-[#0f1420] dark:text-[#e4e7ee]">
             {dynamicHero?.featurePill || `${toPersianDigits('50,000')} تومان اعتبار نقدی هدیه | بدون نیاز به فیلترشکن و پرداخت ریالی`}
           </span>
@@ -819,12 +822,13 @@ export const LandingPage: React.FC = () => {
 
         {/* Hero Visual Mockup Console (Sculpted Thick Clay) */}
         <div className="reveal-init stagger-2 w-full max-w-4xl clay-card-elevated overflow-hidden text-right">
-          {/* Top Console Bar */}
+          {/* Top Console Bar with 4 Signature Clay Dots */}
           <div className="flex flex-wrap items-center justify-between gap-3 px-5 sm:px-7 py-3.5 border-b border-black/5 dark:border-white/5 bg-white/40 dark:bg-black/20 backdrop-blur-xs">
             <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full bg-red-400 shadow-xs" />
-              <div className="w-3 h-3 rounded-full bg-amber-400 shadow-xs" />
-              <div className="w-3 h-3 rounded-full bg-emerald-400 shadow-xs" />
+              <div className="w-3.5 h-3.5 rounded-full clay-gold-circle shadow-xs" title="کهربایی طلایی" />
+              <div className="w-3.5 h-3.5 rounded-full clay-rose-circle shadow-xs" title="رز خاکی" />
+              <div className="w-3.5 h-3.5 rounded-full clay-charcoal-circle shadow-xs" title="ذغالی گرافیتی" />
+              <div className="w-3.5 h-3.5 rounded-full clay-indigo-circle shadow-xs" title="سرمه‌ای ایندیگو" />
               <span className="text-[11px] font-mono font-bold text-[#525d75] dark:text-[#9aa5bc] mr-2">محیط چت تعاملی دستیار هوشمند</span>
             </div>
             <div className="flex items-center gap-2">
@@ -845,7 +849,7 @@ export const LandingPage: React.FC = () => {
                   key={sc.id}
                   onClick={() => setActiveScenario(sc)}
                   className={`flex items-center gap-2 px-4 py-2 rounded-2xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${isActive
-                      ? 'clay-btn-primary-thick !rounded-xl'
+                      ? 'clay-indigo text-white !rounded-xl shadow-md'
                       : 'clay-btn-thick !rounded-xl text-[#525d75] dark:text-[#9aa5bc]'
                     }`}
                 >
@@ -911,8 +915,10 @@ export const LandingPage: React.FC = () => {
           {/* Bento Card 1: Multi-Model Flagship (Double Column) */}
           <div className="reveal-from-right stagger-1 md:col-span-2 clay-card-thick p-6 sm:p-8 flex flex-col justify-between">
             <div>
-              <div className="w-12 h-12 rounded-2xl clay-btn-primary-thick flex items-center justify-center text-white mb-5 shadow-md">
-                <Cpu className="w-5 h-5" />
+              <div className="w-13 h-13 rounded-2xl clay-debossed-socket p-1 mb-5 inline-flex items-center justify-center">
+                <div className="w-11 h-11 rounded-xl clay-indigo flex items-center justify-center text-white shadow-[0_4px_22px_rgba(99,102,241,0.65)]">
+                  <Cpu className="w-5 h-5 text-indigo-100" />
+                </div>
               </div>
               <h3 className="text-lg sm:text-xl font-black text-[#0f1420] dark:text-white mb-2.5" style={{ fontFamily: "'Estedad', sans-serif" }}>
                 دسترسی همزمان به برترین مدل‌های جهان
@@ -921,23 +927,25 @@ export const LandingPage: React.FC = () => {
                 سوییچ آسان میان Claude 3.5 Sonnet، GPT-4o، Google Gemini 2.0 و DeepSeek-V3. با قابلیت سوییچ هوشمند، سیستم به طور خودکار نوع سوال شما را تشخیص داده و کار را به خبره‌ترین مدل واگذار می‌کند.
               </p>
             </div>
-            {/* Visual Model Grid */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-5 border-t border-black/5 dark:border-white/5">
-              <div className="p-3.5 rounded-2xl clay-card-thick text-center">
-                <span className="block font-black text-xs text-[#0f1420] dark:text-white">Claude 3.5</span>
-                <span className="text-[10px] text-[#717b91] font-medium">استاد نگارش و ادبیات</span>
-              </div>
-              <div className="p-3.5 rounded-2xl clay-card-thick text-center">
-                <span className="block font-black text-xs text-[#0f1420] dark:text-white">GPT-4o</span>
-                <span className="text-[10px] text-[#717b91] font-medium">پرچم‌دار همه‌کاره</span>
-              </div>
-              <div className="p-3.5 rounded-2xl clay-card-thick text-center">
-                <span className="block font-black text-xs text-[#0f1420] dark:text-white">Gemini 2.0</span>
-                <span className="text-[10px] text-[#717b91] font-medium">تحلیل چندرسانه‌ای و سرعت</span>
-              </div>
-              <div className="p-3.5 rounded-2xl clay-card-thick text-center">
-                <span className="block font-black text-xs text-[#0f1420] dark:text-white">DeepSeek V3</span>
-                <span className="text-[10px] text-[#717b91] font-medium">کدنویسی و ریاضیات عمیق</span>
+            {/* Visual Model Grid with Inset Tray & Balanced Matte Clay Badges */}
+            <div className="p-2 rounded-3xl clay-debossed-socket mt-6">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                <div className="p-3.5 rounded-2xl clay-indigo text-center text-white transition-transform hover:-translate-y-1">
+                  <span className="block font-black text-xs text-white">Claude 3.5</span>
+                  <span className="text-[10px] text-white/80 font-medium">استاد نگارش و ادبیات</span>
+                </div>
+                <div className="p-3.5 rounded-2xl clay-charcoal text-center text-white transition-transform hover:-translate-y-1">
+                  <span className="block font-black text-xs text-white">GPT-4o</span>
+                  <span className="text-[10px] text-white/80 font-medium">پرچم‌دار همه‌کاره</span>
+                </div>
+                <div className="p-3.5 rounded-2xl clay-gold-noglow text-center text-white transition-transform hover:-translate-y-1">
+                  <span className="block font-black text-xs text-white">Gemini 2.0</span>
+                  <span className="text-[10px] text-white/80 font-medium">تحلیل چندرسانه‌ای و سرعت</span>
+                </div>
+                <div className="p-3.5 rounded-2xl clay-rose-noglow text-center text-white transition-transform hover:-translate-y-1">
+                  <span className="block font-black text-xs text-white">DeepSeek V3</span>
+                  <span className="text-[10px] text-white/80 font-medium">کدنویسی و استدلال</span>
+                </div>
               </div>
             </div>
           </div>
@@ -945,8 +953,10 @@ export const LandingPage: React.FC = () => {
           {/* Bento Card 2: No VPN & Shetab Banking */}
           <div className="reveal-from-left stagger-2 clay-card-thick p-6 sm:p-8 flex flex-col justify-between">
             <div>
-              <div className="w-12 h-12 rounded-2xl clay-btn-emerald-thick flex items-center justify-center text-white mb-5 shadow-md">
-                <ShieldCheck className="w-5 h-5" />
+              <div className="w-13 h-13 rounded-2xl clay-debossed-socket p-1 mb-5 inline-flex items-center justify-center">
+                <div className="w-11 h-11 rounded-xl clay-btn-emerald-thick flex items-center justify-center text-white shadow-[0_4px_22px_rgba(16,185,129,0.65)]">
+                  <ShieldCheck className="w-5 h-5 text-white" />
+                </div>
               </div>
               <h3 className="text-lg sm:text-xl font-black text-[#0f1420] dark:text-white mb-2.5" style={{ fontFamily: "'Estedad', sans-serif" }}>
                 بدون فیلترشکن و پرداخت ریالی
@@ -966,8 +976,10 @@ export const LandingPage: React.FC = () => {
           {/* Bento Card 3: Deep Document Analysis */}
           <div className="reveal-from-right stagger-3 clay-card-thick p-6 sm:p-8 flex flex-col justify-between">
             <div>
-              <div className="w-12 h-12 rounded-2xl clay-btn-amber-thick flex items-center justify-center text-white mb-5 shadow-md">
-                <FileText className="w-5 h-5" />
+              <div className="w-13 h-13 rounded-2xl clay-debossed-socket p-1 mb-5 inline-flex items-center justify-center">
+                <div className="w-11 h-11 rounded-xl clay-gold flex items-center justify-center text-white shadow-[0_4px_18px_rgba(223,159,64,0.45)]">
+                  <FileText className="w-5 h-5 text-white" />
+                </div>
               </div>
               <h3 className="text-lg sm:text-xl font-black text-[#0f1420] dark:text-white mb-2.5" style={{ fontFamily: "'Estedad', sans-serif" }}>
                 تحلیل اسناد و فایل‌های سنگین
@@ -984,8 +996,10 @@ export const LandingPage: React.FC = () => {
           {/* Bento Card 4: High-End Image Studio Showcase (Double Column) */}
           <div className="reveal-from-left stagger-4 md:col-span-2 clay-card-thick p-6 sm:p-8 flex flex-col justify-between">
             <div>
-              <div className="w-12 h-12 rounded-2xl clay-btn-primary-thick flex items-center justify-center text-white mb-5 shadow-md">
-                <ImageIcon className="w-5 h-5" />
+              <div className="w-13 h-13 rounded-2xl clay-debossed-socket p-1 mb-5 inline-flex items-center justify-center">
+                <div className="w-11 h-11 rounded-xl clay-rose flex items-center justify-center text-white shadow-[0_4px_18px_rgba(226,144,138,0.45)]">
+                  <ImageIcon className="w-5 h-5 text-white" />
+                </div>
               </div>
               <h3 className="text-lg sm:text-xl font-black text-[#0f1420] dark:text-white mb-2.5" style={{ fontFamily: "'Estedad', sans-serif" }}>
                 استودیوی تصویرساز هایپررئال با زبان فارسی
@@ -996,7 +1010,7 @@ export const LandingPage: React.FC = () => {
             </div>
             <div className="flex flex-wrap items-center justify-between gap-3 pt-4 border-t border-black/5 dark:border-white/5">
               <span className="text-xs font-medium text-[#717b91]">خلق آثار سینمایی، معماری، پرتره و حیات‌وحش</span>
-              <a href="#gallery" className="text-xs font-bold text-[#2563eb] dark:text-white hover:underline">
+              <a href="#gallery" className="text-xs font-bold text-[#df9f40] dark:text-[#f3b55c] hover:underline">
                 مشاهده ۶ شاهکار گالری زیر ↓
               </a>
             </div>
@@ -1047,7 +1061,7 @@ export const LandingPage: React.FC = () => {
               const ReasonIcon = (typeof r.icon === 'string' ? ICON_MAP[r.icon] : r.icon) || (rIdx === 0 ? Coins : rIdx === 1 ? Zap : ShieldCheck);
               return (
                 <div key={r.id || rIdx} className={`p-5 rounded-2xl clay-card-thick ${rIdx === 0 ? 'reveal-from-right stagger-1' : rIdx === 1 ? 'reveal-pop stagger-2' : 'reveal-from-left stagger-3'}`}>
-                  <div className="w-9 h-9 rounded-xl clay-btn-thick flex items-center justify-center text-[#2563eb] dark:text-white mb-3">
+                  <div className="w-9 h-9 rounded-xl clay-icon-debossed flex items-center justify-center text-[#2563eb] dark:text-blue-400 mb-3">
                     <ReasonIcon className="w-4 h-4" />
                   </div>
                   <h3 className="font-bold text-xs sm:text-sm text-[#0f1420] dark:text-white mb-1.5" style={{ fontFamily: "'Estedad', sans-serif" }}>
@@ -1091,6 +1105,13 @@ export const LandingPage: React.FC = () => {
                 {professionList.map((p, idx) => {
                   const Icon = (typeof p.icon === 'string' ? ICON_MAP[p.icon] : p.icon) || GraduationCap;
                   const isActive = activeProfessionIdx === idx;
+                  const activeColorClass = idx % 4 === 0 
+                    ? 'clay-gold text-white shadow-lg scale-105' 
+                    : idx % 4 === 1 
+                      ? 'clay-rose text-white shadow-lg scale-105' 
+                      : idx % 4 === 2 
+                        ? 'clay-charcoal text-white shadow-lg scale-105' 
+                        : 'clay-indigo text-white shadow-lg scale-105';
                   return (
                     <button
                       key={p.id || idx}
@@ -1098,7 +1119,7 @@ export const LandingPage: React.FC = () => {
                       onClick={() => setActiveProfessionIdx(idx)}
                       className={`inline-flex items-center gap-2 px-4 py-2 rounded-2xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap active:scale-95 ${
                         isActive
-                          ? 'clay-btn-primary-thick text-white shadow-lg scale-105'
+                          ? activeColorClass
                           : 'clay-btn-thick text-[#525d75] dark:text-[#9aa5bc] hover:text-[#0f1420] dark:hover:text-white'
                       }`}
                     >
@@ -1119,8 +1140,8 @@ export const LandingPage: React.FC = () => {
               >
                 {/* Stage Header with Navigation Buttons */}
                 <div className="flex items-center justify-between gap-4 mb-6">
-                  <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full clay-pill-thick bg-blue-500/10 text-blue-600 dark:bg-white/10 dark:text-zinc-200 text-xs font-bold">
-                    <CurrentIcon className="w-4 h-4" />
+                  <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full clay-pill-thick bg-white/80 dark:bg-black/40 text-xs font-bold shadow-sm">
+                    <div className="w-2.5 h-2.5 rounded-full clay-gold-circle" />
                     <span>تخصص انتخابی: {currentProfession.badge}</span>
                   </div>
 
@@ -1524,7 +1545,7 @@ export const LandingPage: React.FC = () => {
                   <div
                     key={pkg.id || idx}
                     className={`${pAnim} ${staggerClass} p-6 sm:p-7 flex flex-col justify-between transition-all duration-300 ${pkg.isPopular
-                        ? 'clay-card-elevated ring-2 ring-blue-500/50 dark:ring-white/40 dark:shadow-[0_0_35px_rgba(255,255,255,0.1)] -translate-y-2'
+                        ? 'clay-card-elevated ring-2 ring-[#df9f40]/70 dark:ring-[#df9f40]/60 shadow-[0_14px_38px_rgba(223,159,64,0.22)] -translate-y-2'
                         : 'clay-card-thick'
                       }`}
                   >
@@ -1536,15 +1557,26 @@ export const LandingPage: React.FC = () => {
                       </div>
                     )}
 
-                    <div className="mb-4">
+                    <div className="flex items-center justify-between mb-4">
                       <span
-                        className={`inline-block px-3 py-1 rounded-full text-[11px] font-bold clay-pill-thick ${pkg.isPopular
-                            ? 'bg-blue-500/20 text-blue-600 dark:bg-white/10 dark:text-zinc-200'
-                            : 'bg-black/5 dark:bg-white/10 text-[#525d75] dark:text-[#9aa5bc]'
+                        className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold clay-pill-thick ${pkg.isPopular
+                            ? 'clay-gold text-white font-black'
+                            : idx === 0
+                              ? 'bg-black/5 dark:bg-white/10 text-[#525d75] dark:text-[#9aa5bc]'
+                              : idx === 1
+                                ? 'clay-rose text-white font-black'
+                                : 'clay-indigo text-white font-black'
                           }`}
                       >
-                        {pkg.badge}
+                        {pkg.isPopular && <Crown className="w-3.5 h-3.5 fill-white/40" />}
+                        <span>{pkg.badge}</span>
                       </span>
+
+                      {pkg.isPopular && (
+                        <div className="w-8 h-8 rounded-full clay-crown-badge flex items-center justify-center text-[#df9f40] shadow-sm">
+                          <Crown className="w-4 h-4 fill-[#df9f40]" />
+                        </div>
+                      )}
                     </div>
 
                     <h3 className="text-base sm:text-lg font-black mb-2 text-[#0f1420] dark:text-white" style={{ fontFamily: "'Estedad', sans-serif" }}>
@@ -1590,8 +1622,12 @@ export const LandingPage: React.FC = () => {
                     type="button"
                     onClick={pkg.ctaAction}
                     className={`w-full py-3.5 rounded-2xl text-xs font-black transition-all cursor-pointer shadow-md active:scale-95 ${pkg.isPopular
-                        ? 'clay-btn-primary-thick'
-                        : 'clay-btn-thick text-[#0f1420] dark:text-white'
+                        ? 'clay-gold text-white font-black shadow-lg hover:brightness-105'
+                        : idx === 1
+                          ? 'clay-rose text-white font-bold hover:brightness-105'
+                          : idx === 3
+                            ? 'clay-indigo text-white font-bold hover:brightness-105'
+                            : 'clay-btn-thick text-[#0f1420] dark:text-white'
                       }`}
                     style={{ fontFamily: "'Estedad', sans-serif" }}
                   >

@@ -968,13 +968,13 @@ img.emoji {
 }
 
 .dark .clay-card-thick {
-  background: #1e2129;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: #141720;
+  border: 1px solid rgba(255, 255, 255, 0.09);
   box-shadow: 
-    12px 18px 36px rgba(0, 0, 0, 0.55),
+    14px 20px 40px rgba(0, 0, 0, 0.7),
     -6px -6px 18px rgba(255, 255, 255, 0.02),
-    inset 3px 3px 6px rgba(255, 255, 255, 0.07),
-    inset -3px -3px 8px rgba(0, 0, 0, 0.4);
+    inset 3px 3px 6px rgba(255, 255, 255, 0.08),
+    inset -3px -3px 8px rgba(0, 0, 0, 0.55);
 }
 
 /* Elevated Floating Clay Surface (For Hero & Featured Items) */
@@ -991,13 +991,13 @@ img.emoji {
 }
 
 .dark .clay-card-elevated {
-  background: #242833;
+  background: #181b25;
   border: 1.5px solid rgba(255, 255, 255, 0.12);
   box-shadow: 
-    16px 24px 44px rgba(0, 0, 0, 0.65),
+    18px 26px 48px rgba(0, 0, 0, 0.75),
     -8px -8px 20px rgba(255, 255, 255, 0.03),
-    inset 4px 4px 8px rgba(255, 255, 255, 0.09),
-    inset -4px -4px 10px rgba(0, 0, 0, 0.45);
+    inset 4px 4px 8px rgba(255, 255, 255, 0.1),
+    inset -4px -4px 10px rgba(0, 0, 0, 0.55);
 }
 
 /* Tactile 3D Clay Button (Standard) */
@@ -1153,11 +1153,51 @@ img.emoji {
 }
 
 .dark .clay-inset-thick {
-  background: #14161d;
+  background: #0f121a;
   border: 1px solid rgba(255, 255, 255, 0.06);
   box-shadow: 
-    inset 5px 5px 12px rgba(0, 0, 0, 0.65),
-    inset -2px -2px 6px rgba(255, 255, 255, 0.03);
+    inset 5px 5px 12px rgba(0, 0, 0, 0.8),
+    inset -2px -2px 6px rgba(255, 255, 255, 0.04);
+}
+
+/* Debossed Inset Well / Socket (Engraved Clay Surface) */
+.clay-debossed-socket {
+  background: #e1e7f0;
+  border-radius: 20px;
+  box-shadow: 
+    inset 3px 3px 6px rgba(166, 178, 203, 0.65),
+    inset -3px -3px 6px rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.45);
+}
+
+.dark .clay-debossed-socket {
+  background: #0d0f16;
+  border-radius: 20px;
+  box-shadow: 
+    inset 4px 4px 9px rgba(0, 0, 0, 0.85),
+    inset -2px -2px 5px rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* Directly Engraved / Debossed Icon Container */
+.clay-icon-debossed {
+  background: #e2e8f2;
+  border-radius: 18px;
+  box-shadow: 
+    inset 3px 3px 7px rgba(166, 178, 203, 0.65),
+    inset -3px -3px 6px rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  transition: all 0.2s ease;
+}
+
+.dark .clay-icon-debossed {
+  background: #10131b;
+  border-radius: 18px;
+  box-shadow: 
+    inset 4px 4px 8px rgba(0, 0, 0, 0.75),
+    inset -2px -2px 4px rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  transition: all 0.2s ease;
 }
 
 /* Puffy Clay Pill & Badge */
@@ -1177,6 +1217,188 @@ img.emoji {
     -2px -2px 6px rgba(255, 255, 255, 0.02),
     inset 1px 1px 3px rgba(255, 255, 255, 0.1),
     inset -1px -1px 4px rgba(0, 0, 0, 0.4);
+}
+
+/* ==========================================================================
+   SIGNATURE CLAY COLOR PALETTE (Gold, Rose, Charcoal, Indigo)
+   ========================================================================== */
+
+/* 1. Amber Gold Swatch (#DF9F40) */
+.clay-gold {
+  background: #df9f40 !important;
+  color: #ffffff !important;
+  border: 1.5px solid rgba(255, 255, 255, 0.45);
+  box-shadow: 
+    10px 16px 32px rgba(223, 159, 64, 0.35),
+    -6px -6px 18px rgba(255, 255, 255, 0.35),
+    inset 4px 4px 8px rgba(255, 255, 255, 0.55),
+    inset -4px -4px 9px rgba(184, 119, 34, 0.6);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.clay-gold:hover {
+  transform: translateY(-2px);
+  box-shadow: 
+    12px 20px 38px rgba(223, 159, 64, 0.45),
+    -6px -6px 20px rgba(255, 255, 255, 0.45),
+    inset 4px 4px 8px rgba(255, 255, 255, 0.65),
+    inset -4px -4px 9px rgba(184, 119, 34, 0.5);
+}
+
+.clay-gold-circle {
+  background: #df9f40;
+  border-radius: 9999px;
+  box-shadow: 
+    5px 7px 16px rgba(184, 119, 34, 0.45),
+    -4px -4px 10px rgba(255, 255, 255, 0.45),
+    inset 3px 3px 5px rgba(255, 255, 255, 0.6),
+    inset -3px -3px 6px rgba(184, 119, 34, 0.55);
+}
+
+/* 2. Dusty Rose Swatch (#E2908A) */
+.clay-rose {
+  background: #e2908a !important;
+  color: #ffffff !important;
+  border: 1.5px solid rgba(255, 255, 255, 0.45);
+  box-shadow: 
+    10px 16px 32px rgba(226, 144, 138, 0.35),
+    -6px -6px 18px rgba(255, 255, 255, 0.35),
+    inset 4px 4px 8px rgba(255, 255, 255, 0.55),
+    inset -4px -4px 9px rgba(184, 109, 103, 0.6);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.clay-rose:hover {
+  transform: translateY(-2px);
+  box-shadow: 
+    12px 20px 38px rgba(226, 144, 138, 0.45),
+    -6px -6px 20px rgba(255, 255, 255, 0.45),
+    inset 4px 4px 8px rgba(255, 255, 255, 0.65),
+    inset -4px -4px 9px rgba(184, 109, 103, 0.5);
+}
+
+.clay-rose-circle {
+  background: #e2908a;
+  border-radius: 9999px;
+  box-shadow: 
+    5px 7px 16px rgba(184, 109, 103, 0.45),
+    -4px -4px 10px rgba(255, 255, 255, 0.45),
+    inset 3px 3px 5px rgba(255, 255, 255, 0.6),
+    inset -3px -3px 6px rgba(184, 109, 103, 0.55);
+}
+
+/* Matte / Subtle Gold Clay without radiating colored glow (clean contrast) */
+.clay-gold-noglow {
+  background: #c8872e !important;
+  color: #ffffff !important;
+  border: 1.5px solid rgba(255, 255, 255, 0.25);
+  box-shadow: 
+    0 4px 10px rgba(0, 0, 0, 0.25),
+    inset 3px 3px 6px rgba(255, 255, 255, 0.45),
+    inset -3px -3px 7px rgba(145, 90, 20, 0.6);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.clay-gold-noglow:hover {
+  transform: translateY(-2px);
+  box-shadow: 
+    0 6px 14px rgba(0, 0, 0, 0.35),
+    inset 3px 3px 6px rgba(255, 255, 255, 0.55),
+    inset -3px -3px 7px rgba(145, 90, 20, 0.5);
+}
+
+/* Matte / Subtle Rose Clay without radiating colored glow (clean contrast) */
+.clay-rose-noglow {
+  background: #c57671 !important;
+  color: #ffffff !important;
+  border: 1.5px solid rgba(255, 255, 255, 0.25);
+  box-shadow: 
+    0 4px 10px rgba(0, 0, 0, 0.25),
+    inset 3px 3px 6px rgba(255, 255, 255, 0.45),
+    inset -3px -3px 7px rgba(145, 75, 70, 0.6);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.clay-rose-noglow:hover {
+  transform: translateY(-2px);
+  box-shadow: 
+    0 6px 14px rgba(0, 0, 0, 0.35),
+    inset 3px 3px 6px rgba(255, 255, 255, 0.55),
+    inset -3px -3px 7px rgba(145, 75, 70, 0.5);
+}
+
+/* 3. Slate Charcoal Swatch (#2C3036) */
+.clay-charcoal {
+  background: #2c3036 !important;
+  color: #f3f5f9 !important;
+  border: 1.5px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 
+    10px 16px 32px rgba(0, 0, 0, 0.5),
+    -4px -4px 14px rgba(255, 255, 255, 0.03),
+    inset 3px 3px 6px rgba(255, 255, 255, 0.18),
+    inset -4px -4px 9px rgba(0, 0, 0, 0.65);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.clay-charcoal:hover {
+  transform: translateY(-2px);
+  box-shadow: 
+    12px 20px 38px rgba(0, 0, 0, 0.6),
+    -4px -4px 16px rgba(255, 255, 255, 0.05),
+    inset 3px 3px 6px rgba(255, 255, 255, 0.24),
+    inset -4px -4px 9px rgba(0, 0, 0, 0.6);
+}
+
+.clay-charcoal-circle {
+  background: #2c3036;
+  border-radius: 9999px;
+  box-shadow: 
+    5px 7px 16px rgba(0, 0, 0, 0.5),
+    -3px -3px 8px rgba(255, 255, 255, 0.04),
+    inset 3px 3px 5px rgba(255, 255, 255, 0.16),
+    inset -3px -3px 6px rgba(0, 0, 0, 0.65);
+}
+
+/* 4. Midnight Indigo Swatch (#282544) */
+.clay-indigo {
+  background: #282544 !important;
+  color: #f3f5f9 !important;
+  border: 1.5px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 
+    10px 16px 32px rgba(40, 37, 68, 0.55),
+    -4px -4px 14px rgba(255, 255, 255, 0.03),
+    inset 3px 3px 6px rgba(255, 255, 255, 0.22),
+    inset -4px -4px 9px rgba(20, 18, 38, 0.7);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.clay-indigo:hover {
+  transform: translateY(-2px);
+  box-shadow: 
+    12px 20px 38px rgba(40, 37, 68, 0.65),
+    -4px -4px 16px rgba(255, 255, 255, 0.05),
+    inset 3px 3px 6px rgba(255, 255, 255, 0.28),
+    inset -4px -4px 9px rgba(20, 18, 38, 0.65);
+}
+
+.clay-indigo-circle {
+  background: #282544;
+  border-radius: 9999px;
+  box-shadow: 
+    5px 7px 16px rgba(20, 18, 38, 0.6),
+    -3px -3px 8px rgba(255, 255, 255, 0.05),
+    inset 3px 3px 5px rgba(255, 255, 255, 0.2),
+    inset -3px -3px 6px rgba(20, 18, 38, 0.7);
+}
+
+/* Luxury Crown Badge from Swatch 1 */
+.clay-crown-badge {
+  background: #201d1a;
+  border: 1px solid rgba(223, 159, 64, 0.45);
+  box-shadow: 
+    3px 4px 8px rgba(0, 0, 0, 0.45),
+    inset 1px 1px 3px rgba(255, 255, 255, 0.15),
+    inset -1px -1px 3px rgba(0, 0, 0, 0.6);
 }
 
 /* ==========================================================================
