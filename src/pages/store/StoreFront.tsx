@@ -32,6 +32,24 @@ export function StoreFront() {
  
  const [searchParams] = useSearchParams();
  const navigate = useNavigate();
+
+  const getProductTitleStyle = (title: string, category?: string) => {
+    const t = title.toLowerCase();
+    if (category === 'plan' || t.includes('بسته') || t.includes('پلن')) {
+      if (t.includes('طلا') || t.includes('طلایی') || t.includes('gold') || t.includes('حرفه‌ای')) {
+        return 'bg-gradient-to-l from-amber-400 via-yellow-300 to-amber-200 bg-clip-text text-transparent font-black drop-shadow-xs';
+      }
+      if (t.includes('نقره') || t.includes('نقره‌ای') || t.includes('silver')) {
+        return 'bg-gradient-to-l from-slate-200 via-zinc-100 to-slate-300 bg-clip-text text-transparent font-black drop-shadow-xs';
+      }
+      if (t.includes('برنز') || t.includes('برنزی') || t.includes('bronze') || t.includes('استارتر')) {
+        return 'bg-gradient-to-l from-amber-600 via-orange-400 to-amber-500 bg-clip-text text-transparent font-black drop-shadow-xs';
+      }
+    }
+    // Other products: beautiful vibrant theme gradient (replacing generic blue)
+    return 'clay-news-title font-bold drop-shadow-xs';
+  };
+
  const paymentStatus = searchParams.get('payment');
  const orderId = searchParams.get('orderId');
  const refId = searchParams.get('refId');
@@ -352,7 +370,7 @@ export function StoreFront() {
  </div>
  )}
  
- <span className="absolute top-3.5 right-3.5 text-[11px] font-bold px-2.5 py-1 clay-charcoal">
+ <span className="absolute top-3.5 right-3.5 text-[11px] font-bold px-2.5 py-1 rounded-lg bg-zinc-900/80 text-zinc-200 dark:bg-zinc-800/90 dark:text-zinc-300 backdrop-blur-md border border-white/10 shadow-xs">
  {p.category === 'plan' ? 'پلن تعرفه' : p.category === 'api' ? 'کلید API' : p.category === 'account' ? 'اکانت پرمیوم' : 'پکیج'}
  </span>
 
@@ -364,12 +382,12 @@ export function StoreFront() {
  </div>
  
  <div className="flex flex-col flex-1 p-5">
- <h3 className="font-bold text-lg text-blue-600 dark:text-blue-400 mb-2 leading-tight line-clamp-2" title={p.title}>
- {usePersianDigits ? toPersianDigits(p.title) : p.title}
- </h3>
+ <h3 className={`text-lg mb-2 leading-tight line-clamp-2 ${getProductTitleStyle(p.title, p.category)}`} title={p.title}>
+                    {usePersianDigits ? toPersianDigits(p.title) : p.title}
+                  </h3>
 
  {p.tokenEstimate && (
- <div className="flex items-center gap-1 text-xs font-semibold text-blue-600 dark:text-blue-400 mb-2.5">
+ <div className="flex items-center gap-1 text-xs font-semibold text-teal-600 dark:text-teal-400 mb-2.5">
  <Zap size={13} className="shrink-0" />
  <span>{usePersianDigits ? toPersianDigits(p.tokenEstimate) : p.tokenEstimate}</span>
  </div>

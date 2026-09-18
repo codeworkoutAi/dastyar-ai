@@ -99,26 +99,34 @@ export function TagArchive() {
  <Hash size={24} className="text-emerald-600" />
  آرشیو تگ: {tagName}
  </h1>
- <div className="flex items-center gap-2 sm:gap-3">
- <Link 
- to="/dashboard"
- className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg clay-btn-thick text-[#525d75] dark:text-zinc-300 hover:text-blue-600 dark:hover:text-blue-400 text-sm font-bold transition-colors"
- title="داشبورد کاربری"
- >
- <LayoutDashboard size={18} />
- <span className="hidden md:inline">داشبورد</span>
- </Link>
- <ThemeToggle variant="minimal" />
- <button 
- onClick={() => navigate('/blog')}
- className="p-2 clay-icon-btn transition-colors text-[#525d75] dark:text-[#9aa5bc] flex items-center gap-2 text-sm font-bold cursor-pointer"
- >
- <span>بازگشت به مجله</span>
- <ChevronRight size={18} />
- </button>
- </div>
- </div>
- </header>
+ <div className="flex items-center gap-2.5">
+            <Link 
+              to="/dashboard"
+              style={{ borderRadius: '12px' }}
+              className="h-10 px-3.5 clay-btn flex items-center gap-2 text-sm font-bold text-zinc-700 dark:text-zinc-200 transition-all cursor-pointer hover:text-emerald-600 dark:hover:text-emerald-400"
+              title="داشبورد کاربری"
+            >
+              <LayoutDashboard size={17} />
+              <span className="hidden sm:inline">داشبورد</span>
+            </Link>
+
+            <ThemeToggle 
+              variant="clay" 
+              className="!h-10 !w-10 !rounded-xl !p-0 flex items-center justify-center shrink-0" 
+            />
+
+            <button 
+              onClick={() => navigate('/blog')}
+              style={{ borderRadius: '12px' }}
+              className="h-10 px-3.5 clay-btn flex items-center gap-1.5 text-sm font-bold text-zinc-700 dark:text-zinc-200 transition-all cursor-pointer hover:text-emerald-600 dark:hover:text-emerald-400"
+              title="بازگشت به مجله"
+            >
+              <ChevronRight size={17} />
+              <span>بازگشت به مجله</span>
+            </button>
+          </div>
+        </div>
+      </header>
 
  <main className="flex-1 container mx-auto px-4 py-8 lg:py-12 max-w-5xl">
  {/* Interactive Prompt Banner */}
@@ -150,10 +158,10 @@ export function TagArchive() {
  <div 
  key={item.id}
  onClick={() => navigate(`/blog/${item.id}`)}
- className="group cursor-pointer clay-modal/40 rounded-2xl overflow-hidden border border-[var(--card-border)] hover: hover:-translate-y-1 transition-all duration-300 flex flex-col"
+ className="group cursor-pointer clay-card-thick hover:clay-card-elevated hover:-translate-y-2 rounded-[28px] overflow-hidden transition-all duration-300 flex flex-col"
  >
  {item.image ? (
- <div className="aspect-square w-full overflow-hidden relative">
+ <div className="aspect-[16/9] w-full overflow-hidden relative">
  <img 
  src={item.image} 
  alt={item.title} 
@@ -161,18 +169,20 @@ export function TagArchive() {
  />
  </div>
  ) : (
- <div className="aspect-square w-full bg-gradient-to-br from-emerald-100 to-teal-50 dark:from-emerald-950/30 dark:to-teal-900/30 flex items-center justify-center">
+ <div className="aspect-[16/9] w-full bg-gradient-to-br from-emerald-100 to-teal-50 dark:from-emerald-950/30 dark:to-teal-900/30 flex items-center justify-center">
  <BookOpen size={48} className="text-emerald-600/30" />
  </div>
  )}
  
- <div className="p-5 flex-1 flex flex-col">
- <h3 className="text-sm md:text-base font-bold mb-2 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors line-clamp-2 leading-snug text-zinc-900 dark:text-zinc-100">
+ <div className="p-5 sm:p-6 flex-1 flex flex-col justify-between">
+ <div>
+ <h3 className="text-sm md:text-[15px] font-bold mb-5 sm:mb-6 clay-news-title line-clamp-2 leading-snug">
  {item.title}
  </h3>
- <p className="text-[#525d75] dark:text-[#9aa5bc] mb-3 line-clamp-2 text-xs leading-relaxed">
- {item.content.replace(/[*_#`\[\]]/g, '').substring(0, 100)}...
+ <p className="text-[#525d75] dark:text-[#9aa5bc] mb-4 line-clamp-3 text-xs md:text-sm leading-relaxed">
+ {item.content.replace(/[*_#`\[\]]/g, '').substring(0, 220)}...
  </p>
+ </div>
  <div className="flex items-center gap-4 text-zinc-400 text-xs mt-auto">
  <div className="flex items-center gap-1.5">
  <Clock size={14} />

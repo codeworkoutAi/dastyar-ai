@@ -42,7 +42,7 @@ export function Footer() {
  }, []);
 
  return (
- <footer className="relative mt-20 pt-8 pb-12 overflow-hidden border-t border-black/5 dark:border-white/5 bg-[#f4f6fb]/70 dark:bg-[#0b0e14]/90 backdrop-blur-2xl">
+ <footer className="relative mt-20 pt-8 pb-12 overflow-hidden border-t border-black/5 dark:border-white/5 bg-[#f4f6fb]/70 dark:bg-zinc-900/95 backdrop-blur-2xl">
  {/* Ambient background glow accents */}
  <div className="absolute top-0 left-1/4 -translate-x-1/2 w-96 h-36 bg-indigo-500/5 dark:bg-indigo-500/10 blur-3xl pointer-events-none" />
  <div className="absolute top-0 right-1/4 translate-x-1/2 w-96 h-36 bg-amber-500/5 dark:bg-amber-500/10 blur-3xl pointer-events-none" />

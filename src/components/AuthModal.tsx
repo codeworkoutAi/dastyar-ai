@@ -66,13 +66,13 @@ export default function AuthModal() {
  const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || 'your-client-id.apps.googleusercontent.com';
 
  const defaultAvatars = [
- '/avatars/avatar-1.svg',
- '/avatars/avatar-2.svg',
- '/avatars/avatar-3.svg',
- '/avatars/avatar-4.svg',
- '/avatars/avatar-5.svg',
- '/avatars/avatar-6.svg'
- ];
+    '/avatars/avatar-1.svg',
+    '/avatars/avatar-2.svg',
+    '/avatars/avatar-3.svg',
+    '/avatars/avatar-4.svg',
+    '/avatars/avatar-5.svg',
+    '/avatars/avatar-6.svg'
+  ];
 
  // Detect password reset token from URL
  useEffect(() => {
@@ -278,7 +278,7 @@ export default function AuthModal() {
  <div className="space-y-4 mb-4">
  <div>
  <label className="block mb-2 text-xs font-medium text-zinc-600 dark:text-zinc-400">انتخاب تصویر نمایه</label>
- <div className="flex gap-2 justify-between items-center clay-surface-inset p-2.5 rounded-xl overflow-x-auto">
+ <div className="flex gap-3 justify-center items-center py-1.5 overflow-x-auto">
  {defaultAvatars.map((url, i) => (
  <button
  key={i}
@@ -290,7 +290,7 @@ export default function AuthModal() {
  : 'opacity-70 hover:opacity-100 hover:scale-105'
  }`}
  >
- <img src={url} alt={`avatar-${i}`} className="w-9 h-9 rounded-full clay-badge" />
+ <img src={url} alt={`avatar-${i}`} className="w-10 h-10 rounded-full shadow-md transition-all" />
  </button>
  ))}
  </div>
@@ -302,9 +302,9 @@ export default function AuthModal() {
  <input 
  type="text" 
  value={name} 
- onChange={e => setName(e.target.value)}
+ onChange={e => setName(e.target.value)} style={{ paddingRight: '2.85rem' }} 
  className="w-full pl-3 pr-10 py-2.5 clay-input rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none text-zinc-900 dark:text-zinc-100 text-sm"
- placeholder="مثال: علی رضایی"
+  placeholder="مثال: علی رضایی"
  />
  </div>
  </div>
@@ -352,34 +352,34 @@ export default function AuthModal() {
  </div>
 
  {/* Login / Register Tabs */}
- {!resetToken && !isForgotPassword && !telegramWaiting && (
- <div className="flex p-2 clay-surface-inset border-b border-zinc-100 dark:border-zinc-800">
- <button
- type="button"
- onClick={() => { setIsEmailLogin(true); setError(''); setSuccessMsg(''); }}
- className={`flex-1 py-2 text-sm font-medium rounded-xl transition-all ${
- isEmailLogin 
- ? 'clay-tab-active text-blue-600 dark:text-blue-400' 
- : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'
- }`}
- >
- ورود
- </button>
- <button
- type="button"
- onClick={() => { setIsEmailLogin(false); setError(''); setSuccessMsg(''); }}
- className={`flex-1 py-2 text-sm font-medium rounded-xl transition-all ${
- !isEmailLogin 
- ? 'clay-tab-active text-blue-600 dark:text-blue-400' 
- : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'
- }`}
- >
- ثبت‌نام جدید
- </button>
- </div>
- )}
+      {!resetToken && !isForgotPassword && !telegramWaiting && (
+        <div className="flex p-1.5 mx-6 mt-4 clay-surface-inset rounded-2xl">
+          <button
+            type="button"
+            onClick={() => { setIsEmailLogin(true); setError(''); setSuccessMsg(''); }}
+            className={`flex-1 py-1.5 text-xs sm:text-sm font-semibold rounded-xl transition-all ${
+              isEmailLogin 
+                ? 'clay-tab-active text-blue-600 dark:text-blue-400' 
+                : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'
+            }`}
+          >
+            ورود
+          </button>
+          <button
+            type="button"
+            onClick={() => { setIsEmailLogin(false); setError(''); setSuccessMsg(''); }}
+            className={`flex-1 py-1.5 text-xs sm:text-sm font-semibold rounded-xl transition-all ${
+              !isEmailLogin 
+                ? 'clay-tab-active text-blue-600 dark:text-blue-400' 
+                : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'
+            }`}
+          >
+            ثبت‌نام جدید
+          </button>
+        </div>
+      )}
 
- {/* Body */}
+      {/* Body */}
  <div className="p-6">
  {error && (
  <div className="mb-5 p-3 text-sm text-red-600 bg-red-50 dark:bg-red-900/20 dark:text-red-400 rounded-xl border border-red-100 dark:border-red-800/30 flex items-center gap-2">

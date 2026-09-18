@@ -1,30 +1,61 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
   <defs>
-    <linearGradient id="bg3" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#10b981"/>
-      <stop offset="100%" stop-color="#047857"/>
+    <radialGradient id="bgPro3" cx="30%" cy="25%" r="75%">
+      <stop offset="0%" stop-color="#0d9488"/>
+      <stop offset="60%" stop-color="#0f766e"/>
+      <stop offset="100%" stop-color="#134e4a"/>
+    </radialGradient>
+    <radialGradient id="skin3" cx="40%" cy="35%" r="65%">
+      <stop offset="0%" stop-color="#fde68a"/>
+      <stop offset="70%" stop-color="#f59e0b"/>
+      <stop offset="100%" stop-color="#b45309"/>
+    </radialGradient>
+    <linearGradient id="hair3" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#94a3b8"/>
+      <stop offset="100%" stop-color="#475569"/>
     </linearGradient>
-    <linearGradient id="metal3" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#f0fdf4"/>
-      <stop offset="100%" stop-color="#bbf7d0"/>
-    </linearGradient>
+    <filter id="proShadow3" x="-10%" y="-10%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="5" stdDeviation="5" flood-color="#000000" flood-opacity="0.3"/>
+    </filter>
   </defs>
-  <circle cx="50" cy="50" r="48" fill="url(#bg3)"/>
-  <!-- Top Sensor Ring -->
-  <ellipse cx="50" cy="22" rx="10" ry="5" fill="#34d399"/>
-  <circle cx="50" cy="18" r="3.5" fill="#a7f3d0"/>
-  <!-- Head Rounded -->
-  <rect x="25" y="26" width="50" height="42" rx="16" fill="url(#metal3)"/>
-  <!-- Ear Dials -->
-  <circle cx="23" cy="46" r="4" fill="#059669"/>
-  <circle cx="77" cy="46" r="4" fill="#059669"/>
-  <!-- Eye Display -->
-  <rect x="30" y="34" width="40" height="18" rx="6" fill="#064e3b"/>
-  <!-- Digital Eyes -->
-  <path d="M 37 43 L 43 43" stroke="#34d399" stroke-width="4" stroke-linecap="round"/>
-  <path d="M 57 43 L 63 43" stroke="#34d399" stroke-width="4" stroke-linecap="round"/>
-  <!-- Cute smile -->
-  <path d="M 43 57 Q 50 62 57 57" fill="none" stroke="#059669" stroke-width="2.5" stroke-linecap="round"/>
-  <!-- Body -->
-  <path d="M 36 68 L 64 68 L 70 86 Q 50 90 30 86 Z" fill="#6ee7b7"/>
+
+  <circle cx="60" cy="60" r="54" fill="url(#bgPro3)" filter="url(#proShadow3)"/>
+  <ellipse cx="60" cy="22" rx="36" ry="12" fill="#ffffff" opacity="0.15"/>
+
+  <!-- Suit & Tie -->
+  <path d="M 28 114 C 28 92, 42 86, 60 86 C 78 86, 92 92, 92 114 Z" fill="#1e293b"/>
+  <!-- White Collared Shirt -->
+  <polygon points="52,86 68,86 60,102" fill="#ffffff"/>
+  <!-- Tie -->
+  <polygon points="58,92 62,92 64,114 56,114" fill="#0d9488"/>
+
+  <!-- Neck -->
+  <rect x="52" y="68" width="16" height="15" fill="url(#skin3)"/>
+
+  <!-- Ears -->
+  <circle cx="36" cy="54" r="6" fill="url(#skin3)"/>
+  <circle cx="84" cy="54" r="6" fill="url(#skin3)"/>
+
+  <!-- Face -->
+  <ellipse cx="60" cy="54" rx="23" ry="26" fill="url(#skin3)"/>
+
+  <!-- Scholarly Trimmed Beard -->
+  <path d="M 44 58 C 44 76, 52 82, 60 82 C 68 82, 76 76, 76 58 C 76 72, 68 76, 60 76 C 52 76, 44 72, 44 58 Z" fill="url(#hair3)"/>
+
+  <!-- Silver Hair -->
+  <path d="M 36 46 C 36 26, 50 20, 60 20 C 76 20, 84 26, 84 46 C 80 33, 72 29, 60 29 C 46 29, 40 35, 36 46 Z" fill="url(#hair3)"/>
+
+  <!-- Eyes & Eyebrows -->
+  <path d="M 46 44 Q 52 41 56 43" fill="none" stroke="#334155" stroke-width="2.5" stroke-linecap="round"/>
+  <path d="M 64 43 Q 68 41 74 44" fill="none" stroke="#334155" stroke-width="2.5" stroke-linecap="round"/>
+  <circle cx="51" cy="50" r="2.2" fill="#0f172a"/>
+  <circle cx="69" cy="50" r="2.2" fill="#0f172a"/>
+
+  <!-- Distinguished Glasses -->
+  <rect x="44" y="45" width="14" height="10" rx="3" fill="none" stroke="#94a3b8" stroke-width="1.8"/>
+  <rect x="62" y="45" width="14" height="10" rx="3" fill="none" stroke="#94a3b8" stroke-width="1.8"/>
+  <line x1="58" y1="50" x2="62" y2="50" stroke="#94a3b8" stroke-width="1.8"/>
+
+  <!-- Smile -->
+  <path d="M 54 67 Q 60 70 66 67" fill="none" stroke="#78350f" stroke-width="2" stroke-linecap="round"/>
 </svg>

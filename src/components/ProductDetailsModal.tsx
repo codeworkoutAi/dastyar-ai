@@ -101,7 +101,7 @@ export const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({ produc
  {/* Description */}
  <div>
  <h3 className="text-sm sm:text-base font-bold text-zinc-900 dark:text-zinc-100 mb-2.5 flex items-center gap-2">
- <span className="w-1 h-5 bg-blue-600 rounded-full"></span>
+ <span className="w-1 h-5 bg-gradient-to-b from-emerald-500 to-teal-500 rounded-full"></span>
  توضیحات محصول
  </h3>
  <div className="bg-zinc-50 dark:bg-zinc-900/50 p-4 rounded-2xl border border-zinc-100 dark:border-zinc-800/60 prose prose-sm dark:prose-invert max-w-none text-xs sm:text-sm text-zinc-700 dark:text-zinc-300 leading-relaxed">
@@ -188,7 +188,7 @@ export const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({ produc
  onClose();
  }}
  disabled={product.category !== 'package' && product.category !== 'plan' && product.stock <= 0}
- className="flex-1 sm:flex-none px-6 py-2.5 rounded-xl bg-blue-600 text-white text-xs sm:text-sm font-bold hover:bg-blue-700 transition-colors shadow-md shadow-blue-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
+ style={{ borderRadius: "12px" }} className="flex-1 sm:flex-none px-6 py-2.5 clay-btn-primary-thick text-white text-xs sm:text-sm font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer shadow-md hover:-translate-y-0.5"
  >
  {product.category !== 'package' && product.category !== 'plan' && product.stock <= 0 ? 'ناموجود' : 'ادامه به پرداخت'}
  </button>

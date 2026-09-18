@@ -1142,12 +1142,18 @@ router.put('/site-design/:sectionKey', (req, res) => {
     const { data } = req.body;
 
     const allowedKeys = [
+      'landing_visibility',
       'landing_hero',
+      'landing_features',
       'landing_manifesto', 
       'landing_professions', 
+      'landing_professions_settings',
       'landing_gallery',
+      'landing_gallery_settings',
+      'landing_analytics',
       'landing_pricing_header',
       'landing_faqs', 
+      'landing_faqs_settings',
       'landing_cta', 
       'landing_gift_card', 
       'store_design', 

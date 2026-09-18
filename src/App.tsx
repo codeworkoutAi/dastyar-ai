@@ -1,5 +1,5 @@
 import { useEffect, lazy, Suspense } from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { useSettingsStore } from './store/settingsStore';
 import { useAuthStore } from './store/authStore';
 import { useUIStore } from './store/uiStore';
@@ -26,6 +26,15 @@ const AdminModal = lazy(() => import('./components/AdminModal').then(m => ({ def
 const AboutModal = lazy(() => import('./components/AboutModal').then(m => ({ default: m.AboutModal })));
 const ContactModal = lazy(() => import('./components/ContactModal').then(m => ({ default: m.ContactModal })));
 const WalletModal = lazy(() => import('./components/WalletModal').then(m => ({ default: m.WalletModal })));
+
+
+function ScrollToTop() {
+  const { pathname } = useLocation();
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+  }, [pathname]);
+  return null;
+}
 
 export default function App() {
  const { settings, systemIsDark, syncSystemProfiles } = useSettingsStore();
@@ -75,6 +84,7 @@ export default function App() {
 
  return (
  <BrowserRouter>
+      <ScrollToTop />
  <Suspense fallback={null}>
  <Routes>
  <Route path="/" element={<HomeRoute />} />

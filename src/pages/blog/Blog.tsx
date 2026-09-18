@@ -314,33 +314,43 @@ export function Blog() {
  مجله هوش مصنوعی
  </h1>
  )}
- <div className="flex items-center gap-2 sm:gap-3">
- <Link 
- to="/dashboard"
- className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg clay-btn-thick text-[#525d75] dark:text-zinc-300 hover:text-blue-600 dark:hover:text-blue-400 text-sm font-bold transition-colors"
- title="داشبورد کاربری"
- >
- <LayoutDashboard size={18} />
- <span className="hidden md:inline">داشبورد</span>
- </Link>
- <ThemeToggle variant="minimal" />
- <button 
- onClick={handleBack}
- className="p-2 clay-icon-btn transition-colors text-[#525d75] dark:text-[#9aa5bc] flex items-center gap-2 text-sm font-bold cursor-pointer"
- title={selectedPost ? 'بازگشت به لیست اخبار' : 'بازگشت به چت'}
- >
- {selectedPost ? (
- <>
- <span>بازگشت</span>
- <ChevronRight size={18} />
- </>
- ) : (
- <Home size={22} />
- )}
- </button>
- </div>
- </div>
- </header>
+ <div className="flex items-center gap-2.5">
+            <Link 
+              to="/dashboard"
+              style={{ borderRadius: '12px' }}
+              className="h-10 px-3.5 clay-btn flex items-center gap-2 text-sm font-bold text-zinc-700 dark:text-zinc-200 transition-all cursor-pointer hover:text-emerald-600 dark:hover:text-emerald-400"
+              title="داشبورد کاربری"
+            >
+              <LayoutDashboard size={17} />
+              <span className="hidden sm:inline">داشبورد</span>
+            </Link>
+
+            <ThemeToggle 
+              variant="clay" 
+              className="!h-10 !w-10 !rounded-xl !p-0 flex items-center justify-center shrink-0" 
+            />
+
+            <button 
+              onClick={handleBack}
+              style={{ borderRadius: '12px' }}
+              className="h-10 px-3.5 clay-btn flex items-center gap-1.5 text-sm font-bold text-zinc-700 dark:text-zinc-200 transition-all cursor-pointer hover:text-emerald-600 dark:hover:text-emerald-400"
+              title={selectedPost ? 'بازگشت به لیست اخبار' : 'بازگشت به چت'}
+            >
+              {selectedPost ? (
+                <>
+                  <ChevronRight size={17} />
+                  <span>بازگشت</span>
+                </>
+              ) : (
+                <>
+                  <Home size={17} />
+                  <span className="hidden sm:inline">خانه</span>
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+      </header>
 
  <main className="flex-1 container mx-auto px-4 py-8 lg:py-12 max-w-5xl">
  {!selectedPost && <NeuralBanner />}
@@ -362,9 +372,9 @@ export function Blog() {
  )}
  
  <div className="mb-8 text-right">
- <h1 className="text-lg md:text-xl font-black leading-snug mb-4 text-zinc-900 dark:text-white">
- {selectedPost.title}
- </h1>
+ <h1 className="text-xl md:text-2xl font-black leading-snug mb-4 clay-news-title">
+              {selectedPost.title}
+            </h1>
  
  <div className="flex flex-wrap items-center justify-between gap-4 py-4 border-y border-zinc-200 dark:border-zinc-800/60 text-sm text-[#525d75] dark:text-[#9aa5bc]">
  <div className="flex flex-wrap items-center gap-4 md:gap-6">
@@ -413,7 +423,7 @@ export function Blog() {
  <Link 
  key={idx} 
  to={`/blog/tag/${encodeURIComponent(tag)}`}
- className="px-4 py-1.5 rounded-full clay-btn-thick hover:bg-emerald-100 dark:hover:bg-emerald-900/30 text-zinc-700 dark:text-zinc-300 hover:text-emerald-700 dark:hover:text-emerald-400 text-sm font-medium transition-colors border border-transparent hover:border-emerald-200 dark:hover:border-emerald-800"
+ style={{ borderRadius: "10px" }} className="px-3.5 py-1.5 clay-btn text-zinc-700 dark:text-zinc-300 hover:text-emerald-600 dark:hover:text-emerald-400 text-xs font-semibold transition-all border border-zinc-200/40 dark:border-zinc-700/40"
  >
  #{tag}
  </Link>
@@ -447,10 +457,10 @@ export function Blog() {
  ) : (
  <div className="space-y-8 animate-fadeIn">
  {/* Minimalist Inline Filter Toolbar */}
- <div className="flex flex-col md:flex-row items-center gap-4 clay-surface p-2 md:p-3 rounded-2xl border border-[var(--card-border)] backdrop-blur-md mb-8 w-full max-w-4xl mx-auto relative z-30">
+ <div style={{ borderRadius: "16px" }} className="flex flex-col md:flex-row items-center gap-3 clay-card-thick p-3 border border-[var(--card-border)] backdrop-blur-md mb-8 w-full max-w-4xl mx-auto relative z-30 shadow-sm">
  
  {/* Search Bar - Flex 1 to take remaining space */}
- <div className="relative flex-1 w-full">
+ <div style={{ borderRadius: "12px" }} className="relative flex-1 w-full clay-surface-inset flex items-center px-3">
  <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
  <Search className="h-4 w-4 text-zinc-400" />
  </div>
@@ -468,7 +478,7 @@ export function Blog() {
  <div className="h-px w-full md:h-8 md:w-px clay-btn-thick hidden md:block"></div>
 
  {/* View Mode Toggle */}
- <div className="flex items-center clay-btn-thick/60 p-1 rounded-xl shrink-0">
+ <div style={{ borderRadius: "12px" }} className="flex items-center bg-zinc-100/90 dark:bg-zinc-800/70 p-1 shrink-0 border border-zinc-200/50 dark:border-zinc-700/50">
  <button
  onClick={() => setViewMode('grid')}
  className={`p-1.5 rounded-lg transition-all ${viewMode === 'grid' ? 'bg-white dark:bg-zinc-700 text-emerald-600 dark:text-emerald-400 shadow-sm' : 'text-zinc-400 hover:text-[#525d75] dark:hover:text-zinc-300'}`}
@@ -499,11 +509,11 @@ export function Blog() {
  {/* Time Filter Dropdown */}
  <div className="relative">
  <button 
- onClick={() => {
- setTimeDropdownOpen(!timeDropdownOpen);
- setTagDropdownOpen(false);
- }}
- className={`flex items-center gap-2 px-3 py-1.5 rounded-xl text-sm font-medium transition-colors ${timeFilter !== 'all' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400' : 'clay-icon-btn text-[#525d75] dark:text-[#9aa5bc]'}`}
+                  onClick={() => {
+                    setTimeDropdownOpen(!timeDropdownOpen);
+                    setTagDropdownOpen(false);
+                  }}
+                  style={{ borderRadius: "10px" }} className={`flex items-center gap-2 px-3.5 py-2 text-sm font-semibold transition-all cursor-pointer ${timeFilter !== 'all' ? 'clay-btn bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30' : 'clay-btn text-zinc-700 dark:text-zinc-300'}`}
  >
  <CalendarDays size={16} />
  <span>{
@@ -544,11 +554,11 @@ export function Blog() {
  {uniqueTags.length > 0 && (
  <div className="relative">
  <button 
- onClick={() => {
- setTagDropdownOpen(!tagDropdownOpen);
- setTimeDropdownOpen(false);
- }}
- className={`flex items-center gap-2 px-3 py-1.5 rounded-xl text-sm font-medium transition-colors ${selectedTag ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400' : 'clay-icon-btn text-[#525d75] dark:text-[#9aa5bc]'}`}
+                  onClick={() => {
+                    setTagDropdownOpen(!tagDropdownOpen);
+                    setTimeDropdownOpen(false);
+                  }}
+                  style={{ borderRadius: "10px" }} className={`flex items-center gap-2 px-3.5 py-2 text-sm font-semibold transition-all cursor-pointer ${selectedTag ? 'clay-btn bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30' : 'clay-btn text-zinc-700 dark:text-zinc-300'}`}
  >
  <Hash size={16} />
  <span>{selectedTag ? `#${selectedTag.substring(0, 10)}${selectedTag.length > 10 ? '...' : ''}` : 'برچسب‌ها'}</span>
@@ -597,7 +607,7 @@ export function Blog() {
  setSelectedPost(displayedNews[0]);
  navigate(`/blog/${displayedNews[0].id}`);
  }}
- className="group cursor-pointer clay-modal/50 rounded-2xl overflow-hidden border border-[var(--card-border)] hover: transition-all duration-300 flex flex-col md:flex-row shadow-sm"
+ className="group cursor-pointer clay-card-elevated rounded-[32px] overflow-hidden hover:-translate-y-1.5 transition-all duration-300 flex flex-col md:flex-row"
  >
  {displayedNews[0].image ? (
  <div className="w-full md:w-1/2 aspect-square md:aspect-auto overflow-hidden relative">
@@ -619,9 +629,9 @@ export function Blog() {
  )}
  
  <div className="p-6 md:p-8 w-full md:w-1/2 flex flex-col justify-center">
- <h3 className="text-lg md:text-xl font-bold mb-3 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors leading-snug text-zinc-900 dark:text-zinc-100">
- {displayedNews[0].title}
- </h3>
+ <h3 className="text-lg md:text-xl font-bold mb-5 clay-news-title leading-snug">
+              {displayedNews[0].title}
+            </h3>
  <p className="text-[#525d75] dark:text-[#9aa5bc] mb-4 line-clamp-3 text-xs md:text-sm leading-relaxed">
  {displayedNews[0].content.replace(/[*_#`\[\]]/g, '').substring(0, 200)}...
  </p>
@@ -646,17 +656,17 @@ export function Blog() {
  setSelectedPost(item);
  navigate(`/blog/${item.id}`);
  }}
- className={`group cursor-pointer clay-modal/40 rounded-2xl border border-[var(--card-border)] hover: hover:-translate-y-1 transition-all duration-300 overflow-hidden ${
- viewMode === 'grid' ? 'flex flex-col' : 
- viewMode === 'list' ? 'flex flex-col sm:flex-row' : 
- 'flex flex-col sm:flex-row items-center p-4 md:p-5 hover:-translate-y-0.5'
- }`}
+ className={`group cursor-pointer clay-card-thick hover:clay-card-elevated hover:-translate-y-2 transition-all duration-300 overflow-hidden ${
+                viewMode === 'grid' ? 'flex flex-col rounded-[28px]' : 
+                viewMode === 'list' ? 'flex flex-col sm:flex-row rounded-[28px]' : 
+                'flex flex-col sm:flex-row items-center p-4 md:p-5 rounded-2xl hover:-translate-y-1'
+              }`}
  >
  
  {/* Image Logic */}
  {viewMode !== 'compact' && (
  <div className={
- viewMode === 'grid' ?"aspect-square w-full overflow-hidden relative shrink-0" :"aspect-video sm:aspect-square sm:w-48 overflow-hidden relative shrink-0"
+ viewMode === 'grid' ? "aspect-[16/9] w-full overflow-hidden relative shrink-0" : "aspect-video sm:aspect-square sm:w-48 overflow-hidden relative shrink-0"
  }>
  {item.image ? (
  <img 
@@ -672,24 +682,24 @@ export function Blog() {
  </div>
  )}
  
- {/* Content Logic */}
- <div className={
- viewMode === 'compact' ?"flex-1 flex flex-col sm:flex-row sm:items-center justify-between w-full gap-4" :"p-5 flex-1 flex flex-col justify-center"
- }>
- <div className={viewMode === 'compact' ?"flex-1" :""}>
- <h3 className={`font-bold group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors leading-snug text-zinc-900 dark:text-zinc-100 ${
- viewMode === 'compact' ? 'text-base mb-1' : 'text-sm md:text-base mb-2 line-clamp-2'
- }`}>
- {item.title}
- </h3>
- 
- {viewMode !== 'compact' && (
- <p className="text-[#525d75] dark:text-[#9aa5bc] mb-3 line-clamp-2 text-xs md:text-sm leading-relaxed">
- {item.content.replace(/[*_#`\[\]]/g, '').substring(0, 150)}...
- </p>
- )}
- </div>
- 
+              {/* Content Logic */}
+              <div className={
+                viewMode === 'compact' ? "flex-1 flex flex-col sm:flex-row sm:items-center justify-between w-full gap-4" : "p-5 sm:p-6 flex-1 flex flex-col justify-between"
+              }>
+                <div className={viewMode === 'compact' ? "flex-1" : ""}>
+                  <h3 className={`font-bold clay-news-title transition-all leading-snug ${
+                    viewMode === 'compact' ? 'text-sm mb-1' : 'text-sm md:text-[15px] mb-5 sm:mb-6 line-clamp-2'
+                  }`}>
+                    {item.title}
+                  </h3>
+                  
+                  {viewMode !== 'compact' && (
+                    <p className="text-[#525d75] dark:text-[#9aa5bc] mb-3 line-clamp-3 text-xs leading-relaxed">
+                      {item.content.replace(/[*_#`\[\]]/g, '').substring(0, 220)}...
+                    </p>
+                  )}
+                </div>
+
  <div className={`flex items-center gap-4 text-zinc-400 font-medium ${
  viewMode === 'compact' ? 'text-xs shrink-0' : 'text-xs mt-auto'
  }`}>
@@ -713,7 +723,7 @@ export function Blog() {
  <div className="flex justify-center pt-8">
  <button
  onClick={() => setVisibleCount(prev => prev + 6)}
- className="px-8 py-3 bg-white/50 dark:bg-zinc-900/50 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 font-bold rounded-2xl border border-emerald-200 dark:border-emerald-800/50 transition-all shadow-sm hover:shadow-md active:scale-95 flex items-center gap-2"
+ className="px-8 py-3.5 clay-btn text-emerald-600 dark:text-emerald-400 font-bold rounded-2xl transition-all shadow-sm active:scale-95 flex items-center gap-2 cursor-pointer"
  >
  مشاهده مقالات بیشتر
  <ChevronDown size={18} />

@@ -1,34 +1,51 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
   <defs>
-    <linearGradient id="bg5" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#f43f5e"/>
-      <stop offset="100%" stop-color="#be123c"/>
+    <radialGradient id="bgPro5" cx="30%" cy="25%" r="75%">
+      <stop offset="0%" stop-color="#10b981"/>
+      <stop offset="60%" stop-color="#059669"/>
+      <stop offset="100%" stop-color="#064e3b"/>
+    </radialGradient>
+    <radialGradient id="skin5" cx="40%" cy="35%" r="65%">
+      <stop offset="0%" stop-color="#fed7aa"/>
+      <stop offset="70%" stop-color="#fb923c"/>
+      <stop offset="100%" stop-color="#c2410c"/>
+    </radialGradient>
+    <linearGradient id="shirt5" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#065f46"/>
+      <stop offset="100%" stop-color="#022c22"/>
     </linearGradient>
-    <linearGradient id="metal5" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#fff1f2"/>
-      <stop offset="100%" stop-color="#fecdd3"/>
-    </linearGradient>
+    <filter id="proShadow5" x="-10%" y="-10%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="5" stdDeviation="5" flood-color="#000000" flood-opacity="0.3"/>
+    </filter>
   </defs>
-  <circle cx="50" cy="50" r="48" fill="url(#bg5)"/>
-  <!-- Heart Antenna -->
-  <path d="M 50 18 Q 47 13 42 16 Q 37 20 50 26 Q 63 20 58 16 Q 53 13 50 18 Z" fill="#fda4af"/>
-  <!-- Head -->
-  <rect x="25" y="27" width="50" height="40" rx="14" fill="url(#metal5)"/>
-  <!-- Headphones -->
-  <rect x="20" y="38" width="7" height="18" rx="3.5" fill="#e11d48"/>
-  <rect x="73" y="38" width="7" height="18" rx="3.5" fill="#e11d48"/>
-  <!-- Screen -->
-  <rect x="31" y="34" width="38" height="18" rx="6" fill="#4c0519"/>
-  <!-- Heart or Star Eyes -->
-  <circle cx="41" cy="43" r="4.5" fill="#fda4af"/>
-  <circle cx="59" cy="43" r="4.5" fill="#fda4af"/>
-  <circle cx="42.5" cy="41.5" r="1.5" fill="#ffffff"/>
-  <circle cx="60.5" cy="41.5" r="1.5" fill="#ffffff"/>
-  <!-- Blush -->
-  <ellipse cx="32" cy="56" rx="3" ry="1.5" fill="#fb7185"/>
-  <ellipse cx="68" cy="56" rx="3" ry="1.5" fill="#fb7185"/>
-  <!-- Cute mouth -->
-  <path d="M 45 57 Q 50 61 55 57" fill="none" stroke="#be123c" stroke-width="2.5" stroke-linecap="round"/>
-  <!-- Body -->
-  <path d="M 37 67 L 63 67 L 69 85 Q 50 89 31 85 Z" fill="#fda4af"/>
+
+  <circle cx="60" cy="60" r="54" fill="url(#bgPro5)" filter="url(#proShadow5)"/>
+  <ellipse cx="60" cy="22" rx="36" ry="12" fill="#ffffff" opacity="0.15"/>
+
+  <!-- Modern Collared Polo -->
+  <path d="M 28 114 C 28 92, 42 86, 60 86 C 78 86, 92 92, 92 114 Z" fill="url(#shirt5)"/>
+  <polygon points="50,86 60,98 70,86" fill="#047857"/>
+
+  <!-- Neck -->
+  <rect x="52" y="68" width="16" height="15" fill="url(#skin5)"/>
+
+  <!-- Face -->
+  <ellipse cx="60" cy="54" rx="22" ry="25" fill="url(#skin5)"/>
+
+  <!-- Sleek Hair -->
+  <path d="M 38 46 C 36 28, 48 22, 60 22 C 74 22, 82 26, 82 46 C 78 35, 72 31, 60 31 C 48 31, 42 35, 38 46 Z" fill="#0f172a"/>
+
+  <!-- Minimalist Thin Wire Glasses -->
+  <rect x="44" y="47" width="14" height="10" rx="4" fill="none" stroke="#a7f3d0" stroke-width="1.6"/>
+  <rect x="62" y="47" width="14" height="10" rx="4" fill="none" stroke="#a7f3d0" stroke-width="1.6"/>
+  <line x1="58" y1="51" x2="62" y2="51" stroke="#a7f3d0" stroke-width="1.6"/>
+
+  <!-- Eyes & Eyebrows -->
+  <path d="M 46 44 Q 51 42 56 44" fill="none" stroke="#0f172a" stroke-width="2.2" stroke-linecap="round"/>
+  <path d="M 64 44 Q 69 42 74 44" fill="none" stroke="#0f172a" stroke-width="2.2" stroke-linecap="round"/>
+  <circle cx="51" cy="52" r="2.2" fill="#0f172a"/>
+  <circle cx="69" cy="52" r="2.2" fill="#0f172a"/>
+
+  <!-- Smile -->
+  <path d="M 54 67 Q 60 71 66 67" fill="none" stroke="#9a3412" stroke-width="2" stroke-linecap="round"/>
 </svg>

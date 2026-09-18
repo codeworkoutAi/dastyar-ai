@@ -71,6 +71,7 @@ interface BlogDesignData {
 }
 
 interface CtaData {
+ enabled?: boolean;
  title: string;
  desc: string;
  primaryBtnText: string;
@@ -268,6 +269,7 @@ export const AdminDesignStudioTab: React.FC = () => {
 
  const [activeSection, setActiveSection] = useState<'landing' | 'store' | 'blog' | 'footer'>('landing');
  const [activeLandingSubTab, setActiveLandingSubTab] = useState<'hero' | 'manifesto' | 'professions' | 'gallery' | 'pricing' | 'faqs' | 'cta'>('hero');
+  const [visibility, setVisibility] = useState<any>({});
 
  const [loading, setLoading] = useState(false);
  const [savingSection, setSavingSection] = useState<string | null>(null);
@@ -294,7 +296,8 @@ export const AdminDesignStudioTab: React.FC = () => {
  });
  if (!res.ok) throw new Error('خطا در بارگذاری تنظیمات طراحی');
  const data = await res.json();
- setHero(data.hero || null);
+ setVisibility(data.visibility || {});
+      setHero(data.hero || null);
  setManifesto(data.manifesto);
  setProfessions(data.professions || []);
  setGallery(data.gallery || []);
@@ -321,7 +324,24 @@ export const AdminDesignStudioTab: React.FC = () => {
  setTimeout(() => setFeedback(null), 4000);
  };
 
- const handleSaveSection = async (sectionKey: string, payload: any) => {
+ const toggleVisibility = async (key: string) => {
+    const newVal = visibility[key] === false ? true : false;
+    const newVis = { ...visibility, [key]: newVal };
+    setVisibility(newVis);
+    try {
+      await fetch('/api/admin/site-design/landing_visibility', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ data: newVis })
+      });
+      showToast('success', 'وضعیت نمایش با موفقیت بروزرسانی شد.');
+    } catch (err) {
+      showToast('error', 'خطا در بروزرسانی وضعیت نمایش');
+      setVisibility(visibility); // revert
+    }
+  };
+
+  const handleSaveSection = async (sectionKey: string, payload: any) => {
  setSavingSection(sectionKey);
  try {
  const res = await fetch(`/api/admin/site-design/${sectionKey}`, {
@@ -536,7 +556,7 @@ export const AdminDesignStudioTab: React.FC = () => {
  {activeSection === 'landing' && (
  <div className="space-y-6">
  {/* Sub-tabs for Landing (100% unified in order from top to bottom) */}
- <div className="flex items-center gap-1.5 overflow-x-auto pb-3 border-b border-[#e2e5eb] dark:border-[#1e2433] [scrollbar-width:none]">
+ <div className="flex items-center gap-2 overflow-x-auto p-2 rounded-2xl bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/10 [scrollbar-width:none]">
  {[
  { id: 'hero', label: '۱. هیرو و دمو چت' },
  { id: 'manifesto', label: '۲. مانیفست ارزش‌ها' },
@@ -552,10 +572,10 @@ export const AdminDesignStudioTab: React.FC = () => {
  key={subItem.id}
  type="button"
  onClick={() => setActiveLandingSubTab(subItem.id as any)}
- className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${
+ className={`px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer flex items-center gap-2 ${
  isActive
- ? 'bg-[#111622] text-white dark:bg-white dark:text-[#0a0c10] shadow-xs'
- : 'text-[#717b91] hover:text-[#0f1420] dark:hover:text-white hover:bg-[#f0f2f7] dark:hover:bg-[#181d2a]'
+ ? 'clay-btn-primary-thick shadow-md'
+ : 'text-[#717b91] hover:text-[#0f1420] dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/10'
  }`}
  >
  <span>{subItem.label}</span>
@@ -574,7 +594,7 @@ export const AdminDesignStudioTab: React.FC = () => {
  {/* SubTab 1: Hero & Demo Console */}
  {activeLandingSubTab === 'hero' && (
  <div className="space-y-4">
- <div className="flex items-center justify-between">
+ <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
  <div>
  <h3 className="text-sm font-bold text-[#0f1420] dark:text-white">
  بخش هیرو (Hero) و سناریوهای کنسول چت
@@ -583,12 +603,25 @@ export const AdminDesignStudioTab: React.FC = () => {
  تیتر اصلی لندینگ، نشان متنی بالای صفحه، دکمه‌های اقدام به عمل و مکالمات نمونه در کنسول چت.
  </p>
  </div>
+
+ <button
+ type="button"
+ onClick={() => toggleVisibility(activeLandingSubTab)}
+ className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+ visibility[activeLandingSubTab] !== false
+ ? 'clay-btn-thick text-[#2563eb] dark:text-[#60a5fa]'
+ : 'bg-[#e2e5eb] dark:bg-[#1b202e] text-[#717b91]'
+ }`}
+ >
+ {visibility[activeLandingSubTab] !== false ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
+ <span>{visibility[activeLandingSubTab] !== false ? 'نمایش در سایت' : 'عدم نمایش'}</span>
+ </button>
  <div className="flex items-center gap-2">
  <button
  type="button"
  onClick={() => handleSaveSection('landing_hero', hero)}
  disabled={savingSection === 'landing_hero'}
- className="px-3 py-1.5 rounded-lg bg-[#111622] dark:bg-white text-white dark:text-[#0a0c10] text-xs font-bold flex items-center gap-1.5 transition-colors shadow-xs cursor-pointer"
+ className="px-3 py-1.5 rounded-xl clay-btn-primary-thick text-xs font-bold flex items-center gap-1.5 transition-all shadow-xs cursor-pointer"
  >
  <Save className="w-3.5 h-3.5" />
  <span>{savingSection === 'landing_hero' ? 'در حال ذخیره...' : 'ذخیره بخش هیرو'}</span>
@@ -596,7 +629,7 @@ export const AdminDesignStudioTab: React.FC = () => {
  <button
  type="button"
  onClick={() => handleResetSection('landing_hero')}
- className="p-1.5 rounded-lg text-[#717b91] hover:text-[#0f1420] dark:hover:text-white hover:bg-[#eef1f6] dark:hover:bg-[#1b202e] cursor-pointer"
+ className="p-1.5 rounded-xl clay-btn-thick text-[#717b91] hover:text-[#0f1420] dark:hover:text-white transition-all cursor-pointer"
  title="بازگردانی به پیش‌فرض کارخانه"
  >
  <RotateCcw className="w-3.5 h-3.5" />
@@ -721,7 +754,7 @@ export const AdminDesignStudioTab: React.FC = () => {
  {hero.demoScenarios?.map((sc, sIdx) => (
  <div
  key={sc.id || sIdx}
- className="p-3.5 rounded-xl border border-[#e2e5eb] dark:border-[#1e2433] bg-[#fbfcfd] dark:bg-[#121622] space-y-2.5"
+ className="p-4 rounded-xl clay-card space-y-3"
  >
  <div className="flex items-center justify-between gap-2">
  <div className="flex items-center gap-2 flex-1">
@@ -736,7 +769,7 @@ export const AdminDesignStudioTab: React.FC = () => {
  updated[sIdx].label = e.target.value;
  setHero({ ...hero, demoScenarios: updated });
  }}
- className="px-2.5 py-1 text-xs font-bold rounded-md border border-[#d8dce6] dark:border-[#1e2433] bg-white dark:bg-[#151924]"
+ className="px-3 py-2 text-xs font-bold rounded-xl clay-input"
  placeholder="عنوان تب (مثلاً نگارش حقوقی)"
  />
  <input
@@ -747,7 +780,7 @@ export const AdminDesignStudioTab: React.FC = () => {
  updated[sIdx].model = e.target.value;
  setHero({ ...hero, demoScenarios: updated });
  }}
- className="px-2.5 py-1 text-xs rounded-md border border-[#d8dce6] dark:border-[#1e2433] bg-white dark:bg-[#151924]"
+ className="px-3 py-2 text-xs rounded-xl clay-input"
  placeholder="نام مدل"
  />
  <input
@@ -758,7 +791,7 @@ export const AdminDesignStudioTab: React.FC = () => {
  updated[sIdx].modelBadge = e.target.value;
  setHero({ ...hero, demoScenarios: updated });
  }}
- className="px-2.5 py-1 text-xs rounded-md border border-[#d8dce6] dark:border-[#1e2433] bg-white dark:bg-[#151924]"
+ className="px-3 py-2 text-xs rounded-xl clay-input"
  placeholder="برچسب (مثلاً رسمی)"
  />
  </div>
@@ -787,7 +820,7 @@ export const AdminDesignStudioTab: React.FC = () => {
  updated[sIdx].userPrompt = e.target.value;
  setHero({ ...hero, demoScenarios: updated });
  }}
- className="w-full p-2 text-xs rounded-md border border-[#d8dce6] dark:border-[#1e2433] bg-white dark:bg-[#151924]"
+ className="w-full p-3 text-xs rounded-xl clay-input resize-y"
  />
  </div>
  <div>
@@ -800,7 +833,7 @@ export const AdminDesignStudioTab: React.FC = () => {
  updated[sIdx].aiResponse = e.target.value;
  setHero({ ...hero, demoScenarios: updated });
  }}
- className="w-full p-2 text-xs rounded-md border border-[#d8dce6] dark:border-[#1e2433] bg-white dark:bg-[#151924]"
+ className="w-full p-3 text-xs rounded-xl clay-input resize-y"
  />
  </div>
  </div>
@@ -816,7 +849,7 @@ export const AdminDesignStudioTab: React.FC = () => {
  {/* SubTab A: Professions */}
  {activeLandingSubTab === 'professions' && (
  <div className="space-y-4">
- <div className="flex items-center justify-between">
+ <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
  <div>
  <h3 className="text-sm font-bold text-[#0f1420] dark:text-white">
  مدیریت داینامیک کارت‌های مشاغل و پرامپت‌ها
@@ -825,6 +858,19 @@ export const AdminDesignStudioTab: React.FC = () => {
  کارت‌ها با گرید هوشمند و خودتنظیم (Fluid Intrinsic Grid) بر روی موبایل، تبلت و دسکتاپ نمایش داده می‌شوند.
  </p>
  </div>
+
+ <button
+ type="button"
+ onClick={() => toggleVisibility(activeLandingSubTab)}
+ className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+ visibility[activeLandingSubTab] !== false
+ ? 'clay-btn-thick text-[#2563eb] dark:text-[#60a5fa]'
+ : 'bg-[#e2e5eb] dark:bg-[#1b202e] text-[#717b91]'
+ }`}
+ >
+ {visibility[activeLandingSubTab] !== false ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
+ <span>{visibility[activeLandingSubTab] !== false ? 'نمایش در سایت' : 'عدم نمایش'}</span>
+ </button>
  <div className="flex items-center gap-2">
  <button
  type="button"
@@ -1029,7 +1075,7 @@ export const AdminDesignStudioTab: React.FC = () => {
  {/* SubTab B: Manifesto */}
  {activeLandingSubTab === 'manifesto' && manifesto && (
  <div className="space-y-4">
- <div className="flex items-center justify-between">
+ <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
  <div>
  <h3 className="text-sm font-bold text-[#0f1420] dark:text-white">
  ویرایش بیانیه مانیفست و استدلال‌های تخصصی
@@ -1038,6 +1084,19 @@ export const AdminDesignStudioTab: React.FC = () => {
  بخش شفافیت و دلایل تمرکز بر کارایی واقعی و حل مسائل روزمره.
  </p>
  </div>
+
+ <button
+ type="button"
+ onClick={() => toggleVisibility(activeLandingSubTab)}
+ className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+ visibility[activeLandingSubTab] !== false
+ ? 'clay-btn-thick text-[#2563eb] dark:text-[#60a5fa]'
+ : 'bg-[#e2e5eb] dark:bg-[#1b202e] text-[#717b91]'
+ }`}
+ >
+ {visibility[activeLandingSubTab] !== false ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
+ <span>{visibility[activeLandingSubTab] !== false ? 'نمایش در سایت' : 'عدم نمایش'}</span>
+ </button>
  <div className="flex items-center gap-2">
  <button
  type="button"
@@ -1060,7 +1119,7 @@ export const AdminDesignStudioTab: React.FC = () => {
  </div>
  </div>
 
- <div className="p-4 rounded-xl bg-white dark:bg-[#0f121a] border border-[#d8dce6] dark:border-[#1e2433] space-y-4">
+ <div className={`p-5 rounded-2xl clay-card-thick space-y-5 transition-all duration-300 ${cta.enabled === false ? 'opacity-50 grayscale pointer-events-none' : ''}`}>
  <div>
  <label className="block text-xs font-bold text-[#0f1420] dark:text-white mb-1">
  برچسب بالای بیانیه
@@ -1069,7 +1128,7 @@ export const AdminDesignStudioTab: React.FC = () => {
  type="text"
  value={manifesto.badge}
  onChange={(e) => setManifesto({ ...manifesto, badge: e.target.value })}
- className="w-full px-3 py-2 text-xs rounded-lg border border-[#d8dce6] dark:border-[#1e2433] bg-white dark:bg-[#131722] text-[#0f1420] dark:text-white"
+ className="w-full px-3 py-2 text-xs rounded-xl clay-input cursor-pointer"
  />
  </div>
 
@@ -1081,7 +1140,7 @@ export const AdminDesignStudioTab: React.FC = () => {
  type="text"
  value={manifesto.title}
  onChange={(e) => setManifesto({ ...manifesto, title: e.target.value })}
- className="w-full px-3 py-2 text-xs rounded-lg border border-[#d8dce6] dark:border-[#1e2433] bg-white dark:bg-[#131722] text-[#0f1420] dark:text-white font-bold"
+ className="w-full px-3 py-2 text-xs rounded-xl clay-input font-bold"
  />
  </div>
 
@@ -1093,7 +1152,7 @@ export const AdminDesignStudioTab: React.FC = () => {
  rows={3}
  value={manifesto.subtitle}
  onChange={(e) => setManifesto({ ...manifesto, subtitle: e.target.value })}
- className="w-full px-3 py-2 text-xs rounded-lg border border-[#d8dce6] dark:border-[#1e2433] bg-white dark:bg-[#131722] text-[#525d75] dark:text-[#ccd3e0]"
+ className="w-full px-3 py-2 text-xs rounded-xl clay-input resize-y"
  />
  </div>
 
@@ -1141,7 +1200,7 @@ export const AdminDesignStudioTab: React.FC = () => {
  {/* SubTab C: FAQs */}
  {activeLandingSubTab === 'faqs' && (
  <div className="space-y-4">
- <div className="flex items-center justify-between">
+ <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
  <div>
  <h3 className="text-sm font-bold text-[#0f1420] dark:text-white">
  مدیریت پرسش و پاسخ‌های متداول (FAQ)
@@ -1150,6 +1209,19 @@ export const AdminDesignStudioTab: React.FC = () => {
  پاسخ‌های شفاف و اعتمادساز برای تصمیم‌گیری کاربران در صفحه اصلی.
  </p>
  </div>
+
+ <button
+ type="button"
+ onClick={() => toggleVisibility(activeLandingSubTab)}
+ className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+ visibility[activeLandingSubTab] !== false
+ ? 'clay-btn-thick text-[#2563eb] dark:text-[#60a5fa]'
+ : 'bg-[#e2e5eb] dark:bg-[#1b202e] text-[#717b91]'
+ }`}
+ >
+ {visibility[activeLandingSubTab] !== false ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
+ <span>{visibility[activeLandingSubTab] !== false ? 'نمایش در سایت' : 'عدم نمایش'}</span>
+ </button>
  <div className="flex items-center gap-2">
  <button
  type="button"
@@ -1217,7 +1289,7 @@ export const AdminDesignStudioTab: React.FC = () => {
  updated[fIdx].a = e.target.value;
  setFaqs(updated);
  }}
- className="w-full px-3 py-2 text-xs rounded-lg border border-[#d8dce6] dark:border-[#1e2433] bg-white dark:bg-[#131722] text-[#525d75] dark:text-[#ccd3e0]"
+ className="w-full px-3 py-2 text-xs rounded-xl clay-input resize-y"
  placeholder="متن پاسخ جامع..."
  />
  </div>
@@ -1229,7 +1301,7 @@ export const AdminDesignStudioTab: React.FC = () => {
  {/* SubTab 4: Gallery */}
  {activeLandingSubTab === 'gallery' && (
  <div className="space-y-4">
- <div className="flex items-center justify-between">
+ <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
  <div>
  <h3 className="text-sm font-bold text-[#0f1420] dark:text-white">
  گالری نمونه آثار استودیوی تصویرساز ({gallery.length})
@@ -1238,6 +1310,19 @@ export const AdminDesignStudioTab: React.FC = () => {
  مدیریت آثار هنری، آپلود تصاویر جدید، ویرایش تگ دسته‌بندی و متن پرامپت انگلیسی برای کپی کاربران.
  </p>
  </div>
+
+ <button
+ type="button"
+ onClick={() => toggleVisibility(activeLandingSubTab)}
+ className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+ visibility[activeLandingSubTab] !== false
+ ? 'clay-btn-thick text-[#2563eb] dark:text-[#60a5fa]'
+ : 'bg-[#e2e5eb] dark:bg-[#1b202e] text-[#717b91]'
+ }`}
+ >
+ {visibility[activeLandingSubTab] !== false ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
+ <span>{visibility[activeLandingSubTab] !== false ? 'نمایش در سایت' : 'عدم نمایش'}</span>
+ </button>
  <div className="flex items-center gap-2">
  <button
  type="button"
@@ -1261,7 +1346,7 @@ export const AdminDesignStudioTab: React.FC = () => {
  type="button"
  onClick={() => handleSaveSection('landing_gallery', gallery)}
  disabled={savingSection === 'landing_gallery'}
- className="px-3 py-1.5 rounded-lg bg-[#111622] dark:bg-white text-white dark:text-[#0a0c10] text-xs font-bold flex items-center gap-1.5 transition-colors shadow-xs cursor-pointer"
+ className="px-3 py-1.5 rounded-xl clay-btn-primary-thick text-xs font-bold flex items-center gap-1.5 transition-all shadow-xs cursor-pointer"
  >
  <Save className="w-3.5 h-3.5" />
  <span>{savingSection === 'landing_gallery' ? 'در حال ذخیره...' : 'ذخیره گالری'}</span>
@@ -1270,7 +1355,7 @@ export const AdminDesignStudioTab: React.FC = () => {
  <button
  type="button"
  onClick={() => handleResetSection('landing_gallery')}
- className="p-1.5 rounded-lg text-[#717b91] hover:text-[#0f1420] dark:hover:text-white hover:bg-[#eef1f6] dark:hover:bg-[#1b202e] cursor-pointer"
+ className="p-1.5 rounded-xl clay-btn-thick text-[#717b91] hover:text-[#0f1420] dark:hover:text-white transition-all cursor-pointer"
  title="بازگردانی به پیش‌فرض کارخانه"
  >
  <RotateCcw className="w-3.5 h-3.5" />
@@ -1393,7 +1478,7 @@ export const AdminDesignStudioTab: React.FC = () => {
  type="button"
  onClick={() => handleSaveSection('landing_pricing_header', pricingHeader)}
  disabled={savingSection === 'landing_pricing_header'}
- className="px-3 py-1.5 rounded-lg bg-[#111622] dark:bg-white text-white dark:text-[#0a0c10] text-xs font-bold flex items-center gap-1.5 transition-colors shadow-xs cursor-pointer"
+ className="px-3 py-1.5 rounded-xl clay-btn-primary-thick text-xs font-bold flex items-center gap-1.5 transition-all shadow-xs cursor-pointer"
  >
  <Save className="w-3.5 h-3.5" />
  <span>{savingSection === 'landing_pricing_header' ? 'در حال ذخیره...' : 'ذخیره سربرگ تعرفه'}</span>
@@ -1401,7 +1486,7 @@ export const AdminDesignStudioTab: React.FC = () => {
  <button
  type="button"
  onClick={() => handleResetSection('landing_pricing_header')}
- className="p-1.5 rounded-lg text-[#717b91] hover:text-[#0f1420] dark:hover:text-white hover:bg-[#eef1f6] dark:hover:bg-[#1b202e] cursor-pointer"
+ className="p-1.5 rounded-xl clay-btn-thick text-[#717b91] hover:text-[#0f1420] dark:hover:text-white transition-all cursor-pointer"
  title="بازگردانی به پیش‌فرض کارخانه"
  >
  <RotateCcw className="w-3.5 h-3.5" />
@@ -1598,7 +1683,7 @@ export const AdminDesignStudioTab: React.FC = () => {
  type="text"
  value={giftCard.badge}
  onChange={(e) => setGiftCard({ ...giftCard, badge: e.target.value })}
- className="w-full px-3 py-2 text-xs rounded-lg border border-[#d8dce6] dark:border-[#1e2433] bg-white dark:bg-[#131722] text-[#0f1420] dark:text-white"
+ className="w-full px-3 py-2 text-xs rounded-xl clay-input cursor-pointer"
  placeholder="مثال: هدیه بدون قیدوشرط"
  />
  </div>
@@ -1637,7 +1722,7 @@ export const AdminDesignStudioTab: React.FC = () => {
  type="text"
  value={giftCard.tokenEstimate}
  onChange={(e) => setGiftCard({ ...giftCard, tokenEstimate: e.target.value })}
- className="w-full px-3 py-2 text-xs rounded-lg border border-[#d8dce6] dark:border-[#1e2433] bg-white dark:bg-[#131722] text-[#0f1420] dark:text-white"
+ className="w-full px-3 py-2 text-xs rounded-xl clay-input cursor-pointer"
  placeholder="مثال: ~۱۵۰,۰۰۰ توکن سهمیه"
  />
  </div>
@@ -1650,7 +1735,7 @@ export const AdminDesignStudioTab: React.FC = () => {
  type="text"
  value={giftCard.messagesCount}
  onChange={(e) => setGiftCard({ ...giftCard, messagesCount: e.target.value })}
- className="w-full px-3 py-2 text-xs rounded-lg border border-[#d8dce6] dark:border-[#1e2433] bg-white dark:bg-[#131722] text-[#0f1420] dark:text-white"
+ className="w-full px-3 py-2 text-xs rounded-xl clay-input cursor-pointer"
  placeholder="مثال: حدود ۱۵۰ تا ۲۰۰ پیام کامل"
  />
  </div>
@@ -1664,7 +1749,7 @@ export const AdminDesignStudioTab: React.FC = () => {
  rows={2}
  value={giftCard.desc}
  onChange={(e) => setGiftCard({ ...giftCard, desc: e.target.value })}
- className="w-full px-3 py-2 text-xs rounded-lg border border-[#d8dce6] dark:border-[#1e2433] bg-white dark:bg-[#131722] text-[#0f1420] dark:text-white"
+ className="w-full px-3 py-2 text-xs rounded-xl clay-input cursor-pointer"
  placeholder="توضیح کوتاه کارت هدیه..."
  />
  </div>
@@ -1677,7 +1762,7 @@ export const AdminDesignStudioTab: React.FC = () => {
  rows={4}
  value={Array.isArray(giftCard.features) ? giftCard.features.join('\n') : giftCard.features || ''}
  onChange={(e) => setGiftCard({ ...giftCard, features: e.target.value.split('\n').filter(Boolean) })}
- className="w-full px-3 py-2 text-xs rounded-lg border border-[#d8dce6] dark:border-[#1e2433] bg-white dark:bg-[#131722] text-[#0f1420] dark:text-white font-mono leading-relaxed"
+ className="w-full px-3 py-2 text-xs rounded-xl clay-input font-mono leading-relaxed"
  placeholder="دسترسی کامل به تمام مدل‌ها&#10;بدون نیاز به کارت بانکی&#10;تحلیل اسناد و جستجوی زنده وب"
  />
  </div>
@@ -1750,9 +1835,9 @@ export const AdminDesignStudioTab: React.FC = () => {
  )}
 
  {/* SubTab D: CTA Banner */}
- {activeLandingSubTab === 'cta' && cta && (
+ {activeLandingSubTab === 'cta' && (
  <div className="space-y-4">
- <div className="flex items-center justify-between">
+ <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
  <div>
  <h3 className="text-sm font-bold text-[#0f1420] dark:text-white">
  مدیریت کارت پایانی دعوت به اقدام (CTA) و هدیه
@@ -1764,9 +1849,22 @@ export const AdminDesignStudioTab: React.FC = () => {
  <div className="flex items-center gap-2">
  <button
  type="button"
+ onClick={() => setCta({ ...cta, enabled: cta.enabled === false ? true : false })}
+ className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+ cta.enabled !== false
+ ? 'clay-btn-thick text-[#2563eb] dark:text-[#60a5fa]'
+ : 'bg-[#e2e5eb] dark:bg-[#1b202e] text-[#717b91]'
+ }`}
+ >
+ {cta.enabled !== false ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
+ <span>{cta.enabled !== false ? 'نمایش در سایت' : 'عدم نمایش'}</span>
+ </button>
+
+ <button
+ type="button"
  onClick={() => handleSaveSection('landing_cta', cta)}
  disabled={savingSection === 'landing_cta'}
- className="px-3 py-1.5 rounded-lg bg-[#111622] dark:bg-white text-white dark:text-[#0a0c10] text-xs font-bold flex items-center gap-1.5 transition-colors shadow-xs"
+ className="px-3 py-1.5 rounded-xl clay-btn-primary-thick text-xs font-bold flex items-center gap-1.5 transition-all shadow-xs cursor-pointer"
  >
  <Save className="w-3.5 h-3.5" />
  <span>{savingSection === 'landing_cta' ? 'در حال ذخیره...' : 'ذخیره کارت CTA'}</span>
@@ -1775,7 +1873,7 @@ export const AdminDesignStudioTab: React.FC = () => {
  <button
  type="button"
  onClick={() => handleResetSection('landing_cta')}
- className="p-1.5 rounded-lg text-[#717b91] hover:text-[#0f1420] dark:hover:text-white hover:bg-[#eef1f6] dark:hover:bg-[#1b202e]"
+ className="p-1.5 rounded-xl clay-btn-thick text-[#717b91] hover:text-[#0f1420] dark:hover:text-white transition-all cursor-pointer"
  title="بازگردانی به پیش‌فرض کارخانه"
  >
  <RotateCcw className="w-3.5 h-3.5" />
@@ -1783,7 +1881,7 @@ export const AdminDesignStudioTab: React.FC = () => {
  </div>
  </div>
 
- <div className="p-4 rounded-xl bg-white dark:bg-[#0f121a] border border-[#d8dce6] dark:border-[#1e2433] space-y-4">
+ <div className={`p-4 rounded-xl clay-card-thick space-y-4 transition-all duration-300 ${cta.enabled === false ? 'opacity-50 grayscale pointer-events-none' : ''}`}>
  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
  <div>
  <label className="block text-xs font-bold text-[#0f1420] dark:text-white mb-1">
@@ -1793,7 +1891,7 @@ export const AdminDesignStudioTab: React.FC = () => {
  type="text"
  value={cta.title}
  onChange={(e) => setCta({ ...cta, title: e.target.value })}
- className="w-full px-3 py-2 text-xs rounded-lg border border-[#d8dce6] dark:border-[#1e2433] bg-white dark:bg-[#131722] text-[#0f1420] dark:text-white font-bold"
+ className="w-full px-3 py-2 text-xs rounded-xl clay-input font-bold"
  />
  </div>
 
@@ -1804,7 +1902,7 @@ export const AdminDesignStudioTab: React.FC = () => {
  <select
  value={cta.theme || 'dark'}
  onChange={(e) => setCta({ ...cta, theme: e.target.value })}
- className="w-full px-3 py-2 text-xs rounded-lg border border-[#d8dce6] dark:border-[#1e2433] bg-white dark:bg-[#131722] text-[#0f1420] dark:text-white"
+ className="w-full px-3 py-2 text-xs rounded-xl clay-input cursor-pointer"
  >
  {CTA_THEME_OPTIONS.map((opt) => (
  <option key={opt.id} value={opt.id}>
@@ -1823,7 +1921,7 @@ export const AdminDesignStudioTab: React.FC = () => {
  rows={2}
  value={cta.desc}
  onChange={(e) => setCta({ ...cta, desc: e.target.value })}
- className="w-full px-3 py-2 text-xs rounded-lg border border-[#d8dce6] dark:border-[#1e2433] bg-white dark:bg-[#131722] text-[#525d75] dark:text-[#ccd3e0]"
+ className="w-full px-3 py-2 text-xs rounded-xl clay-input resize-y"
  />
  </div>
 
@@ -1837,14 +1935,14 @@ export const AdminDesignStudioTab: React.FC = () => {
  value={cta.primaryBtnText}
  onChange={(e) => setCta({ ...cta, primaryBtnText: e.target.value })}
  placeholder="متن دکمه (مثال: ورود به محیط چت)"
- className="w-full px-3 py-1.5 text-xs rounded-lg border border-[#d8dce6] dark:border-[#1e2433] bg-white dark:bg-[#131722] text-[#0f1420] dark:text-white"
+ className="w-full px-3 py-2 text-xs rounded-xl clay-input"
  />
  <input
  type="text"
  value={cta.primaryBtnLink}
  onChange={(e) => setCta({ ...cta, primaryBtnLink: e.target.value })}
  placeholder="لینک دکمه (مثال: /chat)"
- className="w-full px-3 py-1.5 text-xs rounded-lg border border-[#d8dce6] dark:border-[#1e2433] bg-white dark:bg-[#131722] text-[#0f1420] dark:text-white font-mono"
+ className="w-full px-3 py-2 text-xs rounded-xl clay-input font-mono"
  />
  </div>
 
@@ -1857,14 +1955,14 @@ export const AdminDesignStudioTab: React.FC = () => {
  value={cta.secondaryBtnText}
  onChange={(e) => setCta({ ...cta, secondaryBtnText: e.target.value })}
  placeholder="متن دکمه دوم (مثال: مشاهده فروشگاه)"
- className="w-full px-3 py-1.5 text-xs rounded-lg border border-[#d8dce6] dark:border-[#1e2433] bg-white dark:bg-[#131722] text-[#0f1420] dark:text-white"
+ className="w-full px-3 py-2 text-xs rounded-xl clay-input"
  />
  <input
  type="text"
  value={cta.secondaryBtnLink}
  onChange={(e) => setCta({ ...cta, secondaryBtnLink: e.target.value })}
  placeholder="لینک دکمه دوم (مثال: /store)"
- className="w-full px-3 py-1.5 text-xs rounded-lg border border-[#d8dce6] dark:border-[#1e2433] bg-white dark:bg-[#131722] text-[#0f1420] dark:text-white font-mono"
+ className="w-full px-3 py-2 text-xs rounded-xl clay-input font-mono"
  />
  </div>
  </div>
@@ -1910,7 +2008,7 @@ export const AdminDesignStudioTab: React.FC = () => {
  </div>
  </div>
 
- <div className="p-4 rounded-xl bg-white dark:bg-[#0f121a] border border-[#d8dce6] dark:border-[#1e2433] space-y-4">
+ <div className={`p-5 rounded-2xl clay-card-thick space-y-5 transition-all duration-300 ${visibility[activeLandingSubTab] === false ? 'opacity-50 grayscale pointer-events-none' : ''}`}>
  <div>
  <label className="block text-xs font-bold text-[#0f1420] dark:text-white mb-1">
  تیتر اصلی بالای فروشگاه
@@ -1919,7 +2017,7 @@ export const AdminDesignStudioTab: React.FC = () => {
  type="text"
  value={storeDesign.heroTitle}
  onChange={(e) => setStoreDesign({ ...storeDesign, heroTitle: e.target.value })}
- className="w-full px-3 py-2 text-xs rounded-lg border border-[#d8dce6] dark:border-[#1e2433] bg-white dark:bg-[#131722] text-[#0f1420] dark:text-white font-bold"
+ className="w-full px-3 py-2 text-xs rounded-xl clay-input font-bold"
  />
  </div>
 
@@ -1931,7 +2029,7 @@ export const AdminDesignStudioTab: React.FC = () => {
  rows={2}
  value={storeDesign.heroSubtitle}
  onChange={(e) => setStoreDesign({ ...storeDesign, heroSubtitle: e.target.value })}
- className="w-full px-3 py-2 text-xs rounded-lg border border-[#d8dce6] dark:border-[#1e2433] bg-white dark:bg-[#131722] text-[#525d75] dark:text-[#ccd3e0]"
+ className="w-full px-3 py-2 text-xs rounded-xl clay-input resize-y"
  />
  </div>
 
@@ -1975,7 +2073,7 @@ export const AdminDesignStudioTab: React.FC = () => {
  }
  })
  }
- className="w-full px-3 py-2 text-xs rounded-lg border border-[#d8dce6] dark:border-[#1e2433] bg-white dark:bg-[#131722] text-[#0f1420] dark:text-white"
+ className="w-full px-3 py-2 text-xs rounded-xl clay-input cursor-pointer"
  placeholder="متن پیام تخفیف یا اطلاعیه..."
  />
  </div>
@@ -2019,7 +2117,7 @@ export const AdminDesignStudioTab: React.FC = () => {
  </div>
  </div>
 
- <div className="p-4 rounded-xl bg-white dark:bg-[#0f121a] border border-[#d8dce6] dark:border-[#1e2433] space-y-4">
+ <div className={`p-5 rounded-2xl clay-card-thick space-y-5 transition-all duration-300 ${visibility[activeLandingSubTab] === false ? 'opacity-50 grayscale pointer-events-none' : ''}`}>
  <div>
  <label className="block text-xs font-bold text-[#0f1420] dark:text-white mb-1">
  تیتر هدر مجله و وبلاگ
@@ -2028,7 +2126,7 @@ export const AdminDesignStudioTab: React.FC = () => {
  type="text"
  value={blogDesign.headerTitle}
  onChange={(e) => setBlogDesign({ ...blogDesign, headerTitle: e.target.value })}
- className="w-full px-3 py-2 text-xs rounded-lg border border-[#d8dce6] dark:border-[#1e2433] bg-white dark:bg-[#131722] text-[#0f1420] dark:text-white font-bold"
+ className="w-full px-3 py-2 text-xs rounded-xl clay-input font-bold"
  />
  </div>
 
@@ -2040,7 +2138,7 @@ export const AdminDesignStudioTab: React.FC = () => {
  rows={2}
  value={blogDesign.headerSubtitle}
  onChange={(e) => setBlogDesign({ ...blogDesign, headerSubtitle: e.target.value })}
- className="w-full px-3 py-2 text-xs rounded-lg border border-[#d8dce6] dark:border-[#1e2433] bg-white dark:bg-[#131722] text-[#525d75] dark:text-[#ccd3e0]"
+ className="w-full px-3 py-2 text-xs rounded-xl clay-input resize-y"
  />
  </div>
 
@@ -2060,7 +2158,7 @@ export const AdminDesignStudioTab: React.FC = () => {
  .filter(Boolean)
  })
  }
- className="w-full px-3 py-2 text-xs rounded-lg border border-[#d8dce6] dark:border-[#1e2433] bg-white dark:bg-[#131722] text-[#0f1420] dark:text-white"
+ className="w-full px-3 py-2 text-xs rounded-xl clay-input cursor-pointer"
  placeholder="هوش مصنوعی، فناوری، کدنویسی، سئو"
  />
  </div>
@@ -2104,7 +2202,7 @@ export const AdminDesignStudioTab: React.FC = () => {
  </div>
  </div>
 
- <div className="p-4 rounded-xl bg-white dark:bg-[#0f121a] border border-[#d8dce6] dark:border-[#1e2433] space-y-4">
+ <div className={`p-5 rounded-2xl clay-card-thick space-y-5 transition-all duration-300 ${visibility[activeLandingSubTab] === false ? 'opacity-50 grayscale pointer-events-none' : ''}`}>
  <div>
  <label className="block text-xs font-bold text-[#0f1420] dark:text-white mb-1">
  عنوان برند در فوتر
@@ -2113,7 +2211,7 @@ export const AdminDesignStudioTab: React.FC = () => {
  type="text"
  value={footerSettings.brandTitle}
  onChange={(e) => setFooterSettings({ ...footerSettings, brandTitle: e.target.value })}
- className="w-full px-3 py-2 text-xs rounded-lg border border-[#d8dce6] dark:border-[#1e2433] bg-white dark:bg-[#131722] text-[#0f1420] dark:text-white font-bold"
+ className="w-full px-3 py-2 text-xs rounded-xl clay-input font-bold"
  />
  </div>
 
@@ -2125,7 +2223,7 @@ export const AdminDesignStudioTab: React.FC = () => {
  rows={3}
  value={footerSettings.brandDesc}
  onChange={(e) => setFooterSettings({ ...footerSettings, brandDesc: e.target.value })}
- className="w-full px-3 py-2 text-xs rounded-lg border border-[#d8dce6] dark:border-[#1e2433] bg-white dark:bg-[#131722] text-[#525d75] dark:text-[#ccd3e0]"
+ className="w-full px-3 py-2 text-xs rounded-xl clay-input resize-y"
  />
  </div>
 
@@ -2138,7 +2236,7 @@ export const AdminDesignStudioTab: React.FC = () => {
  type="email"
  value={footerSettings.supportEmail}
  onChange={(e) => setFooterSettings({ ...footerSettings, supportEmail: e.target.value })}
- className="w-full px-3 py-2 text-xs rounded-lg border border-[#d8dce6] dark:border-[#1e2433] bg-white dark:bg-[#131722] text-[#0f1420] dark:text-white font-mono"
+ className="w-full px-3 py-2 text-xs rounded-xl clay-input font-mono"
  dir="ltr"
  />
  </div>
@@ -2151,7 +2249,7 @@ export const AdminDesignStudioTab: React.FC = () => {
  type="text"
  value={footerSettings.telegramChannel}
  onChange={(e) => setFooterSettings({ ...footerSettings, telegramChannel: e.target.value })}
- className="w-full px-3 py-2 text-xs rounded-lg border border-[#d8dce6] dark:border-[#1e2433] bg-white dark:bg-[#131722] text-[#0f1420] dark:text-white font-mono"
+ className="w-full px-3 py-2 text-xs rounded-xl clay-input font-mono"
  dir="ltr"
  />
  </div>
@@ -2165,7 +2263,7 @@ export const AdminDesignStudioTab: React.FC = () => {
  type="text"
  value={footerSettings.copyrightText}
  onChange={(e) => setFooterSettings({ ...footerSettings, copyrightText: e.target.value })}
- className="w-full px-3 py-2 text-xs rounded-lg border border-[#d8dce6] dark:border-[#1e2433] bg-white dark:bg-[#131722] text-[#0f1420] dark:text-white"
+ className="w-full px-3 py-2 text-xs rounded-xl clay-input cursor-pointer"
  />
  </div>
  </div>

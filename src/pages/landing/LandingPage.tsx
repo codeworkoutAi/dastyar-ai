@@ -44,6 +44,7 @@ import { ThemeToggle } from '../../components/ThemeToggle';
 import { Footer } from '../../components/Footer';
 import { CheckoutModal } from '../../components/CheckoutModal';
 import { MarkdownRenderer } from '../../components/MarkdownRenderer';
+import { UsageAnalyticsSection } from '../../components/UsageAnalyticsSection';
 import { toPersianDigits } from '../../lib/persianUtils';
 import { setPageSeo } from '../../lib/seo';
 import { useUIStore } from '../../store/uiStore';
@@ -451,12 +452,27 @@ export const LandingPage: React.FC = () => {
   ];
 
   // Dynamic Live Content State (Managed via Admin CMS Studio)
+  const [dynamicVisibility, setDynamicVisibility] = useState<any>({
+    hero: true,
+    features: true,
+    manifesto: true,
+    professions: true,
+    gallery: true,
+    analytics: true,
+    pricing: true,
+    faqs: true,
+    cta: true
+  });
   const [dynamicHero, setDynamicHero] = useState<any>(null);
+  const [dynamicFeatures, setDynamicFeatures] = useState<any>(null);
   const [dynamicManifesto, setDynamicManifesto] = useState<any>(null);
   const [dynamicProfessions, setDynamicProfessions] = useState<any[]>(professionCards);
+  const [dynamicProfessionsSettings, setDynamicProfessionsSettings] = useState<any>(null);
   const [dynamicGallery, setDynamicGallery] = useState<any[]>(galleryImages);
+  const [dynamicGallerySettings, setDynamicGallerySettings] = useState<any>(null);
   const [dynamicPricingHeader, setDynamicPricingHeader] = useState<any>(null);
   const [dynamicFaqs, setDynamicFaqs] = useState<any[]>(faqs);
+  const [dynamicFaqsSettings, setDynamicFaqsSettings] = useState<any>(null);
   const [dynamicCta, setDynamicCta] = useState<any>(null);
   const [dynamicGiftCard, setDynamicGiftCard] = useState<any>(null);
   const [dynamicPlans, setDynamicPlans] = useState<any[]>([]);
@@ -469,30 +485,25 @@ export const LandingPage: React.FC = () => {
         return res.json();
       })
       .then((data) => {
+        if (data.visibility) setDynamicVisibility((prev: any) => ({ ...prev, ...data.visibility }));
         if (data.hero) setDynamicHero(data.hero);
+        if (data.features) setDynamicFeatures(data.features);
         if (data.manifesto && data.manifesto.title) setDynamicManifesto(data.manifesto);
         if (data.professions && Array.isArray(data.professions) && data.professions.length > 0) {
           const activeOnes = data.professions.filter((p: any) => p.enabled !== false);
           if (activeOnes.length > 0) setDynamicProfessions(activeOnes);
         }
+        if (data.professionsSettings) setDynamicProfessionsSettings(data.professionsSettings);
         if (data.gallery && Array.isArray(data.gallery) && data.gallery.length > 0) {
           setDynamicGallery(data.gallery);
         }
-        if (data.pricingHeader) {
-          setDynamicPricingHeader(data.pricingHeader);
-        }
-        if (data.faqs && Array.isArray(data.faqs) && data.faqs.length > 0) {
-          setDynamicFaqs(data.faqs);
-        }
-        if (data.cta && data.cta.title) {
-          setDynamicCta(data.cta);
-        }
-        if (data.giftCard) {
-          setDynamicGiftCard(data.giftCard);
-        }
-        if (data.plans && Array.isArray(data.plans) && data.plans.length > 0) {
-          setDynamicPlans(data.plans);
-        }
+        if (data.gallerySettings) setDynamicGallerySettings(data.gallerySettings);
+        if (data.pricingHeader) setDynamicPricingHeader(data.pricingHeader);
+        if (data.faqs && Array.isArray(data.faqs) && data.faqs.length > 0) setDynamicFaqs(data.faqs);
+        if (data.faqsSettings) setDynamicFaqsSettings(data.faqsSettings);
+        if (data.cta && data.cta.title) setDynamicCta(data.cta);
+        if (data.giftCard) setDynamicGiftCard(data.giftCard);
+        if (data.plans && Array.isArray(data.plans) && data.plans.length > 0) setDynamicPlans(data.plans);
       })
       .catch((err) => console.warn('[Landing] Using local static fallback:', err));
   }, []);
@@ -798,6 +809,7 @@ export const LandingPage: React.FC = () => {
       </header>
 
       {/* ---------------- 2. Hero Section (Thick 3D Claymorphism) ---------------- */}
+      {dynamicVisibility.hero !== false && dynamicHero?.enabled !== false && (
       <section className="pt-12 pb-16 sm:pt-20 sm:pb-24 px-4 sm:px-6 max-w-5xl mx-auto flex flex-col items-center text-center">
         {/* Top Feature Pill (Only rendered if configured) */}
         {Boolean(dynamicHero?.featurePill) && (
@@ -852,10 +864,10 @@ export const LandingPage: React.FC = () => {
 
             {/* Banner Title */}
             <h2 className="text-xl sm:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-rose-500 to-orange-500 dark:from-rose-400 dark:to-orange-400 py-2 px-1 mb-1 relative z-10" style={{ fontFamily: "'Estedad', sans-serif" }}>
-              یک کلید برای تمام پرچمداران جهان
+              {dynamicHero?.bannerTitle || 'یک کلید برای تمام پرچمداران جهان'}
             </h2>
             <p className="text-xs sm:text-sm text-[#525d75] dark:text-[#9aa5bc] max-w-xl mx-auto mb-10 relative z-10 leading-relaxed">
-              بدون نیاز به ده‌ها اکانت ارزی. پلتفرم ما جامع‌ترین درگاه را با پشتیبانی کامل از تمامی مدل‌های قدرتمند هوش مصنوعی در اختیار شما قرار می‌دهد.
+              {dynamicHero?.bannerSubtitle || 'بدون نیاز به ده‌ها اکانت ارزی. پلتفرم ما جامع‌ترین درگاه را با پشتیبانی کامل از تمامی مدل‌های قدرتمند هوش مصنوعی در اختیار شما قرار می‌دهد.'}
             </p>
 
             {/* Marquee Track */}
@@ -926,12 +938,12 @@ export const LandingPage: React.FC = () => {
             {/* Action Button inside Banner */}
             <div className="mt-10 relative z-10">
               <Link
-                to="/chat"
+                to={dynamicHero?.bannerBtnLink || "/chat"}
                 className="group relative inline-flex items-center justify-center gap-3 px-10 py-3.5 clay-btn-primary-thick font-black text-sm overflow-hidden"
                 style={{ fontFamily: "'Estedad', sans-serif" }}
               >
                 <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 pointer-events-none" />
-                <span>شروع</span>
+                <span>{dynamicHero?.bannerBtnText || 'شروع'}</span>
                 <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1.5 transition-transform" />
               </Link>
             </div>
@@ -939,8 +951,10 @@ export const LandingPage: React.FC = () => {
           </div>
         </div>
       </section>
+      )}
 
       {/* ---------------- 3. Bento Grid: Visual Features (Thick 3D Claymorphic) ---------------- */}
+      {dynamicVisibility.features !== false && dynamicFeatures?.enabled !== false && (
       <section id="models" className="py-16 sm:py-20 px-4 sm:px-6 max-w-6xl mx-auto border-t border-black/5 dark:border-white/5">
         <div className="reveal-init text-center max-w-2xl mx-auto mb-12 sm:mb-16">
           <h2
@@ -1060,10 +1074,13 @@ export const LandingPage: React.FC = () => {
           </div>
         </div>
       </section>
+      )}
 
       {/* ---------------- 3.5. Manifesto & Targeted Professions ---------------- */}
+      {(dynamicVisibility.manifesto !== false || dynamicVisibility.professions !== false) && (
       <section id="manifesto" className="py-16 sm:py-20 px-4 sm:px-6 max-w-6xl mx-auto border-t border-black/5 dark:border-white/5">
         {/* Dignified Manifesto Header & Content */}
+        {dynamicVisibility.manifesto !== false && dynamicManifesto?.enabled !== false && (
         <div className="reveal-init clay-card-elevated p-6 sm:p-10 mb-14">
           <div className="max-w-3xl">
             <span className="inline-block px-3.5 py-1 clay-pill-thick text-[11px] font-bold text-blue-600 dark:text-zinc-200 mb-3.5">
@@ -1118,8 +1135,11 @@ export const LandingPage: React.FC = () => {
             })}
           </div>
         </div>
+        )}
 
-        {/* 6 Targeted Professions & Ready-to-Test Prompts (IMAGES PRESERVED) */}
+        {/* 6 Targeted Professions & Ready-to-Test Prompts */}
+        {dynamicVisibility.professions !== false && dynamicProfessionsSettings?.enabled !== false && (
+        <>
         <div className="reveal-init text-center max-w-2xl mx-auto mb-10 sm:mb-12">
           <span className="text-xs font-bold text-[#717b91] uppercase tracking-widest block mb-1">
             TARGET AUDIENCE & USE CASES
@@ -1145,7 +1165,7 @@ export const LandingPage: React.FC = () => {
             <div className="space-y-6">
               {/* Main 3D Spotlight Stage Card */}
               <div
-                className="reveal-pop stagger-2 relative clay-card-elevated p-6 sm:p-8 rounded-[32px] overflow-hidden transition-all duration-500"
+                className="reveal-pop stagger-2 relative clay-card-elevated p-6 sm:p-8 rounded-[32px] overflow-hidden transition-colors duration-300"
                 onMouseEnter={() => setIsProfessionsPaused(true)}
                 onMouseLeave={() => setIsProfessionsPaused(false)}
                 onTouchStart={() => setIsProfessionsPaused(true)}
@@ -1196,15 +1216,15 @@ export const LandingPage: React.FC = () => {
                   </div>
 
                   {/* Content & Typewriter Animated Prompt */}
-                  <div className="lg:col-span-7 space-y-4">
-                    <div>
+                  <div className="lg:col-span-7 space-y-4 h-[350px] sm:h-[340px] flex flex-col justify-between">
+                    <div className="h-[90px] sm:h-[100px] overflow-hidden">
                       <h3
-                        className="text-xl sm:text-2xl font-black text-[#0f1420] dark:text-white tracking-tight mb-2"
+                        className="text-xl sm:text-2xl font-black text-[#0f1420] dark:text-white tracking-tight mb-2 flex items-center"
                         style={{ fontFamily: "'Estedad', sans-serif" }}
                       >
                         {currentProfession.title}
                       </h3>
-                      <p className="text-xs sm:text-sm text-[#525d75] dark:text-[#9aa5bc] leading-relaxed">
+                      <p className="text-xs sm:text-sm text-[#525d75] dark:text-[#9aa5bc] leading-relaxed line-clamp-2 flex items-start">
                         {currentProfession.desc}
                       </p>
                     </div>
@@ -1235,14 +1255,14 @@ export const LandingPage: React.FC = () => {
                         </button>
                       </div>
 
-                      {/* Typewriter text with blinking cursor */}
-                      <div className="min-h-[68px] sm:min-h-[76px] bg-black/5 dark:bg-white/[0.04] p-3.5 sm:p-4 rounded-xl border border-black/5 dark:border-white/10 flex items-center">
+                      {/* Typewriter text with blinking cursor (Locked fixed height prevents any layout shift) */}
+                      <div className="h-[96px] sm:h-[88px] bg-black/5 dark:bg-white/[0.04] p-3 sm:p-3.5 rounded-xl border border-black/5 dark:border-white/10 flex items-start overflow-hidden">
                         <p
-                          className="text-xs sm:text-sm font-medium text-[#0f1420] dark:text-[#f1f5f9] leading-7 sm:leading-8 select-all text-right w-full"
+                          className="text-xs sm:text-sm font-medium text-[#0f1420] dark:text-[#f1f5f9] leading-6 sm:leading-7 select-all text-right w-full m-0"
                           style={{ fontFamily: "'Vazirmatn', -apple-system, BlinkMacSystemFont, sans-serif" }}
                         >
                           <span>{typedPrompt}</span>
-                          <span className="inline-block w-1.5 h-4.5 bg-blue-600 dark:bg-blue-400 ms-1.5 animate-pulse align-middle rounded-sm" />
+                          <span className="inline-block w-1.5 h-4 bg-blue-600 dark:bg-blue-400 ms-1.5 animate-pulse align-middle rounded-sm" />
                         </p>
                       </div>
                     </div>
@@ -1303,10 +1323,13 @@ export const LandingPage: React.FC = () => {
             </div>
           );
         })()}
+        </>
+        )}
       </section>
+      )}
 
       {/* ---------------- 4. Hyperrealistic Image Gallery Showcase (ANIMATED 3D CLAY CAROUSEL) ---------------- */}
-      {(() => {
+      {dynamicVisibility.gallery !== false && dynamicGallerySettings?.enabled !== false && (() => {
         const baseGallery = (dynamicGallery && dynamicGallery.length > 0) ? dynamicGallery : galleryImages;
         const loopedGallery = [...baseGallery, ...baseGallery, ...baseGallery];
         const activeDotIndex = ((gallerySlide % baseGallery.length) + baseGallery.length) % baseGallery.length;
@@ -1468,7 +1491,13 @@ export const LandingPage: React.FC = () => {
         );
       })()}
 
+      {/* ---------------- 4.5. Usage & Consumption Transparency Section ---------------- */}
+      {dynamicVisibility.analytics !== false && (
+        <UsageAnalyticsSection />
+      )}
+
       {/* ---------------- 5. Transparent Hybrid Pricing Section (Thick 3D Claymorphic) ---------------- */}
+      {dynamicVisibility.pricing !== false && dynamicPricingHeader?.enabled !== false && (
       <section id="pricing" className="py-16 sm:py-20 px-4 sm:px-6 max-w-6xl mx-auto border-t border-black/5 dark:border-white/5">
         <div className="text-center max-w-2xl mx-auto mb-12 sm:mb-16">
           <span className="text-xs font-bold text-[#717b91] uppercase tracking-widest block mb-1">
@@ -1724,8 +1753,10 @@ export const LandingPage: React.FC = () => {
           </div>
         </div>
       </section>
+      )}
 
       {/* ---------------- 6. Extensive FAQ Section (10 Rich Questions in Claymorphic Style) ---------------- */}
+      {dynamicVisibility.faqs !== false && dynamicFaqsSettings?.enabled !== false && (
       <section id="faq" className="py-16 sm:py-20 px-4 sm:px-6 max-w-4xl mx-auto border-t border-black/5 dark:border-white/5">
         <div className="reveal-init text-center mb-10 sm:mb-14">
           <span className="text-xs font-bold text-[#717b91] uppercase tracking-widest block mb-1">
@@ -1799,8 +1830,45 @@ export const LandingPage: React.FC = () => {
           </div>
         </div>
       </section>
+      )}
 
       {/* ---------------- 8. Footer Component ---------------- */}
+      {/* ---------------- 7. Final Call to Action (Claymorphic CTA Banner) ---------------- */}
+      {dynamicVisibility.cta !== false && dynamicCta?.enabled !== false && (
+        <section id="cta" className="py-16 sm:py-20 px-4 sm:px-6 max-w-5xl mx-auto border-t border-black/5 dark:border-white/5">
+          <div className="clay-card-thick p-8 sm:p-14 rounded-3xl text-center relative overflow-hidden flex flex-col items-center border border-zinc-200/80 dark:border-zinc-800/80 shadow-2xl">
+            <div className="w-14 h-14 rounded-2xl clay-btn-primary-thick flex items-center justify-center text-white mb-6 shadow-md shadow-blue-500/25">
+              <Sparkles className="w-7 h-7" />
+            </div>
+            <h2 className="text-2xl sm:text-4xl font-black text-[#0f1420] dark:text-white py-2 px-1 mb-3" style={{ fontFamily: "'Estedad', sans-serif" }}>
+              {dynamicCta?.title || 'همین حالا با ۵۰,۰۰۰ تومان هدیه شروع کنید'}
+            </h2>
+            <p className="text-xs sm:text-sm text-[#525d75] dark:text-[#9aa5bc] max-w-xl mx-auto leading-relaxed mb-8 font-normal">
+              {dynamicCta?.desc || 'ثبت‌نام در کمتر از ۳۰ ثانیه بدون نیاز به وارد کردن کارت بانکی؛ بلافاصله وارد محیط چت شوید و لذت کار با برترین مدل‌های جهان را تجربه کنید.'}
+            </p>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3.5 w-full sm:w-auto">
+              <Link
+                to={dynamicCta?.primaryBtnLink || '/chat'}
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-8 py-3.5 rounded-2xl clay-btn-primary-thick text-white text-sm font-black shadow-lg shadow-blue-500/25 transition-all hover:scale-105 active:scale-95 cursor-pointer"
+                style={{ fontFamily: "'Estedad', sans-serif" }}
+              >
+                <span>{dynamicCta?.primaryBtnText || 'ورود به محیط چت'}</span>
+                <ArrowLeft className="w-4 h-4" />
+              </Link>
+              {dynamicCta?.secondaryBtnText && (
+                <Link
+                  to={dynamicCta?.secondaryBtnLink || '/store'}
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-2xl clay-btn-thick text-[#0f1420] dark:text-[#f3f5f9] text-sm font-bold transition-all hover:scale-105 active:scale-95 cursor-pointer"
+                  style={{ fontFamily: "'Estedad', sans-serif" }}
+                >
+                  <span>{dynamicCta.secondaryBtnText}</span>
+                </Link>
+              )}
+            </div>
+          </div>
+        </section>
+      )}
+
       <Footer />
 
       {/* Checkout Modal for Plan Products */}

@@ -214,18 +214,18 @@
   --error-border: transparent;
   
   /* Clay Shadows - Light Mode */
-  --clay-shadow-out: 8px 8px 16px rgba(166, 178, 203, 0.6), -8px -8px 16px rgba(255, 255, 255, 0.9);
-  --clay-shadow-out-sm: 4px 4px 8px rgba(166, 178, 203, 0.5), -4px -4px 8px rgba(255, 255, 255, 0.9);
-  --clay-shadow-out-hover: 12px 12px 20px rgba(166, 178, 203, 0.6), -12px -12px 20px rgba(255, 255, 255, 1);
-  --clay-shadow-in: inset 4px 4px 8px rgba(166, 178, 203, 0.6), inset -4px -4px 8px rgba(255, 255, 255, 0.9);
-  --clay-shadow-in-deep: inset 6px 6px 12px rgba(166, 178, 203, 0.7), inset -6px -6px 12px rgba(255, 255, 255, 1);
+  --clay-shadow-out: 6px 6px 14px rgba(166, 178, 203, 0.35), -5px -5px 12px rgba(255, 255, 255, 0.7);
+  --clay-shadow-out-sm: 3px 3px 6px rgba(166, 178, 203, 0.25), -3px -3px 6px rgba(255, 255, 255, 0.6);
+  --clay-shadow-out-hover: 8px 10px 20px rgba(166, 178, 203, 0.4), -6px -6px 14px rgba(255, 255, 255, 0.75);
+  --clay-shadow-in: inset 3px 3px 6px rgba(166, 178, 203, 0.3), inset -3px -3px 6px rgba(255, 255, 255, 0.65);
+  --clay-shadow-in-deep: inset 4px 4px 10px rgba(166, 178, 203, 0.4), inset -4px -4px 10px rgba(255, 255, 255, 0.75);
 }
 
 [data-theme="dark"], .dark {
-  --bg-main: #262626; /* Tailwind Neutral 800 - Softer, less intense dark gray */
-  --header-bg: rgba(38, 38, 38, 0.85);
-  --sidebar-bg: #262626;
-  --card-bg: #2c2c2c; /* Slightly lighter than bg-main to stand out */
+  --bg-main: #18181b; /* zinc-900: elegant dark gray matching footer */
+  --header-bg: rgba(24, 24, 27, 0.85);
+  --sidebar-bg: #18181b;
+  --card-bg: #27272a; /* zinc-800 for cards to stand out */
   --card-border: var(--border-subtle);
   
   --btn-bg: #262626; 
@@ -253,11 +253,11 @@
   --error-border: transparent;
   
   /* Clay Shadows - Less intense black shadows */
-  --clay-shadow-out: 8px 8px 16px rgba(0, 0, 0, 0.5), -6px -6px 14px rgba(255, 255, 255, 0.05);
-  --clay-shadow-out-sm: 4px 4px 8px rgba(0, 0, 0, 0.4), -3px -3px 6px rgba(255, 255, 255, 0.04);
-  --clay-shadow-out-hover: 10px 10px 20px rgba(0, 0, 0, 0.6), -8px -8px 18px rgba(255, 255, 255, 0.06);
-  --clay-shadow-in: inset 4px 4px 8px rgba(0, 0, 0, 0.5), inset -4px -4px 8px rgba(255, 255, 255, 0.04);
-  --clay-shadow-in-deep: inset 6px 6px 12px rgba(0, 0, 0, 0.6), inset -6px -6px 12px rgba(255, 255, 255, 0.05);
+  --clay-shadow-out: 6px 6px 14px rgba(0, 0, 0, 0.45), -4px -4px 10px rgba(255, 255, 255, 0.03);
+  --clay-shadow-out-sm: 3px 3px 6px rgba(0, 0, 0, 0.35), -2px -2px 5px rgba(255, 255, 255, 0.02);
+  --clay-shadow-out-hover: 8px 10px 20px rgba(0, 0, 0, 0.5), -5px -5px 12px rgba(255, 255, 255, 0.04);
+  --clay-shadow-in: inset 3px 3px 6px rgba(0, 0, 0, 0.35), inset -2px -2px 5px rgba(255, 255, 255, 0.02);
+  --clay-shadow-in-deep: inset 4px 4px 10px rgba(0, 0, 0, 0.45), inset -3px -3px 8px rgba(255, 255, 255, 0.03);
 }
 
 /* ==========================================================================
@@ -301,12 +301,25 @@
   transition: all 0.3s ease;
 }
 
-/* Modals */
+/* Modals (Claymorphic 3D Elevated Dialog) */
 .clay-modal {
   background: var(--card-bg);
   border-radius: 32px;
-  box-shadow: var(--clay-shadow-out-hover), var(--clay-shadow-in);
+  box-shadow: 
+    14px 20px 40px rgba(0, 0, 0, 0.25),
+    -4px -4px 12px rgba(255, 255, 255, 0.5),
+    inset 2px 2px 4px rgba(255, 255, 255, 0.6),
+    inset -2px -2px 4px rgba(0, 0, 0, 0.06);
   transition: all 0.3s ease;
+}
+
+.dark .clay-modal, [data-theme="dark"] .clay-modal {
+  background: var(--card-bg);
+  box-shadow: 
+    16px 22px 45px rgba(0, 0, 0, 0.6),
+    -3px -3px 10px rgba(255, 255, 255, 0.02),
+    inset 1px 1px 2px rgba(255, 255, 255, 0.06),
+    inset -2px -2px 5px rgba(0, 0, 0, 0.25);
 }
 
 /* Bubbles */
@@ -369,10 +382,10 @@
   border: none;
   border-radius: 20px;
   box-shadow: 
-    6px 6px 12px rgba(0, 0, 0, 0.3),
-    -4px -4px 10px rgba(255, 255, 255, 0.3),
-    inset 2px 2px 4px rgba(255, 255, 255, 0.4),
-    inset -2px -2px 4px rgba(0, 0, 0, 0.2);
+    5px 5px 12px rgba(0, 0, 0, 0.25),
+    -2px -2px 6px rgba(255, 255, 255, 0.2),
+    inset 1px 1px 2px rgba(255, 255, 255, 0.3),
+    inset -1px -1px 2px rgba(0, 0, 0, 0.15);
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   font-weight: 700;
 }
@@ -448,6 +461,21 @@
 .clay-icon-btn:active {
   transform: translateY(1px) scale(0.94);
   box-shadow: var(--clay-shadow-in);
+}
+
+/* Soft attractive gradient for news titles */
+.clay-news-title {
+  background: linear-gradient(135deg, #0f766e 0%, #059669 45%, #0284c7 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.dark .clay-news-title {
+  background: linear-gradient(135deg, #5eead4 0%, #6ee7b7 45%, #38bdf8 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 /* Badges / Pills */
@@ -1757,4 +1785,4 @@ img.emoji {
     transform: none !important;
     transition: none !important;
   }
-}
+}

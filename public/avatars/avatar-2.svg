@@ -1,32 +1,64 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
   <defs>
-    <linearGradient id="bg2" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#8b5cf6"/>
-      <stop offset="100%" stop-color="#6d28d9"/>
+    <radialGradient id="bgPro2" cx="30%" cy="25%" r="75%">
+      <stop offset="0%" stop-color="#6366f1"/>
+      <stop offset="60%" stop-color="#4338ca"/>
+      <stop offset="100%" stop-color="#1e1b4b"/>
+    </radialGradient>
+    <radialGradient id="skin2" cx="40%" cy="35%" r="65%">
+      <stop offset="0%" stop-color="#fef08a"/>
+      <stop offset="60%" stop-color="#fcd34d"/>
+      <stop offset="100%" stop-color="#d97706"/>
+    </radialGradient>
+    <linearGradient id="hair2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#475569"/>
+      <stop offset="100%" stop-color="#1e293b"/>
     </linearGradient>
-    <linearGradient id="metal2" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#fdf4ff"/>
-      <stop offset="100%" stop-color="#e9d5ff"/>
+    <linearGradient id="blazer2" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#312e81"/>
+      <stop offset="100%" stop-color="#1e1b4b"/>
     </linearGradient>
+    <filter id="proShadow2" x="-10%" y="-10%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="5" stdDeviation="5" flood-color="#000000" flood-opacity="0.3"/>
+    </filter>
   </defs>
-  <circle cx="50" cy="50" r="48" fill="url(#bg2)"/>
-  <!-- Antennas dual -->
-  <line x1="40" y1="26" x2="34" y2="16" stroke="#c4b5fd" stroke-width="3.5" stroke-linecap="round"/>
-  <line x1="60" y1="26" x2="66" y2="16" stroke="#c4b5fd" stroke-width="3.5" stroke-linecap="round"/>
-  <circle cx="34" cy="14" r="4" fill="#a78bfa"/>
-  <circle cx="66" cy="14" r="4" fill="#a78bfa"/>
-  <!-- Ears -->
-  <circle cx="24" cy="46" r="6" fill="#a78bfa"/>
-  <circle cx="76" cy="46" r="6" fill="#a78bfa"/>
-  <!-- Head -->
-  <rect x="26" y="26" width="48" height="40" rx="14" fill="url(#metal2)"/>
-  <!-- Curved Visor -->
-  <rect x="31" y="33" width="38" height="19" rx="8" fill="#1e1b4b"/>
-  <!-- Glowing Eyes -->
-  <rect x="37" y="38" width="9" height="7" rx="3.5" fill="#f43f5e"/>
-  <rect x="54" y="38" width="9" height="7" rx="3.5" fill="#f43f5e"/>
-  <!-- Cheerful Mouth -->
-  <line x1="43" y1="58" x2="57" y2="58" stroke="#7c3aed" stroke-width="2.5" stroke-linecap="round"/>
-  <!-- Body -->
-  <path d="M 36 66 L 64 66 L 70 85 Q 50 88 30 85 Z" fill="#c4b5fd"/>
+
+  <circle cx="60" cy="60" r="54" fill="url(#bgPro2)" filter="url(#proShadow2)"/>
+  <ellipse cx="60" cy="22" rx="36" ry="12" fill="#ffffff" opacity="0.15"/>
+
+  <!-- Blazer & Inner Shirt -->
+  <path d="M 28 114 C 28 92, 42 86, 60 86 C 78 86, 92 92, 92 114 Z" fill="url(#blazer2)"/>
+  <!-- Inner White Shirt V-Neck -->
+  <polygon points="50,86 70,86 60,102" fill="#ffffff"/>
+  <!-- Lapels -->
+  <path d="M 46 86 L 55 106 L 36 114 Z" fill="#4338ca"/>
+  <path d="M 74 86 L 65 106 L 84 114 Z" fill="#4338ca"/>
+
+  <!-- Neck -->
+  <rect x="53" y="68" width="14" height="15" fill="url(#skin2)"/>
+
+  <!-- Hair Back -->
+  <ellipse cx="60" cy="56" rx="30" ry="32" fill="url(#hair2)"/>
+
+  <!-- Face -->
+  <ellipse cx="60" cy="55" rx="21" ry="24" fill="url(#skin2)"/>
+
+  <!-- Professional Bob Cut Hair Front -->
+  <path d="M 39 48 C 38 28, 52 24, 60 24 C 74 24, 82 28, 81 48 C 76 34, 66 32, 60 33 C 48 32, 42 36, 39 48 Z" fill="url(#hair2)"/>
+
+  <!-- Glasses (Stylish Academic Round) -->
+  <circle cx="50" cy="53" r="7.5" fill="none" stroke="#fbbf24" stroke-width="1.8"/>
+  <circle cx="70" cy="53" r="7.5" fill="none" stroke="#fbbf24" stroke-width="1.8"/>
+  <line x1="57.5" y1="53" x2="62.5" y2="53" stroke="#fbbf24" stroke-width="1.8"/>
+  <!-- Lens reflection -->
+  <path d="M 46 48 L 51 56" stroke="#ffffff" stroke-width="1.2" opacity="0.6"/>
+  <path d="M 66 48 L 71 56" stroke="#ffffff" stroke-width="1.2" opacity="0.6"/>
+
+  <!-- Eyes -->
+  <circle cx="50" cy="53" r="2.2" fill="#1e1b4b"/>
+  <circle cx="70" cy="53" r="2.2" fill="#1e1b4b"/>
+
+  <!-- Nose & Smile -->
+  <path d="M 59 58 L 61 62 L 59 63" fill="none" stroke="#b45309" stroke-width="1.5" stroke-linecap="round"/>
+  <path d="M 54 68 Q 60 71 66 68" fill="none" stroke="#92400e" stroke-width="2" stroke-linecap="round"/>
 </svg>
