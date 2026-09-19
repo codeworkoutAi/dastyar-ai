@@ -818,7 +818,7 @@ export const MessageInput: React.FC = React.memo(() => {
  )}
 
  {/* Input Frame */}
- <div className={`relative flex items-end gap-2 sm:gap-3 clay-surface !rounded-full p-2 sm:p-2.5 transition-all ${isStreaming ? 'opacity-80' : ''}`}>
+ <div className={`relative flex items-end gap-2 sm:gap-3 clay-card !rounded-full p-2 sm:p-2.5 transition-all ${isStreaming ? 'opacity-80' : ''}`}>
  {/* Floating Compact Image Engine Pill Bar (Monochrome Minimal Style) */}
  {showImageEngineModal && (
  <div className="absolute bottom-full right-0 left-0 mb-2 z-[70] flex items-center justify-between gap-2 px-3 py-2 rounded-2xl clay-surface backdrop-blur-xl border border-[var(--card-border)] select-none" dir="rtl"

@@ -715,7 +715,7 @@ export const SettingsModal: React.FC = () => {
  </div>
  <div>
  <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">دستورالعمل سیستم (System Prompt)</label>
- <textarea value={tempSettings.persona.systemPrompt} onChange={(e) => setTempSettings({ ...tempSettings, persona: { ...tempSettings.persona, systemPrompt: e.target.value } })} className="w-full clay-card rounded-xl py-3 px-4 text-sm focus:border-blue-500 outline-none transition-all h-32 resize-none" placeholder="مثال: شما یک متخصص برنامه‌نویسی هستید..." />
+ <textarea value={tempSettings.persona.systemPrompt} onChange={(e) => setTempSettings({ ...tempSettings, persona: { ...tempSettings.persona, systemPrompt: e.target.value } })} className="w-full clay-card rounded-xl py-3 px-4 text-sm focus:border-zinc-400 dark:focus:border-zinc-500 outline-none transition-all h-32 resize-none" placeholder="مثال: شما یک متخصص برنامه‌نویسی هستید..." />
  </div>
  <div>
  <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2 flex justify-between">
@@ -737,7 +737,7 @@ export const SettingsModal: React.FC = () => {
  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
  <div>
  <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">فونت فارسی</label>
- <select value={tempSettings.appearance.font} onChange={(e) => setTempSettings({ ...tempSettings, appearance: { ...tempSettings.appearance, font: e.target.value as FontFamily } })} className="w-full clay-card rounded-xl py-2.5 px-3 text-sm outline-none focus:border-blue-500 font-medium">
+ <select value={tempSettings.appearance.font} onChange={(e) => setTempSettings({ ...tempSettings, appearance: { ...tempSettings.appearance, font: e.target.value as FontFamily } })} className="w-full clay-card rounded-xl py-2.5 px-3 text-sm outline-none focus:border-zinc-400 dark:focus:border-zinc-500 font-medium">
  <option value="hybrid">✨ ترکیب هوشمند (پیش‌فرض مدرن)</option>
  <option value="vazir">وزیرمتن (Vazirmatn)</option>
  <option value="estedad">استعداد (Estedad)</option>
@@ -747,7 +747,7 @@ export const SettingsModal: React.FC = () => {
  </div>
  <div>
  <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">پوسته</label>
- <select value={tempSettings.appearance.theme} onChange={(e) => setTempSettings({ ...tempSettings, appearance: { ...tempSettings.appearance, theme: e.target.value as ThemeMode } })} className="w-full clay-card rounded-xl py-2.5 px-3 text-sm outline-none focus:border-blue-500">
+ <select value={tempSettings.appearance.theme} onChange={(e) => setTempSettings({ ...tempSettings, appearance: { ...tempSettings.appearance, theme: e.target.value as ThemeMode } })} className="w-full clay-card rounded-xl py-2.5 px-3 text-sm outline-none focus:border-zinc-400 dark:focus:border-zinc-500">
  <option value="dark">تاریک (Dark)</option>
  <option value="light">روشن (Light)</option>
  <option value="system">خودکار (System)</option>

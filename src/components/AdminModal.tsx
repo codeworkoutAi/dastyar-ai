@@ -1127,7 +1127,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
  placeholder="جستجوی کاربر (نام، ایمیل، تلفن، شناسه، تلگرام)..."
  value={userSearchQuery}
  onChange={(e) => setUserSearchQuery(e.target.value)}
- className="block w-full pr-10 pl-3 py-2 clay-input rounded-xl leading-5 text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+ className="block w-full pr-10 pl-3 py-2 clay-input rounded-xl leading-5 text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-400 dark:focus:ring-zinc-500 focus:border-zinc-400 dark:focus:border-zinc-500 transition-colors"
  dir="rtl"
  />
  </div>
@@ -1324,7 +1324,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
  value={profileFormName}
  onChange={(e) => setProfileFormName(e.target.value)}
  placeholder="مثال: Qwen 3.6 27B (رایگان)"
- className="w-full px-3.5 py-2.5 rounded-xl clay-input text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-blue-500 transition-colors"
+ className="w-full px-3.5 py-2.5 rounded-xl clay-input text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-zinc-400 dark:focus:border-zinc-500 transition-colors"
  required
  />
  </div>
@@ -1378,7 +1378,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
  value={profileFormModelName}
  onChange={(e) => setProfileFormModelName(e.target.value)}
  placeholder="مثال: qwen/qwen3.6-27b یا gemini-3.1-flash-lite"
- className="w-full px-3.5 py-2.5 rounded-xl clay-input text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-blue-500 transition-colors"
+ className="w-full px-3.5 py-2.5 rounded-xl clay-input text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-zinc-400 dark:focus:border-zinc-500 transition-colors"
  dir="ltr"
  required
  />
@@ -1392,7 +1392,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
  <select
  value={profileFormRole}
  onChange={(e) => setProfileFormRole(e.target.value as any)}
- className="w-full px-3.5 py-2.5 rounded-xl clay-input text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-blue-500 transition-colors"
+ className="w-full px-3.5 py-2.5 rounded-xl clay-input text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-zinc-400 dark:focus:border-zinc-500 transition-colors"
  >
  <option value="default">عمومی (چت و مکالمه پیش‌فرض)</option>
  <option value="coding">برنامه‌نویسی و کدنویسی</option>
@@ -1409,7 +1409,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
  value={profileFormBaseUrl}
  onChange={(e) => setProfileFormBaseUrl(e.target.value)}
  placeholder="مثال: https://api.groq.com/openai/v1 یا https://generativelanguage.googleapis.com/v1beta/openai"
- className="w-full px-3.5 py-2.5 rounded-xl clay-input text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-blue-500 transition-colors"
+ className="w-full px-3.5 py-2.5 rounded-xl clay-input text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-zinc-400 dark:focus:border-zinc-500 transition-colors"
  dir="ltr"
  required
  />
@@ -1424,7 +1424,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
  value={profileFormApiKey}
  onChange={(e) => setProfileFormApiKey(e.target.value)}
  placeholder={editingDefaultProfile ? '(بدون تغییر - مقدار قبلی حفظ می‌شود)' : 'کلید دسترسی سرور'}
- className="w-full px-3.5 py-2.5 rounded-xl clay-input text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-blue-500 transition-colors"
+ className="w-full px-3.5 py-2.5 rounded-xl clay-input text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-zinc-400 dark:focus:border-zinc-500 transition-colors"
  dir="ltr"
  />
  <span className="text-[10px] text-zinc-400 mt-1 block">
@@ -1440,7 +1440,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
  type="number"
  value={profileFormOrderIndex}
  onChange={(e) => setProfileFormOrderIndex(parseInt(toEnglishDigits(e.target.value)) || 0)}
- className="w-full px-3.5 py-2.5 rounded-xl clay-input text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-blue-500 transition-colors"
+ className="w-full px-3.5 py-2.5 rounded-xl clay-input text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-zinc-400 dark:focus:border-zinc-500 transition-colors"
  min={0}
  />
  </div>
@@ -1451,7 +1451,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
  id="profileFormIsActive"
  checked={profileFormIsActive}
  onChange={(e) => setProfileFormIsActive(e.target.checked)}
- className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 border-zinc-300  "
+ className="w-4 h-4 rounded text-blue-600 focus:ring-zinc-400 dark:focus:ring-zinc-500 border-zinc-300  "
  />
  <label htmlFor="profileFormIsActive" className="text-zinc-700 dark:text-zinc-300 font-bold cursor-pointer">
  این کارت فعال باشد و برای کاربران نمایش داده شود
@@ -1467,7 +1467,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
  value={profileFormCustomHeaders}
  onChange={(e) => setProfileFormCustomHeaders(e.target.value)}
  placeholder='مثال: {"HTTP-Referer":"https://ai.studio"} یا هدر: مقدار'
- className="w-full px-3.5 py-2.5 rounded-xl clay-input text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-blue-500 transition-colors font-mono"
+ className="w-full px-3.5 py-2.5 rounded-xl clay-input text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-zinc-400 dark:focus:border-zinc-500 transition-colors font-mono"
  dir="ltr"
  />
  </div>
@@ -1979,7 +1979,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
  type="checkbox"
  checked={isPopular}
  onChange={(e) => setIsPopular(e.target.checked)}
- className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 border-zinc-300 "
+ className="w-4 h-4 rounded text-blue-600 focus:ring-zinc-400 dark:focus:ring-zinc-500 border-zinc-300 "
  />
  <span className="text-xs font-bold text-zinc-800 dark:text-zinc-200">بسته برگزیده و محبوب (کارت سفید و برجسته)</span>
  </label>
@@ -1989,7 +1989,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
  type="checkbox"
  checked={showOnLanding}
  onChange={(e) => setShowOnLanding(e.target.checked)}
- className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 border-zinc-300 "
+ className="w-4 h-4 rounded text-blue-600 focus:ring-zinc-400 dark:focus:ring-zinc-500 border-zinc-300 "
  />
  <span className="text-xs font-bold text-zinc-800 dark:text-zinc-200">نمایش در بخش تعرفه‌های صفحه اصلی</span>
  </label>
@@ -2240,7 +2240,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
  type="text"
  value={editNewsTitle}
  onChange={(e) => setEditNewsTitle(e.target.value)}
- className="w-full px-4 py-2.5 rounded-xl clay-input focus:border-blue-500 outline-none transition-all font-medium text-sm text-zinc-800 dark:text-zinc-100"
+ className="w-full px-4 py-2.5 rounded-xl clay-input focus:border-zinc-400 dark:focus:border-zinc-500 outline-none transition-all font-medium text-sm text-zinc-800 dark:text-zinc-100"
  placeholder="عنوان جدید خبر..."
  />
  </div>
@@ -2250,7 +2250,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
  <textarea
  value={editNewsContent}
  onChange={(e) => setEditNewsContent(e.target.value)}
- className="w-full px-4 py-2.5 rounded-xl clay-input focus:border-blue-500 outline-none transition-all min-h-[160px] text-sm text-zinc-800 dark:text-zinc-100 leading-relaxed custom-scrollbar"
+ className="w-full px-4 py-2.5 rounded-xl clay-input focus:border-zinc-400 dark:focus:border-zinc-500 outline-none transition-all min-h-[160px] text-sm text-zinc-800 dark:text-zinc-100 leading-relaxed custom-scrollbar"
  placeholder="متن کامل مقاله یا خبر..."
  />
  </div>
@@ -2284,7 +2284,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
  id="rebroadcastTelegram"
  checked={editNewsRebroadcast}
  onChange={(e) => setEditNewsRebroadcast(e.target.checked)}
- className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 cursor-pointer"
+ className="w-4 h-4 rounded text-blue-600 focus:ring-zinc-400 dark:focus:ring-zinc-500 cursor-pointer"
  />
  <label htmlFor="rebroadcastTelegram" className="text-xs font-bold text-zinc-700 dark:text-zinc-300 cursor-pointer select-none">
  ارسال مجدد این خبر به کانال تلگرام پس از ذخیره تغییرات
@@ -2495,7 +2495,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
  value={orderSearch}
  onChange={(e) => setOrderSearch(e.target.value)}
  placeholder="جستجوی سفارش، خریدار، محصول..."
- className="w-full pr-9 pl-4 py-1.5 text-xs rounded-xl clay-input focus:border-blue-500 focus:outline-none transition-all placeholder:text-zinc-400"
+ className="w-full pr-9 pl-4 py-1.5 text-xs rounded-xl clay-input focus:border-zinc-400 dark:focus:border-zinc-500 focus:outline-none transition-all placeholder:text-zinc-400"
  />
  {orderSearch && (
  <button
@@ -2950,7 +2950,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
  value={customLicenseInput}
  onChange={(e) => setCustomLicenseInput(e.target.value)}
  placeholder="کلید لایسنس جدید را وارد کنید..."
- className="flex-1 px-3 py-2 text-xs font-mono rounded-xl clay-modal focus:border-blue-500 focus:outline-none"
+ className="flex-1 px-3 py-2 text-xs font-mono rounded-xl clay-modal focus:border-zinc-400 dark:focus:border-zinc-500 focus:outline-none"
  dir="ltr"
  />
  <button

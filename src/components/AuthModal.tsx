@@ -294,7 +294,7 @@ export default function AuthModal() {
  <label className="block mb-1.5 text-xs font-medium text-zinc-600 dark:text-zinc-400">نام نمایشی</label>
  <div className="relative">
  <UserCircle className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400" size={18} />
- <input type="text" value={name} onChange={e => setName(e.target.value)} style={{ paddingRight: '2.85rem' }} className="w-full pl-3 pr-10 py-2.5 clay-input rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none text-zinc-900 dark:text-zinc-100 text-sm"
+ <input type="text" value={name} onChange={e => setName(e.target.value)} style={{ paddingRight: '2.85rem' }} className="w-full pl-3 pr-10 py-2.5 clay-input rounded-xl focus:ring-2 focus:ring-zinc-400 dark:focus:ring-zinc-500 focus:border-transparent transition-all outline-none text-zinc-900 dark:text-zinc-100 text-sm"
  placeholder="مثال: علی رضایی"
  />
  </div>
@@ -422,7 +422,7 @@ export default function AuthModal() {
  <div className="relative">
  <Lock className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400" size={18} />
  <input type="password" value={password} onChange={e => setPassword(e.target.value)}
- className="w-full pl-3 pr-10 py-2.5 clay-input rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none text-zinc-900 dark:text-zinc-100 text-sm"
+ className="w-full pl-3 pr-10 py-2.5 clay-input rounded-xl focus:ring-2 focus:ring-zinc-400 dark:focus:ring-zinc-500 focus:border-transparent transition-all outline-none text-zinc-900 dark:text-zinc-100 text-sm"
  placeholder="حداقل ۶ کاراکتر"
  required
  dir="ltr"
@@ -449,7 +449,7 @@ export default function AuthModal() {
  <div className="relative">
  <Mail className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400" size={18} />
  <input type="email" value={email} onChange={e => setEmail(e.target.value)}
- className="w-full pl-3 pr-10 py-2.5 clay-input rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none text-zinc-900 dark:text-zinc-100 text-sm"
+ className="w-full pl-3 pr-10 py-2.5 clay-input rounded-xl focus:ring-2 focus:ring-zinc-400 dark:focus:ring-zinc-500 focus:border-transparent transition-all outline-none text-zinc-900 dark:text-zinc-100 text-sm"
  placeholder="example@mail.com"
  required
  dir="ltr"
@@ -504,7 +504,7 @@ export default function AuthModal() {
  <div className="relative">
  <Mail className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400" size={18} />
  <input type="email" value={email} onChange={e => setEmail(e.target.value)}
- className="w-full pl-3 pr-10 py-2.5 clay-input rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none text-zinc-900 dark:text-zinc-100 text-sm"
+ className="w-full pl-3 pr-10 py-2.5 clay-input rounded-xl focus:ring-2 focus:ring-zinc-400 dark:focus:ring-zinc-500 focus:border-transparent transition-all outline-none text-zinc-900 dark:text-zinc-100 text-sm"
  placeholder="example@mail.com"
  required
  dir="ltr"
@@ -526,7 +526,7 @@ export default function AuthModal() {
  <div className="relative">
  <Lock className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400" size={18} />
  <input type="password" value={password} onChange={e => setPassword(e.target.value)}
- className="w-full pl-3 pr-10 py-2.5 clay-input rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none text-zinc-900 dark:text-zinc-100 text-sm"
+ className="w-full pl-3 pr-10 py-2.5 clay-input rounded-xl focus:ring-2 focus:ring-zinc-400 dark:focus:ring-zinc-500 focus:border-transparent transition-all outline-none text-zinc-900 dark:text-zinc-100 text-sm"
  placeholder="حداقل ۶ کاراکتر"
  required
  dir="ltr"

@@ -255,7 +255,7 @@ export const WalletModal: React.FC = () => {
  placeholder="مثلاً ۵۰,۰۰۰"
  value={customAmount}
  onChange={(e) => setCustomAmount(e.target.value)}
- className="w-full pl-12 pr-3 py-2.5 text-sm font-semibold clay-input rounded-xl text-zinc-900 dark:text-white focus:outline-hidden focus:border-blue-500"
+ className="w-full pl-12 pr-3 py-2.5 text-sm font-semibold clay-input rounded-xl text-zinc-900 dark:text-white focus:outline-hidden focus:border-zinc-400 dark:focus:border-zinc-500"
  />
  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-zinc-400 pointer-events-none">
  تومان

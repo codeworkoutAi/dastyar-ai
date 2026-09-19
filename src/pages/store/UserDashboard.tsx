@@ -464,7 +464,7 @@ export const UserDashboard = () => {
                     type="text" 
                     value={profileData.name} 
                     onChange={e => setProfileData({...profileData, name: e.target.value})} 
-                    className="w-full px-4 py-3 rounded-2xl clay-inset-thick outline-none focus:border-blue-500 text-xs transition-all border border-transparent font-medium" 
+                    className="w-full px-4 py-3 rounded-2xl clay-inset-thick outline-none focus:border-zinc-400 dark:focus:border-zinc-500 text-xs transition-all border border-transparent font-medium" 
                     required 
                   />
                 </div>
@@ -475,7 +475,7 @@ export const UserDashboard = () => {
                     type="email" 
                     value={profileData.email} 
                     onChange={e => setProfileData({...profileData, email: e.target.value})} 
-                    className="w-full px-4 py-3 rounded-2xl clay-inset-thick outline-none focus:border-blue-500 text-xs transition-all border border-transparent font-medium text-left" 
+                    className="w-full px-4 py-3 rounded-2xl clay-inset-thick outline-none focus:border-zinc-400 dark:focus:border-zinc-500 text-xs transition-all border border-transparent font-medium text-left" 
                     dir="ltr" 
                   />
                 </div>
@@ -528,7 +528,7 @@ export const UserDashboard = () => {
                     type="password" 
                     value={passData.currentPassword} 
                     onChange={e => setPassData({...passData, currentPassword: e.target.value})} 
-                    className="w-full px-4 py-3 rounded-2xl clay-inset-thick outline-none focus:border-blue-500 text-xs transition-all border border-transparent" 
+                    className="w-full px-4 py-3 rounded-2xl clay-inset-thick outline-none focus:border-zinc-400 dark:focus:border-zinc-500 text-xs transition-all border border-transparent" 
                     dir="ltr" 
                     required 
                   />
@@ -540,7 +540,7 @@ export const UserDashboard = () => {
                     value={passData.newPassword} 
                     onChange={e => setPassData({...passData, newPassword: e.target.value})} 
                     minLength={6} 
-                    className="w-full px-4 py-3 rounded-2xl clay-inset-thick outline-none focus:border-blue-500 text-xs transition-all border border-transparent" 
+                    className="w-full px-4 py-3 rounded-2xl clay-inset-thick outline-none focus:border-zinc-400 dark:focus:border-zinc-500 text-xs transition-all border border-transparent" 
                     dir="ltr" 
                     required 
                   />
@@ -916,7 +916,7 @@ export const UserDashboard = () => {
                       onChange={(e) => setRedeemCode(e.target.value)} 
                       placeholder="X7Y9-ABCD-1234" 
                       dir="ltr" 
-                      className="flex-1 px-4 py-3 rounded-2xl clay-inset-thick outline-none focus:border-blue-500 text-xs transition-all border border-transparent font-mono"
+                      className="flex-1 px-4 py-3 rounded-2xl clay-inset-thick outline-none focus:border-zinc-400 dark:focus:border-zinc-500 text-xs transition-all border border-transparent font-mono"
                     />
                     <button 
                       type="submit" 

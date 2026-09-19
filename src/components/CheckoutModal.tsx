@@ -195,7 +195,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ product, isOpen, o
  <input type="text" value={trackingNumber}
  onChange={(e) => setTrackingNumber(e.target.value)}
  placeholder="مثال: 123456 یا 8765"
- className="w-full clay-input  px-3.5 py-2.5 rounded-xl clay-surface  focus:border-blue-500 focus:ring-1 outline-none text-xs sm:text-sm font-mono text-center"
+ className="w-full clay-input  px-3.5 py-2.5 rounded-xl clay-surface  focus:border-zinc-400 dark:focus:border-zinc-500 focus:ring-1 outline-none text-xs sm:text-sm font-mono text-center"
  dir="ltr"
  />
  </div>

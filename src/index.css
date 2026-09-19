@@ -183,27 +183,27 @@
 }
 
 :root, [data-theme="light"], .light {
-  --bg-main: #E8EDF2; /* Soft clay background */
-  --header-bg: rgba(232, 237, 242, 0.85);
-  --sidebar-bg: #E8EDF2;
-  --card-bg: #E8EDF2;
+  --bg-main: #EEEEEE; /* Soft clay background */
+  --header-bg: rgba(238, 238, 238, 0.85);
+  --sidebar-bg: #EEEEEE;
+  --card-bg: #EEEEEE;
   --card-border: transparent; /* Clay doesn't use hard borders usually */
   
-  --btn-bg: #E8EDF2;
-  --btn-hover: #DDE4EC;
+  --btn-bg: #EEEEEE;
+  --btn-hover: #E3E3E3;
   
-  --input-bg: #E8EDF2;
+  --input-bg: #EEEEEE;
   --input-border: transparent;
   
   --bubble-ai-bg: transparent;
-  --bubble-user-bg: #DDE4EC; /* Slightly deeper for contrast */
+  --bubble-user-bg: #E3E3E3; /* Slightly deeper for contrast */
   
   --text-main: #2A313C;
   --text-muted: #4A5568;
   --text-dim: #718096;
   
-  --border-subtle: rgba(166, 178, 203, 0.2);
-  --border-strong: rgba(166, 178, 203, 0.4);
+  --border-subtle: rgba(160, 160, 160, 0.2);
+  --border-strong: rgba(160, 160, 160, 0.4);
   
   --accent-primary: #3B82F6;
   --accent-hover: #2563EB;
@@ -214,11 +214,11 @@
   --error-border: transparent;
   
   /* True Claymorphism Shadows - Light Mode */
-  --clay-shadow-out: 8px 8px 16px rgba(166, 178, 203, 0.25), inset 4px 4px 8px rgba(255, 255, 255, 0.8), inset -4px -4px 8px rgba(166, 178, 203, 0.2);
-  --clay-shadow-out-sm: 4px 4px 8px rgba(166, 178, 203, 0.2), inset 2px 2px 4px rgba(255, 255, 255, 0.8), inset -2px -2px 4px rgba(166, 178, 203, 0.2);
-  --clay-shadow-out-hover: 12px 12px 24px rgba(166, 178, 203, 0.3), inset 4px 4px 8px rgba(255, 255, 255, 0.9), inset -4px -4px 8px rgba(166, 178, 203, 0.15);
-  --clay-shadow-in: inset 4px 4px 8px rgba(166, 178, 203, 0.25), inset -4px -4px 8px rgba(255, 255, 255, 0.8);
-  --clay-shadow-in-deep: inset 6px 6px 12px rgba(166, 178, 203, 0.35), inset -6px -6px 12px rgba(255, 255, 255, 0.9);
+  --clay-shadow-out: 8px 8px 16px rgba(160, 160, 160, 0.25), inset 4px 4px 8px rgba(255, 255, 255, 0.8), inset -4px -4px 8px rgba(160, 160, 160, 0.2);
+  --clay-shadow-out-sm: 4px 4px 8px rgba(160, 160, 160, 0.2), inset 2px 2px 4px rgba(255, 255, 255, 0.8), inset -2px -2px 4px rgba(160, 160, 160, 0.2);
+  --clay-shadow-out-hover: 12px 12px 24px rgba(160, 160, 160, 0.3), inset 4px 4px 8px rgba(255, 255, 255, 0.9), inset -4px -4px 8px rgba(160, 160, 160, 0.15);
+  --clay-shadow-in: inset 4px 4px 8px rgba(160, 160, 160, 0.25), inset -4px -4px 8px rgba(255, 255, 255, 0.8);
+  --clay-shadow-in-deep: inset 6px 6px 12px rgba(160, 160, 160, 0.35), inset -6px -6px 12px rgba(255, 255, 255, 0.9);
 
   /* Radius tokens — overridden per theme */
   --radius-card: 28px;
@@ -233,20 +233,20 @@
 }
 
 [data-theme="dark"], .dark {
-  --bg-main: #212121;
-  --header-bg: rgba(33, 33, 33, 0.92);
-  --sidebar-bg: #212121;
-  --card-bg: #212121; 
+  --bg-main: #2E2E2E;
+  --header-bg: rgba(46, 46, 46, 0.92);
+  --sidebar-bg: #2E2E2E;
+  --card-bg: #2E2E2E; 
   --card-border: var(--border-subtle);
   
-  --btn-bg: #2F2F2F; 
-  --btn-hover: #3D3D3D; /* Slightly lighter for hover */
+  --btn-bg: #383838; 
+  --btn-hover: #424242; /* Slightly lighter for hover */
   
-  --input-bg: #212121; /* Soft sunken effect */
+  --input-bg: #262626; /* Soft sunken effect */
   --input-border: transparent;
   
   --bubble-ai-bg: transparent;
-  --bubble-user-bg: #333333;
+  --bubble-user-bg: #424242;
   
   --text-main: #e5e5e5; 
   --text-muted: #a3a3a3; 
@@ -263,7 +263,6 @@
   --error-text: #fecaca;
   --error-border: transparent;
   
-  /* True Claymorphism Shadows - Dark Mode */
   --clay-shadow-out: 8px 8px 16px rgba(0, 0, 0, 0.6), inset 4px 4px 8px rgba(255, 255, 255, 0.05), inset -4px -4px 8px rgba(0, 0, 0, 0.4);
   --clay-shadow-out-sm: 4px 4px 8px rgba(0, 0, 0, 0.5), inset 2px 2px 4px rgba(255, 255, 255, 0.04), inset -2px -2px 4px rgba(0, 0, 0, 0.3);
   --clay-shadow-out-hover: 12px 12px 24px rgba(0, 0, 0, 0.7), inset 4px 4px 8px rgba(255, 255, 255, 0.07), inset -4px -4px 8px rgba(0, 0, 0, 0.3);
@@ -356,7 +355,7 @@
 
 .clay-input:focus, .clay-input-box:focus-within {
   outline: none;
-  box-shadow: var(--clay-shadow-in-deep), 0 0 0 2px var(--accent-primary);
+  box-shadow: var(--clay-shadow-in-deep);
 }
 
 /* Standard Buttons (Extruded) */
@@ -521,7 +520,7 @@
 .clay-icon svg, .clay-icon {
   filter: 
     drop-shadow(1px 1px 1px rgba(255, 255, 255, 0.8))
-    drop-shadow(-1px -1px 2px rgba(166, 178, 203, 0.6));
+    drop-shadow(-1px -1px 2px rgba(160, 160, 160, 0.6));
 }
 
 .dark .clay-icon svg, .dark .clay-icon {
@@ -1152,14 +1151,14 @@ img.emoji {
 
 /* Base Clay Surface (Heavy 3D Puffy Card) */
 .clay-card-thick {
-  background: #ebf0f8;
+  background: var(--card-bg);
   border: 1px solid rgba(255, 255, 255, 0.02);
   border-radius: 28px;
   box-shadow: 
-    10px 14px 28px rgba(150, 165, 195, 0.5),
+    10px 14px 28px rgba(160, 160, 160, 0.5),
     -4px -4px 10px rgba(255, 255, 255, 0.8),
     inset 2px 2px 4px rgba(255, 255, 255, 0.8),
-    inset -3px -3px 6px rgba(150, 165, 195, 0.35);
+    inset -3px -3px 6px rgba(160, 160, 160, 0.35);
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -1175,14 +1174,14 @@ img.emoji {
 
 /* Elevated Floating Clay Surface (For Hero & Featured Items) */
 .clay-card-elevated {
-  background: #ebf0f8;
+  background: var(--card-bg);
   border: 1px solid rgba(255, 255, 255, 0.02);
   border-radius: 32px;
   box-shadow: 
-    14px 20px 38px rgba(150, 165, 195, 0.6),
+    14px 20px 38px rgba(160, 160, 160, 0.6),
     -6px -6px 14px rgba(255, 255, 255, 0.9),
     inset 3px 3px 6px rgba(255, 255, 255, 0.9),
-    inset -4px -4px 8px rgba(150, 165, 195, 0.35);
+    inset -4px -4px 8px rgba(160, 160, 160, 0.35);
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -1198,19 +1197,19 @@ img.emoji {
 
 /* Tactile 3D Clay Button (Standard) */
 .clay-btn-thick {
-  background: #f4f7fc;
+  background: var(--btn-bg);
   border: 1px solid rgba(255, 255, 255, 0.02);
   border-radius: 18px;
   box-shadow: 
-    8px 12px 22px rgba(166, 178, 203, 0.38),
+    8px 12px 22px rgba(160, 160, 160, 0.38),
     -6px -6px 16px rgba(255, 255, 255, 0.25),
     inset 1px 1px 2px rgba(255, 255, 255, 0.3),
-    inset -3px -3px 7px rgba(166, 178, 203, 0.3);
+    inset -3px -3px 7px rgba(160, 160, 160, 0.3);
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .dark .clay-btn-thick {
-  background: #222630;
+  background: var(--btn-bg);
   border: 1px solid rgba(255, 255, 255, 0.03);
   box-shadow: 
     0 6px 10px -3px rgba(0, 0, 0, 0.8),
@@ -1220,7 +1219,7 @@ img.emoji {
 }
 
 .dark .clay-btn-thick:hover {
-  background: #2a2f3d;
+  background: var(--btn-hover);
   box-shadow: 
     0 10px 16px -4px rgba(0, 0, 0, 0.9),
     inset 0 4px 6px rgba(255, 255, 255, 0.12),
@@ -1414,7 +1413,7 @@ img.emoji {
   border: 1px solid rgba(255, 255, 255, 0.02); /* Softened from 0.6 */
   border-radius: 22px;
   box-shadow: 
-    inset 6px 6px 12px rgba(166, 178, 203, 0.45),
+    inset 6px 6px 12px rgba(160, 160, 160, 0.45),
     inset -6px -6px 12px rgba(255, 255, 255, 0.25);
 }
 
@@ -1431,7 +1430,7 @@ img.emoji {
   background: #e1e7f0;
   border-radius: 20px;
   box-shadow: 
-    inset 3px 3px 6px rgba(166, 178, 203, 0.65),
+    inset 3px 3px 6px rgba(160, 160, 160, 0.65),
     inset -3px -3px 6px rgba(255, 255, 255, 0.25);
   border: 1px solid rgba(255, 255, 255, 0.02);
 }
@@ -1450,7 +1449,7 @@ img.emoji {
   background: #e2e8f2;
   border-radius: 18px;
   box-shadow: 
-    inset 3px 3px 7px rgba(166, 178, 203, 0.65),
+    inset 3px 3px 7px rgba(160, 160, 160, 0.65),
     inset -3px -3px 6px rgba(255, 255, 255, 0.25);
   border: 1px solid rgba(255, 255, 255, 0.02);
   transition: all 0.2s ease;
@@ -1469,14 +1468,14 @@ img.emoji {
 .clay-pill-thick {
   border-radius: 9999px;
   box-shadow: 
-    4px 6px 14px rgba(166, 178, 203, 0.35),
+    4px 6px 14px rgba(160, 160, 160, 0.35),
     -3px -3px 8px rgba(255, 255, 255, 0.25),
     inset 1px 1px 2px rgba(255, 255, 255, 0.3),
-    inset -2px -2px 5px rgba(166, 178, 203, 0.25);
+    inset -2px -2px 5px rgba(160, 160, 160, 0.25);
 }
 
 .dark .clay-pill-thick {
-  background: #222630;
+  background: var(--btn-bg);
   box-shadow: 
     4px 6px 12px rgba(0, 0, 0, 0.4),
     -2px -2px 6px rgba(255, 255, 255, 0.02),
@@ -1626,7 +1625,7 @@ img.emoji {
     inset -3px -3px 7px rgba(145, 75, 70, 0.3);
 }
 
-/* 3. Slate Charcoal Swatch (#2C3036) */
+/* 3. Slate Charcoal Swatch (#2E2E2E) */
 .clay-charcoal {
   background: #2c3036 !important;
   color: #f3f5f9 !important;
@@ -1811,22 +1810,22 @@ html:not([data-ui-style]) {
 html[data-ui-style="neumorphic"],
 :root[data-ui-style="neumorphic"] {
   /* Same base color as Claymorphism — single flat tone, depth from shadow */
-  --bg-main:    #E8EDF2;
-  --sidebar-bg: #E8EDF2;
-  --card-bg:    #E8EDF2;
-  --input-bg:   #E8EDF2;
-  --btn-bg:     #E8EDF2;
-  --btn-hover:  #DDE4EC;
-  --header-bg:  rgba(232, 237, 242, 0.92);
-  --bubble-user-bg: #DDE4EC;
+  --bg-main:    #EEEEEE;
+  --sidebar-bg: #EEEEEE;
+  --card-bg:    #EEEEEE;
+  --input-bg:   #EEEEEE;
+  --btn-bg:     #EEEEEE;
+  --btn-hover:  #E3E3E3;
+  --header-bg:  rgba(238, 238, 238, 0.92);
+  --bubble-user-bg: #E3E3E3;
   --card-border: transparent;
 
-  /* Pure neumorphic two-shadow derived from #E8EDF2 */
-  --clay-shadow-out:       4px 4px 9px #c1c9d4;
-  --clay-shadow-out-sm:    2px 2px 6px #c1c9d4;
-  --clay-shadow-out-hover: 6px 6px 14px #c1c9d4;
-  --clay-shadow-in:        inset 3px 3px 7px #c1c9d4;
-  --clay-shadow-in-deep:   inset 5px 5px 10px #c1c9d4, inset -5px -5px 10px #ffffff;
+  /* Pure neumorphic two-shadow derived from #EEEEEE */
+  --clay-shadow-out:       4px 4px 9px #C5C5C5;
+  --clay-shadow-out-sm:    2px 2px 6px #C5C5C5;
+  --clay-shadow-out-hover: 6px 6px 14px #C5C5C5;
+  --clay-shadow-in:        inset 3px 3px 7px #C5C5C5;
+  --clay-shadow-in-deep:   inset 5px 5px 10px #C5C5C5, inset -5px -5px 10px #ffffff;
 
   /* Smaller, more conservative radius */
   --radius-card:     16px;
@@ -1844,18 +1843,18 @@ html[data-ui-style="neumorphic"],
     html[data-ui-style="neumorphic"].dark,
   html.dark[data-ui-style="neumorphic"],
   html[data-ui-style="neumorphic"][data-theme="dark"] {
-    /* Neumorphic dark: ChatGPT Style Gray */
-    --bg-main:    #212121;
-    --sidebar-bg: #212121;
-    --card-bg:    #212121;
-    --input-bg:   #212121;
-    --btn-bg:     #212121;
-    --btn-hover:  #2F2F2F;
-    --header-bg:  rgba(33, 33, 33, 0.92);
-    --bubble-user-bg: #2F2F2F;
+    /* Neumorphic dark: Original Dark Gray (#2E2E2E) */
+    --bg-main:    #2E2E2E;
+    --sidebar-bg: #2E2E2E;
+    --card-bg:    #2E2E2E;
+    --input-bg:   #2E2E2E;
+    --btn-bg:     #2E2E2E;
+    --btn-hover:  #282A2C;
+    --header-bg:  rgba(46, 46, 46, 0.92);
+    --bubble-user-bg: #282A2C;
   
     /* Pure neumorphic two-shadow — contrast derived from #18181b using rgba */
-    --clay-shadow-out:       5px 5px 11px rgba(0, 0, 0, 0.5);
+    --clay-shadow-out:       5px 5px 11px rgba(0, 0, 0, 0.4), -5px -5px 11px rgba(255, 255, 255, 0.04);
     --clay-shadow-out-sm:    3px 3px 7px  rgba(0, 0, 0, 0.4);
     --clay-shadow-out-hover: 8px 8px 16px rgba(0, 0, 0, 0.6);
     --clay-shadow-in:        inset 4px 4px 8px rgba(0, 0, 0, 0.5);

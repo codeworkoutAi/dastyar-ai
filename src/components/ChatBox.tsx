@@ -390,7 +390,7 @@ export const ChatBox: React.FC = React.memo(() => {
  onChange={(e) => setEditingText(e.target.value)}
  dir="auto"
  rows={Math.min(6, Math.max(2, editingText.split('\n').length))}
- className="w-full p-3 rounded-2xl clay-input  text-[length:var(--chat-font-size)] [font-family:var(--user-font-family)] focus:outline-hidden focus:ring-2 focus:ring-blue-500/30 resize-y leading-relaxed font-medium text-zinc-800 dark:text-zinc-200"
+ className="w-full p-3 rounded-2xl clay-input  text-[length:var(--chat-font-size)] [font-family:var(--user-font-family)] focus:outline-hidden focus:ring-2 focus:ring-zinc-400 dark:focus:ring-zinc-500/30 resize-y leading-relaxed font-medium text-zinc-800 dark:text-zinc-200"
  autoFocus
  placeholder="ویرایش پیام خود را اینجا بنویسید..."
  onKeyDown={(e) => {

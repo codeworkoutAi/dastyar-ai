@@ -622,7 +622,7 @@ export const AdminFinanceTab: React.FC = () => {
  value={sellingRate}
  onChange={(e) => setSellingRate(e.target.value)}
  placeholder="200000"
- className="w-full pl-14 pr-3.5 py-2.5 rounded-xl clay-input  text-zinc-900 dark:text-zinc-100 text-xs font-bold focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
+ className="w-full pl-14 pr-3.5 py-2.5 rounded-xl clay-input  text-zinc-900 dark:text-zinc-100 text-xs font-bold focus:ring-2 focus:ring-zinc-400 dark:focus:ring-zinc-500/20 focus:border-zinc-400 dark:focus:border-zinc-500 outline-none transition-all"
  />
  <span className="absolute left-3.5 top-2.5 text-zinc-400 dark:text-zinc-500 text-xs font-medium select-none pointer-events-none">تومان</span>
  </div>
@@ -644,7 +644,7 @@ export const AdminFinanceTab: React.FC = () => {
  value={welcomeBonus}
  onChange={(e) => setWelcomeBonus(e.target.value)}
  placeholder="50000"
- className="w-full pl-14 pr-3.5 py-2.5 rounded-xl clay-input  text-zinc-900 dark:text-zinc-100 text-xs font-bold focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
+ className="w-full pl-14 pr-3.5 py-2.5 rounded-xl clay-input  text-zinc-900 dark:text-zinc-100 text-xs font-bold focus:ring-2 focus:ring-zinc-400 dark:focus:ring-zinc-500/20 focus:border-zinc-400 dark:focus:border-zinc-500 outline-none transition-all"
  />
  <span className="absolute left-3.5 top-2.5 text-zinc-400 dark:text-zinc-500 text-xs font-medium select-none pointer-events-none">تومان</span>
  </div>
@@ -655,7 +655,7 @@ export const AdminFinanceTab: React.FC = () => {
  id="bonus-enable"
  checked={welcomeBonusEnabled}
  onChange={(e) => setWelcomeBonusEnabled(e.target.checked)}
- className="w-4 h-4 rounded border-zinc-400 text-blue-600 focus:ring-blue-500 cursor-pointer"
+ className="w-4 h-4 rounded border-zinc-400 text-blue-600 focus:ring-zinc-400 dark:focus:ring-zinc-500 cursor-pointer"
  />
  <label htmlFor="bonus-enable" className="text-zinc-600 dark:text-zinc-400 text-xs font-medium cursor-pointer">
  اعتبار هدیه خوش‌آمدگویی فعال باشد
@@ -674,7 +674,7 @@ export const AdminFinanceTab: React.FC = () => {
  value={freeKeyPool}
  onChange={(e) => setFreeKeyPool(e.target.value)}
  placeholder="کلیدهای متعدد Gemini یا Groq را با کاما یا خط جدید وارد کنید..."
- className="w-full px-3 py-2 rounded-xl clay-input  text-zinc-900 dark:text-zinc-100 text-xs font-mono focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all resize-none"
+ className="w-full px-3 py-2 rounded-xl clay-input  text-zinc-900 dark:text-zinc-100 text-xs font-mono focus:ring-2 focus:ring-zinc-400 dark:focus:ring-zinc-500/20 focus:border-zinc-400 dark:focus:border-zinc-500 outline-none transition-all resize-none"
  />
  </div>
  <p className="text-[11px] text-zinc-500 dark:text-zinc-400 leading-relaxed mt-1">
@@ -771,7 +771,7 @@ export const AdminFinanceTab: React.FC = () => {
  value={zarinpalMerchantId}
  onChange={(e) => setZarinpalMerchantId(e.target.value)}
  placeholder="مثال: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
- className="w-full px-3.5 py-2.5 rounded-xl clay-input  text-zinc-900 dark:text-zinc-100 text-xs font-mono focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
+ className="w-full px-3.5 py-2.5 rounded-xl clay-input  text-zinc-900 dark:text-zinc-100 text-xs font-mono focus:ring-2 focus:ring-zinc-400 dark:focus:ring-zinc-500/20 focus:border-zinc-400 dark:focus:border-zinc-500 outline-none transition-all"
  />
  <p className="text-[11px] text-zinc-500 dark:text-zinc-400 leading-relaxed">
  شناسه ۳۶ کاراکتری اختصاصی درگاه زرین‌پال شما برای هدایت مستقیم به صفحه پرداخت شاپرک.
@@ -948,7 +948,7 @@ export const AdminFinanceTab: React.FC = () => {
  <input type="text" placeholder="جستجوی لایو کاربر، ID یا مدل..."
  value={searchQuery}
  onChange={(e) => setSearchQuery(e.target.value)}
- className="w-full px-3 py-1.5 rounded-xl clay-input  text-xs focus:outline-none focus:border-blue-500 transition-colors"
+ className="w-full px-3 py-1.5 rounded-xl clay-input  text-xs focus:outline-none focus:border-zinc-400 dark:focus:border-zinc-500 transition-colors"
  />
  </div>
  <div className="flex w-full sm:w-auto gap-2 flex-wrap items-center">
