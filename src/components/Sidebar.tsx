@@ -25,7 +25,7 @@ import { getStorageUsage } from '../lib/storage';
 import { calculateSessionStats } from '../utils/pricing';
 import { Tooltip } from './Tooltip';
 import { useAuthStore } from '../store/authStore';
-import { User, LogOut, ShieldCheck, Settings, ChevronUp, LayoutDashboard, Store, BookOpen, Compass, Palette, HelpCircle, MessageSquarePlus, Search, Coins } from 'lucide-react';
+import { User, LogOut, ShieldCheck, Settings, ChevronUp, LayoutDashboard, Store, BookOpen, Compass, Palette, HelpCircle, MessageSquarePlus, Search, Coins, Plus } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useUIStore } from '../store/uiStore';
 import { useSettingsStore } from '../store/settingsStore';
@@ -535,13 +535,13 @@ export const Sidebar: React.FC = React.memo(() => {
                             createChat(settings.providers[settings.providers.activeProvider]?.modelName);
                             if (window.innerWidth < 768) setSidebarOpen(false);
                         }}
-                        className="w-full py-2 px-3 clay-card rounded-xl cursor-pointer flex items-center justify-between text-xs font-bold text-zinc-800 dark:text-zinc-200 hover:text-blue-600 dark:hover:text-blue-400 group transition-all"
+                        className="w-full flex items-center justify-between text-xs font-bold text-zinc-500 dark:text-zinc-400 hover:text-blue-600 dark:hover:text-blue-400 group transition-all px-1 py-1"
                     >
-                        <div className="flex items-center gap-2">
-                            <MessageSquarePlus className="w-4 h-4 transition-transform group-hover:scale-110 text-blue-600 dark:text-blue-400" strokeWidth={2} />
+                        <div className="flex items-center gap-1.5">
+                            <Plus className="w-4 h-4 transition-transform group-hover:rotate-90 group-active:scale-95" strokeWidth={2.5} />
                             <span>گفتگوی جدید</span>
                         </div>
-                        <span className="text-[10px] opacity-60 font-mono dir-ltr font-normal bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/5 px-1.5 py-0.5 rounded-md text-zinc-500 dark:text-zinc-400">
+                        <span className="text-[10px] opacity-0 group-hover:opacity-100 font-mono dir-ltr font-normal px-1 py-0.5 rounded text-zinc-400 dark:text-zinc-500 transition-opacity">
                             Ctrl+K
                         </span>
                     </button>

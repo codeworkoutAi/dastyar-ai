@@ -233,16 +233,16 @@
 }
 
 [data-theme="dark"], .dark {
-  --bg-main: #1E1F20;
-  --header-bg: rgba(30, 31, 32, 0.92);
-  --sidebar-bg: #1E1F20;
-  --card-bg: #1E1F20; 
+  --bg-main: #212121;
+  --header-bg: rgba(33, 33, 33, 0.92);
+  --sidebar-bg: #212121;
+  --card-bg: #212121; 
   --card-border: var(--border-subtle);
   
-  --btn-bg: #262626; 
-  --btn-hover: #333333; /* Slightly lighter for hover */
+  --btn-bg: #2F2F2F; 
+  --btn-hover: #3D3D3D; /* Slightly lighter for hover */
   
-  --input-bg: #1c1c1c; /* Soft sunken effect */
+  --input-bg: #212121; /* Soft sunken effect */
   --input-border: transparent;
   
   --bubble-ai-bg: transparent;
@@ -452,6 +452,7 @@
   align-items: center;
   justify-content: center;
   padding: 10px;
+  aspect-ratio: 1 / 1;
 }
 
 .clay-icon-btn:hover {
@@ -1843,15 +1844,15 @@ html[data-ui-style="neumorphic"],
     html[data-ui-style="neumorphic"].dark,
   html.dark[data-ui-style="neumorphic"],
   html[data-ui-style="neumorphic"][data-theme="dark"] {
-    /* Neumorphic dark: Original Dark Gray (#1E1F20) */
-    --bg-main:    #1E1F20;
-    --sidebar-bg: #1E1F20;
-    --card-bg:    #1E1F20;
-    --input-bg:   #1E1F20;
-    --btn-bg:     #1E1F20;
-    --btn-hover:  #282A2C;
-    --header-bg:  rgba(30, 31, 32, 0.92);
-    --bubble-user-bg: #282A2C;
+    /* Neumorphic dark: ChatGPT Style Gray */
+    --bg-main:    #212121;
+    --sidebar-bg: #212121;
+    --card-bg:    #212121;
+    --input-bg:   #212121;
+    --btn-bg:     #212121;
+    --btn-hover:  #2F2F2F;
+    --header-bg:  rgba(33, 33, 33, 0.92);
+    --bubble-user-bg: #2F2F2F;
   
     /* Pure neumorphic two-shadow — contrast derived from #18181b using rgba */
     --clay-shadow-out:       5px 5px 11px rgba(0, 0, 0, 0.5);
