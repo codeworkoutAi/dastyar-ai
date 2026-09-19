@@ -35,7 +35,7 @@ if (syncUrl && authToken) {
       authToken
     } as any);
   } catch (initErr: any) {
-    if (initErr?.message?.includes('InvalidLocalState') || initErr?.message?.includes('metadata file exists')) {
+    if (initErr?.message?.includes('InvalidLocalState') || initErr?.message?.includes('metadata file exists') || initErr?.message?.includes('WalConflict')) {
       console.warn('[Database] Invalid local replica state detected. Cleaning up local replica files and retrying...');
       try {
         if (fs.existsSync(dbPath)) fs.unlinkSync(dbPath);

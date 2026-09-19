@@ -362,7 +362,7 @@ export function Blog() {
  ) : selectedPost ? (
  <article className="max-w-3xl mx-auto animate-fadeIn">
  {selectedPost.image && (
- <div className="mb-8 w-full overflow-hidden rounded-2xl shadow-sm border border-zinc-100 dark:border-zinc-800/50 aspect-video">
+ <div className="mb-8 w-full overflow-hidden rounded-2xl shadow-sm border border-[var(--card-border)]  aspect-video">
  <img 
  src={selectedPost.image} 
  alt={selectedPost.title} 
@@ -376,7 +376,7 @@ export function Blog() {
               {selectedPost.title}
             </h1>
  
- <div className="flex flex-wrap items-center justify-between gap-4 py-4 border-y border-zinc-200 dark:border-zinc-800/60 text-sm text-[#525d75] dark:text-[#9aa5bc]">
+ <div className="flex flex-wrap items-center justify-between gap-4 py-4 border-y border-[var(--card-border)]  text-sm text-[#525d75] dark:text-[#9aa5bc]">
  <div className="flex flex-wrap items-center gap-4 md:gap-6">
  <div className="flex items-center gap-1.5">
  <PenTool size={16} className="text-emerald-600" />
@@ -396,7 +396,7 @@ export function Blog() {
  <button onClick={shareOnTelegram} className="p-2 bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400 rounded-full hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-colors">
  <Send size={16} />
  </button>
- <button onClick={shareOnX} className="p-2 bg-zinc-100 text-[#525d75] dark:bg-zinc-800 dark:text-[#9aa5bc] rounded-full transition-colors">
+ <button onClick={shareOnX} className="p-2 clay-surface text-[#525d75]  dark:text-[#9aa5bc] rounded-full transition-colors">
  <Share2 size={16} />
  </button>
  </div>
@@ -423,7 +423,7 @@ export function Blog() {
  <Link 
  key={idx} 
  to={`/blog/tag/${encodeURIComponent(tag)}`}
- style={{ borderRadius: "10px" }} className="px-3.5 py-1.5 clay-btn text-zinc-700 dark:text-zinc-300 hover:text-emerald-600 dark:hover:text-emerald-400 text-xs font-semibold transition-all border border-zinc-200/40 dark:border-zinc-700/40"
+ style={{ borderRadius: "10px" }} className="px-3.5 py-1.5 clay-btn text-zinc-700 dark:text-zinc-300 hover:text-emerald-600 dark:hover:text-emerald-400 text-xs font-semibold transition-all border border-[var(--card-border)] "
  >
  #{tag}
  </Link>
@@ -478,24 +478,24 @@ export function Blog() {
  <div className="h-px w-full md:h-8 md:w-px clay-btn-thick hidden md:block"></div>
 
  {/* View Mode Toggle */}
- <div style={{ borderRadius: "12px" }} className="flex items-center bg-zinc-100/90 dark:bg-zinc-800/70 p-1 shrink-0 border border-zinc-200/50 dark:border-zinc-700/50">
+ <div style={{ borderRadius: "12px" }} className="flex items-center clay-surface p-1 shrink-0 border border-[var(--card-border)] ">
  <button
  onClick={() => setViewMode('grid')}
- className={`p-1.5 rounded-lg transition-all ${viewMode === 'grid' ? 'bg-white dark:bg-zinc-700 text-emerald-600 dark:text-emerald-400 shadow-sm' : 'text-zinc-400 hover:text-[#525d75] dark:hover:text-zinc-300'}`}
+ className={`p-1.5 rounded-lg transition-all ${viewMode === 'grid' ? 'clay-card text-emerald-600 dark:text-emerald-400 shadow-sm' : 'text-zinc-400 hover:text-[#525d75] dark:hover:text-zinc-300'}`}
  title="نمایش شبکه‌ای"
  >
  <LayoutGrid size={18} />
  </button>
  <button
  onClick={() => setViewMode('list')}
- className={`p-1.5 rounded-lg transition-all ${viewMode === 'list' ? 'bg-white dark:bg-zinc-700 text-emerald-600 dark:text-emerald-400 shadow-sm' : 'text-zinc-400 hover:text-[#525d75] dark:hover:text-zinc-300'}`}
+ className={`p-1.5 rounded-lg transition-all ${viewMode === 'list' ? 'clay-card text-emerald-600 dark:text-emerald-400 shadow-sm' : 'text-zinc-400 hover:text-[#525d75] dark:hover:text-zinc-300'}`}
  title="نمایش لیستی"
  >
  <List size={18} />
  </button>
  <button
  onClick={() => setViewMode('compact')}
- className={`p-1.5 rounded-lg transition-all ${viewMode === 'compact' ? 'bg-white dark:bg-zinc-700 text-emerald-600 dark:text-emerald-400 shadow-sm' : 'text-zinc-400 hover:text-[#525d75] dark:hover:text-zinc-300'}`}
+ className={`p-1.5 rounded-lg transition-all ${viewMode === 'compact' ? 'clay-card text-emerald-600 dark:text-emerald-400 shadow-sm' : 'text-zinc-400 hover:text-[#525d75] dark:hover:text-zinc-300'}`}
  title="نمایش فشرده"
  >
  <AlignJustify size={18} />
@@ -540,7 +540,7 @@ export function Blog() {
  setTimeFilter(tab.id as any);
  setTimeDropdownOpen(false);
  }}
- className="w-full text-right px-4 py-2.5 text-sm flex items-center justify-between hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors"
+ className="w-full text-right px-4 py-2.5 text-sm flex items-center justify-between hover:clay-surface dark:hover:bg-zinc-800/50 transition-colors"
  >
  <span className={timeFilter === tab.id ? 'font-bold text-emerald-600 dark:text-emerald-400' : 'text-zinc-700 dark:text-zinc-300'}>{tab.label}</span>
  {timeFilter === tab.id && <Check size={16} className="text-emerald-600 dark:text-emerald-400" />}
@@ -572,7 +572,7 @@ export function Blog() {
  setSelectedTag(null);
  setTagDropdownOpen(false);
  }}
- className="w-full text-right px-4 py-2.5 text-sm flex items-center justify-between hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors border-b border-zinc-100 dark:border-zinc-800"
+ className="w-full text-right px-4 py-2.5 text-sm flex items-center justify-between hover:clay-surface dark:hover:bg-zinc-800/50 transition-colors border-b border-[var(--card-border)] "
  >
  <span className={!selectedTag ? 'font-bold text-emerald-600 dark:text-emerald-400' : 'text-zinc-700 dark:text-zinc-300'}>همه برچسب‌ها</span>
  {!selectedTag && <Check size={16} className="text-emerald-600 dark:text-emerald-400" />}
@@ -584,7 +584,7 @@ export function Blog() {
  setSelectedTag(tag);
  setTagDropdownOpen(false);
  }}
- className="w-full text-right px-4 py-2.5 text-sm flex items-center justify-between hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors"
+ className="w-full text-right px-4 py-2.5 text-sm flex items-center justify-between hover:clay-surface dark:hover:bg-zinc-800/50 transition-colors"
  >
  <span className={selectedTag === tag ? 'font-bold text-emerald-600 dark:text-emerald-400' : 'text-zinc-700 dark:text-zinc-300'}>#{tag}</span>
  {selectedTag === tag && <Check size={16} className="text-emerald-600 dark:text-emerald-400" />}
@@ -740,7 +740,7 @@ export function Blog() {
  {/* End Results */}
  </div>
  ) : (
- <div className="flex flex-col items-center justify-center h-[40vh] opacity-50 bg-white/30 dark:bg-zinc-900/30 rounded-3xl border border-[var(--card-border)] backdrop-blur-sm">
+ <div className="flex flex-col items-center justify-center h-[40vh] opacity-50 clay-surface rounded-3xl border border-[var(--card-border)] backdrop-blur-sm">
  <div className="w-20 h-20 rounded-full clay-btn-thick flex items-center justify-center mb-6">
  <Search size={32} className="text-zinc-400" />
  </div>

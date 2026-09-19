@@ -154,7 +154,6 @@ export const ExploreHub: React.FC = () => {
 
  // Active Model and Info
  const activeProvider = settings.providers.activeProvider;
- 
  let currentActiveProfileId = settings.providers.custom.activeProfileId;
  if (settings.tools.smartRouting) {
  currentActiveProfileId = settings.tools.routingRoles?.default || currentActiveProfileId;
@@ -163,7 +162,6 @@ export const ExploreHub: React.FC = () => {
  const activeCustomProfile = settings.providers.custom.profiles?.find(
  (p) => p.id === currentActiveProfileId
  );
- 
  const activeModelId =
  activeProvider === 'custom'
  ? activeCustomProfile?.modelName || 'gpt-4o-mini'
@@ -209,7 +207,6 @@ export const ExploreHub: React.FC = () => {
  newSettings.providers.activeProvider = 'custom';
  const profileId = `free_${modelId}`;
  const existingProfileIndex = newSettings.providers.custom.profiles.findIndex(p => p.id === profileId);
- 
  const profile = {
  id: profileId,
  name: title,
@@ -246,9 +243,9 @@ export const ExploreHub: React.FC = () => {
 
  return (
  <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/75 backdrop-blur-md animate-fadeIn">
- <div className="relative w-full max-w-4xl max-h-[90vh] flex flex-col rounded-3xl bg-zinc-50 dark:bg-zinc-950/95 border border-[var(--card-border)] overflow-hidden text-zinc-900 dark:text-zinc-100 font-sans">
+ <div className="relative w-full clay-card  max-w-4xl max-h-[90vh] flex flex-col rounded-3xl clay-surface  overflow-hidden text-zinc-900 dark:text-zinc-100 font-sans">
  {/* Top Header */}
- <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-200 dark:border-zinc-800/80 bg-zinc-50 dark:bg-zinc-900/60">
+ <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--card-border)] clay-surface/60">
  <div className="flex items-center gap-3">
  <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-purple-600 to-indigo-600 flex items-center justify-center text-white shadow-md">
  <CompassOutlineIcon className="w-6 h-6" />
@@ -277,7 +274,7 @@ export const ExploreHub: React.FC = () => {
  </div>
 
  {/* Tab Navigation */}
- <div className="flex items-center gap-2 px-6 py-3 border-b border-zinc-200 dark:border-zinc-800/60 bg-zinc-50 dark:bg-zinc-900/30">
+ <div className="flex items-center gap-2 px-6 py-3 border-b border-[var(--card-border)]/60 clay-surface/30">
  <button
  type="button"
  onClick={() => setActiveTab('models')}
@@ -349,7 +346,7 @@ export const ExploreHub: React.FC = () => {
  <h3 className="text-lg font-black text-zinc-900 dark:text-zinc-100 tracking-tight">
  {currentIntro.title}
  </h3>
- <span className="text-[11px] font-mono px-2 py-0.5 rounded-full clay-surface border border-zinc-300 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300">
+ <span className="text-[11px] font-mono px-2 py-0.5 rounded-full clay-input  text-zinc-700 dark:text-zinc-300">
  {currentDetails.providerLabel}
  </span>
  {currentDetails.isFree && (
@@ -366,7 +363,7 @@ export const ExploreHub: React.FC = () => {
  </div>
 
  {/* Specialty Tags */}
- <div className="flex flex-wrap items-center gap-2 pt-3.5 border-t border-zinc-200 dark:border-zinc-800/80 mt-4">
+ <div className="flex flex-wrap items-center gap-2 pt-3.5 border-t border-[var(--card-border)] mt-4">
  <span className="text-[11px] text-zinc-700 dark:text-zinc-400 font-medium ml-1">تخصص‌های مدل:</span>
  {currentDetails.tags.map((tag, idx) => (
  <span
@@ -380,14 +377,14 @@ export const ExploreHub: React.FC = () => {
  ? 'bg-purple-500/15 text-purple-300 border border-purple-500/30'
  : tag.type === 'fast'
  ? 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/30'
- : 'clay-surface text-zinc-700 dark:text-zinc-300 border border-zinc-300 dark:border-zinc-700'
+ : 'clay-surface text-zinc-700 dark:text-zinc-300 border border-zinc-300 '
  }`}
  >
  {tag.label}
  </span>
  ))}
  {currentDetails.contextFormatted && (
- <span className="text-[11px] px-2.5 py-1 rounded-xl clay-surface text-zinc-700 dark:text-zinc-300 border border-zinc-300 dark:border-zinc-700 font-mono">
+ <span className="text-[11px] px-2.5 py-1 rounded-xl clay-surface text-zinc-700 dark:text-zinc-300 border border-zinc-300  font-mono">
  حافظه: {currentDetails.contextFormatted}
  </span>
  )}
@@ -412,7 +409,7 @@ export const ExploreHub: React.FC = () => {
  className={`p-4 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between ${
  isSelected
  ? 'clay-modal border-indigo-500 dark:border-indigo-500 shadow-md shadow-indigo-500/10'
- : 'bg-zinc-50 dark:bg-zinc-900/50 hover:bg-zinc-50 dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800/80 hover:border-zinc-300 dark:border-zinc-700'
+ : 'clay-surface/50 hover:clay-surface border-[var(--card-border)] hover:border-zinc-300 '
  }`}
  >
  <div className="flex items-center justify-between mb-2">
@@ -429,7 +426,7 @@ export const ExploreHub: React.FC = () => {
  <div className="text-[11px] text-zinc-700 dark:text-zinc-400 font-mono truncate mb-3" dir="ltr">
  {fm.id}
  </div>
- <div className="flex flex-wrap items-center gap-1.5 pt-2 border-t border-zinc-200 dark:border-zinc-800/60">
+ <div className="flex flex-wrap items-center gap-1.5 pt-2 border-t border-[var(--card-border)]/60">
  <span className="text-[10px] px-2 py-0.5 rounded-lg clay-surface text-zinc-700 dark:text-zinc-300">{fm.tag}</span>
  {fm.isVision && <span className="text-[10px] px-2 py-0.5 rounded-lg bg-amber-500/15 text-amber-500">بینایی 👀</span>}
  {fm.isCoding && <span className="text-[10px] px-2 py-0.5 rounded-lg bg-cyan-500/15 text-cyan-500">کدنویسی 💻</span>}
@@ -455,7 +452,7 @@ export const ExploreHub: React.FC = () => {
  className={`p-4 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between ${
  isSelected
  ? 'clay-modal border-indigo-500 dark:border-indigo-500 shadow-md shadow-indigo-500/10'
- : 'bg-zinc-50 dark:bg-zinc-900/50 hover:bg-zinc-50 dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800/80 hover:border-zinc-300 dark:border-zinc-700'
+ : 'clay-surface/50 hover:clay-surface border-[var(--card-border)] hover:border-zinc-300 '
  }`}
  >
  <div className="flex items-center justify-between mb-2">
@@ -474,7 +471,7 @@ export const ExploreHub: React.FC = () => {
  {profile.modelName}
  </div>
 
- <div className="flex flex-wrap items-center gap-1.5 pt-2 border-t border-zinc-200 dark:border-zinc-800/60">
+ <div className="flex flex-wrap items-center gap-1.5 pt-2 border-t border-[var(--card-border)]/60">
  {pDetails.tags.map((t, idx) => (
  <span key={idx} className="text-[10px] px-2 py-0.5 rounded-lg clay-surface text-zinc-700 dark:text-zinc-300">
  {t.label}
@@ -502,7 +499,7 @@ export const ExploreHub: React.FC = () => {
  className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold whitespace-nowrap transition-all border cursor-pointer ${
  selectedCategory === cat.id
  ? 'bg-purple-500/10 border-purple-500/50 text-purple-600 dark:text-purple-400 shadow-sm'
- : 'bg-white dark:bg-[#1e1f20] border-zinc-200 dark:border-white/10 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800/50'
+ : 'bg-white dark:clay-card-thick border-[var(--card-border)] dark:border-white/10 text-zinc-600 dark:text-zinc-400 hover:clay-surface dark:hover:bg-zinc-800/50'
  }`}
  >
  <span className="chat-emoji">{cat.icon}</span>
@@ -516,7 +513,7 @@ export const ExploreHub: React.FC = () => {
  {PROMPT_CATEGORIES.find((c) => c.id === selectedCategory)?.prompts.map((p, idx) => (
  <div
  key={idx}
- className="p-5 rounded-2xl bg-zinc-50 dark:bg-zinc-900/60 border border-[var(--card-border)] hover:border-purple-500/40 hover:bg-zinc-50 dark:bg-zinc-900 transition-all flex flex-col justify-between group"
+ className="p-5 rounded-2xl clay-surface/60 border border-[var(--card-border)] hover:border-purple-500/40 hover:clay-surface transition-all flex flex-col justify-between group"
  >
  <div>
  <div className="flex items-center justify-between mb-2">
@@ -557,7 +554,7 @@ export const ExploreHub: React.FC = () => {
  {EXPLORE_IMAGE_PREVIEWS.map((item) => (
  <div
  key={item.id}
- className="group relative p-5 rounded-3xl text-right flex flex-col justify-between transition-all duration-300 hover:-translate-y-1 overflow-hidden border border-[var(--card-border)] bg-zinc-50 dark:bg-zinc-900/60 hover:shadow-[0_0_25px_rgba(168,85,247,0.2)] hover:border-purple-500/40"
+ className="group relative p-5 rounded-3xl text-right flex flex-col justify-between transition-all duration-300 hover:-translate-y-1 overflow-hidden border border-[var(--card-border)] clay-surface/60 hover:shadow-[0_0_25px_rgba(168,85,247,0.2)] hover:border-purple-500/40"
  >
  <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/10 blur-3xl rounded-full -translate-y-1/2 translate-x-1/2 group-hover:bg-purple-500/20 transition-colors pointer-events-none" />
 

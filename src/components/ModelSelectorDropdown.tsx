@@ -89,7 +89,6 @@ export const ModelSelectorDropdown: React.FC = () => {
  const details = getModelDetails({ id: p.modelName, name: p.name });
  const isSelected = p.id === activeProfileId && !settings.tools.smartRouting;
  const iconUrl = getProviderIconUrl(p.modelName + ' ' + p.name);
- 
  return (
  <button
  key={p.id}
@@ -129,10 +128,8 @@ export const ModelSelectorDropdown: React.FC = () => {
  <div className="relative" ref={dropdownRef}>
  <button
  onClick={() => setIsOpen(!isOpen)}
- className={`flex items-center gap-2 px-3 py-1.5 rounded-2xl border transition-colors backdrop-blur-md shadow-sm ${
- settings.tools.smartRouting 
- ? 'bg-blue-500/10 dark:bg-blue-500/20 border-blue-500/30 hover:bg-blue-500/20' 
- : 'bg-white/50 dark:bg-black/20 border-zinc-200 dark:border-white/10 hover:bg-white dark:hover:bg-black/40'
+ className={`flex items-center gap-2 px-3 py-1.5 rounded-2xl border transition-colors backdrop-blur-md ${
+ settings.tools.smartRouting ? 'clay-card !bg-blue-50 dark:!bg-blue-900/30 border-blue-500/30 hover:!bg-blue-100 dark:hover:!bg-blue-800/40' : 'clay-card border-[var(--card-border)] dark:border-white/10 hover:!bg-zinc-200 dark:hover:!bg-zinc-800/40'
  }`}
  >
  <div className="flex flex-col items-start">
@@ -152,8 +149,7 @@ export const ModelSelectorDropdown: React.FC = () => {
  </button>
 
  {isOpen && (
- <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-80 max-h-[70vh] overflow-y-auto clay-modal z-50 p-2 overflow-x-hidden flex flex-col gap-3 rtl">
- 
+ <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-80 max-h-[70vh] overflow-y-auto clay-card z-50 p-2 overflow-x-hidden flex flex-col gap-3 rtl [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
  <button
  onClick={handleToggleSmartRouting}
  className={`w-full text-right flex items-center justify-between p-3 rounded-xl transition-colors ${
@@ -172,10 +168,9 @@ export const ModelSelectorDropdown: React.FC = () => {
  </button>
 
  <div className="h-px clay-btn-secondary/80 mx-2" />
- 
  {freeProfiles.length > 0 && (
  <div>
- <div className="px-3 pb-1.5 mb-1.5 text-xs font-bold text-emerald-600 dark:text-emerald-400 border-b border-zinc-100 dark:border-zinc-800/80 flex items-center gap-1.5">
+ <div className="px-3 pb-1.5 mb-1.5 text-xs font-bold text-emerald-600 dark:text-emerald-400 border-b border-[var(--card-border)]  flex items-center gap-1.5">
  🎁 مدل‌های رایگان (روزمره)
  </div>
  <div className="flex flex-col gap-1">
@@ -186,7 +181,7 @@ export const ModelSelectorDropdown: React.FC = () => {
 
  {proProfiles.length > 0 && (
  <div>
- <div className="px-3 pb-1.5 mb-1.5 text-xs font-bold text-indigo-600 dark:text-indigo-400 border-b border-zinc-100 dark:border-zinc-800/80 flex items-center gap-1.5">
+ <div className="px-3 pb-1.5 mb-1.5 text-xs font-bold text-indigo-600 dark:text-indigo-400 border-b border-[var(--card-border)]  flex items-center gap-1.5">
  🚀 مدل‌های حرفه‌ای (پولی)
  </div>
  <div className="flex flex-col gap-1">

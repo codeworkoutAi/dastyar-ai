@@ -27,7 +27,7 @@ export const ThemeToggle: React.FC<ThemeToggleProps> = ({
  const baseButtonClasses =
  variant === 'clay'
  ? 'clay-btn w-11 h-11 flex items-center justify-center hover:opacity-90 rounded-xl sm:rounded-2xl cursor-pointer relative overflow-hidden group transition-all duration-300'
- : 'p-2 sm:p-2.5 rounded-xl transition-all duration-300 hover:bg-zinc-200/70 dark:hover:bg-zinc-800/80 text-zinc-700 dark:text-zinc-200 border border-[var(--card-border)] bg-white/70 dark:bg-zinc-900/70 shadow-sm backdrop-blur-md cursor-pointer flex items-center justify-center gap-2 group';
+ : 'p-2 sm:p-2.5 rounded-xl transition-all duration-300 hover:bg-zinc-200/70 dark:hover:bg-zinc-800/80 text-zinc-700 dark:text-zinc-200 border border-[var(--card-border)] clay-surface shadow-sm backdrop-blur-md cursor-pointer flex items-center justify-center gap-2 group';
 
  return (
  <Tooltip content={tooltipText} position={tooltipPosition}>

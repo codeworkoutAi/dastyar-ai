@@ -214,16 +214,16 @@ const getCtaThemeStyles = (theme?: string) => {
       };
     case 'white':
       return {
-        card: 'bg-white dark:bg-[#0f121a] border border-[#d8dce6] dark:border-[#1e2433] text-[#0f1420] dark:text-white ',
-        primaryBtn: 'bg-[#111622] hover:bg-[#202636] dark:bg-white dark:hover:bg-[#e4e7ee] text-white dark:text-[#0a0c10]',
-        secondaryBtn: 'border-[#d8dce6] dark:border-[#1e2433] hover:bg-[#f8f9fb] dark:hover:bg-[#131722] text-[#0f1420] dark:text-white'
+        card: 'bg-white dark:clay-input dark:border-[var(--card-border)] text-[#0f1420] dark:text-white ',
+        primaryBtn: 'clay-surface hover:clay-surface dark:bg-white dark:hover:clay-surface text-white dark:text-[#0a0c10]',
+        secondaryBtn: 'border-[var(--card-border)] dark:border-[var(--card-border)] hover:clay-surface dark:hover:clay-surface text-[#0f1420] dark:text-white'
       };
     case 'dark':
     default:
       return {
-        card: 'bg-[#111622] dark:bg-white text-white dark:text-[#0a0c10] ',
-        primaryBtn: 'bg-white text-[#0a0c10] hover:bg-[#eef1f6] dark:bg-[#0a0c10] dark:text-white dark:hover:bg-[#1a202d]',
-        secondaryBtn: 'border-white/20 dark:border-[#0a0c10]/20 hover:bg-white/10 dark:hover:bg-[#0a0c10]/10 text-inherit'
+        card: 'clay-surface dark:bg-white text-white dark:text-[#0a0c10] ',
+        primaryBtn: 'bg-white text-[#0a0c10] hover:clay-surface dark:clay-surface dark:text-white dark:hover:clay-surface',
+        secondaryBtn: 'border-white/20 dark:border-[var(--card-border)] hover:bg-white/10 dark:hover:clay-surface text-inherit'
       };
   }
 };
@@ -709,10 +709,10 @@ export const LandingPage: React.FC = () => {
   }, [dynamicProfessions, dynamicGallery, dynamicPlans, dynamicFaqs]);
 
   return (
-    <div className="min-h-screen clay-landing-bg text-[#0f1420] dark:text-[#f3f5f9] selection:bg-[#2563eb] selection:text-white dark:selection:bg-white dark:selection:text-black transition-colors overflow-x-hidden" dir="rtl">
+    <div className="min-h-screen clay-landing-bg text-[#0f1420] dark:text-[#f3f5f9] selection:clay-surface selection:text-white dark:selection:bg-white dark:selection:text-black transition-colors overflow-x-hidden" dir="rtl">
 
       {/* ---------------- 1. Claymorphic Floating Header ---------------- */}
-      <header className="sticky top-2 sm:top-3 z-50 max-w-6xl mx-2 sm:mx-4 md:mx-auto px-4 sm:px-6 h-16 flex items-center justify-between clay-card-thick backdrop-blur-xl transition-all">
+      <header className="sticky top-2 sm:top-3 z-50 max-w-6xl mx-2 sm:mx-4 md:mx-auto px-2 sm:px-6 h-14 sm:h-16 flex items-center justify-between clay-card-thick backdrop-blur-xl transition-all">
         {/* Brand */}
         <Link to="/" className="flex items-center gap-2.5 sm:gap-3 group shrink-0">
           <div className="w-9 h-9 rounded-2xl clay-btn-primary-thick flex items-center justify-center font-bold text-sm  transition-transform group-hover:scale-105 shrink-0">
@@ -722,7 +722,7 @@ export const LandingPage: React.FC = () => {
             <span className="text-sm sm:text-base font-black text-[#0f1420] dark:text-white tracking-tight whitespace-nowrap" style={{ fontFamily: "'Estedad', sans-serif" }}>
               دستیار هوشمند
             </span>
-            <span className="text-[10px] text-[#525d75] dark:text-[#9aa5bc] font-medium whitespace-nowrap">پلتفرم جامع هوش مصنوعی فارسی</span>
+            <span className="hidden sm:block text-[10px] text-[#525d75] dark:text-[#9aa5bc] font-medium whitespace-nowrap">پلتفرم جامع هوش مصنوعی فارسی</span>
           </div>
         </Link>
 
@@ -763,7 +763,7 @@ export const LandingPage: React.FC = () => {
           ) : (
             <button
               onClick={() => setAuthModalOpen(true)}
-              className="inline-flex items-center gap-1.5 clay-btn-primary-thick px-3.5 sm:px-4 py-2 rounded-xl text-xs font-bold  transition-all active:scale-95 whitespace-nowrap cursor-pointer"
+              className="inline-flex items-center gap-1 sm:gap-1.5 clay-btn-primary-thick px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-[10px] sm:text-xs font-bold transition-all active:scale-95 whitespace-nowrap cursor-pointer"
             >
               <span>ورود / ثبت‌نام</span>
             </button>
@@ -859,11 +859,11 @@ export const LandingPage: React.FC = () => {
             }
           `}</style>
           
-          <div className="clay-card-elevated p-8 sm:p-10 overflow-hidden flex flex-col items-center text-center relative">
+          <div className="clay-card-elevated p-4 sm:p-10 overflow-hidden flex flex-col items-center text-center relative">
             {/* Glow removed as requested */}
 
             {/* Banner Title */}
-            <h2 className="text-xl sm:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-rose-500 to-orange-500 dark:from-rose-400 dark:to-orange-400 py-2 px-1 mb-1 relative z-10" style={{ fontFamily: "'Estedad', sans-serif" }}>
+            <h2 className="text-xl sm:text-3xl font-black leading-[1.6] sm:leading-normal text-transparent bg-clip-text bg-gradient-to-r from-rose-500 to-orange-500 dark:from-rose-400 dark:to-orange-400 py-2 px-1 mb-1 relative z-10" style={{ fontFamily: "'Estedad', sans-serif" }}>
               {dynamicHero?.bannerTitle || 'یک کلید برای تمام پرچمداران جهان'}
             </h2>
             <p className="text-xs sm:text-sm text-[#525d75] dark:text-[#9aa5bc] max-w-xl mx-auto mb-10 relative z-10 leading-relaxed">
@@ -871,7 +871,7 @@ export const LandingPage: React.FC = () => {
             </p>
 
             {/* Marquee Track */}
-            <div className="w-full overflow-hidden relative z-10 [mask-image:linear-gradient(to_right,transparent,black_15%,black_85%,transparent)]">
+            <div className="w-full overflow-hidden relative z-10 [mask-image:linear-gradient(to_right,transparent,black_5%,black_95%,transparent)] sm:[mask-image:linear-gradient(to_right,transparent,black_15%,black_85%,transparent)]">
               <div className="animate-marquee-rtl gap-4 sm:gap-6 pr-4">
                 {/* Duplicated list for seamless loop */}
                 {[...Array(2)].map((_, i) => (
@@ -987,19 +987,19 @@ export const LandingPage: React.FC = () => {
             {/* Visual Model Grid with Inset Tray & Balanced Matte Clay Badges */}
             <div className="p-2 rounded-3xl clay-debossed-socket mt-6">
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-                <div className="p-3.5 rounded-2xl clay-indigo text-center text-white transition-transform hover:-translate-y-1">
+                <div className="h-full flex flex-col justify-center items-center p-3.5 rounded-2xl clay-indigo text-center text-white transition-transform hover:-translate-y-1">
                   <span className="block font-black text-xs text-white">Claude 3.5</span>
                   <span className="text-[10px] text-white/80 font-medium">استاد نگارش و ادبیات</span>
                 </div>
-                <div className="p-3.5 rounded-2xl clay-charcoal text-center text-white transition-transform hover:-translate-y-1">
+                <div className="h-full flex flex-col justify-center items-center p-3.5 rounded-2xl clay-charcoal text-center text-white transition-transform hover:-translate-y-1">
                   <span className="block font-black text-xs text-white">GPT-4o</span>
                   <span className="text-[10px] text-white/80 font-medium">پرچم‌دار همه‌کاره</span>
                 </div>
-                <div className="p-3.5 rounded-2xl clay-gold-noglow text-center text-white transition-transform hover:-translate-y-1">
+                <div className="h-full flex flex-col justify-center items-center p-3.5 rounded-2xl clay-gold-noglow text-center text-white transition-transform hover:-translate-y-1">
                   <span className="block font-black text-xs text-white">Gemini 2.0</span>
                   <span className="text-[10px] text-white/80 font-medium">تحلیل چندرسانه‌ای و سرعت</span>
                 </div>
-                <div className="p-3.5 rounded-2xl clay-rose-noglow text-center text-white transition-transform hover:-translate-y-1">
+                <div className="h-full flex flex-col justify-center items-center p-3.5 rounded-2xl clay-rose-noglow text-center text-white transition-transform hover:-translate-y-1">
                   <span className="block font-black text-xs text-white">DeepSeek V3</span>
                   <span className="text-[10px] text-white/80 font-medium">کدنویسی و استدلال</span>
                 </div>
@@ -1262,7 +1262,7 @@ export const LandingPage: React.FC = () => {
                           style={{ fontFamily: "'Vazirmatn', -apple-system, BlinkMacSystemFont, sans-serif" }}
                         >
                           <span>{typedPrompt}</span>
-                          <span className="inline-block w-1.5 h-4 bg-blue-600 dark:bg-blue-400 ms-1.5 animate-pulse align-middle rounded-sm" />
+                          <span className="inline-block w-1.5 h-4 clay-btn-primary dark:bg-blue-400 ms-1.5 animate-pulse align-middle rounded-sm" />
                         </p>
                       </div>
                     </div>
@@ -1298,7 +1298,7 @@ export const LandingPage: React.FC = () => {
                         onClick={() => setActiveProfessionIdx(idx)}
                         className={`w-full p-2 rounded-2xl transition-all duration-300 text-right cursor-pointer flex items-center gap-2.5 active:scale-95 ${
                           isActive
-                            ? 'clay-card-elevated border-2 border-[#2563eb] dark:border-white/50 scale-102 '
+                            ? 'clay-card-elevated border-2 border-[var(--card-border)] dark:border-white/50 scale-102 '
                             : 'clay-card-thick opacity-70 hover:opacity-100'
                         }`}
                       >
@@ -1836,7 +1836,7 @@ export const LandingPage: React.FC = () => {
       {/* ---------------- 7. Final Call to Action (Claymorphic CTA Banner) ---------------- */}
       {dynamicVisibility.cta !== false && dynamicCta?.enabled !== false && (
         <section id="cta" className="py-16 sm:py-20 px-4 sm:px-6 max-w-5xl mx-auto border-t border-black/5 dark:border-white/5">
-          <div className="clay-card-thick p-8 sm:p-14 rounded-3xl text-center relative overflow-hidden flex flex-col items-center border border-zinc-200/80 dark:border-zinc-800/80 shadow-2xl">
+          <div className="clay-card-thick p-8 sm:p-14 rounded-3xl text-center relative overflow-hidden flex flex-col items-center border border-[var(--card-border)]  shadow-2xl">
             <div className="w-14 h-14 rounded-2xl clay-btn-primary-thick flex items-center justify-center text-white mb-6 shadow-md shadow-blue-500/25">
               <Sparkles className="w-7 h-7" />
             </div>

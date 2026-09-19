@@ -1,11 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuthStore } from '../store/authStore';
 import { useUIStore } from '../store/uiStore';
-import { 
- Coins, 
- X, 
- Sparkles, 
- CreditCard,
+import { Coins, X, Sparkles, CreditCard,
  ShieldCheck,
  Loader2,
  Gift,
@@ -99,12 +95,11 @@ export const WalletModal: React.FC = () => {
 
  return (
  <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-sm animate-fadeIn" dir="rtl">
- <div 
- className="relative w-full max-w-xl clay-modal overflow-hidden flex flex-col max-h-[90vh]"
+ <div className="relative w-full max-w-xl clay-modal overflow-hidden flex flex-col max-h-[90vh]"
  onClick={(e) => e.stopPropagation()}
  >
  {/* Header */}
- <div className="flex items-center justify-between p-5 border-b border-zinc-200 dark:border-zinc-800 clay-surface-inset">
+ <div className="flex items-center justify-between p-5 border-b border-[var(--card-border)]  clay-surface-inset">
  <div className="flex items-center gap-3">
  <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-500">
  <Coins className="w-5 h-5" />
@@ -114,8 +109,7 @@ export const WalletModal: React.FC = () => {
  <p className="text-xs text-zinc-500">شفافیت کامل در محاسبه توکن‌ها و هزینه‌ها</p>
  </div>
  </div>
- <button 
- onClick={() => setIsWalletOpen(false)}
+ <button onClick={() => setIsWalletOpen(false)}
  className="w-9 h-9 flex items-center justify-center rounded-xl clay-icon-btn cursor-pointer"
  >
  <X className="w-5 h-5" />
@@ -123,7 +117,7 @@ export const WalletModal: React.FC = () => {
  </div>
 
  {/* Balance Card Banner */}
- <div className="p-5 bg-gradient-to-br from-emerald-500/10 via-blue-500/5 to-transparent border-b border-zinc-200 dark:border-zinc-800">
+ <div className="p-5 bg-gradient-to-br from-emerald-500/10 via-blue-500/5 to-transparent border-b border-[var(--card-border)] ">
  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
  <div>
  <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400 block mb-1">موجودی فعلی حساب:</span>
@@ -148,7 +142,7 @@ export const WalletModal: React.FC = () => {
  </div>
 
  {/* Tab Switcher */}
- <div className="flex border-b border-zinc-200 dark:border-zinc-800 px-5 pt-3 clay-surface-inset">
+ <div className="flex border-b border-[var(--card-border)]  px-5 pt-3 clay-surface-inset">
  <button
  onClick={() => setActiveTab('packages')}
  className={`pb-3 px-4 text-xs font-bold transition-all relative cursor-pointer ${
@@ -218,7 +212,7 @@ export const WalletModal: React.FC = () => {
  </div>
 
  {/* Custom Top-up Card */}
- <div className="p-4 rounded-2xl clay-surface space-y-3.5">
+ <div className="p-4 rounded-2xl clay-card space-y-3.5">
  <div className="flex items-center justify-between">
  <label className="text-xs font-bold text-zinc-800 dark:text-zinc-200 flex items-center gap-1.5">
  <CreditCard className="w-4 h-4 text-emerald-500" />
@@ -331,17 +325,12 @@ export const WalletModal: React.FC = () => {
  walletData.transactions.map((tx: any) => {
  const isPositive = tx.amount > 0;
  return (
- <div 
- key={tx.id} 
- className="flex items-center justify-between p-3 rounded-2xl clay-surface text-xs"
+ <div key={tx.id} className="flex items-center justify-between p-3 rounded-2xl clay-card text-xs"
  >
  <div className="flex items-center gap-3">
  <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${
- tx.type === 'bonus' 
- ? 'bg-amber-500/10 text-amber-500'
- : isPositive 
- ? 'bg-emerald-500/10 text-emerald-500' 
- : 'clay-btn-secondary text-zinc-600 dark:text-zinc-300'
+ tx.type === 'bonus' ? 'bg-amber-500/10 text-amber-500'
+ : isPositive ? 'bg-emerald-500/10 text-emerald-500' : 'clay-btn-secondary text-zinc-600 dark:text-zinc-300'
  }`}>
  {tx.type === 'bonus' ? (
  <Sparkles className="w-4 h-4" />

@@ -179,7 +179,7 @@ export function StoreFront() {
  };
  return (
  <div className="flex flex-col min-h-screen clay-landing-bg transition-colors duration-300">
- <header className="sticky top-0 z-40 bg-[#ebf0f8]/80 dark:bg-[#0a0b0e]/80 backdrop-blur-md clay-card-thick rounded-none border-0">
+ <header className="sticky top-0 z-40 clay-surface dark:clay-surface backdrop-blur-md clay-card-thick rounded-none border-0">
  <div className="container mx-auto px-3 sm:px-4 h-16 flex items-center justify-between">
  <div className="flex items-center gap-2 sm:gap-4">
  <Link 
@@ -291,7 +291,7 @@ export function StoreFront() {
  <>
  {loading ? (
  <div className="flex items-center justify-center h-48">
- <div className="w-10 h-10 border-2 border-zinc-200 dark:border-zinc-800 border-t-blue-600 rounded-full animate-spin" />
+ <div className="w-10 h-10 border-2 border-[var(--card-border)]  border-t-blue-600 rounded-full animate-spin" />
  </div>
  ) : error ? (
  <div className="p-6 rounded-2xl bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 font-bold flex flex-col items-center justify-center h-48">
@@ -370,7 +370,7 @@ export function StoreFront() {
  </div>
  )}
  
- <span className="absolute top-3.5 right-3.5 text-[11px] font-bold px-2.5 py-1 rounded-lg bg-zinc-900/80 text-zinc-200 dark:bg-zinc-800/90 dark:text-zinc-300 backdrop-blur-md border border-white/10 shadow-xs">
+ <span className="absolute top-3.5 right-3.5 text-[11px] font-bold px-2.5 py-1 rounded-lg bg-zinc-900/80 text-zinc-200  dark:text-zinc-300 backdrop-blur-md border border-white/10 shadow-xs">
  {p.category === 'plan' ? 'پلن تعرفه' : p.category === 'api' ? 'کلید API' : p.category === 'account' ? 'اکانت پرمیوم' : 'پکیج'}
  </span>
 
@@ -398,7 +398,7 @@ export function StoreFront() {
  )}
 
  {p.category === 'plan' && p.features && (
- <div className="mb-4 space-y-1.5 pt-1 border-t border-zinc-100 dark:border-zinc-800/60">
+ <div className="mb-4 space-y-1.5 pt-1 border-t border-[var(--card-border)] ">
  {p.features.split('\n').filter(Boolean).slice(0, 3).map((feat: string, idx: number) => (
  <div key={idx} className="flex items-center gap-1.5 text-xs">
  <CheckCircle2 size={13} className="text-emerald-500 shrink-0" />
@@ -408,7 +408,7 @@ export function StoreFront() {
  </div>
  )}
  
- <div className="mt-auto pt-4 border-t border-zinc-100 dark:border-zinc-800/60 flex items-center justify-between">
+ <div className="mt-auto pt-4 border-t border-[var(--card-border)]  flex items-center justify-between">
  <div className="flex flex-col">
  <span className="text-[11px] mb-0.5">مبلغ پرداختی</span>
  <span className="text-lg font-bold">

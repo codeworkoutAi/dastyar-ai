@@ -37,7 +37,6 @@ import { Tooltip } from './Tooltip';
 
 export const getModelIntro = (modelName: string, details: ModelDetails) => {
  const lower = modelName.toLowerCase();
- 
  if (lower.includes('lfm') || lower.includes('liquid')) {
  return {
  title: 'مدل نوین چندوجهی LFM (Liquid Foundation Model)',
@@ -122,7 +121,6 @@ export const SmartRoutingAnimation: React.FC<{ routingState: 'general' | 'coding
  let activeModel = modelGeneral;
  let ActiveIcon = FileText;
  let activeGlowColor = 'zinc';
- 
  if (routingState === 'coding') {
  activeModel = modelCoding;
  ActiveIcon = Code2OutlineIcon;
@@ -137,14 +135,13 @@ export const SmartRoutingAnimation: React.FC<{ routingState: 'general' | 'coding
  // The user requested LTR (Left-to-Right) layout for this specific component.
  return (
  <div className="w-full flex justify-between items-center relative fade-in-up select-none h-full max-w-xl mx-auto" dir="ltr">
- 
  {/* 1. Source Node (Brain) - Left Side */}
  <div className={`w-6 h-6 sm:w-8 sm:h-8 z-20 shrink-0 flex items-center justify-center transition-all duration-500 relative ${routingState ? 'text-zinc-700 dark:text-zinc-300' : 'opacity-40 grayscale'}`}>
  <BrainOutlineIcon className="w-full h-full" />
  </div>
 
  {/* Connection Line 1 (Brain to Modality) */}
- <div className="flex-1 h-[1.5px] mx-2 sm:mx-4 relative bg-zinc-200/40 dark:bg-zinc-800/40 rounded-full shrink min-w-[30px] flex justify-start">
+ <div className="flex-1 h-[1.5px] mx-2 sm:mx-4 relative bg-zinc-200/40  rounded-full shrink min-w-[30px] flex justify-start">
  {routingState && (
  <div className="h-full bg-zinc-500 dark:bg-zinc-400 rounded-full animate-fill-line-ltr w-0" />
  )}
@@ -156,7 +153,7 @@ export const SmartRoutingAnimation: React.FC<{ routingState: 'general' | 'coding
  </div>
 
  {/* Connection Line 2 (Modality to Model) */}
- <div className="flex-1 h-[1.5px] mx-2 sm:mx-4 relative bg-zinc-200/40 dark:bg-zinc-800/40 rounded-full shrink min-w-[30px] flex justify-start">
+ <div className="flex-1 h-[1.5px] mx-2 sm:mx-4 relative bg-zinc-200/40  rounded-full shrink min-w-[30px] flex justify-start">
  {routingState && (
  <div className="h-full bg-zinc-500 dark:bg-zinc-400 rounded-full animate-fill-line-ltr w-0" style={{ animationDelay: '0.4s' }} />
  )}
@@ -393,7 +390,7 @@ export const ChatBox: React.FC = React.memo(() => {
  onChange={(e) => setEditingText(e.target.value)}
  dir="auto"
  rows={Math.min(6, Math.max(2, editingText.split('\n').length))}
- className="w-full p-3 rounded-2xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 text-[length:var(--chat-font-size)] [font-family:var(--user-font-family)] focus:outline-hidden focus:ring-2 focus:ring-blue-500/30 resize-y leading-relaxed font-medium text-zinc-800 dark:text-zinc-200"
+ className="w-full p-3 rounded-2xl clay-input  text-[length:var(--chat-font-size)] [font-family:var(--user-font-family)] focus:outline-hidden focus:ring-2 focus:ring-blue-500/30 resize-y leading-relaxed font-medium text-zinc-800 dark:text-zinc-200"
  autoFocus
  placeholder="ویرایش پیام خود را اینجا بنویسید..."
  onKeyDown={(e) => {
@@ -443,8 +440,8 @@ export const ChatBox: React.FC = React.memo(() => {
  {urls.map((url, i) => {
  const isMedia = url.startsWith('data:image/') || url.startsWith('data:video/');
  const wrapperClass = (isMulti && isMedia)
- ?"rounded-2xl overflow-hidden relative group/media w-24 h-24 sm:w-28 sm:h-28 border border-zinc-300 dark:border-zinc-700 bg-black/40 shrink-0 shadow-sm"
- :"rounded-2xl overflow-hidden relative group/media max-w-sm border border-zinc-300 dark:border-zinc-700 bg-black/40 shadow-sm";
+ ?"rounded-2xl overflow-hidden relative group/media w-24 h-24 sm:w-28 sm:h-28 border border-zinc-300  bg-black/40 shrink-0 shadow-sm"
+ :"rounded-2xl overflow-hidden relative group/media max-w-sm border border-zinc-300  bg-black/40 shadow-sm";
  const imgClass = (isMulti && isMedia)
  ?"w-full h-full object-cover transition-transform duration-300 group-hover/media:scale-[1.1]"
  :"w-full object-cover max-h-72 transition-transform duration-300 group-hover/media:scale-[1.02]";
@@ -514,9 +511,9 @@ export const ChatBox: React.FC = React.memo(() => {
  ) : (
  <div className="flex flex-col gap-3">
  {msg.isStreaming && !msg.imageUrl && msg.isImageGen ? (
- <div className="flex flex-col items-center justify-center p-6 sm:p-8 my-2 rounded-3xl bg-zinc-50 dark:bg-zinc-900 border border-[var(--card-border)] relative overflow-hidden group max-w-md w-full animate-fadeIn">
+ <div className="flex flex-col items-center justify-center p-6 sm:p-8 my-2 rounded-3xl clay-card relative overflow-hidden group max-w-md w-full animate-fadeIn">
  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent animate-shimmer" />
- <div className="relative z-10 w-12 h-12 rounded-2xl clay-surface flex items-center justify-center mb-4 border border-zinc-300 dark:border-zinc-700">
+ <div className="relative z-10 w-12 h-12 rounded-2xl clay-surface flex items-center justify-center mb-4 border border-zinc-300 ">
  <Sparkles className="w-6 h-6 text-sky-400 animate-pulse" />
  </div>
  <h4 className="relative z-10 font-medium text-sm text-zinc-700 dark:text-zinc-300 mb-1">
@@ -539,7 +536,7 @@ export const ChatBox: React.FC = React.memo(() => {
  <>
  {msg.imageUrl && (
  <div className="max-w-md my-2">
- <div className="rounded-2xl overflow-hidden relative group/media border border-zinc-300 dark:border-zinc-700 bg-black/40 w-full">
+ <div className="rounded-2xl overflow-hidden relative group/media border border-zinc-300  bg-black/40 w-full">
  <img
  src={msg.imageUrl}
  alt="Generated"
@@ -583,8 +580,7 @@ export const ChatBox: React.FC = React.memo(() => {
  </div>
 
  {/* Single Unified Bottom Container */}
- <div className="flex flex-col mt-1.5 pt-1.5 border-t border-zinc-200 dark:border-zinc-800/40 text-xs text-zinc-700 dark:text-zinc-400">
- 
+ <div className="flex flex-col mt-1.5 pt-1.5 border-t border-[var(--card-border)]/40 text-xs text-zinc-700 dark:text-zinc-400">
  {/* Row 1 (Stats Slider) */}
  {!isUser && !msg.error && (msg.modelUsed || showPerformanceMetrics) && (
  <div className={`overflow-hidden transition-all duration-300 ease-in-out ${showPerformanceMetrics ? 'max-h-12 opacity-100 mb-1' : 'max-h-0 opacity-0 mb-0'}`}>
@@ -596,21 +592,21 @@ export const ChatBox: React.FC = React.memo(() => {
  </div>
  )}
 
- <div className="flex items-center gap-1 px-2 py-0.5 rounded-md clay-surface border border-[var(--card-border)] shrink-0">
+ <div className="flex items-center gap-1 px-2 py-0.5 rounded-md clay-surface shrink-0">
  <span className="text-zinc-500 font-sans">زمان:</span>
  <span className="font-mono text-zinc-700 dark:text-zinc-300" dir="ltr">
  {msg.metrics?.totalTimeMs ? `${(msg.metrics.totalTimeMs / 1000).toFixed(1)}s` : '1.4s'}
  </span>
  </div>
 
- <div className="flex items-center gap-1 px-2 py-0.5 rounded-md clay-surface border border-[var(--card-border)] shrink-0">
+ <div className="flex items-center gap-1 px-2 py-0.5 rounded-md clay-surface shrink-0">
  <span className="text-zinc-500 font-sans">توکن مصرفی:</span>
  <span className="font-mono text-zinc-700 dark:text-zinc-300" dir="ltr">
  {toPersianDigits(msg.metrics?.exactTotalTokens || msg.metrics?.approxTokens || 340)}
  </span>
  </div>
 
- <div className="flex items-center gap-1 px-2 py-0.5 rounded-md clay-surface border border-[var(--card-border)] shrink-0">
+ <div className="flex items-center gap-1 px-2 py-0.5 rounded-md clay-surface shrink-0">
  <span className="text-zinc-500 font-sans">هزینه:</span>
  <span className="font-mono text-emerald-600 dark:text-emerald-400" dir="rtl">
  {typeof msg.metrics?.costToman === 'number'
@@ -729,7 +725,6 @@ export const ChatBox: React.FC = React.memo(() => {
  </>
  )}
  </div>
- 
  {!isUser && !msg.error && onToggleMetrics && (
  <Tooltip content={showPerformanceMetrics ?"مخفی‌سازی آمار" :"نمایش آمار"}>
  <button
@@ -755,7 +750,7 @@ export const ChatBox: React.FC = React.memo(() => {
  {showScrollBottom && (
  <button
  onClick={() => scrollToBottom(true)}
- className="absolute bottom-4 sm:bottom-8 left-4 sm:left-8 z-20 p-3 rounded-full clay-surface text-zinc-700 dark:text-zinc-300 border border-zinc-300 dark:border-zinc-700 transition-all clay-icon-btn hover:scale-105 cursor-pointer"
+ className="absolute bottom-4 sm:bottom-8 left-4 sm:left-8 z-20 p-3 rounded-full clay-surface text-zinc-700 dark:text-zinc-300 border border-zinc-300  transition-all clay-icon-btn hover:scale-105 cursor-pointer"
  aria-label="پیمایش به پایین"
  >
  <ArrowDown className="w-4 h-4" />
@@ -764,20 +759,16 @@ export const ChatBox: React.FC = React.memo(() => {
 
  {/* Lightbox Modal */}
  {lightboxMedia && (
- <div 
- className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center p-4 backdrop-blur-sm"
+ <div className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center p-4 backdrop-blur-sm"
  onClick={() => setLightboxMedia(null)}
  >
- <button 
- className="absolute top-6 right-6 p-2 rounded-full clay-surface clay-icon-btn text-white transition-colors cursor-pointer"
+ <button className="absolute top-6 right-6 p-2 rounded-full clay-surface clay-icon-btn text-white transition-colors cursor-pointer"
  onClick={() => setLightboxMedia(null)}
  aria-label="بستن پیش‌نمایش"
  >
  <X className="w-6 h-6" />
  </button>
- 
- <div 
- className="relative max-w-[90vw] max-h-[90dvh]"
+ <div className="relative max-w-[90vw] max-h-[90dvh]"
  onClick={(e) => e.stopPropagation()}
  >
  {lightboxMedia.type === 'image' ? (
@@ -785,11 +776,10 @@ export const ChatBox: React.FC = React.memo(() => {
  ) : (
  <video src={lightboxMedia.url} controls autoPlay className="max-w-full max-h-[90dvh] object-contain rounded-xl" />
  )}
- 
  <div className="absolute -bottom-14 left-1/2 -translate-x-1/2 flex items-center gap-3">
  <button
  onClick={() => handleDownloadMedia(lightboxMedia.url, lightboxMedia.type === 'video')}
- className="flex items-center gap-2 px-4 py-2 clay-surface clay-icon-btn text-white rounded-xl border border-zinc-300 dark:border-zinc-700 transition-colors cursor-pointer text-sm"
+ className="flex items-center gap-2 px-4 py-2 clay-surface clay-icon-btn text-white rounded-xl border border-zinc-300  transition-colors cursor-pointer text-sm"
  >
  <Download className="w-4 h-4" />
  دانلود

@@ -77,7 +77,7 @@ export function ChatApp() {
  <ChatBox />
  </div>
  
- <div className="flex-none w-full transition-all duration-500 ease-in-out">
+ <div className="flex-none w-full transition-all duration-500 ease-in-out pb-3 sm:pb-0 px-2 sm:px-0">
  <MessageInput />
  </div>
  
@@ -85,7 +85,7 @@ export function ChatApp() {
 
  {/* Floating Action Notices */}
  {metricsNotice && (
- <div className="absolute bottom-28 right-4 md:right-8 bg-zinc-50 dark:bg-zinc-900/95 dark:bg-black/95 text-zinc-900 dark:text-zinc-100 dark:text-zinc-300 border border-[var(--card-border)] dark:border-white/10 px-4 py-2.5 rounded-2xl backdrop-blur-xl flex items-center gap-3 animate-slideUp z-50">
+ <div className="absolute bottom-28 right-4 md:right-8 clay-surface dark:bg-black/95 text-zinc-900 dark:text-zinc-100 dark:text-zinc-300 border border-[var(--card-border)] dark:border-white/10 px-4 py-2.5 rounded-2xl backdrop-blur-xl flex items-center gap-3 animate-slideUp z-50">
  <InfoCircleBoldIcon className="w-5 h-5 text-zinc-700 dark:text-zinc-400" />
  <span className="text-sm font-bold">{metricsNotice}</span>
  </div>

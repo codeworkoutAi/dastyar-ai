@@ -44,7 +44,6 @@ export const GuestLanding: React.FC = () => {
  </div>
 
  <div className="relative z-10 max-w-4xl w-full flex flex-col items-center text-center mt-8 md:mt-12">
- 
  {/* Top Badges */}
  <div className="mb-6 flex flex-col sm:flex-row items-center justify-center gap-2.5 animate-slideDown">
  <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-300/60 dark:border-emerald-500/30 text-emerald-700 dark:text-emerald-300 text-xs font-bold shadow-xs">
@@ -115,9 +114,7 @@ export const GuestLanding: React.FC = () => {
  {/* Features Grid */}
  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-5 w-full animate-slideUp" style={{ animationDelay: '0.2s' }}>
  {features.map((feature, idx) => (
- <div 
- key={idx} 
- className="flex items-start gap-4 p-5 clay-card text-right transition-all"
+ <div key={idx} className="flex items-start gap-4 p-5 clay-card text-right transition-all"
  >
  <div className="flex-shrink-0 w-11 h-11 rounded-2xl clay-surface flex items-center justify-center shadow-inner clay-icon">
  {feature.icon}

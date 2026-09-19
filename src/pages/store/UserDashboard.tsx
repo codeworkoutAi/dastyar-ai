@@ -205,7 +205,7 @@ export const UserDashboard = () => {
   if (!user) {
     return (
       <div className="flex flex-col min-h-screen clay-landing-bg items-center justify-center p-6 font-sans transition-colors duration-300" style={{ fontFamily: "'Vazirmatn', sans-serif" }}>
-        <div className="w-full max-w-md clay-card-thick p-8 text-center shadow-xl border border-zinc-200/80 dark:border-zinc-800/80">
+        <div className="w-full max-w-md clay-card-thick p-8 text-center shadow-xl border border-[var(--card-border)] ">
           <div className="w-16 h-16 clay-btn-thick text-blue-600 dark:text-cyan-400 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-xs">
             <Lock size={28} />
           </div>
@@ -232,7 +232,7 @@ export const UserDashboard = () => {
   return (
     <div className="flex flex-col min-h-screen clay-landing-bg font-sans pb-16 transition-colors duration-300" style={{ fontFamily: "'Vazirmatn', sans-serif" }}>
       {/* Top Navbar: Clean full-width glassmorphic header matching Blog/Store */}
-      <header className="sticky top-0 z-40 bg-[#ebf0f8]/80 dark:bg-[var(--bg-main)]/80 backdrop-blur-xl border-b border-black/5 dark:border-white/5 px-4 md:px-8 py-3 flex items-center justify-between shadow-xs">
+      <header className="sticky top-0 z-40 clay-surface dark:bg-[var(--bg-main)]/80 backdrop-blur-xl border-b border-black/5 dark:border-white/5 px-4 md:px-8 py-3 flex items-center justify-between shadow-xs">
         <div className="flex items-center gap-3">
           <Link 
             to="/" 
@@ -274,7 +274,7 @@ export const UserDashboard = () => {
       <main className="max-w-6xl mx-auto px-4 md:px-8 mt-6 space-y-6">
         
         {/* Row 1: Welcome & Quick Action Bar (Claymorphic) */}
-        <div className="p-6 md:p-7 rounded-3xl clay-card-thick border border-zinc-200/80 dark:border-zinc-800/80 shadow-lg flex flex-col md:flex-row md:items-center justify-between gap-4 relative overflow-hidden">
+        <div className="p-6 md:p-7 rounded-3xl clay-card-thick border border-[var(--card-border)]  shadow-lg flex flex-col md:flex-row md:items-center justify-between gap-4 relative overflow-hidden">
           <div className="space-y-1">
             <h2 className="text-lg md:text-2xl font-black dark:text-white flex items-center gap-2" style={{ fontFamily: "'Estedad', sans-serif" }}>
               <span>خوش آمدید، {user.name?.split(' ')[0] || 'کاربر عزیز'}</span>
@@ -308,7 +308,7 @@ export const UserDashboard = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           
           {/* Card 1: Wallet Balance (Emerald / Teal) */}
-          <div className="p-5 md:p-6 rounded-3xl clay-card-thick border border-zinc-200/80 dark:border-zinc-800/80 shadow-lg flex flex-col justify-between transition-all hover:scale-[1.01]">
+          <div className="p-5 md:p-6 rounded-3xl clay-card-thick border border-[var(--card-border)]  shadow-lg flex flex-col justify-between transition-all hover:scale-[1.01]">
             <div className="flex items-center justify-between mb-3">
               <span className="text-xs font-extrabold text-emerald-600 dark:text-emerald-400 flex items-center gap-2">
                 <div className="w-7 h-7 rounded-xl clay-btn-thick flex items-center justify-center text-emerald-600 dark:text-emerald-400">
@@ -337,7 +337,7 @@ export const UserDashboard = () => {
           </div>
 
           {/* Card 2: Total Tokens (Blue / Cyan) */}
-          <div className="p-5 md:p-6 rounded-3xl clay-card-thick border border-zinc-200/80 dark:border-zinc-800/80 shadow-lg flex flex-col justify-between transition-all hover:scale-[1.01]">
+          <div className="p-5 md:p-6 rounded-3xl clay-card-thick border border-[var(--card-border)]  shadow-lg flex flex-col justify-between transition-all hover:scale-[1.01]">
             <div className="flex items-center justify-between mb-3">
               <span className="text-xs font-extrabold text-blue-600 dark:text-cyan-400 flex items-center gap-2">
                 <div className="w-7 h-7 rounded-xl clay-btn-thick flex items-center justify-center text-blue-600 dark:text-cyan-400">
@@ -362,7 +362,7 @@ export const UserDashboard = () => {
           </div>
 
           {/* Card 3: Total Spent (Purple / Indigo) */}
-          <div className="p-5 md:p-6 rounded-3xl clay-card-thick border border-zinc-200/80 dark:border-zinc-800/80 shadow-lg flex flex-col justify-between transition-all hover:scale-[1.01]">
+          <div className="p-5 md:p-6 rounded-3xl clay-card-thick border border-[var(--card-border)]  shadow-lg flex flex-col justify-between transition-all hover:scale-[1.01]">
             <div className="flex items-center justify-between mb-3">
               <span className="text-xs font-extrabold text-purple-600 dark:text-purple-400 flex items-center gap-2">
                 <div className="w-7 h-7 rounded-xl clay-btn-thick flex items-center justify-center text-purple-600 dark:text-purple-400">
@@ -389,7 +389,7 @@ export const UserDashboard = () => {
           </div>
 
           {/* Card 4: Total Messages (Amber / Orange) */}
-          <div className="p-5 md:p-6 rounded-3xl clay-card-thick border border-zinc-200/80 dark:border-zinc-800/80 shadow-lg flex flex-col justify-between transition-all hover:scale-[1.01]">
+          <div className="p-5 md:p-6 rounded-3xl clay-card-thick border border-[var(--card-border)]  shadow-lg flex flex-col justify-between transition-all hover:scale-[1.01]">
             <div className="flex items-center justify-between mb-3">
               <span className="text-xs font-extrabold text-amber-600 dark:text-amber-400 flex items-center gap-2">
                 <div className="w-7 h-7 rounded-xl clay-btn-thick flex items-center justify-center text-amber-600 dark:text-amber-400">
@@ -422,7 +422,7 @@ export const UserDashboard = () => {
           <div className="flex flex-col gap-6 order-2 lg:order-1">
             
             {/* Profile Card */}
-            <div className="p-5 md:p-6 rounded-3xl clay-card-thick border border-zinc-200/80 dark:border-zinc-800/80 shadow-lg flex flex-col gap-5">
+            <div className="p-5 md:p-6 rounded-3xl clay-card-thick border border-[var(--card-border)]  shadow-lg flex flex-col gap-5">
               <div className="flex items-center gap-2.5 pb-3 border-b border-black/5 dark:border-white/5">
                 <div className="w-7 h-7 rounded-xl clay-btn-thick flex items-center justify-center text-blue-500">
                   <UserIcon size={15} />
@@ -451,7 +451,7 @@ export const UserDashboard = () => {
                           }`}
                           title={`آواتار ${i + 1}`}
                         >
-                          <img src={url} alt={`avatar-${i}`} className="w-8 h-8 rounded-xl object-cover bg-white dark:bg-zinc-800" />
+                          <img src={url} alt={`avatar-${i}`} className="w-8 h-8 rounded-xl object-cover bg-white " />
                         </button>
                       );
                     })}
@@ -513,7 +513,7 @@ export const UserDashboard = () => {
             </div>
 
             {/* Security Card: Fixed Button Color & Clay Styling */}
-            <div className="p-5 md:p-6 rounded-3xl clay-card-thick border border-zinc-200/80 dark:border-zinc-800/80 shadow-lg flex flex-col gap-5">
+            <div className="p-5 md:p-6 rounded-3xl clay-card-thick border border-[var(--card-border)]  shadow-lg flex flex-col gap-5">
               <div className="flex items-center gap-2.5 pb-3 border-b border-black/5 dark:border-white/5">
                 <div className="w-7 h-7 rounded-xl clay-btn-thick flex items-center justify-center text-blue-500">
                   <ShieldCheck size={15} />
@@ -619,7 +619,7 @@ export const UserDashboard = () => {
                 
                 {/* Model Breakdown Card (Claymorphic) */}
                 {walletData?.stats?.modelBreakdown && walletData.stats.modelBreakdown.length > 0 && (
-                  <div className="p-5 md:p-6 rounded-3xl clay-card-thick border border-zinc-200/80 dark:border-zinc-800/80 shadow-lg">
+                  <div className="p-5 md:p-6 rounded-3xl clay-card-thick border border-[var(--card-border)]  shadow-lg">
                     <div className="flex items-center justify-between mb-4 pb-3 border-b border-black/5 dark:border-white/5">
                       <div className="flex items-center gap-2.5">
                         <div className="w-7 h-7 rounded-xl clay-btn-thick flex items-center justify-center text-indigo-500">
@@ -675,7 +675,7 @@ export const UserDashboard = () => {
                 )}
 
                 {/* Transactions Table Section (Claymorphic) */}
-                <div className="p-5 md:p-6 rounded-3xl clay-card-thick border border-zinc-200/80 dark:border-zinc-800/80 shadow-lg flex flex-col min-h-[420px]">
+                <div className="p-5 md:p-6 rounded-3xl clay-card-thick border border-[var(--card-border)]  shadow-lg flex flex-col min-h-[420px]">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 pb-3 border-b border-black/5 dark:border-white/5">
                     <div className="flex items-center gap-2.5">
                       <div className="w-7 h-7 rounded-xl clay-btn-thick flex items-center justify-center text-zinc-600 dark:text-zinc-300">
@@ -727,7 +727,7 @@ export const UserDashboard = () => {
                   <div className="flex-1 overflow-y-auto max-h-[500px] pr-1 -mr-1 space-y-3 hide-scrollbar">
                     {walletLoading ? (
                       <div className="flex justify-center p-12">
-                        <div className="w-8 h-8 border-2 border-zinc-200 border-t-blue-600 rounded-full animate-spin" />
+                        <div className="w-8 h-8 border-2 border-[var(--card-border)] border-t-blue-600 rounded-full animate-spin" />
                       </div>
                     ) : !walletData?.transactions || walletData.transactions.length === 0 ? (
                       <div className="flex flex-col items-center justify-center py-12 text-center">
@@ -833,7 +833,7 @@ export const UserDashboard = () => {
 
             {/* TAB 2: Store Orders History */}
             {activeTab === 'orders' && (
-              <div className="p-5 md:p-6 rounded-3xl clay-card-thick border border-zinc-200/80 dark:border-zinc-800/80 shadow-lg flex-1 flex flex-col min-h-[400px]">
+              <div className="p-5 md:p-6 rounded-3xl clay-card-thick border border-[var(--card-border)]  shadow-lg flex-1 flex flex-col min-h-[400px]">
                 <div className="flex items-center justify-between mb-4 pb-3 border-b border-black/5 dark:border-white/5">
                   <div className="flex items-center gap-2.5">
                     <div className="w-7 h-7 rounded-xl clay-btn-thick flex items-center justify-center text-zinc-600 dark:text-zinc-300">
@@ -850,7 +850,7 @@ export const UserDashboard = () => {
                 
                 <div className="flex-1 overflow-y-auto max-h-[500px] pr-2 -mr-2 space-y-3 hide-scrollbar">
                   {loading ? (
-                    <div className="flex justify-center p-8"><div className="w-8 h-8 border-2 border-zinc-200 border-t-blue-600 rounded-full animate-spin"></div></div>
+                    <div className="flex justify-center p-8"><div className="w-8 h-8 border-2 border-[var(--card-border)] border-t-blue-600 rounded-full animate-spin"></div></div>
                   ) : purchases.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-10 text-center">
                       <div className="w-14 h-14 clay-btn-thick rounded-2xl flex items-center justify-center mb-3 shadow-xs text-zinc-500">
@@ -897,7 +897,7 @@ export const UserDashboard = () => {
 
             {/* TAB 3: Redeem License Section */}
             {activeTab === 'redeem' && (
-              <div className="p-5 md:p-6 rounded-3xl clay-card-thick border border-zinc-200/80 dark:border-zinc-800/80 shadow-lg relative overflow-hidden">
+              <div className="p-5 md:p-6 rounded-3xl clay-card-thick border border-[var(--card-border)]  shadow-lg relative overflow-hidden">
                 <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-5">
                   <div className="flex-1">
                     <h3 className="font-black text-base mb-1.5 flex items-center gap-2 dark:text-white" style={{ fontFamily: "'Estedad', sans-serif" }}>
@@ -939,7 +939,7 @@ export const UserDashboard = () => {
             )}
 
             {/* Support Card (Full Claymorphic Redesign) */}
-            <div className="p-6 rounded-3xl clay-card-thick border border-zinc-200/80 dark:border-zinc-800/80 shadow-lg flex flex-col sm:flex-row items-center justify-between gap-5 relative overflow-hidden">
+            <div className="p-6 rounded-3xl clay-card-thick border border-[var(--card-border)]  shadow-lg flex flex-col sm:flex-row items-center justify-between gap-5 relative overflow-hidden">
               <div className="flex items-center gap-4 text-center sm:text-right">
                 <div className="w-13 h-13 clay-btn-thick text-blue-600 dark:text-cyan-400 rounded-2xl flex items-center justify-center shrink-0 mx-auto sm:mx-0 shadow-xs">
                   <LifeBuoy size={24} />
@@ -970,7 +970,7 @@ export const UserDashboard = () => {
       {selectedInvoice && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-900/80 backdrop-blur-sm animate-fadeIn" onClick={() => setSelectedInvoice(null)}>
           <div 
-            className="w-full max-w-md clay-modal overflow-hidden p-6 rounded-3xl shadow-2xl border border-zinc-200/80 dark:border-zinc-800/80" 
+            className="w-full max-w-md clay-modal overflow-hidden p-6 rounded-3xl shadow-2xl border border-[var(--card-border)] " 
             onClick={e => e.stopPropagation()}
           >
             <div id="invoice-print-area">

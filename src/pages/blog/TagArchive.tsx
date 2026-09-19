@@ -93,7 +93,7 @@ export function TagArchive() {
 
  return (
  <div className="flex flex-col min-h-screen clay-landing-bg transition-colors duration-300 font-sans">
- <header className="sticky top-0 z-40 bg-white/90 dark:bg-zinc-950/90 backdrop-blur-xl border-b border-zinc-200 dark:border-zinc-800">
+ <header className="sticky top-0 z-40 bg-white/90 dark:bg-zinc-950/90 backdrop-blur-xl border-b border-[var(--card-border)] ">
  <div className="container mx-auto px-4 h-16 flex items-center justify-between max-w-5xl">
  <h1 className="text-xl font-black bg-gradient-to-l from-emerald-600 to-teal-600 bg-clip-text text-transparent flex items-center gap-2">
  <Hash size={24} className="text-emerald-600" />

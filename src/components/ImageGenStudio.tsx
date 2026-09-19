@@ -234,14 +234,11 @@ export function ImageGenStudio() {
  const [aspectRatio, setAspectRatio] = useState('1:1');
  const [engine, setEngine] = useState('flux');
  const [selectedStyle, setSelectedStyle] = useState('none');
- 
  const [loading, setLoading] = useState(false);
  const [enhancing, setEnhancing] = useState(false);
  const [error, setError] = useState<string | null>(null);
- 
  const [imageUrl, setImageUrl] = useState<string | null>(null);
  const [history, setHistory] = useState<ImageHistory[]>([]);
- 
  const [isMobileSettingsOpen, setIsMobileSettingsOpen] = useState(false);
  const [showHistory, setShowHistory] = useState(false);
 
@@ -250,7 +247,6 @@ export function ImageGenStudio() {
  const [searchQuery, setSearchQuery] = useState('');
  const [selectedDetailImage, setSelectedDetailImage] = useState<ImageHistory | null>(null);
  const [copiedId, setCopiedId] = useState<string | null>(null);
- 
  // Gallery Grid Density / Zoom State
  const [gridDensity, setGridDensity] = useState<'compact' | 'medium' | 'large'>(() => {
  try {
@@ -288,7 +284,6 @@ export function ImageGenStudio() {
  if (isOpen) {
  if (initialPrompt) setPrompt(initialPrompt);
  if (initialEngine) setEngine(initialEngine);
- 
  let saved = localStorage.getItem(galleryKey);
  if (!saved && !user?.id) {
  saved = localStorage.getItem('image_gen_history');
@@ -416,7 +411,6 @@ export function ImageGenStudio() {
  setError('لطفاً توصیف تصویر را وارد کنید.');
  return;
  }
- 
  // Check Pro lock
  const selectedEngineConf = IMAGE_ENGINES.find(e => e.id === activeEngine);
  if (selectedEngineConf?.tier === 'pro') {
@@ -434,7 +428,6 @@ export function ImageGenStudio() {
  setError(null);
  setImageUrl(null);
  setShowHistory(false);
- 
  // Apply style preset if not none
  let finalPrompt = activePrompt;
  const preset = STYLE_PRESETS.find(s => s.id === activeStyle);
@@ -510,9 +503,7 @@ export function ImageGenStudio() {
  // Filtered gallery items
  const filteredHistory = history.filter(item => {
  const matchesEngine = selectedFilter === 'all' || item.engine === selectedFilter;
- const matchesSearch = !searchQuery.trim() || 
- item.prompt.toLowerCase().includes(searchQuery.toLowerCase()) || 
- (item.enhancedPrompt && item.enhancedPrompt.toLowerCase().includes(searchQuery.toLowerCase()));
+ const matchesSearch = !searchQuery.trim() || item.prompt.toLowerCase().includes(searchQuery.toLowerCase()) || (item.enhancedPrompt && item.enhancedPrompt.toLowerCase().includes(searchQuery.toLowerCase()));
  return matchesEngine && matchesSearch;
  });
 
@@ -533,10 +524,9 @@ export function ImageGenStudio() {
 
  return (
  <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm sm:p-3 lg:p-4 transition-all" dir="rtl">
- <div className="bg-[#f8f9fa] dark:bg-[#121212] w-full h-full sm:h-[95vh] sm:max-h-[1100px] max-w-[96vw] xl:max-w-[1550px] sm:rounded-3xl flex flex-col lg:flex-row overflow-hidden relative border border-zinc-200 dark:border-white/10 animate-scaleIn">
- 
+ <div className="clay-surface dark:clay-surface w-full h-full sm:h-[95vh] sm:max-h-[1100px] max-w-[96vw] xl:max-w-[1550px] sm:rounded-3xl flex flex-col lg:flex-row overflow-hidden relative border border-[var(--card-border)] dark:border-white/10 animate-scaleIn">
  {/* Mobile Header (Only visible on small screens) */}
- <div className="lg:hidden flex items-center justify-between p-4 border-b border-zinc-200 dark:border-white/10 bg-white/50 dark:bg-[#1e1f20]/50 backdrop-blur-md z-10">
+ <div className="lg:hidden flex items-center justify-between p-4 border-b border-[var(--card-border)] dark:border-white/10 bg-white/50 dark:clay-card-thick/50 backdrop-blur-md z-10">
  <div className="flex items-center gap-2 text-purple-500">
  <Sparkles className="w-5 h-5" />
  <h2 className="font-extrabold text-sm text-zinc-800 dark:text-zinc-100">
@@ -557,17 +547,13 @@ export function ImageGenStudio() {
  <span>بوم جدید</span>
  </button>
  )}
- <button 
- onClick={() => { setShowHistory(!showHistory); setSelectedDetailImage(null); }} 
- className={`p-2 rounded-full transition-colors ${showHistory ? 'bg-purple-500 text-white' : 'bg-zinc-100 dark:bg-white/5 text-zinc-600 dark:text-zinc-300'}`}
+ <button onClick={() => { setShowHistory(!showHistory); setSelectedDetailImage(null); }} className={`p-2 rounded-full transition-colors ${showHistory ? 'bg-purple-500 text-white' : 'clay-surface dark:bg-white/5 text-zinc-600 dark:text-zinc-300'}`}
  title={showHistory ? 'بازگشت به بوم' : 'گالری'}
  >
  {showHistory ? <ArrowRight className="w-4 h-4" /> : <History className="w-4 h-4" />}
  </button>
  {!showHistory && (
- <button 
- onClick={() => setIsMobileSettingsOpen(!isMobileSettingsOpen)} 
- className={`p-2 rounded-full transition-colors ${isMobileSettingsOpen ? 'bg-purple-500 text-white' : 'bg-zinc-100 dark:bg-white/5 text-zinc-600 dark:text-zinc-300'}`}
+ <button onClick={() => setIsMobileSettingsOpen(!isMobileSettingsOpen)} className={`p-2 rounded-full transition-colors ${isMobileSettingsOpen ? 'bg-purple-500 text-white' : 'clay-surface dark:bg-white/5 text-zinc-600 dark:text-zinc-300'}`}
  >
  <Sliders className="w-4 h-4" />
  </button>
@@ -581,14 +567,13 @@ export function ImageGenStudio() {
  {/* --- 1. SETTINGS SIDEBAR (RIGHT SIDE on Desktop in RTL, Drawer on Mobile) --- */}
  {!showHistory && (
  <div className={`
- fixed lg:static inset-y-0 right-0 w-[280px] sm:w-[320px] lg:w-80 bg-[#f8f9fa] dark:bg-[#121212] lg:bg-transparent
- border-l border-zinc-200 dark:border-white/10 lg:shadow-none
+ fixed lg:static inset-y-0 right-0 w-[280px] sm:w-[320px] lg:w-80 clay-surface dark:clay-surface lg:bg-transparent
+ border-l border-[var(--card-border)] dark:border-white/10 lg:shadow-none
  flex flex-col z-[70] transform transition-transform duration-300 ease-out
  ${isMobileSettingsOpen ? 'translate-x-0' : 'translate-x-full lg:translate-x-0'}
  `}>
- 
  {/* Sidebar Header */}
- <div className="hidden lg:flex items-center justify-between p-6 border-b border-zinc-200 dark:border-white/10">
+ <div className="hidden lg:flex items-center justify-between p-6 border-b border-[var(--card-border)] dark:border-white/10">
  <div className="flex items-center gap-2 text-purple-500">
  <Sliders className="w-5 h-5" />
  <h2 className="font-extrabold text-sm text-zinc-800 dark:text-white">تنظیمات استودیو</h2>
@@ -597,9 +582,8 @@ export function ImageGenStudio() {
  <X className="w-4 h-4" />
  </button>
  </div>
- 
  {/* Mobile Sidebar Close Button */}
- <div className="lg:hidden flex items-center justify-between p-4 border-b border-zinc-200 dark:border-white/10">
+ <div className="lg:hidden flex items-center justify-between p-4 border-b border-[var(--card-border)] dark:border-white/10">
  <div className="flex items-center gap-2 text-purple-500">
  <Sliders className="w-4 h-4" />
  <h3 className="font-bold text-sm">تنظیمات</h3>
@@ -610,7 +594,6 @@ export function ImageGenStudio() {
  </div>
 
  <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-8 custom-scrollbar pb-24 lg:pb-5 text-right">
- 
  {/* Visual Aspect Ratios */}
  <div className="space-y-4">
  <label className="text-xs font-bold text-zinc-700 dark:text-zinc-400 flex items-center gap-2">
@@ -622,9 +605,8 @@ export function ImageGenStudio() {
  key={ar.id}
  onClick={() => setAspectRatio(ar.id)}
  className={`flex flex-col items-center justify-center gap-2 p-3 rounded-2xl border transition-all cursor-pointer ${
- aspectRatio === ar.id 
- ? 'bg-blue-500/10 border-blue-500 text-blue-600 dark:text-blue-400 shadow-sm'
- : 'bg-white dark:bg-[#1e1f20] border-zinc-200 dark:border-white/10 text-zinc-700 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-black/5 dark:hover:bg-white/5'
+ aspectRatio === ar.id ? 'bg-blue-500/10 border-blue-500 text-blue-600 dark:text-blue-400 shadow-sm'
+ : 'bg-white dark:clay-card-thick border-[var(--card-border)] dark:border-white/10 text-zinc-700 dark:text-zinc-400 hover:clay-surface dark:hover:bg-black/5 dark:hover:bg-white/5'
  }`}
  >
  <div className={`border-2 rounded-sm flex items-center justify-center ${ar.w} ${ar.h} ${aspectRatio === ar.id ? 'border-current' : 'border-zinc-400 dark:border-zinc-500'}`}></div>
@@ -651,9 +633,7 @@ export function ImageGenStudio() {
  key={eng.id}
  onClick={() => {
  if (isLocked) {
- alert(eng.id === 'dalle-3' 
- ? 'برای استفاده از DALL-E 3 باید کلید OpenAI API خود را در تنظیمات وارد کنید.' 
- : 'برای استفاده از Imagen 3 باید کلید Gemini API خود را در تنظیمات وارد کنید.'
+ alert(eng.id === 'dalle-3' ? 'برای استفاده از DALL-E 3 باید کلید OpenAI API خود را در تنظیمات وارد کنید.' : 'برای استفاده از Imagen 3 باید کلید Gemini API خود را در تنظیمات وارد کنید.'
  );
  return;
  }
@@ -666,8 +646,8 @@ export function ImageGenStudio() {
  ? 'bg-amber-50 dark:bg-amber-500/10 border-amber-500 text-amber-700 dark:text-amber-400 shadow-sm'
  : 'bg-emerald-50 dark:bg-emerald-500/10 border-emerald-500 text-emerald-700 dark:text-emerald-400 shadow-sm'
  : isLocked
- ? 'bg-zinc-50 dark:bg-[#1e1f20]/50 border-zinc-200 dark:border-white/5 opacity-60 hover:opacity-80 grayscale'
- : 'bg-white dark:bg-[#1e1f20] border-zinc-200 dark:border-white/10 hover:border-zinc-300 dark:hover:border-white/20'
+ ? 'clay-surface dark:clay-card-thick/50 border-[var(--card-border)] dark:border-white/5 opacity-60 hover:opacity-80 grayscale'
+ : 'bg-white dark:clay-card-thick border-[var(--card-border)] dark:border-white/10 hover:border-zinc-300 dark:hover:border-white/20'
  }`}
  >
  {isLocked && (
@@ -680,7 +660,6 @@ export function ImageGenStudio() {
  <Check className="w-4 h-4" />
  </div>
  )}
- 
  <div className="flex items-center gap-2 mb-1">
  <span className={`font-extrabold text-xs sm:text-sm ${isSelected ? '' : 'text-zinc-700 dark:text-zinc-200'}`}>{eng.name}</span>
  <span className={`text-[9px] px-1.5 py-0.5 rounded-md font-bold ${
@@ -704,16 +683,13 @@ export function ImageGenStudio() {
 
  {/* --- 2. MAIN CONTENT AREA (CANVAS OR FULLSCREEN GALLERY) --- */}
  <div className="flex-1 relative flex flex-col bg-zinc-100/60 dark:bg-black/40 overflow-hidden min-h-0">
- 
  {/* Top Navigation Bar */}
  {!showHistory ? (
  /* Canvas Top Bar */
  <div className="hidden lg:flex absolute top-3.5 left-4 right-4 justify-between items-center z-20 pointer-events-none">
  {/* Top Left: Gallery Button */}
  <div className="pointer-events-auto">
- <button 
- onClick={() => setShowHistory(true)} 
- className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl backdrop-blur-md border bg-white/80 dark:bg-black/60 text-zinc-700 dark:text-zinc-300 border-zinc-200 dark:border-white/10 hover:bg-white dark:hover:bg-black transition-all shadow-xs cursor-pointer hover:border-purple-500/40"
+ <button onClick={() => setShowHistory(true)} className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl backdrop-blur-md border clay-surface text-zinc-700 dark:text-zinc-300 border-[var(--card-border)] dark:border-white/10 hover:bg-white dark:hover:bg-black transition-all shadow-xs cursor-pointer hover:border-purple-500/40"
  >
  <History className="w-4 h-4 text-purple-500" />
  <span className="text-xs sm:text-sm font-bold">گالری من</span>
@@ -733,7 +709,7 @@ export function ImageGenStudio() {
  setImageUrl(null);
  setError(null);
  }}
- className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl backdrop-blur-md border bg-white/80 dark:bg-black/60 text-zinc-800 dark:text-zinc-200 border-zinc-200 dark:border-white/10 hover:bg-purple-50 dark:hover:bg-purple-950/40 hover:text-purple-600 dark:hover:text-purple-400 hover:border-purple-500/40 transition-all shadow-xs cursor-pointer hover:scale-105 active:scale-95"
+ className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl backdrop-blur-md border clay-surface text-zinc-800 dark:text-zinc-200 border-[var(--card-border)] dark:border-white/10 hover:bg-purple-50 dark:hover:bg-purple-950/40 hover:text-purple-600 dark:hover:text-purple-400 hover:border-purple-500/40 transition-all shadow-xs cursor-pointer hover:scale-105 active:scale-95"
  title="پاک کردن بوم و بازگشت به ویترین ایده‌ها"
  >
  <Sparkles className="w-3.5 h-3.5 text-purple-500" />
@@ -744,19 +720,16 @@ export function ImageGenStudio() {
  </div>
  ) : (
  /* Gallery Fullscreen Header */
- <div className="p-3.5 lg:p-5 border-b border-zinc-200 dark:border-white/10 bg-white/40 dark:bg-black/40 backdrop-blur-md z-20 flex flex-col gap-3.5 animate-fadeIn">
+ <div className="p-3.5 lg:p-5 border-b border-[var(--card-border)] dark:border-white/10 clay-surface backdrop-blur-md z-20 flex flex-col gap-3.5 animate-fadeIn">
  <div className="flex items-center justify-between gap-3 flex-wrap">
- 
  {/* Back to Canvas */}
  <div className="flex items-center gap-2.5">
- <button 
- onClick={() => { setShowHistory(false); setSelectedDetailImage(null); }}
+ <button onClick={() => { setShowHistory(false); setSelectedDetailImage(null); }}
  className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs sm:text-sm font-bold transition-all shadow-md hover: cursor-pointer"
  >
  <ArrowRight className="w-4 h-4" />
  <span>بازگشت به استودیو</span>
  </button>
- 
  <div className="hidden md:flex items-center gap-2 text-zinc-700 dark:text-zinc-400 text-xs font-bold">
  <span className="w-1.5 h-1.5 rounded-full bg-purple-500"></span>
  <span>{history.length} اثر ذخیره‌شده</span>
@@ -765,9 +738,8 @@ export function ImageGenStudio() {
 
  {/* Right Actions: Size Slider / Density Selector + Search + Clear */}
  <div className="flex items-center gap-2.5 w-full sm:w-auto justify-between sm:justify-end flex-wrap">
- 
  {/* Grid Density Zoom Selector / Slider */}
- <div className="flex items-center gap-1 clay-modal border border-zinc-200 dark:border-white/10 p-1 rounded-xl shadow-xs">
+ <div className="flex items-center gap-1 clay-card dark:border-white/10 p-1 rounded-xl shadow-xs">
  <button
  onClick={() => handleSetGridDensity('compact')}
  className={`px-2 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
@@ -806,12 +778,9 @@ export function ImageGenStudio() {
  {/* Search input */}
  <div className="relative flex-1 sm:w-52">
  <Search className="w-3.5 h-3.5 text-zinc-700 dark:text-zinc-400 absolute right-3 top-1/2 -translate-y-1/2" />
- <input 
- type="text" 
- value={searchQuery}
+ <input type="text" value={searchQuery}
  onChange={(e) => setSearchQuery(e.target.value)}
- placeholder="جستجو در پرامپت‌ها..." 
- className="w-full clay-inset-thick rounded-xl pr-8 pl-3 py-1.5 text-xs text-zinc-800 dark:text-zinc-200 placeholder:text-zinc-500 dark:placeholder:text-zinc-400 outline-none border-none transition-all"
+ placeholder="جستجو در پرامپت‌ها..." className="w-full clay-inset-thick rounded-xl pr-8 pl-3 py-1.5 text-xs text-zinc-800 dark:text-zinc-200 placeholder:text-zinc-500 dark:placeholder:text-zinc-400 outline-none border-none transition-all"
  />
  {searchQuery && (
  <button onClick={() => setSearchQuery('')} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-zinc-700 dark:text-zinc-400 hover:text-zinc-800 dark:text-zinc-200">
@@ -821,8 +790,7 @@ export function ImageGenStudio() {
  </div>
 
  {history.length > 0 && (
- <button 
- onClick={clearHistory}
+ <button onClick={clearHistory}
  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-black text-rose-500 hover:text-rose-600 clay-btn-thick rounded-xl transition-all cursor-pointer shrink-0 hover:scale-105 active:scale-95"
  title="پاکسازی تمام تاریخچه"
  >
@@ -835,39 +803,39 @@ export function ImageGenStudio() {
 
  {/* Engine Filter Chips */}
  <div className="flex overflow-x-auto hide-scrollbar gap-2 pb-1 text-right">
-            <button
-              onClick={() => setSelectedFilter('all')}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-black transition-all shrink-0 cursor-pointer ${
-                selectedFilter === 'all'
-                  ? 'clay-btn-primary-thick text-white shadow-sm'
-                  : 'clay-pill-thick text-zinc-700 dark:text-zinc-300 hover:scale-102'
-              }`}
-              style={{ fontFamily: "'Estedad', sans-serif" }}
-            >
-              همه مدل‌ها ({toPersianDigits(history.length)})
-            </button>
-            {IMAGE_ENGINES.map((eng) => {
-              const count = history.filter(h => h.engine === eng.id).length;
-              if (count === 0 && selectedFilter !== eng.id) return null;
-              return (
-                <button
-                  key={eng.id}
-                  onClick={() => setSelectedFilter(eng.id)}
-                  className={`px-3.5 py-1.5 rounded-xl text-xs font-black transition-all shrink-0 flex items-center gap-1.5 cursor-pointer ${
-                    selectedFilter === eng.id
-                      ? 'clay-btn-primary-thick text-white shadow-sm'
-                      : 'clay-pill-thick text-zinc-700 dark:text-zinc-300 hover:scale-102'
-                  }`}
-                  style={{ fontFamily: "'Estedad', sans-serif" }}
-                >
-                  <span>{eng.name}</span>
-                  <span className="text-[10px] opacity-80 font-mono">({toPersianDigits(count)})</span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      )}
+ <button
+ onClick={() => setSelectedFilter('all')}
+ className={`px-3.5 py-1.5 rounded-xl text-xs font-black transition-all shrink-0 cursor-pointer ${
+ selectedFilter === 'all'
+ ? 'clay-btn-primary-thick text-white shadow-sm'
+ : 'clay-pill-thick text-zinc-700 dark:text-zinc-300 hover:scale-102'
+ }`}
+ style={{ fontFamily:"'Estedad', sans-serif" }}
+ >
+ همه مدل‌ها ({toPersianDigits(history.length)})
+ </button>
+ {IMAGE_ENGINES.map((eng) => {
+ const count = history.filter(h => h.engine === eng.id).length;
+ if (count === 0 && selectedFilter !== eng.id) return null;
+ return (
+ <button
+ key={eng.id}
+ onClick={() => setSelectedFilter(eng.id)}
+ className={`px-3.5 py-1.5 rounded-xl text-xs font-black transition-all shrink-0 flex items-center gap-1.5 cursor-pointer ${
+ selectedFilter === eng.id
+ ? 'clay-btn-primary-thick text-white shadow-sm'
+ : 'clay-pill-thick text-zinc-700 dark:text-zinc-300 hover:scale-102'
+ }`}
+ style={{ fontFamily:"'Estedad', sans-serif" }}
+ >
+ <span>{eng.name}</span>
+ <span className="text-[10px] opacity-80 font-mono">({toPersianDigits(count)})</span>
+ </button>
+ );
+ })}
+ </div>
+ </div>
+ )}
 
  {/* Main Body Area */}
  <div className={`flex-1 min-h-0 w-full flex items-center justify-center relative ${showHistory ? 'overflow-y-auto p-4 lg:p-8 custom-scrollbar' : 'overflow-hidden p-2 sm:p-4 lg:p-6'}`}>
@@ -891,18 +859,11 @@ export function ImageGenStudio() {
  const isCopied = copiedId === `card_${item.timestamp}`;
 
  return (
- <div 
- key={item.timestamp} 
- onClick={() => setSelectedDetailImage(item)}
- className="group relative aspect-square rounded-2xl sm:rounded-3xl overflow-hidden clay-card-thick cursor-pointer border border-zinc-200/80 dark:border-zinc-800/80 shadow-md hover:scale-[1.02] active:scale-[0.99] transition-all duration-300"
+ <div key={item.timestamp} onClick={() => setSelectedDetailImage(item)}
+ className="group relative aspect-square rounded-2xl sm:rounded-3xl overflow-hidden clay-card-thick cursor-pointer border border-[var(--card-border)]  shadow-md hover:scale-[1.02] active:scale-[0.99] transition-all duration-300"
  >
  {item.url ? (
- <img 
- src={toSafeImageUrl(item.url)} 
- alt={item.prompt} 
- className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" 
- loading="lazy" 
- />
+ <img src={toSafeImageUrl(item.url)} alt={item.prompt} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy" />
  ) : (
  <div className="w-full h-full flex items-center justify-center clay-surface">
  <div className="text-center p-3">
@@ -911,7 +872,6 @@ export function ImageGenStudio() {
  </div>
  </div>
  )}
- 
  {/* Permanent Badges (Corner Tags) */}
  <div className="absolute top-2.5 right-2.5 flex items-center gap-1.5 z-10 pointer-events-none">
  <span className="text-[10px] font-bold text-white bg-black/60 backdrop-blur-md px-2 py-0.5 rounded-lg border border-black/10 dark:border-white/10 shadow-sm">
@@ -930,7 +890,6 @@ export function ImageGenStudio() {
  <p className="text-white text-xs sm:text-sm font-medium line-clamp-2 mb-3 leading-relaxed">
  {item.prompt}
  </p>
- 
  <div className="flex items-center gap-2 flex-wrap" onClick={(e) => e.stopPropagation()}>
  {/* Remix Button */}
  <button
@@ -946,7 +905,7 @@ export function ImageGenStudio() {
  <button
  onClick={(e) => copyPromptText(item.prompt, `card_${item.timestamp}`, e)}
  className="p-2 rounded-xl clay-btn-thick text-white hover:text-purple-300 transition-all cursor-pointer"
-                        title="کپی پرامپت"
+ title="کپی پرامپت"
  >
  {isCopied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
  </button>
@@ -959,7 +918,7 @@ export function ImageGenStudio() {
  rel="noreferrer"
  onClick={(e) => e.stopPropagation()}
  className="p-2 rounded-xl clay-btn-thick text-white hover:text-purple-300 transition-all cursor-pointer"
-                        title="دانلود تصویر"
+ title="دانلود تصویر"
  >
  <Download className="w-3.5 h-3.5" />
  </a>
@@ -983,10 +942,7 @@ export function ImageGenStudio() {
  ) : imageUrl ? (
  /* --- SINGLE CANVAS IMAGE PREVIEW (FILLS ENTIRE AVAILABLE CANVAS) --- */
  <div className="w-full h-full flex items-center justify-center animate-scaleIn min-h-0 overflow-hidden">
- <img 
- src={toSafeImageUrl(imageUrl)} 
- alt="Generated Artwork" 
- className="max-w-full max-h-full w-auto h-auto object-contain rounded-2xl sm:rounded-3xl ring-1 ring-black/10 dark:ring-white/10 select-none drop-"
+ <img src={toSafeImageUrl(imageUrl)} alt="Generated Artwork" className="max-w-full max-h-full w-auto h-auto object-contain rounded-2xl sm:rounded-3xl ring-1 ring-black/10 dark:ring-white/10 select-none drop-"
  onError={() => {
  setError('خطا در نمایش فایل تصویر. لطفاً مجدداً دکمه تولید را فشار دهید.');
  }}
@@ -1026,179 +982,175 @@ export function ImageGenStudio() {
  {!showHistory && (
  <div className="shrink-0 w-full p-2.5 sm:p-4 bg-gradient-to-t from-zinc-100 via-zinc-100/95 dark:from-[#0a0a0a] dark:via-[#0a0a0a]/95 to-transparent z-20">
  <div className="max-w-4xl mx-auto flex flex-col gap-2.5">
- 
  {/* Docked Action Bar when an image is generated (Claymorphic) */}
-              {imageUrl && !loading && (
-                <div className="flex items-center justify-between gap-2 px-1 animate-fadeIn">
-                  <div className="flex items-center gap-2">
-                    <button 
-                      type="button"
-                      onClick={() => handleGenerate()}
-                      disabled={loading}
-                      className="flex items-center gap-2 px-4 py-2.5 clay-btn-thick text-zinc-800 dark:text-zinc-100 rounded-2xl transition-all font-black text-xs sm:text-sm shadow-sm hover:scale-102 active:scale-98 cursor-pointer disabled:opacity-50"
-                      style={{ fontFamily: "'Estedad', sans-serif" }}
-                      title="تولید مجدد با این پرامپت (تنوع جدید)"
-                    >
-                      <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
-                      <span>تنوع جدید</span>
-                    </button>
+ {imageUrl && !loading && (
+ <div className="flex items-center justify-between gap-2 px-1 animate-fadeIn">
+ <div className="flex items-center gap-2">
+ <button type="button"
+ onClick={() => handleGenerate()}
+ disabled={loading}
+ className="flex items-center gap-2 px-4 py-2.5 clay-btn-thick text-zinc-800 dark:text-zinc-100 rounded-2xl transition-all font-black text-xs sm:text-sm shadow-sm hover:scale-102 active:scale-98 cursor-pointer disabled:opacity-50"
+ style={{ fontFamily:"'Estedad', sans-serif" }}
+ title="تولید مجدد با این پرامپت (تنوع جدید)"
+ >
+ <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
+ <span>تنوع جدید</span>
+ </button>
 
-                    <a
-                      href={toSafeImageUrl(imageUrl)}
-                      download="ai-generated-image.png"
-                      target="_blank"
-                      rel="noreferrer"
-                      className="flex items-center gap-1.5 px-3.5 sm:px-4 py-2.5 clay-btn-thick text-zinc-800 dark:text-zinc-100 rounded-2xl transition-all font-black text-xs sm:text-sm shadow-sm hover:scale-102 active:scale-98 cursor-pointer"
-                      style={{ fontFamily: "'Estedad', sans-serif" }}
-                      title="دانلود تصویر با کیفیت بالا"
-                    >
-                      <Download className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
-                      <span className="hidden sm:inline">دانلود تصویر</span>
-                    </a>
-                  </div>
+ <a
+ href={toSafeImageUrl(imageUrl)}
+ download="ai-generated-image.png"
+ target="_blank"
+ rel="noreferrer"
+ className="flex items-center gap-1.5 px-3.5 sm:px-4 py-2.5 clay-btn-thick text-zinc-800 dark:text-zinc-100 rounded-2xl transition-all font-black text-xs sm:text-sm shadow-sm hover:scale-102 active:scale-98 cursor-pointer"
+ style={{ fontFamily:"'Estedad', sans-serif" }}
+ title="دانلود تصویر با کیفیت بالا"
+ >
+ <Download className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
+ <span className="hidden sm:inline">دانلود تصویر</span>
+ </a>
+ </div>
 
-                  {onInsertToChat && (
-                    <button 
-                      type="button"
-                      onClick={() => {
-                        onInsertToChat(prompt, imageUrl);
-                        onClose();
-                      }}
-                      className="flex items-center gap-2 px-5 py-2.5 clay-btn-primary-thick text-white rounded-2xl transition-all font-black text-xs sm:text-sm shadow-md shadow-blue-500/25 hover:scale-102 active:scale-98 cursor-pointer"
-                      style={{ fontFamily: "'Estedad', sans-serif" }}
-                    >
-                      <Send className="w-3.5 h-3.5" />
-                      <span>ارسال به چت</span>
-                    </button>
-                  )}
-                </div>
-              )}
+ {onInsertToChat && (
+ <button type="button"
+ onClick={() => {
+ onInsertToChat(prompt, imageUrl);
+ onClose();
+ }}
+ className="flex items-center gap-2 px-5 py-2.5 clay-btn-primary-thick text-white rounded-2xl transition-all font-black text-xs sm:text-sm shadow-md shadow-blue-500/25 hover:scale-102 active:scale-98 cursor-pointer"
+ style={{ fontFamily:"'Estedad', sans-serif" }}
+ >
+ <Send className="w-3.5 h-3.5" />
+ <span>ارسال به چت</span>
+ </button>
+ )}
+ </div>
+ )}
 
-              {/* Compact Horizontal Inspiration Rail (Claymorphic) */}
-              {!imageUrl && !loading && (
-                <div className="relative flex items-center gap-1.5 w-full">
-                  {/* Right Arrow (Scroll right) */}
-                  <button
-                    type="button"
-                    onClick={() => scrollInspiration('right')}
-                    className="shrink-0 w-8 h-8 rounded-xl clay-btn-thick text-zinc-700 dark:text-zinc-300 hover:text-purple-600 flex items-center justify-center shadow-xs transition-all cursor-pointer hover:scale-105 active:scale-95 z-10"
-                  >
-                    <ChevronRight className="w-4 h-4" />
-                  </button>
+ {/* Compact Horizontal Inspiration Rail (Claymorphic) */}
+ {!imageUrl && !loading && (
+ <div className="relative flex items-center gap-1.5 w-full">
+ {/* Right Arrow (Scroll right) */}
+ <button
+ type="button"
+ onClick={() => scrollInspiration('right')}
+ className="shrink-0 w-8 h-8 rounded-xl clay-btn-thick text-zinc-700 dark:text-zinc-300 hover:text-purple-600 flex items-center justify-center shadow-xs transition-all cursor-pointer hover:scale-105 active:scale-95 z-10"
+ >
+ <ChevronRight className="w-4 h-4" />
+ </button>
 
-                  {/* Scrollable Container with horizontal mouse wheel support */}
-                  <div
-                    ref={inspirationScrollRef}
-                    onWheel={(e) => {
-                      if (e.deltaY !== 0 && inspirationScrollRef.current) {
-                        inspirationScrollRef.current.scrollLeft += e.deltaY;
-                      }
-                    }}
-                    className="flex-1 flex items-center gap-2.5 overflow-x-auto hide-scrollbar scroll-smooth py-1 px-1"
-                  >
-                    <span className="shrink-0 flex items-center gap-1 px-3 py-1.5 rounded-xl clay-pill-thick text-xs font-black text-purple-600 dark:text-purple-400 select-none">
-                      <Sparkles className="w-3.5 h-3.5" />
-                      <span>ایده‌ها:</span>
-                    </span>
-                    {INSPIRATION_PROMPTS.map((item) => (
-                      <button
-                        key={item.id}
-                        type="button"
-                        onClick={() => handleSelectInspiration(item, false)}
-                        className="group shrink-0 flex items-center gap-2.5 p-1.5 pl-3.5 rounded-2xl clay-card-thick hover:scale-102 active:scale-98 transition-all cursor-pointer shadow-xs border border-zinc-200/60 dark:border-zinc-800/60"
-                      >
-                        <img
-                          src={item.thumbnail}
-                          alt={item.title}
-                          className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl object-cover shadow-xs group-hover:scale-105 transition-transform"
-                          loading="lazy"
-                        />
-                        <span className="text-[11px] sm:text-xs font-bold text-zinc-800 dark:text-zinc-200 group-hover:text-purple-600 dark:group-hover:text-purple-400 whitespace-nowrap select-none">
-                          {item.title}
-                        </span>
-                        <span
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleSelectInspiration(item, true);
-                          }}
-                          className="w-6 h-6 rounded-lg clay-btn-thick flex items-center justify-center text-purple-600 dark:text-purple-400 hover:scale-110 transition-transform cursor-pointer"
-                          title="تولید آنی"
-                        >
-                          <Zap className="w-3 h-3 text-amber-400 fill-amber-400" />
-                        </span>
-                      </button>
-                    ))}
-                  </div>
+ {/* Scrollable Container with horizontal mouse wheel support */}
+ <div
+ ref={inspirationScrollRef}
+ onWheel={(e) => {
+ if (e.deltaY !== 0 && inspirationScrollRef.current) {
+ inspirationScrollRef.current.scrollLeft += e.deltaY;
+ }
+ }}
+ className="flex-1 flex items-center gap-2.5 overflow-x-auto hide-scrollbar scroll-smooth py-1 px-1"
+ >
+ <span className="shrink-0 flex items-center gap-1 px-3 py-1.5 rounded-xl clay-pill-thick text-xs font-black text-purple-600 dark:text-purple-400 select-none">
+ <Sparkles className="w-3.5 h-3.5" />
+ <span>ایده‌ها:</span>
+ </span>
+ {INSPIRATION_PROMPTS.map((item) => (
+ <button
+ key={item.id}
+ type="button"
+ onClick={() => handleSelectInspiration(item, false)}
+ className="group shrink-0 flex items-center gap-2.5 p-1.5 pl-3.5 rounded-2xl clay-card-thick hover:scale-102 active:scale-98 transition-all cursor-pointer shadow-xs border border-[var(--card-border)] "
+ >
+ <img
+ src={item.thumbnail}
+ alt={item.title}
+ className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl object-cover shadow-xs group-hover:scale-105 transition-transform"
+ loading="lazy"
+ />
+ <span className="text-[11px] sm:text-xs font-bold text-zinc-800 dark:text-zinc-200 group-hover:text-purple-600 dark:group-hover:text-purple-400 whitespace-nowrap select-none">
+ {item.title}
+ </span>
+ <span
+ onClick={(e) => {
+ e.stopPropagation();
+ handleSelectInspiration(item, true);
+ }}
+ className="w-6 h-6 rounded-lg clay-btn-thick flex items-center justify-center text-purple-600 dark:text-purple-400 hover:scale-110 transition-transform cursor-pointer"
+ title="تولید آنی"
+ >
+ <Zap className="w-3 h-3 text-amber-400 fill-amber-400" />
+ </span>
+ </button>
+ ))}
+ </div>
 
-                  {/* Left Arrow (Scroll left) */}
-                  <button
-                    type="button"
-                    onClick={() => scrollInspiration('left')}
-                    className="shrink-0 w-8 h-8 rounded-xl clay-btn-thick text-zinc-700 dark:text-zinc-300 hover:text-purple-600 flex items-center justify-center shadow-xs transition-all cursor-pointer hover:scale-105 active:scale-95 z-10"
-                  >
-                    <ChevronLeft className="w-4 h-4" />
-                  </button>
-                </div>
-              )}
+ {/* Left Arrow (Scroll left) */}
+ <button
+ type="button"
+ onClick={() => scrollInspiration('left')}
+ className="shrink-0 w-8 h-8 rounded-xl clay-btn-thick text-zinc-700 dark:text-zinc-300 hover:text-purple-600 flex items-center justify-center shadow-xs transition-all cursor-pointer hover:scale-105 active:scale-95 z-10"
+ >
+ <ChevronLeft className="w-4 h-4" />
+ </button>
+ </div>
+ )}
 
-              {error && (
-                <div className="flex items-center gap-2 text-rose-500 bg-rose-500/10 px-4 py-2.5 rounded-xl text-xs font-bold border border-rose-500/20 mx-1">
-                  <AlertTriangle className="w-4 h-4 shrink-0" />
-                  <p>{error}</p>
-                </div>
-              )}
+ {error && (
+ <div className="flex items-center gap-2 text-rose-500 bg-rose-500/10 px-4 py-2.5 rounded-xl text-xs font-bold border border-rose-500/20 mx-1">
+ <AlertTriangle className="w-4 h-4 shrink-0" />
+ <p>{error}</p>
+ </div>
+ )}
 
-              {/* Claymorphic Prompt Box */}
-              <div className="relative flex items-end gap-2.5 clay-card-thick p-2.5 sm:p-3 rounded-3xl border border-zinc-200/80 dark:border-zinc-800/80 shadow-xl transition-all">
-                
-                {/* Random Idea Dice Button */}
-                <button
-                  type="button"
-                  onClick={handleRandomPrompt}
-                  disabled={loading}
-                  className="shrink-0 p-3 clay-btn-thick text-amber-500 rounded-2xl transition-all disabled:opacity-50 shadow-xs hover:scale-105 active:scale-95 cursor-pointer"
-                  title="ایده تصادفی (تاس پرامپت)"
-                >
-                  <Dices className="w-5 h-5 hover:rotate-12 transition-transform" />
-                </button>
+ {/* Claymorphic Prompt Box */}
+ <div className="relative flex items-end gap-2.5 clay-card-thick p-2.5 sm:p-3 rounded-3xl border border-[var(--card-border)]  shadow-xl transition-all">
+ {/* Random Idea Dice Button */}
+ <button
+ type="button"
+ onClick={handleRandomPrompt}
+ disabled={loading}
+ className="shrink-0 p-3 clay-btn-thick text-amber-500 rounded-2xl transition-all disabled:opacity-50 shadow-xs hover:scale-105 active:scale-95 cursor-pointer"
+ title="ایده تصادفی (تاس پرامپت)"
+ >
+ <Dices className="w-5 h-5 hover:rotate-12 transition-transform" />
+ </button>
 
-                {/* Magic Enhance Button */}
-                <button
-                  type="button"
-                  onClick={handleEnhancePrompt}
-                  disabled={enhancing || loading || !prompt.trim()}
-                  className="shrink-0 p-3 clay-btn-primary-thick text-white rounded-2xl transition-all disabled:opacity-50 disabled:grayscale shadow-md shadow-blue-500/25 hover:scale-105 active:scale-95 cursor-pointer"
-                  title="ارتقای جادویی پرامپت با هوش مصنوعی"
-                >
-                  <Wand2 className={`w-5 h-5 ${enhancing ? 'animate-pulse' : ''}`} />
-                </button>
+ {/* Magic Enhance Button */}
+ <button
+ type="button"
+ onClick={handleEnhancePrompt}
+ disabled={enhancing || loading || !prompt.trim()}
+ className="shrink-0 p-3 clay-btn-primary-thick text-white rounded-2xl transition-all disabled:opacity-50 disabled:grayscale shadow-md shadow-blue-500/25 hover:scale-105 active:scale-95 cursor-pointer"
+ title="ارتقای جادویی پرامپت با هوش مصنوعی"
+ >
+ <Wand2 className={`w-5 h-5 ${enhancing ? 'animate-pulse' : ''}`} />
+ </button>
 
-                <textarea
-                  value={prompt}
-                  onChange={(e) => {
-                    setPrompt(e.target.value);
-                    setActiveEnglishPrompt(null);
-                  }}
-                  placeholder="توصیف تصویر مورد نظرتان را به فارسی یا انگلیسی بنویسید..."
-                  className="flex-1 clay-inset-thick px-4 py-3 rounded-2xl border-none outline-none resize-none text-xs sm:text-sm text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-500 min-h-[46px] max-h-32 custom-scrollbar transition-all font-medium"
-                  rows={Math.min(3, prompt.split('\n').length || 1)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                      e.preventDefault();
-                      handleGenerate();
-                    }
-                  }}
-                />
+ <textarea
+ value={prompt}
+ onChange={(e) => {
+ setPrompt(e.target.value);
+ setActiveEnglishPrompt(null);
+ }}
+ placeholder="توصیف تصویر مورد نظرتان را به فارسی یا انگلیسی بنویسید..."
+ className="flex-1 clay-inset-thick px-4 py-3 rounded-2xl border-none outline-none resize-none text-xs sm:text-sm text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-500 min-h-[46px] max-h-32 custom-scrollbar transition-all font-medium"
+ rows={Math.min(3, prompt.split('\n').length || 1)}
+ onKeyDown={(e) => {
+ if (e.key === 'Enter' && !e.shiftKey) {
+ e.preventDefault();
+ handleGenerate();
+ }
+ }}
+ />
 
-                <button
-                  onClick={handleGenerate}
-                  disabled={loading || !prompt.trim()}
-                  className="shrink-0 p-3 clay-btn-primary-thick text-white rounded-2xl transition-all disabled:opacity-50 shadow-md shadow-blue-500/25 hover:scale-105 active:scale-95 flex items-center justify-center cursor-pointer"
-                  title="تولید تصویر"
-                >
-                  {loading ? <RotateCcw className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
-                </button>
-              </div>
+ <button
+ onClick={handleGenerate}
+ disabled={loading || !prompt.trim()}
+ className="shrink-0 p-3 clay-btn-primary-thick text-white rounded-2xl transition-all disabled:opacity-50 shadow-md shadow-blue-500/25 hover:scale-105 active:scale-95 flex items-center justify-center cursor-pointer"
+ title="تولید تصویر"
+ >
+ {loading ? <RotateCcw className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
+ </button>
+ </div>
  </div>
  </div>
  )}
@@ -1206,50 +1158,42 @@ export function ImageGenStudio() {
 
  {/* Mobile Settings Overlay Backdrop */}
  {isMobileSettingsOpen && !showHistory && (
- <div 
- className="fixed inset-0 bg-black/60 z-[60] lg:hidden backdrop-blur-sm"
+ <div className="fixed inset-0 bg-black/60 z-[60] lg:hidden backdrop-blur-sm"
  onClick={() => setIsMobileSettingsOpen(false)}
  />
  )}
 
  {/* --- 3. LIGHTBOX DETAIL MODAL (CLAYMORPHIC) --- */}
-      {selectedDetailImage && (
-        <div 
-          className="fixed inset-0 z-[80] bg-black/70 dark:bg-black/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 animate-fadeIn"
-          onClick={() => setSelectedDetailImage(null)}
-        >
-          <div 
-            className="clay-modal w-full max-w-4xl max-h-[92vh] rounded-3xl overflow-hidden flex flex-col md:flex-row text-right animate-scaleIn border border-zinc-200/80 dark:border-zinc-800/80 shadow-2xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Left Side: Large Image Preview */}
-            <div className="flex-1 clay-inset-thick m-3 sm:m-4 rounded-2xl flex items-center justify-center p-4 min-h-[260px] sm:min-h-[380px] relative">
-              <img 
-                src={toSafeImageUrl(selectedDetailImage.url)} 
-                alt={selectedDetailImage.prompt} 
-                className="max-w-full max-h-[45vh] md:max-h-[75vh] object-contain rounded-2xl"
-              />
-            </div>
+ {selectedDetailImage && (
+ <div className="fixed inset-0 z-[80] bg-black/70 dark:bg-black/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 animate-fadeIn"
+ onClick={() => setSelectedDetailImage(null)}
+ >
+ <div className="clay-modal w-full max-w-4xl max-h-[92vh] rounded-3xl overflow-hidden flex flex-col md:flex-row text-right animate-scaleIn border border-[var(--card-border)]  shadow-2xl"
+ onClick={(e) => e.stopPropagation()}
+ >
+ {/* Left Side: Large Image Preview */}
+ <div className="flex-1 clay-inset-thick m-3 sm:m-4 rounded-2xl flex items-center justify-center p-4 min-h-[260px] sm:min-h-[380px] relative">
+ <img src={toSafeImageUrl(selectedDetailImage.url)} alt={selectedDetailImage.prompt} className="max-w-full max-h-[45vh] md:max-h-[75vh] object-contain rounded-2xl"
+ />
+ </div>
 
  {/* Right Side: Metadata & Action Controls */}
- <div className="w-full md:w-80 lg:w-96 p-5 sm:p-6 flex flex-col justify-between border-t md:border-t-0 md:border-r border-zinc-200 dark:border-white/10 overflow-y-auto custom-scrollbar max-h-[45vh] md:max-h-[85vh]">
+ <div className="w-full md:w-80 lg:w-96 p-5 sm:p-6 flex flex-col justify-between border-t md:border-t-0 md:border-r border-[var(--card-border)] dark:border-white/10 overflow-y-auto custom-scrollbar max-h-[45vh] md:max-h-[85vh]">
  <div className="space-y-4">
- 
  {/* Top Bar with Close Button */}
- <div className="flex items-center justify-between pb-3 border-b border-zinc-100 dark:border-white/10">
+ <div className="flex items-center justify-between pb-3 border-b border-[var(--card-border)] dark:border-white/10">
  <div className="flex items-center gap-2">
- <span className="text-xs font-black text-purple-600 dark:text-purple-400 clay-pill-thick px-3 py-1" style={{ fontFamily: "'Estedad', sans-serif" }}>
+ <span className="text-xs font-black text-purple-600 dark:text-purple-400 clay-pill-thick px-3 py-1" style={{ fontFamily:"'Estedad', sans-serif" }}>
  {IMAGE_ENGINES.find(e => e.id === selectedDetailImage.engine)?.name || selectedDetailImage.engine}
  </span>
  <span className="text-[11px] text-zinc-500 dark:text-zinc-400">
  {getRelativeTime(selectedDetailImage.timestamp)}
  </span>
  </div>
- <button 
-                    onClick={() => setSelectedDetailImage(null)}
-                    className="p-2 rounded-xl clay-btn-thick text-zinc-600 dark:text-zinc-300 hover:text-red-500 transition-colors cursor-pointer"
-                    title="بستن"
-                  >
+ <button onClick={() => setSelectedDetailImage(null)}
+ className="p-2 rounded-xl clay-btn-thick text-zinc-600 dark:text-zinc-300 hover:text-red-500 transition-colors cursor-pointer"
+ title="بستن"
+ >
  <X className="w-5 h-5" />
  </button>
  </div>
@@ -1294,7 +1238,7 @@ export function ImageGenStudio() {
  </div>
 
  {/* Primary Action Buttons */}
- <div className="space-y-2.5 pt-6 mt-4 border-t border-zinc-100 dark:border-white/10">
+ <div className="space-y-2.5 pt-6 mt-4 border-t border-[var(--card-border)] dark:border-white/10">
  {/* Remix in Studio */}
  <button
  onClick={() => remixPrompt(selectedDetailImage)}

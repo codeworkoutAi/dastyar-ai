@@ -47,7 +47,7 @@ export const ErrorCapsule: React.FC = React.memo(() => {
  }`}
  >
  <div
- className={`pointer-events-auto w-full max-w-sm sm:max-w-md relative overflow-hidden rounded-2xl bg-zinc-50 dark:bg-zinc-900/95 dark:bg-zinc-900/95 border border-zinc-300 dark:border-zinc-700/80 text-zinc-900 dark:text-zinc-100 backdrop-blur-2xl p-4 sm:p-4.5 flex flex-col gap-3.5 transition-all duration-300 transform ${
+ className={`pointer-events-auto w-full max-w-sm sm:max-w-md relative overflow-hidden rounded-2xl clay-surface  border border-zinc-300  text-zinc-900 dark:text-zinc-100 backdrop-blur-2xl p-4 sm:p-4.5 flex flex-col gap-3.5 transition-all duration-300 transform ${
  visible ? 'scale-100 translate-y-0' : 'scale-95 translate-y-2'
  }`}
  >
@@ -82,7 +82,7 @@ export const ErrorCapsule: React.FC = React.memo(() => {
  </div>
 
  {/* Action Buttons Row */}
- <div className="flex items-center justify-between gap-2 pt-2 border-t border-zinc-200 dark:border-zinc-800 text-xs">
+ <div className="flex items-center justify-between gap-2 pt-2 border-t border-[var(--card-border)]  text-xs">
  <span className="text-[11px] text-zinc-700 dark:text-zinc-400 font-normal">
  ⏳ خودکار بسته می‌شود
  </span>
@@ -101,7 +101,7 @@ export const ErrorCapsule: React.FC = React.memo(() => {
  <button
  type="button"
  onClick={onOpenSettings}
- className="clay-surface clay-icon-btn text-zinc-800 dark:text-zinc-200 text-xs px-3 py-1.5 rounded-xl flex items-center gap-1.5 font-medium cursor-pointer transition-all border border-zinc-300 dark:border-zinc-700 active:scale-95 shadow-xs"
+ className="clay-surface clay-icon-btn text-zinc-800 dark:text-zinc-200 text-xs px-3 py-1.5 rounded-xl flex items-center gap-1.5 font-medium cursor-pointer transition-all border border-zinc-300  active:scale-95 shadow-xs"
  >
  <Settings className="w-3.5 h-3.5 text-zinc-700 dark:text-zinc-400" />
  <span>تنظیمات مدل</span>

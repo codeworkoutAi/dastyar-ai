@@ -40,7 +40,7 @@ import { useAuthStore } from '../store/authStore';
 import { toEnglishDigits } from '../lib/persianUtils';
 import { AdminFinanceTab } from './AdminFinanceTab';
 import { AdminAnalyticsTab } from './AdminAnalyticsTab';
-import { AdminDesignStudioTab } from './AdminDesignStudioTab';
+
 
 interface AdminModalProps {
  isOpen: boolean;
@@ -55,7 +55,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
  const [error, setError] = useState<string | null>(null);
 
  // Tabs state
- const [activeTab, setActiveTab] = useState<'products' | 'orders' | 'users' | 'news' | 'finance' | 'analytics' | 'settings' | 'design'>('products');
+ const [activeTab, setActiveTab] = useState<'products' | 'orders' | 'users' | 'news' | 'finance' | 'analytics' | 'settings'>('products');
  const [orders, setOrders] = useState<any[]>([]);
  const [ordersLoading, setOrdersLoading] = useState(false);
 
@@ -137,6 +137,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
 
  // Site Settings state
  const [newsAutoPublish, setNewsAutoPublish] = useState<boolean>(false);
+  const [uiStyle, setUiStyle] = useState<string>('clay');
  const [siteSettingsLoading, setSiteSettingsLoading] = useState<boolean>(false);
  const [siteSettingsSaving, setSiteSettingsSaving] = useState<boolean>(false);
 
@@ -404,6 +405,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
  if (res.ok) {
  const data = await res.json();
  setNewsAutoPublish(data.news_auto_publish === 'true');
+   if (data.ui_style) setUiStyle(data.ui_style);
  }
  } catch (err) {
  console.error('Failed to fetch site settings:', err);
@@ -412,7 +414,33 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
  }
  };
 
- const handleToggleNewsAutoPublish = async (newValue: boolean) => {
+ 
+  const handleUiStyleChange = async (newStyle: string) => {
+    try {
+      setSiteSettingsSaving(true);
+      const oldStyle = uiStyle;
+      setUiStyle(newStyle);
+      // Immediately apply to document for preview
+      document.documentElement.setAttribute('data-ui-style', newStyle);
+      const res = await fetch('/api/admin/settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ key: 'ui_style', value: newStyle })
+      });
+      if (!res.ok) {
+        setUiStyle(oldStyle);
+        document.documentElement.setAttribute('data-ui-style', oldStyle);
+        throw new Error('خطا در ذخیره تم');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('خطا در ارتباط با سرور');
+    } finally {
+      setSiteSettingsSaving(false);
+    }
+  };
+
+  const handleToggleNewsAutoPublish = async (newValue: boolean) => {
  try {
  setSiteSettingsSaving(true);
  setNewsAutoPublish(newValue);
@@ -980,7 +1008,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
  <div className="relative w-full w-[95vw] max-w-6xl clay-modal overflow-hidden flex flex-col h-[90vh] md:h-[85vh] animate-slideUpScale">
 
  {/* Header */}
- <div className="flex flex-col border-b border-zinc-200 dark:border-zinc-800 shrink-0">
+ <div className="flex flex-col border-b border-[var(--card-border)]  shrink-0">
  <div className="flex items-center justify-between p-4 sm:p-6 pb-2 sm:pb-4">
  <div className="flex items-center gap-3">
  <div className="w-10 h-10 rounded-xl clay-btn-secondary flex items-center justify-center">
@@ -1062,22 +1090,12 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
  >
  تنظیمات
  </button>
- <button
- onClick={() => setActiveTab('design')}
- className={`pb-3 text-sm font-bold border-b-2 transition-colors flex items-center gap-1.5 shrink-0 whitespace-nowrap ${activeTab === 'design' ? 'border-blue-600 text-blue-600 dark:border-blue-500 dark:text-blue-400' : 'border-transparent text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200'
- }`}
- >
- <Palette className="w-4 h-4" />
- <span>طراحی و صفحات</span>
- </button>
  </div>
  </div>
 
  {/* Content */}
- <div className="flex-1 overflow-y-auto p-4 sm:p-6 custom-scrollbar bg-zinc-50 dark:bg-black/20" ref={formRef}>
- {activeTab === 'design' ? (
- <AdminDesignStudioTab />
- ) : activeTab === 'analytics' ? (
+ <div className="flex-1 overflow-y-auto p-4 sm:p-6 custom-scrollbar" ref={formRef}>
+ {activeTab === 'analytics' ? (
  <AdminAnalyticsTab />
  ) : activeTab === 'finance' ? (
  <AdminFinanceTab />
@@ -1091,7 +1109,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
  <button
  onClick={fetchUsers}
  disabled={usersLoading}
- className="p-2 clay-surface text-zinc-600 dark:text-zinc-300 rounded-xl hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors"
+ className="p-2 clay-surface text-zinc-600 dark:text-zinc-300 rounded-xl hover:clay-surface dark:hover:bg-zinc-700 transition-colors"
  title="بروزرسانی لیست"
  >
  <RefreshCw className={`w-4 h-4 ${usersLoading ? 'animate-spin' : ''}`} />
@@ -1099,7 +1117,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
  </div>
 
  {/* Users Search */}
- <div className="clay-modal rounded-3xl p-4 shadow-sm flex flex-col sm:flex-row gap-4 items-center">
+ <div className="clay-card rounded-2xl p-4 flex flex-col sm:flex-row gap-4 items-center">
  <div className="relative w-full sm:w-96 shrink-0">
  <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
  <Search className="h-5 w-5 text-zinc-400" />
@@ -1109,7 +1127,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
  placeholder="جستجوی کاربر (نام، ایمیل، تلفن، شناسه، تلگرام)..."
  value={userSearchQuery}
  onChange={(e) => setUserSearchQuery(e.target.value)}
- className="block w-full pr-10 pl-3 py-2 border border-[var(--card-border)] rounded-xl leading-5 clay-surface text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+ className="block w-full pr-10 pl-3 py-2 clay-input rounded-xl leading-5 text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
  dir="rtl"
  />
  </div>
@@ -1122,11 +1140,11 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
  </div>
  )}
 
- <div className="clay-modal rounded-3xl shadow-sm overflow-hidden flex flex-col">
+ <div className="clay-card rounded-2xl overflow-hidden flex flex-col">
  <div className="overflow-x-auto min-h-[400px]">
  <table className="w-full text-right text-sm">
  <thead>
- <tr className="clay-surface text-zinc-500 dark:text-zinc-400 border-b border-zinc-200 dark:border-zinc-700">
+ <tr className="clay-surface text-zinc-500 dark:text-zinc-400 border-b border-[var(--card-border)] ">
  <th className="py-4 px-6 font-bold whitespace-nowrap">شناسه</th>
  <th className="py-4 px-6 font-bold whitespace-nowrap">کاربر</th>
  <th className="py-4 px-6 font-bold whitespace-nowrap">تماس</th>
@@ -1153,7 +1171,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
  );
  })
  .map((u) => (
- <tr key={u.id} className="hover:bg-zinc-50 dark:hover:bg-zinc-800/20 transition-colors">
+ <tr key={u.id} className="hover:clay-surface dark:hover:bg-zinc-800/20 transition-colors">
  <td className="py-4 px-6 font-mono text-zinc-500">UC-{10000 + u.id}</td>
  <td className="py-4 px-6">
  <div className="font-bold text-zinc-800 dark:text-zinc-200">{u.name || 'نامشخص'}</div>
@@ -1171,7 +1189,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
  <span className="text-xs font-mono text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 px-2 py-0.5 rounded-md inline-block w-fit">
  {u.telegramId}
  </span>
- <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full w-fit ${u.botState === 'support' ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400' : 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400'}`}>
+ <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full w-fit ${u.botState === 'support' ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400' : 'clay-surface text-zinc-600  dark:text-zinc-400'}`}>
  {u.botState === 'support' ? 'در حال پشتیبانی' : 'عادی'}
  </span>
  </div>
@@ -1182,7 +1200,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
  <td className="py-4 px-6">
  <span className={`px-2 py-1 rounded-full text-xs font-bold ${u.role === 'admin'
  ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-400'
- : 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400'
+ : 'clay-surface text-zinc-600  dark:text-zinc-400'
  }`}>
  {u.role === 'admin' ? 'مدیر' : 'کاربر'}
  </span>
@@ -1241,7 +1259,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
  <div className="flex flex-col gap-6 animate-fadeIn">
  {/* Default AI Profiles Management Section */}
  <div className="clay-surface/50 p-5 sm:p-6 rounded-2xl border border-[var(--card-border)] shadow-sm">
- <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-zinc-100 dark:border-zinc-700/60">
+ <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[var(--card-border)] ">
  <div className="flex items-center gap-3">
  <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
  <Cpu className="w-5 h-5" />
@@ -1260,7 +1278,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
  <button
  onClick={fetchDefaultProfiles}
  disabled={defaultProfilesLoading}
- className="p-2.5 bg-zinc-100 hover:clay-btn-secondary/60 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5"
+ className="p-2.5 clay-surface hover:clay-btn-secondary/60 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5"
  title="تازه‌سازی لیست"
  >
  <RefreshCw className={`w-4 h-4 ${defaultProfilesLoading ? 'animate-spin' : ''}`} />
@@ -1281,8 +1299,8 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
 
  {/* Form to Add or Edit Default Profile */}
  {isAddingDefaultProfile && (
- <form onSubmit={handleSaveDefaultProfile} className="mt-5 p-5 bg-zinc-50 dark:bg-zinc-900/80 rounded-2xl border border-blue-200/60 dark:border-blue-800/40 animate-fadeIn space-y-4">
- <div className="flex items-center justify-between pb-3 border-b border-zinc-200 dark:border-zinc-800">
+ <form onSubmit={handleSaveDefaultProfile} className="mt-5 p-5 clay-card-thick rounded-2xl border border-blue-200/60 dark:border-blue-800/40 animate-fadeIn space-y-4">
+ <div className="flex items-center justify-between pb-3 border-b border-[var(--card-border)] ">
  <h4 className="text-sm font-bold text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
  <Edit2 className="w-4 h-4 text-blue-500" />
  {editingDefaultProfile ? 'ویرایش کارت مدل پیش‌فرض' : 'افزودن کارت مدل پیش‌فرض جدید'}
@@ -1306,7 +1324,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
  value={profileFormName}
  onChange={(e) => setProfileFormName(e.target.value)}
  placeholder="مثال: Qwen 3.6 27B (رایگان)"
- className="w-full px-3.5 py-2.5 rounded-xl border border-[var(--card-border)] clay-surface text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-blue-500 transition-colors"
+ className="w-full px-3.5 py-2.5 rounded-xl clay-input text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-blue-500 transition-colors"
  required
  />
  </div>
@@ -1337,7 +1355,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
  value={adminModelSearchQuery}
  onChange={(e) => setAdminModelSearchQuery(e.target.value)}
  placeholder="جستجو در لیست..."
- className="w-full px-3 py-1.5 rounded-lg border border-[var(--card-border)] bg-zinc-50 dark:bg-zinc-900 text-xs text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-blue-500 transition-colors"
+ className="w-full px-4 py-3 rounded-xl clay-inset-thick text-xs outline-none"
  dir="ltr"
  />
  <div className="max-h-40 overflow-y-auto custom-scrollbar border border-[var(--card-border)] rounded-xl clay-surface p-1">
@@ -1360,7 +1378,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
  value={profileFormModelName}
  onChange={(e) => setProfileFormModelName(e.target.value)}
  placeholder="مثال: qwen/qwen3.6-27b یا gemini-3.1-flash-lite"
- className="w-full px-3.5 py-2.5 rounded-xl border border-[var(--card-border)] clay-surface text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-blue-500 transition-colors"
+ className="w-full px-3.5 py-2.5 rounded-xl clay-input text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-blue-500 transition-colors"
  dir="ltr"
  required
  />
@@ -1374,7 +1392,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
  <select
  value={profileFormRole}
  onChange={(e) => setProfileFormRole(e.target.value as any)}
- className="w-full px-3.5 py-2.5 rounded-xl border border-[var(--card-border)] clay-surface text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-blue-500 transition-colors"
+ className="w-full px-3.5 py-2.5 rounded-xl clay-input text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-blue-500 transition-colors"
  >
  <option value="default">عمومی (چت و مکالمه پیش‌فرض)</option>
  <option value="coding">برنامه‌نویسی و کدنویسی</option>
@@ -1391,7 +1409,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
  value={profileFormBaseUrl}
  onChange={(e) => setProfileFormBaseUrl(e.target.value)}
  placeholder="مثال: https://api.groq.com/openai/v1 یا https://generativelanguage.googleapis.com/v1beta/openai"
- className="w-full px-3.5 py-2.5 rounded-xl border border-[var(--card-border)] clay-surface text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-blue-500 transition-colors"
+ className="w-full px-3.5 py-2.5 rounded-xl clay-input text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-blue-500 transition-colors"
  dir="ltr"
  required
  />
@@ -1406,7 +1424,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
  value={profileFormApiKey}
  onChange={(e) => setProfileFormApiKey(e.target.value)}
  placeholder={editingDefaultProfile ? '(بدون تغییر - مقدار قبلی حفظ می‌شود)' : 'کلید دسترسی سرور'}
- className="w-full px-3.5 py-2.5 rounded-xl border border-[var(--card-border)] clay-surface text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-blue-500 transition-colors"
+ className="w-full px-3.5 py-2.5 rounded-xl clay-input text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-blue-500 transition-colors"
  dir="ltr"
  />
  <span className="text-[10px] text-zinc-400 mt-1 block">
@@ -1422,7 +1440,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
  type="number"
  value={profileFormOrderIndex}
  onChange={(e) => setProfileFormOrderIndex(parseInt(toEnglishDigits(e.target.value)) || 0)}
- className="w-full px-3.5 py-2.5 rounded-xl border border-[var(--card-border)] clay-surface text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-blue-500 transition-colors"
+ className="w-full px-3.5 py-2.5 rounded-xl clay-input text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-blue-500 transition-colors"
  min={0}
  />
  </div>
@@ -1433,7 +1451,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
  id="profileFormIsActive"
  checked={profileFormIsActive}
  onChange={(e) => setProfileFormIsActive(e.target.checked)}
- className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 border-zinc-300 dark:border-zinc-700 dark:bg-zinc-800"
+ className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 border-zinc-300  "
  />
  <label htmlFor="profileFormIsActive" className="text-zinc-700 dark:text-zinc-300 font-bold cursor-pointer">
  این کارت فعال باشد و برای کاربران نمایش داده شود
@@ -1449,17 +1467,17 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
  value={profileFormCustomHeaders}
  onChange={(e) => setProfileFormCustomHeaders(e.target.value)}
  placeholder='مثال: {"HTTP-Referer":"https://ai.studio"} یا هدر: مقدار'
- className="w-full px-3.5 py-2.5 rounded-xl border border-[var(--card-border)] clay-surface text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-blue-500 transition-colors font-mono"
+ className="w-full px-3.5 py-2.5 rounded-xl clay-input text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-blue-500 transition-colors font-mono"
  dir="ltr"
  />
  </div>
  </div>
 
- <div className="flex items-center justify-end gap-3 pt-3 border-t border-zinc-200 dark:border-zinc-800">
+ <div className="flex items-center justify-end gap-3 pt-3 border-t border-[var(--card-border)] ">
  <button
  type="button"
  onClick={resetDefaultProfileForm}
- className="px-4 py-2 rounded-xl text-xs font-bold text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200/60 dark:hover:bg-zinc-800 transition-colors"
+ className="px-5 py-2.5 clay-btn-thick rounded-xl text-xs font-bold transition-colors"
  >
  انصراف
  </button>
@@ -1487,7 +1505,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
  <span className="text-xs">در حال بارگذاری کارت‌های پیش‌فرض سیستم...</span>
  </div>
  ) : defaultProfiles.length === 0 ? (
- <div className="py-10 text-center text-zinc-500 bg-zinc-50 dark:bg-zinc-900/40 rounded-2xl border border-dashed border-zinc-200 dark:border-zinc-800 text-xs">
+ <div className="py-10 text-center text-zinc-500 clay-surface rounded-2xl border border-dashed border-[var(--card-border)]  text-xs">
  هیچ کارت مدل پیش‌فرضی ثبت نشده است. با کلیک روی «افزودن کارت مدل» یک مدل جدید بسازید.
  </div>
  ) : (
@@ -1499,10 +1517,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
  return (
  <div
  key={p.id}
- className={`p-4 rounded-2xl border transition-all duration-200 flex flex-col justify-between ${p.isActive === 1
- ? 'clay-modal/90 border-zinc-200 dark:border-zinc-800 shadow-sm hover:border-zinc-300 dark:hover:border-zinc-700'
- : 'bg-zinc-100/60 dark:bg-zinc-950/60 border-zinc-200/60 dark:border-zinc-800/60 opacity-60'
- }`}
+ className={`p-4 transition-all duration-200 flex flex-col justify-between ${p.isActive === 1 ? 'clay-card' : 'clay-card opacity-50 grayscale'}`}
  >
  <div className="space-y-3">
  {/* Header & Badges */}
@@ -1549,7 +1564,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
  </div>
 
  {/* Details */}
- <div className="space-y-1.5 text-xs text-zinc-600 dark:text-zinc-400 pt-2 border-t border-zinc-100 dark:border-zinc-800">
+ <div className="space-y-1.5 text-xs text-zinc-600 dark:text-zinc-400 pt-2 border-t border-[var(--card-border)] ">
  <div className="flex items-center justify-between font-mono text-[11px]" dir="ltr">
  <span className="text-zinc-400 dark:text-zinc-500">Model:</span>
  <span className="font-bold text-zinc-800 dark:text-zinc-200 clay-btn-secondary/80 px-1.5 py-0.5 rounded truncate max-w-[200px]" title={p.modelName}>
@@ -1566,7 +1581,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
 
  {/* Test Result Message */}
  {result && (
- <div className={`p-2.5 rounded-xl text-[11px] leading-tight flex items-start gap-1.5 animate-fadeIn ${result.success
+ <div className={`fixed top-6 left-1/2 -translate-x-1/2 z-[9999] shadow-lg min-w-[300px] p-2.5 rounded-xl text-[11px] leading-tight flex items-start gap-1.5 animate-fadeIn ${result.success
  ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20'
  : 'bg-red-500/10 text-red-700 dark:text-red-300 border border-red-500/20'
  }`}>
@@ -1577,11 +1592,11 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
  </div>
 
  {/* Actions */}
- <div className="flex items-center justify-between gap-1 pt-4 mt-3 border-t border-zinc-100 dark:border-zinc-800">
+ <div className="flex items-center justify-between gap-1 pt-4 mt-3 border-t border-[var(--card-border)] ">
  <button
  onClick={() => handleTestDefaultProfile(p)}
  disabled={isTesting}
- className="px-3 py-1.5 rounded-xl text-[11px] font-bold bg-zinc-100 hover:clay-btn-secondary dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 transition-colors flex items-center gap-1"
+ className="px-3 py-1.5 rounded-xl text-[11px] font-bold clay-surface hover:clay-btn-secondary dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 transition-colors flex items-center gap-1"
  title="آزمایش سرعت پاسخ و اتصال به این مدل"
  >
  {isTesting ? (
@@ -1619,7 +1634,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
 
  {/* Site General Settings Section */}
  <div className="clay-surface/50 p-5 sm:p-6 rounded-2xl border border-[var(--card-border)] shadow-sm">
- <div className="flex items-center gap-3 pb-4 border-b border-zinc-100 dark:border-zinc-700/60 mb-5">
+ <div className="flex items-center gap-3 pb-4 border-b border-[var(--card-border)]  mb-5">
  <div className="w-10 h-10 rounded-xl bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0">
  <Sparkles className="w-5 h-5" />
  </div>
@@ -1633,7 +1648,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
  </div>
  </div>
 
- <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-xl bg-zinc-50 dark:bg-zinc-900/60 border border-[var(--card-border)]">
+ <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-xl clay-card">
  <div className="flex flex-col gap-1">
  <span className="text-sm font-bold text-zinc-800 dark:text-zinc-200">
  انتشار خودکار اخبار در وبلاگ و تلگرام
@@ -1660,7 +1675,30 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
  </div>
  </div>
 
- {/* Danger Zone Section */}
+ 
+   {/* Theme Switcher */}
+   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-xl clay-card">
+   <div className="flex flex-col gap-1">
+   <span className="text-sm font-bold text-zinc-800 dark:text-zinc-200">
+   استایل بصری سیستم (Theme Switcher)
+   </span>
+   <span className="text-xs text-zinc-500 dark:text-zinc-400">
+   با تغییر این گزینه، استایل کارت‌ها، دکمه‌ها و فرم‌ها در سراسر سایت به صورت آنی برای تمامی کاربران تغییر می‌کند.
+   </span>
+   </div>
+   
+   <select
+     value={uiStyle}
+     onChange={(e) => handleUiStyleChange(e.target.value)}
+     disabled={siteSettingsSaving || siteSettingsLoading}
+     className="w-full sm:w-48 px-3 py-2 rounded-xl clay-input text-sm text-zinc-800 dark:text-zinc-200 focus:outline-none transition-colors"
+   >
+     <option value="clay">کلیمورفیزم (Claymorphism)</option>
+     <option value="neumorphic">نئومورفیزم (Neumorphism)</option>
+                  </select>
+   </div>
+
+  {/* Danger Zone Section */}
  <div className="clay-surface/50 p-6 rounded-2xl border border-[var(--card-border)]">
  <h3 className="text-lg font-bold text-red-600 dark:text-red-400 mb-2 flex items-center gap-2">
  <AlertCircle className="w-5 h-5" />
@@ -1724,7 +1762,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
  {/* Add Licenses Form */}
  <div className="lg:col-span-1">
- <div className="p-5 rounded-2xl clay-modal shadow-sm">
+ <div className="p-5 rounded-2xl clay-card">
  <h4 className="text-sm font-bold text-zinc-900 dark:text-zinc-100 mb-4">افزودن لایسنس جدید (گروهی)</h4>
  <p className="text-xs text-zinc-500 mb-4 leading-relaxed">
  هر لایسنس یا اکانت را در یک خط جدید وارد کنید.
@@ -1733,14 +1771,14 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
  <textarea
  value={newLicensesText}
  onChange={(e) => setNewLicensesText(e.target.value)}
- className="w-full px-4 py-3 rounded-xl clay-surface border border-[var(--card-border)] focus:border-zinc-400 dark:focus:border-zinc-500 focus:ring-1 focus:ring-zinc-400 text-sm outline-none transition-all min-h-[200px]"
+ className="w-full px-4 py-3 rounded-xl clay-input focus:border-zinc-400 dark:focus:border-zinc-500 focus:ring-1 focus:ring-zinc-400 text-sm outline-none transition-all min-h-[200px]"
  placeholder="apikey_12345&#10;apikey_67890&#10;user:pass"
  dir="ltr"
  />
  <button
  type="submit"
  disabled={licensesLoading || !newLicensesText.trim()}
- className="w-full py-2.5 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 font-bold rounded-xl hover:opacity-90 transition-opacity disabled:opacity-50"
+ className="w-full py-3 clay-btn-primary-thick rounded-xl font-bold transition-opacity disabled:opacity-50"
  >
  {licensesLoading ? 'در حال ثبت...' : 'ثبت لایسنس‌ها'}
  </button>
@@ -1750,7 +1788,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
 
  {/* Licenses List */}
  <div className="lg:col-span-2">
- <div className="p-5 rounded-2xl clay-modal shadow-sm h-full">
+ <div className="p-5 rounded-2xl clay-card h-full">
  <div className="flex items-center justify-between mb-4">
  <h4 className="text-sm font-bold text-zinc-900 dark:text-zinc-100">لیست لایسنس‌های موجود</h4>
  <span className="text-xs font-medium text-emerald-600 bg-emerald-50 dark:bg-emerald-900/30 dark:text-emerald-400 px-2.5 py-1 rounded-lg">
@@ -1770,7 +1808,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
  ) : (
  <div className="flex flex-col gap-2 max-h-[500px] overflow-y-auto custom-scrollbar pr-2">
  {licenses.map((l: any) => (
- <div key={l.id} className="flex items-center justify-between p-3 rounded-xl clay-surface border border-[var(--card-border)]">
+ <div key={l.id} className="flex items-center justify-between p-3 rounded-xl clay-card">
  <div className="flex flex-col min-w-0">
  <span className="text-sm font-mono text-zinc-800 dark:text-zinc-200 truncate" dir="ltr">{l.key}</span>
  <span className={`text-[10px] mt-1 w-max px-2 py-0.5 rounded-md ${l.status === 'available' ? 'bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400' : 'bg-red-50 text-red-600 dark:bg-red-900/30 dark:text-red-400'
@@ -1816,7 +1854,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
  setIsAdding(true);
  }
  }}
- className="flex items-center gap-2 px-4 py-2 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 text-sm font-bold rounded-xl hover:opacity-90 transition-opacity"
+ className="flex items-center gap-2 px-5 py-2.5 clay-btn-primary-thick text-sm font-bold rounded-xl transition-opacity"
  >
  <AddSquareOutlineIcon className="w-4 h-4" />
  {isAdding ? 'انصراف' : 'افزودن محصول'}
@@ -1830,8 +1868,8 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
  )}
 
  {isAdding && (
- <div className="mb-8 p-6 rounded-2xl clay-modal shadow-sm max-w-2xl mx-auto">
- <h4 className="text-base font-bold text-zinc-900 dark:text-zinc-100 mb-6 pb-4 border-b border-zinc-100 dark:border-zinc-800">{editingProductId ? 'ویرایش محصول' : 'تعریف محصول جدید'}</h4>
+ <div className="mb-8 p-6 rounded-2xl clay-card max-w-2xl mx-auto">
+ <h4 className="text-base font-bold text-zinc-900 dark:text-zinc-100 mb-6 pb-4 border-b border-[var(--card-border)] ">{editingProductId ? 'ویرایش محصول' : 'تعریف محصول جدید'}</h4>
  <form onSubmit={handleAddProduct} className="flex flex-col gap-5">
  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
  <div className="flex flex-col gap-1.5">
@@ -1840,7 +1878,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
  type="text"
  value={title}
  onChange={(e) => setTitle(e.target.value)}
- className="w-full px-4 py-2.5 rounded-xl clay-surface border border-[var(--card-border)] focus:border-zinc-400 dark:focus:border-zinc-500 focus:ring-1 focus:ring-zinc-400 dark:focus:ring-zinc-500 text-sm outline-none transition-all"
+ className="w-full px-4 py-2.5 rounded-xl clay-input focus:border-zinc-400 dark:focus:border-zinc-500 focus:ring-1 focus:ring-zinc-400 dark:focus:ring-zinc-500 text-sm outline-none transition-all"
  placeholder="مثال: API Key 5$"
  />
  </div>
@@ -1849,7 +1887,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
  <select
  value={category}
  onChange={(e) => setCategory(e.target.value)}
- className="w-full px-4 py-2.5 rounded-xl clay-surface border border-[var(--card-border)] focus:border-zinc-400 dark:focus:border-zinc-500 focus:ring-1 focus:ring-zinc-400 dark:focus:ring-zinc-500 text-sm outline-none transition-all"
+ className="w-full px-4 py-2.5 rounded-xl clay-input focus:border-zinc-400 dark:focus:border-zinc-500 focus:ring-1 focus:ring-zinc-400 dark:focus:ring-zinc-500 text-sm outline-none transition-all"
  >
  <option value="account">اکانت پرمیوم</option>
  <option value="api">کلید API</option>
@@ -1865,7 +1903,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
  type="text"
  value={price}
  onChange={(e) => setPrice(e.target.value)}
- className="w-full px-4 py-2.5 rounded-xl clay-surface border border-[var(--card-border)] focus:border-zinc-400 dark:focus:border-zinc-500 focus:ring-1 focus:ring-zinc-400 dark:focus:ring-zinc-500 text-sm outline-none transition-all"
+ className="w-full px-4 py-2.5 rounded-xl clay-input focus:border-zinc-400 dark:focus:border-zinc-500 focus:ring-1 focus:ring-zinc-400 dark:focus:ring-zinc-500 text-sm outline-none transition-all"
  placeholder="مثال: 50000"
  dir="ltr"
  />
@@ -1876,13 +1914,13 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
  <textarea
  value={description}
  onChange={(e) => setDescription(e.target.value)}
- className="w-full px-4 py-2.5 rounded-xl clay-surface border border-[var(--card-border)] focus:border-zinc-400 dark:focus:border-zinc-500 focus:ring-1 focus:ring-zinc-400 dark:focus:ring-zinc-500 text-sm outline-none transition-all min-h-[80px]"
+ className="w-full px-4 py-2.5 rounded-xl clay-input focus:border-zinc-400 dark:focus:border-zinc-500 focus:ring-1 focus:ring-zinc-400 dark:focus:ring-zinc-500 text-sm outline-none transition-all min-h-[80px]"
  placeholder="نمایش مختصر روی کارت فروشگاه..."
  />
  </div>
 
  {category === 'plan' ? (
- <div className="space-y-4 p-4 rounded-2xl clay-surface border border-[var(--card-border)]">
+ <div className="space-y-4 p-4 rounded-2xl clay-card">
  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
  <div className="flex flex-col gap-1.5">
  <label className="text-xs font-bold text-zinc-600 dark:text-zinc-400">بج یا نشان بالای کارت (اختیاری)</label>
@@ -1935,13 +1973,13 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
  />
  </div>
 
- <div className="pt-2 flex flex-col sm:flex-row items-start sm:items-center gap-4 border-t border-zinc-200/60 dark:border-zinc-700/60">
+ <div className="pt-2 flex flex-col sm:flex-row items-start sm:items-center gap-4 border-t border-[var(--card-border)] ">
  <label className="flex items-center gap-2 cursor-pointer">
  <input
  type="checkbox"
  checked={isPopular}
  onChange={(e) => setIsPopular(e.target.checked)}
- className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 border-zinc-300 dark:border-zinc-700"
+ className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 border-zinc-300 "
  />
  <span className="text-xs font-bold text-zinc-800 dark:text-zinc-200">بسته برگزیده و محبوب (کارت سفید و برجسته)</span>
  </label>
@@ -1951,7 +1989,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
  type="checkbox"
  checked={showOnLanding}
  onChange={(e) => setShowOnLanding(e.target.checked)}
- className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 border-zinc-300 dark:border-zinc-700"
+ className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 border-zinc-300 "
  />
  <span className="text-xs font-bold text-zinc-800 dark:text-zinc-200">نمایش در بخش تعرفه‌های صفحه اصلی</span>
  </label>
@@ -1964,7 +2002,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
  <textarea
  value={longDescription}
  onChange={(e) => setLongDescription(e.target.value)}
- className="w-full px-4 py-2.5 rounded-xl clay-surface border border-[var(--card-border)] focus:border-zinc-400 dark:focus:border-zinc-500 focus:ring-1 focus:ring-zinc-400 dark:focus:ring-zinc-500 text-sm outline-none transition-all min-h-[150px]"
+ className="w-full px-4 py-2.5 rounded-xl clay-input focus:border-zinc-400 dark:focus:border-zinc-500 focus:ring-1 focus:ring-zinc-400 dark:focus:ring-zinc-500 text-sm outline-none transition-all min-h-[150px]"
  placeholder="توضیحات کامل محصول که در پاپ‌آپ نمایش داده می‌شود..."
  />
  </div>
@@ -1975,7 +2013,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
  type="text"
  value={baseUrl}
  onChange={(e) => setBaseUrl(e.target.value)}
- className="w-full px-4 py-2.5 rounded-xl clay-surface border border-[var(--card-border)] focus:border-zinc-400 dark:focus:border-zinc-500 focus:ring-1 focus:ring-zinc-400 dark:focus:ring-zinc-500 text-sm outline-none transition-all"
+ className="w-full px-4 py-2.5 rounded-xl clay-input focus:border-zinc-400 dark:focus:border-zinc-500 focus:ring-1 focus:ring-zinc-400 dark:focus:ring-zinc-500 text-sm outline-none transition-all"
  placeholder="مثال: https://api.openai.com/v1/chat/completions"
  dir="ltr"
  />
@@ -1986,7 +2024,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
  <textarea
  value={deliveryGuide}
  onChange={(e) => setDeliveryGuide(e.target.value)}
- className="w-full px-4 py-2.5 rounded-xl clay-surface border border-[var(--card-border)] focus:border-zinc-400 dark:focus:border-zinc-500 focus:ring-1 focus:ring-zinc-400 dark:focus:ring-zinc-500 text-sm outline-none transition-all min-h-[100px]"
+ className="w-full px-4 py-2.5 rounded-xl clay-input focus:border-zinc-400 dark:focus:border-zinc-500 focus:ring-1 focus:ring-zinc-400 dark:focus:ring-zinc-500 text-sm outline-none transition-all min-h-[100px]"
  placeholder="راهنمای استفاده یا اطلاعات بیشتر که پس از خرید به کاربر نمایش داده می‌شود..."
  />
  </div>
@@ -1995,7 +2033,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
  <div className="flex flex-col gap-1.5">
  <label className="text-xs font-bold text-zinc-600 dark:text-zinc-400">تصویر محصول (مربعی)</label>
  <div className="flex items-center gap-4">
- <label className="flex-1 px-4 py-2.5 rounded-xl clay-surface border border-[var(--card-border)] text-sm cursor-pointer clay-icon-btn transition-colors text-center text-zinc-600 dark:text-zinc-400">
+ <label className="flex-1 px-4 py-2.5 rounded-xl clay-input text-sm cursor-pointer clay-icon-btn transition-colors text-center text-zinc-600 dark:text-zinc-400">
  <span>{image ? 'تغییر تصویر' : 'انتخاب تصویر'}</span>
  <input type="file" accept="image/*" className="hidden" onChange={(e) => handleImageChange(e, 'image')} />
  </label>
@@ -2011,7 +2049,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
  <div className="flex flex-col gap-1.5">
  <label className="text-xs font-bold text-zinc-600 dark:text-zinc-400">تصویر بنر (عریض - اختیاری)</label>
  <div className="flex items-center gap-4">
- <label className="flex-1 px-4 py-2.5 rounded-xl clay-surface border border-[var(--card-border)] text-sm cursor-pointer clay-icon-btn transition-colors text-center text-zinc-600 dark:text-zinc-400">
+ <label className="flex-1 px-4 py-2.5 rounded-xl clay-input text-sm cursor-pointer clay-icon-btn transition-colors text-center text-zinc-600 dark:text-zinc-400">
  <span>{bannerImage ? 'تغییر بنر' : 'انتخاب بنر'}</span>
  <input type="file" accept="image/*" className="hidden" onChange={(e) => handleImageChange(e, 'banner')} />
  </label>
@@ -2028,7 +2066,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
  )}
 
  <div className="flex justify-end pt-2">
- <button type="submit" className="px-6 py-2.5 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 font-bold rounded-xl hover:opacity-90 transition-opacity">
+ <button type="submit" className="px-6 py-3 clay-btn-primary-thick rounded-xl font-bold transition-opacity">
  {editingProductId ? 'ذخیره تغییرات' : 'ثبت محصول'}
  </button>
  </div>
@@ -2039,7 +2077,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
  {/* Product List */}
  {loading ? (
  <div className="flex items-center justify-center h-32">
- <div className="w-8 h-8 border-2 border-zinc-200 dark:border-zinc-800 border-t-zinc-900 dark:border-t-zinc-100 rounded-full animate-spin" />
+ <div className="w-8 h-8 border-2 border-[var(--card-border)]  border-t-zinc-900 dark:border-t-zinc-100 rounded-full animate-spin" />
  </div>
  ) : products.length === 0 ? (
  <div className="flex flex-col items-center justify-center h-48 gap-4 opacity-50">
@@ -2049,10 +2087,10 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
  ) : (
  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
  {products.filter((p: any) => p.category !== 'wallet_topup').map((p: any) => (
- <div key={p.id} className="group flex flex-col clay-modal rounded-2xl shadow-sm hover:shadow-md hover:border-zinc-300 dark:hover:border-zinc-700 transition-all overflow-hidden relative">
+ <div key={p.id} className="group flex flex-col clay-card rounded-2xl hover:shadow-md hover:border-zinc-300 dark:hover:border-zinc-700 transition-all overflow-hidden relative">
 
  {/* Actions (Absolute top-left) */}
- <div className="absolute top-3 left-3 flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity z-10 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md p-1 rounded-xl shadow-sm border border-zinc-100 dark:border-zinc-800">
+ <div className="absolute top-3 left-3 flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity z-10 clay-surface backdrop-blur-md p-1 rounded-xl shadow-sm border border-[var(--card-border)] ">
  <button
  type="button"
  onClick={() => handleEditClick(p)}
@@ -2081,7 +2119,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
  </div>
  )}
  <div className="absolute bottom-3 right-3 flex items-center gap-1.5">
- <span className="text-xs px-2.5 py-1 bg-white/90 dark:bg-zinc-900/90 text-zinc-800 dark:text-zinc-200 font-medium rounded-lg shadow-sm backdrop-blur-sm">
+ <span className="text-xs px-2.5 py-1 clay-pill-thick font-medium">
  {p.category === 'plan' ? 'پلن تعرفه' : p.category === 'package' ? 'پکیج' : p.category === 'api' ? 'کلید API' : 'اکانت'}
  </span>
  {p.isPopular ? (
@@ -2099,7 +2137,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
  <p className="text-xs text-zinc-500 dark:text-zinc-400 line-clamp-2 mb-4 leading-loose">{p.description}</p>
  )}
 
- <div className="mt-auto flex items-center justify-between border-t border-zinc-100 dark:border-zinc-800/60 pt-4">
+ <div className="mt-auto flex items-center justify-between border-t border-[var(--card-border)]  pt-4">
  <div className="flex flex-col">
  <span className="text-[10px] text-zinc-400 dark:text-zinc-500 mb-1">قیمت</span>
  <span className="text-[15px] font-black text-zinc-900 dark:text-zinc-100">{p.price.toLocaleString()} <span className="text-xs font-normal text-zinc-500">تومان</span></span>
@@ -2114,7 +2152,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
  <button
  type="button"
  onClick={() => handleEditClick(p)}
- className="p-2 text-zinc-600 hover:text-blue-600 bg-zinc-100 hover:bg-blue-50 dark:text-zinc-400 dark:bg-zinc-800 dark:hover:bg-blue-900/30 rounded-xl transition-colors"
+ className="p-2 text-zinc-600 hover:text-blue-600 clay-surface hover:bg-blue-50 dark:text-zinc-400  dark:hover:bg-blue-900/30 rounded-xl transition-colors"
  title="ویرایش مشخصات پلن"
  >
  <Edit2 size={15} />
@@ -2157,7 +2195,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
  setIsAddingNews(!isAddingNews);
  if (!isAddingNews) setEditingNews(null);
  }}
- className="flex items-center gap-2 px-4 py-2 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 text-sm font-bold rounded-xl hover:opacity-90 transition-opacity"
+ className="flex items-center gap-2 px-5 py-2.5 clay-btn-primary-thick text-sm font-bold rounded-xl transition-opacity"
  >
  <AddSquareOutlineIcon className="w-4 h-4" />
  {isAddingNews ? 'انصراف' : 'انتشار خبر جدید'}
@@ -2172,8 +2210,8 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
 
  {/* Edit News Form */}
  {editingNews && (
- <div className="mb-8 p-6 rounded-2xl clay-modal border-2 border-blue-500/40 dark:border-blue-500/30 animate-fadeIn">
- <div className="flex items-center justify-between pb-4 mb-5 border-b border-zinc-100 dark:border-zinc-800">
+ <div className="mb-8 p-6 rounded-2xl clay-card border-2 border-blue-500/40 dark:border-blue-500/30 animate-fadeIn">
+ <div className="flex items-center justify-between pb-4 mb-5 border-b border-[var(--card-border)] ">
  <div className="flex items-center gap-2.5">
  <div className="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400">
  <Edit2 size={18} />
@@ -2202,7 +2240,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
  type="text"
  value={editNewsTitle}
  onChange={(e) => setEditNewsTitle(e.target.value)}
- className="w-full px-4 py-2.5 rounded-xl clay-surface border border-[var(--card-border)] focus:border-blue-500 outline-none transition-all font-medium text-sm text-zinc-800 dark:text-zinc-100"
+ className="w-full px-4 py-2.5 rounded-xl clay-input focus:border-blue-500 outline-none transition-all font-medium text-sm text-zinc-800 dark:text-zinc-100"
  placeholder="عنوان جدید خبر..."
  />
  </div>
@@ -2212,7 +2250,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
  <textarea
  value={editNewsContent}
  onChange={(e) => setEditNewsContent(e.target.value)}
- className="w-full px-4 py-2.5 rounded-xl clay-surface border border-[var(--card-border)] focus:border-blue-500 outline-none transition-all min-h-[160px] text-sm text-zinc-800 dark:text-zinc-100 leading-relaxed custom-scrollbar"
+ className="w-full px-4 py-2.5 rounded-xl clay-input focus:border-blue-500 outline-none transition-all min-h-[160px] text-sm text-zinc-800 dark:text-zinc-100 leading-relaxed custom-scrollbar"
  placeholder="متن کامل مقاله یا خبر..."
  />
  </div>
@@ -2220,7 +2258,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
  <div className="flex flex-col gap-1.5">
  <label className="text-xs font-bold text-zinc-600 dark:text-zinc-400">تصویر کاور خبر</label>
  <div className="flex items-center gap-4">
- <label className="flex-1 px-4 py-2.5 rounded-xl clay-surface border border-[var(--card-border)] text-sm cursor-pointer text-center clay-icon-btn transition-colors">
+ <label className="flex-1 px-4 py-2.5 rounded-xl clay-input text-sm cursor-pointer text-center clay-icon-btn transition-colors">
  <span>انتخاب یا تغییر تصویر</span>
  <input type="file" accept="image/*" className="hidden" onChange={handleEditNewsImageChange} />
  </label>
@@ -2257,7 +2295,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
  <button
  type="button"
  onClick={cancelEditNews}
- className="px-5 py-2.5 rounded-xl border border-zinc-300 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 font-bold text-sm clay-icon-btn transition-colors"
+ className="px-5 py-2.5 rounded-xl border border-zinc-300  text-zinc-700 dark:text-zinc-300 font-bold text-sm clay-icon-btn transition-colors"
  >
  انصراف
  </button>
@@ -2274,7 +2312,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
  )}
 
  {isAddingNews && (
- <div className="mb-8 p-6 rounded-2xl clay-modal shadow-sm">
+ <div className="mb-8 p-6 rounded-2xl clay-card">
  <form onSubmit={handleAddNews} className="flex flex-col gap-5">
  <div className="flex flex-col gap-1.5">
  <label className="text-xs font-bold text-zinc-600 dark:text-zinc-400">عنوان خبر</label>
@@ -2282,7 +2320,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
  type="text"
  value={newsTitle}
  onChange={(e) => setNewsTitle(e.target.value)}
- className="w-full px-4 py-2.5 rounded-xl clay-surface border border-[var(--card-border)] focus:border-zinc-400 outline-none transition-all"
+ className="w-full px-4 py-2.5 rounded-xl clay-input focus:border-zinc-400 outline-none transition-all"
  />
  </div>
 
@@ -2291,14 +2329,14 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
  <textarea
  value={newsContent}
  onChange={(e) => setNewsContent(e.target.value)}
- className="w-full px-4 py-2.5 rounded-xl clay-surface border border-[var(--card-border)] focus:border-zinc-400 outline-none transition-all min-h-[150px]"
+ className="w-full px-4 py-2.5 rounded-xl clay-input focus:border-zinc-400 outline-none transition-all min-h-[150px]"
  />
  </div>
 
  <div className="flex flex-col gap-1.5">
  <label className="text-xs font-bold text-zinc-600 dark:text-zinc-400">کاور خبر (اختیاری)</label>
  <div className="flex items-center gap-4">
- <label className="flex-1 px-4 py-2.5 rounded-xl clay-surface border border-[var(--card-border)] text-sm cursor-pointer text-center">
+ <label className="flex-1 px-4 py-2.5 rounded-xl clay-input text-sm cursor-pointer text-center">
  <span>انتخاب تصویر</span>
  <input type="file" accept="image/*" className="hidden" onChange={handleNewsImageChange} />
  </label>
@@ -2322,7 +2360,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
 
  {newsLoading && !isAddingNews ? (
  <div className="flex items-center justify-center h-48">
- <div className="w-8 h-8 border-2 border-zinc-200 border-t-blue-600 rounded-full animate-spin" />
+ <div className="w-8 h-8 border-2 border-[var(--card-border)] border-t-blue-600 rounded-full animate-spin" />
  </div>
  ) : news.length === 0 ? (
  <div className="flex flex-col items-center justify-center h-48 opacity-50">
@@ -2331,18 +2369,18 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
  ) : (
  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
  {news.map(n => (
- <div key={n.id} className="flex flex-col clay-surface rounded-2xl border border-[var(--card-border)] overflow-hidden relative group">
+ <div key={n.id} className="flex flex-col clay-card rounded-2xl border border-[var(--card-border)] overflow-hidden relative group">
  <div className="absolute top-2 left-2 z-10 flex items-center gap-1.5">
  <button
  onClick={() => startEditNews(n)}
- className="p-1.5 bg-white/90 hover:bg-white dark:bg-black/60 dark:hover:bg-black/80 text-blue-600 dark:text-blue-400 rounded-lg backdrop-blur-sm transition-all shadow-sm"
+ className="p-1.5 bg-white/90 hover:clay-surface dark:hover:bg-black/80 text-blue-600 dark:text-blue-400 rounded-lg backdrop-blur-sm transition-all shadow-sm"
  title="ویرایش خبر"
  >
  <Edit2 size={16} />
  </button>
  <button
  onClick={() => handleDeleteNews(n.id)}
- className="p-1.5 bg-white/90 hover:bg-white dark:bg-black/60 dark:hover:bg-black/80 text-red-500 rounded-lg backdrop-blur-sm transition-all shadow-sm"
+ className="p-1.5 bg-white/90 hover:clay-surface dark:hover:bg-black/80 text-red-500 rounded-lg backdrop-blur-sm transition-all shadow-sm"
  title="حذف خبر"
  >
  <Trash2 size={16} />
@@ -2374,7 +2412,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
  <button
  onClick={fetchOrders}
  disabled={ordersLoading}
- className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-zinc-100 hover:clay-btn-secondary dark:hover:bg-zinc-700 text-xs font-bold text-zinc-700 dark:text-zinc-300 transition-colors shrink-0 disabled:opacity-50 shadow-sm"
+ className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl clay-surface hover:clay-btn-secondary dark:hover:bg-zinc-700 text-xs font-bold text-zinc-700 dark:text-zinc-300 transition-colors shrink-0 disabled:opacity-50 shadow-sm"
  title="بروزرسانی لیست سفارشات"
  >
  <RefreshCw className={`w-3.5 h-3.5 ${ordersLoading ? 'animate-spin' : ''}`} />
@@ -2385,7 +2423,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
 
  {/* Feedback Alert */}
  {orderFeedback && (
- <div className={`p-4 rounded-2xl flex items-center justify-between gap-3 text-sm font-bold animate-slideUpScale ${orderFeedback.type === 'success' ? 'bg-emerald-50 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800' :
+ <div className={`fixed top-6 left-1/2 -translate-x-1/2 z-[9999] shadow-lg min-w-[300px] p-4 rounded-2xl flex items-center justify-between gap-3 text-sm font-bold animate-slideUpScale ${orderFeedback.type === 'success' ? 'bg-emerald-50 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800' :
  orderFeedback.type === 'warning' ? 'bg-amber-50 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300 border border-amber-200 dark:border-amber-800' :
  'bg-red-50 text-red-800 dark:bg-red-950/40 dark:text-red-300 border border-red-200 dark:border-red-800'
  }`}>
@@ -2405,7 +2443,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
  )}
 
  {/* Filters & Search Bar */}
- <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 clay-modal p-3 rounded-2xl border border-[var(--card-border)] shadow-sm">
+ <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 clay-card p-3 rounded-2xl border border-[var(--card-border)]">
  <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
  <button
  onClick={() => setOrderStatusFilter('all')}
@@ -2457,7 +2495,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
  value={orderSearch}
  onChange={(e) => setOrderSearch(e.target.value)}
  placeholder="جستجوی سفارش، خریدار، محصول..."
- className="w-full pr-9 pl-4 py-1.5 text-xs rounded-xl clay-surface border border-[var(--card-border)] focus:border-blue-500 focus:outline-none transition-all placeholder:text-zinc-400"
+ className="w-full pr-9 pl-4 py-1.5 text-xs rounded-xl clay-input focus:border-blue-500 focus:outline-none transition-all placeholder:text-zinc-400"
  />
  {orderSearch && (
  <button
@@ -2472,19 +2510,19 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
 
  {/* Table / Empty State */}
  {ordersLoading ? (
- <div className="flex flex-col items-center justify-center h-64 clay-modal">
- <div className="w-8 h-8 border-2 border-zinc-200 dark:border-zinc-800 border-t-blue-600 rounded-full animate-spin mb-3" />
+ <div className="flex flex-col items-center justify-center h-64 clay-card">
+ <div className="w-8 h-8 border-2 border-[var(--card-border)]  border-t-blue-600 rounded-full animate-spin mb-3" />
  <span className="text-xs text-zinc-500">در حال دریافت لیست سفارشات...</span>
  </div>
  ) : orders.length === 0 ? (
- <div className="flex flex-col items-center justify-center h-64 gap-4 opacity-50 clay-modal">
+ <div className="flex flex-col items-center justify-center h-64 gap-4 opacity-50 clay-card">
  <ShopLinearIcon className="w-12 h-12 text-zinc-400" />
  <span className="text-sm font-bold text-zinc-600 dark:text-zinc-400">هیچ سفارشی ثبت نشده است.</span>
  </div>
  ) : (
- <div className="overflow-x-auto rounded-3xl border border-[var(--card-border)] clay-modal shadow-sm custom-scrollbar">
+ <div className="overflow-x-auto rounded-2xl border border-[var(--card-border)] clay-card shadow-sm custom-scrollbar">
  <table className="w-full text-sm text-right">
- <thead className="text-xs font-bold text-zinc-500 bg-zinc-100/70 dark:bg-zinc-800/60 border-b border-zinc-200 dark:border-zinc-800">
+ <thead className="text-xs font-bold text-zinc-500 clay-surface border-b border-[var(--card-border)] ">
  <tr>
  <th className="px-4 py-3.5 rounded-tr-2xl">شماره سفارش</th>
  <th className="px-4 py-3.5">خریدار</th>
@@ -2739,7 +2777,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
 
  <div className="relative w-full max-w-xl clay-modal overflow-hidden flex flex-col max-h-[90vh] animate-slideUpScale">
  {/* Modal Header */}
- <div className="flex items-center justify-between p-5 border-b border-zinc-100 dark:border-zinc-800 shrink-0">
+ <div className="flex items-center justify-between p-5 border-b border-[var(--card-border)]  shrink-0">
  <div className="flex items-center gap-2.5">
  <div className="w-9 h-9 rounded-xl bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center">
  <Package className="w-5 h-5" />
@@ -2772,7 +2810,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
  {/* Summary Cards */}
  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
  {/* Buyer Info */}
- <div className="p-3.5 rounded-2xl clay-surface border border-[var(--card-border)] flex flex-col gap-1.5">
+ <div className="p-3.5 rounded-2xl clay-card flex flex-col gap-1.5">
  <span className="text-[11px] font-bold text-zinc-500 flex items-center gap-1">
  <User className="w-3.5 h-3.5" />
  مشخصات مشتری
@@ -2786,7 +2824,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
  </div>
 
  {/* Product & Price Info */}
- <div className="p-3.5 rounded-2xl clay-surface border border-[var(--card-border)] flex flex-col gap-1.5">
+ <div className="p-3.5 rounded-2xl clay-card flex flex-col gap-1.5">
  <span className="text-[11px] font-bold text-zinc-500 flex items-center gap-1">
  <ShopLinearIcon className="w-3.5 h-3.5" />
  محصول و مبلغ
@@ -2801,7 +2839,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
  </div>
 
  {/* Status Management */}
- <div className="p-4 rounded-2xl clay-surface border border-[var(--card-border)] space-y-2.5">
+ <div className="p-4 rounded-2xl clay-card space-y-2.5">
  <label className="text-xs font-bold text-zinc-700 dark:text-zinc-300 block">
  تغییر وضعیت پرداخت این سفارش:
  </label>
@@ -2868,7 +2906,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
  </p>
  </div>
  ) : selectedOrder.productCategory !== 'package' && (
- <div className="p-4 rounded-2xl clay-surface border border-[var(--card-border)] space-y-3">
+ <div className="p-4 rounded-2xl clay-card space-y-3">
  <div className="flex items-center justify-between">
  <span className="text-xs font-bold text-zinc-800 dark:text-zinc-200 flex items-center gap-1.5">
  <Key className="w-4 h-4 text-blue-600" />
@@ -2880,7 +2918,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
  </div>
 
  {selectedOrder.licenseKey ? (
- <div className="p-3 clay-modal rounded-xl border border-[var(--card-border)] space-y-2">
+ <div className="p-3 clay-card rounded-xl border border-[var(--card-border)] space-y-3">
  <div className="flex items-center justify-between text-[11px] text-zinc-500">
  <span>کلید تحویل داده شده به کاربر:</span>
  <button
@@ -2902,7 +2940,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
  )}
 
  {/* Manual License Form */}
- <div className="pt-2 border-t border-zinc-200/60 dark:border-zinc-700/60 space-y-2">
+ <div className="pt-2 border-t border-[var(--card-border)]  space-y-2">
  <label className="text-[11px] font-bold text-zinc-600 dark:text-zinc-400 block">
  تخصیص یا جایگزینی دستی لایسنس برای این سفارش:
  </label>
@@ -2933,10 +2971,10 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
  </div>
 
  {/* Modal Footer */}
- <div className="p-4 border-t border-zinc-100 dark:border-zinc-800 flex items-center justify-end shrink-0">
+ <div className="p-4 border-t border-[var(--card-border)]  flex items-center justify-end shrink-0">
  <button
  onClick={() => setSelectedOrder(null)}
- className="px-5 py-2 bg-zinc-100 hover:clay-btn-secondary dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 rounded-xl text-xs font-bold transition-colors"
+ className="px-5 py-2.5 clay-btn-thick rounded-xl text-xs font-bold transition-colors"
  >
  بستن
  </button>

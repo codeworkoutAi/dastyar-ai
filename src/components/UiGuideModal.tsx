@@ -1,8 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useUIStore } from '../store/uiStore';
-import { 
- X, 
- BookOpen,
+import { X, BookOpen,
  Image as ImageIcon,
  Key,
  Cpu,
@@ -61,9 +59,8 @@ export const UiGuideModal: React.FC = () => {
  return (
  <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/60 backdrop-blur-md animate-fadeIn" dir="rtl">
  <div className="clay-card border-subtle w-[95vw] md:w-full max-w-5xl h-[85vh] flex flex-col rounded-3xl overflow-hidden clay-modal text-zinc-800 dark:text-zinc-200">
- 
  {/* Modal Header */}
- <div className="p-4 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between bg-zinc-50 dark:bg-zinc-900/50 shrink-0">
+ <div className="p-4 border-b border-[var(--card-border)]  flex items-center justify-between clay-surface shrink-0">
  <div className="flex items-center gap-3">
  <div className="p-2.5 rounded-2xl bg-blue-500 text-white shadow-md shrink-0">
  <BookOpen className="w-5 h-5" />
@@ -79,18 +76,15 @@ export const UiGuideModal: React.FC = () => {
  </div>
 
  <div className="flex flex-1 overflow-hidden">
- 
  {/* Table of Contents (Right Sidebar) */}
- <div className="hidden md:flex flex-col w-64 border-l border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-black/10 p-4 space-y-1 overflow-y-auto shrink-0">
+ <div className="hidden md:flex flex-col w-64 border-l border-[var(--card-border)]  bg-zinc-50/50 dark:bg-black/10 p-4 space-y-1 overflow-y-auto shrink-0">
  <span className="text-xs font-bold text-zinc-500 mb-2 px-2">فهرست عناوین</span>
  {sections.map(sec => (
  <button
  key={sec.id}
  onClick={() => scrollToSection(sec.id)}
  className={`flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-bold transition-all text-right ${
- activeSection === sec.id 
- ? 'bg-blue-500 text-white shadow-md' 
- : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-800'
+ activeSection === sec.id ? 'bg-blue-500 text-white shadow-md' : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-800'
  }`}
  >
  {sec.icon}
@@ -109,9 +103,7 @@ export const UiGuideModal: React.FC = () => {
  <BookOpen className="w-6 h-6" /> شروع کار با دستیار
  </h2>
  <p className="text-sm leading-relaxed opacity-90 text-justify">
- به دستیار هوشمند فارسی خوش آمدید. این محیط برای تعامل سریع و حرفه‌ای با پیشرفته‌ترین مدل‌های هوش مصنوعی (مثل Gemini) طراحی شده است. 
- شما می‌توانید متن بفرستید، عکس و فایل آپلود کنید و با سرعت بالا جواب بگیرید. 
- برای شروع کافیست در کادر پایین صفحه پیام خود را بنویسید یا از گزینه‌های"بانک ایده‌های سریع" در نوار کناری استفاده کنید.
+ به دستیار هوشمند فارسی خوش آمدید. این محیط برای تعامل سریع و حرفه‌ای با پیشرفته‌ترین مدل‌های هوش مصنوعی (مثل Gemini) طراحی شده است. شما می‌توانید متن بفرستید، عکس و فایل آپلود کنید و با سرعت بالا جواب بگیرید. برای شروع کافیست در کادر پایین صفحه پیام خود را بنویسید یا از گزینه‌های"بانک ایده‌های سریع" در نوار کناری استفاده کنید.
  </p>
  <div className="p-4 bg-blue-50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-900/30 rounded-2xl">
  <span className="font-bold text-blue-700 dark:text-blue-300">نکته طلایی:</span>
@@ -128,7 +120,7 @@ export const UiGuideModal: React.FC = () => {
  برای اینکه دستیار بتواند به سوالات شما پاسخ دهد، نیازمند متصل شدن به مغز هوش مصنوعی از طریق کلید امنیتی (API Key) است.
  اگر تاکنون این کلید را وارد نکرده‌اید، روی آیکون <strong>تنظیمات (چرخدنده)</strong> در بالای صفحه کلیک کنید.
  </p>
- <div className="flex flex-col gap-3 p-5 rounded-2xl clay-btn-secondary border border-zinc-300 dark:border-zinc-700">
+ <div className="flex flex-col gap-3 p-5 rounded-2xl clay-btn-secondary border border-zinc-300 ">
  <h4 className="font-bold">مراحل دریافت کلید جمنای (Gemini):</h4>
  <ol className="list-decimal list-inside text-sm space-y-2 opacity-80 pl-2">
  <li>وارد سایت <strong>Google AI Studio</strong> شوید (نیاز به نرم‌افزار تغییر آی‌پی دارد).</li>
@@ -163,8 +155,7 @@ export const UiGuideModal: React.FC = () => {
  <ImageIcon className="w-6 h-6" /> استودیو تصویر (Image Studio)
  </h2>
  <p className="text-sm leading-relaxed opacity-90 text-justify">
- با کلیک روی آیکون پالت رنگ در بالای صفحه، وارد استودیوی تولید تصویر می‌شوید. 
- در آنجا با نوشتن توضیحات دقیق (به زبان انگلیسی یا فارسی) می‌توانید تصاویری بسیار با کیفیت خلق کنید.
+ با کلیک روی آیکون پالت رنگ در بالای صفحه، وارد استودیوی تولید تصویر می‌شوید. در آنجا با نوشتن توضیحات دقیق (به زبان انگلیسی یا فارسی) می‌توانید تصاویری بسیار با کیفیت خلق کنید.
  همچنین امکان تنظیم ابعاد تصویر (مربع، پرتره، منظره) در آن بخش وجود دارد.
  </p>
  </section>
@@ -177,15 +168,15 @@ export const UiGuideModal: React.FC = () => {
  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">
  <div className="p-3 clay-btn-secondary rounded-xl flex items-center justify-between text-sm">
  <span>ارسال پیام</span>
- <kbd className="px-2 py-1 bg-white dark:bg-black rounded-md shadow-sm border border-[var(--card-border)] font-mono text-xs">Enter</kbd>
+ <kbd className="px-2 py-1 clay-surface rounded-md shadow-sm border border-[var(--card-border)] font-mono text-xs">Enter</kbd>
  </div>
  <div className="p-3 clay-btn-secondary rounded-xl flex items-center justify-between text-sm">
  <span>خط جدید</span>
- <kbd className="px-2 py-1 bg-white dark:bg-black rounded-md shadow-sm border border-[var(--card-border)] font-mono text-xs">Shift + Enter</kbd>
+ <kbd className="px-2 py-1 clay-surface rounded-md shadow-sm border border-[var(--card-border)] font-mono text-xs">Shift + Enter</kbd>
  </div>
  <div className="p-3 clay-btn-secondary rounded-xl flex items-center justify-between text-sm">
  <span>توقف تولید متن</span>
- <kbd className="px-2 py-1 bg-white dark:bg-black rounded-md shadow-sm border border-[var(--card-border)] font-mono text-xs">Esc</kbd>
+ <kbd className="px-2 py-1 clay-surface rounded-md shadow-sm border border-[var(--card-border)] font-mono text-xs">Esc</kbd>
  </div>
  </div>
  </section>

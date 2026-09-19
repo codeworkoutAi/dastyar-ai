@@ -724,7 +724,7 @@ router.get('/provider-live-balances', async (req, res) => {
 
       if (baseUrl.includes('router.cheap') || baseUrl.includes('one-api') || baseUrl.includes('new-api')) {
         try {
-          const subRes = await fetch(`${baseUrl}/v1/dashboard/billing/subscription`, {
+          const subRes = await fetch(`${baseUrl}/v1/dashboard/billing/subscription?_t=` + Date.now(), {
             headers: { Authorization: `Bearer ${apiKey}` },
             signal: AbortSignal.timeout(6000)
           });
@@ -733,7 +733,7 @@ router.get('/provider-live-balances', async (req, res) => {
             const now = new Date();
             const start = new Date(now.getFullYear() - 1, 0, 1).toISOString().split('T')[0];
             const end = new Date(now.getFullYear() + 1, 11, 31).toISOString().split('T')[0];
-            const usageRes = await fetch(`${baseUrl}/v1/dashboard/billing/usage?start_date=${start}&end_date=${end}`, {
+            const usageRes = await fetch(`${baseUrl}/v1/dashboard/billing/usage?start_date=${start}&end_date=${end}&_t=` + Date.now(), {
               headers: { Authorization: `Bearer ${apiKey}` },
               signal: AbortSignal.timeout(6000)
             });

@@ -85,12 +85,12 @@ export const VisualRoleSelect: React.FC<VisualRoleSelectProps> = ({
  onClick={() => setIsOpen(!isOpen)}
  className={`w-full flex items-center justify-between p-3 rounded-xl border transition-all text-right select-none cursor-pointer ${
  isOpen
- ? 'bg-zinc-50 dark:bg-zinc-900 border-indigo-500 shadow-md ring-1 ring-indigo-500/20'
- : 'bg-zinc-50 dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:border-zinc-700 hover:bg-zinc-50 dark:bg-zinc-900/60'
+ ? 'clay-surface border-indigo-500 shadow-md ring-1 ring-indigo-500/20'
+ : 'clay-surface border-[var(--card-border)] hover:border-zinc-300  hover:clay-surface/60'
  }`}
  >
  <div className="flex items-center gap-2.5 min-w-0 flex-1">
- <div className="p-1.5 rounded-lg bg-zinc-50 dark:bg-zinc-900 border border-[var(--card-border)] shrink-0">
+ <div className="p-1.5 rounded-lg clay-card shrink-0">
  {getRoleIcon()}
  </div>
  {selectedProfile ? (
@@ -134,8 +134,8 @@ export const VisualRoleSelect: React.FC<VisualRoleSelectProps> = ({
  </button>
 
  {isOpen && (
- <div className="absolute z-[70] w-full mt-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 rounded-2xl max-h-72 overflow-y-auto p-1.5 animate-fadeIn space-y-1">
- <div className="px-3 py-1.5 text-[11px] text-zinc-700 dark:text-zinc-400 border-b border-zinc-200 dark:border-zinc-800/80 font-medium flex items-center justify-between">
+ <div className="absolute z-[70] w-full mt-2 clay-card  rounded-2xl max-h-72 overflow-y-auto p-1.5 animate-fadeIn space-y-1">
+ <div className="px-3 py-1.5 text-[11px] text-zinc-700 dark:text-zinc-400 border-b border-[var(--card-border)] font-medium flex items-center justify-between">
  <span>پروفایل‌های موجود ({profiles.length})</span>
  <span className="text-zinc-700 dark:text-zinc-400">مرتب‌شده بر اساس سازگاری با نقش</span>
  </div>
@@ -162,12 +162,12 @@ export const VisualRoleSelect: React.FC<VisualRoleSelectProps> = ({
  isSelected
  ? 'bg-indigo-950/40 border-indigo-500/50 text-indigo-200'
  : isRecommendedForRole
- ? 'bg-zinc-50 dark:bg-zinc-900/80 border-zinc-300 dark:border-zinc-700 hover:border-zinc-600 clay-icon-btn/70 text-zinc-800 dark:text-zinc-200'
- : 'bg-zinc-50 dark:bg-zinc-950/50 border-zinc-200 dark:border-zinc-800/60 hover:bg-zinc-50 dark:bg-zinc-900/50 text-zinc-700 dark:text-zinc-400 opacity-80 hover:opacity-100'
+ ? 'clay-surface/80 border-zinc-300  hover:border-zinc-600 clay-icon-btn/70 text-zinc-800 dark:text-zinc-200'
+ : 'clay-surface border-[var(--card-border)]/60 hover:clay-surface/50 text-zinc-700 dark:text-zinc-400 opacity-80 hover:opacity-100'
  }`}
  >
  <div className="flex items-center gap-2.5 min-w-0 flex-1">
- <div className={`p-1.5 rounded-lg shrink-0 ${isSelected ? 'bg-indigo-500/20 text-indigo-400' : 'bg-zinc-50 dark:bg-zinc-900 text-zinc-700 dark:text-zinc-400'}`}>
+ <div className={`p-1.5 rounded-lg shrink-0 ${isSelected ? 'bg-indigo-500/20 text-indigo-400' : 'clay-surface text-zinc-700 dark:text-zinc-400'}`}>
  {meta.isVision && roleType === 'vision' ? (
  <EyeOutlineIcon className="w-3.5 h-3.5 text-amber-400" />
  ) : meta.isCoding && roleType === 'coding' ? (
@@ -251,14 +251,14 @@ export const SearchableCombobox = ({ value, onChange, options, placeholder, clas
  <svg className="w-4 h-4 text-zinc-700 dark:text-zinc-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
  </div>
  {isOpen && (
- <div className="absolute z-50 w-full mt-1 bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 rounded-xl max-h-60 overflow-auto">
+ <div className="absolute z-50 w-full mt-1 clay-card  rounded-xl max-h-60 overflow-auto">
  {filteredOptions.length === 0 ? (
  <div className="p-3 text-sm text-zinc-700 dark:text-zinc-400 text-center">موردی یافت نشد</div>
  ) : (
  filteredOptions.map((opt: any) => (
  <div
  key={opt.id}
- className="p-3 clay-icon-btn cursor-pointer text-sm font-mono border-b border-zinc-200 dark:border-zinc-800/50 last:border-0 truncate text-left"
+ className="p-3 clay-icon-btn cursor-pointer text-sm font-mono border-b border-[var(--card-border)]/50 last:border-0 truncate text-left"
  onClick={() => {
  onChange(opt.id);
  setIsOpen(false);
@@ -397,7 +397,6 @@ export const SettingsModal: React.FC = () => {
  if (!tempSettings.tools.smartRouting) return null;
  const { default: def, coding, vision } = tempSettings.tools.routingRoles || {};
  const profiles = tempSettings.providers.custom.profiles || [];
- 
  const getProfile = (id: string) => profiles.find(p => p.id === id);
  const defP = getProfile(def || '');
  const codP = getProfile(coding || '');
@@ -422,7 +421,6 @@ export const SettingsModal: React.FC = () => {
  if (codP && codMeta && !codMeta.isCoding) {
  feedback.push(`⚠️ پیشنهاد: مدل «${codP.modelName || codP.name}» ممکن است در کدهای پیچیده ضعیف عمل کند. بهتر است از مدل‌های قدرتمندی مثل Claude Sonnet/Opus، DeepSeek R1/V3، GPT-4o یا Qwen Coder استفاده کنید.`);
  }
- 
  if (feedback.length === 0 && defP && codP && visP) {
  return {
  type: 'success',
@@ -434,7 +432,6 @@ export const SettingsModal: React.FC = () => {
  messages: feedback
  };
  }
- 
  return null;
  }, [tempSettings.tools.smartRouting, tempSettings.tools.routingRoles, tempSettings.providers.custom.profiles, cachedModels]);
  const [feedbackVisible, setFeedbackVisible] = useState(true);
@@ -514,8 +511,8 @@ export const SettingsModal: React.FC = () => {
  <div className="w-full sm:w-[95vw] md:w-full max-w-4xl clay-modal flex flex-col sm:flex-row overflow-hidden text-zinc-900 dark:text-zinc-100 h-[92dvh] sm:h-auto sm:max-h-[85dvh]">
 
  {/* Sidebar Tabs */}
- <div className="w-full sm:w-64 clay-surface-inset border-b sm:border-b-0 sm:border-l border-zinc-200 dark:border-zinc-800 flex flex-col shrink-0">
- <div className="px-4 py-3 sm:p-5 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between">
+ <div className="w-full sm:w-64 clay-surface-inset border-b sm:border-b-0 sm:border-l border-[var(--card-border)] flex flex-col shrink-0">
+ <div className="px-4 py-3 sm:p-5 border-b border-[var(--card-border)] flex items-center justify-between">
  <div className="flex items-center gap-2">
  <div className="p-1.5 bg-blue-500/10 rounded-lg text-blue-400">
  <SettingsOutlineIcon className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -556,10 +553,10 @@ export const SettingsModal: React.FC = () => {
  </div>
 
  {/* Smart Routing Block (Collapsible) */}
- <div className="bg-zinc-50 dark:bg-zinc-900/50 border border-[var(--card-border)] rounded-2xl p-4 sm:p-5 mt-4 transition-all">
+ <div className="clay-card rounded-2xl p-4 sm:p-5 mt-4 transition-all">
  <div className="flex items-center justify-between">
  <button type="button" onClick={() => setIsSmartRoutingExpanded(!isSmartRoutingExpanded)} className="flex items-center gap-3 text-right group w-full outline-none">
- <div className={`p-1.5 rounded-lg border border-zinc-300 dark:border-zinc-700 clay-surface text-zinc-700 dark:text-zinc-400 transition-transform ${isSmartRoutingExpanded ? 'rotate-180' : ''}`}>
+ <div className={`p-1.5 rounded-lg border border-zinc-300  clay-surface text-zinc-700 dark:text-zinc-400 transition-transform ${isSmartRoutingExpanded ? 'rotate-180' : ''}`}>
  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
  </div>
  <div>
@@ -576,7 +573,7 @@ export const SettingsModal: React.FC = () => {
 
  {isSmartRoutingExpanded && (
  <>
- <div className="pt-5 mt-5 border-t border-zinc-200 dark:border-zinc-800/50 grid grid-cols-1 gap-4 animate-fadeIn relative z-20">
+ <div className="pt-5 mt-5 border-t border-[var(--card-border)]/50 grid grid-cols-1 gap-4 animate-fadeIn relative z-20">
  {/* Default Model */}
  <div className="relative z-30">
  <label className="block text-xs font-medium text-zinc-700 dark:text-zinc-300 mb-1.5 flex items-center gap-2">
@@ -654,10 +651,8 @@ export const SettingsModal: React.FC = () => {
  <div className={`mt-4 p-4 rounded-xl border relative flex flex-col gap-2 pl-10 ${
  analysisFeedback.type === 'success' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' : 'bg-yellow-500/10 border-yellow-500/20 text-yellow-400'
  }`}>
- <button 
- type="button"
- onClick={() => setFeedbackVisible(false)} 
- className={`absolute top-3 left-3 p-1 rounded-md transition-colors ${
+ <button type="button"
+ onClick={() => setFeedbackVisible(false)} className={`absolute top-3 left-3 p-1 rounded-md transition-colors ${
  analysisFeedback.type === 'success' ? 'hover:bg-emerald-500/20 text-emerald-500' : 'hover:bg-yellow-500/20 text-yellow-500'
  }`}
  >
@@ -688,10 +683,10 @@ export const SettingsModal: React.FC = () => {
  </div>
  </div>
 
- <div className="bg-zinc-50 dark:bg-zinc-900 border border-[var(--card-border)] rounded-2xl p-4 sm:p-5 mt-4">
+ <div className="clay-card rounded-2xl p-4 sm:p-5 mt-4">
 
  <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
- <button type="button" onClick={() => handleTestConnection('custom')} disabled={testing} className="w-full sm:w-auto px-5 py-2.5 rounded-xl font-medium text-sm border border-zinc-300 dark:border-zinc-700 clay-surface clay-icon-btn text-zinc-700 dark:text-zinc-300 transition-colors flex items-center justify-center gap-2">
+ <button type="button" onClick={() => handleTestConnection('custom')} disabled={testing} className="w-full sm:w-auto px-5 py-2.5 rounded-xl font-medium text-sm border border-zinc-300  clay-surface clay-icon-btn text-zinc-700 dark:text-zinc-300 transition-colors flex items-center justify-center gap-2">
  {testing ? <><div className="w-4 h-4 border-2 border-zinc-500 border-t-white rounded-full animate-spin" /> بررسی ارتباط...</> : <><GlobalOutlineIcon className="w-4 h-4" /> تست اتصال</>}
  </button>
  {testResult && (
@@ -720,7 +715,7 @@ export const SettingsModal: React.FC = () => {
  </div>
  <div>
  <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">دستورالعمل سیستم (System Prompt)</label>
- <textarea value={tempSettings.persona.systemPrompt} onChange={(e) => setTempSettings({ ...tempSettings, persona: { ...tempSettings.persona, systemPrompt: e.target.value } })} className="w-full bg-zinc-50 dark:bg-zinc-900 border border-[var(--card-border)] rounded-xl py-3 px-4 text-sm focus:border-blue-500 outline-none transition-all h-32 resize-none" placeholder="مثال: شما یک متخصص برنامه‌نویسی هستید..." />
+ <textarea value={tempSettings.persona.systemPrompt} onChange={(e) => setTempSettings({ ...tempSettings, persona: { ...tempSettings.persona, systemPrompt: e.target.value } })} className="w-full clay-card rounded-xl py-3 px-4 text-sm focus:border-blue-500 outline-none transition-all h-32 resize-none" placeholder="مثال: شما یک متخصص برنامه‌نویسی هستید..." />
  </div>
  <div>
  <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2 flex justify-between">
@@ -742,7 +737,7 @@ export const SettingsModal: React.FC = () => {
  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
  <div>
  <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">فونت فارسی</label>
- <select value={tempSettings.appearance.font} onChange={(e) => setTempSettings({ ...tempSettings, appearance: { ...tempSettings.appearance, font: e.target.value as FontFamily } })} className="w-full bg-zinc-50 dark:bg-zinc-900 border border-[var(--card-border)] rounded-xl py-2.5 px-3 text-sm outline-none focus:border-blue-500 font-medium">
+ <select value={tempSettings.appearance.font} onChange={(e) => setTempSettings({ ...tempSettings, appearance: { ...tempSettings.appearance, font: e.target.value as FontFamily } })} className="w-full clay-card rounded-xl py-2.5 px-3 text-sm outline-none focus:border-blue-500 font-medium">
  <option value="hybrid">✨ ترکیب هوشمند (پیش‌فرض مدرن)</option>
  <option value="vazir">وزیرمتن (Vazirmatn)</option>
  <option value="estedad">استعداد (Estedad)</option>
@@ -752,7 +747,7 @@ export const SettingsModal: React.FC = () => {
  </div>
  <div>
  <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">پوسته</label>
- <select value={tempSettings.appearance.theme} onChange={(e) => setTempSettings({ ...tempSettings, appearance: { ...tempSettings.appearance, theme: e.target.value as ThemeMode } })} className="w-full bg-zinc-50 dark:bg-zinc-900 border border-[var(--card-border)] rounded-xl py-2.5 px-3 text-sm outline-none focus:border-blue-500">
+ <select value={tempSettings.appearance.theme} onChange={(e) => setTempSettings({ ...tempSettings, appearance: { ...tempSettings.appearance, theme: e.target.value as ThemeMode } })} className="w-full clay-card rounded-xl py-2.5 px-3 text-sm outline-none focus:border-blue-500">
  <option value="dark">تاریک (Dark)</option>
  <option value="light">روشن (Light)</option>
  <option value="system">خودکار (System)</option>
@@ -766,7 +761,7 @@ export const SettingsModal: React.FC = () => {
  </label>
  <input type="range" min="12" max="24" step="1" value={tempSettings.appearance.fontSize} onChange={(e) => setTempSettings({ ...tempSettings, appearance: { ...tempSettings.appearance, fontSize: parseInt(e.target.value, 10) } })} className="w-full accent-blue-500" />
  </div>
- <div className="flex items-center justify-between p-4 bg-zinc-50 dark:bg-zinc-900 border border-[var(--card-border)] rounded-xl">
+ <div className="flex items-center justify-between p-4 clay-card rounded-xl">
  <div>
  <div className="font-medium text-sm">اعداد فارسی</div>
  <div className="text-xs text-zinc-700 dark:text-zinc-400">نمایش تمام اعداد لاتین به صورت فارسی</div>
@@ -780,7 +775,7 @@ export const SettingsModal: React.FC = () => {
  <div className="space-y-6 animate-fadeIn">
  <h3 className="text-lg font-bold">ابزارهای جانبی</h3>
  <div className="space-y-3">
- <div className="flex items-center justify-between p-4 bg-zinc-50 dark:bg-zinc-900 border border-[var(--card-border)] rounded-xl">
+ <div className="flex items-center justify-between p-4 clay-card rounded-xl">
  <div>
  <div className="font-medium text-sm">جستجوی زنده وب (Web Search)</div>
  <div className="text-xs text-zinc-700 dark:text-zinc-400">جستجوی آنلاین برای اطلاعات به‌روز</div>
@@ -794,7 +789,7 @@ export const SettingsModal: React.FC = () => {
  // Let's use a small DOM injection for a nice toast if alert is too intrusive, but wait, a simple alert is fine.
  // Wait, alert blocks the UI. Let's just create a quick custom toast.
  const toast = document.createElement('div');
- toast.className = 'fixed bottom-10 left-1/2 transform -translate-x-1/2 clay-surface text-zinc-800 dark:text-zinc-200 border border-zinc-300 dark:border-zinc-700 px-5 py-3 rounded-2xl z-[9999] text-sm animate-fadeIn flex items-center gap-2';
+ toast.className = 'fixed bottom-10 left-1/2 transform -translate-x-1/2 clay-surface text-zinc-800 dark:text-zinc-200 border border-zinc-300  px-5 py-3 rounded-2xl z-[9999] text-sm animate-fadeIn flex items-center gap-2';
  toast.innerHTML = `<span class="${v ? 'text-emerald-400' : 'text-zinc-700 dark:text-zinc-400'}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4"></path><path d="M12 8h.01"></path></svg></span> ${msg}`;
  document.body.appendChild(toast);
  setTimeout(() => {
@@ -805,8 +800,7 @@ export const SettingsModal: React.FC = () => {
  }}
  />
  </div>
- 
- <div className="flex items-center justify-between p-4 bg-zinc-50 dark:bg-zinc-900 border border-[var(--card-border)] rounded-xl">
+ <div className="flex items-center justify-between p-4 clay-card rounded-xl">
  <div>
  <div className="font-medium text-sm flex items-center gap-2">
  <span>تفکر عمیق (Deep Thinking/Reasoning)</span>
@@ -814,15 +808,12 @@ export const SettingsModal: React.FC = () => {
  </div>
  <div className="text-xs text-zinc-700 dark:text-zinc-400">تحلیل عمیق و استدلال مرحله‌به‌مرحله قبل از پاسخ (در مدل‌های پشتیبانی شده)</div>
  </div>
- <ToggleSwitch 
- checked={!!tempSettings.tools.reasoningMode} 
- onChange={(v) => {
+ <ToggleSwitch checked={!!tempSettings.tools.reasoningMode} onChange={(v) => {
  setTempSettings({ ...tempSettings, tools: { ...tempSettings.tools, reasoningMode: v } });
- }} 
- />
+ }} />
  </div>
 
- <div className="flex items-center justify-between p-4 bg-zinc-50 dark:bg-zinc-900 border border-[var(--card-border)] rounded-xl">
+ <div className="flex items-center justify-between p-4 clay-card rounded-xl">
  <div>
  <div className="font-medium text-sm">ارسال با Enter</div>
  <div className="text-xs text-zinc-700 dark:text-zinc-400">ارسال پیام با فشردن کلید Enter</div>
@@ -832,7 +823,7 @@ export const SettingsModal: React.FC = () => {
 
 
 
- <div className="flex items-center justify-between p-4 bg-zinc-50 dark:bg-zinc-900 border border-[var(--card-border)] rounded-xl">
+ <div className="flex items-center justify-between p-4 clay-card rounded-xl">
  <div>
  <div className="font-medium text-sm">نمایش عملکرد</div>
  <div className="text-xs text-zinc-700 dark:text-zinc-400">محاسبه توکن‌ها و هزینه‌ها</div>
@@ -852,7 +843,7 @@ export const SettingsModal: React.FC = () => {
  <div className="space-y-3">
 
  <div className="flex flex-col sm:flex-row gap-3">
- <button className="flex-1 p-4 bg-zinc-50 dark:bg-zinc-900 border border-[var(--card-border)] hover:border-zinc-300 dark:border-zinc-700 rounded-xl flex items-center gap-3 transition-colors">
+ <button className="flex-1 p-4 clay-card hover:border-zinc-300  rounded-xl flex items-center gap-3 transition-colors">
  <div className="p-2 bg-emerald-500/10 text-emerald-400 rounded-lg"><DownloadOutlineIcon className="w-5 h-5" /></div>
  <div className="text-right">
  <div className="font-medium text-sm">دریافت نسخه پشتیبان (Export)</div>
@@ -860,7 +851,7 @@ export const SettingsModal: React.FC = () => {
  </div>
  </button>
 
- <button onClick={() => fileInputRef.current?.click()} className="flex-1 p-4 bg-zinc-50 dark:bg-zinc-900 border border-[var(--card-border)] hover:border-zinc-300 dark:border-zinc-700 rounded-xl flex items-center gap-3 transition-colors relative overflow-hidden">
+ <button onClick={() => fileInputRef.current?.click()} className="flex-1 p-4 clay-card hover:border-zinc-300  rounded-xl flex items-center gap-3 transition-colors relative overflow-hidden">
  <input
  type="file"
  accept=".json"
@@ -903,7 +894,7 @@ export const SettingsModal: React.FC = () => {
  </div>
 
  {/* Footer */}
- <div className="p-4 border-t border-zinc-200 dark:border-zinc-800 clay-surface-inset bg-zinc-50/50 dark:bg-zinc-950/80 backdrop-blur flex justify-end gap-3 shrink-0 rounded-b-3xl">
+ <div className="p-4 border-t border-[var(--card-border)] clay-surface-inset clay-surface backdrop-blur flex justify-end gap-3 shrink-0 rounded-b-3xl">
  <button onClick={onClose} className="px-5 py-2.5 rounded-xl font-bold text-sm transition-all clay-btn-secondary">انصراف</button>
  <button onClick={handleSave} className="px-6 py-2.5 rounded-xl font-bold text-sm transition-all flex items-center gap-2 clay-btn-primary">
  <DisketteOutlineIcon className="w-4 h-4" /> ذخیره و اعمال

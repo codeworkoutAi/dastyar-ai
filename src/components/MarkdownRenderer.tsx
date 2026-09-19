@@ -476,7 +476,7 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = React.memo(({
 
  return (
  <div
- className={`markdown-body prose dark:prose-invert max-w-none prose-p:my-1.5 prose-p:leading-7 prose-headings:mt-4 prose-headings:mb-2 prose-headings:font-bold prose-h1:text-xl prose-h2:text-lg prose-h3:text-base prose-ul:my-1.5 prose-ol:my-1.5 prose-li:my-0.5 prose-table:my-2 prose-pre:my-2 prose-blockquote:my-2 prose-hr:my-3 prose-hr:border-zinc-200 dark:prose-hr:border-zinc-800/50 prose-a:text-blue-500 text-inherit leading-snug ${isOverallRtl ? 'text-right' : 'text-left'} ${
+ className={`markdown-body prose dark:prose-invert max-w-none prose-p:my-1.5 prose-p:leading-7 prose-headings:mt-4 prose-headings:mb-2 prose-headings:font-bold prose-h1:text-xl prose-h2:text-lg prose-h3:text-base prose-ul:my-1.5 prose-ol:my-1.5 prose-li:my-0.5 prose-table:my-2 prose-pre:my-2 prose-blockquote:my-2 prose-hr:my-3 prose-hr:border-[var(--card-border)] dark:prose-hr:border-zinc-800/50 prose-a:text-blue-500 text-inherit leading-snug ${isOverallRtl ? 'text-right' : 'text-left'} ${
  isStreaming ? 'streaming-cursor' : ''
  }`}
  dir={isOverallRtl ? 'rtl' : 'ltr'}
@@ -569,7 +569,6 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = React.memo(({
 
  if (isBlock) {
  if (!codeString.trim()) return null; // Prevent completely empty block rendering
- 
  if (language === 'poem' || language === 'poetry' || language === 'sher') {
  const poemLines = codeString.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
  const couplets: Array<{ first: string; second: string }> = [];
@@ -590,16 +589,13 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = React.memo(({
  <span className="text-lg">🧠</span>
  <span className="text-[14px] text-zinc-700 dark:text-zinc-300">فرآیند استدلال هوش مصنوعی (برای مشاهده کلیک کنید)</span>
  </summary>
- <div 
- className="p-4 border-t border-subtle text-[13px] opacity-80 leading-relaxed font-mono whitespace-pre-wrap max-h-[400px] overflow-y-auto" 
- style={{ unicodeBidi: 'plaintext', textAlign: 'start' }}
+ <div className="p-4 border-t border-subtle text-[13px] opacity-80 leading-relaxed font-mono whitespace-pre-wrap max-h-[400px] overflow-y-auto" style={{ unicodeBidi: 'plaintext', textAlign: 'start' }}
  >
  {codeString}
  </div>
  </details>
  );
  }
- 
  return <CodeBlock language={language} code={codeString} />;
  }
 
@@ -819,7 +815,7 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = React.memo(({
  },
 
  // Divider
- hr: () => <hr className="!my-4 border-t border-zinc-200 dark:border-zinc-800/60 first:hidden" />,
+ hr: () => <hr className="!my-4 border-t border-[var(--card-border)]  first:hidden" />,
  }}
  >
  {processedContent}
@@ -881,11 +877,11 @@ const CodeBlock: React.FC<CodeBlockProps> = ({ language, code }) => {
 
  return (
  <div
- className="my-4 rounded-xl overflow-hidden border border-subtle bg-[#1e1e1e] text-slate-300"
+ className="my-4 rounded-xl overflow-hidden border border-subtle clay-surface text-slate-300"
  dir="ltr"
  >
  {/* Code Header (VSCode / Windows 11 style) */}
- <div className="flex items-center justify-between px-3.5 py-2 bg-[#252526] border-b border-[#333333] select-none">
+ <div className="flex items-center justify-between px-3.5 py-2 clay-surface border-b select-none">
  <div className="flex items-center gap-2">
  <FileCode className="w-4 h-4 text-sky-400" />
  <span className="font-mono text-xs text-zinc-400 font-bold uppercase tracking-wider">
@@ -923,7 +919,7 @@ const CodeBlock: React.FC<CodeBlockProps> = ({ language, code }) => {
  </div>
 
  {/* Code Content with Syntax Highlighting */}
- <div className="overflow-x-auto text-[13px] font-mono leading-relaxed bg-[#1e1e1e]">
+ <div className="overflow-x-auto text-[13px] font-mono leading-relaxed clay-surface">
  <SyntaxHighlighter
  language={language || 'typescript'}
  style={vscDarkPlus}

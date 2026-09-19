@@ -213,19 +213,30 @@
   --error-text: #DC2626;
   --error-border: transparent;
   
-  /* Clay Shadows - Light Mode */
-  --clay-shadow-out: 6px 6px 14px rgba(166, 178, 203, 0.35), -5px -5px 12px rgba(255, 255, 255, 0.7);
-  --clay-shadow-out-sm: 3px 3px 6px rgba(166, 178, 203, 0.25), -3px -3px 6px rgba(255, 255, 255, 0.6);
-  --clay-shadow-out-hover: 8px 10px 20px rgba(166, 178, 203, 0.4), -6px -6px 14px rgba(255, 255, 255, 0.75);
-  --clay-shadow-in: inset 3px 3px 6px rgba(166, 178, 203, 0.3), inset -3px -3px 6px rgba(255, 255, 255, 0.65);
-  --clay-shadow-in-deep: inset 4px 4px 10px rgba(166, 178, 203, 0.4), inset -4px -4px 10px rgba(255, 255, 255, 0.75);
+  /* True Claymorphism Shadows - Light Mode */
+  --clay-shadow-out: 8px 8px 16px rgba(166, 178, 203, 0.25), inset 4px 4px 8px rgba(255, 255, 255, 0.8), inset -4px -4px 8px rgba(166, 178, 203, 0.2);
+  --clay-shadow-out-sm: 4px 4px 8px rgba(166, 178, 203, 0.2), inset 2px 2px 4px rgba(255, 255, 255, 0.8), inset -2px -2px 4px rgba(166, 178, 203, 0.2);
+  --clay-shadow-out-hover: 12px 12px 24px rgba(166, 178, 203, 0.3), inset 4px 4px 8px rgba(255, 255, 255, 0.9), inset -4px -4px 8px rgba(166, 178, 203, 0.15);
+  --clay-shadow-in: inset 4px 4px 8px rgba(166, 178, 203, 0.25), inset -4px -4px 8px rgba(255, 255, 255, 0.8);
+  --clay-shadow-in-deep: inset 6px 6px 12px rgba(166, 178, 203, 0.35), inset -6px -6px 12px rgba(255, 255, 255, 0.9);
+
+  /* Radius tokens — overridden per theme */
+  --radius-card: 28px;
+  --radius-modal: 32px;
+  --radius-sidebar: 32px;
+  --radius-input: 16px;
+  --radius-btn: 16px;
+  --radius-icon-btn: 50%;
+  --radius-badge: 9999px;
+  --radius-tab: 14px;
+  --radius-bubble: 24px;
 }
 
 [data-theme="dark"], .dark {
-  --bg-main: #18181b; /* zinc-900: elegant dark gray matching footer */
-  --header-bg: rgba(24, 24, 27, 0.85);
-  --sidebar-bg: #18181b;
-  --card-bg: #27272a; /* zinc-800 for cards to stand out */
+  --bg-main: #1E1F20;
+  --header-bg: rgba(30, 31, 32, 0.92);
+  --sidebar-bg: #1E1F20;
+  --card-bg: #1E1F20; 
   --card-border: var(--border-subtle);
   
   --btn-bg: #262626; 
@@ -252,12 +263,12 @@
   --error-text: #fecaca;
   --error-border: transparent;
   
-  /* Clay Shadows - Less intense black shadows */
-  --clay-shadow-out: 6px 6px 14px rgba(0, 0, 0, 0.45), -4px -4px 10px rgba(255, 255, 255, 0.03);
-  --clay-shadow-out-sm: 3px 3px 6px rgba(0, 0, 0, 0.35), -2px -2px 5px rgba(255, 255, 255, 0.02);
-  --clay-shadow-out-hover: 8px 10px 20px rgba(0, 0, 0, 0.5), -5px -5px 12px rgba(255, 255, 255, 0.04);
-  --clay-shadow-in: inset 3px 3px 6px rgba(0, 0, 0, 0.35), inset -2px -2px 5px rgba(255, 255, 255, 0.02);
-  --clay-shadow-in-deep: inset 4px 4px 10px rgba(0, 0, 0, 0.45), inset -3px -3px 8px rgba(255, 255, 255, 0.03);
+  /* True Claymorphism Shadows - Dark Mode */
+  --clay-shadow-out: 8px 8px 16px rgba(0, 0, 0, 0.6), inset 4px 4px 8px rgba(255, 255, 255, 0.05), inset -4px -4px 8px rgba(0, 0, 0, 0.4);
+  --clay-shadow-out-sm: 4px 4px 8px rgba(0, 0, 0, 0.5), inset 2px 2px 4px rgba(255, 255, 255, 0.04), inset -2px -2px 4px rgba(0, 0, 0, 0.3);
+  --clay-shadow-out-hover: 12px 12px 24px rgba(0, 0, 0, 0.7), inset 4px 4px 8px rgba(255, 255, 255, 0.07), inset -4px -4px 8px rgba(0, 0, 0, 0.3);
+  --clay-shadow-in: inset 4px 4px 8px rgba(0, 0, 0, 0.6), inset -4px -4px 8px rgba(255, 255, 255, 0.03);
+  --clay-shadow-in-deep: inset 6px 6px 12px rgba(0, 0, 0, 0.8), inset -6px -6px 12px rgba(255, 255, 255, 0.04);
 }
 
 /* ==========================================================================
@@ -281,14 +292,15 @@
 .clay-sidebar {
   background: var(--sidebar-bg);
   box-shadow: var(--clay-shadow-out);
-  border-radius: 32px; /* Very rounded for clay */
+  border-radius: var(--radius-sidebar); /* Theme-aware */
   margin: 16px; /* Sidebar usually floats in clay */
 }
 
 /* Base Card (Extruded) */
 .clay-card {
   background: var(--card-bg);
-  border-radius: 28px;
+  color: var(--text-main);
+  border-radius: var(--radius-card);
   box-shadow: var(--clay-shadow-out);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -296,7 +308,8 @@
 /* Inner Surface (Sunken) */
 .clay-surface, .clay-surface-inset {
   background: var(--input-bg);
-  border-radius: 24px;
+  color: var(--text-main);
+  border-radius: var(--radius-input);
   box-shadow: var(--clay-shadow-in);
   transition: all 0.3s ease;
 }
@@ -304,29 +317,22 @@
 /* Modals (Claymorphic 3D Elevated Dialog) */
 .clay-modal {
   background: var(--card-bg);
-  border-radius: 32px;
-  box-shadow: 
-    14px 20px 40px rgba(0, 0, 0, 0.25),
-    -4px -4px 12px rgba(255, 255, 255, 0.5),
-    inset 2px 2px 4px rgba(255, 255, 255, 0.6),
-    inset -2px -2px 4px rgba(0, 0, 0, 0.06);
+  color: var(--text-main);
+  border-radius: var(--radius-modal);
+  box-shadow: var(--clay-shadow-out);
   transition: all 0.3s ease;
 }
 
 .dark .clay-modal, [data-theme="dark"] .clay-modal {
   background: var(--card-bg);
-  box-shadow: 
-    16px 22px 45px rgba(0, 0, 0, 0.6),
-    -3px -3px 10px rgba(255, 255, 255, 0.02),
-    inset 1px 1px 2px rgba(255, 255, 255, 0.06),
-    inset -2px -2px 5px rgba(0, 0, 0, 0.25);
+  box-shadow: var(--clay-shadow-out);
 }
 
 /* Bubbles */
 .clay-bubble-user {
   background: var(--bubble-user-bg);
   color: var(--text-main);
-  border-radius: 24px 24px 4px 24px; /* classic chat tail */
+  border-radius: var(--radius-bubble) var(--radius-bubble) 4px var(--radius-bubble); /* classic chat tail */
   padding: 14px 20px;
   box-shadow: var(--clay-shadow-out-sm);
 }
@@ -341,7 +347,7 @@
 .clay-input, .clay-input-box {
   background: var(--input-bg);
   border: none;
-  border-radius: 16px;
+  border-radius: var(--radius-input);
   box-shadow: var(--clay-shadow-in);
   transition: all 0.2s ease;
   color: var(--text-main);
@@ -357,7 +363,7 @@
 .clay-btn {
   background: var(--btn-bg);
   border: none;
-  border-radius: 16px;
+  border-radius: var(--radius-btn);
   box-shadow: var(--clay-shadow-out-sm);
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   color: var(--text-main);
@@ -380,12 +386,11 @@
   background: var(--accent-primary);
   color: #FFFFFF !important;
   border: none;
-  border-radius: 20px;
+  border-radius: var(--radius-btn);
   box-shadow: 
-    5px 5px 12px rgba(0, 0, 0, 0.25),
-    -2px -2px 6px rgba(255, 255, 255, 0.2),
-    inset 1px 1px 2px rgba(255, 255, 255, 0.3),
-    inset -1px -1px 2px rgba(0, 0, 0, 0.15);
+    6px 6px 12px rgba(59, 130, 246, 0.4),
+    inset 3px 3px 6px rgba(255, 255, 255, 0.35),
+    inset -3px -3px 6px rgba(0, 0, 0, 0.2);
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   font-weight: 700;
 }
@@ -393,33 +398,31 @@
 .dark .clay-btn-primary, .dark .clay-btn-primary-thick {
   box-shadow: 
     6px 6px 12px rgba(0, 0, 0, 0.6),
-    -4px -4px 10px rgba(255, 255, 255, 0.05),
-    inset 2px 2px 4px rgba(255, 255, 255, 0.2),
-    inset -2px -2px 4px rgba(0, 0, 0, 0.4);
+    inset 3px 3px 6px rgba(255, 255, 255, 0.15),
+    inset -3px -3px 6px rgba(0, 0, 0, 0.3);
 }
 
 .clay-btn-primary:hover, .clay-btn-primary-thick:hover {
   transform: translateY(-2px);
   filter: brightness(1.1);
   box-shadow: 
-    8px 8px 16px rgba(0, 0, 0, 0.35),
-    -6px -6px 12px rgba(255, 255, 255, 0.4),
-    inset 2px 2px 4px rgba(255, 255, 255, 0.5),
-    inset -2px -2px 4px rgba(0, 0, 0, 0.2);
+    8px 8px 16px rgba(59, 130, 246, 0.5),
+    inset 3px 3px 6px rgba(255, 255, 255, 0.4),
+    inset -3px -3px 6px rgba(0, 0, 0, 0.15);
 }
 
 .clay-btn-primary:active, .clay-btn-primary-thick:active {
   transform: translateY(2px) scale(0.97);
   box-shadow: 
     inset 4px 4px 8px rgba(0, 0, 0, 0.3),
-    inset -4px -4px 8px rgba(255, 255, 255, 0.2);
+    inset -4px -4px 8px rgba(255, 255, 255, 0.1);
 }
 
 /* Secondary Button */
 .clay-btn-secondary {
   background: var(--btn-bg);
   border: none;
-  border-radius: 16px;
+  border-radius: var(--radius-btn);
   box-shadow: var(--clay-shadow-out-sm);
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   color: var(--text-main);
@@ -441,7 +444,7 @@
 .clay-icon-btn {
   background: var(--btn-bg);
   border: none;
-  border-radius: 50%;
+  border-radius: var(--radius-icon-btn);
   box-shadow: var(--clay-shadow-out-sm);
   color: var(--text-dim);
   transition: all 0.2s ease;
@@ -481,7 +484,7 @@
 /* Badges / Pills */
 .clay-badge {
   background: var(--btn-bg);
-  border-radius: 9999px;
+  border-radius: var(--radius-badge);
   box-shadow: var(--clay-shadow-out-sm);
   padding: 4px 12px;
   font-size: 0.85em;
@@ -491,7 +494,7 @@
 /* Tabs */
 .clay-tab {
   background: transparent;
-  border-radius: 14px;
+  border-radius: var(--radius-tab);
   color: var(--text-dim);
   transition: all 0.2s ease;
   font-weight: 600;
@@ -1786,3 +1789,169 @@ img.emoji {
     transition: none !important;
   }
 }
+
+
+
+
+/* ==========================================================================
+   THEME SWITCHER: Claymorphism & Neumorphism
+   Applied via data-ui-style on <html> element
+   ========================================================================== */
+
+/* ── CLAYMORPHISM (default) ─────────────────────────────────────────────── */
+/* html[data-ui-style="clay"],
+html:not([data-ui-style]) {
+  Inherits all :root defaults — no overrides needed
+} */
+
+/* ── NEUMORPHISM ─────────────────────────────────────────────────────────── */
+
+/* Light mode neumorphic */
+html[data-ui-style="neumorphic"],
+:root[data-ui-style="neumorphic"] {
+  /* Same base color as Claymorphism — single flat tone, depth from shadow */
+  --bg-main:    #E8EDF2;
+  --sidebar-bg: #E8EDF2;
+  --card-bg:    #E8EDF2;
+  --input-bg:   #E8EDF2;
+  --btn-bg:     #E8EDF2;
+  --btn-hover:  #DDE4EC;
+  --header-bg:  rgba(232, 237, 242, 0.92);
+  --bubble-user-bg: #DDE4EC;
+  --card-border: transparent;
+
+  /* Pure neumorphic two-shadow derived from #E8EDF2 */
+  --clay-shadow-out:       4px 4px 9px #c1c9d4;
+  --clay-shadow-out-sm:    2px 2px 6px #c1c9d4;
+  --clay-shadow-out-hover: 6px 6px 14px #c1c9d4;
+  --clay-shadow-in:        inset 3px 3px 7px #c1c9d4;
+  --clay-shadow-in-deep:   inset 5px 5px 10px #c1c9d4, inset -5px -5px 10px #ffffff;
+
+  /* Smaller, more conservative radius */
+  --radius-card:     16px;
+  --radius-modal:    20px;
+  --radius-sidebar:  20px;
+  --radius-input:    12px;
+  --radius-btn:      12px;
+  --radius-icon-btn: 12px;
+  --radius-badge:    9999px;
+  --radius-tab:      10px;
+  --radius-bubble:   18px;
+}
+
+/* Dark mode neumorphic */
+    html[data-ui-style="neumorphic"].dark,
+  html.dark[data-ui-style="neumorphic"],
+  html[data-ui-style="neumorphic"][data-theme="dark"] {
+    /* Neumorphic dark: Original Dark Gray (#1E1F20) */
+    --bg-main:    #1E1F20;
+    --sidebar-bg: #1E1F20;
+    --card-bg:    #1E1F20;
+    --input-bg:   #1E1F20;
+    --btn-bg:     #1E1F20;
+    --btn-hover:  #282A2C;
+    --header-bg:  rgba(30, 31, 32, 0.92);
+    --bubble-user-bg: #282A2C;
+  
+    /* Pure neumorphic two-shadow — contrast derived from #18181b using rgba */
+    --clay-shadow-out:       5px 5px 11px rgba(0, 0, 0, 0.5);
+    --clay-shadow-out-sm:    3px 3px 7px  rgba(0, 0, 0, 0.4);
+    --clay-shadow-out-hover: 8px 8px 16px rgba(0, 0, 0, 0.6);
+    --clay-shadow-in:        inset 4px 4px 8px rgba(0, 0, 0, 0.5);
+  --clay-shadow-in-deep:   inset 6px 6px 12px #14151e, inset -6px -6px 12px #2a2d38;
+
+  --border-subtle: rgba(255, 255, 255, 0.04);
+  --border-strong: rgba(255, 255, 255, 0.08);
+
+  /* Radius same as light */
+  --radius-card:     16px;
+  --radius-modal:    20px;
+  --radius-sidebar:  20px;
+  --radius-input:    12px;
+  --radius-btn:      12px;
+  --radius-icon-btn: 12px;
+}
+
+/* clay-modal now uses var(--clay-shadow-out) directly — no override needed */
+
+
+/* Neumorphic icon style: subtle flat look — depth comes from button surface, not icon */
+html[data-ui-style="neumorphic"] .clay-icon svg,
+html[data-ui-style="neumorphic"] .clay-icon {
+  filter: none;
+}
+html[data-ui-style="neumorphic"].dark .clay-icon svg,
+html[data-ui-style="neumorphic"].dark .clay-icon,
+html.dark[data-ui-style="neumorphic"] .clay-icon svg,
+html.dark[data-ui-style="neumorphic"] .clay-icon {
+  filter: none;
+}
+
+
+  /* Neumorphic Overrides for Thick/Special Clay Classes */
+  html[data-ui-style="neumorphic"] .clay-landing-bg {
+    background-color: var(--bg-main);
+  }
+  
+  html[data-ui-style="neumorphic"] .clay-card-thick,
+  html[data-ui-style="neumorphic"] .dark .clay-card-thick,
+  html.dark[data-ui-style="neumorphic"] .clay-card-thick {
+    background: var(--card-bg);
+    border-radius: var(--radius-card);
+    box-shadow: var(--clay-shadow-out);
+    border: none;
+  }
+  
+  html[data-ui-style="neumorphic"] .clay-btn-thick,
+  html[data-ui-style="neumorphic"] .dark .clay-btn-thick,
+  html.dark[data-ui-style="neumorphic"] .clay-btn-thick {
+    background: var(--btn-bg);
+    border-radius: var(--radius-btn);
+    box-shadow: var(--clay-shadow-out);
+    border: none;
+  }
+  
+  html[data-ui-style="neumorphic"] .clay-btn-thick:hover,
+  html[data-ui-style="neumorphic"] .dark .clay-btn-thick:hover,
+  html.dark[data-ui-style="neumorphic"] .clay-btn-thick:hover {
+    background: var(--btn-hover);
+    box-shadow: var(--clay-shadow-out-hover);
+    transform: translateY(-2px);
+  }
+  
+  html[data-ui-style="neumorphic"] .clay-inset-thick,
+  html[data-ui-style="neumorphic"] .dark .clay-inset-thick,
+  html.dark[data-ui-style="neumorphic"] .clay-inset-thick,
+  html[data-ui-style="neumorphic"] .clay-debossed-socket,
+  html[data-ui-style="neumorphic"] .dark .clay-debossed-socket,
+  html.dark[data-ui-style="neumorphic"] .clay-debossed-socket {
+    background: var(--input-bg);
+    box-shadow: var(--clay-shadow-in);
+    border: none;
+  }
+  
+  html[data-ui-style="neumorphic"] .clay-pill-thick,
+  html[data-ui-style="neumorphic"] .dark .clay-pill-thick,
+  html.dark[data-ui-style="neumorphic"] .clay-pill-thick {
+    background: var(--btn-bg);
+    box-shadow: var(--clay-shadow-out-sm);
+    border: none;
+  }
+  
+  /* Remove 3D effect from primary color buttons in neumorphic */
+  html[data-ui-style="neumorphic"] .clay-btn-primary-thick,
+  html[data-ui-style="neumorphic"] .dark .clay-btn-primary-thick,
+  html.dark[data-ui-style="neumorphic"] .clay-btn-primary-thick,
+  html[data-ui-style="neumorphic"] .clay-btn-emerald-thick,
+  html[data-ui-style="neumorphic"] .dark .clay-btn-emerald-thick,
+  html.dark[data-ui-style="neumorphic"] .clay-btn-emerald-thick,
+  html[data-ui-style="neumorphic"] .clay-btn-amber-thick,
+  html[data-ui-style="neumorphic"] .dark .clay-btn-amber-thick,
+  html.dark[data-ui-style="neumorphic"] .clay-btn-amber-thick {
+    box-shadow: var(--clay-shadow-out);
+    border: none;
+  }
+
+/* ==========================================================================
+   END THEME SWITCHER
+   ========================================================================== */

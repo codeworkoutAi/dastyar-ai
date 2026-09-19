@@ -1,21 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { 
- X, 
- Download, 
- FileText, 
- Code, 
- Printer, 
- Copy, 
- Check, 
- Layers
+import { X, Download, FileText, Code, Printer, Copy, Check, Layers
 } from 'lucide-react';
 
-import { 
- exportConversationToMarkdown, 
- exportConversationToText, 
- exportToJson, 
- printOrSavePdfTranscript 
-} from '../lib/exportUtils';
+import { exportConversationToMarkdown, exportConversationToText, exportToJson, printOrSavePdfTranscript } from '../lib/exportUtils';
 import { formatPersianDateTime } from '../lib/persianUtils';
 import { Tooltip } from './Tooltip';
 import { useUIStore } from '../store/uiStore';
@@ -102,14 +89,12 @@ export const ExportModal: React.FC = () => {
  };
 
  return (
- <div 
- className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/75 backdrop-blur-xs animate-fadeIn"
+ <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/75 backdrop-blur-xs animate-fadeIn"
  onClick={(e) => {
  if (e.target === e.currentTarget) onClose();
  }}
  >
- <div 
- id="export-modal"
+ <div id="export-modal"
  className="w-[95vw] md:w-full max-w-xl clay-card text-inherit rounded-[2rem] border border-subtle flex flex-col max-h-[90dvh] overflow-hidden"
  onClick={(e) => e.stopPropagation()}
  >

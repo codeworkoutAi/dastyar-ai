@@ -351,7 +351,7 @@ export const CameraCaptureModal: React.FC<CameraCaptureModalProps> = ({
  dir="rtl"
  >
  <div
- className="relative w-full max-w-lg bg-[#1e1f20] border border-[#333333] rounded-2xl overflow-hidden flex flex-col max-h-[92dvh] sm:max-h-[88dvh] text-slate-100 mx-auto my-auto"
+ className="relative w-full max-w-lg clay-card-thick border rounded-2xl overflow-hidden flex flex-col max-h-[92dvh] sm:max-h-[88dvh] text-slate-100 mx-auto my-auto"
  >
  {/* Header */}
  <div className="shrink-0 flex items-center justify-between px-4 sm:px-5 py-3 border-b border-black/10 dark:border-white/10 bg-white/[0.02]">
@@ -421,7 +421,7 @@ export const CameraCaptureModal: React.FC<CameraCaptureModalProps> = ({
  className={`px-2.5 py-2 rounded-xl text-right transition-all flex flex-col gap-0.5 cursor-pointer border ${
  isSelected
  ? 'bg-sky-500/20 border-sky-500/50 text-white shadow-sm'
- : 'bg-[#2a2b2d] border-black/5 dark:border-white/5 text-slate-300 hover:bg-black/5 dark:hover:bg-white/10 hover:border-white/15'
+ : 'clay-surface border-black/5 dark:border-white/5 text-slate-300 hover:bg-black/5 dark:hover:bg-white/10 hover:border-white/15'
  }`}
  >
  <span className={`font-bold text-[11px] ${isSelected ? 'text-sky-300' : 'text-slate-200'}`}>
@@ -443,7 +443,7 @@ export const CameraCaptureModal: React.FC<CameraCaptureModalProps> = ({
  <select
  value={selectedDeviceId}
  onChange={(e) => handleDeviceChange(e.target.value)}
- className="w-full bg-[#2a2b2d] text-slate-200 border border-black/10 dark:border-white/10 rounded-lg px-2.5 py-1 text-xs outline-none focus:border-sky-500 cursor-pointer"
+ className="w-full clay-surface text-slate-200 border border-black/10 dark:border-white/10 rounded-lg px-2.5 py-1 text-xs outline-none focus:border-sky-500 cursor-pointer"
  >
  {devices.map((d) => (
  <option key={d.deviceId} value={d.deviceId}>
@@ -455,7 +455,7 @@ export const CameraCaptureModal: React.FC<CameraCaptureModalProps> = ({
  )}
 
  {/* Video / Snapshot Viewport */}
- <div className="flex-1 min-h-[220px] max-h-[48dvh] sm:max-h-[52dvh] relative w-full bg-[#0d0e10] flex items-center justify-center overflow-hidden">
+ <div className="flex-1 min-h-[220px] max-h-[48dvh] sm:max-h-[52dvh] relative w-full clay-surface-inset flex items-center justify-center overflow-hidden">
  {isLoading && !capturedImage && !errorMessage && (
  <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-black/60 z-10">
  <RefreshCw className="w-7 h-7 text-sky-400 animate-spin" />
@@ -538,7 +538,7 @@ export const CameraCaptureModal: React.FC<CameraCaptureModalProps> = ({
  />
 
  {/* Footer Actions */}
- <div className="shrink-0 p-3 sm:p-4 border-t border-black/10 dark:border-white/10 bg-[#1e1f20] flex items-center justify-between gap-2">
+ <div className="shrink-0 p-3 sm:p-4 border-t border-black/10 dark:border-white/10 clay-card-thick flex items-center justify-between gap-2">
  <div className="flex items-center gap-2">
  <button
  type="button"

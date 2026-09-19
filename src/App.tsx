@@ -49,6 +49,16 @@ export default function App() {
  checkAuth();
  syncSystemProfiles();
 
+ // Fetch public settings (ui_style theme) and apply to <html>
+ fetch('/api/public-settings')
+   .then(res => res.json())
+   .then(data => {
+     if (data.ui_style) {
+       document.documentElement.setAttribute('data-ui-style', data.ui_style);
+     }
+   })
+   .catch(() => {});
+
  // Listen for custom event to open auth modal
  const handleOpenAuth = () => setAuthModalOpen(true);
  const handleOpenWallet = () => setIsWalletOpen(true);

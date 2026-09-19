@@ -14,9 +14,7 @@ import {
  CpuBoltLinearIcon,
  StopCircleBoldIcon
 } from '@solar-icons/react';
-import { 
- ArrowUp, 
- X
+import { ArrowUp, X
 } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
 import { toPersianDigits, isRtlText } from '../lib/persianUtils';
@@ -43,7 +41,6 @@ export const MessageInput: React.FC = React.memo(() => {
 
  const activeProvider = settings.providers.activeProvider;
  const activeProviderSettings = settings.providers[activeProvider as keyof typeof settings.providers] as any;
- 
  let activeModel = activeProviderSettings?.modelName || 'default';
  if (settings.tools.smartRouting) {
  const profileId = settings.tools.routingRoles?.default;
@@ -52,7 +49,6 @@ export const MessageInput: React.FC = React.memo(() => {
  activeModel = profile?.modelName || profileId;
  }
  }
- 
  const modelDetails = getModelDetails({ id: activeModel });
  const modelIntro = getModelIntro(activeModel, modelDetails);
  const enterToSend = settings.tools.enterToSend;
@@ -85,13 +81,11 @@ export const MessageInput: React.FC = React.memo(() => {
  const [isRecording, setIsRecording] = useState(false);
  const [showImageEngineModal, setShowImageEngineModal] = useState(false);
  const [pendingImagePrompt, setPendingImagePrompt] = useState('');
- 
  const [sentHistory, setSentHistory] = useState<string[]>([]);
  const [historyIndex, setHistoryIndex] = useState(-1);
  const [slashMenuOpen, setSlashMenuOpen] = useState(false);
  const [slashQuery, setSlashQuery] = useState('');
  const [isHoldingMic, setIsHoldingMic] = useState(false);
- 
  const holdTimeoutRef = useRef<any>(null);
  const mediaRecorderRef = useRef<any>(null);
  const audioChunksRef = useRef<any[]>([]);
@@ -123,8 +117,7 @@ export const MessageInput: React.FC = React.memo(() => {
  useEffect(() => {
  const handleClickOutside = (event: MouseEvent) => {
  if (
- menuRef.current && 
- !menuRef.current.contains(event.target as Node) &&
+ menuRef.current && !menuRef.current.contains(event.target as Node) &&
  (!toggleBtnRef.current || !toggleBtnRef.current.contains(event.target as Node))
  ) {
  setIsAttachmentMenuOpen(false);
@@ -239,8 +232,7 @@ export const MessageInput: React.FC = React.memo(() => {
  }
  };
  reader.readAsText(file);
- } 
- // 2. PDF Documents -> Render to Images using PDF.js (Supports Scanned PDFs perfectly for Vision models!)
+ } // 2. PDF Documents -> Render to Images using PDF.js (Supports Scanned PDFs perfectly for Vision models!)
  else if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
  // PDF size and page validation
  const MAX_PDF_SIZE = 50 * 1024 * 1024; // 50MB
@@ -347,8 +339,7 @@ export const MessageInput: React.FC = React.memo(() => {
  }
  };
  processPdfHybrid();
- } 
- // 3. Images -> Compress/Downscale via Canvas (max 1200px, 0.8 quality)
+ } // 3. Images -> Compress/Downscale via Canvas (max 1200px, 0.8 quality)
  else if (file.type.startsWith('image/')) {
  if (file.size > 10 * 1024 * 1024) {
  alert('حجم تصویر بیش از حد مجاز است (حداکثر ۱۰ مگابایت).');
@@ -381,8 +372,7 @@ export const MessageInput: React.FC = React.memo(() => {
  }
  };
  reader.readAsDataURL(file);
- } 
- // 4. Audio files (.mp3, .wav, .ogg, .m4a)
+ } // 4. Audio files (.mp3, .wav, .ogg, .m4a)
  else if (file.type.startsWith('audio/')) {
  if (file.size > 15 * 1024 * 1024) {
  alert('حجم فایل صوتی بیش از حد مجاز است (حداکثر ۱۵ مگابایت).');
@@ -398,8 +388,7 @@ export const MessageInput: React.FC = React.memo(() => {
  }
  };
  reader.readAsDataURL(file);
- } 
- // 5. Video files (.mp4, .webm, .mov)
+ } // 5. Video files (.mp4, .webm, .mov)
  else if (file.type.startsWith('video/')) {
  if (file.size > 25 * 1024 * 1024) {
  alert('حجم فایل ویدیویی بیش از حد مجاز است (حداکثر ۲۵ مگابایت).');
@@ -416,8 +405,7 @@ export const MessageInput: React.FC = React.memo(() => {
  }
  };
  reader.readAsDataURL(file);
- } 
- // 6. Generic Binary Documents
+ } // 6. Generic Binary Documents
  else {
  if (file.size > 5 * 1024 * 1024) {
  alert('حجم فایل انتخابی بیش از حد مجاز است (حداکثر ۵ مگابایت).');
@@ -440,10 +428,8 @@ export const MessageInput: React.FC = React.memo(() => {
  // Handle camera trigger depending on platform (Mobile vs PC)
  const handleCameraClick = () => {
  setIsAttachmentMenuOpen(false);
- 
  // Check if on mobile device
- const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
- (window.matchMedia && window.matchMedia('(pointer:coarse)').matches);
+ const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || (window.matchMedia && window.matchMedia('(pointer:coarse)').matches);
 
  if (isMobile) {
  // Mobile: trigger native camera input
@@ -566,7 +552,6 @@ export const MessageInput: React.FC = React.memo(() => {
 
  recognition.onresult = (event: any) => {
  let currentTranscript = '';
- 
  for (let i = 0; i < event.results.length; ++i) {
  const t = event.results[i][0].transcript.trim();
  if (!t) continue;
@@ -638,7 +623,6 @@ export const MessageInput: React.FC = React.memo(() => {
  const firstImageUrl = imageUrls[0] || undefined;
 
  let finalMessage = text.trim() || 'لطفاً فایل‌های پیوست شده را بررسی کن.';
- 
  if (finalMessage.startsWith('/image ') || finalMessage.startsWith('/تصویر ')) {
  setPendingImagePrompt(finalMessage);
  setShowImageEngineModal(true);
@@ -747,7 +731,6 @@ export const MessageInput: React.FC = React.memo(() => {
  return (
  <div className={`p-2.5 sm:p-4 md:p-5 shrink-0 transition-all duration-500 ease-in-out ${isEmpty ? 'w-full max-w-3xl mx-auto' : ''}`}>
  <div className={`space-y-2 w-full mx-auto ${isEmpty ? '' : 'max-w-3xl'}`}>
- 
  {/* Multi-File Attachment Preview Strip */}
  {attachments.length > 0 && (
  <div className="flex items-end gap-2 overflow-x-auto pb-1 animate-fadeIn scrollbar-thin scrollbar-thumb-zinc-300 dark:scrollbar-thumb-zinc-600">
@@ -825,8 +808,7 @@ export const MessageInput: React.FC = React.memo(() => {
  {/* Token Estimator (Moved to top-left) */}
  {(text.trim() || imagePreview || attachedFileMeta) && (
  <div className="flex justify-end w-full px-2" dir="rtl">
- <div 
- className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md border font-mono text-[10px] select-none transition-colors ${estimatedTokens > 32000 ? 'text-red-600 dark:text-red-400 bg-red-500/10 border-red-500/20' : estimatedTokens > 8000 ? 'text-amber-600 dark:text-amber-400 bg-amber-500/10 border-amber-500/20' : 'text-zinc-700 dark:text-zinc-300 bg-zinc-200/70 dark:bg-zinc-800/80 border-zinc-300/50 dark:border-white/10'}`}
+ <div className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md border font-mono text-[10px] select-none transition-colors ${estimatedTokens > 32000 ? 'text-red-600 dark:text-red-400 bg-red-500/10 border-red-500/20' : estimatedTokens > 8000 ? 'text-amber-600 dark:text-amber-400 bg-amber-500/10 border-amber-500/20' : 'text-zinc-700 dark:text-zinc-300 bg-zinc-200/70  border-zinc-300/50 dark:border-white/10'}`}
  title="تخمین توکن‌های این پیام بر اساس طول نویسه‌ها و اسناد"
  >
  <CpuBoltLinearIcon className={`w-3 h-3 shrink-0 ${estimatedTokens > 32000 ? 'text-red-500' : estimatedTokens > 8000 ? 'text-amber-500' : 'text-sky-500'}`} />
@@ -835,14 +817,11 @@ export const MessageInput: React.FC = React.memo(() => {
  </div>
  )}
 
-  {/* Input Frame */}
-  <div className={`relative flex items-end gap-2 sm:gap-3 clay-surface !rounded-full p-2 sm:p-2.5 transition-all ${isStreaming ? 'opacity-80' : ''}`}>
- 
+ {/* Input Frame */}
+ <div className={`relative flex items-end gap-2 sm:gap-3 clay-surface !rounded-full p-2 sm:p-2.5 transition-all ${isStreaming ? 'opacity-80' : ''}`}>
  {/* Floating Compact Image Engine Pill Bar (Monochrome Minimal Style) */}
  {showImageEngineModal && (
- <div 
- className="absolute bottom-full right-0 left-0 mb-2 z-[70] flex items-center justify-between gap-2 px-3 py-2 rounded-2xl bg-white/95 dark:bg-zinc-900/95 backdrop-blur-xl border border-[var(--card-border)] select-none" 
- dir="rtl"
+ <div className="absolute bottom-full right-0 left-0 mb-2 z-[70] flex items-center justify-between gap-2 px-3 py-2 rounded-2xl clay-surface backdrop-blur-xl border border-[var(--card-border)] select-none" dir="rtl"
  >
  <div className="flex items-center gap-1.5 overflow-x-auto py-0.5 custom-scrollbar min-w-0 flex-1">
  <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400 shrink-0 ml-1">
@@ -850,40 +829,36 @@ export const MessageInput: React.FC = React.memo(() => {
  </span>
 
  {/* Sana NVIDIA */}
- <button 
- type="button"
+ <button type="button"
  onClick={() => confirmImageGen('sana')}
- className="px-3 py-1.5 rounded-xl bg-zinc-100 hover:clay-btn-secondary dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 border border-[var(--card-border)] text-xs font-medium transition-all shrink-0 active:scale-95 cursor-pointer"
+ className="px-3 py-1.5 rounded-xl clay-surface hover:clay-btn-secondary dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 border border-[var(--card-border)] text-xs font-medium transition-all shrink-0 active:scale-95 cursor-pointer"
  title="مدل نسل جدید انویدیا با رزولوشن بالا و سرعت آنی"
  >
  Sana (NVIDIA)
  </button>
 
  {/* Flux.1 */}
- <button 
- type="button"
+ <button type="button"
  onClick={() => confirmImageGen('flux')}
- className="px-3 py-1.5 rounded-xl bg-zinc-100 hover:clay-btn-secondary dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 border border-[var(--card-border)] text-xs font-medium transition-all shrink-0 active:scale-95 cursor-pointer"
+ className="px-3 py-1.5 rounded-xl clay-surface hover:clay-btn-secondary dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 border border-[var(--card-border)] text-xs font-medium transition-all shrink-0 active:scale-95 cursor-pointer"
  title="کیفیت عالی، طبیعی و واقع‌گرایانه"
  >
  Flux.1 Realism
  </button>
 
  {/* DALL-E 3 */}
- <button 
- type="button"
+ <button type="button"
  onClick={() => confirmImageGen('dalle-3')}
- className="px-3 py-1.5 rounded-xl bg-zinc-100 hover:clay-btn-secondary dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 border border-[var(--card-border)] text-xs font-medium transition-all shrink-0 active:scale-95 cursor-pointer"
+ className="px-3 py-1.5 rounded-xl clay-surface hover:clay-btn-secondary dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 border border-[var(--card-border)] text-xs font-medium transition-all shrink-0 active:scale-95 cursor-pointer"
  title="هوش بالا - نیازمند کلید OpenAI"
  >
  DALL-E 3
  </button>
 
  {/* Imagen 3 */}
- <button 
- type="button"
+ <button type="button"
  onClick={() => confirmImageGen('imagen-3')}
- className="px-3 py-1.5 rounded-xl bg-zinc-100 hover:clay-btn-secondary dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 border border-[var(--card-border)] text-xs font-medium transition-all shrink-0 active:scale-95 cursor-pointer"
+ className="px-3 py-1.5 rounded-xl clay-surface hover:clay-btn-secondary dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 border border-[var(--card-border)] text-xs font-medium transition-all shrink-0 active:scale-95 cursor-pointer"
  title="کیفیت استودیو گوگل - رسمی"
  >
  Imagen 3
@@ -891,8 +866,7 @@ export const MessageInput: React.FC = React.memo(() => {
  </div>
 
  {/* Dismiss button */}
- <button 
- type="button"
+ <button type="button"
  onClick={() => setShowImageEngineModal(false)}
  className="p-1.5 rounded-lg text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 clay-icon-btn transition-colors shrink-0 cursor-pointer mr-1"
  title="بستن"
@@ -901,7 +875,6 @@ export const MessageInput: React.FC = React.memo(() => {
  </button>
  </div>
  )}
- 
  {/* Right actions (Attachment, Image Gen) */}
  <div className="flex items-center gap-0.5 pb-0.5 sm:pb-1 border-none outline-none">
  <div className="relative">
@@ -912,9 +885,7 @@ export const MessageInput: React.FC = React.memo(() => {
  onClick={handleMenuToggle}
  disabled={isStreaming}
  className={`w-10 h-10 flex items-center justify-center rounded-full bg-transparent border-0 outline-none transition-all cursor-pointer ${
- isAttachmentMenuOpen 
- ? 'text-zinc-900 dark:text-white bg-zinc-200 dark:bg-white/10' 
- : 'text-zinc-700 dark:text-zinc-500 dark:text-slate-400 hover:text-zinc-800 dark:hover:text-slate-200 hover:bg-zinc-200 dark:hover:bg-black/5 dark:hover:bg-white/5 active:scale-95'
+ isAttachmentMenuOpen ? 'text-zinc-900 dark:text-white bg-zinc-200 dark:bg-white/10' : 'text-zinc-700 dark:text-zinc-500 dark:text-slate-400 hover:text-zinc-800 dark:hover:text-slate-200 hover:bg-zinc-200 dark:hover:bg-black/5 dark:hover:bg-white/5 active:scale-95'
  }`}
  aria-label="Add attachment"
  >
@@ -924,33 +895,24 @@ export const MessageInput: React.FC = React.memo(() => {
 
  {/* Sleek Floating Dark Menu directly above button */}
  {isAttachmentMenuOpen && createPortal(
- <div 
- ref={menuRef}
+ <div ref={menuRef}
  dir="rtl"
- style={{ 
- position: 'fixed', 
- bottom: `${menuCoords.bottom}px`, 
- right: `${menuCoords.right}px`, 
- zIndex: 999999 
- }}
- className="w-44 bg-white dark:bg-[#1e1f20] border border-zinc-200 dark:border-[#333333] rounded-2xl p-1.5 flex flex-col gap-1 origin-bottom-right animate-fadeIn"
+ style={{ position: 'fixed', bottom: `${menuCoords.bottom}px`, right: `${menuCoords.right}px`, zIndex: 999999 }}
+ className="w-44 bg-white dark:clay-card-thick border border-[var(--card-border)] dark: rounded-2xl p-1.5 flex flex-col gap-1 origin-bottom-right animate-fadeIn"
  >
- <button 
- type="button"
+ <button type="button"
  onClick={() => {
  fileInputRef.current?.click();
  setIsAttachmentMenuOpen(false);
  }}
- className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-zinc-100 dark:hover:bg-black/5 dark:hover:bg-white/10 transition-colors text-right cursor-pointer text-zinc-700 dark:text-slate-200"
+ className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:clay-surface dark:hover:bg-black/5 dark:hover:bg-white/10 transition-colors text-right cursor-pointer text-zinc-700 dark:text-slate-200"
  >
  <CloudUploadLinearIcon className="w-4 h-4 text-emerald-500 dark:text-emerald-400 shrink-0" />
  <span className="text-xs font-medium">بارگذاری فایل</span>
  </button>
- 
- <button 
- type="button"
+ <button type="button"
  onClick={handleCameraClick}
- className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-zinc-100 dark:hover:bg-black/5 dark:hover:bg-white/10 transition-colors text-right cursor-pointer text-zinc-700 dark:text-slate-200"
+ className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:clay-surface dark:hover:bg-black/5 dark:hover:bg-white/10 transition-colors text-right cursor-pointer text-zinc-700 dark:text-slate-200"
  >
  <CameraLinearIcon className="w-4 h-4 text-sky-500 dark:text-sky-400 shrink-0" />
  <span className="text-xs font-medium">دوربین</span>
@@ -1014,7 +976,6 @@ export const MessageInput: React.FC = React.memo(() => {
  onChange={handleFileChange}
  accept="*/*"
  />
- 
  <input
  ref={cameraInputRef}
  type="file"
@@ -1027,12 +988,12 @@ export const MessageInput: React.FC = React.memo(() => {
 
  {/* Textarea */}
  {slashMenuOpen && slashCommands.filter(c => c.cmd.startsWith(slashQuery)).length > 0 && (
- <div className="absolute bottom-full right-0 mb-1 w-full max-w-[240px] bg-white dark:bg-[#1e1f20] border border-zinc-200 dark:border-[#333333] rounded-xl z-[60] flex flex-col p-0.5 animate-fadeIn">
+ <div className="absolute bottom-full right-0 mb-1 w-full max-w-[240px] bg-white dark:clay-card-thick border border-[var(--card-border)] dark: rounded-xl z-[60] flex flex-col p-0.5 animate-fadeIn">
  {slashCommands.filter(c => c.cmd.startsWith(slashQuery)).map((c, idx) => (
  <button
  key={idx}
  type="button"
- className="flex flex-col text-right px-2.5 py-1.5 hover:bg-zinc-100 dark:hover:bg-black/5 dark:hover:bg-white/10 rounded-lg transition-colors w-full"
+ className="flex flex-col text-right px-2.5 py-1.5 hover:clay-surface dark:hover:bg-black/5 dark:hover:bg-white/10 rounded-lg transition-colors w-full"
  onClick={() => {
  const words = text.split(' ');
  words.pop();
@@ -1063,7 +1024,6 @@ export const MessageInput: React.FC = React.memo(() => {
 
  {/* Left actions (Clear, Mic, Cancel, Send) */}
  <div className="flex items-center gap-1 pb-0.5 sm:pb-1 pr-1 border-0 border-none outline-none">
- 
  {/* Clear text button */}
  {text.trim() && !isStreaming && !isRecording && (
  <Tooltip content="پاک کردن متن">
@@ -1113,7 +1073,6 @@ export const MessageInput: React.FC = React.memo(() => {
  </button>
  </Tooltip>
  )}
- 
  {/* Loading Indicator */}
  {isStreaming && (
  <div className="w-10 h-10 flex items-center justify-center border-0">

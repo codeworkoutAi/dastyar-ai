@@ -31,12 +31,11 @@ export class ErrorBoundary extends Component<Props, State> {
  public render() {
  if (this.state.hasError) {
  return (
- <div dir="rtl" className="min-h-screen flex items-center justify-center p-4 bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 font-sans">
+ <div dir="rtl" className="min-h-screen flex items-center justify-center p-4 clay-surface text-zinc-900 dark:text-zinc-100 font-sans">
  <div className="max-w-md w-full p-8 rounded-3xl clay-modal text-center">
  <div className="w-16 h-16 rounded-2xl bg-amber-500/10 text-amber-600 dark:text-amber-400 mx-auto flex items-center justify-center mb-6">
  <AlertTriangle className="w-8 h-8" />
  </div>
- 
  <h2 className="text-xl font-bold mb-3">یک خطای غیرمنتظره رخ داد</h2>
  <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-6 leading-relaxed">
  برای بهبود تجربه و بارگذاری مجدد بخش‌های برنامه، لطفاً صفحه را بازنشانی کنید.

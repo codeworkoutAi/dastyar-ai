@@ -41,16 +41,14 @@ export const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({ produc
  return (
  <div className="fixed inset-0 z-[60] flex items-center justify-center p-3 sm:p-4">
  {/* Backdrop */}
- <div 
- className="absolute inset-0 bg-zinc-900/50 dark:bg-black/70 backdrop-blur-sm animate-fadeIn"
+ <div className="absolute inset-0 bg-zinc-900/50 dark:bg-black/70 backdrop-blur-sm animate-fadeIn"
  onClick={onClose}
  />
 
  {/* Modal */}
- <div className="relative w-full max-w-xl clay-modal rounded-3xl overflow-hidden flex flex-col animate-slideUpScale max-h-[88vh] border border-[var(--card-border)]">
+ <div className="relative w-full max-w-xl clay-card rounded-3xl overflow-hidden flex flex-col animate-slideUpScale max-h-[88vh] border border-[var(--card-border)]">
  {/* Close Button */}
- <button 
- onClick={onClose}
+ <button onClick={onClose}
  className="absolute top-3.5 left-3.5 z-50 p-2 clay-surface hover:bg-white dark:hover:bg-zinc-700 backdrop-blur-md rounded-full text-zinc-600 dark:text-zinc-300 transition-colors shadow-sm"
  title="بستن"
  >
@@ -104,7 +102,7 @@ export const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({ produc
  <span className="w-1 h-5 bg-gradient-to-b from-emerald-500 to-teal-500 rounded-full"></span>
  توضیحات محصول
  </h3>
- <div className="bg-zinc-50 dark:bg-zinc-900/50 p-4 rounded-2xl border border-zinc-100 dark:border-zinc-800/60 prose prose-sm dark:prose-invert max-w-none text-xs sm:text-sm text-zinc-700 dark:text-zinc-300 leading-relaxed">
+ <div className="clay-surface p-4 rounded-2xl border border-[var(--card-border)]  prose prose-sm dark:prose-invert max-w-none text-xs sm:text-sm text-zinc-700 dark:text-zinc-300 leading-relaxed">
  <MarkdownRenderer content={product.longDescription || product.description || 'توضیحاتی برای این محصول ثبت نشده است.'} />
  </div>
  </div>
@@ -139,12 +137,9 @@ export const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({ produc
  </h3>
  <div className="space-y-2.5">
  {faqs.map((faq, idx) => (
- <div 
- key={idx} 
- className="border border-[var(--card-border)] rounded-xl overflow-hidden transition-all duration-300"
+ <div key={idx} className="border border-[var(--card-border)] rounded-xl overflow-hidden transition-all duration-300"
  >
- <button 
- onClick={() => setOpenFaqIndex(openFaqIndex === idx ? null : idx)}
+ <button onClick={() => setOpenFaqIndex(openFaqIndex === idx ? null : idx)}
  className="w-full flex items-center justify-between p-3 sm:p-3.5 clay-surface clay-icon-btn/60 transition-colors text-right"
  >
  <span className="text-xs sm:text-sm font-bold text-zinc-800 dark:text-zinc-200">{faq.q}</span>
@@ -155,7 +150,7 @@ export const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({ produc
  )}
  </button>
  {openFaqIndex === idx && (
- <div className="p-3 sm:p-3.5 clay-modal border-t border-zinc-100 dark:border-zinc-800">
+ <div className="p-3 sm:p-3.5 clay-card border-t border-[var(--card-border)] ">
  <p className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed">{faq.a}</p>
  </div>
  )}
@@ -167,28 +162,25 @@ export const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({ produc
  </div>
 
  {/* Footer */}
- <div className="p-4 sm:p-5 bg-zinc-50 dark:bg-zinc-900/80 border-t border-zinc-200 dark:border-zinc-800 flex flex-col sm:flex-row items-center justify-between gap-3 shrink-0">
+ <div className="p-4 sm:p-5 clay-surface border-t border-[var(--card-border)]  flex flex-col sm:flex-row items-center justify-between gap-3 shrink-0">
  <div className="flex flex-col w-full sm:w-auto text-center sm:text-right">
  <span className="text-[11px] sm:text-xs text-zinc-500 dark:text-zinc-400 mb-0.5">مبلغ قابل پرداخت:</span>
  <span className="text-lg sm:text-xl font-black text-zinc-900 dark:text-zinc-100">
  {formatPrice(product.price)} <span className="text-xs font-normal text-zinc-500">تومان</span>
  </span>
  </div>
- 
  <div className="flex items-center gap-2.5 w-full sm:w-auto">
- <button 
- onClick={onClose}
- className="flex-1 sm:flex-none px-5 py-2.5 rounded-xl clay-surface text-zinc-700 dark:text-zinc-300 text-xs sm:text-sm font-bold border border-[var(--card-border)] hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors"
+ <button onClick={onClose}
+ className="flex-1 sm:flex-none px-5 py-2.5 rounded-xl clay-surface text-zinc-700 dark:text-zinc-300 text-xs sm:text-sm font-bold border border-[var(--card-border)] hover:clay-surface dark:hover:bg-zinc-700 transition-colors"
  >
  انصراف
  </button>
- <button 
- onClick={() => {
+ <button onClick={() => {
  onBuy(product);
  onClose();
  }}
  disabled={product.category !== 'package' && product.category !== 'plan' && product.stock <= 0}
- style={{ borderRadius: "12px" }} className="flex-1 sm:flex-none px-6 py-2.5 clay-btn-primary-thick text-white text-xs sm:text-sm font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer shadow-md hover:-translate-y-0.5"
+ style={{ borderRadius:"12px" }} className="flex-1 sm:flex-none px-6 py-2.5 clay-btn-primary-thick text-white text-xs sm:text-sm font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer shadow-md hover:-translate-y-0.5"
  >
  {product.category !== 'package' && product.category !== 'plan' && product.stock <= 0 ? 'ناموجود' : 'ادامه به پرداخت'}
  </button>

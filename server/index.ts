@@ -117,6 +117,15 @@ app.use('/api/admin', adminRouter);
 app.use('/api/store', storeRouter);
 app.use('/api/news', newsRouter);
 
+app.get('/api/public-settings', (req, res) => {
+  try {
+    const row = db.prepare('SELECT value FROM site_settings WHERE key = ?').get('ui_style') as { value: string } | undefined;
+    res.json({ ui_style: row?.value || 'clay' });
+  } catch (err) {
+    res.json({ ui_style: 'clay' });
+  }
+});
+
 app.get('/robots.txt', (req, res) => {
   const protocol = req.protocol === 'https' || req.headers['x-forwarded-proto'] === 'https' ? 'https' : 'http';
   const host = req.get('host');

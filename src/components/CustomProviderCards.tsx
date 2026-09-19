@@ -21,12 +21,7 @@ export interface ModelDetails {
  tags: ModelCapabilityTag[];
 }
 
-export const getModelDetails = (m: { 
- id: string; 
- name?: string; 
- isFree?: boolean; 
- isVision?: boolean; 
- isCoding?: boolean;
+export const getModelDetails = (m: { id: string; name?: string; isFree?: boolean; isVision?: boolean; isCoding?: boolean;
  isReasoning?: boolean;
  isFast?: boolean;
  contextLength?: number | null;
@@ -289,12 +284,7 @@ interface CustomProviderCardsProps {
  tempSettings: AppSettings;
  setTempSettings: (settings: AppSettings) => void;
  cachedModels: {
- id: string; 
- name?: string; 
- isFree?: boolean; 
- provider?: string; 
- isVision?: boolean; 
- isCoding?: boolean;
+ id: string; name?: string; isFree?: boolean; provider?: string; isVision?: boolean; isCoding?: boolean;
  isReasoning?: boolean;
  isFast?: boolean;
  contextLength?: number | null;
@@ -368,7 +358,6 @@ export const CustomProviderCards: React.FC<CustomProviderCardsProps> = ({
  };
 
  const searchStr = modelSearchQuery.toLowerCase();
- 
  cachedModels
  .filter(m => (m.id + (m.name || '')).toLowerCase().includes(searchStr))
  .forEach(m => {
@@ -398,7 +387,6 @@ export const CustomProviderCards: React.FC<CustomProviderCardsProps> = ({
  modelName: '',
  customHeaders: '',
  };
- 
  setTempSettings({
  ...tempSettings,
  providers: {
@@ -432,7 +420,6 @@ export const CustomProviderCards: React.FC<CustomProviderCardsProps> = ({
  if (!confirm('آیا از حذف این پروفایل اطمینان دارید؟')) return;
  const filtered = profiles.filter(p => p.id !== id);
  const newActiveId = activeProfileId === id ? (filtered[0]?.id || '') : activeProfileId;
- 
  const syncUpdates = activeProfileId === id && filtered.length > 0
  ? { baseUrl: filtered[0].baseUrl, apiKey: filtered[0].apiKey, modelName: filtered[0].modelName, customHeaders: filtered[0].customHeaders }
  : (activeProfileId === id ? { baseUrl: '', apiKey: '', modelName: '', customHeaders: '' } : {});
@@ -453,11 +440,9 @@ export const CustomProviderCards: React.FC<CustomProviderCardsProps> = ({
 
  const handleDuplicateProfile = (profile: CustomProfile, e: React.MouseEvent) => {
  e.stopPropagation();
- 
  const newId = 'profile-' + Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
  let baseName = profile.name || 'پروفایل';
  let newName = '';
- 
  const copyMatch = baseName.match(/(.*?) \(کپی(?: (\d+))?\)$/);
  if (copyMatch) {
  baseName = copyMatch[1];
@@ -472,7 +457,6 @@ export const CustomProviderCards: React.FC<CustomProviderCardsProps> = ({
  id: newId,
  name: newName,
  };
- 
  setTempSettings({
  ...tempSettings,
  providers: {
@@ -484,7 +468,6 @@ export const CustomProviderCards: React.FC<CustomProviderCardsProps> = ({
  }
  }
  });
- 
  setEditingProfileId(newId);
  };
 
@@ -589,13 +572,10 @@ export const CustomProviderCards: React.FC<CustomProviderCardsProps> = ({
  {profiles.map(profile => {
  const isActive = profile.id === activeProfileId;
  return (
- <div 
- key={profile.id}
+ <div key={profile.id}
  onClick={() => handleSelectActive(profile.id)}
  className={`relative cursor-pointer rounded-2xl p-4 border transition-all duration-200 overflow-hidden group ${
- isActive 
- ? 'bg-blue-50/20 dark:bg-zinc-800/80 border-blue-500/60 dark:border-blue-500/50 shadow-md ring-1 ring-blue-500/20' 
- : 'clay-modal/70 border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 hover:bg-zinc-50/50 dark:hover:bg-zinc-900/90'
+ isActive ? 'bg-blue-50/20  border-blue-500/60 dark:border-blue-500/50 shadow-md ring-1 ring-blue-500/20' : 'clay-modal/70 border-[var(--card-border)]  hover:border-zinc-300 dark:hover:border-zinc-700 hover:bg-zinc-50/50 dark:hover:bg-zinc-900/90'
  }`}
  >
  <div className="flex justify-between items-center mb-2.5">
@@ -608,22 +588,19 @@ export const CustomProviderCards: React.FC<CustomProviderCardsProps> = ({
  </h5>
  </div>
  <div className="flex items-center gap-1 shrink-0">
- <button 
- onClick={(e) => { e.stopPropagation(); setEditingProfileId(profile.id); }}
+ <button onClick={(e) => { e.stopPropagation(); setEditingProfileId(profile.id); }}
  className="p-1.5 text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 clay-icon-btn transition-colors"
  title="ویرایش"
  >
  <PenOutlineIcon className="w-3.5 h-3.5" />
  </button>
- <button 
- onClick={(e) => handleDuplicateProfile(profile, e)}
+ <button onClick={(e) => handleDuplicateProfile(profile, e)}
  className="p-1.5 text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 clay-icon-btn transition-colors"
  title="کپی گرفتن"
  >
  <CopyOutlineIcon className="w-3.5 h-3.5" />
  </button>
- <button 
- onClick={(e) => handleDeleteProfile(profile.id, e)}
+ <button onClick={(e) => handleDeleteProfile(profile.id, e)}
  className="p-1.5 text-zinc-400 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
  title="حذف"
  >
@@ -631,8 +608,7 @@ export const CustomProviderCards: React.FC<CustomProviderCardsProps> = ({
  </button>
  </div>
  </div>
- 
- <div className="space-y-2 mt-3 pt-2.5 border-t border-zinc-100 dark:border-zinc-800/80">
+ <div className="space-y-2 mt-3 pt-2.5 border-t border-[var(--card-border)] ">
  <div className="flex items-center justify-between gap-2 text-xs">
  <div className="flex items-center gap-1.5 font-mono min-w-0 flex-1">
  <ChartOutlineIcon className="w-3.5 h-3.5 shrink-0 text-zinc-400 dark:text-zinc-500" />
@@ -660,10 +636,8 @@ export const CustomProviderCards: React.FC<CustomProviderCardsProps> = ({
  </div>
  );
  })}
- 
- <div 
- onClick={handleCreateNew}
- className="cursor-pointer rounded-2xl p-4 border border-dashed border-zinc-200 dark:border-zinc-800 hover:border-zinc-600 bg-zinc-50 dark:bg-zinc-950/30 hover:bg-zinc-50 dark:bg-zinc-900/50 transition-all duration-200 flex flex-col items-center justify-center min-h-[110px] text-zinc-700 dark:text-zinc-500 hover:text-zinc-700 dark:text-zinc-300"
+ <div onClick={handleCreateNew}
+ className="cursor-pointer rounded-2xl p-4 border border-dashed border-[var(--card-border)]  hover:border-zinc-600 clay-surface hover:clay-surface transition-all duration-200 flex flex-col items-center justify-center min-h-[110px] text-zinc-700 dark:text-zinc-500 hover:text-zinc-700 dark:text-zinc-300"
  >
  <AddOutlineIcon className="w-6 h-6 mb-2" />
  <span className="text-sm font-medium">افزودن ارائه‌دهنده</span>
@@ -671,38 +645,23 @@ export const CustomProviderCards: React.FC<CustomProviderCardsProps> = ({
  </div>
 
  {editingProfile && (
- <div className="mt-4 p-5 rounded-2xl bg-zinc-50 dark:bg-zinc-950/70 border border-[var(--card-border)] animate-fadeIn">
- <div className="flex justify-between items-center mb-4 pb-3 border-b border-zinc-200 dark:border-zinc-800/80">
+ <div className="mt-4 p-5 rounded-2xl clay-card animate-fadeIn">
+ <div className="flex justify-between items-center mb-4 pb-3 border-b border-[var(--card-border)] ">
  <h5 className="font-bold text-sm text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
  <PenOutlineIcon className="w-4 h-4 text-blue-500" /> ویرایش پروفایل
  </h5>
- <button onClick={() => setEditingProfileId(null)} className="text-xs text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200 px-2.5 py-1 rounded-lg bg-zinc-200/60 dark:bg-zinc-800/80 transition-colors">بستن</button>
+ <button onClick={() => setEditingProfileId(null)} className="text-xs text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200 px-2.5 py-1 rounded-lg bg-zinc-200/60  transition-colors">بستن</button>
  </div>
- 
  <div className="space-y-4">
  <div>
  <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-400 mb-1">نام پروفایل</label>
- <input 
- type="text" 
- value={editingProfile.name} 
- onChange={(e) => handleUpdateProfile(editingProfile.id, { name: e.target.value })} 
- className="w-full bg-zinc-50 dark:bg-zinc-900 border border-[var(--card-border)] rounded-xl py-2 px-3 text-sm focus:border-zinc-500 outline-none transition-all" 
- placeholder="مثال: کلود / اوپن‌ای‌آی سازمانی" 
- />
+ <input type="text" value={editingProfile.name} onChange={(e) => handleUpdateProfile(editingProfile.id, { name: e.target.value })} className="w-full clay-input rounded-xl py-2 px-3 text-sm focus:border-zinc-500 outline-none transition-all" placeholder="مثال: کلود / اوپن‌ای‌آی سازمانی" />
  </div>
- 
  <div>
  <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-400 mb-1">آدرس پایه (Base URL)</label>
  <div className="relative">
  <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-zinc-700 dark:text-zinc-500"><LinkOutlineIcon className="w-4 h-4" /></div>
- <input 
- type="text" 
- dir="ltr" 
- value={editingProfile.baseUrl} 
- onChange={(e) => handleUpdateProfile(editingProfile.id, { baseUrl: e.target.value })} 
- className="w-full bg-zinc-50 dark:bg-zinc-900 border border-[var(--card-border)] rounded-xl py-2 pr-9 pl-3 text-sm focus:border-zinc-500 outline-none transition-all font-mono" 
- placeholder="https://api.openai.com/v1 یا https://openrouter.ai/api/v1" 
- />
+ <input type="text" dir="ltr" value={editingProfile.baseUrl} onChange={(e) => handleUpdateProfile(editingProfile.id, { baseUrl: e.target.value })} className="w-full clay-input rounded-xl py-2 pr-9 pl-3 text-sm focus:border-zinc-500 outline-none transition-all font-mono" placeholder="https://api.openai.com/v1 یا https://openrouter.ai/api/v1" />
  </div>
  </div>
 
@@ -710,14 +669,7 @@ export const CustomProviderCards: React.FC<CustomProviderCardsProps> = ({
  <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-400 mb-1">کلید دسترسی (API Key)</label>
  <div className="relative">
  <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-zinc-700 dark:text-zinc-500"><KeyMinimalisticOutlineIcon className="w-4 h-4" /></div>
- <input 
- type="password" 
- dir="ltr" 
- value={editingProfile.apiKey} 
- onChange={(e) => handleUpdateProfile(editingProfile.id, { apiKey: e.target.value })} 
- className="w-full bg-zinc-50 dark:bg-zinc-900 border border-[var(--card-border)] rounded-xl py-2 pr-9 pl-3 text-sm focus:border-zinc-500 outline-none transition-all font-mono" 
- placeholder={editingProfile.isSystemDefault ?"(کلید پیش‌فرض رایگان فعال است - اختیاری)" :"sk-..."} 
- />
+ <input type="password" dir="ltr" value={editingProfile.apiKey} onChange={(e) => handleUpdateProfile(editingProfile.id, { apiKey: e.target.value })} className="w-full clay-input rounded-xl py-2 pr-9 pl-3 text-sm focus:border-zinc-500 outline-none transition-all font-mono" placeholder={editingProfile.isSystemDefault ?"(کلید پیش‌فرض رایگان فعال است - اختیاری)" :"sk-..."} />
  </div>
  </div>
 
@@ -725,25 +677,16 @@ export const CustomProviderCards: React.FC<CustomProviderCardsProps> = ({
  <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-400 mb-1">مدل انتخابی (Model)</label>
  <div className="flex gap-2">
  <div className="relative flex-1">
- <input 
- type="text"
+ <input type="text"
  dir="ltr"
- value={editingProfile.modelName} 
- onChange={(e) => handleUpdateProfile(editingProfile.id, { modelName: e.target.value })} 
- className="w-full bg-zinc-50 dark:bg-zinc-900 border border-[var(--card-border)] rounded-xl py-2 px-3 text-sm focus:border-zinc-500 outline-none transition-all font-mono" 
- placeholder="e.g. anthropic/claude-sonnet-5 or openai/gpt-4o"
+ value={editingProfile.modelName} onChange={(e) => handleUpdateProfile(editingProfile.id, { modelName: e.target.value })} className="w-full clay-input rounded-xl py-2 px-3 text-sm focus:border-zinc-500 outline-none transition-all font-mono" placeholder="e.g. anthropic/claude-sonnet-5 or openai/gpt-4o"
  />
  </div>
- <button 
- type="button" 
- onClick={async () => {
+ <button type="button" onClick={async () => {
  handleSelectActive(editingProfile.id);
  await handleFetchModels(editingProfile);
  setShowFetchedList(true);
- }} 
- disabled={fetchingModels} 
- className="px-3 rounded-xl border border-zinc-300 dark:border-zinc-700 clay-surface clay-icon-btn text-zinc-700 dark:text-zinc-300 transition-colors flex items-center justify-center shrink-0 min-w-[40px]" 
- title="دریافت لیست هوشمند مدل‌ها از سرور"
+ }} disabled={fetchingModels} className="px-3 rounded-xl border border-zinc-300  clay-surface clay-icon-btn text-zinc-700 dark:text-zinc-300 transition-colors flex items-center justify-center shrink-0 min-w-[40px]" title="دریافت لیست هوشمند مدل‌ها از سرور"
  >
  {fetchingModels ? <div className="w-4 h-4 border-2 border-zinc-500 border-t-zinc-200 rounded-full animate-spin" /> : <RefreshOutlineIcon className="w-4 h-4" />}
  </button>
@@ -752,16 +695,14 @@ export const CustomProviderCards: React.FC<CustomProviderCardsProps> = ({
 
  {/* Fetched Models List (Collapsible with Search) */}
  {showFetchedList && (
- <div className="animate-fadeIn bg-zinc-50 dark:bg-zinc-900/50 border border-[var(--card-border)] rounded-xl p-3">
+ <div className="animate-fadeIn clay-card rounded-xl p-3">
  <details className="group" open>
  <summary className="flex items-center justify-between text-xs font-medium text-indigo-400 cursor-pointer select-none outline-none mb-2">
  <span className="flex items-center gap-2">
  <RefreshOutlineIcon className="w-3.5 h-3.5" /> لیست مدل‌های دریافت‌شده ({cachedModels.length})
  </span>
  <div className="flex items-center gap-3">
- <button 
- type="button" 
- onClick={(e) => { e.preventDefault(); handleExportModels(); }}
+ <button type="button" onClick={(e) => { e.preventDefault(); handleExportModels(); }}
  disabled={cachedModels.length === 0}
  className="flex items-center gap-1.5 px-2 py-1 rounded bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
  title="خروجی گرفتن از کل لیست به صورت فایل متنی با مشخصات کامل"
@@ -771,7 +712,7 @@ export const CustomProviderCards: React.FC<CustomProviderCardsProps> = ({
  <span className="text-zinc-700 dark:text-zinc-500 group-open:rotate-180 transition-transform">▼</span>
  </div>
  </summary>
- <div className="pt-2 border-t border-zinc-200 dark:border-zinc-800/50">
+ <div className="pt-2 border-t border-[var(--card-border)] ">
  <div className="flex flex-col sm:flex-row gap-2 mb-2.5 mt-1">
  <div className="relative flex-1">
  <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-zinc-700 dark:text-zinc-500">
@@ -782,14 +723,13 @@ export const CustomProviderCards: React.FC<CustomProviderCardsProps> = ({
  placeholder="جستجوی مدل (نام، قابلیت، سازنده)..."
  value={modelSearchQuery}
  onChange={(e) => setModelSearchQuery(e.target.value)}
- className="w-full bg-zinc-50 dark:bg-zinc-950 border border-[var(--card-border)] rounded-xl py-2 sm:py-1.5 pr-9 pl-3 text-xs focus:border-indigo-500/50 outline-none transition-all text-zinc-700 dark:text-zinc-300"
+ className="w-full clay-input rounded-xl py-2 sm:py-1.5 pr-9 pl-3 text-xs focus:border-indigo-500/50 outline-none transition-all text-zinc-700 dark:text-zinc-300"
  />
  </div>
- 
  <select
  value={filterProvider}
  onChange={(e) => setFilterProvider(e.target.value)}
- className="bg-zinc-50 dark:bg-zinc-950 border border-[var(--card-border)] rounded-xl py-2 sm:py-1.5 px-3 text-xs focus:border-indigo-500/50 outline-none transition-all text-zinc-700 dark:text-zinc-400 font-medium"
+ className="clay-input rounded-xl py-2 sm:py-1.5 px-3 text-xs focus:border-indigo-500/50 outline-none transition-all text-zinc-700 dark:text-zinc-400 font-medium"
  dir="rtl"
  >
  {PROVIDER_CATEGORIES.map(cat => (
@@ -797,72 +737,53 @@ export const CustomProviderCards: React.FC<CustomProviderCardsProps> = ({
  ))}
  </select>
  </div>
- 
  {/* Multi-Capability Interactive Filter Tags - 2 Columns on Mobile */}
  {cachedModels.length > 0 && (
  <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-1.5 mb-3" dir="rtl">
- <button 
- type="button"
+ <button type="button"
  onClick={() => setActiveTag('all')}
  className={`flex items-center justify-center sm:justify-start gap-1.5 px-2.5 sm:px-3 py-2 sm:py-1.5 rounded-xl sm:rounded-full text-[11px] font-medium cursor-pointer transition-colors border select-none w-full sm:w-auto truncate ${
- activeTag === 'all' 
- ? 'bg-zinc-700 text-zinc-900 dark:text-zinc-100 border-zinc-500 shadow-sm' 
- : 'bg-zinc-50 dark:bg-zinc-900 text-zinc-700 dark:text-zinc-400 border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:border-zinc-700'
+ activeTag === 'all' ? 'bg-zinc-700 text-zinc-900 dark:text-zinc-100 border-zinc-500 shadow-sm' : 'clay-surface text-zinc-700 dark:text-zinc-400 border-[var(--card-border)]  hover:border-zinc-300 '
  }`}
  >
  <LayersOutlineIcon className="w-3.5 h-3.5 shrink-0" /> <span className="truncate">همه مدل‌ها ({tagCounts.all})</span>
  </button>
- <button 
- type="button"
+ <button type="button"
  onClick={() => setActiveTag(activeTag === 'coding' ? 'all' : 'coding')}
  className={`flex items-center justify-center sm:justify-start gap-1.5 px-2.5 sm:px-3 py-2 sm:py-1.5 rounded-xl sm:rounded-full text-[11px] font-medium cursor-pointer transition-colors border select-none w-full sm:w-auto truncate ${
- activeTag === 'coding' 
- ? 'bg-cyan-500/25 text-cyan-300 border-cyan-500/40 shadow-sm' 
- : 'bg-zinc-50 dark:bg-zinc-900 text-zinc-700 dark:text-zinc-400 border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:border-zinc-700'
+ activeTag === 'coding' ? 'bg-cyan-500/25 text-cyan-300 border-cyan-500/40 shadow-sm' : 'clay-surface text-zinc-700 dark:text-zinc-400 border-[var(--card-border)]  hover:border-zinc-300 '
  }`}
  >
  <CodeOutlineIcon className="w-3.5 h-3.5 shrink-0" /> <span className="truncate">برنامه‌نویسی ({tagCounts.coding})</span>
  </button>
- <button 
- type="button"
+ <button type="button"
  onClick={() => setActiveTag(activeTag === 'vision' ? 'all' : 'vision')}
  className={`flex items-center justify-center sm:justify-start gap-1.5 px-2.5 sm:px-3 py-2 sm:py-1.5 rounded-xl sm:rounded-full text-[11px] font-medium cursor-pointer transition-colors border select-none w-full sm:w-auto truncate ${
- activeTag === 'vision' 
- ? 'bg-amber-500/25 text-amber-300 border-amber-500/40 shadow-sm' 
- : 'bg-zinc-50 dark:bg-zinc-900 text-zinc-700 dark:text-zinc-400 border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:border-zinc-700'
+ activeTag === 'vision' ? 'bg-amber-500/25 text-amber-300 border-amber-500/40 shadow-sm' : 'clay-surface text-zinc-700 dark:text-zinc-400 border-[var(--card-border)]  hover:border-zinc-300 '
  }`}
  >
  <EyeOutlineIcon className="w-3.5 h-3.5 shrink-0" /> <span className="truncate">دیداری و تصویر ({tagCounts.vision})</span>
  </button>
- <button 
- type="button"
+ <button type="button"
  onClick={() => setActiveTag(activeTag === 'reasoning' ? 'all' : 'reasoning')}
  className={`flex items-center justify-center sm:justify-start gap-1.5 px-2.5 sm:px-3 py-2 sm:py-1.5 rounded-xl sm:rounded-full text-[11px] font-medium cursor-pointer transition-colors border select-none w-full sm:w-auto truncate ${
- activeTag === 'reasoning' 
- ? 'bg-purple-500/25 text-purple-300 border-purple-500/40 shadow-sm' 
- : 'bg-zinc-50 dark:bg-zinc-900 text-zinc-700 dark:text-zinc-400 border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:border-zinc-700'
+ activeTag === 'reasoning' ? 'bg-purple-500/25 text-purple-300 border-purple-500/40 shadow-sm' : 'clay-surface text-zinc-700 dark:text-zinc-400 border-[var(--card-border)]  hover:border-zinc-300 '
  }`}
  >
  <BrainOutlineIcon className="w-3.5 h-3.5 shrink-0" /> <span className="truncate">استدلال و تفکر ({tagCounts.reasoning})</span>
  </button>
- <button 
- type="button"
+ <button type="button"
  onClick={() => setActiveTag(activeTag === 'fast' ? 'all' : 'fast')}
  className={`flex items-center justify-center sm:justify-start gap-1.5 px-2.5 sm:px-3 py-2 sm:py-1.5 rounded-xl sm:rounded-full text-[11px] font-medium cursor-pointer transition-colors border select-none w-full sm:w-auto truncate ${
- activeTag === 'fast' 
- ? 'bg-emerald-500/25 text-emerald-300 border-emerald-500/40 shadow-sm' 
- : 'bg-zinc-50 dark:bg-zinc-900 text-zinc-700 dark:text-zinc-400 border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:border-zinc-700'
+ activeTag === 'fast' ? 'bg-emerald-500/25 text-emerald-300 border-emerald-500/40 shadow-sm' : 'clay-surface text-zinc-700 dark:text-zinc-400 border-[var(--card-border)]  hover:border-zinc-300 '
  }`}
  >
  <BoltOutlineIcon className="w-3.5 h-3.5 shrink-0" /> <span className="truncate">سریع و سبک ({tagCounts.fast})</span>
  </button>
- <button 
- type="button"
+ <button type="button"
  onClick={() => setActiveTag(activeTag === 'free' ? 'all' : 'free')}
  className={`flex items-center justify-center sm:justify-start gap-1.5 px-2.5 sm:px-3 py-2 sm:py-1.5 rounded-xl sm:rounded-full text-[11px] font-medium cursor-pointer transition-colors border select-none w-full sm:w-auto truncate ${
- activeTag === 'free' 
- ? 'bg-emerald-500/25 text-emerald-300 border-emerald-500/40 shadow-sm' 
- : 'bg-zinc-50 dark:bg-zinc-900 text-zinc-700 dark:text-zinc-400 border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:border-zinc-700'
+ activeTag === 'free' ? 'bg-emerald-500/25 text-emerald-300 border-emerald-500/40 shadow-sm' : 'clay-surface text-zinc-700 dark:text-zinc-400 border-[var(--card-border)]  hover:border-zinc-300 '
  }`}
  >
  <StarsOutlineIcon className="w-3.5 h-3.5 shrink-0" /> <span className="truncate">رایگان ({tagCounts.free})</span>
@@ -888,13 +809,10 @@ export const CustomProviderCards: React.FC<CustomProviderCardsProps> = ({
  const isSelected = editingProfile.modelName === m.id;
 
  return (
- <div 
- key={m.id}
+ <div key={m.id}
  onClick={() => handleUpdateProfile(editingProfile.id, { modelName: m.id })}
  className={`p-2.5 rounded-xl border transition-all cursor-pointer flex flex-col gap-1.5 ${
- isSelected 
- ? 'border-indigo-500 bg-indigo-500/10 shadow-sm ring-1 ring-indigo-500/50' 
- : 'border-zinc-200 dark:border-zinc-800/60 bg-zinc-50 dark:bg-zinc-950/70 hover:border-zinc-300 dark:border-zinc-700 hover:bg-zinc-50 dark:bg-zinc-900/60'
+ isSelected ? 'border-indigo-500 bg-indigo-500/10 shadow-sm ring-1 ring-indigo-500/50' : 'border-[var(--card-border)]  clay-surface hover:border-zinc-300  hover:clay-surface'
  }`}
  >
  {/* Top Row: Name + Star + Badges */}
@@ -914,7 +832,6 @@ export const CustomProviderCards: React.FC<CustomProviderCardsProps> = ({
  </span>
  )}
  </div>
- 
  {/* Capability Badges (Multi-tag) */}
  <div className="flex items-center gap-1 shrink-0 flex-wrap justify-end">
  {meta.isFree && (
@@ -970,7 +887,7 @@ export const CustomProviderCards: React.FC<CustomProviderCardsProps> = ({
  {/* Bottom Row: Description + Technical ID */}
  <div className="flex items-center justify-between text-[11px] text-zinc-700 dark:text-zinc-400 pt-0.5">
  <span className="text-zinc-700 dark:text-zinc-400 truncate text-[11px] leading-relaxed">{meta.description}</span>
- <span className="font-mono text-[10px] text-zinc-700 dark:text-zinc-500 truncate mr-2 bg-zinc-50 dark:bg-zinc-900 px-1.5 py-0.5 rounded border border-[var(--card-border)] shrink-0" dir="ltr">
+ <span className="font-mono text-[10px] text-zinc-700 dark:text-zinc-500 truncate mr-2 clay-surface px-1.5 py-0.5 rounded border border-[var(--card-border)] shrink-0" dir="ltr">
  {m.id}
  </span>
  </div>
@@ -989,21 +906,13 @@ export const CustomProviderCards: React.FC<CustomProviderCardsProps> = ({
 
  <div>
  <label className="block text-xs font-medium text-zinc-700 dark:text-zinc-400 mb-1">هدرهای سفارشی (JSON)</label>
- <textarea 
- dir="ltr" 
- value={editingProfile.customHeaders} 
- onChange={(e) => handleUpdateProfile(editingProfile.id, { customHeaders: e.target.value })} 
- className="w-full bg-zinc-50 dark:bg-zinc-900 border border-[var(--card-border)] rounded-xl py-2 px-3 text-sm focus:border-zinc-500 outline-none transition-all font-mono h-20 resize-none" 
- placeholder='{"HTTP-Referer":"https://myapp.com"}' 
- />
+ <textarea dir="ltr" value={editingProfile.customHeaders} onChange={(e) => handleUpdateProfile(editingProfile.id, { customHeaders: e.target.value })} className="w-full clay-input rounded-xl py-2 px-3 text-sm focus:border-zinc-500 outline-none transition-all font-mono h-20 resize-none" placeholder='{"HTTP-Referer":"https://myapp.com"}' />
  </div>
- 
- <button 
- onClick={() => {
+ <button onClick={() => {
  setEditingProfileId(null);
  setShowFetchedList(false);
  }}
- className="w-full py-2.5 rounded-xl bg-zinc-100 hover:bg-white text-zinc-900 font-medium text-sm transition-colors mt-2"
+ className="w-full py-2.5 rounded-xl clay-surface hover:bg-white text-zinc-900 font-medium text-sm transition-colors mt-2"
  >
  تایید و بستن
  </button>
