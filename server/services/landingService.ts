@@ -109,7 +109,7 @@ export const DEFAULT_LANDING_PROFESSIONS = [
     id: 'lawyer',
     title: 'مدیران، مشاوران و وکلا',
     icon: 'Scale',
-    image: '/images/professions/lawyer.jpg',
+    image: '/images/professions/legal.jpg',
     badge: 'حقوقی و سازمانی',
     accentColor: 'purple',
     desc: 'بررسی مفاد قراردادها، نگارش صورتجلسات رسمی، مکاتبات اداری پیشرفته و تحلیل سناریوهای حقوقی.',
@@ -133,7 +133,7 @@ export const DEFAULT_LANDING_PROFESSIONS = [
     id: 'finance',
     title: 'فعالان مالی و تحلیل‌گران بازار',
     icon: 'TrendingUp',
-    image: '/images/professions/finance.jpg',
+    image: '/images/professions/business.jpg',
     badge: 'سرمایه‌گذاری و مالی',
     accentColor: 'amber',
     desc: 'تحلیل داده‌های آماری، مدل‌سازی ریسک، گزارش‌های تحلیلی بورس و هوش تجاری کسب‌وکار.',
@@ -167,24 +167,31 @@ export const DEFAULT_LANDING_GALLERY = [
   },
   {
     id: 'g3',
-    src: '/images/gallery/data-architecture.jpg',
-    title: 'معماری کلان داده و سرورها',
-    tag: 'مهندسی داده',
-    prompt: 'Macro perspective architectural diagram of a distributed computing cloud, translucent glass cubic servers floating in a serene mist, glowing subtle fiber optic lines, ultra sharp focus, technical realism'
+    src: '/images/gallery/legal-emblem.jpg',
+    title: 'تندیس مفهومی حقوق و عدالت',
+    tag: 'حقوقی و سازمانی',
+    prompt: 'Minimalist modern 3D sculptural emblem of justice balance scales, matte dark stone and brushed gold brass accents, clean minimalist dark studio background, elegant corporate symbol, uncluttered'
   },
   {
     id: 'g4',
-    src: '/images/gallery/quantum-concept.jpg',
-    title: 'مفاهیم پردازش کوانتومی',
-    tag: 'فیزیک محاسباتی',
-    prompt: 'Cinematic visual exploration of quantum superposition, clean geometric crystal prisms splitting coherent light beams into pure spectral gradients, dark slate environment, pristine studio photography lighting'
+    src: '/images/gallery/business-trends.jpg',
+    title: 'تصویرسازی تحلیل رشد مالی',
+    tag: 'گزارش‌های شرکتی',
+    prompt: 'Minimalist 3D architectural financial analytics chart, subtle glowing upward curved graph line on dark navy slate pedestal, refined glass milestone cubes, corporate growth indicator, clean studio lighting, uncluttered'
   },
   {
     id: 'g5',
-    src: '/images/gallery/botanical-science.jpg',
-    title: 'سلول‌های گیاهی و بیوتکنولوژی',
-    tag: 'محیط زیست و سلامت',
-    prompt: 'Hyperrealistic botanical science visual, transparent glass plant cell structures infused with micro-circuitry, soft morning natural sunlight, deep emerald moss background, pristine scientific clarity'
+    src: '/images/gallery/academic-book.jpg',
+    title: 'طراحی جلد کتاب مرجع دانشگاهی',
+    tag: 'آموزش عالی',
+    prompt: 'Refined modern academic textbook cover art, minimalist abstract geometric composition of intersecting arches and steps representing knowledge and education, warm ivory and rich slate blue, elegant and serene'
+  },
+  {
+    id: 'g6',
+    src: '/images/gallery/biotech-dna.jpg',
+    title: 'تصویرسازی زیست‌فناوری و ژنتیک',
+    tag: 'پزشکی و سلامت',
+    prompt: 'Clean minimalist 3D medical visualization of a glowing DNA double helix structure, floating in pristine clinical atmosphere with soft cyan and white luminous glow, ultra-clean laboratory background, uncluttered'
   }
 ];
 

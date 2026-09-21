@@ -986,6 +986,12 @@ export const LandingPage: React.FC = () => {
                         alt={currentProfession.title}
                         className="w-full h-full object-cover rounded-[20px] transition-all duration-700 hover:scale-105"
                         loading="lazy"
+                        onError={(e) => {
+                          const target = e.currentTarget as HTMLImageElement;
+                          if (!target.src.includes('developer.jpg')) {
+                            target.src = '/images/professions/developer.jpg';
+                          }
+                        }}
                       />
                     </div>
                   </div>
@@ -1082,6 +1088,12 @@ export const LandingPage: React.FC = () => {
                         src={p.image}
                         alt={p.title}
                         className="w-10 h-10 rounded-xl object-cover shrink-0"
+                        onError={(e) => {
+                          const target = e.currentTarget as HTMLImageElement;
+                          if (!target.src.includes('developer.jpg')) {
+                            target.src = '/images/professions/developer.jpg';
+                          }
+                        }}
                       />
                       <div className="overflow-hidden">
                         <span className="block text-[11px] font-bold text-[#0f1420] dark:text-white truncate">
@@ -1124,24 +1136,16 @@ export const LandingPage: React.FC = () => {
 
         return (
           <section id="gallery" className="py-16 sm:py-20 px-4 sm:px-6 max-w-6xl mx-auto border-t border-black/5 dark:border-white/5">
-            <div className="reveal-init flex flex-col items-center gap-4 mb-8 sm:mb-10 w-full">
-              <div>
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full clay-pill-thick text-[10px] font-bold bg-blue-500/10 text-blue-600 dark:bg-white/10 dark:text-zinc-200">
-                  <Sparkles className="w-3 h-3" />
-                  <span>AI IMAGE STUDIO SHOWCASE • انیمیشن تعاملی</span>
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between w-full gap-3">
+            <div className="reveal-init flex flex-col items-center gap-6 mb-12">
+              <div className="flex items-center justify-between w-full">
                 <button
                   type="button"
                   onClick={() => {
                     setGalleryTransition(true);
                     setGallerySlide((prev) => prev - 1);
                   }}
-                  className="w-10 h-10 rounded-2xl clay-btn-thick flex items-center justify-center text-[#0f1420] dark:text-white transition-all cursor-pointer active:scale-95  shrink-0"
-                  aria-label="تصویر قبلی"
-                  title="تصویر قبلی"
+                  className="p-3 rounded-2xl clay-btn-thick text-[#0f1420] dark:text-white cursor-pointer active:scale-95"
+                  aria-label="اسلاید قبلی"
                 >
                   <ChevronRight className="w-5 h-5" />
                 </button>
@@ -1198,6 +1202,12 @@ export const LandingPage: React.FC = () => {
                         alt={img.title}
                         className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
                         loading="lazy"
+                        onError={(e) => {
+                          const target = e.currentTarget as HTMLImageElement;
+                          if (!target.src.includes('journal-cover.jpg')) {
+                            target.src = '/images/gallery/journal-cover.jpg';
+                          }
+                        }}
                       />
                       <div className="absolute top-2.5 right-2.5 px-3 py-1 rounded-full clay-charcoal text-[10px] font-bold">
                         {img.tag}
