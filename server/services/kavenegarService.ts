@@ -164,7 +164,7 @@ export async function sendOrderSuccessSms(params: {
 /**
  * Looks up order details and dispatches a customer confirmation SMS if phone exists.
  */
-export async function notifyOrderSuccessBySms(orderId: string, licenseId?: number | null): Promise<void> {
+export async function notifyOrderSuccessBySms(orderId: string, licenseId?: number | bigint | null): Promise<void> {
   try {
     const row = db.prepare(`
       SELECT o.id, o.userId, u.phone, p.title as productTitle, p.category as productCategory, l.key as licenseKey

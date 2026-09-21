@@ -49,6 +49,15 @@ import { toPersianDigits } from '../../lib/persianUtils';
 import { setPageSeo } from '../../lib/seo';
 import { useUIStore } from '../../store/uiStore';
 
+// Import content config
+import {
+  landingPageContent,
+  landingDemoScenarios,
+  landingGalleryImages,
+  landingGallerySettings
+} from '../../config/landingContent';
+import type { LandingPageContent } from '../../config/landingContent';
+
 function formatDemoAiResponse(response: string, scenarioId?: string): string {
   if (!response) return '';
   const trimmed = response.trim();
@@ -79,66 +88,8 @@ interface DemoScenario {
   aiResponse: string;
 }
 
-const DEMO_SCENARIOS: DemoScenario[] = [
-  {
-    id: 'contract',
-    label: 'نگارش حقوقی و اداری',
-    icon: FileText,
-    model: 'Claude 3.5 Sonnet',
-    modelBadge: 'قدرتمندترین مدل ادبی و استدلال',
-    userPrompt: 'یک پیش‌نویس قرارداد محرمانگی اطلاعات (NDA) رسمی و حقوقی برای همکاری دو شرکت نرم‌افزاری تنظیم کن.',
-    aiResponse: `**قرارداد عدم افشای اطلاعات محرمانه (NDA)**
-
-**ماده ۱ - طرفین قرارداد:**
-این توافق‌نامه فی‌مابین شرکت الف (افشاکننده) و شرکت ب (دریافت‌کننده) با شرایط ذیل منعقد می‌گردد:
-
-**ماده ۲ - موضوع قرارداد:**
-حفظ محرمانگی کامل کلیه داده‌های فنی، سورس‌کدها، مستندات معماری و اسرار تجاری مبادله‌شده.
-
-**ماده ۳ - تعهدات دریافت‌کننده:**
-دریافت‌کننده متعهد است بالاترین تدابیر امنیتی را اعمال نموده و بدون موافقت کتبی قبلی، هیچ بخشی از داده‌ها را در اختیار اشخاص ثالث قرار ندهد.`
-  },
-  {
-    id: 'coding',
-    label: 'کدنویسی و مهندسی نرم‌افزار',
-    icon: Code2,
-    model: 'DeepSeek-V3 / GPT-4o',
-    modelBadge: 'متخصص الگوریتم و توسعه',
-    userPrompt: 'یک سیستم ریت‌لیمیت برای کنترل سهمیه توکن‌ها بر اساس دقیقه در تایپ‌اسکریپت بنویس.',
-    aiResponse: `\`\`\`typescript
-interface TokenLimiter {
-  maxTokensPerMinute: number;
-  consumed: number;
-  resetAt: number;
-}
-
-export function checkTokenQuota(limiter: TokenLimiter, tokensNeeded: number): boolean {
-  const now = Date.now();
-  if (now > limiter.resetAt) {
-    limiter.consumed = 0;
-    limiter.resetAt = now + 60_000;
-  }
-  if (limiter.consumed + tokensNeeded <= limiter.maxTokensPerMinute) {
-    limiter.consumed += tokensNeeded;
-    return true; // مجاز به پردازش
-  }
-  return false; // سهمیه این بازه تکمیل است
-}
-\`\`\``
-  },
-  {
-    id: 'vision',
-    label: 'استودیوی تصویرساز فارسی',
-    icon: ImageIcon,
-    model: 'Flux.1 Hyperreal',
-    modelBadge: 'موتور گرافیکی هایپررئال',
-    userPrompt: 'پرتره سینمایی یک سردار باستانی ایران با زره سایبرنتیک و شمشیر پلاسمایی فیروزه‌ای در شبی بارانی',
-    aiResponse: `✨ **درخواست تحلیل شد و به پرامپت مهندسی‌شده تبدیل گردید:**
-\`Cinematic portrait of an ancient Persian warrior in cybernetic high-tech battle armor, engraved golden Farvahar patterns, glowing cyan energy lines, holding plasma scimitar, atmospheric smoke, 8k photorealism\`
-
-🖼️ تصویر با رزولوشن 8K و بیشترین جزئیات نوری در استودیو خلق گردید.`
-  }
-];
+// Use imported content config
+const DEMO_SCENARIOS = landingDemoScenarios;
 
 const ICON_MAP: Record<string, any> = {
   GraduationCap,
@@ -235,7 +186,7 @@ export const LandingPage: React.FC = () => {
 
   const [activeFaq, setActiveFaq] = useState<number | null>(0);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
-  const [activeScenario, setActiveScenario] = useState<DemoScenario>(DEMO_SCENARIOS[0]);
+  const [activeScenario, setActiveScenario] = useState<DemoScenario>(landingPageContent.demoScenarios[0]);
   const [copiedPromptIndex, setCopiedPromptIndex] = useState<number | null>(null);
 
   // Animated 3D Gallery Carousel State & Auto-play (Infinite Seamless Loop)
@@ -249,207 +200,21 @@ export const LandingPage: React.FC = () => {
   const [typedPrompt, setTypedPrompt] = useState<string>('');
   const [copiedProfessionPrompt, setCopiedProfessionPrompt] = useState<boolean>(false);
 
-  // Comprehensive FAQ list (10 rich, practical questions)
-  const faqs = [
-    {
-      q: 'دستیار هوشمند چیست و چگونه کار می‌کند؟',
-      a: 'دستیار هوشمند یک پلتفرم پیشرفته و یکپارچه برای دسترسی مستقیم به قدرتمندترین هوش‌های مصنوعی جهان مانند Claude 3.5، GPT-4o و Gemini است. بدون نیاز به فیلترشکن، خرید شماره مجازی یا کارت اعتباری خارجی، می‌توانید با زبان فارسی با این مدل‌ها گفتگو کرده، فایل و کتاب‌های PDF را تحلیل نموده یا در استودیو تصویرسازی کنید.'
-    },
-    {
-      q: 'تفاوت سیستم پرداخت بر اساس مصرف واقعی (Pay-As-You-Go) با خرید اکانت‌های دلاری چیست؟',
-      a: 'در خرید اشتراک‌های ماهانه خارجی، کاربر باید ماهیانه بیش از ۲۰ دلار (حدود ۱ میلیون و ۸۰۰ هزار تومان) پرداخت کند و با خطر مسدود شدن اکانت و دردسر فیلترشکن روبه‌رو است. در دستیار هوشمند، نیازی به پرداخت ماهانه سنگین نیست؛ با کارت بانکی شتاب حساب خود را شارژ می‌کنید و به ازای هر پیام، فقط هزینه چند تک‌تومانی توکن‌های ورودی و خروجی کسر می‌گردد. این اعتبار هیچ‌گاه منقضی نمی‌شود.'
-    },
-    {
-      q: 'توکن چیست و هر پیام چقدر توکن مصرف می‌کند؟',
-      a: 'توکن کوچک‌ترین واحد محاسباتی در مدل‌های هوش مصنوعی است (تقریباً هر ۱۰۰۰ توکن معادل ۷۵۰ کلمه انگلیسی یا حدود ۵۰۰ کلمه فارسی است). برای یک سوال و جواب متداول، بین ۲۰۰ تا ۸۰۰ توکن مصرف می‌شود که هزینه آن در مدل‌های اقتصادی معمولاً کمتر از ۱۰۰ تا ۲۰۰ تک‌تومان است.'
-    },
-    {
-      q: 'آیا برای استفاده از دستیار هوشمند به فیلترشکن یا شماره خارجی نیاز است؟',
-      a: 'خیر، به هیچ عنوان. سرورهای این پلتفرم مستقیماً به سریع‌ترین درگاه‌های رسمی متصل هستند و از داخل ایران بدون نیاز به فیلترشکن، با نهایت سرعت لود و تاخیر پینگ زیر ۳۰۰ میلی‌ثانیه کار می‌کنند. ثبت‌نام نیز با شماره همراه ایران یا ایمیل در چند ثانیه انجام می‌شود.'
-    },
-    {
-      q: 'چه مدل‌هایی از هوش مصنوعی در دسترس هستند؟',
-      a: 'شما به طور همزمان به پرچمداران هوش مصنوعی جهان دسترسی دارید: Claude 3.5 Sonnet (سلطان نگارش و کدنویسی)، GPT-4o (پرچمدار همه‌کاره OpenAI)، Gemini 2.0 Flash (فوق‌سریع گوگل)، DeepSeek-V3 (هوش استدلالی و ریاضیاتی)، Qwen 2.5 72B و استودیوی تصویرسازی هنری Flux.'
-    },
-    {
-      q: 'سیستم سوییچ هوشمند (Smart Routing) چیست و چه کاربردی دارد؟',
-      a: 'دستیار هوشمند مجهز به موتور تشخیص قصد کاربر (Intent Detection) است. اگر سوال کدنویسی بپرسید، سیستم درخواست را به بهترین مدل برنامه‌نویسی هدایت می‌کند؛ اگر درخواست نگارش متن رسمی یا ترجمه داشته باشید، از ادبی‌ترین مدل استفاده می‌کند؛ و اگر نیاز به جستجوی وب باشد، داده‌های زنده اینترنت را جستجو می‌کند.'
-    },
-    {
-      q: 'آیا امکان آپلود و تحلیل فایل‌های PDF و کد وجود دارد؟',
-      a: 'بله. می‌توانید فایل‌های کتاب و اسناد PDF، فایل‌های متنی، پروژه‌های کدنویسی (پایتون، جاوااسکریپت و...)، اکسل و تصاویر را آپلود کنید. هوش مصنوعی متن و ساختار فایل را استخراج کرده و به سوالات تحلیلی، ترجمه یا خلاصه مقالات با بالاترین دقت پاسخ می‌دهد.'
-    },
-    {
-      q: 'استودیوی تصویرساز چگونه کار می‌کند و آیا زبان فارسی را می‌فهمد؟',
-      a: 'بله، کاملاً. شما می‌توانید توصیف خود از تصویر مورد نظرتان را به زبان شیرین فارسی بنویسید. سیستم ابتدا پرامپت شما را از نظر هنری، زاویه دوربین، نورپردازی و رزولوشن غنی‌سازی کرده و سپس با موتورهای پیشرفته تصویرسازی (Flux و SDXL)، تصاویر هایپررئال 8K خلق می‌کند.'
-    },
-    {
-      q: 'حریم خصوصی و امنیت گفتگوها چگونه تضمین می‌شود؟',
-      a: 'تمامی تبادلات اطلاعاتی از طریق پروتکل رمزنگاری پیشرفته SSL صورت می‌پذیرد. تاریخچه گفتگوها در فضای امن ذخیره شده و به هیچ عنوان در اختیار اشخاص یا سازمان‌های ثالث قرار نمی‌گیرد و برای آموزش مدل‌های عمومی استفاده نمی‌شود.'
-    },
-    {
-      q: 'نحوه شارژ حساب و درگاه‌های پرداخت چگونه است؟',
-      a: 'شارژ حساب با تمام کارت‌های عضو شتاب از طریق درگاه‌های پرداخت معتبر شاپرکی امکان‌پذیر است. موجودی بلافاصله پس از پرداخت به کیف پول کاربر اضافه شده و صورت‌حساب دقیق و شفاف هر تراکنش در بخش مالی و داشبورد کاربری در دسترس است.'
-    }
-  ];
+// Use imported FAQ content
+  const faqs = Array.isArray(landingPageContent.faqs)
+    ? landingPageContent.faqs
+    : ((landingPageContent.faqs as any)?.faqs || []);
 
-  const [copiedProfessionId, setCopiedProfessionId] = useState<string | null>(null);
+  // Use imported content config
+  const professionCards = Array.isArray(landingPageContent.professions)
+    ? landingPageContent.professions
+    : ((landingPageContent.professions as any)?.cards || []);
 
-  // 6 Targeted Professional Personas & Ready-to-Test Prompts
-  const professionCards = [
-    {
-      id: 'academic',
-      title: 'دانشجویان، اساتید و پژوهشگران',
-      icon: GraduationCap,
-      image: '/images/professions/academic.jpg',
-      badge: 'پژوهش و دانشگاه',
-      desc: 'تحلیل مقالات ISI، استخراج فصول و ساختار پایان‌نامه، ترجمه تخصصی روان و رفرنس‌دهی علمی.',
-      prompt: 'یک ساختار استاندارد ۵ فصلی برای پروپوزال کارشناسی ارشد با موضوع "کاربرد هوش مصنوعی در بهینه‌سازی سیستم‌های مالی" تنظیم کن و فرضیات پژوهش را بنویس.'
-    },
-    {
-      id: 'developer',
-      title: 'برنامه‌نویسان و مهندسان نرم‌افزار',
-      icon: Terminal,
-      image: '/images/professions/developer.jpg',
-      badge: 'فناوری و توسعه',
-      desc: 'دیباگ سریع خطاهای کدنویسی، نگارش کوئری‌های SQL و معماری پروژه‌های نرم‌افزاری با استدلال عمیق.',
-      prompt: 'یک کامپوننت React با تایپ‌اسکریپت برای پیاده‌سازی Infinite Scroll بنویس که با Intersection Observer کار کند و مدیریت خطای شبکه داشته باشد.'
-    },
-    {
-      id: 'content',
-      title: 'تولیدکنندگان محتوا و متخصصان سئو',
-      icon: PenTool,
-      image: '/images/professions/content.jpg',
-      badge: 'تولید محتوا و سئو',
-      desc: 'نگارش مقالات سئوشده ۲,۰۰۰ کلمه‌ای با لحن کاملاً فاخر و روان فارسی، سناریونویسی و ایده‌پردازی تقویم.',
-      prompt: 'یک ساختار مقاله جامع ۲۰۰۰ کلمه‌ای سئوشده با تگ‌های H2 و H3 درباره "راهنمای جامع سئو معنایی (Semantic SEO) در سال ۲۰۲۶" تدوین کن.'
-    },
-    {
-      id: 'legal',
-      title: 'وکلا، کارشناسان حقوقی و مدیران قرارداد',
-      icon: Scale,
-      image: '/images/professions/legal.jpg',
-      badge: 'حقوق و قراردادها',
-      desc: 'تحلیل بندبه‌بند قراردادهای تجاری و پیمانکاری، کشف تعهدات و ریسک‌های پنهان، و تنظیم پیش‌نویس لوایح رسمی.',
-      prompt: 'مهم‌ترین بندهای رفع تعهد و جریمه دیرکرد (Liquidated Damages) را در یک قرارداد توسعه نرم‌افزار همراه با تبصره فورس‌ماژور بنویس.'
-    },
-    {
-      id: 'business',
-      title: 'مدیران، استارتاپ‌ها و تحلیل‌گران بازار',
-      icon: TrendingUp,
-      image: '/images/professions/business.jpg',
-      badge: 'کسب‌وکار و استراتژی',
-      desc: 'تحلیل گزارش‌های فروش و اکسل، تدوین طرح کسب‌وکار (Business Plan) و مکاتبات رسمی تجاری.',
-      prompt: 'یک ایمیل رسمی و متقاعدکننده به مدیرعامل یک شرکت همکار بنویس و پیشنهاد جلسه استراتژیک برای همکاری تجاری مشترک را مطرح کن.'
-    },
-    {
-      id: 'medical',
-      title: 'پزشکان، داروسازان و محققان سلامت',
-      icon: Stethoscope,
-      image: '/images/professions/medical.jpg',
-      badge: 'پزشکی و سلامت',
-      desc: 'خلاصه‌سازی پژوهش‌های بالینی و ژورنال‌های معتبر، ترجمه دقیق اصطلاحات و تنظیم مطالعات موردی.',
-      prompt: 'جدیدترین پروتکل‌های بالینی در مدیریت دیابت نوع ۲ بر اساس استانداردهای ADA را به صورت دسته‌بندی‌شده و خلاصه بالینی شرح بده.'
-    }
-  ];
+  const galleryImages = Array.isArray(landingPageContent.galleryImages)
+    ? landingPageContent.galleryImages
+    : ((landingPageContent.gallery as any)?.images || []);
 
-  // Professional Imagery for Studio Gallery (Manifesto-aligned)
-  const galleryImages = [
-    {
-      src: '/images/gallery/journal-cover.jpg',
-      title: 'طراحی جلد ژورنال علمی',
-      tag: 'انتشارات پژوهشی',
-      prompt: 'Minimalist abstract scientific journal cover art, elegant synaptic neural network pathways connecting soft glowing data nodes, deep navy slate and warm gold tones, refined clean scientific illustration, calm and uncluttered'
-    },
-    {
-      src: '/images/gallery/tech-editorial.jpg',
-      title: 'تصویر شاخص وبلاگ فناوری',
-      tag: 'سئو و تولید محتوا',
-      prompt: 'Clean modern isometric editorial tech blog illustration, minimalist floating geometric cubes and digital paper workflow diagrams, matte titanium finish, soft diffused studio light, uncluttered, professional aesthetic'
-    },
-    {
-      src: '/images/gallery/legal-emblem.jpg',
-      title: 'تندیس مفهومی حقوق و عدالت',
-      tag: 'حقوقی و سازمانی',
-      prompt: 'Minimalist modern 3D sculptural emblem of justice balance scales, matte dark stone and brushed gold brass accents, clean minimalist dark studio background, elegant corporate symbol, uncluttered'
-    },
-    {
-      src: '/images/gallery/business-trends.jpg',
-      title: 'تصویرسازی تحلیل رشد مالی',
-      tag: 'گزارش‌های شرکتی',
-      prompt: 'Minimalist 3D architectural financial analytics chart, subtle glowing upward curved graph line on dark navy slate pedestal, refined glass milestone cubes, corporate growth indicator, clean studio lighting, uncluttered'
-    },
-    {
-      src: '/images/gallery/academic-book.jpg',
-      title: 'طراحی جلد کتاب مرجع دانشگاهی',
-      tag: 'آموزش عالی',
-      prompt: 'Refined modern academic textbook cover art, minimalist abstract geometric composition of intersecting arches and steps representing knowledge and education, warm ivory and rich slate blue, elegant and serene'
-    },
-    {
-      src: '/images/gallery/biotech-dna.jpg',
-      title: 'تصویرسازی زیست‌فناوری و ژنتیک',
-      tag: 'پزشکی و سلامت',
-      prompt: 'Clean minimalist 3D medical visualization of a glowing DNA double helix structure, floating in pristine clinical atmosphere with soft cyan and white luminous glow, ultra-clean laboratory background, uncluttered'
-    }
-  ];
-
-  // Pricing Packages with Persian Digits & Font Refinements
-  const packages = [
-    {
-      title: 'هدیه ثبت‌نام',
-      price: 'رایگان',
-      rawPrice: 0,
-      badge: 'هدیه بدون قیدوشرط',
-      tokenEstimate: `~${toPersianDigits('150,000')} توکن سهمیه`,
-      messagesCount: `حدود ${toPersianDigits('150')} تا ${toPersianDigits('200')} پیام کامل`,
-      desc: 'بلافاصله پس از ثبت‌نام به کیف پول شما واریز می‌شود تا قدرت مدل‌ها را آزادانه آزمایش کنید.',
-      features: ['دسترسی کامل به تمام مدل‌ها', 'بدون نیاز به کارت بانکی', 'تحلیل اسناد و جستجوی زنده وب'],
-      isPopular: false,
-      ctaText: 'شروع با اعتبار هدیه',
-      ctaAction: () => (isAuthenticated ? navigate('/chat') : setAuthModalOpen(true))
-    },
-    {
-      title: 'بسته برنزی (استارتر)',
-      price: toPersianDigits('49,000'),
-      rawPrice: 49000,
-      badge: 'مقرون‌به‌صرفه',
-      tokenEstimate: `~${toPersianDigits('400,000')} توکن سهمیه`,
-      messagesCount: `حدود ${toPersianDigits('300')} تا ${toPersianDigits('400')} پاسخ هوشمند`,
-      desc: 'انتخابی عالی برای پاسخ به سوالات درسی، نگارش ایمیل و خلاصه مقالات هفتگی.',
-      features: ['دسترسی به Claude 3.5 و GPT-4o', 'بدون تاریخ انقضا', 'محاسبه شفاف و دقیق به اندازه مصرف'],
-      isPopular: false,
-      ctaText: 'خرید بسته برنزی',
-      ctaAction: () => navigate('/dashboard')
-    },
-    {
-      title: 'بسته نقره‌ای',
-      price: toPersianDigits('149,000'),
-      rawPrice: 149000,
-      creditGranted: `${toPersianDigits('180,000')} تومان`,
-      badge: `پرفروش‌ترین (${toPersianDigits('20')}٪ شارژ هدیه)`,
-      tokenEstimate: `~${toPersianDigits('1,800,000')} توکن سهمیه`,
-      messagesCount: `معادل بیش از ${toPersianDigits('1,500')} پاسخ مفصل`,
-      desc: 'محبوب‌ترین انتخاب برای نویسندگان، پژوهشگران، وکلا و تولیدکنندگان محتوا.',
-      features: [`${toPersianDigits('20')}٪ اعتبار رایگان اضافه`, 'تحلیل عمیق کتاب و اسناد PDF', 'استودیوی تصویرسازی بدون سقف', 'پشتیبانی در اولویت'],
-      isPopular: true,
-      ctaText: 'انتخاب بسته نقره‌ای',
-      ctaAction: () => navigate('/dashboard')
-    },
-    {
-      title: 'بسته طلایی (حرفه‌ای)',
-      price: toPersianDigits('349,000'),
-      rawPrice: 349000,
-      creditGranted: `${toPersianDigits('450,000')} تومان`,
-      badge: `بیشترین ارزش (${toPersianDigits('30')}٪ شارژ هدیه)`,
-      tokenEstimate: `~${toPersianDigits('5,500,000')} توکن سهمیه`,
-      messagesCount: `معادل بیش از ${toPersianDigits('5,000')} پیام عمیق`,
-      desc: 'ویژه توسعه‌دهندگان، معماران نرم‌افزار، تحلیل‌گران داده و تیم‌های کاری.',
-      features: [`${toPersianDigits('30')}٪ شارژ تشویقی نقدی`, 'بالاترین اولویت سرعت پردازش', 'کدنویسی پیچیده و تحلیل دیتاست', 'اعتبار بدون انقضا'],
-      isPopular: false,
-      ctaText: 'انتخاب بسته طلایی',
-      ctaAction: () => navigate('/dashboard')
-    }
-  ];
+  const packages = landingPageContent.pricing.plans;
 
   // Dynamic Live Content State (Managed via Admin CMS Studio)
   const [dynamicVisibility, setDynamicVisibility] = useState<any>({
@@ -489,8 +254,11 @@ export const LandingPage: React.FC = () => {
         if (data.hero) setDynamicHero(data.hero);
         if (data.features) setDynamicFeatures(data.features);
         if (data.manifesto && data.manifesto.title) setDynamicManifesto(data.manifesto);
-        if (data.professions && Array.isArray(data.professions) && data.professions.length > 0) {
-          const activeOnes = data.professions.filter((p: any) => p.enabled !== false);
+        if (data.professions) {
+          const list = Array.isArray(data.professions)
+            ? data.professions
+            : (data.professions.cards || []);
+          const activeOnes = list.filter((p: any) => p && p.enabled !== false);
           if (activeOnes.length > 0) setDynamicProfessions(activeOnes);
         }
         if (data.professionsSettings) setDynamicProfessionsSettings(data.professionsSettings);
@@ -588,7 +356,8 @@ export const LandingPage: React.FC = () => {
 
   // Typewriter effect for active profession prompt
   useEffect(() => {
-    const list = dynamicProfessions && dynamicProfessions.length > 0 ? dynamicProfessions : professionCards;
+    const list = Array.isArray(dynamicProfessions) && dynamicProfessions.length > 0 ? dynamicProfessions : professionCards;
+    if (!Array.isArray(list) || list.length === 0) return;
     const currentCard = list[activeProfessionIdx] || list[0];
     if (!currentCard?.prompt) return;
     const fullText = currentCard.prompt;
@@ -608,18 +377,18 @@ export const LandingPage: React.FC = () => {
     }, 25);
 
     return () => clearInterval(timer);
-  }, [activeProfessionIdx, dynamicProfessions]);
+  }, [activeProfessionIdx, dynamicProfessions, professionCards]);
 
   // Auto-play interval for Professions Spotlight Stage
   useEffect(() => {
     if (isProfessionsPaused) return;
-    const list = dynamicProfessions && dynamicProfessions.length > 0 ? dynamicProfessions : professionCards;
-    if (!list || list.length <= 1) return;
+    const list = Array.isArray(dynamicProfessions) && dynamicProfessions.length > 0 ? dynamicProfessions : professionCards;
+    if (!Array.isArray(list) || list.length <= 1) return;
     const timer = setInterval(() => {
       setActiveProfessionIdx((prev) => (prev + 1) % list.length);
     }, 5500);
     return () => clearInterval(timer);
-  }, [isProfessionsPaused, dynamicProfessions]);
+  }, [isProfessionsPaused, dynamicProfessions, professionCards]);
 
   const copyProfessionPrompt = (text: string) => {
     navigator.clipboard.writeText(text);
@@ -1157,9 +926,15 @@ export const LandingPage: React.FC = () => {
 
         {/* ---------------- 3D Spotlight Stage with Typewriter Animated Prompts ---------------- */}
         {(() => {
-          const professionList = dynamicProfessions && dynamicProfessions.length > 0 ? dynamicProfessions : professionCards;
+          const professionList = (Array.isArray(dynamicProfessions) && dynamicProfessions.length > 0)
+            ? dynamicProfessions
+            : professionCards;
+          if (!Array.isArray(professionList) || professionList.length === 0) return null;
           const currentProfession = professionList[activeProfessionIdx] || professionList[0];
-          const CurrentIcon = (typeof currentProfession.icon === 'string' ? ICON_MAP[currentProfession.icon] : currentProfession.icon) || GraduationCap;
+          if (!currentProfession) return null;
+          const CurrentIcon = (currentProfession.icon && typeof currentProfession.icon === 'string'
+            ? ICON_MAP[currentProfession.icon]
+            : currentProfession.icon) || GraduationCap;
 
           return (
             <div className="space-y-6">
@@ -1287,7 +1062,8 @@ export const LandingPage: React.FC = () => {
 
               {/* Bottom Miniature Cards Grid (Quick Jump to any of the 6 Professions) */}
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-                {professionList.map((p, idx) => {
+                {Array.isArray(professionList) && professionList.map((p, idx) => {
+                  if (!p) return null;
                   const isActive = activeProfessionIdx === idx;
                   const thumbAnim = idx % 2 === 0 ? 'reveal-from-right' : 'reveal-from-left';
                   const staggerClass = `stagger-${(idx % 6) + 1}`;
@@ -1331,6 +1107,7 @@ export const LandingPage: React.FC = () => {
       {/* ---------------- 4. Hyperrealistic Image Gallery Showcase (ANIMATED 3D CLAY CAROUSEL) ---------------- */}
       {dynamicVisibility.gallery !== false && dynamicGallerySettings?.enabled !== false && (() => {
         const baseGallery = (dynamicGallery && dynamicGallery.length > 0) ? dynamicGallery : galleryImages;
+        if (!Array.isArray(baseGallery) || baseGallery.length === 0) return null;
         const loopedGallery = [...baseGallery, ...baseGallery, ...baseGallery];
         const activeDotIndex = ((gallerySlide % baseGallery.length) + baseGallery.length) % baseGallery.length;
 

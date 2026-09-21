@@ -17,12 +17,56 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme {
+  /* Fonts */
   --font-sans: var(--user-font-family);
   --font-display: var(--font-display);
   --font-ui: var(--font-ui);
   --font-reading: var(--font-reading);
   --font-chat: var(--font-chat);
   --font-mono: var(--font-mono);
+
+  /* Colors - mapped from CSS variables */
+  --color-bg-main: var(--bg-main);
+  --color-card-bg: var(--card-bg);
+  --color-input-bg: var(--input-bg);
+  --color-btn-bg: var(--btn-bg);
+  --color-btn-hover: var(--btn-hover);
+  --color-header-bg: var(--header-bg);
+  --color-sidebar-bg: var(--sidebar-bg);
+  --color-bubble-user-bg: var(--bubble-user-bg);
+  --color-bubble-ai-bg: var(--bubble-ai-bg);
+  --color-text-main: var(--text-main);
+  --color-text-muted: var(--text-muted);
+  --color-text-dim: var(--text-dim);
+  --color-border-subtle: var(--border-subtle);
+  --color-border-strong: var(--border-strong);
+  --color-card-border: var(--card-border);
+  --color-accent-primary: var(--accent-primary);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-text: var(--accent-text);
+  --color-error-bg: var(--error-bg);
+  --color-error-text: var(--error-text);
+  --color-error-border: var(--error-border);
+
+  /* Shadows - mapped from CSS variables */
+  --shadow-out: var(--clay-shadow-out);
+  --shadow-out-sm: var(--clay-shadow-out-sm);
+  --shadow-out-hover: var(--clay-shadow-out-hover);
+  --shadow-in: var(--clay-shadow-in);
+  --shadow-in-deep: var(--clay-shadow-in-deep);
+
+  /* Radius - mapped from CSS variables */
+  --radius-card: var(--radius-card);
+  --radius-modal: var(--radius-modal);
+  --radius-sidebar: var(--radius-sidebar);
+  --radius-input: var(--radius-input);
+  --radius-btn: var(--radius-btn);
+  --radius-icon-btn: var(--radius-icon-btn);
+  --radius-badge: var(--radius-badge);
+  --radius-tab: var(--radius-tab);
+  --radius-bubble: var(--radius-bubble);
+
+  /* Legacy color aliases for gradual migration */
   --color-subtle: var(--border-subtle);
   --color-strong: var(--border-strong);
 }
@@ -1948,8 +1992,134 @@ html.dark[data-ui-style="neumorphic"] .clay-icon {
   html[data-ui-style="neumorphic"] .clay-btn-amber-thick,
   html[data-ui-style="neumorphic"] .dark .clay-btn-amber-thick,
   html.dark[data-ui-style="neumorphic"] .clay-btn-amber-thick {
+    background: var(--btn-bg) !important;
+    background-image: none !important;
+    box-shadow: var(--clay-shadow-out) !important;
+    border: none !important;
+  }
+
+  /* Signature Color Buttons - neumorphic overrides */
+  html[data-ui-style="neumorphic"] .clay-btn-primary-thick,
+  html[data-ui-style="neumorphic"] .dark .clay-btn-primary-thick,
+  html.dark[data-ui-style="neumorphic"] .clay-btn-primary-thick,
+  html[data-ui-style="neumorphic"] .clay-btn-emerald-thick,
+  html[data-ui-style="neumorphic"] .dark .clay-btn-emerald-thick,
+  html.dark[data-ui-style="neumorphic"] .clay-btn-emerald-thick,
+  html[data-ui-style="neumorphic"] .clay-btn-amber-thick,
+  html[data-ui-style="neumorphic"] .dark .clay-btn-amber-thick,
+  html.dark[data-ui-style="neumorphic"] .clay-btn-amber-thick,
+  html[data-ui-style="neumorphic"] .clay-btn-flowing-glow,
+  html.dark[data-ui-style="neumorphic"] .clay-btn-flowing-glow,
+  html[data-ui-style="neumorphic"] .clay-gold,
+  html[data-ui-style="neumorphic"] .dark .clay-gold,
+  html.dark[data-ui-style="neumorphic"] .clay-gold,
+  html[data-ui-style="neumorphic"] .clay-rose,
+  html[data-ui-style="neumorphic"] .dark .clay-rose,
+  html.dark[data-ui-style="neumorphic"] .clay-rose,
+  html[data-ui-style="neumorphic"] .clay-charcoal,
+  html[data-ui-style="neumorphic"] .dark .clay-charcoal,
+  html.dark[data-ui-style="neumorphic"] .clay-charcoal,
+  html[data-ui-style="neumorphic"] .clay-indigo,
+  html[data-ui-style="neumorphic"] .dark .clay-indigo,
+  html.dark[data-ui-style="neumorphic"] .clay-indigo {
+    background: var(--btn-bg) !important;
+    background-image: none !important;
+    box-shadow: var(--clay-shadow-out) !important;
+    border: none !important;
+    color: var(--text-main) !important;
+  }
+
+  /* Signature Color Circles/Badges - neumorphic overrides */
+  html[data-ui-style="neumorphic"] .clay-gold-circle,
+  html[data-ui-style="neumorphic"] .dark .clay-gold-circle,
+  html.dark[data-ui-style="neumorphic"] .clay-gold-circle,
+  html[data-ui-style="neumorphic"] .clay-rose-circle,
+  html[data-ui-style="neumorphic"] .dark .clay-rose-circle,
+  html.dark[data-ui-style="neumorphic"] .clay-rose-circle,
+  html[data-ui-style="neumorphic"] .clay-charcoal-circle,
+  html[data-ui-style="neumorphic"] .dark .clay-charcoal-circle,
+  html.dark[data-ui-style="neumorphic"] .clay-charcoal-circle,
+  html[data-ui-style="neumorphic"] .clay-indigo-circle,
+  html[data-ui-style="neumorphic"] .dark .clay-indigo-circle,
+  html.dark[data-ui-style="neumorphic"] .clay-indigo-circle,
+  html[data-ui-style="neumorphic"] .clay-crown-badge {
+    background: var(--btn-bg) !important;
+    box-shadow: var(--clay-shadow-out-sm) !important;
+    border: none !important;
+  }
+
+  /* Landing Page Exclusive Classes - neumorphic overrides */
+  html[data-ui-style="neumorphic"] .clay-card-elevated,
+  html[data-ui-style="neumorphic"] .dark .clay-card-elevated,
+  html.dark[data-ui-style="neumorphic"] .clay-card-elevated {
+    background: var(--card-bg);
     box-shadow: var(--clay-shadow-out);
     border: none;
+    border-radius: var(--radius-card);
+  }
+
+  html[data-ui-style="neumorphic"] .clay-debossed-socket,
+  html[data-ui-style="neumorphic"] .dark .clay-debossed-socket,
+  html.dark[data-ui-style="neumorphic"] .clay-debossed-socket,
+  html[data-ui-style="neumorphic"] .clay-icon-debossed,
+  html[data-ui-style="neumorphic"] .dark .clay-icon-debossed,
+  html.dark[data-ui-style="neumorphic"] .clay-icon-debossed {
+    background: var(--input-bg);
+    box-shadow: var(--clay-shadow-in);
+    border: none;
+    border-radius: var(--radius-input);
+  }
+
+  html[data-ui-style="neumorphic"] .clay-pill-thick,
+  html[data-ui-style="neumorphic"] .dark .clay-pill-thick,
+  html.dark[data-ui-style="neumorphic"] .clay-pill-thick {
+    background: var(--btn-bg);
+    box-shadow: var(--clay-shadow-out-sm);
+    border: none;
+    border-radius: var(--radius-badge);
+  }
+
+  /* Landing Page Flowing Glow Button - neumorphic flat version */
+  html[data-ui-style="neumorphic"] .btn-flowing-glow,
+  html.dark[data-ui-style="neumorphic"] .btn-flowing-glow {
+    background: var(--btn-bg) !important;
+    background-image: none !important;
+    animation: none !important;
+    box-shadow: var(--clay-shadow-out) !important;
+    border: none !important;
+    color: var(--text-main) !important;
+  }
+
+  /* Landing Page Gold/Rose/Charcoal/Indigo color swatches - neumorphic flat */
+  html[data-ui-style="neumorphic"] .clay-gold,
+  html[data-ui-style="neumorphic"] .dark .clay-gold,
+  html.dark[data-ui-style="neumorphic"] .clay-gold,
+  html[data-ui-style="neumorphic"] .clay-rose,
+  html[data-ui-style="neumorphic"] .dark .clay-rose,
+  html.dark[data-ui-style="neumorphic"] .clay-rose,
+  html[data-ui-style="neumorphic"] .clay-charcoal,
+  html[data-ui-style="neumorphic"] .dark .clay-charcoal,
+  html.dark[data-ui-style="neumorphic"] .clay-charcoal,
+  html[data-ui-style="neumorphic"] .clay-indigo,
+  html[data-ui-style="neumorphic"] .dark .clay-indigo,
+  html.dark[data-ui-style="neumorphic"] .clay-indigo {
+    background: var(--btn-bg) !important;
+    box-shadow: var(--clay-shadow-out) !important;
+    border: none !important;
+    color: var(--text-main) !important;
+  }
+
+  /* Landing Page noglow variants - neumorphic */
+  html[data-ui-style="neumorphic"] .clay-gold-noglow,
+  html[data-ui-style="neumorphic"] .dark .clay-gold-noglow,
+  html.dark[data-ui-style="neumorphic"] .clay-gold-noglow,
+  html[data-ui-style="neumorphic"] .clay-rose-noglow,
+  html[data-ui-style="neumorphic"] .dark .clay-rose-noglow,
+  html.dark[data-ui-style="neumorphic"] .clay-rose-noglow {
+    background: var(--btn-bg) !important;
+    box-shadow: var(--clay-shadow-out) !important;
+    border: none !important;
+    color: var(--text-main) !important;
   }
 
 /* ==========================================================================

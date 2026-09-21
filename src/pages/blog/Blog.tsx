@@ -304,22 +304,22 @@ export function Blog() {
  <div className="flex flex-col min-h-screen clay-landing-bg transition-colors duration-300 font-sans">
  <header className="sticky top-0 z-40 clay-header backdrop-blur-xl border-b border-[var(--border-subtle)]">
  <div className="container mx-auto px-4 h-16 flex items-center justify-between max-w-5xl">
- {selectedPost ? (
- <span className="text-xl font-black bg-gradient-to-l from-emerald-600 to-teal-600 bg-clip-text text-transparent flex items-center gap-2">
- مجله هوش مصنوعی
- </span>
- ) : (
- <h1 className="text-xl font-black bg-gradient-to-l from-emerald-600 to-teal-600 bg-clip-text text-transparent flex items-center gap-2">
- <BookOpen size={24} className="text-emerald-600" />
- مجله هوش مصنوعی
- </h1>
- )}
+{selectedPost ? (
+  <span className="text-xl font-black bg-[var(--gemini-gradient)] bg-clip-text text-transparent flex items-center gap-2">
+  مجله هوش مصنوعی
+  </span>
+  ) : (
+  <h1 className="text-xl font-black bg-[var(--gemini-gradient)] bg-clip-text text-transparent flex items-center gap-2">
+  <BookOpen size={24} className="text-[var(--color-accent-primary)]" />
+  مجله هوش مصنوعی
+  </h1>
+  )}
  <div className="flex items-center gap-2.5">
             <Link 
               to="/dashboard"
-              style={{ borderRadius: '12px' }}
-              className="h-10 px-3.5 clay-btn flex items-center gap-2 text-sm font-bold text-zinc-700 dark:text-zinc-200 transition-all cursor-pointer hover:text-emerald-600 dark:hover:text-emerald-400"
+              className="h-10 px-3.5 clay-btn flex items-center gap-2 text-sm font-bold text-[var(--color-text-main)] transition-all cursor-pointer hover:text-[var(--color-accent-primary)] dark:hover:text-[var(--color-accent-text)]"
               title="داشبورد کاربری"
+              aria-label="داشبورد کاربری"
             >
               <LayoutDashboard size={17} />
               <span className="hidden sm:inline">داشبورد</span>
@@ -332,9 +332,9 @@ export function Blog() {
 
             <button 
               onClick={handleBack}
-              style={{ borderRadius: '12px' }}
-              className="h-10 px-3.5 clay-btn flex items-center gap-1.5 text-sm font-bold text-zinc-700 dark:text-zinc-200 transition-all cursor-pointer hover:text-emerald-600 dark:hover:text-emerald-400"
+              className="h-10 px-3.5 clay-btn flex items-center gap-1.5 text-sm font-bold text-[var(--color-text-main)] transition-all cursor-pointer hover:text-[var(--color-accent-primary)] dark:hover:text-[var(--color-accent-text)]"
               title={selectedPost ? 'بازگشت به لیست اخبار' : 'بازگشت به چت'}
+              aria-label={selectedPost ? 'بازگشت به لیست اخبار' : 'بازگشت به چت'}
             >
               {selectedPost ? (
                 <>
@@ -361,15 +361,15 @@ export function Blog() {
  </div>
  ) : selectedPost ? (
  <article className="max-w-3xl mx-auto animate-fadeIn">
- {selectedPost.image && (
- <div className="mb-8 w-full overflow-hidden rounded-2xl shadow-sm border border-[var(--card-border)]  aspect-video">
- <img 
- src={selectedPost.image} 
- alt={selectedPost.title} 
- className="w-full h-full object-cover"
- />
- </div>
- )}
+{selectedPost.image && (
+  <div className="mb-8 w-full overflow-hidden rounded-card shadow-sm border border-[var(--card-border)]  aspect-video">
+  <img 
+  src={selectedPost.image} 
+  alt={selectedPost.title} 
+  className="w-full h-full object-cover"
+  />
+  </div>
+  )}
  
  <div className="mb-8 text-right">
  <h1 className="text-xl md:text-2xl font-black leading-snug mb-4 clay-news-title">
@@ -392,14 +392,14 @@ export function Blog() {
  </div>
  </div>
  
- <div className="flex items-center gap-2">
- <button onClick={shareOnTelegram} className="p-2 bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400 rounded-full hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-colors">
- <Send size={16} />
- </button>
- <button onClick={shareOnX} className="p-2 clay-surface text-[#525d75]  dark:text-[#9aa5bc] rounded-full transition-colors">
- <Share2 size={16} />
- </button>
- </div>
+<div className="flex items-center gap-2">
+<button onClick={shareOnTelegram} className="p-2 bg-[var(--color-accent-primary)]/10 text-[var(--color-accent-primary)] dark:bg-[var(--color-accent-primary)]/20 dark:text-[var(--color-accent-text)] rounded-badge hover:bg-[var(--color-accent-primary)]/20 dark:hover:bg-[var(--color-accent-primary)]/30 transition-colors">
+<Send size={16} />
+</button>
+<button onClick={shareOnX} className="p-2 clay-surface rounded-badge text-[var(--color-text-muted)] dark:text-[var(--color-text-dim)] transition-colors">
+<Share2 size={16} />
+</button>
+</div>
  </div>
  </div>
  

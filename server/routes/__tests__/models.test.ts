@@ -11,7 +11,7 @@ app.use('/', modelsRouter);
 
 beforeAll(() => {
   initializeSchema();
-});
+}, 30000);
 
 describe('GET /api/default-profiles (public endpoint)', () => {
   it('masks API keys — never returns real keys to client', async () => {

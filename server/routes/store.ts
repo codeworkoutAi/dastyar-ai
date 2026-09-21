@@ -264,7 +264,7 @@ router.post('/checkout-manual', checkoutLimiter, requireAuth, (req: any, res) =>
 });
 
 // GET /api/store/mock-payment (Dummy gateway to simulate successful payment)
-router.get('/mock-payment', (req, res) => {
+router.get('/mock-payment', requireAuth, (req: any, res) => {
   const rawOrderId = typeof req.query.orderId === 'string' ? req.query.orderId : '';
   if (!rawOrderId || !/^[a-zA-Z0-9_-]{1,64}$/.test(rawOrderId)) {
     return res.status(400).send('شماره سفارش نامعتبر است');
@@ -303,7 +303,7 @@ router.get('/mock-payment', (req, res) => {
 });
 
 // GET /api/store/mock-callback (Handles the return from Dummy gateway)
-router.get('/mock-callback', (req, res) => {
+router.get('/mock-callback', requireAuth, async (req: any, res) => {
   const rawOrderId = typeof req.query.orderId === 'string' ? req.query.orderId : '';
   const status = typeof req.query.status === 'string' ? req.query.status : '';
   
@@ -319,6 +319,11 @@ router.get('/mock-callback', (req, res) => {
       
       if (!order || order.paymentStatus !== 'pending') {
         return res.redirect('/store?payment=failed');
+      }
+
+      // Verify the authenticated user owns this order
+      if (order.userId !== req.user.id) {
+        return res.redirect('/store?payment=failed&msg=unauthorized');
       }
 
       // Check if wallet top-up or digital pricing plan

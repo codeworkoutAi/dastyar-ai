@@ -10,7 +10,7 @@ interface ClayInputProps extends React.InputHTMLAttributes<HTMLInputElement | HT
 export const ClayInput = forwardRef<HTMLInputElement | HTMLTextAreaElement, ClayInputProps>(
  ({ multiline = false, label, error, className = '', ...props }, ref) => {
  const Component = multiline ? 'textarea' : 'input';
- const baseClass = `clay-inset-thick w-full px-4 py-3 rounded-xl text-xs outline-none focus:ring-1 focus:ring-zinc-400 dark:focus:ring-zinc-500 transition-all ${
+ const baseClass = `clay-inset-thick w-full px-4 py-3 rounded-input text-xs outline-none focus:ring-1 focus:ring-zinc-400 dark:focus:ring-zinc-500 transition-all ${
  multiline ? 'resize-y min-h-[80px]' : ''
  } ${className}`;
 

@@ -17,9 +17,38 @@ export function getTelegramBot(): Telegraf<any> | null {
 }
 const RLM = '\u200F';
 const pendingCheckouts = new Map<string, string>(); // tgId -> productId
-const pendingReceipts = new Map<string, string>(); // tgId -> orderId
+// pendingReceipts now persisted in DB (telegram_pending_receipts table)
 const activeSupportUsers = new Set<string>(); // Users currently in support mode
 const adminMessageMap = new Map<number, string>(); // Maps admin message IDs to user telegram IDs
+
+// Helper functions for pending receipts (DB-backed)
+async function setPendingReceipt(tgId: string, orderId: string) {
+  try {
+    db.prepare('INSERT OR REPLACE INTO telegram_pending_receipts (tgId, orderId) VALUES (?, ?)').run(tgId, orderId);
+    syncDatabase();
+  } catch (e) {
+    console.error('[Telegram] Failed to set pending receipt:', e);
+  }
+}
+
+async function getPendingReceipt(tgId: string): Promise<string | null> {
+  try {
+    const row = db.prepare('SELECT orderId FROM telegram_pending_receipts WHERE tgId = ?').get(tgId) as any;
+    return row?.orderId || null;
+  } catch (e) {
+    console.error('[Telegram] Failed to get pending receipt:', e);
+    return null;
+  }
+}
+
+async function deletePendingReceipt(tgId: string) {
+  try {
+    db.prepare('DELETE FROM telegram_pending_receipts WHERE tgId = ?').run(tgId);
+    syncDatabase();
+  } catch (e) {
+    console.error('[Telegram] Failed to delete pending receipt:', e);
+  }
+}
 
 export function startTelegramBot() {
   const token = process.env.TELEGRAM_BOT_TOKEN;
@@ -586,7 +615,7 @@ async function sendStoreShowcase(ctx: any, page: number = 0, isEdit: boolean = f
   bot.action(/^c2c_(.+)$/, async (ctx) => {
     const orderId = ctx.match[1];
     const tgId = ctx.from.id.toString();
-    pendingReceipts.set(tgId, orderId);
+    await setPendingReceipt(tgId, orderId);
     
     const c2cMessage = 
       `💳 **پرداخت کارت به کارت**\n\n` +
@@ -683,16 +712,16 @@ async function sendStoreShowcase(ctx: any, page: number = 0, isEdit: boolean = f
     const ADMIN_ID = process.env.TELEGRAM_ADMIN_ID || '';
 
     // Check if waiting for receipt photo
-    if (pendingReceipts.has(tgId)) {
+    const pendingOrderId = await getPendingReceipt(tgId);
+    if (pendingOrderId) {
       if (ctx.message.photo || ctx.message.document) {
-        const orderId = pendingReceipts.get(tgId);
-        pendingReceipts.delete(tgId);
+        await deletePendingReceipt(tgId);
         
         if (ADMIN_ID) {
-          const order = db.prepare('SELECT o.*, p.title as productTitle, p.price as productPrice FROM orders o LEFT JOIN products p ON o.productId = p.id WHERE o.id = ?').get(orderId) as any;
+          const order = db.prepare('SELECT o.*, p.title as productTitle, p.price as productPrice FROM orders o LEFT JOIN products p ON o.productId = p.id WHERE o.id = ?').get(pendingOrderId) as any;
           const priceFa = Number(order?.productPrice || 0).toLocaleString('fa-IR');
           
-          await ctx.telegram.sendMessage(ADMIN_ID, `🧾 **فیش واریزی جدید (کارت به کارت)**\n\n📦 **محصول:** ${order?.productTitle}\n💰 **مبلغ:** ${priceFa} تومان\n🔢 **سفارش:** \`${orderId}\`\n👤 **کاربر:** ${ctx.from.first_name}\n🆔 **آیدی:** \`${tgId}\``, { parse_mode: 'Markdown' });
+          await ctx.telegram.sendMessage(ADMIN_ID, `🧾 **فیش واریزی جدید (کارت به کارت)**\n\n📦 **محصول:** ${order?.productTitle}\n💰 **مبلغ:** ${priceFa} تومان\n🔢 **سفارش:** \`${pendingOrderId}\`\n👤 **کاربر:** ${ctx.from.first_name}\n🆔 **آیدی:** \`${tgId}\``, { parse_mode: 'Markdown' });
           await ctx.telegram.copyMessage(ADMIN_ID, ctx.chat.id, ctx.message.message_id);
         }
         

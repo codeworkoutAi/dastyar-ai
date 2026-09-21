@@ -529,6 +529,54 @@ export function initNewsCron() {
     timezone: 'Asia/Tehran'
   });
 
+  // Stuck-order reconciliation: run every hour to find orders pending > 24h
+  cron.schedule('0 * * * *', async () => {
+    console.log('[NewsCron] Running stuck-order reconciliation check...');
+    appendCronLog('INFO', 'Stuck-order reconciliation check triggered.');
+    try {
+      const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+      const stuckOrders = db.prepare(`
+        SELECT o.id, o.userId, o.amount, o.createdAt, p.title as productTitle, u.telegramId, u.name
+        FROM orders o
+        LEFT JOIN products p ON o.productId = p.id
+        LEFT JOIN users u ON o.userId = u.id
+        WHERE o.paymentStatus = 'pending' AND o.createdAt < ?
+      `).all(cutoff) as any[];
+
+      if (stuckOrders.length > 0) {
+        console.log(`[NewsCron] Found ${stuckOrders.length} stuck orders pending > 24h`);
+        appendCronLog('WARN', `Found ${stuckOrders.length} stuck orders`, { orderIds: stuckOrders.map(o => o.id) });
+
+        // Notify admin via Telegram
+        const ADMIN_ID = process.env.TELEGRAM_ADMIN_ID;
+        const currentBot = getTelegramBot() || bot;
+        if (ADMIN_ID && currentBot) {
+          for (const order of stuckOrders) {
+            const msg = `⚠️ **سفارش معلق بیش از ۲۴ ساعت**\n\n` +
+                        `📦 **محصول:** ${order.productTitle || 'نامشخص'}\n` +
+                        `💰 **مبلغ:** ${Number(order.amount || 0).toLocaleString('fa-IR')} تومان\n` +
+                        `🔢 **سفارش:** \`${order.id}\`\n` +
+                        `👤 **کاربر:** ${order.name || 'نامشخص'} (\`${order.telegramId || 'بدون آیدی'}\`)\n` +
+                        `⏰ **ایجاد شده:** ${new Date(order.createdAt).toLocaleString('fa-IR')}\n\n` +
+                        `لطفاً در پنل ادمین بررسی و اقدام کنید.`;
+            try {
+              await currentBot.telegram.sendMessage(ADMIN_ID, msg, { parse_mode: 'Markdown' });
+            } catch (e) {
+              console.error('[NewsCron] Failed to notify admin of stuck order:', e);
+            }
+          }
+        }
+      } else {
+        console.log('[NewsCron] No stuck orders found.');
+      }
+    } catch (err) {
+      console.error('[NewsCron] Stuck-order reconciliation error:', err);
+      appendCronLog('ERROR', 'Stuck-order reconciliation failed', err);
+    }
+  }, {
+    timezone: 'Asia/Tehran'
+  });
+
   const initMsg = 'Scheduled AI News fetcher initialized for daily 08:00 AM (Asia/Tehran).';
   console.log(`[NewsCron] ${initMsg}`);
   appendCronLog('INFO', initMsg);

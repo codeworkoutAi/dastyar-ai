@@ -35,16 +35,16 @@ export function ClayButton({ variant = 'primary', children, className = '', ...p
  break;
  }
 
- // Base styling for all buttons to keep consistency
- let defaultClasses = 'px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed';
- 
- if (variant === 'icon') {
-   defaultClasses = 'w-8 h-8 rounded-xl flex items-center justify-center transition-colors';
- } else if (variant === 'text') {
-   defaultClasses = 'transition-colors disabled:opacity-50 disabled:cursor-not-allowed'; // minimal styles for text links
- } else {
-   defaultClasses += ' shadow-xs';
- }
+// Base styling for all buttons to keep consistency
+  let defaultClasses = 'px-4 py-2 rounded-btn text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed';
+  
+  if (variant === 'icon') {
+    defaultClasses = 'w-8 h-8 rounded-icon-btn flex items-center justify-center transition-colors';
+  } else if (variant === 'text') {
+    defaultClasses = 'transition-colors disabled:opacity-50 disabled:cursor-not-allowed'; // minimal styles for text links
+  } else {
+    defaultClasses += ' shadow-xs';
+  }
 
  return (
  <button className={`${baseClass} ${defaultClasses} ${className}`} {...props}>

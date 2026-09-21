@@ -165,9 +165,9 @@ export const Sidebar: React.FC = React.memo(() => {
                         }
                     }
                 }}
-                className={`group relative flex flex-col p-2.5 rounded-2xl cursor-pointer transition-all duration-150 border-transparent ${isActive
-                    ? 'bg-gradient-to-r from-blue-500/10 via-indigo-500/10 to-purple-500/10 dark:from-blue-500/15 dark:via-indigo-500/15 dark:to-purple-500/15 border border-indigo-500/30 text-zinc-900 dark:text-zinc-100 shadow-xs'
-                    : 'hover:bg-zinc-200/60 dark:hover:bg-zinc-800/40 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200'
+                className={`group relative flex flex-col p-2.5 rounded-card cursor-pointer transition-all duration-150 border-transparent ${isActive
+                    ? 'bg-[var(--gemini-gradient-subtle)] border-[var(--color-accent-primary)]/30 text-[var(--color-text-main)] dark:text-[var(--color-text-main)] shadow-xs'
+                    : 'hover:bg-[var(--color-border-subtle)] dark:hover:bg-[var(--color-border-strong)] text-[var(--color-text-muted)] dark:text-[var(--color-text-dim)] hover:text-[var(--color-text-main)] dark:hover:text-[var(--color-text-main)]'
                     }`}
             >
                 <div className="flex items-center justify-between gap-2">
@@ -182,12 +182,12 @@ export const Sidebar: React.FC = React.memo(() => {
                                     if (e.key === 'Escape') setEditingId(null);
                                 }}
                                 autoFocus
-                                className="w-full text-xs sm:text-sm px-3 py-1.5 rounded-xl bg-white  border border-blue-500 text-zinc-900 dark:text-zinc-100 focus:outline-hidden"
+                                className="w-full text-xs sm:text-sm px-3 py-1.5 rounded-input bg-[var(--color-input-bg)] border border-[var(--color-border-strong)] text-[var(--color-text-main)] dark:text-[var(--color-text-main)] focus:outline-hidden"
                             />
                             <Tooltip content="ذخیره">
                                 <button
                                     onClick={() => handleSaveRename(conv.id)}
-                                    className="clay-btn-primary hover:bg-blue-500 text-white p-1.5 rounded-xl cursor-pointer"
+                                    className="clay-btn-primary p-1.5 rounded-btn cursor-pointer"
                                     aria-label="Save title"
                                 >
                                     <Check className="w-4 h-4" />
@@ -196,7 +196,7 @@ export const Sidebar: React.FC = React.memo(() => {
                             <Tooltip content="انصراف">
                                 <button
                                     onClick={() => setEditingId(null)}
-                                    className="bg-zinc-700 hover:bg-zinc-600 text-zinc-700 dark:text-zinc-300 p-1.5 rounded-xl cursor-pointer"
+                                    className="bg-[var(--color-input-bg)] hover:bg-[var(--color-input-bg)]/80 text-[var(--color-text-main)] p-1.5 rounded-btn cursor-pointer"
                                     aria-label="Cancel rename"
                                 >
                                     <X className="w-4 h-4" />
@@ -204,24 +204,24 @@ export const Sidebar: React.FC = React.memo(() => {
                             </Tooltip>
                         </div>
                     ) : isDeleting ? (
-                        <div className="flex items-center justify-between w-full bg-red-950/80 border border-red-500/50 rounded-xl p-2 text-xs text-red-200" onClick={(e) => e.stopPropagation()}>
+                        <div className="flex items-center justify-between w-full bg-[var(--color-error-bg)] border border-[var(--color-error-border)] rounded-card p-2 text-xs text-[var(--color-error-text)]" onClick={(e) => e.stopPropagation()}>
                             <span>حذف این گفتگو؟</span>
                             <div className="flex items-center gap-1.5">
-                                <button
-                                    onClick={() => {
-                                        deleteConversation(conv.id);
-                                        setConfirmDeleteId(null);
-                                    }}
-                                    className="px-2 py-1 rounded-lg bg-red-600 hover:bg-red-500 text-white font-bold text-[11px] cursor-pointer"
-                                >
-                                    بله
-                                </button>
-                                <button
-                                    onClick={() => setConfirmDeleteId(null)}
-                                    className="px-2 py-1 rounded-lg bg-white  hover:clay-surface dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 text-[11px] cursor-pointer"
-                                >
-                                    خیر
-                                </button>
+<button
+                                onClick={() => {
+                                    deleteConversation(conv.id);
+                                    setConfirmDeleteId(null);
+                                }}
+                                className="px-2 py-1 rounded-btn bg-[var(--color-error-bg)] hover:bg-[var(--color-error-bg)]/80 text-[var(--color-error-text)] font-bold text-[11px] cursor-pointer"
+                            >
+                                بله
+                            </button>
+                            <button
+                                onClick={() => setConfirmDeleteId(null)}
+                                className="px-2 py-1 rounded-btn bg-[var(--color-input-bg)] hover:bg-[var(--color-input-bg)]/80 text-[var(--color-text-main)] dark:text-[var(--color-text-main)] text-[11px] cursor-pointer"
+                            >
+                                خیر
+                            </button>
                             </div>
                         </div>
                     ) : (
@@ -240,9 +240,9 @@ export const Sidebar: React.FC = React.memo(() => {
                                             e.stopPropagation();
                                             updateConversation(conv.id, c => ({ ...c, isPinned: !c.isPinned }));
                                         }}
-                                        className={`p-1.5 rounded-lg transition-all cursor-pointer ${conv.isPinned
-                                            ? 'text-amber-500 dark:text-amber-400 bg-amber-400/15 opacity-100'
-                                            : 'opacity-60 hover:opacity-100 hover:bg-black/5 dark:hover:bg-white/10 text-zinc-700 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200'
+                                        className={`p-1.5 rounded-btn transition-all cursor-pointer ${conv.isPinned
+                                            ? 'text-amber-400 bg-amber-400/15 opacity-100'
+                                            : 'opacity-60 hover:opacity-100 hover:bg-[var(--color-input-bg)] text-[var(--color-text-muted)] dark:text-[var(--color-text-dim)] hover:text-[var(--color-text-main)] dark:hover:text-[var(--color-text-main)]'
                                             }`}
                                         aria-label="Pin conversation"
                                     >
@@ -253,7 +253,7 @@ export const Sidebar: React.FC = React.memo(() => {
                                 <Tooltip content="ویرایش عنوان">
                                     <button
                                         onClick={(e) => handleStartRename(e, conv)}
-                                        className="p-1.5 rounded-lg opacity-60 hover:opacity-100 hover:bg-black/5 dark:hover:bg-white/10 text-zinc-700 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200 transition-all cursor-pointer"
+                                        className="p-1.5 rounded-btn opacity-60 hover:opacity-100 hover:bg-[var(--color-input-bg)] text-[var(--color-text-muted)] dark:text-[var(--color-text-dim)] hover:text-[var(--color-text-main)] dark:hover:text-[var(--color-text-main)] transition-all cursor-pointer"
                                         aria-label="Rename conversation"
                                     >
                                         <PenLinearIcon className="w-3.5 h-3.5" />
@@ -266,7 +266,7 @@ export const Sidebar: React.FC = React.memo(() => {
                                             e.stopPropagation();
                                             exportToJson([conv]);
                                         }}
-                                        className="p-1.5 rounded-lg opacity-60 hover:opacity-100 hover:bg-black/5 dark:hover:bg-white/10 text-zinc-700 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200 transition-all cursor-pointer"
+                                        className="p-1.5 rounded-btn opacity-60 hover:opacity-100 hover:bg-[var(--color-input-bg)] text-[var(--color-text-muted)] dark:text-[var(--color-text-dim)] hover:text-[var(--color-text-main)] dark:hover:text-[var(--color-text-main)] transition-all cursor-pointer"
                                         aria-label="Export conversation"
                                     >
                                         <DownloadMinimalisticLinearIcon className="w-3.5 h-3.5" />
@@ -279,7 +279,7 @@ export const Sidebar: React.FC = React.memo(() => {
                                             e.stopPropagation();
                                             setConfirmDeleteId(conv.id);
                                         }}
-                                        className="p-1.5 rounded-lg opacity-60 hover:opacity-100 hover:bg-red-50 dark:hover:bg-red-500/10 text-zinc-700 dark:text-zinc-400 hover:text-red-600 dark:hover:text-red-400 transition-all cursor-pointer"
+                                        className="p-1.5 rounded-btn opacity-60 hover:opacity-100 hover:bg-[var(--color-error-bg)]/10 text-[var(--color-text-muted)] dark:text-[var(--color-text-dim)] hover:text-[var(--color-error-text)] dark:hover:text-[var(--color-error-text)] transition-all cursor-pointer"
                                         aria-label="Delete conversation"
                                     >
                                         <TrashBinMinimalisticLinearIcon className="w-3.5 h-3.5" />
@@ -328,9 +328,9 @@ export const Sidebar: React.FC = React.memo(() => {
                 <div className="p-3 pb-2.5 shrink-0 border-b border-[var(--card-border)]  relative" ref={userMenuRef}>
                     <div className="flex items-center justify-between gap-2">
                         {isAuthenticated ? (
-                            <button
-                                onClick={() => setUserMenuOpen(!userMenuOpen)}
-                                className="flex items-center justify-between p-2 rounded-xl hover:bg-zinc-200 dark:hover:bg-zinc-700/80 transition-all cursor-pointer flex-1 text-right"
+<button
+                            onClick={() => setUserMenuOpen(!userMenuOpen)}
+                            className="flex items-center justify-between p-2 rounded-btn hover:bg-[var(--color-input-bg)] dark:hover:bg-[var(--color-input-bg)]/80 transition-all cursor-pointer flex-1 text-right"
                             >
                                 <div className="flex items-center gap-2.5 overflow-hidden">
                                     <img
@@ -342,7 +342,7 @@ export const Sidebar: React.FC = React.memo(() => {
                                             const letter = user?.name?.charAt(0).toUpperCase() || (user?.phone ? user.phone.slice(-2) : user?.email?.charAt(0).toUpperCase() || 'U');
                                             target.src = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><rect width="100" height="100" fill="%232563eb"/><text x="50%" y="54%" fill="white" font-size="45" font-weight="bold" font-family="Tahoma, sans-serif" dominant-baseline="middle" text-anchor="middle">${letter}</text></svg>`;
                                         }}
-                                        className="w-8 h-8 rounded-full bg-white  shadow-sm object-cover shrink-0"
+                                        className="w-8 h-8 rounded-badge bg-[var(--color-input-bg)] shadow-sm object-cover shrink-0"
                                     />
                                     <div className="flex flex-col min-w-0">
                                         <span className="text-xs font-bold text-zinc-900 dark:text-zinc-100 truncate" dir={user?.name ? 'rtl' : 'ltr'}>
@@ -355,7 +355,7 @@ export const Sidebar: React.FC = React.memo(() => {
                                 </div>
                                 <div className="flex items-center gap-1.5 shrink-0">
                                     {user?.role === 'admin' && (
-                                        <span className="text-[9px] px-1.5 py-0.5 rounded-md bg-blue-500/15 text-blue-600 dark:text-blue-400 font-bold">
+                                        <span className="text-[9px] px-1.5 py-0.5 rounded-md bg-[var(--color-accent-primary)]/15 text-[var(--color-accent-text)] dark:text-[var(--color-accent-text)] font-bold">
                                             ادمین
                                         </span>
                                     )}
@@ -381,7 +381,7 @@ export const Sidebar: React.FC = React.memo(() => {
                         {/* Mobile Close Button */}
                         <button
                             onClick={() => setSidebarOpen(false)}
-                            className="p-2 rounded-xl text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 hover:clay-surface dark:hover:bg-zinc-800 transition-colors md:hidden cursor-pointer shrink-0"
+                            className="p-2 rounded-btn text-[var(--color-text-dim)] hover:text-[var(--color-text-main)] dark:hover:text-[var(--color-text-main)] hover:bg-[var(--color-input-bg)] dark:hover:bg-[var(--color-input-bg)]/80 transition-colors md:hidden cursor-pointer shrink-0"
                             aria-label="Close sidebar"
                         >
                             <X className="w-4 h-4" />
@@ -390,74 +390,74 @@ export const Sidebar: React.FC = React.memo(() => {
 
                     {/* User Floating Dropdown Popover */}
                     {userMenuOpen && isAuthenticated && (
-                        <div className="absolute top-full mt-1.5 right-3 left-3 p-2 clay-card !bg-[var(--sidebar-bg)] rounded-2xl shadow-2xl border border-[var(--card-border)] flex flex-col gap-1 z-50 animate-fadeIn">
-                            <div className="flex items-center gap-2.5 p-2 rounded-xl mb-1">
-                                <img
-                                    src={user?.avatar || '/avatars/avatar-1.svg'}
-                                    alt="Avatar"
-                                    onError={(e) => {
-                                        const target = e.target as HTMLImageElement;
-                                        target.onerror = null;
-                                        const letter = user?.name?.charAt(0).toUpperCase() || (user?.phone ? user.phone.slice(-2) : user?.email?.charAt(0).toUpperCase() || 'U');
-                                        target.src = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><rect width="100" height="100" fill="%232563eb"/><text x="50%" y="54%" fill="white" font-size="45" font-weight="bold" font-family="Tahoma, sans-serif" dominant-baseline="middle" text-anchor="middle">${letter}</text></svg>`;
-                                    }}
-                                    className="w-8 h-8 rounded-full bg-white  shadow-sm object-cover shrink-0"
-                                />
-                                <div className="flex flex-col min-w-0">
-                                    <span className="text-xs font-bold text-zinc-900 dark:text-zinc-100 truncate" dir={user?.name ? 'rtl' : 'ltr'}>
-                                        {user?.name || user?.phone || user?.email}
-                                    </span>
-                                    <span className="text-[10px] text-blue-600 dark:text-blue-400 font-bold">
-                                        {user?.role === 'admin' ? 'مدیر سیستم' : 'کاربر عادی'}
-                                    </span>
-                                </div>
-                            </div>
+<div className="absolute top-full mt-1.5 right-3 left-3 p-2 clay-card !bg-[var(--sidebar-bg)] rounded-card shadow-2xl border border-[var(--card-border)] flex flex-col gap-1 z-50 animate-fadeIn">
+    <div className="flex items-center gap-2.5 p-2 rounded-input mb-1">
+        <img
+            src={user?.avatar || '/avatars/avatar-1.svg'}
+            alt="Avatar"
+            onError={(e) => {
+                const target = e.target as HTMLImageElement;
+                target.onerror = null;
+                const letter = user?.name?.charAt(0).toUpperCase() || (user?.phone ? user.phone.slice(-2) : user?.email?.charAt(0).toUpperCase() || 'U');
+                target.src = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><rect width="100" height="100" fill="%232563eb"/><text x="50%" y="54%" fill="white" font-size="45" font-weight="bold" font-family="Tahoma, sans-serif" dominant-baseline="middle" text-anchor="middle">${letter}</text></svg>`;
+            }}
+            className="w-8 h-8 rounded-badge bg-[var(--color-input-bg)] shadow-sm object-cover shrink-0"
+        />
+        <div className="flex flex-col min-w-0">
+            <span className="text-xs font-bold text-[var(--color-text-main)] truncate" dir={user?.name ? 'rtl' : 'ltr'}>
+                {user?.name || user?.phone || user?.email}
+            </span>
+            <span className="text-[10px] text-[var(--color-accent-text)] dark:text-[var(--color-accent-text)] font-bold">
+                {user?.role === 'admin' ? 'مدیر سیستم' : 'کاربر عادی'}
+            </span>
+        </div>
+    </div>
 
-                            {user?.role === 'admin' && (
-                                <button
-                                    onClick={() => {
-                                        setIsAdminOpen(true);
-                                        setUserMenuOpen(false);
-                                        if (window.innerWidth < 768) setSidebarOpen(false);
-                                    }}
-                                    className="flex items-center gap-2 w-full p-2 rounded-xl hover:bg-blue-50 dark:hover:bg-blue-950/40 text-blue-600 dark:text-blue-400 text-xs font-bold transition-colors text-right cursor-pointer"
-                                >
-                                    <ShieldCheck size={16} />
-                                    <span>پنل مدیریت سیستم</span>
-                                </button>
-                            )}
+    {user?.role === 'admin' && (
+        <button
+            onClick={() => {
+                setIsAdminOpen(true);
+                setUserMenuOpen(false);
+                if (window.innerWidth < 768) setSidebarOpen(false);
+            }}
+            className="flex items-center gap-2 w-full p-2 rounded-btn hover:bg-[var(--color-accent-primary)]/10 dark:hover:bg-[var(--color-accent-primary)]/10 text-[var(--color-accent-text)] dark:text-[var(--color-accent-text)] text-xs font-bold transition-colors text-right cursor-pointer"
+        >
+            <ShieldCheck size={16} />
+            <span>پنل مدیریت سیستم</span>
+        </button>
+    )}
 
-                            <Link
-                                to="/dashboard"
-                                onClick={() => {
-                                    setUserMenuOpen(false);
-                                    if (window.innerWidth < 768) setSidebarOpen(false);
-                                }}
-                                className="flex items-center gap-2 w-full p-2 rounded-xl hover:bg-zinc-200 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 text-xs font-medium transition-colors text-right cursor-pointer"
-                            >
-                                <LayoutDashboard size={16} />
-                                <span>داشبورد کاربری</span>
-                            </Link>
+    <Link
+        to="/dashboard"
+        onClick={() => {
+            setUserMenuOpen(false);
+            if (window.innerWidth < 768) setSidebarOpen(false);
+        }}
+        className="flex items-center gap-2 w-full p-2 rounded-btn hover:bg-[var(--color-input-bg)] dark:hover:bg-[var(--color-input-bg)]/80 text-[var(--color-text-main)] dark:text-[var(--color-text-main)] text-xs font-medium transition-colors text-right cursor-pointer"
+    >
+        <LayoutDashboard size={16} />
+        <span>داشبورد کاربری</span>
+    </Link>
 
                             <button
                                 onClick={() => {
                                     setIsSettingsOpen(true);
                                     setUserMenuOpen(false);
                                 }}
-                                className="flex items-center gap-2 w-full p-2 rounded-xl hover:bg-zinc-200 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 text-xs font-medium transition-colors text-right cursor-pointer"
+                                className="flex items-center gap-2 w-full p-2 rounded-btn hover:bg-[var(--color-input-bg)] dark:hover:bg-[var(--color-input-bg)]/80 text-[var(--color-text-main)] dark:text-[var(--color-text-main)] text-xs font-medium transition-colors text-right cursor-pointer"
                             >
                                 <Settings size={16} />
                                 <span>تنظیمات</span>
                             </button>
 
-                            <div className="h-px bg-zinc-200  my-0.5" />
+                            <div className="h-px bg-[var(--color-border-subtle)] my-0.5" />
 
                             <button
                                 onClick={() => {
                                     logout();
                                     setUserMenuOpen(false);
                                 }}
-                                className="flex items-center gap-2 w-full p-2 rounded-xl hover:bg-red-50 dark:hover:bg-red-950/30 text-red-600 dark:text-red-400 text-xs font-bold transition-colors text-right cursor-pointer"
+                                className="flex items-center gap-2 w-full p-2 rounded-btn hover:bg-[var(--color-error-bg)]/10 dark:hover:bg-[var(--color-error-bg)]/10 text-[var(--color-error-text)] dark:text-[var(--color-error-text)] text-xs font-bold transition-colors text-right cursor-pointer"
                             >
                                 <LogOut size={16} />
                                 <span>خروج از حساب</span>
@@ -535,7 +535,7 @@ export const Sidebar: React.FC = React.memo(() => {
                             createChat(settings.providers[settings.providers.activeProvider]?.modelName);
                             if (window.innerWidth < 768) setSidebarOpen(false);
                         }}
-                        className="w-full flex items-center justify-between text-xs font-bold text-zinc-500 dark:text-zinc-400 hover:text-blue-600 dark:hover:text-blue-400 group transition-all px-1 py-1"
+                        className="w-full flex items-center justify-between text-xs font-bold text-[var(--color-text-dim)] dark:text-[var(--color-text-dim)] hover:text-[var(--color-accent-primary)] dark:hover:text-[var(--color-accent-text)] group transition-all px-1 py-1"
                     >
                         <div className="flex items-center gap-1.5">
                             <Plus className="w-4 h-4 transition-transform group-hover:rotate-90 group-active:scale-95" strokeWidth={2.5} />
@@ -555,12 +555,12 @@ export const Sidebar: React.FC = React.memo(() => {
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             placeholder="جستجو در گفتگوها..."
-                            className="w-full text-xs !pr-10 !pl-7 !py-2 rounded-xl clay-input  hover:border-zinc-300 dark:hover:border-zinc-600 text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus:outline-hidden focus:border-zinc-400 dark:focus:border-zinc-500 focus:ring-1 focus:ring-zinc-400/20 dark:focus:ring-zinc-500/20 transition-all"
+                            className="w-full text-xs !pr-10 !pl-7 !py-2 rounded-input clay-input hover:border-[var(--color-border-strong)] dark:hover:border-[var(--color-border-strong)] text-[var(--color-text-main)] dark:text-[var(--color-text-main)] placeholder:text-[var(--color-text-dim)] dark:placeholder:text-[var(--color-text-dim)] focus:outline-hidden focus:border-[var(--color-border-strong)] dark:focus:border-[var(--color-border-strong)] focus:ring-1 focus:ring-[var(--color-border-strong)]/20 dark:focus:ring-[var(--color-border-strong)]/20 transition-all"
                         />
                         {searchQuery && (
                             <button
                                 onClick={() => setSearchQuery('')}
-                                className="absolute left-2.5 p-1 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 cursor-pointer"
+                                className="absolute left-2.5 p-1 text-[var(--color-text-dim)] hover:text-[var(--color-text-main)] dark:hover:text-[var(--color-text-main)] cursor-pointer"
                                 aria-label="Clear search"
                             >
                                 <X className="w-3 h-3" />
@@ -573,11 +573,11 @@ export const Sidebar: React.FC = React.memo(() => {
                 <div className="px-4 sm:px-5 pt-2 pb-2 shrink-0 border-b border-[var(--card-border)]  mt-1">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-1.5">
-                            <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                            <span className="text-xs font-bold text-zinc-800 dark:text-zinc-200">تاریخچه گفتگوها</span>
+                            <div className="w-2 h-2 rounded-badge bg-[var(--color-accent-primary)] animate-pulse" />
+                            <span className="text-xs font-bold text-[var(--color-text-main)]">تاریخچه گفتگوها</span>
                         </div>
                         {conversations.length > 0 && (
-                            <span className="text-[10px] font-medium text-zinc-600 dark:text-zinc-300 bg-zinc-200 dark:bg-zinc-800 px-2 py-0.5 rounded-full border border-[var(--card-border)]">
+                            <span className="text-[10px] font-medium text-[var(--color-text-dim)] bg-[var(--color-input-bg)] dark:bg-[var(--color-input-bg)] px-2 py-0.5 rounded-badge border border-[var(--card-border)]">
                                 {usePersianDigits ? toPersianDigits(conversations.length) : conversations.length} گفتگو
                             </span>
                         )}
@@ -589,15 +589,15 @@ export const Sidebar: React.FC = React.memo(() => {
                     {/* Pinned Section */}
                     {pinnedConversations.length > 0 && (
                         <div className="space-y-1.5">
-                            <div className="flex items-center justify-between px-2 py-0.5 text-xs font-bold text-amber-400">
-                                <div className="flex items-center gap-1.5">
-                                    <PinBoldIcon className="w-3.5 h-3.5" />
-                                    <span>گفتگوهای سنجاق شده</span>
-                                    <span className="text-[10px] font-medium text-amber-400/90 bg-amber-500/10 px-1.5 py-0.5 rounded-full">
-                                        {usePersianDigits ? toPersianDigits(pinnedConversations.length) : pinnedConversations.length}
-                                    </span>
-                                </div>
+<div className="flex items-center justify-between px-2 py-0.5 text-xs font-bold text-amber-400">
+                            <div className="flex items-center gap-1.5">
+                                <PinBoldIcon className="w-3.5 h-3.5" />
+                                <span>گفتگوهای سنجاق شده</span>
+                                <span className="text-[10px] font-medium text-amber-400/90 bg-[var(--color-accent-primary)]/10 px-1.5 py-0.5 rounded-badge">
+                                    {usePersianDigits ? toPersianDigits(pinnedConversations.length) : pinnedConversations.length}
+                                </span>
                             </div>
+                        </div>
                             <div className="space-y-1">
                                 {pinnedConversations.map(renderConversationItem)}
                             </div>
@@ -614,12 +614,12 @@ export const Sidebar: React.FC = React.memo(() => {
                                     <button
                                         type="button"
                                         onClick={() => toggleGroupCollapse(group.id)}
-                                        className="w-full flex items-center justify-between px-2 py-1 rounded-lg text-xs font-bold text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-200/60 dark:hover:bg-zinc-800/60 transition-colors cursor-pointer select-none group"
+                                        className="w-full flex items-center justify-between px-2 py-1 rounded-btn text-xs font-bold text-[var(--color-text-main)] hover:text-[var(--color-text-main)] hover:bg-[var(--color-input-bg)] dark:hover:bg-[var(--color-input-bg)]/80 transition-colors cursor-pointer select-none group"
                                     >
                                         <div className="flex items-center gap-1.5">
-                                            <CalendarLinearIcon className="w-3.5 h-3.5 text-zinc-700 dark:text-zinc-500 group-hover:text-zinc-700 dark:text-zinc-300" />
+                                            <CalendarLinearIcon className="w-3.5 h-3.5 text-[var(--color-text-dim)] group-hover:text-[var(--color-text-main)] dark:group-hover:text-[var(--color-text-main)]" />
                                             <span>{group.label}</span>
-                                            <span className="text-[10px] font-medium text-zinc-600 dark:text-zinc-300 bg-zinc-200 dark:bg-zinc-800 px-1.5 py-0.5 rounded-full">
+                                            <span className="text-[10px] font-medium text-[var(--color-text-dim)] bg-[var(--color-input-bg)] dark:bg-[var(--color-input-bg)] px-1.5 py-0.5 rounded-badge">
                                                 {usePersianDigits ? toPersianDigits(group.items.length) : group.items.length}
                                             </span>
                                         </div>
@@ -639,14 +639,14 @@ export const Sidebar: React.FC = React.memo(() => {
                             );
                         })
                     ) : pinnedConversations.length === 0 ? (
-                        <div className="text-center py-10 px-4 text-zinc-700 dark:text-zinc-500">
+                        <div className="text-center py-10 px-4 text-[var(--color-text-muted)] dark:text-[var(--color-text-dim)]">
                             {searchQuery ? (
                                 <p className="text-xs">هیچ گفتگویی با عبارت «{searchQuery}» یافت نشد.</p>
                             ) : (
                                 <div className="space-y-2">
-                                    <StarsMinimalisticBoldIcon className="w-8 h-8 mx-auto text-blue-400 opacity-60" />
-                                    <p className="text-xs font-semibold text-zinc-700 dark:text-zinc-400">تاریخچه گفتگوها خالی است</p>
-                                    <p className="text-[11px] text-zinc-700 dark:text-zinc-500">یک گفتگوی جدید را آغاز کنید</p>
+                                    <StarsMinimalisticBoldIcon className="w-8 h-8 mx-auto text-[var(--color-accent-primary)] opacity-60" />
+                                    <p className="text-xs font-semibold text-[var(--color-text-main)]">تاریخچه گفتگوها خالی است</p>
+                                    <p className="text-[11px] text-[var(--color-text-muted)]">یک گفتگوی جدید را آغاز کنید</p>
                                 </div>
                             )}
                         </div>
@@ -655,14 +655,14 @@ export const Sidebar: React.FC = React.memo(() => {
 
                 {/* Wallet Status Widget for Authenticated Users */}
                 {user && (
-                    <div className="mx-3 mb-2 p-2.5 rounded-2xl bg-gradient-to-r from-blue-500/10 via-indigo-500/10 to-purple-500/10 dark:from-blue-500/15 dark:via-indigo-500/15 dark:to-purple-500/15 border border-indigo-500/20 flex items-center justify-between shadow-xs">
+                    <div className="mx-3 mb-2 p-2.5 rounded-card bg-[var(--gemini-gradient-subtle)] border border-[var(--color-accent-primary)]/20 flex items-center justify-between shadow-xs">
                         <div className="flex items-center gap-2">
-                            <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-blue-500 via-indigo-500 to-purple-500 text-white flex items-center justify-center shrink-0 shadow-sm">
+                            <div className="w-8 h-8 rounded-btn bg-[var(--color-accent-primary)] text-white flex items-center justify-center shrink-0 shadow-sm">
                                 <Coins className="w-4 h-4" />
                             </div>
                             <div className="flex flex-col text-right">
-                                <span className="text-[10px] text-zinc-600 dark:text-zinc-400 font-medium">کیف پول</span>
-                                <span className="text-xs font-bold text-zinc-800 dark:text-zinc-200">
+                                <span className="text-[10px] text-[var(--color-text-dim)] font-medium">کیف پول</span>
+                                <span className="text-xs font-bold text-[var(--color-text-main)]">
                                     {usePersianDigits
                                         ? toPersianDigits((user?.walletBalance || 0).toLocaleString('fa-IR'))
                                         : (user?.walletBalance || 0).toLocaleString()} تومان
@@ -674,7 +674,7 @@ export const Sidebar: React.FC = React.memo(() => {
                                 setIsWalletOpen(true);
                                 if (window.innerWidth < 768) setSidebarOpen(false);
                             }}
-                            className="px-2.5 py-1 text-[11px] font-bold bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-lg transition-all shadow-md cursor-pointer"
+                            className="px-2.5 py-1 text-[11px] font-bold bg-[var(--color-accent-primary)] hover:bg-[var(--color-accent-hover)] text-white rounded-btn transition-all shadow-sm cursor-pointer"
                         >
                             شارژ
                         </button>

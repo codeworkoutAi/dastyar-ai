@@ -417,13 +417,16 @@ router.put('/orders/:id/status', (req, res) => {
         const creditAmount = getPlanCreditAmount(product);
         depositWallet(order.userId, creditAmount, `تایید سفارش ${product?.title || 'بسته تعرفه'} توسط مدیریت - سفارش ${id}`);
       } else if (order.productCategory !== 'package' && !licenseId) {
-        const availLicense = db.prepare(
-          'SELECT id, key FROM licenses WHERE productId = ? AND status = ? LIMIT 1'
-        ).get(order.productId, 'available') as any;
+        // Atomic license assignment to prevent race conditions
+        const availLicense = db.prepare(`
+          UPDATE licenses 
+          SET status = 'sold' 
+          WHERE productId = ? AND status = 'available' 
+          RETURNING id, key
+        `).get(order.productId) as any;
 
         if (availLicense) {
           licenseId = availLicense.id;
-          db.prepare('UPDATE licenses SET status = ? WHERE id = ?').run('sold', licenseId);
         } else {
           warning = 'سفارش به حالت موفق تغییر یافت، اما موجودی لایسنس این محصول خالی است و لایسنسی تخصیص داده نشد.';
         }
@@ -711,6 +714,14 @@ router.put('/settings', (req, res) => {
       return res.status(400).json({ error: 'کلید و مقدار تنظیمات الزامی است.' });
     }
 
+    // Validate api_dollar_rate - must be positive integer
+    if (key === 'api_dollar_rate') {
+      const rate = parseInt(String(value), 10);
+      if (isNaN(rate) || rate <= 0) {
+        return res.status(400).json({ error: 'نرخ دلار API باید عدد صحیح و مثبت باشد (مثال: 200000)' });
+      }
+    }
+
     db.prepare('INSERT OR REPLACE INTO site_settings (key, value, updatedAt) VALUES (?, ?, CURRENT_TIMESTAMP)').run(key, String(value));
     syncDatabase();
 
@@ -719,6 +730,94 @@ router.put('/settings', (req, res) => {
   } catch (error) {
     console.error('[Admin API] Error updating site settings:', error);
     res.status(500).json({ error: 'خطا در به‌روزرسانی تنظیمات سیستم' });
+  }
+});
+
+// GET /api/admin/financial-summary
+router.get('/financial-summary', (req, res) => {
+  try {
+    const summary = getAdminFinancialSummary();
+    res.json(summary);
+  } catch (error) {
+    console.error('[Admin API] Error fetching financial summary:', error);
+    res.status(500).json({ error: 'خطا در دریافت خلاصه مالی سیستم' });
+  }
+});
+
+// GET /api/admin/financial-export (CSV export for orders/wallet/transactions)
+router.get('/financial-export', (req, res) => {
+  try {
+    const { type = 'orders', from, to } = req.query;
+    
+    let query = '';
+    let params: any[] = [];
+    
+    if (type === 'orders') {
+      query = `
+        SELECT o.id, o.userId, o.productId, o.amount, o.paymentStatus, o.paymentMethod, 
+               o.trackingNumber, o.authority, o.refId, o.cardPan, o.createdAt,
+               u.name as userName, u.phone as userPhone, u.email as userEmail,
+               p.title as productTitle, p.category as productCategory
+        FROM orders o
+        LEFT JOIN users u ON o.userId = u.id
+        LEFT JOIN products p ON o.productId = p.id
+      `;
+    } else if (type === 'wallet_transactions') {
+      query = `
+        SELECT wt.id, wt.userId, wt.type, wt.amount, wt.balanceAfter, wt.model,
+               wt.promptTokens, wt.completionTokens, wt.costUsd, wt.description, wt.createdAt,
+               u.name as userName, u.phone as userPhone
+        FROM wallet_transactions wt
+        LEFT JOIN users u ON wt.userId = u.id
+      `;
+    } else if (type === 'api_purchases') {
+      query = 'SELECT * FROM api_purchases';
+    } else {
+      return res.status(400).json({ error: 'نوع گزارش نامعتبر است. مقادیر مجاز: orders, wallet_transactions, api_purchases' });
+    }
+    
+    // Add date range filtering
+    if (from) {
+      query += query.includes('WHERE') ? ' AND ' : ' WHERE ';
+      query += 'date(createdAt) >= date(?)';
+      params.push(from);
+    }
+    if (to) {
+      query += query.includes('WHERE') ? ' AND ' : ' WHERE ';
+      query += 'date(createdAt) <= date(?)';
+      params.push(to);
+    }
+    
+    query += ' ORDER BY createdAt DESC';
+    
+    const rows = db.prepare(query).all(...params) as any[];
+    
+    if (rows.length === 0) {
+      return res.status(404).json({ error: 'داده‌ای برای خروجی یافت نشد' });
+    }
+    
+    // Generate CSV
+    const headers = Object.keys(rows[0]);
+    const csvLines = [
+      headers.join(','),
+      ...rows.map(row => headers.map(h => {
+        const val = row[h];
+        if (val === null || val === undefined) return '';
+        const str = String(val).replace(/"/g, '""');
+        return str.includes(',') || str.includes('"') || str.includes('\n') ? `"${str}"` : str;
+      }).join(','))
+    ];
+    
+    const csv = csvLines.join('\n');
+    const filename = `${type}_export_${new Date().toISOString().split('T')[0]}.csv`;
+    
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    // Add UTF-8 BOM for Excel compatibility
+    res.send('\uFEFF' + csv);
+  } catch (error) {
+    console.error('[Admin API] Error exporting financial data:', error);
+    res.status(500).json({ error: 'خطا در خروجی گرفتن داده‌های مالی' });
   }
 });
 

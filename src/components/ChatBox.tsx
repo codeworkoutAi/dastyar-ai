@@ -334,9 +334,9 @@ export const ChatBox: React.FC = React.memo(() => {
  <div
  className={`relative chat-message-bubble transition-all text-right ${
  isUser
- ? 'bg-black/5 dark:bg-black/15 text-zinc-900 dark:text-zinc-100 rounded-3xl rounded-br-sm px-5 py-3 shadow-[inset_0_2px_6px_rgba(0,0,0,0.08)] dark:shadow-[inset_0_2px_6px_rgba(0,0,0,0.3)] border border-black/5 dark:border-white/5'
+? 'bg-[var(--color-bubble-user-bg)] text-[var(--color-text-main)] rounded-bubble rounded-br-sm px-5 py-3 shadow-[inset_0_2px_6px_rgba(0,0,0,0.08)] dark:shadow-[inset_0_2px_6px_rgba(0,0,0,0.3)] border border-[var(--color-border-subtle)]'
  : msg.error
- ? 'border border-red-500/30 rounded-2xl p-4 bg-red-500/5 text-red-400'
+ ? 'border border-[var(--color-error-border)] rounded-card p-4 bg-[var(--color-error-bg)] text-[var(--color-error-text)]'
  : 'text-zinc-800 dark:text-zinc-200 border-none bg-transparent py-2'
  }`}
  >
@@ -354,7 +354,8 @@ export const ChatBox: React.FC = React.memo(() => {
  <button
  type="button"
  onClick={() => setActiveError(null)}
- className="text-red-400/60 hover:text-red-400 hover:bg-red-500/10 p-1.5 rounded-lg transition-colors cursor-pointer shrink-0"
+className="text-[var(--color-error-text)]/60 hover:text-[var(--color-error-text)] hover:bg-[var(--color-error-bg)] p-1.5 rounded-btn 
+transition-colors cursor-pointer shrink-0"
  title="بستن پیام خطا"
  >
  <X className="w-4 h-4" />
@@ -363,8 +364,8 @@ export const ChatBox: React.FC = React.memo(() => {
  </div>
 
  {/* 15-second visual countdown progress bar */}
- <div className="w-full bg-red-500/10 h-1 rounded-full overflow-hidden mt-0.5">
- <div className="bg-red-500/50 h-full rounded-full animate-error-progress" />
+<div className="w-full bg-[var(--color-error-bg)] h-1 rounded-full overflow-hidden mt-0.5">
+<div className="bg-[var(--color-error-text)]/50 h-full rounded-full animate-error-progress" />
  </div>
 
  {!isStreaming && (
@@ -374,7 +375,8 @@ export const ChatBox: React.FC = React.memo(() => {
  </span>
  <button
  onClick={onRegenerate}
- className="bg-red-600/20 hover:bg-red-600/30 text-red-400 text-xs px-3.5 py-1.5 rounded-xl flex items-center gap-1.5 font-bold cursor-pointer transition-all shadow-sm active:scale-95 ml-auto"
+className="bg-[var(--color-error-bg)] hover:bg-[var(--color-error-bg)]/80 text-[var(--color-error-text)] text-xs px-3.5 py-1.5 
+rounded-btn flex items-center gap-1.5 font-bold cursor-pointer transition-all shadow-sm active:scale-95 ml-auto"
  >
  <RotateCw className="w-3.5 h-3.5" />
  <span>تلاش مجدد</span>
@@ -390,7 +392,9 @@ export const ChatBox: React.FC = React.memo(() => {
  onChange={(e) => setEditingText(e.target.value)}
  dir="auto"
  rows={Math.min(6, Math.max(2, editingText.split('\n').length))}
- className="w-full p-3 rounded-2xl clay-input  text-[length:var(--chat-font-size)] [font-family:var(--user-font-family)] focus:outline-hidden focus:ring-2 focus:ring-zinc-400 dark:focus:ring-zinc-500/30 resize-y leading-relaxed font-medium text-zinc-800 dark:text-zinc-200"
+className="w-full p-3 rounded-input clay-input  text-[length:var(--chat-font-size)] 
+[font-family:var(--user-font-family)] focus:outline-hidden focus:ring-2 focus:ring-[var(--color-border-strong)] 
+dark:focus:ring-[var(--color-border-strong)] resize-y leading-relaxed font-medium text-[var(--color-text-main)] dark:text-[var(--color-text-main)]"
  autoFocus
  placeholder="ویرایش پیام خود را اینجا بنویسید..."
  onKeyDown={(e) => {
@@ -409,7 +413,7 @@ export const ChatBox: React.FC = React.memo(() => {
  <button
  type="button"
  onClick={() => setEditingMessageId(null)}
- className="px-3 py-1.5 rounded-xl text-xs bg-black/5 dark:bg-white/5 hover:bg-black/5 dark:hover:bg-white/10 text-zinc-700 dark:text-zinc-400 font-medium transition-all cursor-pointer"
+className="px-3 py-1.5 rounded-btn text-xs bg-[var(--color-input-bg)] dark:bg-[var(--color-input-bg)] hover:bg-[var(--color-input-bg)]/80 dark:hover:bg-[var(--color-input-bg)]/80 text-[var(--color-text-main)] dark:text-[var(--color-text-main)] font-medium transition-all cursor-pointer"
  >
  انصراف
  </button>
@@ -422,7 +426,7 @@ export const ChatBox: React.FC = React.memo(() => {
  setEditingMessageId(null);
  }
  }}
- className="bg-sky-600 hover:bg-sky-500 text-white px-3.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-sm transition-all disabled:opacity-50 cursor-pointer active:scale-95"
+className="bg-[var(--color-accent-primary)] hover:bg-[var(--color-accent-hover)] text-white px-3.5 py-1.5 rounded-btn font-bold flex items-center gap-1.5 shadow-sm transition-all disabled:opacity-50 cursor-pointer active:scale-95"
  >
  <Check className="w-3.5 h-3.5" />
  <span>ذخیره</span>
@@ -439,9 +443,9 @@ export const ChatBox: React.FC = React.memo(() => {
  <div className="flex flex-wrap gap-2">
  {urls.map((url, i) => {
  const isMedia = url.startsWith('data:image/') || url.startsWith('data:video/');
- const wrapperClass = (isMulti && isMedia)
- ?"rounded-2xl overflow-hidden relative group/media w-24 h-24 sm:w-28 sm:h-28 border border-zinc-300  bg-black/40 shrink-0 shadow-sm"
- :"rounded-2xl overflow-hidden relative group/media max-w-sm border border-zinc-300  bg-black/40 shadow-sm";
+const wrapperClass = (isMulti && isMedia)
+  ?"rounded-card overflow-hidden relative group/media w-24 h-24 sm:w-28 sm:h-28 border border-[var(--color-border-strong)]  bg-[var(--color-input-bg)] shrink-0 shadow-sm"
+  :"rounded-card overflow-hidden relative group/media max-w-sm border border-[var(--color-border-strong)]  bg-[var(--color-input-bg)] shadow-sm";
  const imgClass = (isMulti && isMedia)
  ?"w-full h-full object-cover transition-transform duration-300 group-hover/media:scale-[1.1]"
  :"w-full object-cover max-h-72 transition-transform duration-300 group-hover/media:scale-[1.02]";
@@ -459,7 +463,7 @@ export const ChatBox: React.FC = React.memo(() => {
  <video controls={!isMulti} src={url} className={imgClass +" bg-black"} dir="ltr" />
  ) : (
  <div className="flex items-center gap-3 p-4">
- <div className="p-3 bg-blue-500/10 rounded-xl text-sky-400 shrink-0">
+ <div className="p-3 bg-[var(--color-accent-primary)]/10 rounded-input text-[var(--color-accent-text)] shrink-0">
  <FileText className="w-8 h-8" />
  </div>
  <div className="flex flex-col text-sm min-w-0">
@@ -469,25 +473,26 @@ export const ChatBox: React.FC = React.memo(() => {
  </div>
  )}
  {/* Floating Media Actions */}
- {(isMedia) && (
- <div className="absolute top-1.5 right-1.5 flex items-center gap-1 bg-black/60 backdrop-blur-md p-1 rounded-xl opacity-0 group-hover/media:opacity-100 transition-opacity">
- <button
- type="button"
- onClick={() => setLightboxMedia({ url, type: url.startsWith('data:video/') ? 'video' : 'image' })}
- className="p-1 rounded-lg hover:bg-white/20 text-zinc-700 dark:text-zinc-300 hover:text-white transition-colors cursor-pointer"
- title="نمایش تمام‌صفحه"
- >
- <Maximize2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
- </button>
- <button
- type="button"
- onClick={() => handleDownloadMedia(url, url.startsWith('data:video/'))}
- className="p-1 rounded-lg hover:bg-white/20 text-zinc-700 dark:text-zinc-300 hover:text-white transition-colors cursor-pointer"
- title="دانلود"
- >
- <Download className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
- </button>
- </div>
+{(isMedia) && (
+<div className="absolute top-1.5 right-1.5 flex items-center gap-1 bg-[var(--color-input-bg)]/80 
+backdrop-blur-md p-1 rounded-input opacity-0 group-hover/media:opacity-100 transition-opacity">
+<button
+type="button"
+onClick={() => setLightboxMedia({ url, type: url.startsWith('data:video/') ? 'video' : 'image' })}
+className="p-1 rounded-btn hover:bg-[var(--color-input-bg)]/20 text-[var(--color-text-main)] hover:text-[var(--color-text-main)] transition-colors cursor-pointer"
+title="نمایش تمام‌صفحه"
+>
+<Maximize2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+</button>
+<button
+type="button"
+onClick={() => handleDownloadMedia(url, url.startsWith('data:video/'))}
+className="p-1 rounded-btn hover:bg-[var(--color-input-bg)]/20 text-[var(--color-text-main)] hover:text-[var(--color-text-main)] transition-colors cursor-pointer"
+title="دانلود"
+>
+<Download className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+</button>
+</div>
  )}
  </div>
  );
@@ -511,57 +516,58 @@ export const ChatBox: React.FC = React.memo(() => {
  ) : (
  <div className="flex flex-col gap-3">
  {msg.isStreaming && !msg.imageUrl && msg.isImageGen ? (
- <div className="flex flex-col items-center justify-center p-6 sm:p-8 my-2 rounded-3xl clay-card relative overflow-hidden group max-w-md w-full animate-fadeIn">
+<div className="flex flex-col items-center justify-center p-6 sm:p-8 my-2 rounded-card 
+clay-card relative overflow-hidden group max-w-md w-full animate-fadeIn">
  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent animate-shimmer" />
- <div className="relative z-10 w-12 h-12 rounded-2xl clay-surface flex items-center justify-center mb-4 border border-zinc-300 ">
+ <div className="relative z-10 w-12 h-12 rounded-input clay-surface flex items-center justify-center mb-4 border border-[var(--color-border-strong)] ">
  <Sparkles className="w-6 h-6 text-sky-400 animate-pulse" />
  </div>
  <h4 className="relative z-10 font-medium text-sm text-zinc-700 dark:text-zinc-300 mb-1">
  در حال تولید تصویر...
  </h4>
- <div className="relative z-10 flex items-center gap-1.5 mt-2">
- <span className="w-1.5 h-1.5 rounded-full bg-zinc-500 animate-bounce" style={{ animationDelay: '0s' }} />
- <span className="w-1.5 h-1.5 rounded-full bg-zinc-500 animate-bounce" style={{ animationDelay: '0.2s' }} />
- <span className="w-1.5 h-1.5 rounded-full bg-zinc-500 animate-bounce" style={{ animationDelay: '0.4s' }} />
- </div>
+<div className="relative z-10 flex items-center gap-1.5 mt-2">
+<span className="w-1.5 h-1.5 rounded-badge bg-[var(--color-text-dim)] animate-bounce" style={{ animationDelay: '0s' }} />
+<span className="w-1.5 h-1.5 rounded-badge bg-[var(--color-text-dim)] animate-bounce" style={{ animationDelay: '0.2s' }} />
+<span className="w-1.5 h-1.5 rounded-badge bg-[var(--color-text-dim)] animate-bounce" style={{ animationDelay: '0.4s' }} />
+</div>
  </div>
  ) : msg.isStreaming && !msg.content ? (
- <div className="flex items-center gap-2 p-4 text-zinc-700 dark:text-zinc-400 animate-pulse">
- <div className="w-2.5 h-2.5 bg-zinc-500 rounded-full animate-bounce" />
- <div className="w-2.5 h-2.5 bg-zinc-500 rounded-full animate-bounce [animation-delay:0.2s]" />
- <div className="w-2.5 h-2.5 bg-zinc-500 rounded-full animate-bounce [animation-delay:0.4s]" />
- <span className="text-xs text-zinc-700 dark:text-zinc-500 mr-2">در حال پردازش و تولید پاسخ...</span>
- </div>
+<div className="flex items-center gap-2 p-4 text-[var(--color-text-main)] dark:text-[var(--color-text-main)] animate-pulse">
+<div className="w-2.5 h-2.5 bg-[var(--color-text-dim)] rounded-badge animate-bounce" />
+<div className="w-2.5 h-2.5 bg-[var(--color-text-dim)] rounded-badge animate-bounce [animation-delay:0.2s]" />
+<div className="w-2.5 h-2.5 bg-[var(--color-text-dim)] rounded-badge animate-bounce [animation-delay:0.4s]" />
+<span className="text-xs text-[var(--color-text-muted)] dark:text-[var(--color-text-dim)] mr-2">در حال پردازش و تولید پاسخ...</span>
+</div>
  ) : (
  <>
- {msg.imageUrl && (
- <div className="max-w-md my-2">
- <div className="rounded-2xl overflow-hidden relative group/media border border-zinc-300  bg-black/40 w-full">
+{msg.imageUrl && (
+<div className="max-w-md my-2">
+<div className="rounded-card overflow-hidden relative group/media border border-[var(--color-border-strong)] bg-[var(--color-input-bg)] w-full">
  <img
  src={msg.imageUrl}
  alt="Generated"
  className="w-full object-cover max-h-96 transition-transform duration-300 group-hover/media:scale-[1.02]"
  />
 
- {/* Floating Media Actions for AI Generated Image */}
- <div className="absolute top-2.5 left-2.5 flex items-center gap-1.5 bg-black/60 backdrop-blur-md p-1 rounded-xl opacity-0 group-hover/media:opacity-100 transition-opacity">
- <button
- type="button"
- onClick={() => setLightboxMedia({ url: msg.imageUrl!, type: 'image' })}
- className="p-1.5 rounded-lg hover:bg-white/20 text-zinc-700 dark:text-zinc-300 hover:text-white transition-colors cursor-pointer"
- title="نمایش تمام‌صفحه"
- >
- <Maximize2 className="w-4 h-4" />
- </button>
- <button
- type="button"
- onClick={() => handleDownloadMedia(msg.imageUrl!)}
- className="p-1.5 rounded-lg hover:bg-white/20 text-zinc-700 dark:text-zinc-300 hover:text-white transition-colors cursor-pointer"
- title="دانلود تصویر"
- >
- <Download className="w-4 h-4" />
- </button>
- </div>
+{/* Floating Media Actions for AI Generated Image */}
+<div className="absolute top-2.5 left-2.5 flex items-center gap-1.5 bg-[var(--color-input-bg)]/80 backdrop-blur-md p-1 rounded-input opacity-0 group-hover/media:opacity-100 transition-opacity">
+<button
+type="button"
+onClick={() => setLightboxMedia({ url: msg.imageUrl!, type: 'image' })}
+className="p-1.5 rounded-btn hover:bg-[var(--color-input-bg)]/20 text-[var(--color-text-main)] hover:text-[var(--color-text-main)] transition-colors cursor-pointer"
+title="نمایش تمام‌صفحه"
+>
+<Maximize2 className="w-4 h-4" />
+</button>
+<button
+type="button"
+onClick={() => handleDownloadMedia(msg.imageUrl!)}
+className="p-1.5 rounded-btn hover:bg-[var(--color-input-bg)]/20 text-[var(--color-text-main)] hover:text-[var(--color-text-main)] transition-colors cursor-pointer"
+title="دانلود تصویر"
+>
+<Download className="w-4 h-4" />
+</button>
+</div>
  </div>
  </div>
  )}
@@ -580,40 +586,40 @@ export const ChatBox: React.FC = React.memo(() => {
  </div>
 
  {/* Single Unified Bottom Container */}
- <div className="flex flex-col mt-1.5 pt-1.5 border-t border-[var(--card-border)]/40 text-xs text-zinc-700 dark:text-zinc-400">
+ <div className="flex flex-col mt-1.5 pt-1.5 border-t border-[var(--card-border)]/40 text-xs text-[var(--color-text-muted)] dark:text-[var(--color-text-dim)]">
  {/* Row 1 (Stats Slider) */}
  {!isUser && !msg.error && (msg.modelUsed || showPerformanceMetrics) && (
  <div className={`overflow-hidden transition-all duration-300 ease-in-out ${showPerformanceMetrics ? 'max-h-12 opacity-100 mb-1' : 'max-h-0 opacity-0 mb-0'}`}>
  <div className="flex items-center gap-1.5 flex-nowrap overflow-x-auto [scrollbar-width:none] whitespace-nowrap text-[10px] sm:text-[11px] text-zinc-700 dark:text-zinc-400 pb-1">
- {msg.modelUsed && (
- <div className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-blue-500/10 border border-blue-500/20 text-blue-400 font-mono select-none shrink-0" title="مدل پردازش‌کننده">
- <Sparkles className="w-3 h-3" />
- <span dir="ltr">{msg.modelUsed.replace(' (Auto)', '')}</span>
- </div>
- )}
+{msg.modelUsed && (
+<div className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-[var(--color-accent-primary)]/10 border border-[var(--color-accent-primary)]/20 text-[var(--color-accent-text)] font-mono select-none shrink-0" title="مدل پردازش‌کننده">
+<Sparkles className="w-3 h-3" />
+<span dir="ltr">{msg.modelUsed.replace(' (Auto)', '')}</span>
+</div>
+)}
 
- <div className="flex items-center gap-1 px-2 py-0.5 rounded-md clay-surface shrink-0">
- <span className="text-zinc-500 font-sans">زمان:</span>
- <span className="font-mono text-zinc-700 dark:text-zinc-300" dir="ltr">
- {msg.metrics?.totalTimeMs ? `${(msg.metrics.totalTimeMs / 1000).toFixed(1)}s` : '1.4s'}
- </span>
- </div>
+<div className="flex items-center gap-1 px-2 py-0.5 rounded-md clay-surface shrink-0">
+<span className="text-[var(--color-text-dim)] font-sans">زمان:</span>
+<span className="font-mono text-[var(--color-text-main)] dark:text-[var(--color-text-main)]" dir="ltr">
+{msg.metrics?.totalTimeMs ? `${(msg.metrics.totalTimeMs / 1000).toFixed(1)}s` : '1.4s'}
+</span>
+</div>
 
- <div className="flex items-center gap-1 px-2 py-0.5 rounded-md clay-surface shrink-0">
- <span className="text-zinc-500 font-sans">توکن مصرفی:</span>
- <span className="font-mono text-zinc-700 dark:text-zinc-300" dir="ltr">
- {toPersianDigits(msg.metrics?.exactTotalTokens || msg.metrics?.approxTokens || 340)}
- </span>
- </div>
+<div className="flex items-center gap-1 px-2 py-0.5 rounded-md clay-surface shrink-0">
+<span className="text-[var(--color-text-dim)] font-sans">توکن مصرفی:</span>
+<span className="font-mono text-[var(--color-text-main)] dark:text-[var(--color-text-main)]" dir="ltr">
+{toPersianDigits(msg.metrics?.exactTotalTokens || msg.metrics?.approxTokens || 340)}
+</span>
+</div>
 
- <div className="flex items-center gap-1 px-2 py-0.5 rounded-md clay-surface shrink-0">
- <span className="text-zinc-500 font-sans">هزینه:</span>
- <span className="font-mono text-emerald-600 dark:text-emerald-400" dir="rtl">
- {typeof msg.metrics?.costToman === 'number'
- ? (msg.metrics.costToman === 0 ? 'رایگان' : `${toPersianDigits(msg.metrics.costToman.toLocaleString('fa-IR'))} تومان`)
- : `$${msg.metrics?.estimatedCostUSD || '0.00012'}`}
- </span>
- </div>
+<div className="flex items-center gap-1 px-2 py-0.5 rounded-md clay-surface shrink-0">
+<span className="text-[var(--color-text-dim)] font-sans">هزینه:</span>
+<span className="font-mono text-[var(--color-accent-text)] dark:text-[var(--color-accent-text)]" dir="rtl">
+{typeof msg.metrics?.costToman === 'number'
+? (msg.metrics.costToman === 0 ? 'رایگان' : `${toPersianDigits(msg.metrics.costToman.toLocaleString('fa-IR'))} تومان`)
+: `$${msg.metrics?.estimatedCostUSD || '0.00012'}`}
+</span>
+</div>
  </div>
  </div>
  )}
@@ -638,105 +644,105 @@ export const ChatBox: React.FC = React.memo(() => {
  )}
 
  {isUser && !isStreaming && (
- <Tooltip content="بازگشت متن به کادر پیام">
- <button
- onClick={() => {
- window.dispatchEvent(new CustomEvent('set-chat-input-text', { detail: { text: msg.content } }));
- }}
- className="p-1.5 rounded-lg text-zinc-700 dark:text-zinc-400 hover:text-sky-500 dark:hover:text-sky-400 hover:bg-sky-500/10 dark:hover:bg-sky-500/10 transition-colors cursor-pointer"
- aria-label="بازگشت متن به کادر پیام"
- >
- <RestartLinearIcon className="w-4 h-4" />
- </button>
- </Tooltip>
+<Tooltip content="بازگشت متن به کادر پیام">
+<button
+onClick={() => {
+window.dispatchEvent(new CustomEvent('set-chat-input-text', { detail: { text: msg.content } }));
+}}
+className="p-1.5 rounded-btn text-[var(--color-text-main)] hover:text-[var(--color-accent-primary)] hover:bg-[var(--color-accent-primary)]/10 dark:hover:bg-[var(--color-accent-primary)]/10 transition-colors cursor-pointer"
+aria-label="بازگشت متن به کادر پیام"
+>
+<RestartLinearIcon className="w-4 h-4" />
+</button>
+</Tooltip>
  )}
 
  {!isUser && !msg.error && (
  <>
- <Tooltip content={loadingTtsId === msg.id ? 'در حال آماده‌سازی صوت...' : speakingId === msg.id ? 'توقف خوانش' : 'خواندن صوتی'}>
- <button
- onClick={() => handleToggleSpeak(msg)}
- className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
- speakingId === msg.id || loadingTtsId === msg.id
- ? 'text-sky-400 bg-sky-500/15'
- : 'text-zinc-700 dark:text-zinc-400 hover:text-zinc-900 dark:text-zinc-100 clay-icon-btn/80'
- }`}
- aria-label={speakingId === msg.id ? 'توقف خوانش متن' : 'خواندن صوتی متن پیام'}
- >
- {loadingTtsId === msg.id ? (
- <RotateCw className="w-4 h-4 animate-spin" />
- ) : speakingId === msg.id ? (
- <VolumeCrossLinearIcon className="w-4 h-4 animate-pulse" />
- ) : (
- <VolumeLoudLinearIcon className="w-4 h-4" />
- )}
- </button>
- </Tooltip>
+<Tooltip content={loadingTtsId === msg.id ? 'در حال آماده‌سازی صوت...' : speakingId === msg.id ? 'توقف خوانش' : 'خواندن صوتی'}>
+<button
+onClick={() => handleToggleSpeak(msg)}
+className={`p-1.5 rounded-btn transition-colors cursor-pointer ${
+speakingId === msg.id || loadingTtsId === msg.id
+? 'text-[var(--color-accent-text)] bg-[var(--color-accent-primary)]/15'
+: 'text-[var(--color-text-main)] dark:text-[var(--color-text-main)] clay-icon-btn/80'
+}`}
+aria-label={speakingId === msg.id ? 'توقف خوانش متن' : 'خواندن صوتی متن پیام'}
+>
+{loadingTtsId === msg.id ? (
+<RotateCw className="w-4 h-4 animate-spin" />
+) : speakingId === msg.id ? (
+<VolumeCrossLinearIcon className="w-4 h-4 animate-pulse" />
+) : (
+<VolumeLoudLinearIcon className="w-4 h-4" />
+)}
+</button>
+</Tooltip>
 
- <Tooltip content="خروجی Markdown">
- <button
- onClick={() => handleExportSingleMessage(msg)}
- className="p-1.5 rounded-lg text-zinc-700 dark:text-zinc-400 hover:text-zinc-900 dark:text-zinc-100 clay-icon-btn/80 transition-colors cursor-pointer"
- aria-label="دانلود خروجی متن به صورت فایل مارک‌داون"
- >
- <DownloadMinimalisticLinearIcon className="w-4 h-4" />
- </button>
- </Tooltip>
+<Tooltip content="خروجی Markdown">
+<button
+onClick={() => handleExportSingleMessage(msg)}
+className="p-1.5 rounded-btn text-[var(--color-text-main)] hover:text-[var(--color-text-main)] clay-icon-btn/80 transition-colors cursor-pointer"
+aria-label="دانلود خروجی متن به صورت فایل مارک‌داون"
+>
+<DownloadMinimalisticLinearIcon className="w-4 h-4" />
+</button>
+</Tooltip>
 
- <Tooltip content="پاسخ خوب بود">
- <button
- onClick={() => handleFeedback(msg.id, 'up')}
- className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
- feedback[msg.id] === 'up'
- ? 'text-emerald-400 bg-emerald-500/15'
- : 'text-zinc-700 dark:text-zinc-400 hover:text-zinc-900 dark:text-zinc-100 clay-icon-btn/80'
- }`}
- aria-label="ثبت بازخورد مثبت برای پاسخ"
- >
- {feedback[msg.id] === 'up' ? <LikeBoldIcon className="w-4 h-4 text-emerald-400" /> : <LikeLinearIcon className="w-4 h-4" />}
- </button>
- </Tooltip>
+<Tooltip content="پاسخ خوب بود">
+<button
+onClick={() => handleFeedback(msg.id, 'up')}
+className={`p-1.5 rounded-btn transition-colors cursor-pointer ${
+feedback[msg.id] === 'up'
+? 'text-[var(--color-accent-text)] bg-[var(--color-accent-primary)]/15'
+: 'text-[var(--color-text-main)] dark:text-[var(--color-text-main)] clay-icon-btn/80'
+}`}
+aria-label="ثبت بازخورد مثبت برای پاسخ"
+>
+{feedback[msg.id] === 'up' ? <LikeBoldIcon className="w-4 h-4 text-[var(--color-accent-text)]" /> : <LikeLinearIcon className="w-4 h-4" />}
+</button>
+</Tooltip>
 
- <Tooltip content="پاسخ بد بود">
- <button
- onClick={() => handleFeedback(msg.id, 'down')}
- className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
- feedback[msg.id] === 'down'
- ? 'text-rose-400 bg-rose-500/15'
- : 'text-zinc-700 dark:text-zinc-400 hover:text-zinc-900 dark:text-zinc-100 clay-icon-btn/80'
- }`}
- aria-label="ثبت بازخورد منفی برای پاسخ"
- >
- {feedback[msg.id] === 'down' ? <DislikeBoldIcon className="w-4 h-4 text-rose-400" /> : <DislikeLinearIcon className="w-4 h-4" />}
- </button>
- </Tooltip>
+<Tooltip content="پاسخ بد بود">
+<button
+onClick={() => handleFeedback(msg.id, 'down')}
+className={`p-1.5 rounded-btn transition-colors cursor-pointer ${
+feedback[msg.id] === 'down'
+? 'text-rose-400 bg-rose-500/15'
+: 'text-[var(--color-text-main)] dark:text-[var(--color-text-main)] clay-icon-btn/80'
+}`}
+aria-label="ثبت بازخورد منفی برای پاسخ"
+>
+{feedback[msg.id] === 'down' ? <DislikeBoldIcon className="w-4 h-4 text-rose-400" /> : <DislikeLinearIcon className="w-4 h-4" />}
+</button>
+</Tooltip>
 
- {!isStreaming && (
- <Tooltip content="تولید مجدد پاسخ">
- <button
- onClick={onRegenerate}
- className="p-1.5 rounded-lg text-zinc-700 dark:text-zinc-400 hover:text-zinc-900 dark:text-zinc-100 clay-icon-btn/80 transition-colors cursor-pointer"
- aria-label="تولید مجدد پاسخ هوش مصنوعی"
- >
- <RestartLinearIcon className="w-4 h-4" />
- </button>
- </Tooltip>
+{!isStreaming && (
+<Tooltip content="تولید مجدد پاسخ">
+<button
+onClick={onRegenerate}
+className="p-1.5 rounded-btn text-[var(--color-text-main)] dark:text-[var(--color-text-main)] clay-icon-btn/80 transition-colors cursor-pointer"
+aria-label="تولید مجدد پاسخ هوش مصنوعی"
+>
+<RestartLinearIcon className="w-4 h-4" />
+</button>
+</Tooltip>
  )}
  </>
  )}
  </div>
- {!isUser && !msg.error && onToggleMetrics && (
- <Tooltip content={showPerformanceMetrics ?"مخفی‌سازی آمار" :"نمایش آمار"}>
- <button
- type="button"
- onClick={() => onToggleMetrics(!showPerformanceMetrics)}
- className="p-1.5 text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300 clay-icon-btn/80 rounded-lg transition-colors cursor-pointer mr-auto shrink-0"
- aria-label="تغییر وضعیت نمایش آمار"
- >
- {showPerformanceMetrics ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
- </button>
- </Tooltip>
- )}
+{!isUser && !msg.error && onToggleMetrics && (
+<Tooltip content={showPerformanceMetrics ?"مخفی‌سازی آمار" :"نمایش آمار"}>
+<button
+type="button"
+onClick={() => onToggleMetrics(!showPerformanceMetrics)}
+className="p-1.5 text-[var(--color-text-dim)] hover:text-[var(--color-text-main)] dark:hover:text-[var(--color-text-main)] clay-icon-btn/80 rounded-btn transition-colors cursor-pointer mr-auto shrink-0"
+aria-label="تغییر وضعیت نمایش آمار"
+>
+{showPerformanceMetrics ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+</button>
+</Tooltip>
+)}
  </div>
  </div>
  </div>
@@ -747,45 +753,45 @@ export const ChatBox: React.FC = React.memo(() => {
  )}
 
  {/* Floating Scroll to Bottom Button - Minimal Pill */}
- {showScrollBottom && (
- <button
- onClick={() => scrollToBottom(true)}
- className="absolute bottom-4 sm:bottom-8 left-4 sm:left-8 z-20 p-3 rounded-full clay-surface text-zinc-700 dark:text-zinc-300 border border-zinc-300  transition-all clay-icon-btn hover:scale-105 cursor-pointer"
- aria-label="پیمایش به پایین"
- >
- <ArrowDown className="w-4 h-4" />
- </button>
- )}
+{showScrollBottom && (
+<button
+onClick={() => scrollToBottom(true)}
+className="absolute bottom-4 sm:bottom-8 left-4 sm:left-8 z-20 p-3 rounded-badge clay-surface text-[var(--color-text-main)] dark:text-[var(--color-text-main)] border border-[var(--color-border-strong)] transition-all clay-icon-btn hover:scale-105 cursor-pointer"
+aria-label="پیمایش به پایین"
+>
+<ArrowDown className="w-4 h-4" />
+</button>
+)}
 
  {/* Lightbox Modal */}
  {lightboxMedia && (
  <div className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center p-4 backdrop-blur-sm"
  onClick={() => setLightboxMedia(null)}
  >
- <button className="absolute top-6 right-6 p-2 rounded-full clay-surface clay-icon-btn text-white transition-colors cursor-pointer"
- onClick={() => setLightboxMedia(null)}
- aria-label="بستن پیش‌نمایش"
- >
- <X className="w-6 h-6" />
- </button>
- <div className="relative max-w-[90vw] max-h-[90dvh]"
- onClick={(e) => e.stopPropagation()}
- >
- {lightboxMedia.type === 'image' ? (
- <img src={lightboxMedia.url} className="max-w-full max-h-[90dvh] object-contain rounded-xl" alt="Preview" />
- ) : (
- <video src={lightboxMedia.url} controls autoPlay className="max-w-full max-h-[90dvh] object-contain rounded-xl" />
- )}
- <div className="absolute -bottom-14 left-1/2 -translate-x-1/2 flex items-center gap-3">
- <button
- onClick={() => handleDownloadMedia(lightboxMedia.url, lightboxMedia.type === 'video')}
- className="flex items-center gap-2 px-4 py-2 clay-surface clay-icon-btn text-white rounded-xl border border-zinc-300  transition-colors cursor-pointer text-sm"
- >
- <Download className="w-4 h-4" />
- دانلود
- </button>
- </div>
- </div>
+<button className="absolute top-6 right-6 p-2 rounded-badge clay-surface clay-icon-btn text-white transition-colors cursor-pointer"
+onClick={() => setLightboxMedia(null)}
+aria-label="بستن پیش‌نمایش"
+>
+<X className="w-6 h-6" />
+</button>
+<div className="relative max-w-[90vw] max-h-[90dvh]"
+onClick={(e) => e.stopPropagation()}
+>
+{lightboxMedia.type === 'image' ? (
+<img src={lightboxMedia.url} className="max-w-full max-h-[90dvh] object-contain rounded-card" alt="Preview" />
+) : (
+<video src={lightboxMedia.url} controls autoPlay className="max-w-full max-h-[90dvh] object-contain rounded-card" />
+)}
+<div className="absolute -bottom-14 left-1/2 -translate-x-1/2 flex items-center gap-3">
+<button
+onClick={() => handleDownloadMedia(lightboxMedia.url, lightboxMedia.type === 'video')}
+className="flex items-center gap-2 px-4 py-2 clay-surface clay-icon-btn text-white rounded-btn border border-[var(--color-border-strong)] transition-colors cursor-pointer text-sm"
+>
+<Download className="w-4 h-4" />
+دانلود
+</button>
+</div>
+</div>
  </div>
  )}
  </div>

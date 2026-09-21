@@ -455,5 +455,14 @@ export function initializeSchema() {
     )
   `);
 
+  // Create Telegram Pending Receipts table (for card-to-card payment flow)
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS telegram_pending_receipts (
+      tgId TEXT PRIMARY KEY,
+      orderId TEXT NOT NULL,
+      createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
   console.log('[Database] SQLite schema ready.');
 }
