@@ -424,19 +424,36 @@ export function initializeSchema() {
       db.prepare("UPDATE site_settings SET value = 'true' WHERE key = 'news_auto_publish'").run();
     } catch {}
     seedSetting('api_dollar_rate', '200000'); // 200,000 Tomans per $1 API by default
-    seedSetting('welcome_bonus_amount', '50000'); // 50,000 Tomans welcome credit
-    // Ensure existing database has 50000 if previously 5000
-    try {
-      const existingBonus = db.prepare("SELECT value FROM site_settings WHERE key = 'welcome_bonus_amount'").get() as any;
-      if (existingBonus?.value === '5000') {
-        db.prepare("UPDATE site_settings SET value = '50000' WHERE key = 'welcome_bonus_amount'").run();
-      }
-    } catch {}
-    seedSetting('welcome_bonus_enabled', 'true');
     seedSetting('free_key_pool', ''); // Comma- or newline-separated free keys for round-robin
+    seedSetting('free_daily_limit_user', '30');
+    seedSetting('free_daily_limit_guest', '5');
   } catch (err) {
     console.error('[Database] Failed to seed site settings:', err);
   }
+
+  // Create Promo Codes table
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS promo_codes (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      code TEXT UNIQUE NOT NULL,
+      type TEXT NOT NULL DEFAULT 'registration_bonus', -- 'registration_bonus', 'discount_percent', 'extra_charge_percent'
+      value INTEGER NOT NULL,
+      maxUses INTEGER DEFAULT 0,
+      currentUses INTEGER DEFAULT 0,
+      isActive INTEGER DEFAULT 1,
+      createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  // Create Free Models Daily Usage table
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS free_daily_usage (
+      id TEXT, -- 'user:ID' or 'ip:1.2.3.4'
+      date TEXT, -- 'YYYY-MM-DD'
+      count INTEGER DEFAULT 0,
+      PRIMARY KEY (id, date)
+    )
+  `);
 
   console.log('[Database] SQLite schema ready.');
 }

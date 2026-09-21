@@ -6,6 +6,7 @@ import { Coins, TrendingUp, TrendingDown, Plus, Trash2, Save, CheckCircle2, Aler
  Loader2
 } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
+import { PromoCodesManager } from './PromoCodesManager';
 
 export const AdminFinanceTab: React.FC = () => {
  const { token } = useAuthStore();
@@ -209,7 +210,7 @@ export const AdminFinanceTab: React.FC = () => {
  ]);
 
  setGatewayEnabled(zarinpalMerchantId.trim().length >= 30);
- setFeedback({ type: 'success', text: 'تنظیمات مالی و درگاه زرین‌پال با موفقیت ذخیره شد.' });
+ setFeedback({ type: 'success', text: 'تنظیمات با موفقیت ذخیره شد.' });
  fetchData();
  } catch (err: any) {
  setFeedback({ type: 'error', text: err.message || 'خطا در ذخیره تنظیمات' });
@@ -470,7 +471,7 @@ export const AdminFinanceTab: React.FC = () => {
  <button
  onClick={fetchLiveBalances}
  disabled={liveLoading}
- className="px-4 py-2 rounded-xl clay-btn-primary-thick text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-xs transition-all disabled:opacity-50"
+ className="px-4 py-2 rounded-xl admin-btn-primary text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-sm transition-all disabled:opacity-50"
  >
  <RefreshCw className={`w-3.5 h-3.5 ${liveLoading ? 'animate-spin' : ''}`} />
  <span>بروزرسانی استعلام</span>
@@ -495,7 +496,7 @@ export const AdminFinanceTab: React.FC = () => {
  {/* KPI Cards Header */}
  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
  {/* Total USD Purchased */}
- <div className="p-4 rounded-2xl clay-card flex flex-col justify-between">
+ <div className="p-4 rounded-2xl admin-card flex flex-col justify-between">
  <div>
  <div className="flex items-center justify-between mb-2">
  <span className="text-xs font-semibold text-zinc-500 dark:text-zinc-400">مخزن کلیدها (خریداری شده)</span>
@@ -510,7 +511,7 @@ export const AdminFinanceTab: React.FC = () => {
  <span className="text-xs font-medium text-zinc-400">اعتبار دلاری</span>
  </div>
  </div>
- <div className="text-[11px] font-medium text-zinc-500 dark:text-zinc-400 mt-2.5 pt-2 border-t border-[var(--card-border)]  flex items-center justify-between">
+ <div className="text-[11px] font-medium text-zinc-500 dark:text-zinc-400 mt-2.5 pt-2 border-t admin-border  flex items-center justify-between">
  <span>پرداخت کل: <span className="font-bold text-zinc-700 dark:text-zinc-300">{(summary?.totalSpentToman || 0).toLocaleString('fa-IR')}</span> تومان</span>
  {!hasPurchases && (
  <button
@@ -528,7 +529,7 @@ export const AdminFinanceTab: React.FC = () => {
  </div>
 
  {/* Average Buy Rate vs Selling Rate */}
- <div className="p-4 rounded-2xl clay-card flex flex-col justify-between">
+ <div className="p-4 rounded-2xl admin-card flex flex-col justify-between">
  <div>
  <div className="flex items-center justify-between mb-2">
  <span className="text-xs font-semibold text-zinc-500 dark:text-zinc-400">نرخ خرید vs نرخ فروش</span>
@@ -543,14 +544,14 @@ export const AdminFinanceTab: React.FC = () => {
  <span className="text-xs font-medium text-zinc-400">حاشیه سود</span>
  </div>
  </div>
- <div className="text-[11px] font-medium text-zinc-500 dark:text-zinc-400 mt-2.5 pt-2 border-t border-[var(--card-border)]  flex justify-between items-center">
+ <div className="text-[11px] font-medium text-zinc-500 dark:text-zinc-400 mt-2.5 pt-2 border-t admin-border  flex justify-between items-center">
  <span>خرید: <b className="text-zinc-700 dark:text-zinc-300">{hasPurchases ? `${avgBuyRate.toLocaleString('fa-IR')} ت` : 'ثبت نشده'}</b></span>
  <span>فروش: <b className="text-zinc-700 dark:text-zinc-300">{currentSellingRateNum.toLocaleString('fa-IR')} ت</b></span>
  </div>
  </div>
 
  {/* Consumed USD / Tokens */}
- <div className="p-4 rounded-2xl clay-card flex flex-col justify-between">
+ <div className="p-4 rounded-2xl admin-card flex flex-col justify-between">
  <div>
  <div className="flex items-center justify-between mb-2">
  <span className="text-xs font-semibold text-zinc-500 dark:text-zinc-400">مصرف کاربران</span>
@@ -565,13 +566,13 @@ export const AdminFinanceTab: React.FC = () => {
  <span className="text-xs font-medium text-zinc-400">دلار</span>
  </div>
  </div>
- <div className="text-[11px] font-medium text-zinc-500 dark:text-zinc-400 mt-2.5 pt-2 border-t border-[var(--card-border)] ">
+ <div className="text-[11px] font-medium text-zinc-500 dark:text-zinc-400 mt-2.5 pt-2 border-t admin-border ">
  معادل <span className="font-bold text-zinc-700 dark:text-zinc-300">{(summary?.totalTokensUsed || 0).toLocaleString('fa-IR')}</span> توکن چت
  </div>
  </div>
 
  {/* Remaining Treasury USD */}
- <div className="p-4 rounded-2xl clay-card flex flex-col justify-between">
+ <div className="p-4 rounded-2xl admin-card flex flex-col justify-between">
  <div>
  <div className="flex items-center justify-between mb-2">
  <span className="text-xs font-semibold text-zinc-500 dark:text-zinc-400">مانده اعتبار در مخزن</span>
@@ -586,19 +587,24 @@ export const AdminFinanceTab: React.FC = () => {
  <span className="text-xs font-medium text-zinc-400">باقی‌مانده</span>
  </div>
  </div>
- <div className="text-[11px] font-medium text-zinc-500 dark:text-zinc-400 mt-2.5 pt-2 border-t border-[var(--card-border)] ">
+ <div className="text-[11px] font-medium text-zinc-500 dark:text-zinc-400 mt-2.5 pt-2 border-t admin-border ">
  درآمد کسر شده: <span className="font-bold text-zinc-700 dark:text-zinc-300">{(summary?.totalDeductedToman || 0).toLocaleString('fa-IR')}</span> تومان
  </div>
  </div>
  </div>
 
- {/* Currency & Business Settings Section */}
- <div className="p-5 rounded-2xl clay-card space-y-4">
- <div className="flex items-center justify-between border-b border-[var(--card-border)]  pb-3">
- <div className="flex items-center gap-2">
- <Receipt className="w-5 h-5 text-blue-500" />
- <h3 className="text-sm font-bold text-zinc-900 dark:text-zinc-100">تنظیمات تبدیل ارز و تعرفه کاربران</h3>
- </div>
+  {/* Promo Codes Manager */}
+  <div className="mb-6">
+    <PromoCodesManager />
+  </div>
+
+  {/* Currency & Business Settings Section */}
+  <div className="p-5 rounded-2xl admin-card space-y-4">
+  <div className="flex items-center justify-between border-b admin-border  pb-3">
+  <div className="flex items-center gap-2">
+  <Receipt className="w-5 h-5 text-blue-500" />
+  <h3 className="text-sm font-bold text-zinc-900 dark:text-zinc-100">تنظیمات تبدیل ارز و تعرفه کاربران</h3>
+  </div>
  <button
  onClick={handleSaveSettings}
  disabled={actionLoading}
@@ -622,7 +628,7 @@ export const AdminFinanceTab: React.FC = () => {
  value={sellingRate}
  onChange={(e) => setSellingRate(e.target.value)}
  placeholder="200000"
- className="w-full pl-14 pr-3.5 py-2.5 rounded-xl clay-input  text-zinc-900 dark:text-zinc-100 text-xs font-bold focus:ring-2 focus:ring-zinc-400 dark:focus:ring-zinc-500/20 focus:border-zinc-400 dark:focus:border-zinc-500 outline-none transition-all"
+ className="w-full pl-14 pr-3.5 py-2.5 rounded-xl admin-input text-xs font-bold focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
  />
  <span className="absolute left-3.5 top-2.5 text-zinc-400 dark:text-zinc-500 text-xs font-medium select-none pointer-events-none">تومان</span>
  </div>
@@ -632,36 +638,7 @@ export const AdminFinanceTab: React.FC = () => {
  </p>
  </div>
 
- {/* Welcome Bonus Amount */}
- <div className="space-y-1.5 flex flex-col justify-between">
- <div>
- <label className="text-xs font-semibold text-zinc-700 dark:text-zinc-300 block mb-1.5">
- مبلغ اعتبار هدیه ثبت‌نام (تومان):
- </label>
- <div className="relative">
- <input
- type="number"
- value={welcomeBonus}
- onChange={(e) => setWelcomeBonus(e.target.value)}
- placeholder="50000"
- className="w-full pl-14 pr-3.5 py-2.5 rounded-xl clay-input  text-zinc-900 dark:text-zinc-100 text-xs font-bold focus:ring-2 focus:ring-zinc-400 dark:focus:ring-zinc-500/20 focus:border-zinc-400 dark:focus:border-zinc-500 outline-none transition-all"
- />
- <span className="absolute left-3.5 top-2.5 text-zinc-400 dark:text-zinc-500 text-xs font-medium select-none pointer-events-none">تومان</span>
- </div>
- </div>
- <div className="flex items-center gap-2 pt-1">
- <input
- type="checkbox"
- id="bonus-enable"
- checked={welcomeBonusEnabled}
- onChange={(e) => setWelcomeBonusEnabled(e.target.checked)}
- className="w-4 h-4 rounded border-zinc-400 text-blue-600 focus:ring-zinc-400 dark:focus:ring-zinc-500 cursor-pointer"
- />
- <label htmlFor="bonus-enable" className="text-zinc-600 dark:text-zinc-400 text-xs font-medium cursor-pointer">
- اعتبار هدیه خوش‌آمدگویی فعال باشد
- </label>
- </div>
- </div>
+
 
  {/* Free Key Pool Info */}
  <div className="space-y-1.5 flex flex-col justify-between">
@@ -674,7 +651,7 @@ export const AdminFinanceTab: React.FC = () => {
  value={freeKeyPool}
  onChange={(e) => setFreeKeyPool(e.target.value)}
  placeholder="کلیدهای متعدد Gemini یا Groq را با کاما یا خط جدید وارد کنید..."
- className="w-full px-3 py-2 rounded-xl clay-input  text-zinc-900 dark:text-zinc-100 text-xs font-mono focus:ring-2 focus:ring-zinc-400 dark:focus:ring-zinc-500/20 focus:border-zinc-400 dark:focus:border-zinc-500 outline-none transition-all resize-none"
+ className="w-full px-3 py-2 rounded-xl admin-input text-xs font-mono focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all resize-none"
  />
  </div>
  <p className="text-[11px] text-zinc-500 dark:text-zinc-400 leading-relaxed mt-1">
@@ -685,8 +662,8 @@ export const AdminFinanceTab: React.FC = () => {
  </div>
 
  {/* ZarinPal Payment Gateway Section */}
- <div className="p-5 rounded-2xl clay-card space-y-4">
- <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[var(--card-border)]  pb-3">
+ <div className="p-5 rounded-2xl admin-card space-y-4">
+ <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b admin-border  pb-3">
  <div className="flex items-center gap-2.5">
  <div className="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center shrink-0 font-black">
  <CreditCard className="w-4 h-4" />
@@ -697,7 +674,7 @@ export const AdminFinanceTab: React.FC = () => {
  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
  gatewayEnabled
  ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
- : 'clay-btn-secondary text-zinc-600 dark:text-zinc-400'
+ : 'admin-btn-secondary text-zinc-600 dark:text-zinc-400'
  }`}>
  {gatewayEnabled ? 'درگاه متصل و فعال' : 'غیرفعال (درگاه آزمایشی)'}
  </span>
@@ -710,7 +687,7 @@ export const AdminFinanceTab: React.FC = () => {
  <button
  onClick={handleTestGateway}
  disabled={testingGateway || !zarinpalMerchantId.trim()}
- className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl clay-btn-secondary hover:bg-zinc-300 dark:hover:bg-zinc-600 text-zinc-800 dark:text-zinc-200 font-bold text-xs transition-all cursor-pointer disabled:opacity-50"
+ className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl admin-btn-secondary text-zinc-800 dark:text-zinc-200 font-bold text-xs transition-all cursor-pointer disabled:opacity-50"
  >
  {testingGateway ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ShieldCheck className="w-3.5 h-3.5 text-blue-500" />}
  <span>تست اتصال به زرین‌پال</span>
@@ -742,7 +719,7 @@ export const AdminFinanceTab: React.FC = () => {
  <div className="flex items-center gap-2 text-blue-700 dark:text-blue-300">
  <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
  <span>آی‌پی عمومی این سرور برای ثبت در زرین‌پال:</span>
- <code className="font-mono font-bold clay-surface px-2 py-0.5 rounded border border-blue-200 dark:border-blue-700 select-all" dir="ltr">
+ <code className="font-mono font-bold bg-blue-50 dark:bg-blue-950/40 px-2 py-0.5 rounded border border-blue-200 dark:border-blue-700 text-blue-700 dark:text-blue-300 select-all" dir="ltr">
  {detectedServerIp}
  </code>
  </div>
@@ -771,7 +748,7 @@ export const AdminFinanceTab: React.FC = () => {
  value={zarinpalMerchantId}
  onChange={(e) => setZarinpalMerchantId(e.target.value)}
  placeholder="مثال: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
- className="w-full px-3.5 py-2.5 rounded-xl clay-input  text-zinc-900 dark:text-zinc-100 text-xs font-mono focus:ring-2 focus:ring-zinc-400 dark:focus:ring-zinc-500/20 focus:border-zinc-400 dark:focus:border-zinc-500 outline-none transition-all"
+ className="w-full px-3.5 py-2.5 rounded-xl admin-input text-xs font-mono focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
  />
  <p className="text-[11px] text-zinc-500 dark:text-zinc-400 leading-relaxed">
  شناسه ۳۶ کاراکتری اختصاصی درگاه زرین‌پال شما برای هدایت مستقیم به صفحه پرداخت شاپرک.
@@ -805,8 +782,8 @@ export const AdminFinanceTab: React.FC = () => {
  </div>
 
  {/* API Purchases Management Section */}
- <div ref={purchaseSectionRef} className="p-5 rounded-2xl clay-card space-y-4">
- <div className="flex items-center justify-between border-b border-[var(--card-border)]  pb-3">
+ <div ref={purchaseSectionRef} className="p-5 rounded-2xl admin-card space-y-4">
+ <div className="flex items-center justify-between border-b admin-border  pb-3">
  <div className="flex items-center gap-2">
  <Layers className="w-5 h-5 text-emerald-500" />
  <div>
@@ -825,7 +802,7 @@ export const AdminFinanceTab: React.FC = () => {
 
  {/* Add Purchase Form */}
  {isAddingPurchase && (
- <form onSubmit={handleAddPurchase} className="p-4 rounded-2xl clay-card space-y-3 animate-slideDown">
+ <form onSubmit={handleAddPurchase} className="p-4 rounded-2xl admin-surface space-y-3 animate-slideDown">
  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
  <div>
  <label className="font-bold text-zinc-700 dark:text-zinc-300 block mb-1">نام تأمین‌کننده / پرووایدر:</label>
@@ -835,7 +812,7 @@ export const AdminFinanceTab: React.FC = () => {
  onChange={(e) => setPurchaseProvider(e.target.value)}
  placeholder="مثلاً: ری‌سلر ایرانی A، صرافی، ..."
  required
- className="w-full px-3 py-2 rounded-xl clay-input  text-zinc-900 dark:text-zinc-100"
+ className="w-full px-3 py-2 rounded-xl admin-input focus:border-blue-500 outline-none"
  />
  </div>
 
@@ -848,7 +825,7 @@ export const AdminFinanceTab: React.FC = () => {
  onChange={(e) => setPurchaseAmountUsd(e.target.value)}
  placeholder="20"
  required
- className="w-full px-3 py-2 rounded-xl clay-input  text-zinc-900 dark:text-zinc-100 font-mono"
+ className="w-full px-3 py-2 rounded-xl admin-input font-mono focus:border-blue-500 outline-none"
  />
  </div>
 
@@ -860,7 +837,7 @@ export const AdminFinanceTab: React.FC = () => {
  onChange={(e) => setPurchaseCostToman(e.target.value)}
  placeholder="1000000"
  required
- className="w-full px-3 py-2 rounded-xl clay-input  text-zinc-900 dark:text-zinc-100 font-mono"
+ className="w-full px-3 py-2 rounded-xl admin-input font-mono focus:border-blue-500 outline-none"
  />
  </div>
  </div>
@@ -876,7 +853,7 @@ export const AdminFinanceTab: React.FC = () => {
  <button
  type="button"
  onClick={() => setIsAddingPurchase(false)}
- className="px-3 py-1.5 rounded-xl clay-btn-secondary text-zinc-600 dark:text-zinc-400 text-xs font-bold"
+ className="px-3 py-1.5 rounded-xl admin-btn-secondary text-zinc-600 dark:text-zinc-400 text-xs font-bold"
  >
  انصراف
  </button>
@@ -895,7 +872,7 @@ export const AdminFinanceTab: React.FC = () => {
  <div className="overflow-x-auto">
  <table className="w-full text-xs text-right">
  <thead>
- <tr className="border-b border-[var(--card-border)]  text-zinc-400">
+ <tr className="border-b admin-border  text-zinc-400">
  <th className="py-2.5 px-3">تأمین‌کننده</th>
  <th className="py-2.5 px-3">مبلغ دلاری</th>
  <th className="py-2.5 px-3">پرداختی تومانی</th>
@@ -937,8 +914,8 @@ export const AdminFinanceTab: React.FC = () => {
  </div>
 
  {/* User Usage Logs */}
- <div className="p-5 rounded-2xl clay-card space-y-4">
- <div className="flex flex-col xl:flex-row items-start xl:items-center justify-between border-b border-[var(--card-border)]  pb-4 gap-4">
+ <div className="p-5 rounded-2xl admin-card space-y-4">
+ <div className="flex flex-col xl:flex-row items-start xl:items-center justify-between border-b admin-border  pb-4 gap-4">
  <div className="flex items-center gap-2">
  <Clock className="w-5 h-5 text-purple-500" />
  <h3 className="text-sm font-bold text-zinc-900 dark:text-zinc-100">آخرین تراکنش‌ها و مصرف توکن</h3>
@@ -948,14 +925,14 @@ export const AdminFinanceTab: React.FC = () => {
  <input type="text" placeholder="جستجوی لایو کاربر، ID یا مدل..."
  value={searchQuery}
  onChange={(e) => setSearchQuery(e.target.value)}
- className="w-full px-3 py-1.5 rounded-xl clay-input  text-xs focus:outline-none focus:border-zinc-400 dark:focus:border-zinc-500 transition-colors"
+ className="w-full px-3 py-1.5 rounded-xl admin-input text-xs focus:outline-none focus:border-blue-500 transition-colors"
  />
  </div>
  <div className="flex w-full sm:w-auto gap-2 flex-wrap items-center">
  <select
  value={txTypeFilter}
  onChange={(e) => setTxTypeFilter(e.target.value)}
- className="h-9 px-2.5 flex-1 sm:flex-none clay-input  rounded-xl text-xs font-medium text-zinc-700 dark:text-zinc-300 outline-none cursor-pointer"
+ className="h-9 px-2.5 flex-1 sm:flex-none admin-input rounded-xl text-xs font-medium text-zinc-700 dark:text-zinc-300 outline-none cursor-pointer"
  >
  <option value="all">همه تراکنش‌ها</option>
  <option value="deposit">افزایش اعتبار (+)</option>
@@ -965,7 +942,7 @@ export const AdminFinanceTab: React.FC = () => {
  <select
  value={dateFilter}
  onChange={(e) => setDateFilter(e.target.value)}
- className="h-9 px-2.5 flex-1 sm:flex-none clay-input  rounded-xl text-xs font-medium text-zinc-700 dark:text-zinc-300 outline-none cursor-pointer"
+ className="h-9 px-2.5 flex-1 sm:flex-none admin-input rounded-xl text-xs font-medium text-zinc-700 dark:text-zinc-300 outline-none cursor-pointer"
  >
  <option value="all">همه زمان‌ها</option>
  <option value="today">۲۴ ساعت گذشته</option>
@@ -976,7 +953,7 @@ export const AdminFinanceTab: React.FC = () => {
  <select
  value={sortFilter}
  onChange={(e) => setSortFilter(e.target.value)}
- className="h-9 px-2.5 flex-1 sm:flex-none clay-input  rounded-xl text-xs font-medium text-zinc-700 dark:text-zinc-300 outline-none cursor-pointer"
+ className="h-9 px-2.5 flex-1 sm:flex-none admin-input rounded-xl text-xs font-medium text-zinc-700 dark:text-zinc-300 outline-none cursor-pointer"
  >
  <option value="newest">جدیدترین</option>
  <option value="oldest">قدیمی‌ترین</option>
@@ -1014,7 +991,7 @@ export const AdminFinanceTab: React.FC = () => {
  <div className="overflow-x-auto">
  <table className="w-full text-xs text-right">
  <thead>
- <tr className="border-b border-[var(--card-border)]  text-zinc-500 dark:text-zinc-400">
+ <tr className="border-b admin-border  text-zinc-500 dark:text-zinc-400">
  <th className="py-3 px-3.5 font-bold">کاربر</th>
  <th className="py-3 px-3.5 font-bold">نوع / مدل</th>
  <th className="py-3 px-3.5 font-bold">توکن مصرفی</th>
@@ -1040,7 +1017,7 @@ export const AdminFinanceTab: React.FC = () => {
  </div>
  </td>
  <td className="py-3 px-3.5">
- <span className="inline-flex items-center px-2 py-0.5 rounded-md clay-btn-secondary text-zinc-700 dark:text-zinc-300 border border-[var(--card-border)] font-mono text-[11px] font-medium">
+ <span className="inline-flex items-center px-2 py-0.5 rounded-md admin-btn-secondary text-zinc-700 dark:text-zinc-300 font-mono text-[11px] font-medium">
  {tx.model || tx.description || tx.type}
  </span>
  </td>
@@ -1095,11 +1072,11 @@ export const AdminFinanceTab: React.FC = () => {
  </div>
 
  {/* Pagination Controls */}
- <div className="flex items-center justify-between pt-4 border-t border-[var(--card-border)] ">
+ <div className="flex items-center justify-between pt-4 border-t admin-border ">
  <button
  onClick={() => setPage(p => Math.max(1, p - 1))}
  disabled={page === 1}
- className="px-3 py-1.5 text-xs font-bold rounded-lg clay-surface text-zinc-700 dark:text-zinc-300 disabled:opacity-50 disabled:cursor-not-allowed clay-icon-btn transition-colors"
+ className="px-3 py-1.5 text-xs font-bold rounded-lg admin-btn-secondary text-zinc-700 dark:text-zinc-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
  >
  صفحه قبل
  </button>
@@ -1109,7 +1086,7 @@ export const AdminFinanceTab: React.FC = () => {
  <button
  onClick={() => setPage(p => p + 1)}
  disabled={!transactions || transactions.length < LIMIT}
- className="px-3 py-1.5 text-xs font-bold rounded-lg clay-surface text-zinc-700 dark:text-zinc-300 disabled:opacity-50 disabled:cursor-not-allowed clay-icon-btn transition-colors"
+ className="px-3 py-1.5 text-xs font-bold rounded-lg admin-btn-secondary text-zinc-700 dark:text-zinc-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
  >
  صفحه بعد
  </button>

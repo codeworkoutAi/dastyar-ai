@@ -2,6 +2,7 @@ import express from 'express';
 import db, { syncDatabase } from '../db/database';
 import { requireAuth } from '../middleware/auth';
 import { bot, sendTelegramOrderSuccess } from '../telegram/bot';
+import { notifyOrderSuccessBySms } from '../services/kavenegarService';
 import { clearSitemapCache } from '../seo/sitemap';
 import { getAdminFinancialSummary, addApiPurchase, depositWallet, getPlanCreditAmount } from '../services/walletService';
 import { getZarinpalConfig, testZarinpalMerchant, getServerPublicIp } from '../services/zarinpalService';
@@ -21,6 +22,62 @@ const requireAdmin = (req: any, res: any, next: any) => {
 
 // Apply auth and admin check to all admin routes
 router.use(requireAuth, requireAdmin);
+
+
+
+// ==========================================
+// Promo Codes Management
+// ==========================================
+
+// GET /api/admin/promo-codes
+router.get('/promo-codes', (req, res) => {
+  try {
+    const codes = db.prepare('SELECT * FROM promo_codes ORDER BY id DESC').all();
+    res.json(codes);
+  } catch (err) {
+    res.status(500).json({ error: 'خطا در دریافت کدهای تخفیف' });
+  }
+});
+
+// POST /api/admin/promo-codes
+router.post('/promo-codes', (req, res) => {
+  try {
+    const { code, type, value, maxUses } = req.body;
+    if (!code || !value) return res.status(400).json({ error: 'کد و مبلغ الزامی است' });
+    
+    db.prepare('INSERT INTO promo_codes (code, type, value, maxUses) VALUES (?, ?, ?, ?)').run(code, type || 'registration_bonus', value, maxUses || 0);
+    syncDatabase();
+    res.json({ message: 'کد با موفقیت اضافه شد' });
+  } catch (err: any) {
+    if (err.message.includes('UNIQUE')) {
+      return res.status(400).json({ error: 'این کد قبلاً ثبت شده است' });
+    }
+    res.status(500).json({ error: 'خطا در ثبت کد تخفیف' });
+  }
+});
+
+// DELETE /api/admin/promo-codes/:id
+router.delete('/promo-codes/:id', (req, res) => {
+  try {
+    db.prepare('DELETE FROM promo_codes WHERE id = ?').run(req.params.id);
+    syncDatabase();
+    res.json({ message: 'کد با موفقیت حذف شد' });
+  } catch (err) {
+    res.status(500).json({ error: 'خطا در حذف کد تخفیف' });
+  }
+});
+
+// PUT /api/admin/promo-codes/:id/toggle
+router.put('/promo-codes/:id/toggle', (req, res) => {
+  try {
+    const { isActive } = req.body;
+    db.prepare('UPDATE promo_codes SET isActive = ? WHERE id = ?').run(isActive ? 1 : 0, req.params.id);
+    syncDatabase();
+    res.json({ message: 'وضعیت کد تغییر کرد' });
+  } catch (err) {
+    res.status(500).json({ error: 'خطا در تغییر وضعیت' });
+  }
+});
 
 // GET /api/admin/products
 router.get('/products', (req, res) => {
@@ -204,6 +261,8 @@ router.delete('/products/:id', (req, res) => {
   }
 });
 
+
+
 // GET /api/admin/products/:productId/licenses
 router.get('/products/:productId/licenses', (req, res) => {
   try {
@@ -381,9 +440,10 @@ router.put('/orders/:id/status', (req, res) => {
 
     syncDatabase();
 
-    // Send Telegram delivery notification if approved
+    // Send Telegram & SMS delivery notification if approved
     if (status === 'success') {
       sendTelegramOrderSuccess(id, licenseId);
+      notifyOrderSuccessBySms(id, licenseId);
     }
 
     res.json({ 
@@ -437,8 +497,9 @@ router.post('/orders/:id/assign-license', (req, res) => {
 
     syncDatabase();
 
-    // Notify Telegram buyer
+    // Notify Telegram & SMS buyer
     sendTelegramOrderSuccess(id, finalLicenseId);
+    notifyOrderSuccessBySms(id, finalLicenseId);
 
     res.json({ success: true, message: 'لایسنس با موفقیت به سفارش تخصیص یافت و سفارش تایید شد.', licenseId: finalLicenseId });
   } catch (error) {
@@ -726,7 +787,7 @@ router.get('/provider-live-balances', async (req, res) => {
         try {
           const subRes = await fetch(`${baseUrl}/v1/dashboard/billing/subscription?_t=` + Date.now(), {
             headers: { Authorization: `Bearer ${apiKey}` },
-            signal: AbortSignal.timeout(6000)
+            signal: AbortSignal.timeout(3000)
           });
           if (subRes.ok) {
             const sub = await subRes.json();
@@ -735,7 +796,7 @@ router.get('/provider-live-balances', async (req, res) => {
             const end = new Date(now.getFullYear() + 1, 11, 31).toISOString().split('T')[0];
             const usageRes = await fetch(`${baseUrl}/v1/dashboard/billing/usage?start_date=${start}&end_date=${end}&_t=` + Date.now(), {
               headers: { Authorization: `Bearer ${apiKey}` },
-              signal: AbortSignal.timeout(6000)
+              signal: AbortSignal.timeout(3000)
             });
             const usage = usageRes.ok ? await usageRes.json() : {};
             const hardLimit = Number(sub.hard_limit_usd) || 0;
@@ -763,7 +824,7 @@ router.get('/provider-live-balances', async (req, res) => {
         try {
           const keyRes = await fetch('https://openrouter.ai/api/v1/auth/key', {
             headers: { Authorization: `Bearer ${apiKey}` },
-            signal: AbortSignal.timeout(6000)
+            signal: AbortSignal.timeout(3000)
           });
           if (keyRes.ok) {
             const keyData = await keyRes.json();
@@ -1225,3 +1286,5 @@ router.post('/site-design/upload-image', (req, res) => {
 });
 
 export default router;
+
+

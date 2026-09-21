@@ -32,7 +32,8 @@ if (syncUrl && authToken) {
   try {
     db = new Database(dbPath, {
       syncUrl,
-      authToken
+      authToken,
+      syncPeriod: 120 // 2 minutes background sync (non-blocking Rust thread)
     } as any);
   } catch (initErr: any) {
     if (initErr?.message?.includes('InvalidLocalState') || initErr?.message?.includes('metadata file exists') || initErr?.message?.includes('WalConflict')) {
@@ -45,30 +46,27 @@ if (syncUrl && authToken) {
         const shmPath = path.join(dataDir, 'chatbox.db-shm');
         if (fs.existsSync(shmPath)) fs.unlinkSync(shmPath);
       } catch (cleanupErr) {}
-      db = new Database(dbPath, {
-        syncUrl,
-        authToken
+              db = new Database(dbPath, {
+      syncUrl,
+      authToken,
+      syncPeriod: 120 // 2 minutes background sync (non-blocking Rust thread)
       } as any);
     } else {
       throw initErr;
     }
   }
-  try {
-    console.log('[Database] Synchronizing schema and data with Turso Cloud...');
-    db.sync();
-    console.log('[Database] Successfully synchronized with Turso Cloud.');
-  } catch (syncErr) {
-    console.warn('[Database] Initial Turso sync failed, continuing locally:', syncErr);
-  }
-
-  // Periodic sync every 2 minutes
-  setInterval(() => {
+  // Run initial sync asynchronously in the background so it doesn't block Node startup
+  setTimeout(() => {
     try {
+      console.log('[Database] Synchronizing schema and data with Turso Cloud...');
       db.sync();
-    } catch (e) {
-      console.warn('[Database] Background Turso sync error:', e);
+      console.log('[Database] Successfully synchronized with Turso Cloud.');
+    } catch (syncErr) {
+      console.warn('[Database] Initial Turso sync failed, continuing locally:', syncErr.message || syncErr);
     }
-  }, 2 * 60 * 1000);
+  }, 100);
+
+  // Background sync is now handled efficiently by the Rust layer via syncPeriod: 120
 
   // Sync on process termination
   process.on('SIGTERM', () => {

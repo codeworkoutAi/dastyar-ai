@@ -23,7 +23,6 @@ const MODEL_PRICING_USD: Record<string, [number, number]> = {
   'deepseek-v3': [0.14, 0.28],
 
   // Google Gemini
-  'gemini-3.6-flash': [0.10, 0.40],
   'gemini-3.6-pro': [1.25, 5.00],
   'gemini-2.0-flash': [0.10, 0.40],
   'gemini-2.0-flash-lite': [0.075, 0.30],
@@ -36,7 +35,49 @@ const MODEL_PRICING_USD: Record<string, [number, number]> = {
   'qwen/qwen3.6-27b': [0.20, 0.60],
   'qwen/qwen-2.5-coder-32b': [0.20, 0.60],
   'openai/gpt-oss-120b': [0.30, 0.90],
-  'meta-llama/llama-3.3-70b-instruct': [0.30, 0.90]
+  'meta-llama/llama-3.3-70b-instruct': [0.30, 0.90],
+  // --- Router.Cheap Auto-Fetched Models (2026) ---
+  'gpt-6-astra': [10.0, 50.0],
+  'claude-sonnet-4-6': [3.0, 15.0],
+  'minimax-m3': [0.3, 1.2],
+  'gpt-5.5': [5.0, 30.0],
+  'glm-5.1': [1.4, 4.3999999999999995],
+  'kimi-k2.6': [0.95, 3.9999999999999996],
+  'gemini-3.8-flash': [3.0, 15.0],
+  'deepseek-v4-flash-0731': [0.3, 1.2],
+  'claude-fable-5-1': [10.0, 50.0],
+  'gemini-3.7-flash': [3.0, 15.0],
+  'claude-opus-4-6': [5.0, 25.0],
+  'claude-sonnet-5': [3.0, 15.0],
+  'hy3': [0.132, 0.528],
+  'grok-4.6': [2.0, 6.0],
+  'gpt-5.6-luna': [0.2, 1.2000000000000002],
+  'gpt-5.4-mini': [0.75, 4.5],
+  'claude-haiku-4-5': [1.0, 5.0],
+  'deepseek-v4-pro': [1.32, 3.96],
+  'deepseek-v4.1-flash': [0.3, 1.2],
+  'hy4': [0.264, 1.056],
+  'glm-5.2': [1.4, 4.3999999999999995],
+  'glm-5.3': [1.4, 4.3999999999999995],
+  'kimi-k2.7-code-highspeed': [1.9, 7.999999999999999],
+  'mimo-v2.5-pro': [0.435, 0.87],
+  'grok-4.5': [2.0, 6.0],
+  'gemini-3.6-flash': [1.5, 7.5],
+  'gpt-5.6-terra': [2.0, 12.0],
+  'claude-fable-5': [10.0, 50.0],
+  'claude-opus-4-7': [5.0, 25.0],
+  'deepseek-v4-flash': [0.3, 1.2],
+  'glm-5.3-flash': [0.15, 0.5],
+  'gpt-5.6-sol': [5.0, 30.0],
+  'claude-opus-4-8': [5.0, 25.0],
+  'claude-opus-5': [5.0, 25.0],
+  'deepseek-v4-flash-vision-exp': [0.3, 1.2],
+  'deepseek-v4-pro-0813': [1.32, 3.96],
+  'kimi-k2.7-code': [0.95, 3.9999999999999996],
+  'kimi-k3': [3.0, 15.0],
+  'gemini-3.1-pro-preview': [2.0, 12.0],
+  'gemini-3.5-flash': [1.5, 9.0],
+  'gpt-5.4': [2.5, 15.0],
 };
 
 /**
@@ -114,37 +155,40 @@ export function hasSufficientBalance(userId: number, minRequiredToman: number = 
 /**
  * Grant welcome bonus credit to user upon first signup/login
  */
-export function grantWelcomeBonusIfEligible(userId: number): { granted: boolean; amount: number; newBalance: number } {
+export function grantWelcomeBonusIfEligible(userId: number, promoCode?: string): { granted: boolean; amount: number; newBalance: number } {
   try {
     const user = db.prepare('SELECT id, walletBalance, hasReceivedWelcomeBonus FROM users WHERE id = ?').get(userId) as any;
     if (!user || user.hasReceivedWelcomeBonus) {
       return { granted: false, amount: 0, newBalance: user?.walletBalance || 0 };
     }
 
-    const enabledRow = db.prepare("SELECT value FROM site_settings WHERE key = 'welcome_bonus_enabled'").get() as any;
-    const isEnabled = enabledRow ? enabledRow.value === 'true' : true;
-    if (!isEnabled) {
+    if (!promoCode || promoCode.trim() === '') {
       return { granted: false, amount: 0, newBalance: user.walletBalance || 0 };
     }
 
-    const amountRow = db.prepare("SELECT value FROM site_settings WHERE key = 'welcome_bonus_amount'").get() as any;
-    const bonusAmount = amountRow ? parseInt(amountRow.value, 10) || 50000 : 50000;
-
-    if (bonusAmount <= 0) {
+    const promo = db.prepare("SELECT * FROM promo_codes WHERE code = ? AND isActive = 1 AND type = 'registration_bonus'").get(promoCode) as any;
+    if (!promo) {
       return { granted: false, amount: 0, newBalance: user.walletBalance || 0 };
     }
 
+    if (promo.maxUses > 0 && promo.currentUses >= promo.maxUses) {
+      return { granted: false, amount: 0, newBalance: user.walletBalance || 0 };
+    }
+
+    const bonusAmount = promo.value;
     const newBalance = (user.walletBalance || 0) + bonusAmount;
+    
     db.prepare('UPDATE users SET walletBalance = ?, hasReceivedWelcomeBonus = 1 WHERE id = ?').run(newBalance, userId);
+    db.prepare('UPDATE promo_codes SET currentUses = currentUses + 1 WHERE id = ?').run(promo.id);
 
     const txId = `tx-${Date.now()}-${crypto.randomBytes(4).toString('hex')}`;
     db.prepare(`
       INSERT INTO wallet_transactions (id, userId, type, amount, balanceAfter, description)
-      VALUES (?, ?, 'bonus', ?, ?, 'اعتبار هدیه خوش‌آمدگویی')
-    `).run(txId, userId, bonusAmount, newBalance);
+      VALUES (?, ?, 'bonus', ?, ?, ?)
+    `).run(txId, userId, bonusAmount, newBalance, `پاداش ثبت‌نام (کد معرفی: ${promoCode})`);
 
     syncDatabase();
-    console.log(`[WalletService] 🎁 Granted welcome bonus of ${bonusAmount} Toman to user #${userId}`);
+    console.log(`[WalletService] 🎁 Granted promo bonus of ${bonusAmount} Toman to user #${userId} using code ${promoCode}`);
 
     return { granted: true, amount: bonusAmount, newBalance };
   } catch (error) {

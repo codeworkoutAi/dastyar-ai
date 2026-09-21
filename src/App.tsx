@@ -49,6 +49,15 @@ export default function App() {
  checkAuth();
  syncSystemProfiles();
 
+ // Check for promo code in URL
+ const urlParams = new URLSearchParams(window.location.search);
+ const promoCode = urlParams.get('promo');
+ if (promoCode) {
+   localStorage.setItem('chatbox_promo', promoCode);
+   // Optional: Clean up URL after extracting promo code
+   window.history.replaceState({}, document.title, window.location.pathname);
+ }
+
  // Fetch public settings (ui_style theme) and apply to <html>
  fetch('/api/public-settings')
    .then(res => res.json())

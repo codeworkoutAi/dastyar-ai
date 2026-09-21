@@ -9,6 +9,7 @@ import nodemailer from 'nodemailer';
 import rateLimit from 'express-rate-limit';
 import { telegramAuthSessions } from '../services/telegramAuthSessions';
 import { grantWelcomeBonusIfEligible, getUserWallet, getUserTransactions, getUserUsageStats, getApiDollarRate } from '../services/walletService';
+import { sendOtpSms, normalizePhoneNumber, isValidIranianMobile } from '../services/kavenegarService';
 
 const router = express.Router();
 
@@ -29,6 +30,22 @@ const verifyLimiter = rateLimit({
   legacyHeaders: false,
 });
 
+const otpSendLimiter = rateLimit({
+  windowMs: 10 * 60 * 1000, // 10 minutes
+  max: 5, // Limit each IP to 5 OTP requests per window
+  message: { error: 'تعداد درخواست‌های ارسال کد بیش از حد مجاز است. لطفاً ۱۰ دقیقه دیگر دوباره تلاش کنید.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+const otpVerifyLimiter = rateLimit({
+  windowMs: 10 * 60 * 1000, // 10 minutes
+  max: 10, // Limit each IP to 10 verification attempts per window
+  message: { error: 'تعداد تلاش‌های ناموفق ورود بیش از حد مجاز است. لطفاً کمی صبر کنید.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
 const forgotPasswordLimiter = rateLimit({
   windowMs: 10 * 60 * 1000, // 10 minutes
   max: 3, // Limit each IP to 3 forgot password requests per window
@@ -45,10 +62,160 @@ const resetPasswordLimiter = rateLimit({
   legacyHeaders: false,
 });
 
+// POST /api/auth/otp/send (Phone OTP Request)
+router.post('/otp/send', otpSendLimiter, async (req, res) => {
+  try {
+    const { phone } = req.body;
+    if (!phone) {
+      return res.status(400).json({ error: 'شماره موبایل الزامی است.' });
+    }
+
+    const normalizedPhone = normalizePhoneNumber(phone);
+    if (!isValidIranianMobile(normalizedPhone)) {
+      return res.status(400).json({ error: 'شماره موبایل نامعتبر است. فرمت صحیح: ۰۹۱۲۳۴۵۶۷۸۹' });
+    }
+
+    // Check cooling period: don't allow resending within 60 seconds
+    const existingOtp = db.prepare('SELECT * FROM otps WHERE phone = ?').get(normalizedPhone) as any;
+    if (existingOtp) {
+      const expiresAt = new Date(existingOtp.expiresAt).getTime();
+      const timeLeftSeconds = Math.round((expiresAt - Date.now()) / 1000);
+      // Expiry is 120s from creation, so if remaining > 60s, it's inside the 60s cooldown
+      if (timeLeftSeconds > 60) {
+        return res.status(429).json({
+          error: `لطفاً ${timeLeftSeconds - 60} ثانیه دیگر برای درخواست مجدد کد شکیبا باشید.`,
+          retryAfter: timeLeftSeconds - 60
+        });
+      }
+    }
+
+    // Generate secure 5-digit numeric OTP code
+    const code = Math.floor(10000 + Math.random() * 90000).toString();
+    const expiresAt = new Date(Date.now() + 2 * 60 * 1000).toISOString(); // 2 minutes
+
+    // Upsert into otps table
+    db.prepare(`
+      INSERT INTO otps (phone, code, expiresAt)
+      VALUES (?, ?, ?)
+      ON CONFLICT(phone) DO UPDATE SET code = excluded.code, expiresAt = excluded.expiresAt
+    `).run(normalizedPhone, code, expiresAt);
+    syncDatabase();
+
+    // Dispatch SMS via Kavenegar
+    const smsResult = await sendOtpSms(normalizedPhone, code);
+    if (!smsResult.success) {
+      return res.status(500).json({ error: smsResult.error || 'خطا در ارسال پیامک کد تایید' });
+    }
+
+    res.json({
+      success: true,
+      message: 'کد تایید ورود پیامک شد.',
+      expiresIn: 120
+    });
+  } catch (err) {
+    console.error('[Auth API] Send OTP Error:', err);
+    res.status(500).json({ error: 'خطای سرور در ارسال کد ورود' });
+  }
+});
+
+// POST /api/auth/otp/verify (Verify OTP & Login/Register)
+router.post('/otp/verify', otpVerifyLimiter, async (req, res) => {
+  try {
+    const { phone, code, promoCode } = req.body;
+    if (!phone || !code) {
+      return res.status(400).json({ error: 'شماره موبایل و کد تایید الزامی است.' });
+    }
+
+    const normalizedPhone = normalizePhoneNumber(phone);
+    const normalizedCode = code.toString().trim();
+
+    const otpRow = db.prepare('SELECT * FROM otps WHERE phone = ?').get(normalizedPhone) as any;
+    if (!otpRow) {
+      return res.status(400).json({ error: 'کد تایید یافت نشد یا منقضی شده است. لطفاً مجدداً درخواست کد دهید.' });
+    }
+
+    // Check expiry
+    if (new Date(otpRow.expiresAt).getTime() < Date.now()) {
+      db.prepare('DELETE FROM otps WHERE phone = ?').run(normalizedPhone);
+      syncDatabase();
+      return res.status(400).json({ error: 'کد تایید منقضی شده است. لطفاً مجدداً کد دریافت کنید.' });
+    }
+
+    // Check match
+    if (otpRow.code !== normalizedCode) {
+      return res.status(400).json({ error: 'کد وارد شده نادرست است.' });
+    }
+
+    // Code is valid! Consume OTP
+    db.prepare('DELETE FROM otps WHERE phone = ?').run(normalizedPhone);
+    syncDatabase();
+
+    // Check if user exists
+    let user = db.prepare('SELECT * FROM users WHERE phone = ?').get(normalizedPhone) as any;
+
+    if (!user) {
+      const countStmt = db.prepare('SELECT COUNT(*) as count FROM users');
+      const { count } = countStmt.get() as { count: number };
+      const role = count === 0 ? 'admin' : 'user';
+
+      const maskedPhone = `${normalizedPhone.slice(0, 4)}***${normalizedPhone.slice(-4)}`;
+      const defaultName = `کاربر ${maskedPhone}`;
+      const defaultAvatar = `https://api.dicebear.com/9.x/shapes/svg?seed=${normalizedPhone}`;
+
+      const insertStmt = db.prepare('INSERT INTO users (phone, name, avatar, role) VALUES (?, ?, ?, ?)');
+      const info = insertStmt.run(normalizedPhone, defaultName, defaultAvatar, role);
+      const userId = Number(info.lastInsertRowid);
+
+      const bonusResult = grantWelcomeBonusIfEligible(userId, promoCode);
+
+      user = {
+        id: userId,
+        phone: normalizedPhone,
+        email: null,
+        name: defaultName,
+        avatar: defaultAvatar,
+        role,
+        walletBalance: bonusResult.newBalance,
+        hasReceivedWelcomeBonus: bonusResult.granted
+      };
+    } else {
+      const wallet = getUserWallet(user.id);
+      user.walletBalance = wallet.walletBalance;
+      user.hasReceivedWelcomeBonus = wallet.hasReceivedWelcomeBonus;
+    }
+
+    syncDatabase();
+
+    const token = jwt.sign(
+      { id: user.id, phone: user.phone, email: user.email, role: user.role },
+      JWT_SECRET,
+      { expiresIn: '30d' }
+    );
+
+    res.json({
+      message: 'ورود موفقیت‌آمیز',
+      token,
+      user: {
+        id: user.id,
+        phone: user.phone,
+        email: user.email,
+        name: user.name,
+        avatar: user.avatar,
+        role: user.role,
+        walletBalance: user.walletBalance,
+        hasReceivedWelcomeBonus: user.hasReceivedWelcomeBonus
+      }
+    });
+  } catch (err) {
+    console.error('[Auth API] Verify OTP Error:', err);
+    res.status(500).json({ error: 'خطای سرور در تایید کد ورود' });
+  }
+});
+
 // POST /api/auth/register (Email)
 router.post('/register', registerLimiter, async (req, res) => {
   try {
-    const { email, password, name, avatar } = req.body;
+    const { email, password, name, avatar, promoCode } = req.body;
 
     if (!email || !email.includes('@') || !password || password.length < 6) {
       return res.status(400).json({ error: 'ایمیل معتبر و رمز عبور (حداقل ۶ کاراکتر) الزامی است.' });
@@ -75,7 +242,7 @@ router.post('/register', registerLimiter, async (req, res) => {
     syncDatabase();
 
     const userId = Number(info.lastInsertRowid);
-    const bonusResult = grantWelcomeBonusIfEligible(userId);
+    const bonusResult = grantWelcomeBonusIfEligible(userId, promoCode);
 
     const token = jwt.sign(
       { id: userId, email, role },
@@ -150,7 +317,7 @@ router.post('/login', verifyLimiter, async (req, res) => {
 // POST /api/auth/google
 router.post('/google', googleAuthLimiter, async (req, res) => {
   try {
-    const { credential } = req.body;
+    const { credential, promoCode } = req.body;
     if (!credential) return res.status(400).json({ error: 'توکن گوگل دریافت نشد.' });
 
     // Validate token using Google's public endpoint (supports both ID Token and OAuth2 Access Token)
@@ -207,7 +374,7 @@ router.post('/google', googleAuthLimiter, async (req, res) => {
         const insertUserStmt = db.prepare('INSERT INTO users (email, googleId, name, avatar, role) VALUES (?, ?, ?, ?, ?)');
         const info = insertUserStmt.run(email, googleId, name, avatar, role);
         user = { id: Number(info.lastInsertRowid), email, googleId, name, avatar, role };
-        grantWelcomeBonusIfEligible(user.id);
+        grantWelcomeBonusIfEligible(user.id, promoCode);
       }
     }
 

@@ -98,6 +98,7 @@ import newsRouter from './routes/news';
 import landingRouter from './routes/landing';
 import { startTelegramBot } from './telegram/bot';
 import { initNewsCron } from './services/newsCron';
+import { startAutoProfilesSync } from './services/autoProfiles';
 
 import { initializeSchema } from './db/schema';
 import db from './db/database';
@@ -105,7 +106,10 @@ import { sitemapHandler } from './seo/sitemap';
 import { renderHtmlWithSeo } from './seo/htmlInjector';
 // Initialize SQLite tables
 initializeSchema();
+
+// Start Background Services
 initNewsCron();
+startAutoProfilesSync();
 
 app.use('/', modelsRouter);
 app.use('/', chatRouter);

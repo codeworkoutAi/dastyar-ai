@@ -339,24 +339,29 @@ function getCalloutType(text: string): { type: 'note' | 'tip' | 'warning' | 'cau
 
 // Safely detects Persian poetry couplets (ابیات شعر فارسی) for authentic two-column Divan book presentation
 function isValidHemistichPair(m1: string, m2: string): boolean {
- // Check Persian characters
- const persian1 = (m1.match(/[\u0600-\u06FF]/g) || []).length;
- const persian2 = (m2.match(/[\u0600-\u06FF]/g) || []).length;
- if (persian1 < 8 || persian2 < 8) return false;
+  // Check Persian characters
+  const persian1 = (m1.match(/[\u0600-\u06FF]/g) || []).length;
+  const persian2 = (m2.match(/[\u0600-\u06FF]/g) || []).length;
+  if (persian1 < 8 || persian2 < 8) return false;
 
- // Length limits for hemistich (typically 10 to 65 chars)
- if (m1.length < 10 || m1.length > 65 || m2.length < 10 || m2.length > 65) return false;
+  // Length limits for hemistich (typically 10 to 65 chars)
+  if (m1.length < 10 || m1.length > 65 || m2.length < 10 || m2.length > 65) return false;
 
- // Ratio of lengths should be reasonably balanced (min/max >= 0.5)
- const ratio = Math.min(m1.length, m2.length) / Math.max(m1.length, m2.length);
- if (ratio < 0.5) return false;
+  // Ratio of lengths should be reasonably balanced (min/max >= 0.75) for poetry
+  const ratio = Math.min(m1.length, m2.length) / Math.max(m1.length, m2.length);
+  if (ratio < 0.75) return false;
 
- // Must not be list items, headers, code, or links
- if (/^[-*#\d\.\>\:\—\–]/i.test(m1) || /^[-*#\d\.\>\:\—\–]/i.test(m2)) return false;
- if (m1.endsWith(':') || m2.endsWith(':')) return false;
- if (/https?:\/\//i.test(m1) || /https?:\/\//i.test(m2)) return false;
+  // Must not be list items, headers, code, or links
+  if (/^[-*#\d\.\>\:\—\–]/i.test(m1) || /^[-*#\d\.\>\:\—\–]/i.test(m2)) return false;
+  if (m1.endsWith(':') || m2.endsWith(':')) return false;
+  if (/https?:\/\//i.test(m1) || /https?:\/\//i.test(m2)) return false;
 
- return true;
+  // Reject typical conversational sentences that aren't poetry
+  if (m1.includes('؟') || m2.includes('؟')) return false;
+  if (m1.includes('سلام') || m2.includes('سلام')) return false;
+  if (m1.includes('لطفاً') || m2.includes('لطفاً')) return false;
+
+  return true;
 }
 
 function parsePoeticCouplets(children: React.ReactNode): Array<{ first: string; second: string }> | null {

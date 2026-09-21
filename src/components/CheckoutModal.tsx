@@ -147,6 +147,19 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ product, isOpen, o
  <span>تومان</span>
  </div>
  </div>
+
+ <div className="flex items-center gap-2 mt-1">
+ <input 
+ type="text" 
+ placeholder="کد تخفیف دارید؟" 
+ className="flex-1 clay-input px-3 py-1.5 rounded-lg text-xs font-mono outline-none focus:border-blue-400"
+ dir="ltr"
+ />
+ <button className="px-3 py-1.5 bg-zinc-200 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-300 rounded-lg text-xs font-bold transition-colors hover:bg-zinc-300 dark:hover:bg-zinc-600">
+ اعمال
+ </button>
+ </div>
+
  <div className="w-full h-px clay-btn-secondary/50" />
  <div className="flex items-center justify-between">
  <span className="text-zinc-900 dark:text-zinc-100 font-bold text-xs sm:text-sm">مبلغ قابل پرداخت</span>

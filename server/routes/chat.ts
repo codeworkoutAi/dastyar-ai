@@ -116,12 +116,14 @@ router.post('/api/chat/stream', chatStreamLimiter, async (req, res) => {
 
     // Extract authenticated user if token provided
     let userId: number | null = null;
+    let userRole: string = 'user';
     const authHeader = req.headers.authorization;
     if (authHeader && authHeader.startsWith('Bearer ')) {
       try {
         const token = authHeader.split(' ')[1];
         const decoded = jwt.verify(token, JWT_SECRET) as any;
         if (decoded?.id) userId = decoded.id;
+        if (decoded?.role) userRole = decoded.role;
       } catch (e) {}
     }
 
@@ -135,6 +137,7 @@ router.post('/api/chat/stream', chatStreamLimiter, async (req, res) => {
     let targetModel = model;
     let targetApiKey = '';
     let resolvedSystemProfile = null;
+    let usedPoolKey = '';
     
     if (provider === 'custom' && customProfileId) {
       // 1. Try to fetch from DB if it's a system default
@@ -144,13 +147,76 @@ router.post('/api/chat/stream', chatStreamLimiter, async (req, res) => {
         targetBaseUrl = profileResult.baseUrl;
         targetModel = profileResult.modelName;
         targetApiKey = profileResult.apiKey;
-        if (profileResult.name?.includes('رایگان') || profileResult.name?.toLowerCase().includes('free')) {
+        
+        if (targetApiKey === '[AUTO_POOL]') {
+          const poolKey = keyRotator.getNextKey();
+          if (poolKey) {
+            targetApiKey = poolKey.apiKey;
+            targetBaseUrl = poolKey.baseUrl;
+            usedPoolKey = poolKey.apiKey;
+
+            // Resolve dynamic model mapping based on the selected Base URL
+            if (targetModel.startsWith('{')) {
+              try {
+                const modelMap = JSON.parse(targetModel);
+                if (modelMap[targetBaseUrl]) {
+                  targetModel = modelMap[targetBaseUrl];
+                }
+              } catch (e) {
+                console.error('[Chat] Failed to parse dynamic model mapping:', e);
+              }
+            }
+          } else {
+            sendChunk({ error: 'ظرفیت کلیدهای عمومی در حال حاضر پر شده است. لطفاً چند دقیقه دیگر تلاش کنید.' });
+            sendChunk({ done: true });
+            return finishStream();
+          }
+        }
+        
+        // Override apiConfig with the resolved values so the rest of the file uses the correct dynamic keys/urls
+        if (!apiConfig[provider]) apiConfig[provider] = {};
+        apiConfig[provider].baseUrl = targetBaseUrl;
+        apiConfig[provider].modelName = targetModel;
+        apiConfig[provider].apiKey = targetApiKey;
+        apiConfig[provider].id = customProfileId; // Ensure injected key works
+
+        if (profileResult.name?.includes('رایگان') || profileResult.name?.toLowerCase().includes('free') || profileResult.name?.includes('[AUTO]')) {
           isFreeModel = true;
         }
       }
     }
 
     const hasCustomUserKey = Boolean(apiConfig?.[provider]?.apiKey && apiConfig[provider].apiKey.trim() !== '');
+
+    // Check daily limit for Free Models
+    if (isFreeModel && !hasCustomUserKey && userRole !== 'admin') {
+      const todayStr = new Date().toISOString().split('T')[0];
+      const identifier = userId ? `user:${userId}` : `ip:${req.ip}`;
+      
+      const limitStr = userId ? 
+        (db.prepare("SELECT value FROM site_settings WHERE key = 'free_daily_limit_user'").get() as any)?.value || '30' :
+        (db.prepare("SELECT value FROM site_settings WHERE key = 'free_daily_limit_guest'").get() as any)?.value || '5';
+      
+      const dailyLimit = parseInt(limitStr, 10);
+      
+      // Get current usage
+      let usage = db.prepare("SELECT count FROM free_daily_usage WHERE id = ? AND date = ?").get(identifier, todayStr) as any;
+      if (!usage) {
+        db.prepare("INSERT INTO free_daily_usage (id, date, count) VALUES (?, ?, 0)").run(identifier, todayStr);
+        usage = { count: 0 };
+      }
+      
+      if (usage.count >= dailyLimit) {
+        sendChunk({
+          error: `سهمیه روزانه شما برای مدل‌های رایگان (${dailyLimit} پیام) به پایان رسیده است. لطفاً فردا مراجعه کنید یا از مدل‌های حرفه‌ای استفاده کنید.`,
+          done: true
+        });
+        return finishStream();
+      }
+      
+      // Increment usage immediately to prevent race conditions
+      db.prepare("UPDATE free_daily_usage SET count = count + 1 WHERE id = ? AND date = ?").run(identifier, todayStr);
+    }
 
     if (userId && !hasCustomUserKey) {
       const userWallet = getUserWallet(userId);
@@ -349,8 +415,8 @@ router.post('/api/chat/stream', chatStreamLimiter, async (req, res) => {
       }
     }
     const baseSystemPrompt = `شما «دستیار هوشمند» هستید؛ متمرکز، دقیق و مسلط به زبان فارسی. پاسخ‌ها را به فارسی شیوا، دسته‌بندی‌شده و ساختاریافته ارائه دهید. در موضوعات فنی و برنامه‌نویسی، کدهای استاندارد همراه با توضیحات موجز بنویسید. هرگز خود را با نام پلتفرم‌های متفرقه معرفی نکنید.\n\n${timeContext}`;
-    const poetryRule = 'قاعده نگارش شعر: هنگام نوشتن شعر فارسی، هر بیت را در دو سطر متوالی (مصرع اول و سپس بلافاصله در سطر بعد مصرع دوم) بنویسید تا قالب دو ستونه کتاب شعر فعال شود.';
-    const systemInstruction = apiConfig?.systemInstruction ? `${apiConfig.systemInstruction}\n\n${timeContext}\n\nنکته نگارشی: همیشه اصول، مراحل و لیست‌های شماره‌دار را در خطوط مجزا تفکیک کن. حتماً اصول نگارش فارسی و **نیم‌فاصله‌ها** را رعایت کن (مثلاً: می‌رود، برنامه‌نویسی، بخش‌ها).\n${poetryRule}` : `${baseSystemPrompt}\n\nنکته نگارشی: حتماً اصول نگارش فارسی و **نیم‌فاصله‌ها** (Zero-Width Non-Joiner) را با دقت تمام رعایت کن (مثال: می‌رود، برنامه‌نویسی، دسته‌بندی‌شده، کتاب‌ها).\n${poetryRule}`;
+    
+    const systemInstruction = apiConfig?.systemInstruction ? `${apiConfig.systemInstruction}\n\n${timeContext}\n\nنکته نگارشی: همیشه اصول، مراحل و لیست‌های شماره‌دار را در خطوط مجزا تفکیک کن. حتماً اصول نگارش فارسی و **نیم‌فاصله‌ها** را رعایت کن (مثلاً: می‌رود، برنامه‌نویسی، بخش‌ها).` : `${baseSystemPrompt}\n\nنکته نگارشی: حتماً اصول نگارش فارسی و **نیم‌فاصله‌ها** (Zero-Width Non-Joiner) را با دقت تمام رعایت کن (مثال: می‌رود، برنامه‌نویسی، دسته‌بندی‌شده، کتاب‌ها).`;
 
     // Inject liveWebContext into the LAST user message instead of system prompt
     // This ensures that models (especially via OpenRouter/Custom providers) don't ignore it.
@@ -798,6 +864,11 @@ router.post('/api/chat/stream', chatStreamLimiter, async (req, res) => {
         try {
           errorText = await response.text();
         } catch { }
+
+        if ((response.status === 429 || response.status === 401 || response.status === 402 || response.status === 403 || response.status === 404) && usedPoolKey) {
+          keyRotator.reportRateLimit(usedPoolKey, 300); // 5 minutes cooldown for failures
+        }
+
         sendChunk({ error: sanitizeErrorMessage(errorText || `Status ${response.status}`) });
         sendChunk({ done: true });
         return finishStream();

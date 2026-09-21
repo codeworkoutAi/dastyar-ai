@@ -1,5 +1,10 @@
 import db from '../db/database';
 
+export interface PoolKey {
+  apiKey: string;
+  baseUrl: string;
+}
+
 interface KeyHealth {
   key: string;
   cooldownUntil: number;
@@ -12,19 +17,33 @@ class KeyRotatorService {
 
   /**
    * Parse keys from a string (separated by newline, comma, semicolon, or spaces)
+   * Supports 'baseUrl|apiKey' format
    */
-  public parseKeys(raw: string | undefined | null): string[] {
+  public parseKeys(raw: string | undefined | null): PoolKey[] {
     if (!raw) return [];
     return raw
       .split(/[\n,;]+/)
       .map(k => k.trim())
-      .filter(k => k.length > 5);
+      .filter(k => k.length > 5)
+      .map(k => {
+        if (k.includes('|')) {
+          const parts = k.split('|');
+          const p1 = parts[0].trim();
+          const p2 = parts[1].trim();
+          if (p1.startsWith('http')) {
+            return { baseUrl: p1, apiKey: p2 };
+          } else {
+            return { baseUrl: p2, apiKey: p1 };
+          }
+        }
+        return { baseUrl: 'https://router.cheap/v1', apiKey: k };
+      });
   }
 
   /**
    * Get all configured keys in the pool from site_settings or fallback
    */
-  public getPoolKeys(): string[] {
+  public getPoolKeys(): PoolKey[] {
     try {
       const row = db.prepare("SELECT value FROM site_settings WHERE key = 'free_key_pool'").get() as any;
       if (row && row.value) {
@@ -43,16 +62,16 @@ class KeyRotatorService {
   /**
    * Get next healthy API key in round-robin fashion
    */
-  public getNextKey(fallbackKey: string = ''): string {
+  public getNextKey(fallbackKey: string = ''): PoolKey | null {
     const keys = this.getPoolKeys();
     if (keys.length === 0) {
-      return fallbackKey;
+      return fallbackKey ? { apiKey: fallbackKey, baseUrl: 'https://router.cheap/v1' } : null;
     }
 
     const now = Date.now();
     // Filter out keys currently on cooldown
     const healthyKeys = keys.filter(k => {
-      const health = this.healthMap.get(k);
+      const health = this.healthMap.get(k.apiKey);
       return !health || health.cooldownUntil <= now;
     });
 
@@ -60,7 +79,7 @@ class KeyRotatorService {
     const candidates = healthyKeys.length > 0 ? healthyKeys : keys;
 
     this.currentIndex = (this.currentIndex + 1) % candidates.length;
-    return candidates[this.currentIndex] || fallbackKey;
+    return candidates[this.currentIndex] || null;
   }
 
   /**

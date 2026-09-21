@@ -175,7 +175,7 @@ export const AdminAnalyticsTab: React.FC = () => {
  return (
  <div className="space-y-6" dir="rtl">
  {/* Header & Period Filters */}
- <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-[var(--card-border)]  pb-4">
+ <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b admin-border pb-4">
  <div>
  <h2 className="text-base font-bold text-zinc-900 dark:text-white flex items-center gap-2">
  <BarChart3 className="w-5 h-5 text-blue-600 dark:text-blue-400" />
@@ -187,11 +187,11 @@ export const AdminAnalyticsTab: React.FC = () => {
  </div>
 
  <div className="flex items-center gap-2">
- <div className="flex items-center p-1 rounded-xl clay-btn-secondary/80 border border-[var(--card-border)] text-xs font-bold">
+ <div className="flex items-center p-1 rounded-xl admin-surface text-xs font-bold">
  <button
  onClick={() => setPeriod('7d')}
  className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
- period === '7d' ? 'clay-card text-blue-600 dark:text-blue-300 shadow-xs' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900'
+ period === '7d' ? 'admin-card text-blue-600 dark:text-blue-400 font-bold' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900'
  }`}
  >
  ۷ روز اخیر
@@ -199,7 +199,7 @@ export const AdminAnalyticsTab: React.FC = () => {
  <button
  onClick={() => setPeriod('30d')}
  className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
- period === '30d' ? 'clay-card text-blue-600 dark:text-blue-300 shadow-xs' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900'
+ period === '30d' ? 'admin-card text-blue-600 dark:text-blue-400 font-bold' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900'
  }`}
  >
  ۳۰ روز اخیر
@@ -207,7 +207,7 @@ export const AdminAnalyticsTab: React.FC = () => {
  <button
  onClick={() => setPeriod('1y')}
  className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
- period === '1y' ? 'clay-card text-blue-600 dark:text-blue-300 shadow-xs' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900'
+ period === '1y' ? 'admin-card text-blue-600 dark:text-blue-400 font-bold' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900'
  }`}
  >
  ۱ سال اخیر
@@ -217,7 +217,7 @@ export const AdminAnalyticsTab: React.FC = () => {
  <button
  onClick={fetchAnalytics}
  disabled={loading}
- className="p-2 rounded-xl clay-btn-secondary text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors cursor-pointer"
+ className="p-2 rounded-xl admin-btn-secondary transition-colors cursor-pointer"
  title="بروزرسانی داده‌ها"
  >
  <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
@@ -228,7 +228,7 @@ export const AdminAnalyticsTab: React.FC = () => {
  {/* KPI Cards Header */}
  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
  {/* Total Revenue */}
- <div className="p-4 rounded-2xl clay-card flex flex-col justify-between">
+ <div className="p-4 rounded-2xl admin-card flex flex-col justify-between">
  <div>
  <div className="flex items-center justify-between mb-2">
  <span className="text-xs font-semibold text-zinc-500 dark:text-zinc-400">کل درآمد دوره</span>
@@ -243,14 +243,14 @@ export const AdminAnalyticsTab: React.FC = () => {
  <span className="text-xs font-medium text-zinc-400">تومان</span>
  </div>
  </div>
- <div className="text-[11px] font-medium text-zinc-500 dark:text-zinc-400 mt-2.5 pt-2 border-t border-[var(--card-border)]  flex justify-between">
+ <div className="text-[11px] font-medium text-zinc-500 dark:text-zinc-400 mt-2.5 pt-2 border-t admin-border  flex justify-between">
  <span>چت: {(summary?.totalChatRevenueToman || 0).toLocaleString('fa-IR')} ت</span>
  <span>فروشگاه: {(summary?.totalStoreRevenueToman || 0).toLocaleString('fa-IR')} ت</span>
  </div>
  </div>
 
  {/* Estimated Net Profit */}
- <div className="p-4 rounded-2xl clay-card flex flex-col justify-between">
+ <div className="p-4 rounded-2xl admin-card flex flex-col justify-between">
  <div>
  <div className="flex items-center justify-between mb-2">
  <span className="text-xs font-semibold text-zinc-500 dark:text-zinc-400">سود ناخالص تخمینی</span>
@@ -265,13 +265,13 @@ export const AdminAnalyticsTab: React.FC = () => {
  <span className="text-xs font-medium text-zinc-400">تومان</span>
  </div>
  </div>
- <div className="text-[11px] font-medium text-zinc-500 dark:text-zinc-400 mt-2.5 pt-2 border-t border-[var(--card-border)] ">
+ <div className="text-[11px] font-medium text-zinc-500 dark:text-zinc-400 mt-2.5 pt-2 border-t admin-border ">
  هزینه دلاری API: <span className="font-mono font-bold" dir="ltr">${(summary?.totalCostUsd || 0).toFixed(4)}</span>
  </div>
  </div>
 
  {/* Total Tokens & Chats */}
- <div className="p-4 rounded-2xl clay-card flex flex-col justify-between">
+ <div className="p-4 rounded-2xl admin-card flex flex-col justify-between">
  <div>
  <div className="flex items-center justify-between mb-2">
  <span className="text-xs font-semibold text-zinc-500 dark:text-zinc-400">حجم پیام‌ها و توکن‌ها</span>
@@ -286,13 +286,13 @@ export const AdminAnalyticsTab: React.FC = () => {
  <span className="text-xs font-medium text-zinc-400">توکن</span>
  </div>
  </div>
- <div className="text-[11px] font-medium text-zinc-500 dark:text-zinc-400 mt-2.5 pt-2 border-t border-[var(--card-border)] ">
+ <div className="text-[11px] font-medium text-zinc-500 dark:text-zinc-400 mt-2.5 pt-2 border-t admin-border ">
  تعداد کل گفت‌وگوها: <span className="font-bold text-zinc-700 dark:text-zinc-300">{(summary?.totalChats || 0).toLocaleString('fa-IR')}</span> پیام
  </div>
  </div>
 
  {/* Users & Growth */}
- <div className="p-4 rounded-2xl clay-card flex flex-col justify-between">
+ <div className="p-4 rounded-2xl admin-card flex flex-col justify-between">
  <div>
  <div className="flex items-center justify-between mb-2">
  <span className="text-xs font-semibold text-zinc-500 dark:text-zinc-400">کاربران فعال و جدید</span>
@@ -307,7 +307,7 @@ export const AdminAnalyticsTab: React.FC = () => {
  <span className="text-xs font-medium text-zinc-400">کاربر فعال چت</span>
  </div>
  </div>
- <div className="text-[11px] font-medium text-zinc-500 dark:text-zinc-400 mt-2.5 pt-2 border-t border-[var(--card-border)] ">
+ <div className="text-[11px] font-medium text-zinc-500 dark:text-zinc-400 mt-2.5 pt-2 border-t admin-border ">
  ثبت‌نام‌های جدید دوره: <span className="font-bold text-zinc-700 dark:text-zinc-300">{(summary?.totalNewUsers || 0).toLocaleString('fa-IR')}</span> کاربر
  </div>
  </div>
@@ -316,7 +316,7 @@ export const AdminAnalyticsTab: React.FC = () => {
  {/* Main Charts Grid: Revenue Trend & Model Distribution */}
  <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
  {/* Chart 1: Revenue Area Chart (2 Cols) */}
- <div className="lg:col-span-2 p-5 rounded-2xl clay-card flex flex-col justify-between">
+ <div className="lg:col-span-2 p-5 rounded-2xl admin-card flex flex-col justify-between">
  <div>
  <div className="flex items-center justify-between mb-4">
  <div>
@@ -388,7 +388,7 @@ export const AdminAnalyticsTab: React.FC = () => {
  </div>
  </div>
 
- <div className="flex justify-between items-center text-[10px] text-zinc-400 pt-2 border-t border-[var(--card-border)]  font-mono">
+ <div className="flex justify-between items-center text-[10px] text-zinc-400 pt-2 border-t admin-border  font-mono">
  <span>{timeline[0]?.date || ''}</span>
  <span>بازه انتخابی: {period === '7d' ? '۷ روز' : period === '30d' ? '۳۰ روز' : 'یک سال'}</span>
  <span>{timeline[timeline.length - 1]?.date || ''}</span>
@@ -396,7 +396,7 @@ export const AdminAnalyticsTab: React.FC = () => {
  </div>
 
  {/* Chart 2: Model Distribution (Donut Chart) */}
- <div className="p-5 rounded-2xl clay-card flex flex-col justify-between">
+ <div className="p-5 rounded-2xl admin-card flex flex-col justify-between">
  <div>
  <div className="flex items-center justify-between mb-3">
  <h3 className="text-xs font-bold text-zinc-900 dark:text-white flex items-center gap-1.5">
@@ -454,7 +454,7 @@ export const AdminAnalyticsTab: React.FC = () => {
  onMouseEnter={() => setHoveredModel(m)}
  onMouseLeave={() => setHoveredModel(null)}
  className={`flex items-center justify-between p-1.5 rounded-lg transition-colors cursor-pointer ${
- hoveredModel?.model === m.model ? 'bg-zinc-200/60 dark:bg-zinc-700/50' : 'clay-icon-btn/60'
+ hoveredModel?.model === m.model ? 'bg-zinc-200/60 dark:bg-zinc-700/50' : 'hover:bg-zinc-100 dark:hover:bg-zinc-700/40 text-zinc-600 dark:text-zinc-300'
  }`}
  >
  <div className="flex items-center gap-2">
@@ -483,7 +483,7 @@ export const AdminAnalyticsTab: React.FC = () => {
  {/* Secondary Charts: Daily Token Volume Bar Chart & User Registrations */}
  <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
  {/* Chart 3: Token Usage Volume Bars */}
- <div className="p-5 rounded-2xl clay-card">
+ <div className="p-5 rounded-2xl admin-card">
  <div className="flex items-center justify-between mb-4">
  <div>
  <h3 className="text-xs font-bold text-zinc-900 dark:text-white flex items-center gap-1.5">
@@ -514,7 +514,7 @@ export const AdminAnalyticsTab: React.FC = () => {
  <div
  style={{ height: `${heightPercent}%` }}
  className={`w-full rounded-t-sm transition-all duration-200 ${
- item.totalTokens > 0 ? 'bg-purple-500 group-hover:bg-purple-400 dark:bg-purple-600 dark:group-hover:bg-purple-500' : 'clay-btn-secondary/40'
+ item.totalTokens > 0 ? 'bg-purple-500 group-hover:bg-purple-400 dark:bg-purple-600 dark:group-hover:bg-purple-500' : 'bg-zinc-200 dark:bg-zinc-700'
  }`}
  />
  </div>
@@ -522,7 +522,7 @@ export const AdminAnalyticsTab: React.FC = () => {
  })}
  </div>
 
- <div className="flex justify-between items-center text-[10px] text-zinc-400 pt-3 border-t border-[var(--card-border)]  font-mono">
+ <div className="flex justify-between items-center text-[10px] text-zinc-400 pt-3 border-t admin-border  font-mono">
  <span>{timeline[0]?.date || ''}</span>
  <span>بیشترین مصرف روزانه: {maxTokens.toLocaleString('fa-IR')} توکن</span>
  <span>{timeline[timeline.length - 1]?.date || ''}</span>
@@ -530,7 +530,7 @@ export const AdminAnalyticsTab: React.FC = () => {
  </div>
 
  {/* Chart 4: User Growth / Registrations */}
- <div className="p-5 rounded-2xl clay-card">
+ <div className="p-5 rounded-2xl admin-card">
  <div className="flex items-center justify-between mb-4">
  <div>
  <h3 className="text-xs font-bold text-zinc-900 dark:text-white flex items-center gap-1.5">
@@ -563,7 +563,7 @@ export const AdminAnalyticsTab: React.FC = () => {
  <div
  style={{ height: `${heightPercent}%` }}
  className={`w-full rounded-t-sm transition-all duration-200 ${
- item.newUsersCount > 0 ? 'bg-amber-500 group-hover:bg-amber-400 dark:bg-amber-600 dark:group-hover:bg-amber-500' : 'clay-btn-secondary/40'
+ item.newUsersCount > 0 ? 'bg-amber-500 group-hover:bg-amber-400 dark:bg-amber-600 dark:group-hover:bg-amber-500' : 'bg-zinc-200 dark:bg-zinc-700'
  }`}
  />
  </div>
@@ -571,7 +571,7 @@ export const AdminAnalyticsTab: React.FC = () => {
  })}
  </div>
 
- <div className="flex justify-between items-center text-[10px] text-zinc-400 pt-3 border-t border-[var(--card-border)]  font-mono">
+ <div className="flex justify-between items-center text-[10px] text-zinc-400 pt-3 border-t admin-border  font-mono">
  <span>{timeline[0]?.date || ''}</span>
  <span>رشد پیوسته جامعه کاربران</span>
  <span>{timeline[timeline.length - 1]?.date || ''}</span>

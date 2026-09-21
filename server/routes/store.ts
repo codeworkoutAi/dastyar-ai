@@ -6,6 +6,7 @@ import { requireAuth } from '../middleware/auth';
 import { bot } from '../telegram/bot';
 import { requestZarinpalPayment, verifyZarinpalPayment, getZarinpalConfig } from '../services/zarinpalService';
 import { depositWallet, getPlanCreditAmount } from '../services/walletService';
+import { notifyOrderSuccessBySms } from '../services/kavenegarService';
 
 const router = express.Router();
 
@@ -437,6 +438,9 @@ router.get('/zarinpal/callback', async (req, res) => {
           }
         } catch (tgErr) {}
 
+        // SMS notification
+        notifyOrderSuccessBySms(orderId, null);
+
         return res.redirect(`/store?tab=wallet&payment=success&orderId=${orderId}&refId=${refId}&amount=${creditAmount}`);
       }
 
@@ -476,6 +480,9 @@ router.get('/zarinpal/callback', async (req, res) => {
       } catch (tgErr) {
         console.error('[Store] Telegram notify error:', tgErr);
       }
+
+      // SMS notification
+      notifyOrderSuccessBySms(orderId, licenseId);
 
       return res.redirect(`/store?payment=success&orderId=${orderId}&refId=${refId}`);
     } else {
