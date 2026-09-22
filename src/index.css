@@ -635,10 +635,12 @@ code:not(pre code) {
   font-family: var(--font-mono) !important;
   direction: ltr !important;
   unicode-bidi: isolate;
-  background-color: var(--bubble-user-bg);
-  padding: 0.15em 0.35em;
-  border-radius: 6px;
-  font-size: 0.88em;
+  background-color: transparent !important;
+  background: transparent !important;
+  border: none !important;
+  padding: 0 0.25em;
+  font-size: 0.9em;
+  font-weight: 600;
 }
 
 /* Chat bubble & Markdown typography mapping to CSS variables */
@@ -974,9 +976,9 @@ img.emoji {
 
 
 
-.markdown-body pre,
-.prose pre,
-pre {
+.markdown-body pre:not(.code-block-pre),
+.prose pre:not(.code-block-pre),
+pre:not(.code-block-pre) {
   direction: ltr !important;
   text-align: left !important;
   unicode-bidi: isolate;
@@ -986,6 +988,28 @@ pre {
   margin: 0 !important;
   border: none !important;
   box-shadow: none !important;
+}
+
+.code-block-container pre,
+.code-block-container pre code,
+.code-block-container code,
+pre.code-block-pre,
+pre.code-block-pre code {
+  direction: ltr !important;
+  text-align: left !important;
+  unicode-bidi: isolate;
+  padding: 16px 20px !important;
+  margin: 0 !important;
+  line-height: 1.7 !important;
+  box-shadow: none !important;
+  border: none !important;
+  background-color: transparent !important;
+  background: transparent !important;
+}
+
+.code-block-container pre code,
+pre.code-block-pre code {
+  padding: 0 !important;
 }
 
 /* Eliminate all internal borders and scrollbar lines inside message input */
@@ -1237,6 +1261,81 @@ img.emoji {
     -6px -6px 16px rgba(255, 255, 255, 0.02),
     inset 3px 3px 6px rgba(255, 255, 255, 0.05),
     inset -4px -4px 10px rgba(0, 0, 0, 0.4);
+}
+
+/* --------------------------------------------------------------------------
+   Solid Colored Clay Cards (Matte, No Glass, No Glow - 100% Authentic Clay)
+   -------------------------------------------------------------------------- */
+.clay-card-indigo,
+.clay-card-amber {
+  background: #f0f4fc;
+  border: 1px solid rgba(255, 255, 255, 0.02);
+  border-radius: 28px;
+  box-shadow: 
+    10px 14px 28px rgba(160, 160, 160, 0.5),
+    -4px -4px 10px rgba(255, 255, 255, 0.8),
+    inset 2px 2px 4px rgba(255, 255, 255, 0.8),
+    inset -3px -3px 6px rgba(160, 160, 160, 0.35);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.dark .clay-card-indigo,
+[data-theme="dark"] .clay-card-indigo,
+.dark .clay-card-amber,
+[data-theme="dark"] .clay-card-amber {
+  background: #1c2130;
+  border: 1px solid var(--card-border);
+  box-shadow: 
+    14px 20px 40px rgba(0, 0, 0, 0.45),
+    -4px -4px 12px rgba(255, 255, 255, 0.02),
+    inset 2px 2px 4px rgba(255, 255, 255, 0.04),
+    inset -3px -3px 8px rgba(0, 0, 0, 0.35);
+}
+
+.clay-card-rose {
+  background: #fcf0f2;
+  border: 1px solid rgba(255, 255, 255, 0.02);
+  border-radius: 28px;
+  box-shadow: 
+    10px 14px 28px rgba(160, 160, 160, 0.5),
+    -4px -4px 10px rgba(255, 255, 255, 0.8),
+    inset 2px 2px 4px rgba(255, 255, 255, 0.8),
+    inset -3px -3px 6px rgba(160, 160, 160, 0.35);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.dark .clay-card-rose,
+[data-theme="dark"] .clay-card-rose {
+  background: #251b24;
+  border: 1px solid var(--card-border);
+  box-shadow: 
+    14px 20px 40px rgba(0, 0, 0, 0.45),
+    -4px -4px 12px rgba(255, 255, 255, 0.02),
+    inset 2px 2px 4px rgba(255, 255, 255, 0.04),
+    inset -3px -3px 8px rgba(0, 0, 0, 0.35);
+}
+
+.clay-card-teal,
+.clay-card-emerald {
+  background: #eff7f7;
+  border: 1px solid rgba(255, 255, 255, 0.02);
+  border-radius: 28px;
+  box-shadow: 
+    10px 14px 28px rgba(160, 160, 160, 0.5),
+    -4px -4px 10px rgba(255, 255, 255, 0.8),
+    inset 2px 2px 4px rgba(255, 255, 255, 0.8),
+    inset -3px -3px 6px rgba(160, 160, 160, 0.35);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.dark .clay-card-teal,
+[data-theme="dark"] .clay-card-teal,
+.dark .clay-card-emerald,
+[data-theme="dark"] .clay-card-emerald {
+  background: #192328;
+  border: 1px solid var(--card-border);
+  box-shadow: 
+    14px 20px 40px rgba(0, 0, 0, 0.45),
+    -4px -4px 12px rgba(255, 255, 255, 0.02),
+    inset 2px 2px 4px rgba(255, 255, 255, 0.04),
+    inset -3px -3px 8px rgba(0, 0, 0, 0.35);
 }
 
 /* Tactile 3D Clay Button (Standard) */
@@ -1897,15 +1996,16 @@ html[data-ui-style="neumorphic"],
     --header-bg:  rgba(46, 46, 46, 0.92);
     --bubble-user-bg: #282A2C;
   
-    /* Pure neumorphic two-shadow — contrast derived from #18181b using rgba */
-    --clay-shadow-out:       5px 5px 11px rgba(0, 0, 0, 0.4), -5px -5px 11px rgba(255, 255, 255, 0.04);
-    --clay-shadow-out-sm:    3px 3px 7px  rgba(0, 0, 0, 0.4);
-    --clay-shadow-out-hover: 8px 8px 16px rgba(0, 0, 0, 0.6);
+    /* Pure neumorphic dark shadow — matte, no glowing light halo */
+    --clay-shadow-out:       5px 5px 14px rgba(0, 0, 0, 0.55);
+    --clay-shadow-out-sm:    3px 3px 8px  rgba(0, 0, 0, 0.45);
+    --clay-shadow-out-hover: 8px 8px 18px rgba(0, 0, 0, 0.7);
     --clay-shadow-in:        inset 4px 4px 8px rgba(0, 0, 0, 0.5);
-  --clay-shadow-in-deep:   inset 6px 6px 12px #14151e, inset -6px -6px 12px #2a2d38;
+    --clay-shadow-in-deep:   inset 6px 6px 12px #14151e, inset -6px -6px 12px #20222a;
 
-  --border-subtle: rgba(255, 255, 255, 0.04);
-  --border-strong: rgba(255, 255, 255, 0.08);
+    --border-subtle: transparent;
+    --border-strong: transparent;
+    --card-border: transparent;
 
   /* Radius same as light */
   --radius-card:     16px;
@@ -1937,13 +2037,18 @@ html.dark[data-ui-style="neumorphic"] .clay-icon {
     background-color: var(--bg-main);
   }
   
+  html[data-ui-style="neumorphic"] .clay-card,
+  html[data-ui-style="neumorphic"] .dark .clay-card,
+  html.dark[data-ui-style="neumorphic"] .clay-card,
   html[data-ui-style="neumorphic"] .clay-card-thick,
   html[data-ui-style="neumorphic"] .dark .clay-card-thick,
-  html.dark[data-ui-style="neumorphic"] .clay-card-thick {
-    background: var(--card-bg);
+  html.dark[data-ui-style="neumorphic"] .clay-card-thick,
+  html[data-ui-style="neumorphic"] .code-block-container,
+  html.dark[data-ui-style="neumorphic"] .code-block-container {
+    background: var(--card-bg) !important;
     border-radius: var(--radius-card);
-    box-shadow: var(--clay-shadow-out);
-    border: none;
+    box-shadow: var(--clay-shadow-out) !important;
+    border: none !important;
   }
   
   html[data-ui-style="neumorphic"] .clay-btn-thick,
@@ -2079,7 +2184,7 @@ html.dark[data-ui-style="neumorphic"] .clay-icon {
     border-radius: var(--radius-badge);
   }
 
-  /* Landing Page Flowing Glow Button - neumorphic flat version */
+  /* Landing Page Flowing Glow Button - neumorphic flat version (Zero Glow) */
   html[data-ui-style="neumorphic"] .btn-flowing-glow,
   html.dark[data-ui-style="neumorphic"] .btn-flowing-glow {
     background: var(--btn-bg) !important;
@@ -2088,6 +2193,47 @@ html.dark[data-ui-style="neumorphic"] .clay-icon {
     box-shadow: var(--clay-shadow-out) !important;
     border: none !important;
     color: var(--text-main) !important;
+    filter: none !important;
+  }
+
+  html[data-ui-style="neumorphic"] .btn-flowing-glow:hover,
+  html[data-ui-style="neumorphic"] .dark .btn-flowing-glow:hover,
+  html.dark[data-ui-style="neumorphic"] .btn-flowing-glow:hover {
+    background: var(--btn-hover) !important;
+    box-shadow: var(--clay-shadow-out-hover) !important;
+    filter: none !important;
+    transform: translateY(-2px);
+  }
+
+  html[data-ui-style="neumorphic"] .btn-flowing-glow:active,
+  html[data-ui-style="neumorphic"] .dark .btn-flowing-glow:active,
+  html.dark[data-ui-style="neumorphic"] .btn-flowing-glow:active {
+    background: var(--btn-bg) !important;
+    box-shadow: var(--clay-shadow-in) !important;
+    filter: none !important;
+    transform: translateY(1px);
+  }
+
+  /* Disable any text-shadow glow or filter glow in Neumorphic mode */
+  html[data-ui-style="neumorphic"] .routing-glow-text,
+  html.dark[data-ui-style="neumorphic"] .routing-glow-text {
+    text-shadow: none !important;
+  }
+
+  html[data-ui-style="neumorphic"] .routing-dendrite-pulse-glow,
+  html.dark[data-ui-style="neumorphic"] .routing-dendrite-pulse-glow,
+  html[data-ui-style="neumorphic"] .pulse-glow,
+  html.dark[data-ui-style="neumorphic"] .pulse-glow {
+    filter: none !important;
+    box-shadow: none !important;
+  }
+
+  /* Global No-Glow Rule for all elements in Neumorphic mode */
+  html[data-ui-style="neumorphic"] [class*="glow"],
+  html.dark[data-ui-style="neumorphic"] [class*="glow"] {
+    text-shadow: none !important;
+    filter: none !important;
+    animation: none !important;
   }
 
   /* Landing Page Gold/Rose/Charcoal/Indigo color swatches - neumorphic flat */
@@ -2120,6 +2266,27 @@ html.dark[data-ui-style="neumorphic"] .clay-icon {
     box-shadow: var(--clay-shadow-out) !important;
     border: none !important;
     color: var(--text-main) !important;
+  }
+
+  /* Landing Page Colored Cards - neumorphic overrides */
+  html[data-ui-style="neumorphic"] .clay-card-indigo,
+  html[data-ui-style="neumorphic"] .dark .clay-card-indigo,
+  html.dark[data-ui-style="neumorphic"] .clay-card-indigo,
+  html[data-ui-style="neumorphic"] .clay-card-amber,
+  html[data-ui-style="neumorphic"] .dark .clay-card-amber,
+  html.dark[data-ui-style="neumorphic"] .clay-card-amber,
+  html[data-ui-style="neumorphic"] .clay-card-rose,
+  html[data-ui-style="neumorphic"] .dark .clay-card-rose,
+  html.dark[data-ui-style="neumorphic"] .clay-card-rose,
+  html[data-ui-style="neumorphic"] .clay-card-teal,
+  html[data-ui-style="neumorphic"] .dark .clay-card-teal,
+  html.dark[data-ui-style="neumorphic"] .clay-card-teal,
+  html[data-ui-style="neumorphic"] .clay-card-emerald,
+  html[data-ui-style="neumorphic"] .dark .clay-card-emerald,
+  html.dark[data-ui-style="neumorphic"] .clay-card-emerald {
+    background: var(--card-bg) !important;
+    box-shadow: var(--clay-shadow-out) !important;
+    border: none !important;
   }
 
 /* ==========================================================================

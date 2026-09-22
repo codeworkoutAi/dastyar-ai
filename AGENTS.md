@@ -77,11 +77,24 @@ Persian AI Chatbox is a highly polished, full-stack AI platform for Persian-spea
 - Vite middleware mode watches the app but **must ignore** `server/data/**` and `*.db*` files so Turso/SQLite sync does not thrash HMR (`server/index.ts`).
 
 ## 🛑 Rules for Future AI Agents
-1. **MANDATORY RESEARCH & PLANNING**: Before making ANY code changes or introducing new features, you MUST thoroughly research the existing codebase, read relevant documentation, and verify assumptions (e.g., API constraints, free tier limits). You MUST present a detailed plan, ask clarifying questions, challenge the user's assumptions if necessary, and wait for explicit approval before modifying any files. Do not rush into writing code. Failure to do this risks destroying the project and the user's investment.
+1. **MANDATORY RESEARCH & PLANNING**: Before making ANY code changes or introducing new features, you MUST read this `AGENTS.md` file carefully, thoroughly research the existing codebase, read relevant documentation, and verify assumptions (e.g., API constraints, free tier limits). You MUST present a detailed plan, ask clarifying questions, challenge the user's assumptions if necessary, and wait for explicit approval before modifying any files. Do not rush into writing code. Failure to do this risks destroying the project and the user's investment.
 2. **Preserve the Build Script**: `server/index.ts` handles API routes, Vite middleware in dev, static + SEO injection in prod. Never break `npm run build` / `start` in `package.json`.
 3. **Never Expose API Keys**: All LLM/search/TTS/provider calls MUST route through the Express server. Never call external AI APIs directly from the React frontend (BYOK keys stay encrypted client-side and are sent only to our backend).
 4. **No Unrequested Features**: Stick strictly to the user's prompt. Do not add unrequested pages, sidebars, or databases unless explicitly asked.
-5. **Styling Approach**: Prefer Tailwind utilities; reuse CSS variables/classes from `index.css`. Do not introduce CSS modules or new external CSS files.
+5. **STRICT 3D UI DESIGN ARCHITECTURE (CLAYMORPHISM & NEUMORPHISM DUAL SUPPORT)**:
+   - The platform operates with a specialized dual 3D UI design system: **Claymorphism** (`data-ui-style="clay"` / default) and **Neumorphism** (`data-ui-style="neumorphic"`).
+   - **DO NOT USE FLAT/CLASSIC OR RAW GENERIC STYLES & NEVER HARDCODE AD-HOC CLASSES**: Never write raw flat Tailwind backgrounds, borders, or generic boxes that bypass the 3D design language. Never invent ad-hoc custom CSS classes or hardcode hex colors for UI containers when core platform utilities already exist.
+   - **ALWAYS USE CORE DESIGN SYSTEM CLASSES**:
+     - Outer 3D cards/containers: `.clay-card`, `.clay-card-thick`, `.clay-card-elevated`
+     - Sunken inner surfaces: `.clay-surface`, `.clay-surface-inset`
+     - 3D tactile buttons: `.clay-btn`, `.clay-btn-thick`, `.clay-btn-primary`, `.clay-icon-btn`
+     - Borders and radiuses: `border-subtle`, `border-strong`, `rounded-card`, `rounded-btn`, `rounded-input`
+     - Colors and typography: `var(--text-main)`, `var(--text-muted)`, `var(--text-dim)`, `var(--accent-primary)`, `var(--card-bg)`, `var(--input-bg)`
+   - Any new or modified card, button, badge, input, or section MUST be checked and guaranteed to render properly in **BOTH Claymorphic and Neumorphic modes**:
+     - In **Claymorphism**: Must have authentic 3D extruded clay elevation, tactile inset light highlights, and soft deep clay shadows (`clay-card-thick`, `clay-card-elevated`, `clay-btn-thick`, `clay-socket-*`, etc.).
+     - In **Neumorphism**: Must seamlessly merge with the background surface using dual soft light/dark shadows (`--clay-shadow-out` / `--clay-shadow-in`), zero hard borders, and clean debossed/embossed contours.
+   - **Code Blocks Exception (Unified Seamless Cards)**: In chat code blocks, do NOT nest sunken inner surfaces (`.clay-surface` / `.clay-surface-inset`) inside the card. The code block must be a single, seamless unified `.clay-card` where the code editor area is flush with the card's edges. Breathing room/padding (`16px 20px`) belongs exclusively to the code text itself, not the container background.
+   - Always define and maintain design tokens in `src/index.css` under both the primary clay declarations and the `html[data-ui-style="neumorphic"]` theme overrides.
 6. **Robust Error Handling**: New API routes/features must fail gracefully with user-friendly **Persian** error messages.
 7. **Web Search Global Toggle (KILL-SWITCH)**: `settings.tools.webSearch` is a strict KILL-SWITCH. If disabled, NO web search may occur — even if Smart Routing wants it. Enforcement is in `src/store/chatStore.ts`. Never bypass this.
 8. **Markdown Rendering Stability**: When preprocessing `<think>` tags in `MarkdownRenderer.tsx`, wrap reasoning fences with double newlines: `\n\n\`\`\`reasoning\n...\n\`\`\`\n\n`. Otherwise React can crash with nested `<pre>` inside `<p>`.

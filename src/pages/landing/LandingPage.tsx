@@ -179,6 +179,21 @@ const getCtaThemeStyles = (theme?: string) => {
   }
 };
 
+const MANIFESTO_CARD_THEMES = [
+  {
+    card: 'clay-card-indigo',
+    iconColor: 'text-indigo-500 dark:text-indigo-400'
+  },
+  {
+    card: 'clay-card-rose',
+    iconColor: 'text-rose-500 dark:text-[#e2908a]'
+  },
+  {
+    card: 'clay-card-teal',
+    iconColor: 'text-teal-500 dark:text-teal-400'
+  }
+];
+
 export const LandingPage: React.FC = () => {
   const navigate = useNavigate();
   const { isAuthenticated, setAuthModalOpen } = useAuthStore();
@@ -887,10 +902,14 @@ export const LandingPage: React.FC = () => {
                 desc: 'ما تمام توان مهندسی خود را بر توسعه یک دستیار پایدار، با پاسخ‌دهی فوق‌سریع و درک عمیق زبان فارسی متمرکز کرده‌ایم تا هر ریال از اعتبار شما، مستقیماً صرف پیشرفت کار و صرفه‌جویی در زمان شود.'
               }
             ]).map((r: any, rIdx: number) => {
+              const theme = MANIFESTO_CARD_THEMES[rIdx % MANIFESTO_CARD_THEMES.length];
               const ReasonIcon = (typeof r.icon === 'string' ? ICON_MAP[r.icon] : r.icon) || (rIdx === 0 ? Coins : rIdx === 1 ? Zap : ShieldCheck);
               return (
-                <div key={r.id || rIdx} className={`p-5 rounded-2xl clay-card-thick ${rIdx === 0 ? 'reveal-from-right stagger-1' : rIdx === 1 ? 'reveal-pop stagger-2' : 'reveal-from-left stagger-3'}`}>
-                  <div className="w-9 h-9 rounded-xl clay-icon-debossed flex items-center justify-center text-[#2563eb] dark:text-blue-400 mb-3">
+                <div
+                  key={r.id || rIdx}
+                  className={`p-5 rounded-2xl ${theme.card} ${rIdx === 0 ? 'reveal-from-right stagger-1' : rIdx === 1 ? 'reveal-pop stagger-2' : 'reveal-from-left stagger-3'}`}
+                >
+                  <div className={`w-9 h-9 rounded-xl clay-icon-debossed flex items-center justify-center ${theme.iconColor} mb-3`}>
                     <ReasonIcon className="w-4 h-4" />
                   </div>
                   <h3 className="font-bold text-xs sm:text-sm text-[#0f1420] dark:text-white mb-1.5" style={{ fontFamily: "'Estedad', sans-serif" }}>

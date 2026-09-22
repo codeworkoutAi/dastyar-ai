@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
@@ -52,7 +52,8 @@ import {
  ShieldCheckBoldDuotoneIcon,
 } from '@solar-icons/react';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import { vscDarkPlus, oneLight } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import { useSettingsStore } from '../store/settingsStore';
 import {
  Copy,
  Check,
@@ -606,7 +607,7 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = React.memo(({
 
  return (
  <code
- className="px-1.5 py-0.5 rounded-md bg-black/5 dark:bg-white/10 text-slate-800 dark:text-slate-200 text-[0.88em] font-mono border border-subtle inline mx-1 break-words align-baseline isolate font-medium before:hidden after:hidden"
+ className="px-1 py-0.5 text-slate-800 dark:text-slate-200 text-[0.88em] font-mono inline mx-0.5 break-words align-baseline isolate font-semibold before:hidden after:hidden bg-transparent border-0"
  dir="ltr"
  {...props}
  >
@@ -835,7 +836,29 @@ interface CodeBlockProps {
 }
 
 const CodeBlock: React.FC<CodeBlockProps> = ({ language, code }) => {
- const [copied, setCopied] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const { settings, systemIsDark } = useSettingsStore();
+  const isDarkMode = settings.appearance.theme === 'dark' || (settings.appearance.theme === 'system' && systemIsDark);
+
+  const syntaxTheme = useMemo(() => {
+    const base = isDarkMode ? vscDarkPlus : oneLight;
+    const cleanTheme: { [key: string]: React.CSSProperties } = {};
+    for (const key in base) {
+      if (base[key]) {
+        cleanTheme[key] = { ...base[key] };
+      }
+    }
+    ['pre[class*="language-"]', 'code[class*="language-"]', ':not(pre) > code[class*="language-"]'].forEach((k) => {
+      if (cleanTheme[k]) {
+        cleanTheme[k] = {
+          ...cleanTheme[k],
+          background: 'transparent',
+          backgroundColor: 'transparent',
+        };
+      }
+    });
+    return cleanTheme;
+  }, [isDarkMode]);
 
  const fallbackCopy = (text: string) => {
  try {
@@ -881,74 +904,82 @@ const CodeBlock: React.FC<CodeBlockProps> = ({ language, code }) => {
  };
 
  return (
- <div
- className="my-4 rounded-xl overflow-hidden border border-subtle clay-surface text-slate-300"
- dir="ltr"
- >
- {/* Code Header (VSCode / Windows 11 style) */}
- <div className="flex items-center justify-between px-3.5 py-2 clay-surface border-b select-none">
- <div className="flex items-center gap-2">
- <FileCode className="w-4 h-4 text-sky-400" />
- <span className="font-mono text-xs text-zinc-400 font-bold uppercase tracking-wider">
- {language || 'code'}
- </span>
- </div>
+    <div
+      className="my-4 overflow-hidden rounded-card clay-card border border-subtle code-block-container"
+      dir="ltr"
+    >
+      {/* Code Header */}
+      <div className="flex items-center justify-between px-4 py-2.5 border-b border-subtle select-none">
+        <div className="flex items-center gap-2">
+          <FileCode className="w-4 h-4 text-[var(--accent-primary)]" />
+          <span className="font-mono text-xs font-bold uppercase tracking-wider text-[var(--text-main)] opacity-85">
+            {language || 'code'}
+          </span>
+        </div>
 
- <div className="flex items-center gap-1.5">
- <button
- onClick={handleDownload}
- className="p-1.5 rounded-lg hover:bg-white/10 text-slate-300 transition-colors flex items-center gap-1 text-[11px]"
- title="دانلود فایل کد"
- >
- <Download className="w-3.5 h-3.5" />
- </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleDownload}
+            className="p-1.5 rounded-btn clay-btn text-[var(--text-main)] transition-all flex items-center gap-1 text-[11px] cursor-pointer"
+            title="دانلود فایل کد"
+          >
+            <Download className="w-3.5 h-3.5" />
+          </button>
 
- <button
- onClick={handleCopy}
- className="clay-btn bg-white/5 hover:bg-white/10 border border-white/10 flex items-center gap-1.5 px-2.5 py-1 text-slate-200 text-[11px] rounded-lg transition-all cursor-pointer"
- aria-label="Copy code block"
- >
- {copied ? (
- <>
- <Check className="w-3.5 h-3.5 text-emerald-400 font-bold" />
- <span className="text-emerald-400 font-sans font-bold">کپی شد ✓</span>
- </>
- ) : (
- <>
- <Copy className="w-3.5 h-3.5 opacity-70" />
- <span className="font-sans font-medium">کپی کد</span>
- </>
- )}
- </button>
- </div>
- </div>
+          <button
+            onClick={handleCopy}
+            className="clay-btn flex items-center gap-1.5 px-3 py-1 text-[11px] rounded-btn transition-all cursor-pointer font-sans font-medium text-[var(--text-main)]"
+            aria-label="Copy code block"
+          >
+            {copied ? (
+              <>
+                <Check className="w-3.5 h-3.5 text-emerald-500 font-bold" />
+                <span className="text-emerald-500 font-bold">کپی شد ✓</span>
+              </>
+            ) : (
+              <>
+                <Copy className="w-3.5 h-3.5 opacity-70" />
+                <span>کپی کد</span>
+              </>
+            )}
+          </button>
+        </div>
+      </div>
 
- {/* Code Content with Syntax Highlighting */}
- <div className="overflow-x-auto text-[13px] font-mono leading-relaxed clay-surface">
- <SyntaxHighlighter
- language={language || 'typescript'}
- style={vscDarkPlus}
- customStyle={{
- margin: 0,
- padding: '1rem',
- background: '#1e1e1e',
- fontSize: '13px',
- lineHeight: '1.6',
- fontFamily:"var(--font-mono), 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
- }}
- showLineNumbers={code.split('\n').length > 3}
- lineNumberStyle={{
- minWidth: '2.5em',
- paddingRight: '1em',
- color: '#6e7681',
- textAlign: 'right',
- userSelect: 'none',
- }}
- wrapLongLines={false}
- >
- {code}
- </SyntaxHighlighter>
- </div>
- </div>
- );
+      {/* Code Content with Syntax Highlighting */}
+      <div className="overflow-x-auto text-[13px] font-mono leading-relaxed">
+        <SyntaxHighlighter
+          language={language || 'typescript'}
+          style={syntaxTheme}
+          className="code-block-pre"
+          customStyle={{
+            margin: 0,
+            padding: '16px 20px',
+            background: 'transparent',
+            backgroundColor: 'transparent',
+            fontSize: '13px',
+            lineHeight: '1.7',
+            fontFamily: "var(--font-mono), 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+          }}
+          codeTagProps={{
+            style: {
+              background: 'transparent',
+              backgroundColor: 'transparent',
+            },
+          }}
+          showLineNumbers={code.split('\n').length > 3}
+          lineNumberStyle={{
+            minWidth: '2.5em',
+            paddingRight: '1em',
+            color: isDarkMode ? '#64748b' : '#94a3b8',
+            textAlign: 'right',
+            userSelect: 'none',
+          }}
+          wrapLongLines={false}
+        >
+          {code}
+        </SyntaxHighlighter>
+      </div>
+    </div>
+  );
 };
