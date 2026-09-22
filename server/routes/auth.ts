@@ -9,7 +9,7 @@ import nodemailer from 'nodemailer';
 import rateLimit from 'express-rate-limit';
 import { telegramAuthSessions } from '../services/telegramAuthSessions';
 import { grantWelcomeBonusIfEligible, getUserWallet, getUserTransactions, getUserUsageStats, getApiDollarRate } from '../services/walletService';
-import { sendOtpSms, normalizePhoneNumber, isValidIranianMobile } from '../services/kavenegarService';
+import { sendOtpSms, normalizePhoneNumber, isValidIranianMobile, sendWelcomeSms } from '../services/kavenegarService';
 
 const router = express.Router();
 
@@ -178,6 +178,10 @@ router.post('/otp/verify', otpVerifyLimiter, async (req, res) => {
         walletBalance: bonusResult.newBalance,
         hasReceivedWelcomeBonus: bonusResult.granted
       };
+
+      if (normalizedPhone) {
+        sendWelcomeSms(normalizedPhone, bonusResult.granted, bonusResult.amount).catch(() => {});
+      }
     } else {
       const wallet = getUserWallet(user.id);
       user.walletBalance = wallet.walletBalance;

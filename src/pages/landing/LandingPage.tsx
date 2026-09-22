@@ -1647,10 +1647,10 @@ export const LandingPage: React.FC = () => {
               <Sparkles className="w-7 h-7" />
             </div>
             <h2 className="text-2xl sm:text-4xl font-black text-[#0f1420] dark:text-white py-2 px-1 mb-3" style={{ fontFamily: "'Estedad', sans-serif" }}>
-              {dynamicCta?.title || 'همین حالا با ۵۰,۰۰۰ تومان هدیه شروع کنید'}
+              {dynamicCta?.title || 'همین حالا گفتگوی هوشمند را شروع کنید'}
             </h2>
             <p className="text-xs sm:text-sm text-[#525d75] dark:text-[#9aa5bc] max-w-xl mx-auto leading-relaxed mb-8 font-normal">
-              {dynamicCta?.desc || 'ثبت‌نام در کمتر از ۳۰ ثانیه بدون نیاز به وارد کردن کارت بانکی؛ بلافاصله وارد محیط چت شوید و لذت کار با برترین مدل‌های جهان را تجربه کنید.'}
+              {dynamicCta?.desc || 'ثبت‌نام در کمتر از ۳۰ ثانیه بدون نیاز به وارد کردن کارت بانکی؛ بلافاصله وارد محیط چت شوید و قدرت مدل‌های برتر هوش مصنوعی جهان را تجربه کنید.'}
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3.5 w-full sm:w-auto">
               <Link

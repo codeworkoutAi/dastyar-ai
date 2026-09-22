@@ -47,8 +47,8 @@ export const GuestLanding: React.FC = () => {
  {/* Top Badges */}
  <div className="mb-6 flex flex-col sm:flex-row items-center justify-center gap-2.5 animate-slideDown">
  <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-300/60 dark:border-emerald-500/30 text-emerald-700 dark:text-emerald-300 text-xs font-bold shadow-xs">
- <Gift className="w-4 h-4 text-emerald-500 animate-bounce" />
- <span>۵۰,۰۰۰ تومان اعتبار هدیه تست رایگان با ثبت‌نام اولیه</span>
+ <Sparkles className="w-4 h-4 text-emerald-500" />
+ <span>دسترسی مستقیم و پرسرعت به برترین هوش‌های مصنوعی جهان</span>
  </div>
 
  <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/20 text-blue-700 dark:text-blue-300 text-xs font-bold">

@@ -79,16 +79,56 @@ export async function sendOtpSms(phone: string, token: string): Promise<{ succes
     const data = await res.json() as any;
 
     if (data.return?.status === 200 && Array.isArray(data.entries) && data.entries.length > 0) {
-      console.log(`[Kavenegar] OTP sent successfully. Message ID: ${data.entries[0].messageid}`);
+      console.log(`[Kavenegar] OTP sent successfully via lookup. Message ID: ${data.entries[0].messageid}`);
       return { success: true, messageId: data.entries[0].messageid };
     }
 
-    const errMsg = data.return?.message || 'خطا در ارسال پیامک از طریق کاوه‌نگار';
-    console.error('[Kavenegar] Verification lookup failed:', data.return);
+    // Lookup failed (e.g. template pending approval or status 501 / 414 / 424)
+    console.warn(`[Kavenegar] Verification lookup failed (${data.return?.status}: ${data.return?.message}). Attempting fallback via general SMS...`);
+    
+    // Resilient fallback: dispatch full welcoming message via general SMS line
+    const fallbackMessage = `به دستیار هوشمند خوش آمدید.\nکد ورود شما: ${token}\n(معتبر برای ۲ دقیقه)\ndastyarai.com`;
+    const fallbackRes = await sendGeneralSms(normalized, fallbackMessage);
+    if (fallbackRes.success) {
+      console.log(`[Kavenegar] OTP fallback SMS sent successfully. Message ID: ${fallbackRes.messageId}`);
+      return { success: true, messageId: fallbackRes.messageId };
+    }
+
+    const errMsg = data.return?.message || fallbackRes.error || 'خطا در ارسال پیامک از طریق کاوه‌نگار';
+    console.error('[Kavenegar] Both lookup and fallback SMS failed:', errMsg);
     return { success: false, error: errMsg };
   } catch (err: any) {
     console.error('[Kavenegar] Network error in sendOtpSms:', err.message);
+    // Even if fetch throws, attempt fallback
+    try {
+      const fallbackMessage = `به دستیار هوشمند خوش آمدید.\nکد ورود شما: ${token}\n(معتبر برای ۲ دقیقه)\ndastyarai.com`;
+      const fallbackRes = await sendGeneralSms(normalized, fallbackMessage);
+      if (fallbackRes.success) {
+        return { success: true, messageId: fallbackRes.messageId };
+      }
+    } catch {
+      // ignore secondary error
+    }
     return { success: false, error: 'خطای ارتباط با سرور پیامک' };
+  }
+}
+
+/**
+ * Sends a warm welcome SMS when a new user registers.
+ */
+export async function sendWelcomeSms(phone: string, hasBonus?: boolean, bonusAmount?: number): Promise<void> {
+  const normalized = normalizePhoneNumber(phone);
+  if (!isValidIranianMobile(normalized)) return;
+  
+  let message = `به دستیار هوشمند خوش آمدید 🌟\nحساب کاربری شما با موفقیت فعال شد.\nورود و گفتگو: dastyarai.com`;
+  if (hasBonus && bonusAmount && bonusAmount > 0) {
+    message = `به دستیار هوشمند خوش آمدید 🌟\nحساب کاربری شما فعال شد و هدیه کد معرف (${bonusAmount.toLocaleString('fa-IR')} تومان) به کیف پول شما منظور گردید.\nورود و گفتگو: dastyarai.com`;
+  }
+
+  try {
+    await sendGeneralSms(normalized, message);
+  } catch (err) {
+    console.warn('[Kavenegar] Welcome SMS failed:', err);
   }
 }
 
