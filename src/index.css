@@ -2087,71 +2087,7 @@ html.dark[data-ui-style="neumorphic"] .clay-icon {
     border: none;
   }
   
-  /* Remove 3D effect from primary color buttons in neumorphic */
-  html[data-ui-style="neumorphic"] .clay-btn-primary-thick,
-  html[data-ui-style="neumorphic"] .dark .clay-btn-primary-thick,
-  html.dark[data-ui-style="neumorphic"] .clay-btn-primary-thick,
-  html[data-ui-style="neumorphic"] .clay-btn-emerald-thick,
-  html[data-ui-style="neumorphic"] .dark .clay-btn-emerald-thick,
-  html.dark[data-ui-style="neumorphic"] .clay-btn-emerald-thick,
-  html[data-ui-style="neumorphic"] .clay-btn-amber-thick,
-  html[data-ui-style="neumorphic"] .dark .clay-btn-amber-thick,
-  html.dark[data-ui-style="neumorphic"] .clay-btn-amber-thick {
-    background: var(--btn-bg) !important;
-    background-image: none !important;
-    box-shadow: var(--clay-shadow-out) !important;
-    border: none !important;
-  }
 
-  /* Signature Color Buttons - neumorphic overrides */
-  html[data-ui-style="neumorphic"] .clay-btn-primary-thick,
-  html[data-ui-style="neumorphic"] .dark .clay-btn-primary-thick,
-  html.dark[data-ui-style="neumorphic"] .clay-btn-primary-thick,
-  html[data-ui-style="neumorphic"] .clay-btn-emerald-thick,
-  html[data-ui-style="neumorphic"] .dark .clay-btn-emerald-thick,
-  html.dark[data-ui-style="neumorphic"] .clay-btn-emerald-thick,
-  html[data-ui-style="neumorphic"] .clay-btn-amber-thick,
-  html[data-ui-style="neumorphic"] .dark .clay-btn-amber-thick,
-  html.dark[data-ui-style="neumorphic"] .clay-btn-amber-thick,
-  html[data-ui-style="neumorphic"] .clay-btn-flowing-glow,
-  html.dark[data-ui-style="neumorphic"] .clay-btn-flowing-glow,
-  html[data-ui-style="neumorphic"] .clay-gold,
-  html[data-ui-style="neumorphic"] .dark .clay-gold,
-  html.dark[data-ui-style="neumorphic"] .clay-gold,
-  html[data-ui-style="neumorphic"] .clay-rose,
-  html[data-ui-style="neumorphic"] .dark .clay-rose,
-  html.dark[data-ui-style="neumorphic"] .clay-rose,
-  html[data-ui-style="neumorphic"] .clay-charcoal,
-  html[data-ui-style="neumorphic"] .dark .clay-charcoal,
-  html.dark[data-ui-style="neumorphic"] .clay-charcoal,
-  html[data-ui-style="neumorphic"] .clay-indigo,
-  html[data-ui-style="neumorphic"] .dark .clay-indigo,
-  html.dark[data-ui-style="neumorphic"] .clay-indigo {
-    background: var(--btn-bg) !important;
-    background-image: none !important;
-    box-shadow: var(--clay-shadow-out) !important;
-    border: none !important;
-    color: var(--text-main) !important;
-  }
-
-  /* Signature Color Circles/Badges - neumorphic overrides */
-  html[data-ui-style="neumorphic"] .clay-gold-circle,
-  html[data-ui-style="neumorphic"] .dark .clay-gold-circle,
-  html.dark[data-ui-style="neumorphic"] .clay-gold-circle,
-  html[data-ui-style="neumorphic"] .clay-rose-circle,
-  html[data-ui-style="neumorphic"] .dark .clay-rose-circle,
-  html.dark[data-ui-style="neumorphic"] .clay-rose-circle,
-  html[data-ui-style="neumorphic"] .clay-charcoal-circle,
-  html[data-ui-style="neumorphic"] .dark .clay-charcoal-circle,
-  html.dark[data-ui-style="neumorphic"] .clay-charcoal-circle,
-  html[data-ui-style="neumorphic"] .clay-indigo-circle,
-  html[data-ui-style="neumorphic"] .dark .clay-indigo-circle,
-  html.dark[data-ui-style="neumorphic"] .clay-indigo-circle,
-  html[data-ui-style="neumorphic"] .clay-crown-badge {
-    background: var(--btn-bg) !important;
-    box-shadow: var(--clay-shadow-out-sm) !important;
-    border: none !important;
-  }
 
   /* Landing Page Exclusive Classes - neumorphic overrides */
   html[data-ui-style="neumorphic"] .clay-card-elevated,
@@ -2236,58 +2172,6 @@ html.dark[data-ui-style="neumorphic"] .clay-icon {
     animation: none !important;
   }
 
-  /* Landing Page Gold/Rose/Charcoal/Indigo color swatches - neumorphic flat */
-  html[data-ui-style="neumorphic"] .clay-gold,
-  html[data-ui-style="neumorphic"] .dark .clay-gold,
-  html.dark[data-ui-style="neumorphic"] .clay-gold,
-  html[data-ui-style="neumorphic"] .clay-rose,
-  html[data-ui-style="neumorphic"] .dark .clay-rose,
-  html.dark[data-ui-style="neumorphic"] .clay-rose,
-  html[data-ui-style="neumorphic"] .clay-charcoal,
-  html[data-ui-style="neumorphic"] .dark .clay-charcoal,
-  html.dark[data-ui-style="neumorphic"] .clay-charcoal,
-  html[data-ui-style="neumorphic"] .clay-indigo,
-  html[data-ui-style="neumorphic"] .dark .clay-indigo,
-  html.dark[data-ui-style="neumorphic"] .clay-indigo {
-    background: var(--btn-bg) !important;
-    box-shadow: var(--clay-shadow-out) !important;
-    border: none !important;
-    color: var(--text-main) !important;
-  }
-
-  /* Landing Page noglow variants - neumorphic */
-  html[data-ui-style="neumorphic"] .clay-gold-noglow,
-  html[data-ui-style="neumorphic"] .dark .clay-gold-noglow,
-  html.dark[data-ui-style="neumorphic"] .clay-gold-noglow,
-  html[data-ui-style="neumorphic"] .clay-rose-noglow,
-  html[data-ui-style="neumorphic"] .dark .clay-rose-noglow,
-  html.dark[data-ui-style="neumorphic"] .clay-rose-noglow {
-    background: var(--btn-bg) !important;
-    box-shadow: var(--clay-shadow-out) !important;
-    border: none !important;
-    color: var(--text-main) !important;
-  }
-
-  /* Landing Page Colored Cards - neumorphic overrides */
-  html[data-ui-style="neumorphic"] .clay-card-indigo,
-  html[data-ui-style="neumorphic"] .dark .clay-card-indigo,
-  html.dark[data-ui-style="neumorphic"] .clay-card-indigo,
-  html[data-ui-style="neumorphic"] .clay-card-amber,
-  html[data-ui-style="neumorphic"] .dark .clay-card-amber,
-  html.dark[data-ui-style="neumorphic"] .clay-card-amber,
-  html[data-ui-style="neumorphic"] .clay-card-rose,
-  html[data-ui-style="neumorphic"] .dark .clay-card-rose,
-  html.dark[data-ui-style="neumorphic"] .clay-card-rose,
-  html[data-ui-style="neumorphic"] .clay-card-teal,
-  html[data-ui-style="neumorphic"] .dark .clay-card-teal,
-  html.dark[data-ui-style="neumorphic"] .clay-card-teal,
-  html[data-ui-style="neumorphic"] .clay-card-emerald,
-  html[data-ui-style="neumorphic"] .dark .clay-card-emerald,
-  html.dark[data-ui-style="neumorphic"] .clay-card-emerald {
-    background: var(--card-bg) !important;
-    box-shadow: var(--clay-shadow-out) !important;
-    border: none !important;
-  }
 
 /* ==========================================================================
    END THEME SWITCHER
