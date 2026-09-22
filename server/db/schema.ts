@@ -425,7 +425,7 @@ export function initializeSchema() {
     } catch {}
     seedSetting('api_dollar_rate', '200000'); // 200,000 Tomans per $1 API by default
     seedSetting('free_key_pool', ''); // Comma- or newline-separated free keys for round-robin
-    seedSetting('free_daily_limit_user', '30');
+    seedSetting('free_daily_limit_user', '15'); // 15 free messages per 4-hour window
     seedSetting('free_daily_limit_guest', '5');
   } catch (err) {
     console.error('[Database] Failed to seed site settings:', err);
@@ -449,11 +449,15 @@ export function initializeSchema() {
   db.exec(`
     CREATE TABLE IF NOT EXISTS free_daily_usage (
       id TEXT, -- 'user:ID' or 'ip:1.2.3.4'
-      date TEXT, -- 'YYYY-MM-DD'
+      date TEXT, -- 'window' or 'YYYY-MM-DD'
       count INTEGER DEFAULT 0,
+      windowStart INTEGER DEFAULT 0,
       PRIMARY KEY (id, date)
     )
   `);
+  try {
+    db.exec(`ALTER TABLE free_daily_usage ADD COLUMN windowStart INTEGER DEFAULT 0;`);
+  } catch {}
 
   // Create Telegram Pending Receipts table (for card-to-card payment flow)
   db.exec(`

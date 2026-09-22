@@ -7,18 +7,21 @@ import { SocksProxyAgent } from 'socks-proxy-agent';
 const SLOT_PRIORITIES = [
   {
     role: 'default',
-    name: 'دستیار چت (رایگان)',
+    name: 'دستیار چت و گفتگو (رایگان)',
+    orderIndex: 1,
     priorityModels: ['gpt-4o-mini', 'gpt-3.5-turbo', 'qwen-turbo', 'llama-3-8b']
   },
   {
     role: 'coding',
-    name: 'دستیار کدنویسی (رایگان)',
-    priorityModels: ['claude-3-5-sonnet', 'claude-3-5-haiku', 'deepseek-v3', 'gpt-4o', 'claude-3-haiku-20240307']
+    name: 'دستیار کدنویسی و تحلیل (رایگان)',
+    orderIndex: 2,
+    priorityModels: ['deepseek-v3', 'deepseek', 'claude-3-5-sonnet', 'claude-3-5-haiku', 'gpt-4o']
   },
   {
     role: 'vision',
-    name: 'دستیار بینایی و سریع (رایگان)',
-    priorityModels: ['gemini-1.5-flash', 'gemini-2.0-flash', 'gemini-1.5-pro', 'gpt-4-vision-preview']
+    name: 'دستیار بینایی و اسناد (رایگان)',
+    orderIndex: 3,
+    priorityModels: ['gemini-2.0-flash', 'gemini-1.5-flash', 'mimo', 'gpt-4-vision-preview']
   }
 ];
 
@@ -134,29 +137,41 @@ export async function syncAutoDefaultProfiles() {
 
     const mappingJson = JSON.stringify(modelMapping);
 
-    // 4. Upsert the profile in the database
-    db.prepare("DELETE FROM default_profiles WHERE role = ? AND apiKey = '[AUTO_POOL]'").run(slot.role);
+    // 4. Upsert the profile in the database with stable ID
+    const stableId = `free_${slot.role}`;
+    const existing = db.prepare("SELECT id FROM default_profiles WHERE id = ?").get(stableId);
+
+    if (existing) {
+      db.prepare(`
+        UPDATE default_profiles 
+        SET name = ?, modelName = ?, updatedAt = CURRENT_TIMESTAMP
+        WHERE id = ?
+      `).run(slot.name, mappingJson, stableId);
+    } else {
+      db.prepare(`
+        INSERT INTO default_profiles (
+          id, name, baseUrl, apiKey, modelName, role, orderIndex, isActive, createdAt, updatedAt
+        ) VALUES (
+          ?, ?, ?, ?, ?, ?, ?, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+        )
+      `).run(
+        stableId,
+        slot.name,
+        '[DYNAMIC_POOL] / Auto-Routed',
+        '[AUTO_POOL]',
+        mappingJson,
+        slot.role,
+        slot.orderIndex
+      );
+    }
     
-    // Insert new one
-    db.prepare(`
-      INSERT INTO default_profiles (
-        id, name, baseUrl, apiKey, modelName, role, orderIndex, isActive, createdAt, updatedAt
-      ) VALUES (
-        ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
-      )
-    `).run(
-      `auto_${slot.role}_${Date.now()}`,
-      `${slot.name}`,
-      '[DYNAMIC_POOL] / Auto-Routed', // Better placeholder for UI
-      '[AUTO_POOL]',
-      mappingJson,
-      slot.role,
-      orderIndex++ + 100,
-      1
-    );
-    
-    console.log(`[AutoProfiles] Assigned ${selectedNormalized} to slot ${slot.role}`);
+    console.log(`[AutoProfiles] Assigned ${selectedNormalized} to slot ${slot.role} (${stableId})`);
   }
+
+  // Clean up any legacy auto_* profiles if they exist
+  try {
+    db.prepare("DELETE FROM default_profiles WHERE id LIKE 'auto_%'").run();
+  } catch (err) {}
 }
 
 // Start a background interval

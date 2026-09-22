@@ -64,6 +64,7 @@ router.post('/api/chat/stream', chatStreamLimiter, async (req, res) => {
     imageUrls?: string[];
     usage?: { promptTokens?: number; completionTokens?: number; totalTokens?: number };
     insufficientBalance?: boolean;
+    quotaExceeded?: boolean;
   }) => {
     if (isEnded || res.writableEnded || res.destroyed) return;
     try {
@@ -128,7 +129,7 @@ router.post('/api/chat/stream', chatStreamLimiter, async (req, res) => {
     }
 
     let provider = apiConfig?.activeProvider || 'gemini';
-    const customProfileId = apiConfig?.custom?.activeProfileId;
+    let customProfileId = apiConfig?.custom?.activeProfileId;
     let model = req.body.model || apiConfig?.[provider]?.modelName || '';
 
     // Auto-detect native official providers from custom profiles based on Base URL
@@ -188,41 +189,78 @@ router.post('/api/chat/stream', chatStreamLimiter, async (req, res) => {
 
     const hasCustomUserKey = Boolean(apiConfig?.[provider]?.apiKey && apiConfig[provider].apiKey.trim() !== '');
 
-    // Check daily limit for Free Models
+    // Check 4-hour rolling window limit for Free Models
     if (isFreeModel && !hasCustomUserKey && userRole !== 'admin') {
-      const todayStr = new Date().toISOString().split('T')[0];
+      const now = Date.now();
+      const WINDOW_MS = 4 * 60 * 60 * 1000; // 4 hours
       const identifier = userId ? `user:${userId}` : `ip:${req.ip}`;
       
       const limitStr = userId ? 
-        (db.prepare("SELECT value FROM site_settings WHERE key = 'free_daily_limit_user'").get() as any)?.value || '30' :
+        (db.prepare("SELECT value FROM site_settings WHERE key = 'free_daily_limit_user'").get() as any)?.value || '15' :
         (db.prepare("SELECT value FROM site_settings WHERE key = 'free_daily_limit_guest'").get() as any)?.value || '5';
       
-      const dailyLimit = parseInt(limitStr, 10);
+      const windowLimit = parseInt(limitStr, 10);
       
-      // Get current usage
-      let usage = db.prepare("SELECT count FROM free_daily_usage WHERE id = ? AND date = ?").get(identifier, todayStr) as any;
-      if (!usage) {
-        db.prepare("INSERT INTO free_daily_usage (id, date, count) VALUES (?, ?, 0)").run(identifier, todayStr);
-        usage = { count: 0 };
+      // Get current window usage
+      let usage = db.prepare("SELECT count, windowStart FROM free_daily_usage WHERE id = ? AND date = 'window'").get(identifier) as any;
+      if (!usage || !usage.windowStart || (now - usage.windowStart >= WINDOW_MS)) {
+        db.prepare("INSERT OR REPLACE INTO free_daily_usage (id, date, count, windowStart) VALUES (?, 'window', 0, ?)").run(identifier, now);
+        usage = { count: 0, windowStart: now };
       }
       
-      if (usage.count >= dailyLimit) {
-        sendChunk({
-          error: `سهمیه روزانه شما برای مدل‌های رایگان (${dailyLimit} پیام) به پایان رسیده است. لطفاً فردا مراجعه کنید یا از مدل‌های حرفه‌ای استفاده کنید.`,
-          done: true
-        });
-        return finishStream();
+      if (usage.count >= windowLimit) {
+        // Free quota exhausted! Check if user has wallet balance to seamlessly switch to Paid card
+        const userWallet = userId ? getUserWallet(userId) : null;
+        if (userWallet && userWallet.walletBalance > 0) {
+          // Seamless auto-switch to paid card!
+          isFreeModel = false;
+          let paidRoleId = 'paid_default';
+          const currentModel = (targetModel || model || '').toLowerCase();
+          if (customProfileId === 'free_coding' || currentModel.includes('deepseek') || currentModel.includes('claude')) {
+            paidRoleId = 'paid_coding';
+          } else if (customProfileId === 'free_vision' || currentModel.includes('vision') || currentModel.includes('flash') || currentModel.includes('gemini')) {
+            paidRoleId = 'paid_vision';
+          }
+          const paidProfile = db.prepare('SELECT * FROM default_profiles WHERE id = ?').get(paidRoleId) as any;
+          if (paidProfile) {
+            customProfileId = paidProfile.id;
+            targetModel = paidProfile.modelName;
+            model = paidProfile.modelName;
+            targetBaseUrl = paidProfile.baseUrl;
+            targetApiKey = paidProfile.apiKey;
+            if (apiConfig?.custom) {
+              apiConfig.custom.baseUrl = paidProfile.baseUrl;
+              apiConfig.custom.modelName = paidProfile.modelName;
+              apiConfig.custom.apiKey = paidProfile.apiKey;
+              apiConfig.custom.id = paidProfile.id;
+            }
+          }
+        } else {
+          // Calculate remaining cooldown time
+          const msLeft = Math.max(0, (usage.windowStart + WINDOW_MS) - now);
+          const hoursLeft = Math.floor(msLeft / (60 * 60 * 1000));
+          const minsLeft = Math.max(1, Math.ceil((msLeft % (60 * 60 * 1000)) / (60 * 1000)));
+          const timeLeftStr = hoursLeft > 0 ? `${hoursLeft} ساعت و ${minsLeft} دقیقه` : `${minsLeft} دقیقه`;
+          
+          sendChunk({
+            error: `سهمیه ${windowLimit} پیام رایگان شما به پایان رسیده است. ⏱️ سهمیه بعدی شما حدود ${timeLeftStr} دیگر فعال خواهد شد. در صورت تمایل می‌توانید با شارژ کیف پول خود به هر میزان دلخواه، با مدل‌های پیشرفته اعتباری به گفتگو ادامه دهید.`,
+            insufficientBalance: true,
+            quotaExceeded: true,
+            done: true
+          });
+          return finishStream();
+        }
+      } else {
+        // Increment usage immediately to prevent race conditions
+        db.prepare("UPDATE free_daily_usage SET count = count + 1 WHERE id = ? AND date = 'window'").run(identifier);
       }
-      
-      // Increment usage immediately to prevent race conditions
-      db.prepare("UPDATE free_daily_usage SET count = count + 1 WHERE id = ? AND date = ?").run(identifier, todayStr);
     }
 
-    if (userId && !hasCustomUserKey) {
+    if (!isFreeModel && userId && !hasCustomUserKey) {
       const userWallet = getUserWallet(userId);
       if (userWallet.walletBalance <= 0) {
         sendChunk({
-          error: 'اعتبار کیف پول شما به پایان رسیده است. لطفاً برای ادامه گفت‌وگو حساب خود را شارژ کنید.',
+          error: 'اعتبار کیف پول شما برای استفاده از مدل‌های اعتباری کافی نیست. لطفاً کیف پول خود را شارژ کنید.',
           insufficientBalance: true,
           done: true
         });

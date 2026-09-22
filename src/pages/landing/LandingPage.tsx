@@ -38,7 +38,8 @@ import {
   PenTool,
   Scale,
   TrendingUp,
-  Stethoscope
+  Stethoscope,
+  Wallet
 } from 'lucide-react';
 import { ThemeToggle } from '../../components/ThemeToggle';
 import { Footer } from '../../components/Footer';
@@ -181,16 +182,16 @@ const getCtaThemeStyles = (theme?: string) => {
 
 const MANIFESTO_CARD_THEMES = [
   {
-    card: 'clay-card-indigo',
+    card: 'clay-surface-inset border border-black/[0.04] dark:border-white/[0.04]',
     iconColor: 'text-indigo-500 dark:text-indigo-400'
   },
   {
-    card: 'clay-card-rose',
-    iconColor: 'text-rose-500 dark:text-[#e2908a]'
+    card: 'clay-surface-inset border border-black/[0.04] dark:border-white/[0.04]',
+    iconColor: 'text-rose-500 dark:text-rose-400'
   },
   {
-    card: 'clay-card-teal',
-    iconColor: 'text-teal-500 dark:text-teal-400'
+    card: 'clay-surface-inset border border-black/[0.04] dark:border-white/[0.04]',
+    iconColor: 'text-emerald-500 dark:text-emerald-400'
   }
 ];
 
@@ -661,8 +662,8 @@ export const LandingPage: React.FC = () => {
                 {[...Array(2)].map((_, i) => (
                   <React.Fragment key={i}>
                     {/* GPT-4o */}
-                    <div className="flex items-center gap-3 px-5 py-3 rounded-2xl clay-inset-thick transition-transform hover:-translate-y-0.5 cursor-pointer shrink-0">
-                      <div className="w-10 h-10 rounded-xl bg-black/5 dark:bg-white/5 flex items-center justify-center text-[#10a37f]  border border-black/5 dark:border-white/5">
+                    <div className="flex items-center gap-3 px-5 py-3 rounded-2xl hero-model-chip transition-transform hover:-translate-y-0.5 cursor-pointer shrink-0">
+                      <div className="w-10 h-10 rounded-xl bg-black/5 dark:bg-white/5 flex items-center justify-center text-[#10a37f] border border-black/5 dark:border-white/5">
                         <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 opacity-90"><path d="M22.2819 9.8211a5.9847 5.9847 0 0 0-.5157-4.9108 6.0462 6.0462 0 0 0-6.5098-2.9A6.0651 6.0651 0 0 0 4.9807 4.1818a5.9847 5.9847 0 0 0-3.9977 2.9 6.0462 6.0462 0 0 0 .7427 7.0966 5.98 5.98 0 0 0 .511 4.9107 6.051 6.051 0 0 0 6.5146 2.9001A6.0651 6.0651 0 0 0 19.0192 19.818a5.9847 5.9847 0 0 0 3.9977-2.9 6.0462 6.0462 0 0 0-.735-7.0968zM8.7505 18.2588a4.5078 4.5078 0 0 1-2.4828-4.2238l.0047-.1165 4.5492 2.627v5.253a4.5204 4.5204 0 0 1-2.0711-3.5397zm-3.518-7.9044a4.5078 4.5078 0 0 1 1.0506-4.739 4.4962 4.4962 0 0 1 3.5332-1.2828L5.2671 6.959v5.254l-4.5492-2.6264zm10.0526-7.234a4.5078 4.5078 0 0 1 4.2238 2.4828 4.4962 4.4962 0 0 1-.225 3.7388L14.7347 6.716 10.1855 4.089v-5.253a4.5078 4.5078 0 0 1 5.1016 1.8344zm3.4897 7.9044a4.5078 4.5078 0 0 1-1.0506 4.739 4.4962 4.4962 0 0 1-3.5332 1.2828l4.5492-2.6264V9.022l4.5492 2.6264zm-10.0526 7.234a4.5078 4.5078 0 0 1-4.2238-2.4828 4.4962 4.4962 0 0 1 .225-3.7388L9.2653 17.284 13.8145 19.911v5.253a4.5078 4.5078 0 0 1-5.1016-1.8344zM16.3262 10.038l-4.269 2.4646-4.269-2.4646V5.109l4.269 2.4646 4.269-2.4646v4.929z" /></svg>
                       </div>
                       <div className="text-right">
@@ -672,8 +673,8 @@ export const LandingPage: React.FC = () => {
                     </div>
                     
                     {/* Claude 3.5 */}
-                    <div className="flex items-center gap-3 px-5 py-3 rounded-2xl clay-inset-thick transition-transform hover:-translate-y-0.5 cursor-pointer shrink-0">
-                      <div className="w-10 h-10 rounded-xl bg-black/5 dark:bg-white/5 flex items-center justify-center text-[#d97757]  border border-black/5 dark:border-white/5">
+                    <div className="flex items-center gap-3 px-5 py-3 rounded-2xl hero-model-chip transition-transform hover:-translate-y-0.5 cursor-pointer shrink-0">
+                      <div className="w-10 h-10 rounded-xl bg-black/5 dark:bg-white/5 flex items-center justify-center text-[#d97757] border border-black/5 dark:border-white/5">
                         <svg viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6 opacity-90"><path d="M18.8 20.5H22L12 3H8.8L-0 20.5H3.2L12 4.6L18.8 20.5ZM12.2 16.5H15.4L13.8 13.3L12.2 16.5Z"/></svg>
                       </div>
                       <div className="text-right">
@@ -683,8 +684,8 @@ export const LandingPage: React.FC = () => {
                     </div>
 
                     {/* Gemini Flash */}
-                    <div className="flex items-center gap-3 px-5 py-3 rounded-2xl clay-inset-thick transition-transform hover:-translate-y-0.5 cursor-pointer shrink-0">
-                      <div className="w-10 h-10 rounded-xl bg-black/5 dark:bg-white/5 flex items-center justify-center text-[#4285f4]  border border-black/5 dark:border-white/5">
+                    <div className="flex items-center gap-3 px-5 py-3 rounded-2xl hero-model-chip transition-transform hover:-translate-y-0.5 cursor-pointer shrink-0">
+                      <div className="w-10 h-10 rounded-xl bg-black/5 dark:bg-white/5 flex items-center justify-center text-[#4285f4] border border-black/5 dark:border-white/5">
                         <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 opacity-90"><path d="M12.025 24C12.025 17.5 17.5 12.025 24 12.025C17.5 12.025 12.025 6.5 12.025 0C12.025 6.5 6.5 12.025 0 12.025C6.5 12.025 12.025 17.5 12.025 24Z"/></svg>
                       </div>
                       <div className="text-right">
@@ -694,8 +695,8 @@ export const LandingPage: React.FC = () => {
                     </div>
 
                     {/* Flux Studio */}
-                    <div className="flex items-center gap-3 px-5 py-3 rounded-2xl clay-inset-thick transition-transform hover:-translate-y-0.5 cursor-pointer shrink-0">
-                      <div className="w-10 h-10 rounded-xl bg-black/5 dark:bg-white/5 flex items-center justify-center text-[#ec4899]  border border-black/5 dark:border-white/5">
+                    <div className="flex items-center gap-3 px-5 py-3 rounded-2xl hero-model-chip transition-transform hover:-translate-y-0.5 cursor-pointer shrink-0">
+                      <div className="w-10 h-10 rounded-xl bg-black/5 dark:bg-white/5 flex items-center justify-center text-[#ec4899] border border-black/5 dark:border-white/5">
                         <svg viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6 opacity-90"><path d="M19 3H5C3.89543 3 3 3.89543 3 5V19C3 20.1046 3.89543 21 5 21H19C20.1046 21 21 20.1046 21 19V5C21 3.89543 20.1046 3 19 3ZM15 11H11V15H9V11H7V9H9V7H11V9H15V11Z"/></svg>
                       </div>
                       <div className="text-right">
@@ -705,8 +706,8 @@ export const LandingPage: React.FC = () => {
                     </div>
 
                     {/* DeepSeek */}
-                    <div className="flex items-center gap-3 px-5 py-3 rounded-2xl clay-inset-thick transition-transform hover:-translate-y-0.5 cursor-pointer shrink-0">
-                      <div className="w-10 h-10 rounded-xl bg-black/5 dark:bg-white/5 flex items-center justify-center text-[#2563eb]  border border-black/5 dark:border-white/5">
+                    <div className="flex items-center gap-3 px-5 py-3 rounded-2xl hero-model-chip transition-transform hover:-translate-y-0.5 cursor-pointer shrink-0">
+                      <div className="w-10 h-10 rounded-xl bg-black/5 dark:bg-white/5 flex items-center justify-center text-[#2563eb] border border-black/5 dark:border-white/5">
                         <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 opacity-90"><path d="M12 21.5c-5.238 0-9.5-4.262-9.5-9.5S6.762 2.5 12 2.5s9.5 4.262 9.5 9.5-4.262 9.5-9.5 9.5zm0-17C7.86 4.5 4.5 7.86 4.5 12s3.36 7.5 7.5 7.5 7.5-3.36 7.5-7.5-3.36-7.5-7.5-7.5zM12 17c-2.757 0-5-2.243-5-5s2.243-5 5-5 5 2.243 5 5-2.243 5-5 5z"/></svg>
                       </div>
                       <div className="text-right">
@@ -1305,246 +1306,144 @@ export const LandingPage: React.FC = () => {
       {/* ---------------- 5. Transparent Hybrid Pricing Section (Thick 3D Claymorphic) ---------------- */}
       {dynamicVisibility.pricing !== false && dynamicPricingHeader?.enabled !== false && (
       <section id="pricing" className="py-16 sm:py-20 px-4 sm:px-6 max-w-6xl mx-auto border-t border-black/5 dark:border-white/5">
-        <div className="text-center max-w-2xl mx-auto mb-12 sm:mb-16">
+        <div className="text-center max-w-2xl mx-auto mb-10 sm:mb-14">
           <span className="text-xs font-bold text-[#717b91] uppercase tracking-widest block mb-1">
-            {dynamicPricingHeader?.badge || 'TRANSPARENT PRICING'}
+            {dynamicPricingHeader?.badge || 'PAY-AS-YOU-GO PRICING'}
           </span>
           <h2
             className="text-2xl sm:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-sky-500 to-blue-500 dark:from-sky-400 dark:to-blue-400 tracking-tight py-2 px-1 mb-1"
             style={{ fontFamily: "'Estedad', sans-serif" }}
           >
-            {dynamicPricingHeader?.title || 'تعرفه‌ها بر اساس تومان و سهمیه توکن'}
+            {dynamicPricingHeader?.title || 'تعرفه منعطف و شارژ آزاد به میزان دلخواه'}
           </h2>
           <p className="text-xs sm:text-sm text-[#525d75] dark:text-[#9aa5bc]">
-            {dynamicPricingHeader?.subtitle || 'بدون کسر ماهانه خودکار و بدون هزینه‌های مخفی. هر بسته مستقیماً به کیف پول شما اضافه می‌شود و تاریخ انقضا ندارد.'}
+            {dynamicPricingHeader?.subtitle || 'بدون بسته‌های اجباری، بدون اشتراک ماهانه و بدون تاریخ انقضا. کیف پول خود را به هر میزانی که مایلید شارژ کنید و فقط به ازای توکن مصرفی هر گفتگو بپردازید.'}
           </p>
         </div>
 
-        {/* Pricing Grid (Dynamic Self-Healing Fluid Layout) */}
-        {(() => {
-          const freeCard = dynamicGiftCard ? {
-            id: 'free-welcome',
-            title: dynamicGiftCard.title || 'هدیه ثبت‌نام',
-            price: dynamicGiftCard.price || 'رایگان',
-            rawPrice: 0,
-            badge: dynamicGiftCard.badge || 'هدیه بدون قیدوشرط',
-            tokenEstimate: dynamicGiftCard.tokenEstimate || `~${toPersianDigits('150,000')} توکن سهمیه`,
-            messagesCount: dynamicGiftCard.messagesCount || `حدود ${toPersianDigits('150')} تا ${toPersianDigits('200')} پیام کامل`,
-            desc: dynamicGiftCard.desc || 'بلافاصله پس از ثبت‌نام به کیف پول شما واریز می‌شود تا قدرت مدل‌ها را آزادانه آزمایش کنید.',
-            features: Array.isArray(dynamicGiftCard.features)
-              ? dynamicGiftCard.features
-              : typeof dynamicGiftCard.features === 'string'
-                ? dynamicGiftCard.features.split('\n').filter(Boolean)
-                : ['دسترسی کامل به تمام مدل‌ها', 'بدون نیاز به کارت بانکی', 'تحلیل اسناد و جستجوی زنده وب'],
-            isPopular: false,
-            image: null,
-            ctaText: dynamicGiftCard.ctaText || 'شروع با اعتبار هدیه',
-            ctaAction: () => (isAuthenticated ? navigate('/chat') : setAuthModalOpen(true))
-          } : {
-            id: 'free-welcome',
-            title: 'هدیه ثبت‌نام',
-            price: 'رایگان',
-            rawPrice: 0,
-            badge: 'هدیه بدون قیدوشرط',
-            tokenEstimate: `~${toPersianDigits('150,000')} توکن سهمیه`,
-            messagesCount: `حدود ${toPersianDigits('150')} تا ${toPersianDigits('200')} پیام کامل`,
-            desc: 'بلافاصله پس از ثبت‌نام به کیف پول شما واریز می‌شود تا قدرت مدل‌ها را آزادانه آزمایش کنید.',
-            features: ['دسترسی کامل به تمام مدل‌ها', 'بدون نیاز به کارت بانکی', 'تحلیل اسناد و جستجوی زنده وب'],
-            isPopular: false,
-            image: null,
-            ctaText: 'شروع با اعتبار هدیه',
-            ctaAction: () => (isAuthenticated ? navigate('/chat') : setAuthModalOpen(true))
-          };
+        {/* Pay-As-You-Go Flexible Wallet Showcase (Replaces fixed packages) */}
+        <div className="reveal-pop p-7 sm:p-10 rounded-3xl clay-card-thick max-w-5xl mx-auto transition-all">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
+            
+            {/* Right Column: Copy & Highlights */}
+            <div className="lg:col-span-7 space-y-6 text-right">
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-bold clay-pill-thick text-emerald-600 dark:text-emerald-400">
+                <Coins className="w-4 h-4 text-emerald-500 shrink-0" />
+                <span>انعطاف‌پذیری کامل در شارژ | Pay-As-You-Go</span>
+              </div>
 
-          const isFreeCardEnabled = dynamicGiftCard ? dynamicGiftCard.enabled !== false : true;
+              <h3 className="text-xl sm:text-3xl font-black text-[#0f1420] dark:text-white leading-snug" style={{ fontFamily: "'Estedad', sans-serif" }}>
+                شارژ با هر مبلغ دلخواه؛ پرداخت دقیقاً به اندازه مصرف
+              </h3>
 
-          let cardsToRender: any[] = packages;
-          if (dynamicPlans && dynamicPlans.length > 0) {
-            const dbCards = dynamicPlans.map((p) => {
-              let featureList: string[] = [];
-              if (p.features) {
-                featureList = p.features.split('\n').map((s: string) => s.trim()).filter(Boolean);
-              } else if (p.longDescription) {
-                featureList = p.longDescription.split('\n').map((s: string) => s.trim()).filter(Boolean);
-              } else if (p.description) {
-                featureList = [p.description];
-              }
+              <p className="text-xs sm:text-sm text-[#525d75] dark:text-[#9aa5bc] leading-relaxed">
+                دیگر نیازی به خرید بسته‌های اجباری، پرداخت هزینه‌های ماهانه سنگین یا نگرانی از تاریخ انقضا ندارید. در دستیار هوشمند، کیف پول خود را به هر میزانی که مایلید (حتی ۵۰,۰۰۰ تومان) شارژ کنید و فقط به ازای تک‌تک کلمات و توکن‌هایی که در هر گفتگو مصرف می‌کنید هزینه بپردازید.
+              </p>
 
-              return {
-                id: p.id,
-                title: p.title,
-                price: toPersianDigits(p.price ? p.price.toLocaleString() : '۰'),
-                rawPrice: p.price || 0,
-                badge: p.badge || (p.isPopular ? `پرفروش‌ترین (${toPersianDigits('20')}٪ شارژ هدیه)` : 'بسته ویژه'),
-                tokenEstimate: p.tokenEstimate || `~${toPersianDigits('1,000,000')} توکن سهمیه`,
-                messagesCount: '',
-                desc: p.description || '',
-                features: featureList,
-                isPopular: Boolean(p.isPopular),
-                image: p.image || null,
-                ctaText: `خرید ${p.title}`,
-                ctaAction: () => {
-                  if (!isAuthenticated) {
-                    setAuthModalOpen(true);
-                  } else {
-                    setSelectedPlanForCheckout(p);
-                  }
-                }
-              };
-            });
-            cardsToRender = isFreeCardEnabled ? [freeCard, ...dbCards] : dbCards;
-          } else {
-            cardsToRender = isFreeCardEnabled ? packages : packages.filter(p => p.rawPrice > 0);
-          }
-
-          const count = cardsToRender.length;
-          const gridLayoutClass = count === 1
-            ? 'max-w-md mx-auto grid grid-cols-1 gap-6'
-            : count === 2
-              ? 'max-w-3xl mx-auto grid grid-cols-1 sm:grid-cols-2 gap-6'
-              : count === 3
-                ? 'max-w-5xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6'
-                : count === 4
-                  ? 'max-w-6xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6'
-                  : 'max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6';
-
-          return (
-            <div className={`${gridLayoutClass} transition-all duration-300`}>
-              {cardsToRender.map((pkg: any, idx: number) => {
-                const pAnim = pkg.isPopular ? 'reveal-pop' : (idx % 2 === 0 ? 'reveal-from-right' : 'reveal-from-left');
-                const staggerClass = `stagger-${(idx % 4) + 1}`;
-                return (
-                  <div
-                    key={pkg.id || idx}
-                    className={`${pAnim} ${staggerClass} p-6 sm:p-7 flex flex-col justify-between transition-all duration-300 ${pkg.isPopular
-                        ? 'clay-card-elevated ring-2 ring-[#df9f40]/70 dark:ring-[#df9f40]/60 -translate-y-2'
-                        : 'clay-card-thick'
-                      }`}
-                  >
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-2">
+                <div className="clay-surface p-3.5 rounded-2xl flex items-start gap-2.5">
+                  <Check className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
                   <div>
-                    {/* Optional Header Image / Media (Preserved) */}
-                    {pkg.image && (
-                      <div className="mb-4 w-full h-32 rounded-2xl overflow-hidden clay-inset-thick">
-                        <img src={pkg.image} alt={pkg.title} className="w-full h-full object-cover" loading="lazy" />
-                      </div>
-                    )}
-
-                    <div className="flex items-center justify-between mb-4">
-                      <span
-                        className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold clay-pill-thick ${pkg.isPopular
-                            ? 'clay-gold text-white font-black'
-                            : idx === 0
-                              ? 'bg-black/5 dark:bg-white/10 text-[#525d75] dark:text-[#9aa5bc]'
-                              : idx === 1
-                                ? 'clay-rose text-white font-black'
-                                : 'clay-indigo text-white font-black'
-                          }`}
-                      >
-                        {pkg.isPopular && <Crown className="w-3.5 h-3.5 fill-white/40" />}
-                        <span>{pkg.badge}</span>
-                      </span>
-
-                      {pkg.isPopular && (
-                        <div className="w-8 h-8 rounded-full clay-crown-badge flex items-center justify-center text-[#df9f40] ">
-                          <Crown className="w-4 h-4 fill-[#df9f40]" />
-                        </div>
-                      )}
-                    </div>
-
-                    <h3 className="text-base sm:text-lg font-black mb-2 text-[#0f1420] dark:text-white text-center" style={{ fontFamily: "'Estedad', sans-serif" }}>
-                      {pkg.title}
-                    </h3>
-
-                    <div className="flex items-baseline justify-center gap-1.5 mb-4">
-                      <span className="text-3xl sm:text-4xl font-black tracking-tight text-[#0f1420] dark:text-white" style={{ fontFamily: "'Estedad', sans-serif" }}>
-                        {pkg.price}
-                      </span>
-                      {pkg.rawPrice > 0 && <span className="text-xs font-bold opacity-70">تومان</span>}
-                    </div>
-
-                    {/* Token / Messages Box in Inset Clay */}
-                    {pkg.tokenEstimate && (
-                      <div
-                        className="clay-inset-thick p-3.5 rounded-2xl mb-5 text-xs space-y-1"
-                      >
-                        <div className="font-black text-[#0f1420] dark:text-white" style={{ fontFamily: "'Estedad', sans-serif" }}>
-                          {pkg.tokenEstimate}
-                        </div>
-                        {pkg.messagesCount ? <div className="text-[11px] text-[#525d75] dark:text-[#9aa5bc] font-medium">{pkg.messagesCount}</div> : null}
-                      </div>
-                    )}
-
-                    {pkg.desc && (
-                      <p className="text-xs opacity-80 leading-relaxed mb-6">{pkg.desc}</p>
-                    )}
-
-                    {pkg.features && pkg.features.length > 0 && (
-                      <ul className="space-y-2.5 text-xs mb-8">
-                        {pkg.features.map((feat: string, fIdx: number) => (
-                          <li key={fIdx} className="flex items-center gap-2">
-                            <Check className="w-4 h-4 shrink-0 text-[#10b981]" />
-                            <span className="font-medium text-[#0f1420] dark:text-[#e4e7ee]">{feat}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    )}
+                    <div className="text-xs font-bold text-[#0f1420] dark:text-white mb-0.5">اعتبار بدون تاریخ انقضا</div>
+                    <div className="text-[11px] text-[#525d75] dark:text-[#9aa5bc]">موجودی کیف پول شما هرگز منقضی یا صفر نخواهد شد.</div>
                   </div>
+                </div>
 
-                  <button
-                    type="button"
-                    onClick={pkg.ctaAction}
-                    className={`w-full py-3.5 rounded-2xl text-xs font-black transition-all cursor-pointer active:scale-95 ${pkg.isPopular
-                        ? 'clay-gold text-white hover:brightness-105'
-                        : idx === 1
-                          ? 'clay-rose text-white font-bold hover:brightness-105'
-                          : idx === 3
-                            ? 'clay-indigo text-white font-bold hover:brightness-105'
-                            : 'clay-btn-thick text-[#0f1420] dark:text-white'
-                      }`}
-                    style={{ fontFamily: "'Estedad', sans-serif" }}
-                  >
-                    {pkg.ctaText}
-                  </button>
+                <div className="clay-surface p-3.5 rounded-2xl flex items-start gap-2.5">
+                  <Check className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
+                  <div>
+                    <div className="text-xs font-bold text-[#0f1420] dark:text-white mb-0.5">محاسبه دقیق بر اساس توکن</div>
+                    <div className="text-[11px] text-[#525d75] dark:text-[#9aa5bc]">شفافیت ۱۰۰٪ و مشاهده هزینه و توکن مصرفی هر چت.</div>
                   </div>
-                );
-              })}
-            </div>
-          );
-        })()}
+                </div>
 
-        {/* Custom Amount Top-up Banner in Clay */}
-        {dynamicPricingHeader?.customTopupBanner?.enabled !== false && (
-          <div className="reveal-pop mt-10 p-6 sm:p-8 rounded-3xl clay-card-thick max-w-3xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-6 transition-all">
-            <div className="flex items-center gap-4 text-right">
-              <div className="w-12 h-12 rounded-2xl clay-btn-emerald-thick flex items-center justify-center shrink-0">
-                <Coins className="w-6 h-6" />
+                <div className="clay-surface p-3.5 rounded-2xl flex items-start gap-2.5">
+                  <Check className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
+                  <div>
+                    <div className="text-xs font-bold text-[#0f1420] dark:text-white mb-0.5">شارژ با مبالغ خرد</div>
+                    <div className="text-[11px] text-[#525d75] dark:text-[#9aa5bc]">آزادی عمل برای شارژ از ۵۰,۰۰۰ تومان تا مبالغ دلخواه.</div>
+                  </div>
+                </div>
+
+                <div className="clay-surface p-3.5 rounded-2xl flex items-start gap-2.5">
+                  <Check className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
+                  <div>
+                    <div className="text-xs font-bold text-[#0f1420] dark:text-white mb-0.5">۱۵ چت رایگان روزانه</div>
+                    <div className="text-[11px] text-[#525d75] dark:text-[#9aa5bc]">استفاده رایگان در هر چرخه ۴ ساعته برای همه کاربران.</div>
+                  </div>
+                </div>
               </div>
-              <div>
-                <h4 className="font-black text-sm sm:text-base text-[#0f1420] dark:text-white mb-1.5" style={{ fontFamily: "'Estedad', sans-serif" }}>
-                  {dynamicPricingHeader?.customTopupBanner?.title || 'پلن‌های ثابت مناسب شما نیست؟ شارژ با هر مبلغ دلخواه'}
-                </h4>
-                <p className="text-xs text-[#525d75] dark:text-[#9aa5bc] leading-relaxed">
-                  {dynamicPricingHeader?.customTopupBanner?.desc || 'کیف پول خود را به هر میزانی که مایلید (حداقل ۵,۰۰۰ تومان) شارژ کنید و فقط به ازای توکن‌های مصرفی کسر اعتبار شوید.'}
-                </p>
+
+              <div className="pt-3 flex flex-col sm:flex-row items-center gap-4">
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (isAuthenticated) {
+                      setIsWalletOpen(true);
+                    } else {
+                      setAuthModalOpen(true);
+                    }
+                  }}
+                  className="w-full sm:w-auto px-7 py-3.5 rounded-2xl clay-btn-primary text-xs font-black transition-all flex items-center justify-center gap-2.5 cursor-pointer active:scale-95"
+                  style={{ fontFamily: "'Estedad', sans-serif" }}
+                >
+                  <CreditCard className="w-4 h-4" />
+                  <span>ورود و شارژ با مبلغ دلخواه</span>
+                  <ArrowLeft className="w-4 h-4" />
+                </button>
+                <span className="text-[11px] font-medium text-[#525d75] dark:text-[#9aa5bc]">
+                  پشتیبانی از کلیه کارت‌های شتاب با درگاه امن بانکی
+                </span>
               </div>
             </div>
-            <button
-              type="button"
-              onClick={() => {
-                if (isAuthenticated) {
-                  setIsWalletOpen(true);
-                } else {
-                  setAuthModalOpen(true);
-                }
-              }}
-              className="shrink-0 px-5 py-3 rounded-2xl clay-btn-emerald-thick text-xs font-black transition-all flex items-center gap-2 cursor-pointer active:scale-95"
-              style={{ fontFamily: "'Estedad', sans-serif" }}
-            >
-              <CreditCard className="w-4 h-4" />
-              <span>{dynamicPricingHeader?.customTopupBanner?.btnText || 'شارژ با مبلغ دلخواه'}</span>
-            </button>
+
+            {/* Left Column: Visual 3D Showcase Card */}
+            <div className="lg:col-span-5 flex justify-center">
+              <div className="w-full max-w-sm p-6 sm:p-7 rounded-3xl clay-card-elevated space-y-5 border border-black/5 dark:border-white/10">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-10 h-10 rounded-2xl clay-surface flex items-center justify-center text-emerald-600 dark:text-emerald-400">
+                      <Wallet className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <div className="text-xs font-bold text-[#0f1420] dark:text-white">کیف پول هوشمند</div>
+                      <div className="text-[10px] text-[#525d75] dark:text-[#9aa5bc]">موجودی لحظه‌ای کاربر</div>
+                    </div>
+                  </div>
+                  <span className="px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+                    فعال
+                  </span>
+                </div>
+
+                <div className="clay-surface-inset p-4 rounded-2xl text-center space-y-1">
+                  <div className="text-[11px] text-[#525d75] dark:text-[#9aa5bc] font-medium">نمونه موجودی قابل شارژ</div>
+                  <div className="text-2xl sm:text-3xl font-black text-[#0f1420] dark:text-white tracking-tight" style={{ fontFamily: "'Estedad', sans-serif" }}>
+                    {toPersianDigits('50,000')} <span className="text-xs font-bold opacity-70">تومان</span>
+                  </div>
+                  <div className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold pt-0.5">
+                    معادل ~{toPersianDigits('500,000')} توکن سهمیه مکالمه
+                  </div>
+                </div>
+
+                <div className="space-y-2 text-xs">
+                  <div className="flex items-center justify-between py-1.5 border-b border-black/5 dark:border-white/5">
+                    <span className="text-[#525d75] dark:text-[#9aa5bc]">مدل‌های اعتباری فعال:</span>
+                    <span className="font-bold text-[#0f1420] dark:text-white">لونا، دیپ‌سیک، جمینای ۳.۸</span>
+                  </div>
+                  <div className="flex items-center justify-between py-1.5 border-b border-black/5 dark:border-white/5">
+                    <span className="text-[#525d75] dark:text-[#9aa5bc]">حداقل مبلغ شارژ:</span>
+                    <span className="font-bold text-emerald-600 dark:text-emerald-400">{toPersianDigits('5,000')} تومان</span>
+                  </div>
+                  <div className="flex items-center justify-between py-1.5">
+                    <span className="text-[#525d75] dark:text-[#9aa5bc]">سرعت فعال‌سازی:</span>
+                    <span className="font-bold text-[#0f1420] dark:text-white">آنی و خودکار</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
           </div>
-        )}
+        </div>
 
         {/* Security & Instant Credit Note in Sculpted Clay */}
         <div className="reveal-init mt-8 p-4 rounded-2xl clay-card-thick max-w-2xl mx-auto flex flex-col sm:flex-row items-center justify-center gap-4 text-xs font-bold text-[#525d75] dark:text-[#9aa5bc]">

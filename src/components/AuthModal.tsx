@@ -6,17 +6,33 @@ import {
   UserPlus, UserCircle, Check, Smartphone, RefreshCw, KeyRound, ShieldCheck
 } from 'lucide-react';
 import { GoogleOAuthProvider, useGoogleLogin } from '@react-oauth/google';
+import { toPersianDigits, toEnglishDigits } from '../lib/persianUtils';
 
-function toEnglishDigits(str: string): string {
-  if (!str) return '';
-  const persianDigits = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'];
-  const arabicDigits = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
-  let res = str.toString();
-  for (let i = 0; i < 10; i++) {
-    res = res.replaceAll(persianDigits[i], i.toString());
-    res = res.replaceAll(arabicDigits[i], i.toString());
+function handleInputInvalid(
+  e: React.FormEvent<HTMLInputElement>,
+  fieldName: string,
+  type?: 'email' | 'password' | 'phone' | 'text'
+) {
+  const target = e.currentTarget;
+  const validity = target.validity;
+
+  if (validity.valueMissing) {
+    if (type === 'email') {
+      target.setCustomValidity('لطفاً آدرس ایمیل خود را وارد نمایید.');
+    } else if (type === 'password') {
+      target.setCustomValidity('لطفاً رمز عبور خود را وارد نمایید.');
+    } else if (type === 'phone') {
+      target.setCustomValidity('لطفاً شماره موبایل خود را وارد نمایید.');
+    } else {
+      target.setCustomValidity(`لطفاً ${fieldName} را تکمیل نمایید.`);
+    }
+  } else if (validity.typeMismatch && type === 'email') {
+    target.setCustomValidity('لطفاً یک آدرس ایمیل معتبر وارد کنید (شامل @ و دامنه، مانند example@mail.com).');
+  } else if (validity.tooShort && type === 'password') {
+    target.setCustomValidity('رمز عبور باید حداقل ۶ کاراکتر باشد.');
+  } else {
+    target.setCustomValidity(`لطفاً این فیلد را به درستی تکمیل نمایید.`);
   }
-  return res;
 }
 
 function GoogleLoginButton({ onSuccess, onError, loading }: { onSuccess: (token: string) => void, onError: () => void, loading: boolean }) {
@@ -30,7 +46,7 @@ function GoogleLoginButton({ onSuccess, onError, loading }: { onSuccess: (token:
     <ClayButton variant="text" type="button"
       disabled={loading}
       onClick={() => login()}
-      className="w-full flex items-center justify-center gap-2 py-2.5 clay-btn-secondary text-zinc-700 dark:text-zinc-200 rounded-xl font-medium transition-all active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed text-xs sm:text-sm"
+      className="w-full flex items-center justify-center gap-2 py-2.5 clay-btn text-zinc-800 dark:text-zinc-200 rounded-xl font-bold transition-all active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed text-xs sm:text-sm"
     >
       <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" className="w-4 h-4" />
       <span>گوگل</span>
@@ -44,7 +60,7 @@ function TelegramLoginButton({ onClick, loading }: { onClick: () => void, loadin
       type="button"
       onClick={onClick}
       disabled={loading}
-      className="w-full flex items-center justify-center gap-2 py-2.5 clay-surface hover:clay-surface text-[#229ED9] dark:clay-surface dark:hover:clay-surface rounded-xl font-medium shadow-sm transition-all active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed text-xs sm:text-sm"
+      className="w-full flex items-center justify-center gap-2 py-2.5 clay-btn text-[#229ED9] rounded-xl font-bold transition-all active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed text-xs sm:text-sm"
     >
       <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
         <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 00-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.74-.55 2.92-1.27 4.86-2.11 5.83-2.51 2.78-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .38z"/>
@@ -80,12 +96,14 @@ export default function AuthModal() {
   const [telegramToken, setTelegramToken] = useState('');
   const [telegramBotUrl, setTelegramBotUrl] = useState('');
 
+  // Refs
+  const otpInputRef = useRef<HTMLInputElement>(null);
+  const otpFormRef = useRef<HTMLFormElement>(null);
+
   // Status & Feedback
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
-
-  const otpInputRef = useRef<HTMLInputElement>(null);
 
   const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || 'your-client-id.apps.googleusercontent.com';
 
@@ -147,6 +165,13 @@ export default function AuthModal() {
       setTimeout(() => otpInputRef.current?.focus(), 150);
     }
   }, [phoneStep]);
+
+  // Pre-select first avatar on modal open
+  useEffect(() => {
+    if (isAuthModalOpen && !selectedAvatar) {
+      setSelectedAvatar(defaultAvatars[0]);
+    }
+  }, [isAuthModalOpen, selectedAvatar]);
 
   // Polling for Telegram Bot Auth confirmation
   useEffect(() => {
@@ -284,16 +309,32 @@ export default function AuthModal() {
   // 4. Email / Password Login & Register Handler
   const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
     setError('');
     setSuccessMsg('');
+
+    const trimmedEmail = email.trim();
+    if (!trimmedEmail) {
+      setError('لطفاً آدرس ایمیل خود را وارد نمایید.');
+      return;
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(trimmedEmail)) {
+      setError('فرمت آدرس ایمیل نامعتبر است (مثال: example@mail.com).');
+      return;
+    }
+    if (!password || password.length < 6) {
+      setError('رمز عبور باید حداقل ۶ کاراکتر باشد.');
+      return;
+    }
+
+    setLoading(true);
 
     try {
       const endpoint = isEmailLogin ? '/api/auth/login' : '/api/auth/register';
       const promo = localStorage.getItem('chatbox_promo');
       const body = isEmailLogin
-        ? { email, password }
-        : { email, password, name, avatar: selectedAvatar || defaultAvatars[0], promoCode: promo };
+        ? { email: trimmedEmail, password }
+        : { email: trimmedEmail, password, name, avatar: selectedAvatar || defaultAvatars[0], promoCode: promo };
 
       const res = await fetch(endpoint, {
         method: 'POST',
@@ -428,6 +469,9 @@ export default function AuthModal() {
           <UserCircle className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400" size={18} />
           <input type="text" value={name} onChange={e => setName(e.target.value)} style={{ paddingRight: '2.85rem' }} className="w-full pl-3 pr-10 py-2.5 clay-input rounded-xl focus:ring-2 focus:ring-zinc-400 dark:focus:ring-zinc-500 focus:border-transparent transition-all outline-none text-zinc-900 dark:text-zinc-100 text-sm"
             placeholder="مثال: علی رضایی"
+            required
+            minLength={2}
+            maxLength={50}
           />
         </div>
       </div>
@@ -440,10 +484,10 @@ export default function AuthModal() {
         <div className="absolute inset-0 bg-black/60 backdrop-blur-sm"
           onClick={() => setAuthModalOpen(false)}
         />
-        <div className="relative w-full max-w-md admin-modal-container rounded-3xl overflow-hidden shadow-2xl border admin-border animate-in fade-in zoom-in-95 duration-200">
+        <div className="relative w-full max-w-md clay-modal overflow-hidden animate-in fade-in zoom-in-95 duration-200">
           
           {/* Header */}
-          <div className="flex items-center justify-between p-5 border-b admin-border">
+          <div className="flex items-center justify-between p-5 border-b border-black/5 dark:border-white/10">
             <div className="flex items-center gap-2.5">
               {(isForgotPassword || telegramWaiting || (authMethod === 'phone' && phoneStep === 'otp') || authMethod === 'email') && (
                 <button
@@ -551,7 +595,9 @@ export default function AuthModal() {
                   <div className="relative">
                     <Lock className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400" size={18} />
                     <input type="password" value={password} onChange={e => setPassword(e.target.value)}
-                      className="w-full pl-3 pr-10 py-2.5 admin-input rounded-xl focus:border-blue-500 focus:outline-none transition-all text-zinc-900 dark:text-zinc-100 text-sm"
+                      onInvalid={e => handleInputInvalid(e, 'رمز عبور', 'password')}
+                      onInput={e => e.currentTarget.setCustomValidity('')}
+                      className="w-full pl-3 pr-10 py-2.5 clay-input rounded-xl focus:outline-none transition-all text-zinc-900 dark:text-zinc-100 text-sm"
                       placeholder="حداقل ۶ کاراکتر"
                       required
                       dir="ltr"
@@ -561,7 +607,7 @@ export default function AuthModal() {
                 </div>
 
                 <button type="submit" disabled={loading}
-                  className="w-full flex items-center justify-center gap-2 py-3 admin-btn-primary text-white rounded-xl font-bold disabled:opacity-70 disabled:cursor-not-allowed text-sm"
+                  className="w-full flex items-center justify-center gap-2 py-3 clay-btn-primary text-white rounded-xl font-bold disabled:opacity-70 disabled:cursor-not-allowed text-sm"
                 >
                   {loading ? <Loader2 size={18} className="animate-spin" /> : <Check size={18} />}
                   تایید و تغییر رمز
@@ -578,7 +624,9 @@ export default function AuthModal() {
                   <div className="relative">
                     <Mail className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400" size={18} />
                     <input type="email" value={email} onChange={e => setEmail(e.target.value)}
-                      className="w-full pl-3 pr-10 py-2.5 admin-input rounded-xl focus:border-blue-500 focus:outline-none transition-all text-zinc-900 dark:text-zinc-100 text-sm"
+                      onInvalid={e => handleInputInvalid(e, 'ایمیل', 'email')}
+                      onInput={e => e.currentTarget.setCustomValidity('')}
+                      className="w-full pl-3 pr-10 py-2.5 clay-input rounded-xl focus:outline-none transition-all text-zinc-900 dark:text-zinc-100 text-sm"
                       placeholder="example@mail.com"
                       required
                       dir="ltr"
@@ -587,7 +635,7 @@ export default function AuthModal() {
                 </div>
 
                 <button type="submit" disabled={loading}
-                  className="w-full flex items-center justify-center gap-2 py-3 admin-btn-primary text-white rounded-xl font-bold disabled:opacity-70 disabled:cursor-not-allowed text-sm"
+                  className="w-full flex items-center justify-center gap-2 py-3 clay-btn-primary text-white rounded-xl font-bold disabled:opacity-70 disabled:cursor-not-allowed text-sm"
                 >
                   {loading ? <Loader2 size={18} className="animate-spin" /> : <Mail size={18} />}
                   ارسال لینک بازیابی
@@ -614,27 +662,31 @@ export default function AuthModal() {
                     <label className="block mb-1.5 text-xs font-bold text-zinc-700 dark:text-zinc-300">
                       شماره موبایل
                     </label>
-                    <div className="relative">
-                      <Smartphone className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-400" size={18} />
+                    <div className="relative" dir="ltr">
                       <input
                         type="tel"
-                        value={phone}
+                        value={phone ? toPersianDigits(phone) : ''}
                         onChange={e => {
                           const val = toEnglishDigits(e.target.value).replace(/[^\d]/g, '');
                           if (val.length <= 11) setPhone(val);
                         }}
-                        className="w-full pl-4 pr-11 py-2.5 admin-input rounded-xl focus:border-blue-500 focus:outline-none transition-all text-zinc-900 dark:text-zinc-100 text-sm font-mono dir-ltr placeholder:text-zinc-400 placeholder:text-right"
+                        onInvalid={e => handleInputInvalid(e, 'شماره موبایل', 'phone')}
+                        onInput={e => e.currentTarget.setCustomValidity('')}
+                        className="w-full pl-4 pr-11 py-2.5 clay-input rounded-xl focus:outline-none transition-all text-zinc-900 dark:text-zinc-100 text-sm font-semibold tracking-wider text-left placeholder:text-left placeholder:text-zinc-400"
+                        style={{ fontFamily: "'Vazirmatn', sans-serif" }}
                         placeholder="۰۹۱۲۳۴۵۶۷۸۹"
+                        dir="ltr"
                         required
                         autoFocus
                       />
+                      <Smartphone className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-400 pointer-events-none" size={18} />
                     </div>
                   </div>
 
                   <button
                     type="submit"
                     disabled={loading || phone.length < 11}
-                    className="w-full flex items-center justify-center gap-2 py-3 admin-btn-primary text-white rounded-xl font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed text-sm shadow-sm"
+                    className="w-full flex items-center justify-center gap-2 py-3 clay-btn-primary text-white rounded-xl font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed text-sm shadow-sm"
                   >
                     {loading ? (
                       <Loader2 size={18} className="animate-spin" />
@@ -649,10 +701,10 @@ export default function AuthModal() {
                   {/* Divider */}
                   <div className="relative my-4">
                     <div className="absolute inset-0 flex items-center">
-                      <div className="w-full border-t admin-border"></div>
+                      <div className="w-full border-t border-subtle"></div>
                     </div>
                     <div className="relative flex justify-center text-xs">
-                      <span className="px-3 admin-surface text-zinc-400 rounded-full">یا سایر روش‌های ورود</span>
+                      <span className="px-3 clay-surface text-zinc-500 rounded-full">یا سایر روش‌های ورود</span>
                     </div>
                   </div>
 
@@ -664,7 +716,7 @@ export default function AuthModal() {
                       setError('');
                       setSuccessMsg('');
                     }}
-                    className="w-full flex items-center justify-center gap-2 py-2.5 admin-btn-secondary text-zinc-700 dark:text-zinc-200 rounded-xl font-bold transition-all text-xs sm:text-sm border admin-border"
+                    className="w-full flex items-center justify-center gap-2 py-2.5 clay-btn text-zinc-700 dark:text-zinc-200 rounded-xl font-bold transition-all text-xs sm:text-sm border border-subtle"
                   >
                     <Mail size={16} className="text-zinc-500" />
                     <span>ورود با ایمیل و رمز عبور</span>
@@ -678,7 +730,7 @@ export default function AuthModal() {
                 </form>
               ) : (
                 /* Step 2: Input 5-Digit OTP Code */
-                <form onSubmit={handleVerifyOtp} className="space-y-4">
+                <form ref={otpFormRef} onSubmit={handleVerifyOtp} className="space-y-4">
                   <div className="text-center space-y-1">
                     <div className="w-12 h-12 mx-auto rounded-2xl bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center mb-2">
                       <ShieldCheck size={24} />
@@ -709,20 +761,20 @@ export default function AuthModal() {
                         type="text"
                         inputMode="numeric"
                         maxLength={5}
-                        value={otpCode}
+                        value={otpCode ? toPersianDigits(otpCode) : ''}
                         onChange={e => {
                           const val = toEnglishDigits(e.target.value).replace(/[^\d]/g, '');
                           if (val.length <= 5) {
                             setOtpCode(val);
                             if (val.length === 5) {
                               setTimeout(() => {
-                                const btn = document.getElementById('btn-verify-otp');
-                                btn?.click();
+                                otpFormRef.current?.requestSubmit();
                               }, 100);
                             }
                           }
                         }}
-                        className="w-full text-center py-2.5 tracking-[0.5em] text-lg font-bold font-mono admin-input rounded-xl focus:border-blue-500 focus:outline-none transition-all text-zinc-900 dark:text-zinc-100"
+                        className="w-full text-center py-2.5 tracking-[0.4em] text-xl font-bold clay-input rounded-xl focus:outline-none transition-all text-zinc-900 dark:text-zinc-100"
+                        style={{ fontFamily: "'Vazirmatn', sans-serif" }}
                         placeholder="•••••"
                         required
                         autoFocus
@@ -734,7 +786,7 @@ export default function AuthModal() {
                     id="btn-verify-otp"
                     type="submit"
                     disabled={loading || otpCode.length !== 5}
-                    className="w-full flex items-center justify-center gap-2 py-3 admin-btn-primary text-white rounded-xl font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed text-sm shadow-sm"
+                    className="w-full flex items-center justify-center gap-2 py-3 clay-btn-primary text-white rounded-xl font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed text-sm shadow-sm"
                   >
                     {loading ? <Loader2 size={18} className="animate-spin" /> : <Check size={18} />}
                     <span>تایید و ورود به سامانه</span>
@@ -768,12 +820,12 @@ export default function AuthModal() {
               /* --- Email & Password Mode --- */
               <form onSubmit={handleEmailSubmit} className="space-y-4">
                 {/* Switch between Login / Register tabs */}
-                <div className="flex p-1 admin-surface rounded-xl border admin-border mb-3">
+                <div className="flex p-1 clay-surface rounded-xl border border-subtle mb-3">
                   <button
                     type="button"
                     onClick={() => { setIsEmailLogin(true); setError(''); setSuccessMsg(''); }}
                     className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all ${
-                      isEmailLogin ? 'bg-blue-600 text-white shadow-sm' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900'
+                      isEmailLogin ? 'clay-btn-primary text-white shadow-sm' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900'
                     }`}
                   >
                     ورود
@@ -782,7 +834,7 @@ export default function AuthModal() {
                     type="button"
                     onClick={() => { setIsEmailLogin(false); setError(''); setSuccessMsg(''); }}
                     className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all ${
-                      !isEmailLogin ? 'bg-blue-600 text-white shadow-sm' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900'
+                      !isEmailLogin ? 'clay-btn-primary text-white shadow-sm' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900'
                     }`}
                   >
                     ثبت‌نام جدید
@@ -796,7 +848,9 @@ export default function AuthModal() {
                   <div className="relative">
                     <Mail className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400" size={18} />
                     <input type="email" value={email} onChange={e => setEmail(e.target.value)}
-                      className="w-full pl-3 pr-10 py-2.5 admin-input rounded-xl focus:border-blue-500 focus:outline-none transition-all text-zinc-900 dark:text-zinc-100 text-sm"
+                      onInvalid={e => handleInputInvalid(e, 'ایمیل', 'email')}
+                      onInput={e => e.currentTarget.setCustomValidity('')}
+                      className="w-full pl-3 pr-10 py-2.5 clay-input rounded-xl focus:outline-none transition-all text-zinc-900 dark:text-zinc-100 text-sm"
                       placeholder="example@mail.com"
                       required
                       dir="ltr"
@@ -818,7 +872,9 @@ export default function AuthModal() {
                   <div className="relative">
                     <Lock className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400" size={18} />
                     <input type="password" value={password} onChange={e => setPassword(e.target.value)}
-                      className="w-full pl-3 pr-10 py-2.5 admin-input rounded-xl focus:border-blue-500 focus:outline-none transition-all text-zinc-900 dark:text-zinc-100 text-sm"
+                      onInvalid={e => handleInputInvalid(e, 'رمز عبور', 'password')}
+                      onInput={e => e.currentTarget.setCustomValidity('')}
+                      className="w-full pl-3 pr-10 py-2.5 clay-input rounded-xl focus:outline-none transition-all text-zinc-900 dark:text-zinc-100 text-sm"
                       placeholder="حداقل ۶ کاراکتر"
                       required
                       dir="ltr"
@@ -828,7 +884,7 @@ export default function AuthModal() {
                 </div>
 
                 <button type="submit" disabled={loading}
-                  className="w-full flex items-center justify-center gap-2 py-3 admin-btn-primary text-white rounded-xl font-bold disabled:opacity-70 disabled:cursor-not-allowed text-sm shadow-sm"
+                  className="w-full flex items-center justify-center gap-2 py-3 clay-btn-primary text-white rounded-xl font-bold disabled:opacity-70 disabled:cursor-not-allowed text-sm shadow-sm"
                 >
                   {loading ? <Loader2 size={18} className="animate-spin" /> : (isEmailLogin ? <LogIn size={18} /> : <UserPlus size={18} />)}
                   {isEmailLogin ? 'ورود به حساب کاربری' : 'تکمیل ثبت‌نام'}

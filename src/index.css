@@ -1268,7 +1268,7 @@ img.emoji {
    -------------------------------------------------------------------------- */
 .clay-card-indigo,
 .clay-card-amber {
-  background: #f0f4fc;
+  background: var(--card-bg);
   border: 1px solid rgba(255, 255, 255, 0.02);
   border-radius: 28px;
   box-shadow: 
@@ -1292,7 +1292,7 @@ img.emoji {
 }
 
 .clay-card-rose {
-  background: #fcf0f2;
+  background: var(--card-bg);
   border: 1px solid rgba(255, 255, 255, 0.02);
   border-radius: 28px;
   box-shadow: 
@@ -1315,7 +1315,7 @@ img.emoji {
 
 .clay-card-teal,
 .clay-card-emerald {
-  background: #eff7f7;
+  background: var(--card-bg);
   border: 1px solid rgba(255, 255, 255, 0.02);
   border-radius: 28px;
   box-shadow: 
@@ -1552,12 +1552,12 @@ img.emoji {
 
 /* Inset Clay Surface (Engraved / Pressed In / Terminal / Inputs) */
 .clay-inset-thick {
-  background: #e2e8f3;
-  border: 1px solid rgba(255, 255, 255, 0.02); /* Softened from 0.6 */
+  background: var(--input-bg);
+  border: 1px solid rgba(255, 255, 255, 0.02);
   border-radius: 22px;
   box-shadow: 
-    inset 6px 6px 12px rgba(160, 160, 160, 0.45),
-    inset -6px -6px 12px rgba(255, 255, 255, 0.25);
+    inset 4px 4px 9px rgba(160, 160, 160, 0.45),
+    inset -4px -4px 9px rgba(255, 255, 255, 0.75);
 }
 
 .dark .clay-inset-thick {
@@ -1570,11 +1570,11 @@ img.emoji {
 
 /* Debossed Inset Well / Socket (Engraved Clay Surface) */
 .clay-debossed-socket {
-  background: #e1e7f0;
+  background: var(--input-bg);
   border-radius: 20px;
   box-shadow: 
-    inset 3px 3px 6px rgba(160, 160, 160, 0.65),
-    inset -3px -3px 6px rgba(255, 255, 255, 0.25);
+    inset 3px 3px 6px rgba(160, 160, 160, 0.45),
+    inset -3px -3px 6px rgba(255, 255, 255, 0.75);
   border: 1px solid rgba(255, 255, 255, 0.02);
 }
 
@@ -1589,11 +1589,11 @@ img.emoji {
 
 /* Directly Engraved / Debossed Icon Container */
 .clay-icon-debossed {
-  background: #e2e8f2;
+  background: var(--input-bg);
   border-radius: 18px;
   box-shadow: 
-    inset 3px 3px 7px rgba(160, 160, 160, 0.65),
-    inset -3px -3px 6px rgba(255, 255, 255, 0.25);
+    inset 2px 2px 5px rgba(160, 160, 160, 0.45),
+    inset -2px -2px 5px rgba(255, 255, 255, 0.75);
   border: 1px solid rgba(255, 255, 255, 0.02);
   transition: all 0.2s ease;
 }
@@ -1605,6 +1605,24 @@ img.emoji {
     inset 3px 3px 6px rgba(0, 0, 0, 0.2),
     inset -2px -2px 4px rgba(255, 255, 255, 0.03);
   border: 1px solid var(--border-subtle);
+}
+
+/* Hero Marquee Model Chip */
+.hero-model-chip {
+  background: var(--input-bg);
+  border: 1px solid rgba(255, 255, 255, 0.02);
+  border-radius: 20px;
+  box-shadow: 
+    inset 3px 3px 6px rgba(160, 160, 160, 0.45),
+    inset -3px -3px 6px rgba(255, 255, 255, 0.75);
+}
+
+.dark .hero-model-chip {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.02);
+  box-shadow: 
+    inset 3px 3px 6px rgba(0, 0, 0, 0.25),
+    inset -2px -2px 5px rgba(255, 255, 255, 0.02);
 }
 
 /* Puffy Clay Pill & Badge */
@@ -1964,11 +1982,11 @@ html[data-ui-style="neumorphic"],
   --card-border: transparent;
 
   /* Pure neumorphic two-shadow derived from #EEEEEE */
-  --clay-shadow-out:       4px 4px 9px #C5C5C5;
-  --clay-shadow-out-sm:    2px 2px 6px #C5C5C5;
-  --clay-shadow-out-hover: 6px 6px 14px #C5C5C5;
-  --clay-shadow-in:        inset 3px 3px 7px #C5C5C5;
-  --clay-shadow-in-deep:   inset 5px 5px 10px #C5C5C5, inset -5px -5px 10px #ffffff;
+  --clay-shadow-out:       4px 4px 9px #C5C5C5, -4px -4px 9px #FFFFFF;
+  --clay-shadow-out-sm:    2px 2px 5px #C5C5C5, -2px -2px 5px #FFFFFF;
+  --clay-shadow-out-hover: 6px 6px 14px #C5C5C5, -6px -6px 14px #FFFFFF;
+  --clay-shadow-in:        inset 3px 3px 6px #C5C5C5, inset -3px -3px 6px #FFFFFF;
+  --clay-shadow-in-deep:   inset 5px 5px 10px #C5C5C5, inset -5px -5px 10px #FFFFFF;
 
   /* Smaller, more conservative radius */
   --radius-card:     16px;
@@ -2051,21 +2069,79 @@ html.dark[data-ui-style="neumorphic"] .clay-icon {
     border: none !important;
   }
   
+  /* All Standard Buttons in Neumorphic Mode (Flat, Matte, Crisp 12px Radius) */
+  html[data-ui-style="neumorphic"] .clay-btn,
   html[data-ui-style="neumorphic"] .clay-btn-thick,
-  html[data-ui-style="neumorphic"] .dark .clay-btn-thick,
-  html.dark[data-ui-style="neumorphic"] .clay-btn-thick {
-    background: var(--btn-bg);
-    border-radius: var(--radius-btn);
-    box-shadow: var(--clay-shadow-out);
-    border: none;
+  html.dark[data-ui-style="neumorphic"] .clay-btn,
+  html.dark[data-ui-style="neumorphic"] .clay-btn-thick,
+  html[data-ui-style="neumorphic"] .dark .clay-btn,
+  html[data-ui-style="neumorphic"] .dark .clay-btn-thick {
+    background: var(--btn-bg) !important;
+    border-radius: var(--radius-btn) !important;
+    box-shadow: var(--clay-shadow-out) !important;
+    border: none !important;
   }
   
+  html[data-ui-style="neumorphic"] .clay-btn:hover,
   html[data-ui-style="neumorphic"] .clay-btn-thick:hover,
-  html[data-ui-style="neumorphic"] .dark .clay-btn-thick:hover,
-  html.dark[data-ui-style="neumorphic"] .clay-btn-thick:hover {
-    background: var(--btn-hover);
-    box-shadow: var(--clay-shadow-out-hover);
+  html.dark[data-ui-style="neumorphic"] .clay-btn:hover,
+  html.dark[data-ui-style="neumorphic"] .clay-btn-thick:hover,
+  html[data-ui-style="neumorphic"] .dark .clay-btn:hover,
+  html[data-ui-style="neumorphic"] .dark .clay-btn-thick:hover {
+    background: var(--btn-hover) !important;
+    box-shadow: var(--clay-shadow-out-hover) !important;
     transform: translateY(-2px);
+  }
+
+  /* Primary Buttons in Neumorphic Mode (Crisp 12px Radius, Flat Matte, Zero Puffy Insets) */
+  html[data-ui-style="neumorphic"] .clay-btn-primary,
+  html[data-ui-style="neumorphic"] .clay-btn-primary-thick,
+  html.dark[data-ui-style="neumorphic"] .clay-btn-primary,
+  html.dark[data-ui-style="neumorphic"] .clay-btn-primary-thick,
+  html[data-ui-style="neumorphic"] .dark .clay-btn-primary,
+  html[data-ui-style="neumorphic"] .dark .clay-btn-primary-thick {
+    background: var(--accent-primary) !important;
+    color: #FFFFFF !important;
+    border-radius: var(--radius-btn) !important;
+    border: none !important;
+    box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.35), -2px -2px 6px rgba(255, 255, 255, 0.06) !important;
+  }
+
+  html[data-ui-style="neumorphic"] .clay-btn-primary:hover,
+  html[data-ui-style="neumorphic"] .clay-btn-primary-thick:hover,
+  html.dark[data-ui-style="neumorphic"] .clay-btn-primary:hover,
+  html.dark[data-ui-style="neumorphic"] .clay-btn-primary-thick:hover,
+  html[data-ui-style="neumorphic"] .dark .clay-btn-primary:hover,
+  html[data-ui-style="neumorphic"] .dark .clay-btn-primary-thick:hover {
+    filter: brightness(1.06);
+    box-shadow: 6px 6px 14px rgba(0, 0, 0, 0.4), -3px -3px 8px rgba(255, 255, 255, 0.08) !important;
+    transform: translateY(-2px);
+  }
+
+  html[data-ui-style="neumorphic"] .clay-btn-primary:active,
+  html[data-ui-style="neumorphic"] .clay-btn-primary-thick:active,
+  html.dark[data-ui-style="neumorphic"] .clay-btn-primary:active,
+  html.dark[data-ui-style="neumorphic"] .clay-btn-primary-thick:active,
+  html[data-ui-style="neumorphic"] .dark .clay-btn-primary:active,
+  html[data-ui-style="neumorphic"] .dark .clay-btn-primary-thick:active {
+    box-shadow: inset 3px 3px 6px rgba(0, 0, 0, 0.35), inset -2px -2px 5px rgba(255, 255, 255, 0.06) !important;
+    transform: translateY(1px);
+  }
+
+  /* Neumorphic Modals & Floating Dialogs (Zero Glow / Zero White Halo on Backdrop) */
+  html[data-ui-style="neumorphic"] .clay-modal,
+  html.dark[data-ui-style="neumorphic"] .clay-modal,
+  html[data-ui-style="neumorphic"] .dark .clay-modal {
+    background: var(--card-bg) !important;
+    border-radius: var(--radius-modal) !important;
+    box-shadow: 0 16px 36px -8px rgba(0, 0, 0, 0.28) !important;
+    border: 1px solid rgba(0, 0, 0, 0.06) !important;
+  }
+
+  html.dark[data-ui-style="neumorphic"] .clay-modal,
+  html[data-ui-style="neumorphic"] .dark .clay-modal {
+    box-shadow: 0 20px 48px -12px rgba(0, 0, 0, 0.75) !important;
+    border: 1px solid rgba(255, 255, 255, 0.05) !important;
   }
   
   html[data-ui-style="neumorphic"] .clay-inset-thick,
@@ -2079,12 +2155,40 @@ html.dark[data-ui-style="neumorphic"] .clay-icon {
     border: none;
   }
   
+  /* Hero Marquee Model Chips in Neumorphic Mode */
+  html[data-ui-style="neumorphic"] .hero-model-chip,
+  html.dark[data-ui-style="neumorphic"] .hero-model-chip,
+  html[data-ui-style="neumorphic"] .dark .hero-model-chip {
+    background: var(--card-bg) !important;
+    box-shadow: var(--clay-shadow-out-sm) !important;
+    border-radius: var(--radius-btn) !important;
+    border: none !important;
+  }
+
+  html[data-ui-style="neumorphic"] .hero-model-chip:hover,
+  html.dark[data-ui-style="neumorphic"] .hero-model-chip:hover,
+  html[data-ui-style="neumorphic"] .dark .hero-model-chip:hover {
+    box-shadow: var(--clay-shadow-out) !important;
+    transform: translateY(-2px);
+  }
+
+  /* Pill & Icon Buttons in Neumorphic Mode */
   html[data-ui-style="neumorphic"] .clay-pill-thick,
-  html[data-ui-style="neumorphic"] .dark .clay-pill-thick,
-  html.dark[data-ui-style="neumorphic"] .clay-pill-thick {
-    background: var(--btn-bg);
-    box-shadow: var(--clay-shadow-out-sm);
-    border: none;
+  html.dark[data-ui-style="neumorphic"] .clay-pill-thick,
+  html[data-ui-style="neumorphic"] .dark .clay-pill-thick {
+    background: var(--btn-bg) !important;
+    box-shadow: var(--clay-shadow-out-sm) !important;
+    border: none !important;
+    border-radius: var(--radius-btn) !important;
+  }
+
+  html[data-ui-style="neumorphic"] .clay-icon-btn,
+  html.dark[data-ui-style="neumorphic"] .clay-icon-btn,
+  html[data-ui-style="neumorphic"] .dark .clay-icon-btn {
+    background: var(--btn-bg) !important;
+    box-shadow: var(--clay-shadow-out-sm) !important;
+    border: none !important;
+    border-radius: var(--radius-icon-btn) !important;
   }
   
 
@@ -2092,11 +2196,26 @@ html.dark[data-ui-style="neumorphic"] .clay-icon {
   /* Landing Page Exclusive Classes - neumorphic overrides */
   html[data-ui-style="neumorphic"] .clay-card-elevated,
   html[data-ui-style="neumorphic"] .dark .clay-card-elevated,
-  html.dark[data-ui-style="neumorphic"] .clay-card-elevated {
-    background: var(--card-bg);
-    box-shadow: var(--clay-shadow-out);
-    border: none;
-    border-radius: var(--radius-card);
+  html.dark[data-ui-style="neumorphic"] .clay-card-elevated,
+  html[data-ui-style="neumorphic"] .clay-card-indigo,
+  html[data-ui-style="neumorphic"] .clay-card-amber,
+  html[data-ui-style="neumorphic"] .clay-card-rose,
+  html[data-ui-style="neumorphic"] .clay-card-teal,
+  html[data-ui-style="neumorphic"] .clay-card-emerald,
+  html[data-ui-style="neumorphic"] .dark .clay-card-indigo,
+  html[data-ui-style="neumorphic"] .dark .clay-card-amber,
+  html[data-ui-style="neumorphic"] .dark .clay-card-rose,
+  html[data-ui-style="neumorphic"] .dark .clay-card-teal,
+  html[data-ui-style="neumorphic"] .dark .clay-card-emerald,
+  html.dark[data-ui-style="neumorphic"] .clay-card-indigo,
+  html.dark[data-ui-style="neumorphic"] .clay-card-amber,
+  html.dark[data-ui-style="neumorphic"] .clay-card-rose,
+  html.dark[data-ui-style="neumorphic"] .clay-card-teal,
+  html.dark[data-ui-style="neumorphic"] .clay-card-emerald {
+    background: var(--card-bg) !important;
+    box-shadow: var(--clay-shadow-out) !important;
+    border: none !important;
+    border-radius: var(--radius-card) !important;
   }
 
   html[data-ui-style="neumorphic"] .clay-debossed-socket,
@@ -2118,6 +2237,55 @@ html.dark[data-ui-style="neumorphic"] .clay-icon {
     box-shadow: var(--clay-shadow-out-sm);
     border: none;
     border-radius: var(--radius-badge);
+  }
+
+  /* Colored badges and action pills in Neumorphic mode - Preserve colors, replace glossy plastic bevels with soft matte neumorphic shadows */
+  html[data-ui-style="neumorphic"] .clay-gold,
+  html[data-ui-style="neumorphic"] .clay-gold-noglow,
+  html.dark[data-ui-style="neumorphic"] .clay-gold,
+  html.dark[data-ui-style="neumorphic"] .clay-gold-noglow {
+    background: #c8872e !important;
+    color: #FFFFFF !important;
+    box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.2), -2px -2px 6px rgba(255, 255, 255, 0.08) !important;
+    border: none !important;
+  }
+
+  html[data-ui-style="neumorphic"] .clay-btn-emerald,
+  html[data-ui-style="neumorphic"] .clay-btn-emerald-thick,
+  html.dark[data-ui-style="neumorphic"] .clay-btn-emerald,
+  html.dark[data-ui-style="neumorphic"] .clay-btn-emerald-thick {
+    background: #10b981 !important;
+    color: #FFFFFF !important;
+    box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.2), -2px -2px 6px rgba(255, 255, 255, 0.08) !important;
+    border: none !important;
+  }
+
+  html[data-ui-style="neumorphic"] .clay-rose,
+  html[data-ui-style="neumorphic"] .clay-rose-noglow,
+  html.dark[data-ui-style="neumorphic"] .clay-rose,
+  html.dark[data-ui-style="neumorphic"] .clay-rose-noglow {
+    background: #c57671 !important;
+    color: #FFFFFF !important;
+    box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.2), -2px -2px 6px rgba(255, 255, 255, 0.08) !important;
+    border: none !important;
+  }
+
+  html[data-ui-style="neumorphic"] .clay-indigo,
+  html.dark[data-ui-style="neumorphic"] .clay-indigo {
+    background: #6366f1 !important;
+    color: #FFFFFF !important;
+    box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.2), -2px -2px 6px rgba(255, 255, 255, 0.08) !important;
+    border: none !important;
+  }
+
+  html[data-ui-style="neumorphic"] .clay-charcoal,
+  html[data-ui-style="neumorphic"] .clay-charcoal-circle,
+  html.dark[data-ui-style="neumorphic"] .clay-charcoal,
+  html.dark[data-ui-style="neumorphic"] .clay-charcoal-circle {
+    background: #2c3036 !important;
+    color: #FFFFFF !important;
+    box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.2), -2px -2px 6px rgba(255, 255, 255, 0.08) !important;
+    border: none !important;
   }
 
   /* Landing Page Flowing Glow Button - neumorphic flat version (Zero Glow) */
