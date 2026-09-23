@@ -186,45 +186,7 @@ export function initializeSchema() {
       console.log('[DB Schema] Added showOnLanding column to products table.');
     }
 
-    // Seed default pricing plans if none exist
-    const planCountRow = db.prepare("SELECT COUNT(*) as count FROM products WHERE category = 'plan'").get() as any;
-    if (!planCountRow || planCountRow.count === 0) {
-      const insertPlan = db.prepare(`
-        INSERT INTO products (title, price, category, badge, tokenEstimate, description, features, isPopular, showOnLanding)
-        VALUES (?, ?, 'plan', ?, ?, ?, ?, ?, 1)
-      `);
 
-      insertPlan.run(
-        'بسته برنزی (استارتر)',
-        49000,
-        'مقرون‌به‌صرفه',
-        '~۴۰۰,۰۰۰ توکن سهمیه | حدود ۳۰۰ تا ۴۰۰ پاسخ هوشمند',
-        'انتخابی عالی برای پاسخ به سوالات درسی، نگارش ایمیل و خلاصه مقالات هفتگی.',
-        'دسترسی به Claude 3.5 و GPT-4o\nبدون تاریخ انقضا\nمحاسبه شفاف و دقیق به اندازه مصرف',
-        0
-      );
-
-      insertPlan.run(
-        'بسته نقره‌ای',
-        149000,
-        'پرفروش‌ترین (۲۰٪ شارژ هدیه)',
-        '~۱,۸۰۰,۰۰۰ توکن سهمیه | معادل بیش از ۱,۵۰۰ پاسخ مفصل',
-        'محبوب‌ترین انتخاب برای نویسندگان، پژوهشگران، وکلا و تولیدکنندگان محتوا.',
-        '۲۰٪ اعتبار رایگان اضافه\nتحلیل عمیق کتاب و اسناد PDF\nاستودیوی تصویرسازی بدون سقف\nپشتیبانی در اولویت',
-        1
-      );
-
-      insertPlan.run(
-        'بسته طلایی (حرفه‌ای)',
-        349000,
-        'بیشترین ارزش (۳۰٪ شارژ هدیه)',
-        '~۵,۵۰۰,۰۰۰ توکن سهمیه | معادل بیش از ۵,۰۰۰ پیام عمیق',
-        'ویژه توسعه‌دهندگان، معماران نرم‌افزار، تحلیل‌گران داده و تیم‌های کاری.',
-        '۳۰٪ شارژ تشویقی نقدی\nبالاترین اولویت سرعت پردازش\nکدنویسی پیچیده و تحلیل دیتاست\nاعتبار بدون انقضا',
-        0
-      );
-      console.log('[DB Schema] Seeded initial pricing plans in products table.');
-    }
   } catch (e) {
     console.error('Migration error:', e);
   }
