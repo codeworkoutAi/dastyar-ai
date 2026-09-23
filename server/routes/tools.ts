@@ -9,6 +9,9 @@ const router = express.Router();
 router.post('/api/fetch-models', aiRouteLimiter, async (req, res) => {
   try {
     let { baseUrl, apiKey, customHeaders, profileId } = req.body;
+    if (baseUrl && baseUrl.includes('[DYNAMIC_POOL]')) {
+      return res.status(400).json({ error: 'کارت‌های رایگان پیش‌فرض توسط سیستم (استخر کلیدها) به صورت خودکار مدیریت می‌شوند و نیازی به دریافت لیست مدل به صورت دستی ندارند.' });
+    }
     if (!baseUrl || typeof baseUrl !== 'string' || !isSafeBaseUrl(baseUrl)) {
       return res.status(400).json({ error: 'آدرس پایه ارائه‌دهنده نامعتبر یا غیرمجاز است.' });
     }

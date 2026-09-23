@@ -63,7 +63,10 @@ async function fetchModelsForKey(poolKey: PoolKey): Promise<{ baseUrl: string; o
 
     const data = await response.json() as any;
     if (data && data.data && Array.isArray(data.data)) {
-      const originalIds = data.data.map((m: any) => String(m.id));
+      // The admin puts free or credit-based keys in the pool, so we don't care about the provider's retail pricing.
+      const availableModels = data.data;
+
+      const originalIds = availableModels.map((m: any) => String(m.id));
       const normalizedIds = originalIds.map((id: string) => id.includes('/') ? id.split('/').pop()! : id);
       return { baseUrl: poolKey.baseUrl, originalIds, normalizedIds };
     }
@@ -71,6 +74,35 @@ async function fetchModelsForKey(poolKey: PoolKey): Promise<{ baseUrl: string; o
   } catch (error) {
     console.error(`[AutoProfiles] Error fetching models for key ...${poolKey.apiKey.slice(-6)}:`, error);
     return null;
+  }
+}
+
+async function testModelKey(poolKey: PoolKey, originalModelId: string): Promise<boolean> {
+  try {
+    const url = poolKey.baseUrl.endsWith('/') ? poolKey.baseUrl + 'chat/completions' : poolKey.baseUrl + '/chat/completions';
+    const agent = getAgent();
+    
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${poolKey.apiKey}`,
+        'Content-Type': 'application/json'
+      },
+      agent,
+      body: JSON.stringify({
+        model: originalModelId,
+        messages: [{ role: 'user', content: 'ping' }],
+        max_tokens: 1
+      })
+    });
+
+    if (response.ok) return true;
+    
+    console.warn(`[AutoProfiles] Model ${originalModelId} failed ping test on key ...${poolKey.apiKey.slice(-6)} (Status: ${response.status})`);
+    return false;
+  } catch (error) {
+    console.warn(`[AutoProfiles] Ping test error for ${originalModelId} on key ...${poolKey.apiKey.slice(-6)}`);
+    return false;
   }
 }
 
@@ -117,39 +149,84 @@ export async function syncAutoDefaultProfiles() {
   console.log(`[AutoProfiles] Found ${commonModels.length} common normalized models across all providers.`);
 
   // 3. Select the best model for each slot based on priority
-  let orderIndex = 0;
   for (const slot of SLOT_PRIORITIES) {
-    // Find the first model in the priority list that exists in the common normalized models
-    const selectedNormalized = slot.priorityModels.reduce<string | undefined>((found, pm) => {
-      if (found) return found;
-      return commonModels.find(cm => cm === pm || cm.includes(pm));
-    }, undefined) || commonModels[0];
+    const stableId = `free_${slot.role}`;
     
-    // Create a JSON mapping for this slot: baseUrl -> originalModelId
+    // Check if admin has manually overridden this slot before doing expensive ping tests
+    const existingProfile = db.prepare("SELECT id, baseUrl FROM default_profiles WHERE id = ?").get(stableId) as any;
+    if (existingProfile && existingProfile.baseUrl && existingProfile.baseUrl !== '[DYNAMIC_POOL] / Auto-Routed' && existingProfile.baseUrl.trim() !== '') {
+      console.log(`[AutoProfiles] Slot ${slot.role} is manually managed by admin. Skipping auto-update.`);
+      continue;
+    }
+
+    let finalSelectedNormalized: string | undefined = undefined;
     const modelMapping: Record<string, string> = {};
-    for (const res of results) {
-      // Find the original ID that corresponds to this normalized ID
-      const original = res.originalIds.find(id => id.endsWith('/' + selectedNormalized) || id === selectedNormalized);
-      if (original) {
-        modelMapping[res.baseUrl] = original;
+
+    // Try priority models one by one
+    for (const pm of slot.priorityModels) {
+      // Find matching models in commonModels
+      const matchingNormalized = commonModels.filter(cm => cm === pm || cm.includes(pm));
+      
+      let foundWorkingModel = false;
+      for (const selectedNormalized of matchingNormalized) {
+        // Reset mapping for this candidate
+        for (const key in modelMapping) delete modelMapping[key];
+        
+        // Test this model against all unique providers that have it
+        let passedProviders = 0;
+        let totalProviders = 0;
+
+        for (const res of results) {
+          const original = res.originalIds.find(id => id.endsWith('/' + selectedNormalized) || id === selectedNormalized);
+          if (original) {
+            totalProviders++;
+            const matchingKey = keys.find(k => k.baseUrl === res.baseUrl);
+            if (matchingKey) {
+              // Perform the Ping Test
+              const isWorking = await testModelKey(matchingKey, original);
+              if (isWorking) {
+                modelMapping[res.baseUrl] = original;
+                passedProviders++;
+              }
+            }
+          }
+        }
+
+        // If at least one provider passed the test, we accept this model
+        if (passedProviders > 0) {
+          finalSelectedNormalized = selectedNormalized;
+          foundWorkingModel = true;
+          break;
+        }
+      }
+
+      if (foundWorkingModel) {
+        break; // Stop looking at lower priority models for this slot
+      }
+    }
+
+    if (!finalSelectedNormalized) {
+      console.warn(`[AutoProfiles] Failed to find ANY working models for slot ${slot.role}. Using fallback.`);
+      // If everything failed, just pick the first common model without testing so the slot isn't empty
+      finalSelectedNormalized = commonModels[0];
+      for (const res of results) {
+        const original = res.originalIds.find(id => id.endsWith('/' + finalSelectedNormalized) || id === finalSelectedNormalized);
+        if (original) modelMapping[res.baseUrl] = original;
       }
     }
 
     const mappingJson = JSON.stringify(modelMapping);
 
     // 4. Upsert the profile in the database with stable ID
-    const stableId = `free_${slot.role}`;
-    const existing = db.prepare("SELECT id FROM default_profiles WHERE id = ?").get(stableId);
-
-    if (existing) {
+    if (existingProfile) {
       db.prepare(`
         UPDATE default_profiles 
-        SET name = ?, modelName = ?, updatedAt = CURRENT_TIMESTAMP
+        SET name = ?, modelName = ?, baseUrl = '[DYNAMIC_POOL] / Auto-Routed', apiKey = '[AUTO_POOL]', updatedAt = CURRENT_TIMESTAMP
         WHERE id = ?
       `).run(slot.name, mappingJson, stableId);
     } else {
       db.prepare(`
-        INSERT INTO default_profiles (
+        INSERT OR REPLACE INTO default_profiles (
           id, name, baseUrl, apiKey, modelName, role, orderIndex, isActive, createdAt, updatedAt
         ) VALUES (
           ?, ?, ?, ?, ?, ?, ?, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
@@ -165,7 +242,7 @@ export async function syncAutoDefaultProfiles() {
       );
     }
     
-    console.log(`[AutoProfiles] Assigned ${selectedNormalized} to slot ${slot.role} (${stableId})`);
+    console.log(`[AutoProfiles] Assigned ${finalSelectedNormalized} to slot ${slot.role} (${stableId})`);
   }
 
   // Clean up any legacy auto_* profiles if they exist

@@ -1401,9 +1401,23 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
  </div>
 
  <div className="sm:col-span-2">
- <label className="block text-zinc-700 dark:text-zinc-300 font-bold mb-1.5">
+ <div className="flex items-center justify-between mb-1.5">
+ <label className="block text-zinc-700 dark:text-zinc-300 font-bold">
  آدرس پایه اندپوینت (Base URL) <span className="text-red-500">*</span>
  </label>
+ {editingDefaultProfile?.id?.startsWith('free_') && (
+ <button
+ type="button"
+ onClick={() => {
+ setProfileFormBaseUrl('[DYNAMIC_POOL] / Auto-Routed');
+ setProfileFormApiKey('[AUTO_POOL]');
+ }}
+ className="text-[10px] bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400 px-2 py-1 rounded border border-emerald-200 dark:border-emerald-800 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 transition-colors"
+ >
+ واگذاری به ربات (اتوماتیک)
+ </button>
+ )}
+ </div>
  <input
  type="text"
  value={profileFormBaseUrl}

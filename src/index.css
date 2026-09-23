@@ -227,27 +227,27 @@
 }
 
 :root, [data-theme="light"], .light {
-  --bg-main: #EEEEEE; /* Soft clay background */
-  --header-bg: rgba(238, 238, 238, 0.85);
-  --sidebar-bg: #EEEEEE;
-  --card-bg: #EEEEEE;
+  --bg-main: #F4F1EA; /* Noticeably warm paper/clay background */
+  --header-bg: rgba(244, 241, 234, 0.85);
+  --sidebar-bg: #F4F1EA;
+  --card-bg: #F4F1EA;
   --card-border: transparent; /* Clay doesn't use hard borders usually */
   
-  --btn-bg: #EEEEEE;
-  --btn-hover: #E3E3E3;
+  --btn-bg: #F4F1EA;
+  --btn-hover: #E8E4DB;
   
-  --input-bg: #EEEEEE;
+  --input-bg: #F4F1EA;
   --input-border: transparent;
   
   --bubble-ai-bg: transparent;
-  --bubble-user-bg: #E3E3E3; /* Slightly deeper for contrast */
+  --bubble-user-bg: #E8E4DB; /* Slightly deeper for contrast */
   
-  --text-main: #2A313C;
-  --text-muted: #4A5568;
-  --text-dim: #718096;
+  --text-main: #292524; /* Stone 800 - warmer dark gray */
+  --text-muted: #44403C; /* Stone 700 */
+  --text-dim: #57534E; /* Stone 600 */
   
-  --border-subtle: rgba(160, 160, 160, 0.2);
-  --border-strong: rgba(160, 160, 160, 0.4);
+  --border-subtle: rgba(140, 135, 130, 0.15);
+  --border-strong: rgba(140, 135, 130, 0.3);
   
   --accent-primary: #3B82F6;
   --accent-hover: #2563EB;
@@ -257,12 +257,12 @@
   --error-text: #DC2626;
   --error-border: transparent;
   
-  /* True Claymorphism Shadows - Light Mode */
-  --clay-shadow-out: 8px 8px 16px rgba(160, 160, 160, 0.25), inset 4px 4px 8px rgba(255, 255, 255, 0.8), inset -4px -4px 8px rgba(160, 160, 160, 0.2);
-  --clay-shadow-out-sm: 4px 4px 8px rgba(160, 160, 160, 0.2), inset 2px 2px 4px rgba(255, 255, 255, 0.8), inset -2px -2px 4px rgba(160, 160, 160, 0.2);
-  --clay-shadow-out-hover: 12px 12px 24px rgba(160, 160, 160, 0.3), inset 4px 4px 8px rgba(255, 255, 255, 0.9), inset -4px -4px 8px rgba(160, 160, 160, 0.15);
-  --clay-shadow-in: inset 4px 4px 8px rgba(160, 160, 160, 0.25), inset -4px -4px 8px rgba(255, 255, 255, 0.8);
-  --clay-shadow-in-deep: inset 6px 6px 12px rgba(160, 160, 160, 0.35), inset -6px -6px 12px rgba(255, 255, 255, 0.9);
+  /* True Claymorphism Shadows - Light Mode (noticeably warm shadows) */
+  --clay-shadow-out: 8px 8px 16px rgba(150, 145, 140, 0.22), inset 4px 4px 8px rgba(255, 255, 255, 0.9), inset -4px -4px 8px rgba(150, 145, 140, 0.15);
+  --clay-shadow-out-sm: 4px 4px 8px rgba(150, 145, 140, 0.18), inset 2px 2px 4px rgba(255, 255, 255, 0.9), inset -2px -2px 4px rgba(150, 145, 140, 0.15);
+  --clay-shadow-out-hover: 12px 12px 24px rgba(150, 145, 140, 0.25), inset 4px 4px 8px rgba(255, 255, 255, 1), inset -4px -4px 8px rgba(150, 145, 140, 0.1);
+  --clay-shadow-in: inset 4px 4px 8px rgba(150, 145, 140, 0.22), inset -4px -4px 8px rgba(255, 255, 255, 0.9);
+  --clay-shadow-in-deep: inset 6px 6px 12px rgba(150, 145, 140, 0.3), inset -6px -6px 12px rgba(255, 255, 255, 1);
 
   /* Radius tokens — overridden per theme */
   --radius-card: 28px;
@@ -292,9 +292,9 @@
   --bubble-ai-bg: transparent;
   --bubble-user-bg: #424242;
   
-  --text-main: #e5e5e5; 
-  --text-muted: #a3a3a3; 
-  --text-dim: #737373; 
+  --text-main: #F9FAFB; 
+  --text-muted: #D1D5DB; 
+  --text-dim: #9CA3AF; 
   
   --border-subtle: rgba(255, 255, 255, 0.05);
   --border-strong: rgba(255, 255, 255, 0.1);
@@ -1970,23 +1970,23 @@ html:not([data-ui-style]) {
 /* Light mode neumorphic */
 html[data-ui-style="neumorphic"],
 :root[data-ui-style="neumorphic"] {
-  /* Same base color as Claymorphism — single flat tone, depth from shadow */
-  --bg-main:    #EEEEEE;
-  --sidebar-bg: #EEEEEE;
-  --card-bg:    #EEEEEE;
-  --input-bg:   #EEEEEE;
-  --btn-bg:     #EEEEEE;
-  --btn-hover:  #E3E3E3;
-  --header-bg:  rgba(238, 238, 238, 0.92);
-  --bubble-user-bg: #E3E3E3;
+  /* Warm paper/clay to prevent icy blue optical illusion */
+  --bg-main:    #F4F1EA;
+  --sidebar-bg: #F4F1EA;
+  --card-bg:    #F4F1EA;
+  --input-bg:   #F4F1EA;
+  --btn-bg:     #F4F1EA;
+  --btn-hover:  #E8E4DB;
+  --header-bg:  rgba(244, 241, 234, 0.92);
+  --bubble-user-bg: #E8E4DB;
   --card-border: transparent;
 
-  /* Pure neumorphic two-shadow derived from #EEEEEE */
-  --clay-shadow-out:       4px 4px 9px #C5C5C5, -4px -4px 9px #FFFFFF;
-  --clay-shadow-out-sm:    2px 2px 5px #C5C5C5, -2px -2px 5px #FFFFFF;
-  --clay-shadow-out-hover: 6px 6px 14px #C5C5C5, -6px -6px 14px #FFFFFF;
-  --clay-shadow-in:        inset 3px 3px 6px #C5C5C5, inset -3px -3px 6px #FFFFFF;
-  --clay-shadow-in-deep:   inset 5px 5px 10px #C5C5C5, inset -5px -5px 10px #FFFFFF;
+  /* Pure neumorphic two-shadow derived from warm clay */
+  --clay-shadow-out:       4px 4px 9px #D6D2C8, -4px -4px 9px #FFFFFF;
+  --clay-shadow-out-sm:    2px 2px 5px #D6D2C8, -2px -2px 5px #FFFFFF;
+  --clay-shadow-out-hover: 6px 6px 14px #D6D2C8, -6px -6px 14px #FFFFFF;
+  --clay-shadow-in:        inset 3px 3px 6px #D6D2C8, inset -3px -3px 6px #FFFFFF;
+  --clay-shadow-in-deep:   inset 5px 5px 10px #D6D2C8, inset -5px -5px 10px #FFFFFF;
 
   /* Smaller, more conservative radius */
   --radius-card:     16px;
@@ -2340,76 +2340,102 @@ html.dark[data-ui-style="neumorphic"] .clay-icon {
     animation: none !important;
   }
 
+  /* Kill all floating decorative blur orbs in Neumorphic mode */
+  html[data-ui-style="neumorphic"] .blur-3xl,
+  html[data-ui-style="neumorphic"] .blur-2xl,
+  html[data-ui-style="neumorphic"] .blur-xl {
+    display: none !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+  }
+
+  /* Force kill inline Tailwind drop-shadows and raw shadows in Neumorphism */
+  html[data-ui-style="neumorphic"] [class*="drop-shadow-"],
+  html[data-ui-style="neumorphic"] [class*="shadow-["] {
+    filter: none !important;
+    /* Do not override box-shadow here globally as it breaks clay-modal's own shadow, 
+       just rely on the specific element overrides we already have. */
+  }
+
 
 /* ==========================================================================
    END THEME SWITCHER
    ========================================================================== */
 
 /* ==========================================================================
-   ADMIN PANEL - CLEAN MODERN DASHBOARD DESIGN SYSTEM (NO CLAY/NEUMORPHISM)
+   ADMIN PANEL - REFACTORED TO PURE 3D STYLE (PHASE 2)
    ========================================================================== */
 
 .admin-modal-container {
-  background-color: #ffffff;
-  border: 1px solid rgba(0, 0, 0, 0.12);
-  color: #1f2937;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  background: var(--card-bg);
+  border: none;
+  color: var(--text-main);
+  border-radius: var(--radius-modal);
+  box-shadow: var(--clay-shadow-out);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .dark .admin-modal-container,
 [data-theme="dark"] .admin-modal-container {
-  background-color: #242424;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: #f3f4f6;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+  background: var(--card-bg);
+  border: none;
+  color: var(--text-main);
+  box-shadow: var(--clay-shadow-out);
 }
 
 .admin-card {
-  background-color: #ffffff;
-  border: 1px solid #e5e7eb;
-  color: #1f2937;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+  background: var(--card-bg);
+  border: none;
+  color: var(--text-main);
+  border-radius: var(--radius-card);
+  box-shadow: var(--clay-shadow-out);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .dark .admin-card,
 [data-theme="dark"] .admin-card {
-  background-color: #2c2c2c;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  color: #f3f4f6;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.3);
+  background: var(--card-bg);
+  border: none;
+  color: var(--text-main);
+  box-shadow: var(--clay-shadow-out);
 }
 
 .admin-surface {
-  background-color: #f9fafb;
-  border: 1px solid #e5e7eb;
-  color: #374151;
+  background: var(--input-bg);
+  border: none;
+  color: var(--text-main);
+  border-radius: var(--radius-input);
+  box-shadow: var(--clay-shadow-in);
 }
 
 .dark .admin-surface,
 [data-theme="dark"] .admin-surface {
-  background-color: #1f1f1f;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  color: #e5e7eb;
+  background: var(--input-bg);
+  border: none;
+  color: var(--text-main);
+  box-shadow: var(--clay-shadow-in);
 }
 
 .admin-input {
-  background-color: #ffffff;
-  border: 1px solid #d1d5db;
-  color: #111827;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  background: var(--input-bg);
+  border: none;
+  color: var(--text-main);
+  border-radius: var(--radius-input);
+  box-shadow: var(--clay-shadow-in);
+  transition: all 0.2s ease;
 }
 
 .admin-input:focus {
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
   outline: none;
+  box-shadow: var(--clay-shadow-in-deep);
 }
 
 .dark .admin-input,
 [data-theme="dark"] .admin-input {
-  background-color: #1c1c1c;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  color: #f9fafb;
+  background: var(--input-bg);
+  border: none;
+  color: var(--text-main);
+  box-shadow: var(--clay-shadow-in);
 }
 
 .dark .admin-input:focus,

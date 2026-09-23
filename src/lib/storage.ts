@@ -37,37 +37,12 @@ export const DEFAULT_SETTINGS: AppSettings = {
       apiKey: '', 
       modelName: '', 
       customHeaders: '', 
-      activeProfileId: 'default-groq-qwen-27b',
-      profiles: [
-        {
-          id: 'default-groq-qwen-27b',
-          name: 'Qwen 3.6 27B (رایگان)',
-          baseUrl: 'https://api.groq.com/openai/v1',
-          apiKey: '',
-          modelName: 'qwen/qwen3.6-27b',
-          customHeaders: ''
-        },
-        {
-          id: 'default-groq-gpt-oss-120b',
-          name: 'GPT OSS 120B (رایگان)',
-          baseUrl: 'https://api.groq.com/openai/v1',
-          apiKey: '',
-          modelName: 'openai/gpt-oss-120b',
-          customHeaders: ''
-        },
-        {
-          id: 'default-gemini-3-1-flash-lite',
-          name: 'Gemini 3.1 Flash Lite (رایگان)',
-          baseUrl: 'https://generativelanguage.googleapis.com/v1beta/openai',
-          apiKey: '',
-          modelName: 'gemini-3.1-flash-lite',
-          customHeaders: ''
-        }
-      ] 
+      activeProfileId: 'free_default',
+      profiles: [] 
     }
   },
   persona: { systemPrompt: '', tone: 'expert', temperature: 0.7 },
-  appearance: { theme: 'dark', font: 'hybrid', fontSize: 16, persianNumerals: true, direction: 'rtl', uiLanguage: 'fa' },
+  appearance: { theme: 'dark', font: 'hybrid', fontSize: 14, persianNumerals: true, direction: 'rtl', uiLanguage: 'fa' },
   tools: { 
     webSearch: true, 
     enterToSend: true, 
@@ -76,9 +51,9 @@ export const DEFAULT_SETTINGS: AppSettings = {
     smartRouting: true, 
     reasoningMode: false,
     routingRoles: { 
-      default: 'default-groq-qwen-27b', 
-      coding: 'default-groq-gpt-oss-120b', 
-      vision: 'default-gemini-3-1-flash-lite' 
+      default: 'free_default', 
+      coding: 'free_coding', 
+      vision: 'free_vision' 
     } 
   }
 };
@@ -212,18 +187,18 @@ export function loadSettings(): AppSettings {
       } catch {}
     }
 
-    // Migration: update default font size to 16
-    if (localStorage.getItem('fa_chat_font_size_default_16_v2') !== 'true') {
-      if (merged.appearance.fontSize === 15 || !merged.appearance.fontSize) {
-        merged.appearance.fontSize = 16;
+    // Migration: update default font size to 14
+    if (localStorage.getItem('fa_chat_font_size_default_14_v3') !== 'true') {
+      if (merged.appearance.fontSize === 16 || merged.appearance.fontSize === 15 || !merged.appearance.fontSize) {
+        merged.appearance.fontSize = 14;
       }
       try {
-        localStorage.setItem('fa_chat_font_size_default_16_v2', 'true');
+        localStorage.setItem('fa_chat_font_size_default_14_v3', 'true');
       } catch {}
     }
 
-    // Migration: ensure clean 6-profile system architecture & purge legacy cached cards
-    if (localStorage.getItem('fa_chat_profiles_clean_v3') !== 'true') {
+    // Migration: ensure clean 6-profile system architecture & purge legacy cached cards (v4 to fix JSON cache)
+    if (localStorage.getItem('fa_chat_profiles_clean_v4') !== 'true') {
       merged.providers.custom.profiles = [];
       merged.providers.custom.activeProfileId = 'free_default';
       merged.tools.routingRoles = {
@@ -232,7 +207,7 @@ export function loadSettings(): AppSettings {
         vision: 'free_vision'
       };
       try {
-        localStorage.setItem('fa_chat_profiles_clean_v3', 'true');
+        localStorage.setItem('fa_chat_profiles_clean_v4', 'true');
       } catch {}
     }
 

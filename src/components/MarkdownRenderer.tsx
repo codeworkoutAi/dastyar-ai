@@ -675,19 +675,79 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = React.memo(({
  },
 
  // Lists with correct adaptive RTL / LTR bullet / number alignment & task lists
- ul({ className, children }: any) {
- const isTaskList = className?.includes('contains-task-list');
- return (
- <ul
- className={`${isTaskList ? 'list-none !pr-1 !pl-0' : 'list-disc ' + (isOverallRtl ? '!pr-6 !pl-0' : '!pl-6 !pr-0')} !my-3 space-y-2 text-inherit opacity-95 marker:text-slate-400 dark:marker:text-slate-500 ${
- isOverallRtl ? 'text-right' : 'text-left'
- }`}
- dir={isOverallRtl ? 'rtl' : 'ltr'}
- >
- {children}
- </ul>
- );
- },
+  ul({ node, className, children }: any) {
+    const isTaskList = className?.includes('contains-task-list');
+
+    let isPureLinksList = false;
+    const uniqueLinks = new Map<string, string>(); 
+
+    if (node && node.children && node.children.length > 0) {
+      isPureLinksList = node.children.every((liNode: any) => {
+        if (liNode.type !== 'listItem') return false;
+        
+        let isPureLink = false;
+        if (liNode.children && liNode.children.length === 1 && liNode.children[0].type === 'paragraph') {
+          const pNode = liNode.children[0];
+          const contentNodes = pNode.children.filter((n: any) => n.type !== 'text' || n.value.strip() !== '');
+          if (contentNodes.length === 1 && contentNodes[0].type === 'link') {
+            isPureLink = true;
+            const linkNode = contentNodes[0];
+            const url = linkNode.url;
+            let label = url;
+            if (linkNode.children && linkNode.children[0] && linkNode.children[0].type === 'text') {
+              label = linkNode.children[0].value;
+            }
+            if (!uniqueLinks.has(url)) {
+              uniqueLinks.set(url, label);
+            }
+          }
+        }
+        return isPureLink;
+      });
+    }
+
+    if (isPureLinksList && uniqueLinks.size > 0) {
+      return (
+        <div className="flex flex-wrap items-center gap-2 my-4" dir="ltr">
+          {Array.from(uniqueLinks.entries()).map(([url, label], index) => {
+            let domain = label;
+            try {
+              domain = new URL(url).hostname.replace('www.', '');
+            } catch (e) {}
+
+            return (
+              <a
+                key={index}
+                href={url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 text-[var(--text-main)] text-[13px] font-medium transition-colors border border-black/10 dark:border-white/10 !no-underline shadow-xs"
+              >
+                <img 
+                  src={`https://www.google.com/s2/favicons?domain=${domain}&sz=32`} 
+                  alt={domain} 
+                  className="w-3.5 h-3.5 rounded-sm opacity-80" 
+                  onError={(e: any) => { e.currentTarget.style.display = 'none'; }}
+                />
+                <span dir="ltr">{domain}</span>
+              </a>
+            );
+          })}
+        </div>
+      );
+    }
+
+    return (
+      <ul
+        className={`${isTaskList ? 'list-none !pr-1 !pl-0' : 'list-disc ' + (isOverallRtl ? '!pr-6 !pl-0' : '!pl-6 !pr-0')} !my-3 space-y-2 text-inherit opacity-95 marker:text-slate-400 dark:marker:text-slate-500 ${
+          isOverallRtl ? 'text-right' : 'text-left'
+        }`}
+        dir={isOverallRtl ? 'rtl' : 'ltr'}
+      >
+        {children}
+      </ul>
+    );
+  },
  ol({ children }) {
  return (
  <ol

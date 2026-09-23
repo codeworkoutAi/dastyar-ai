@@ -1,4 +1,4 @@
-import { useEffect, lazy, Suspense } from 'react';
+﻿import { useEffect, lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { useSettingsStore } from './store/settingsStore';
 import { useAuthStore } from './store/authStore';
@@ -91,7 +91,7 @@ export default function App() {
  root.style.setProperty('--font-primary',"'" + settings.appearance.font +"', sans-serif");
  }
  root.setAttribute('data-font', settings.appearance.font);
- root.style.fontSize = settings.appearance.fontSize + 'px';
+ // root.style.fontSize = settings.appearance.fontSize + 'px';
  root.style.setProperty('--chat-font-size', settings.appearance.fontSize + 'px');
  root.dir = direction;
  }, [isDarkMode, settings.appearance.font, settings.appearance.fontSize, direction]);
@@ -133,3 +133,4 @@ export default function App() {
  </BrowserRouter>
  );
 }
+

@@ -14,11 +14,22 @@ router.get('/api/default-profiles', (_req, res) => {
   try {
     const rows = db.prepare('SELECT id, name, baseUrl, modelName, customHeaders, role, orderIndex FROM default_profiles WHERE isActive = 1 ORDER BY orderIndex ASC, createdAt ASC').all() as any[];
     // Ensure apiKey is completely blank for security
-    const sanitized = rows.map(r => ({
-      ...r,
-      apiKey: '',
-      isSystemDefault: true
-    }));
+    const sanitized = rows.map(r => {
+      let displayName = r.modelName;
+      if (typeof displayName === 'string' && displayName.startsWith('{')) {
+        try {
+          const map = JSON.parse(displayName);
+          const firstKey = Object.keys(map)[0];
+          displayName = firstKey ? map[firstKey] : displayName;
+        } catch(e) {}
+      }
+      return {
+        ...r,
+        modelName: displayName,
+        apiKey: '',
+        isSystemDefault: true
+      };
+    });
     res.json(sanitized);
   } catch (error) {
     console.error('[Models API] Error fetching public default profiles:', error);
@@ -40,6 +51,15 @@ router.post(['/api/models/test', '/api/ping'], modelTestRateLimiter, async (req,
       } else if (bUrl.includes('generativelanguage.googleapis.com')) {
         provider = 'gemini';
       }
+    }
+
+    // Handle system dynamic profiles gracefully
+    if (customBaseUrl && customBaseUrl.includes('[DYNAMIC_POOL]')) {
+      return res.status(400).json({
+        success: false,
+        statusType: 'invalid_action',
+        error: 'کارت‌های رایگان پیش‌فرض توسط سیستم (استخر کلیدها) به صورت خودکار مدیریت می‌شوند و نیازی به تست یا دریافت لیست مدل به صورت دستی ندارند.',
+      });
     }
 
     // Strict SSRF validation

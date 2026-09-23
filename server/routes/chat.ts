@@ -128,9 +128,17 @@ router.post('/api/chat/stream', chatStreamLimiter, async (req, res) => {
       } catch (e) {}
     }
 
+    if (!userId) {
+      sendChunk({ error: 'برای ارسال پیام و استفاده از چت‌باکس، لطفاً وارد حساب کاربری خود شوید.' });
+      sendChunk({ done: true });
+      return finishStream();
+    }
     let provider = apiConfig?.activeProvider || 'gemini';
     let customProfileId = apiConfig?.custom?.activeProfileId;
     let model = req.body.model || apiConfig?.[provider]?.modelName || '';
+    
+    // Capture if client provided their own key before we mutate apiConfig with system pool keys
+    const clientProvidedKey = Boolean(apiConfig?.[provider]?.apiKey && apiConfig[provider].apiKey.trim() !== '');
 
     // Auto-detect native official providers from custom profiles based on Base URL
     let isFreeModel = false;
@@ -173,6 +181,7 @@ router.post('/api/chat/stream', chatStreamLimiter, async (req, res) => {
             return finishStream();
           }
         }
+        // No process.env fallbacks here anymore! Keys MUST be managed via the Database / Admin Panel.
         
         // Override apiConfig with the resolved values so the rest of the file uses the correct dynamic keys/urls
         if (!apiConfig[provider]) apiConfig[provider] = {};
@@ -186,13 +195,11 @@ router.post('/api/chat/stream', chatStreamLimiter, async (req, res) => {
         }
       }
     }
-
-    const hasCustomUserKey = Boolean(apiConfig?.[provider]?.apiKey && apiConfig[provider].apiKey.trim() !== '');
-
-    // Check 4-hour rolling window limit for Free Models
+    const hasCustomUserKey = clientProvidedKey;
+    // Check 24-hour rolling window limit for Free Models
     if (isFreeModel && !hasCustomUserKey && userRole !== 'admin') {
       const now = Date.now();
-      const WINDOW_MS = 4 * 60 * 60 * 1000; // 4 hours
+      const WINDOW_MS = 24 * 60 * 60 * 1000; // 24 hours
       const identifier = userId ? `user:${userId}` : `ip:${req.ip}`;
       
       const limitStr = userId ? 
@@ -231,7 +238,7 @@ router.post('/api/chat/stream', chatStreamLimiter, async (req, res) => {
             if (apiConfig?.custom) {
               apiConfig.custom.baseUrl = paidProfile.baseUrl;
               apiConfig.custom.modelName = paidProfile.modelName;
-              apiConfig.custom.apiKey = paidProfile.apiKey;
+              apiConfig.custom.apiKey = targetApiKey;
               apiConfig.custom.id = paidProfile.id;
             }
           }
@@ -501,11 +508,7 @@ router.post('/api/chat/stream', chatStreamLimiter, async (req, res) => {
           const row = db.prepare('SELECT apiKey FROM default_profiles WHERE modelName = ? AND isActive = 1').get(modelName) as any;
           if (row?.apiKey) userKey = row.apiKey;
         }
-        if (!userKey) {
-          if (modelName === 'gemini-3.1-flash-lite' || modelName === 'gemini-2.0-flash-exp' || modelName === 'gemini-2.5-flash') {
-            userKey = process.env.DEFAULT_GEMINI_KEY || process.env.GEMINI_API_KEY;
-          }
-        }
+        // Environment fallback for free Gemini models removed. Free keys must go in the DB pool.
       }
 
       const ai = getGeminiClient(userKey, false); // Do NOT fallback to env master key for chat generation
@@ -746,20 +749,8 @@ router.post('/api/chat/stream', chatStreamLimiter, async (req, res) => {
           } else {
             headers['Authorization'] = `Bearer ${injectedKey}`;
           }
-        } else if (provider === 'custom') {
-          const allowedGroqModels = ['qwen/qwen3.6-27b', 'openai/gpt-oss-120b', 'qwen/qwen3.8-27b', 'openai/gpt-oss-20b', 'allam-2-7b', 'groq/compound'];
-          const allowedGeminiModels = ['gemini-3.1-flash-lite', 'gemini-1.5-flash'];
-          const groqKey = process.env.DEFAULT_GROQ_KEY || process.env.GROQ_API_KEY;
-          const geminiKey = process.env.DEFAULT_GEMINI_KEY || process.env.GEMINI_API_KEY;
-
-          if (allowedGroqModels.includes(requestedModel.toLowerCase()) && groqKey) {
-            headers['Authorization'] = `Bearer ${groqKey}`;
-            injectedKey = groqKey;
-          } else if (allowedGeminiModels.includes(requestedModel.toLowerCase()) && geminiKey) {
-            headers['Authorization'] = `Bearer ${geminiKey}`;
-            injectedKey = geminiKey;
-          }
         }
+        // Environment fallback for custom free models (Groq/Gemini) removed. Free keys must go in the DB pool.
       }
 
       if (provider === 'openrouter') {
@@ -907,7 +898,14 @@ router.post('/api/chat/stream', chatStreamLimiter, async (req, res) => {
           keyRotator.reportRateLimit(usedPoolKey, 300); // 5 minutes cooldown for failures
         }
 
-        sendChunk({ error: sanitizeErrorMessage(errorText || `Status ${response.status}`) });
+        let cleanError = sanitizeErrorMessage(errorText || `Status ${response.status}`);
+        if (response.status === 401) {
+          cleanError = 'کلید API برای این مدل نامعتبر است یا در دیتابیس (پنل ادمین) به درستی تنظیم نشده است.';
+        } else if (response.status === 402) {
+           cleanError = 'موجودی حساب API ارائه‌دهنده برای این مدل به پایان رسیده است.';
+        }
+
+        sendChunk({ error: cleanError });
         sendChunk({ done: true });
         return finishStream();
       }
