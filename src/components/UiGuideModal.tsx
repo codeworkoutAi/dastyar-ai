@@ -23,6 +23,7 @@ export const UiGuideModal: React.FC = () => {
     { id: 'models', title: 'هوشمند و مدل‌ها', icon: <Cpu className="w-4 h-4 text-amber-500" /> },
     { id: 'features', title: 'امکانات ویژه', icon: <Sparkles className="w-4 h-4 text-purple-500" /> },
     { id: 'explore', title: 'مرکز کشف', icon: <Compass className="w-4 h-4 text-blue-500" /> },
+    { id: 'android', title: 'راهنمای نصب اندروید', icon: <Cpu className="w-4 h-4 text-rose-500" /> },
   ];
 
   const scrollToSection = (id: string) => {
@@ -191,6 +192,27 @@ export const UiGuideModal: React.FC = () => {
                 <p className="text-sm leading-relaxed opacity-90 text-justify">
                   در منوی سمت راست، بخشی به نام <strong>دنیای کشف</strong> وجود دارد. در این بخش، ده‌ها دستور (Prompt) آماده و پرسونای تخصصی از پیش نوشته شده است. با انتخاب هر کدام، دستیار لحن و شخصیت خود را تغییر می‌دهد. مثلاً می‌توانید از او بخواهید نقش یک معلم زبان انگلیسی، مشاور حقوقی یا تحلیل‌گر سئو را بازی کند!
                 </p>
+              </section>
+
+              {/* Android Section */}
+              <section id="doc-sec-android" className="space-y-4">
+                <h2 className="text-2xl font-black text-rose-600 dark:text-rose-400 flex items-center gap-2">
+                  <Cpu className="w-6 h-6" /> راهنمای نصب اپلیکیشن اندروید
+                </h2>
+                <div className="p-4 rounded-xl bg-rose-50 dark:bg-rose-900/10 border border-rose-200 dark:border-rose-900/30">
+                  <h4 className="font-bold text-rose-700 dark:text-rose-300 mb-2">رفع خطای سپر ایمنی گوگل (Play Protect)</h4>
+                  <p className="text-sm opacity-90 leading-relaxed text-justify mb-3">
+                    از آنجا که اپلیکیشن ما به صورت مستقیم (خارج از گوگل پلی) دانلود می‌شود، ممکن است در هنگام نصب با خطای <strong>App blocked to protect your device</strong> مواجه شوید. این یک هشدار عمومی گوگل برای تمامی برنامه‌های خارج از استور است و به معنای ویروسی بودن برنامه نیست.
+                  </p>
+                  <div className="text-sm opacity-90 leading-relaxed font-bold">
+                    برای نصب موفق، مراحل زیر را طی کنید:
+                    <ol className="list-decimal list-inside font-normal mt-2 space-y-1">
+                      <li>در پیام خطای ظاهر شده، روی گزینه <strong>More details</strong> (یا جزئیات بیشتر) کلیک کنید.</li>
+                      <li>سپس دکمه <strong>Install anyway</strong> (نصب در هر حال) را انتخاب کنید.</li>
+                      <li>اپلیکیشن به راحتی نصب شده و می‌توانید از آن استفاده کنید.</li>
+                    </ol>
+                  </div>
+                </div>
               </section>
 
             </div>
