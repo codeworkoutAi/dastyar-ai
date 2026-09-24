@@ -4,6 +4,7 @@ import { useSettingsStore } from './store/settingsStore';
 import { useAuthStore } from './store/authStore';
 import { useUIStore } from './store/uiStore';
 import { Capacitor } from '@capacitor/core';
+import { App as CapacitorApp } from '@capacitor/app';
 
 // Critical Pages (loaded immediately)
 import { ChatApp } from './pages/chat/ChatApp';
@@ -49,6 +50,16 @@ export default function App() {
  useEffect(() => {
  checkAuth();
  syncSystemProfiles();
+
+ if (Capacitor.isNativePlatform()) {
+   CapacitorApp.addListener('backButton', ({ canGoBack }) => {
+     if (!canGoBack || window.location.pathname === '/' || window.location.pathname === '/chat') {
+       CapacitorApp.exitApp();
+     } else {
+       window.history.back();
+     }
+   });
+ }
 
  // Check for promo code in URL
  const urlParams = new URLSearchParams(window.location.search);
