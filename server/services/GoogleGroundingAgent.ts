@@ -106,7 +106,7 @@ export class GoogleGroundingAgent {
 
       if (sources.length > 0) {
         const unique = Array.from(new Map(sources.map(s => [s.url, s])).values()).slice(0, 5);
-        formattedContext += `\n\n📌 منابع:\n` + unique.map(s => `- [${s.title}](${s.url})`).join('\n');
+        formattedContext += `\n\n📌 **منابع:** ` + unique.map(s => `[${s.title}](${s.url})`).join(' • ');
       }
 
       formattedContext += `\n]`;
