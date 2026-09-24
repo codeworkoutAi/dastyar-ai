@@ -51,29 +51,26 @@ class ModelDiscoveryService {
     if (role === 'free_vision' || role === 'vision') {
       priorities = [
         'gpt-4o',
-        'gemini-1.5-pro',
-        'gemini-1.5-flash',
+        'gpt-5',
+        'gemini',
         'pixtral',
-        'vision'
+        'vision',
+        'claude-haiku'
       ];
     } else if (role === 'free_coding' || role === 'coding') {
       priorities = [
-        'deepseek-coder',
-        'deepseek-v3',
+        'coder',
+        'deepseek-v',
         'deepseek-chat',
-        'qwen-coder',
-        'qwen2.5-coder',
-        'claude-3-5-sonnet',
-        'gpt-4o',
-        'coder'
+        'qwen',
+        'sonnet',
+        'gpt-4o'
       ];
     } else { // default
       priorities = [
         'gpt-4o-mini',
-        'gemini-1.5-flash',
-        'llama-3.1-8b',
-        'llama-3.3',
-        'qwen2.5-7b',
+        'llama',
+        'gemini',
         'chat'
       ];
     }
