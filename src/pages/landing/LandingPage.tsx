@@ -39,7 +39,11 @@ import {
   Scale,
   TrendingUp,
   Stethoscope,
-  Wallet
+  Wallet,
+  Smartphone,
+  Monitor,
+  Tablet,
+  Download
 } from 'lucide-react';
 import { ThemeToggle } from '../../components/ThemeToggle';
 import { Footer } from '../../components/Footer';
@@ -1537,8 +1541,81 @@ export const LandingPage: React.FC = () => {
       </section>
       )}
 
-      {/* ---------------- 8. Footer Component ---------------- */}
-      {/* ---------------- 7. Final Call to Action (Claymorphic CTA Banner) ---------------- */}
+      {/* ---------------- 7. Cross Platform Downloads Section ---------------- */}
+      <section id="downloads" className="py-16 sm:py-20 px-4 sm:px-6 max-w-6xl mx-auto border-t border-black/5 dark:border-white/5">
+        <div className="reveal-init text-center mb-10 sm:mb-14">
+          <span className="text-xs font-bold text-[#717b91] uppercase tracking-widest block mb-1">
+            CROSS-PLATFORM EXPERIENCE
+          </span>
+          <h2
+            className="text-2xl sm:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-indigo-500 dark:from-blue-400 dark:to-indigo-400 tracking-tight py-2 px-1 mb-1"
+            style={{ fontFamily: "'Estedad', sans-serif" }}
+          >
+            دسترسی آسان روی تمامی پلتفرم‌ها
+          </h2>
+          <p className="text-xs sm:text-sm text-[#525d75] dark:text-[#9aa5bc] max-w-2xl mx-auto">
+            محیط دستیار هوشمند به صورت کاملا واکنش‌گرا و سازگار با تمامی دستگاه‌ها از جمله موبایل، دسکتاپ، تبلت و آیپد طراحی شده است. می‌توانید نسخه اندروید را دانلود کنید یا به صورت وب‌اپلیکیشن (PWA) روی آیفون و کامپیوتر نصب نمایید.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 relative z-10">
+          
+          {/* Mobile Card */}
+          <div className="clay-card-thick p-6 sm:p-8 rounded-3xl flex flex-col items-center text-center reveal-from-bottom border border-zinc-200 dark:border-zinc-800 transition-transform duration-300 hover:scale-[1.02]">
+            <div className="w-16 h-16 rounded-full bg-rose-500/10 dark:bg-rose-500/20 flex items-center justify-center mb-4">
+              <Smartphone className="w-8 h-8 text-rose-500" />
+            </div>
+            <h3 className="font-bold text-lg mb-2 text-zinc-900 dark:text-white">نسخه موبایل (اندروید)</h3>
+            <p className="text-sm opacity-80 mb-6 leading-relaxed flex-1">
+              دارای اپلیکیشن اختصاصی با سرعت بالا و طراحی کاملاً یکپارچه، مناسب برای گوشی‌های اندرویدی.
+            </p>
+            <a 
+              href="/app-release.apk" 
+              download 
+              className="w-full py-3 px-4 rounded-xl clay-btn-primary bg-rose-500 hover:bg-rose-600 text-white font-bold flex items-center justify-center gap-2 transition-colors"
+            >
+              <Download className="w-4 h-4" />
+              دانلود فایل APK
+            </a>
+            <p className="text-[10px] opacity-60 mt-3">نکته: در صورت نمایش پیام اخطار گوگل (Play Protect)، گزینه Install anyway را انتخاب کنید.</p>
+          </div>
+
+          {/* iOS & Tablet Card */}
+          <div className="clay-card-thick p-6 sm:p-8 rounded-3xl flex flex-col items-center text-center reveal-from-bottom border border-zinc-200 dark:border-zinc-800 transition-transform duration-300 hover:scale-[1.02]" style={{ transitionDelay: '100ms' }}>
+            <div className="w-16 h-16 rounded-full bg-blue-500/10 dark:bg-blue-500/20 flex items-center justify-center mb-4">
+              <Tablet className="w-8 h-8 text-blue-500" />
+            </div>
+            <h3 className="font-bold text-lg mb-2 text-zinc-900 dark:text-white">آیفون و آیپد (iOS)</h3>
+            <p className="text-sm opacity-80 mb-6 leading-relaxed flex-1">
+              پشتیبانی کامل از تمامی دستگاه‌های اپل از طریق وب‌اپلیکیشن (PWA) با تجربه کاربری کاملا بومی.
+            </p>
+            <button 
+              className="w-full py-3 px-4 rounded-xl clay-btn-secondary border-blue-200 dark:border-blue-800 text-blue-600 dark:text-blue-400 font-bold flex items-center justify-center gap-2 cursor-default"
+            >
+              Share &gt; Add to Home Screen
+            </button>
+            <p className="text-[10px] opacity-60 mt-3">از طریق مرورگر سافاری روی آیفون، این گزینه را انتخاب کنید.</p>
+          </div>
+
+          {/* Desktop Card */}
+          <div className="clay-card-thick p-6 sm:p-8 rounded-3xl flex flex-col items-center text-center reveal-from-bottom border border-zinc-200 dark:border-zinc-800 transition-transform duration-300 hover:scale-[1.02]" style={{ transitionDelay: '200ms' }}>
+            <div className="w-16 h-16 rounded-full bg-emerald-500/10 dark:bg-emerald-500/20 flex items-center justify-center mb-4">
+              <Monitor className="w-8 h-8 text-emerald-500" />
+            </div>
+            <h3 className="font-bold text-lg mb-2 text-zinc-900 dark:text-white">ویندوز و مک (Desktop)</h3>
+            <p className="text-sm opacity-80 mb-6 leading-relaxed flex-1">
+              بدون نیاز به نصب شبیه‌ساز؛ با امکان افزودن میانبر مستقیم از مرورگر (Chrome / Edge) به نوار ابزار سیستم.
+            </p>
+            <div className="w-full py-3 px-4 rounded-xl clay-surface-inset border border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-400 font-bold flex items-center justify-center gap-2">
+              اجرای مستقیم در وب
+            </div>
+            <p className="text-[10px] opacity-60 mt-3">روی آیکون نصب در نوار آدرس مرورگر کلیک کنید.</p>
+          </div>
+
+        </div>
+      </section>
+
+      {/* ---------------- 8. Final Call to Action (Claymorphic CTA Banner) ---------------- */}
       {dynamicVisibility.cta !== false && dynamicCta?.enabled !== false && (
         <section id="cta" className="py-16 sm:py-20 px-4 sm:px-6 max-w-5xl mx-auto border-t border-black/5 dark:border-white/5">
           <div className="clay-card-thick p-8 sm:p-14 rounded-3xl text-center relative overflow-hidden flex flex-col items-center border border-[var(--card-border)]  shadow-2xl">
