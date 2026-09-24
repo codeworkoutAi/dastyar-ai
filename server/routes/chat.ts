@@ -459,9 +459,10 @@ router.post('/api/chat/stream', chatStreamLimiter, async (req, res) => {
         console.log('[Backend] Web search & tools disabled.');
       }
     }
-    const baseSystemPrompt = `شما «دستیار هوشمند» هستید؛ متمرکز، دقیق و مسلط به زبان فارسی. پاسخ‌ها را به فارسی شیوا، دسته‌بندی‌شده و ساختاریافته ارائه دهید. در موضوعات فنی و برنامه‌نویسی، کدهای استاندارد همراه با توضیحات موجز بنویسید. هرگز خود را با نام پلتفرم‌های متفرقه معرفی نکنید.\n\n${timeContext}`;
+    const imageAntiHallucination = `\n\nقانون بسیار مهم درباره فایل‌ها: سیستم فایل‌های کاربر (مثل PDF) را به تصاویر یا متن تبدیل کرده و ضمیمه این درخواست کرده است. شما قابلیت کامل برای خواندن تصاویر و متون را دارید. به هیچ‌وجه نگویید "نمی‌توانم فایل‌ها را باز کنم یا ببینم". مستقیماً تصاویر یا متون ضمیمه‌شده را بخوانید و درخواست کاربر را انجام دهید.`;
+    const baseSystemPrompt = `شما «دستیار هوشمند» هستید؛ متمرکز، دقیق و مسلط به زبان فارسی. پاسخ‌ها را به فارسی شیوا، دسته‌بندی‌شده و ساختاریافته ارائه دهید. در موضوعات فنی و برنامه‌نویسی، کدهای استاندارد همراه با توضیحات موجز بنویسید. هرگز خود را با نام پلتفرم‌های متفرقه معرفی نکنید.\n\n${timeContext}${imageAntiHallucination}`;
     
-    const systemInstruction = apiConfig?.systemInstruction ? `${apiConfig.systemInstruction}\n\n${timeContext}\n\nنکته نگارشی: همیشه اصول، مراحل و لیست‌های شماره‌دار را در خطوط مجزا تفکیک کن. حتماً اصول نگارش فارسی و **نیم‌فاصله‌ها** را رعایت کن (مثلاً: می‌رود، برنامه‌نویسی، بخش‌ها).` : `${baseSystemPrompt}\n\nنکته نگارشی: حتماً اصول نگارش فارسی و **نیم‌فاصله‌ها** (Zero-Width Non-Joiner) را با دقت تمام رعایت کن (مثال: می‌رود، برنامه‌نویسی، دسته‌بندی‌شده، کتاب‌ها).`;
+    const systemInstruction = apiConfig?.systemInstruction ? `${apiConfig.systemInstruction}\n\n${timeContext}${imageAntiHallucination}\n\nنکته نگارشی: همیشه اصول، مراحل و لیست‌های شماره‌دار را در خطوط مجزا تفکیک کن. حتماً اصول نگارش فارسی و **نیم‌فاصله‌ها** را رعایت کن (مثلاً: می‌رود، برنامه‌نویسی، بخش‌ها).` : `${baseSystemPrompt}\n\nنکته نگارشی: حتماً اصول نگارش فارسی و **نیم‌فاصله‌ها** (Zero-Width Non-Joiner) را با دقت تمام رعایت کن (مثال: می‌رود، برنامه‌نویسی، دسته‌بندی‌شده، کتاب‌ها).`;
 
     // Inject liveWebContext into the LAST user message instead of system prompt
     // This ensures that models (especially via OpenRouter/Custom providers) don't ignore it.
