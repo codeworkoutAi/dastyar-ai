@@ -471,7 +471,7 @@ router.post('/api/chat/stream', chatStreamLimiter, async (req, res) => {
         if (isDateInquiry) {
           prunedMessages[lastMsgIndex].content = `${prunedMessages[lastMsgIndex].content}\n\n${liveWebContext}`;
         } else {
-          const webSearchWrapper = `\n\n<context_data>\n${liveWebContext}\n</context_data>\n\n<instructions>\nاخطار مهم: پاسخ خود را دقیقاً و منحصراً بر اساس اطلاعات داخل تگ بالا ارائه بده. تو موظفی تمام داده‌ها، اعداد، آمار و جزئیات مرتبط با درخواست کاربر را به طور کامل از متن بالا استخراج و گزارش کنی.\n**قانون بسیار مهم برای منابع:** اگر در اطلاعات بالا منابعی (منابع:) ذکر شده است، آن‌ها را حتماً در انتهای پاسخ خود دقیقاً به صورت خطی و پشت سر هم (مثلاً: منابع: [منبع ۱] • [منبع ۲]) نمایش بده. به هیچ وجه از لیست‌های عمودی یا Bullet points برای منابع استفاده نکن!\n</instructions>`;
+          const webSearchWrapper = `\n\n<context_data>\n${liveWebContext}\n</context_data>\n\n<instructions>\nاخطار مهم: پاسخ خود را دقیقاً و منحصراً بر اساس اطلاعات داخل تگ بالا ارائه بده. تو موظفی تمام داده‌ها، اعداد، آمار و جزئیات مرتبط با درخواست کاربر را به طور کامل از متن بالا استخراج و گزارش کنی.\n**قانون بسیار مهم برای منابع:** اگر در اطلاعات بالا منابعی (منابع:) ذکر شده است، آن‌ها را حتماً در انتهای پاسخ خود به صورت خطی و با **لینک‌های کلیک‌شونده مارک‌داون (Markdown)** و دقیقاً از راست به چپ (شروع با کلمه منابع) نمایش بده. به هیچ وجه از لیست‌های عمودی استفاده نکن.\nفرمت الزامی و دقیق خروجی:\n**منابع:** [نام سایت](لینک کامل سایت) • [نام سایت ۲](لینک کامل سایت ۲)\n</instructions>`;
           prunedMessages[lastMsgIndex].content = `${prunedMessages[lastMsgIndex].content}${webSearchWrapper}`;
         }
       }
