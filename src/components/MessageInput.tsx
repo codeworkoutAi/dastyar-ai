@@ -808,7 +808,7 @@ export const MessageInput: React.FC = React.memo(() => {
  {/* Token Estimator (Moved to top-left) */}
  {(text.trim() || imagePreview || attachedFileMeta) && (
  <div className="flex justify-end w-full px-2" dir="rtl">
- <div className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md border font-mono text-[10px] select-none transition-colors ${estimatedTokens > 32000 ? 'text-red-600 dark:text-red-400 bg-red-500/10 border-red-500/20' : estimatedTokens > 8000 ? 'text-amber-600 dark:text-amber-400 bg-amber-500/10 border-amber-500/20' : 'text-zinc-700 dark:text-zinc-300 bg-zinc-200/70  border-zinc-300/50 dark:border-white/10'}`}
+ <div className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md border font-mono text-[10px] select-none transition-colors ${estimatedTokens > 32000 ? 'text-red-600 dark:text-red-400 bg-red-500/10 border-red-500/20' : estimatedTokens > 8000 ? 'text-amber-600 dark:text-amber-400 bg-amber-500/10 border-amber-500/20' : 'text-zinc-700 dark:text-zinc-300 bg-zinc-200/70 dark:bg-zinc-800/70 border-zinc-300/50 dark:border-white/10'}`}
  title="تخمین توکن‌های این پیام بر اساس طول نویسه‌ها و اسناد"
  >
  <CpuBoltLinearIcon className={`w-3 h-3 shrink-0 ${estimatedTokens > 32000 ? 'text-red-500' : estimatedTokens > 8000 ? 'text-amber-500' : 'text-sky-500'}`} />

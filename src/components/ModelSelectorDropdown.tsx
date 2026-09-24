@@ -126,7 +126,7 @@ export const ModelSelectorDropdown: React.FC = () => {
                 className="flex items-center justify-center gap-2 w-10 h-10 sm:w-auto sm:h-auto sm:px-3 sm:py-1.5 rounded-2xl border transition-colors backdrop-blur-md shrink-0 clay-card border-[var(--card-border)] dark:border-white/10 hover:!bg-zinc-200 dark:hover:!bg-zinc-800/40"
             >
                 {settings.tools.smartRouting ? (
-                    <SparklesIcon className="w-5 h-5 text-zinc-700 dark:text-zinc-300 shrink-0" />
+                    <img src="/pwa-192x192.png" alt="دستیار هوشمند" className="w-5 h-5 sm:w-6 sm:h-6 object-contain drop-shadow-md shrink-0" />
                 ) : (
                     <img src={activeProfile ? getProviderIconUrl(activeProfile.modelName + ' ' + activeProfile.name) : '/icons/bot.svg'} alt="Model" className="w-5 h-5 object-contain shrink-0" />
                 )}
