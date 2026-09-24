@@ -21,7 +21,7 @@ export const ReloadPrompt: React.FC = () => {
  setNeedRefresh(false);
  };
 
- if (!offlineReady && !needRefresh) {
+ if (!needRefresh) {
  return null;
  }
 
@@ -29,11 +29,7 @@ export const ReloadPrompt: React.FC = () => {
  <div className="fixed bottom-4 right-4 z-50 flex flex-col gap-2 animate-fadeIn">
  <div className="bg-blue-600/90 backdrop-blur-md text-white px-4 py-3 rounded-2xl flex items-center gap-4 border border-blue-400/30">
  <div className="flex-1 text-sm font-medium">
- {offlineReady ? (
- <span>برنامه برای کار در حالت آفلاین آماده است.</span>
- ) : (
  <span>نسخه جدیدی از دستیار آماده است. برای اعمال رفرش کنید.</span>
- )}
  </div>
  <div className="flex items-center gap-2">
  {needRefresh && (
