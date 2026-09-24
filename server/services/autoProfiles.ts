@@ -130,23 +130,21 @@ export async function syncAutoDefaultProfiles() {
     return;
   }
 
-  // 2. Find the intersection of NORMALIZED models (models available in ALL providers)
-  let intersection: string[] | null = null;
+  // 2. Find the union of NORMALIZED models (models available in AT LEAST ONE provider)
+  let union = new Set<string>();
   for (const res of results) {
-    if (intersection === null) {
-      intersection = [...res.normalizedIds];
-    } else {
-      intersection = intersection.filter(x => res.normalizedIds.includes(x));
+    for (const model of res.normalizedIds) {
+      union.add(model);
     }
   }
 
-  if (!intersection || intersection.length === 0) {
-    console.warn('[AutoProfiles] Could not find any common models across the providers.');
+  if (union.size === 0) {
+    console.warn('[AutoProfiles] Could not find any models across the providers.');
     return;
   }
 
-  const commonModels = intersection;
-  console.log(`[AutoProfiles] Found ${commonModels.length} common normalized models across all providers.`);
+  const commonModels = Array.from(union);
+  console.log(`[AutoProfiles] Found ${commonModels.length} unique normalized models across all providers.`);
 
   // 3. Select the best model for each slot based on priority
   for (const slot of SLOT_PRIORITIES) {
