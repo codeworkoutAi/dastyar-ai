@@ -1,6 +1,8 @@
 import express from 'express';
 import { isSafeBaseUrl, getGeminiClient, normalizeBaseUrl, parseCustomHeaders } from '../services/utils';
 import { aiRouteLimiter } from '../middleware/rateLimiter';
+import db from '../db/database';
+import { keyRotator } from '../services/keyRotator';
 
 const router = express.Router();
 
@@ -97,11 +99,43 @@ Do not wrap in markdown. Raw JSON only.`;
 
     } else {
       // DeepSeek / OpenAI / Custom
-      if (apiConfig?.[provider]?.baseUrl && !isSafeBaseUrl(apiConfig?.[provider]?.baseUrl)) {
+      let targetBaseUrl = apiConfig?.[provider]?.baseUrl || '';
+      let targetModel = apiConfig?.[provider]?.modelName || '';
+      let targetApiKey = apiConfig?.[provider]?.apiKey || '';
+
+      if (provider === 'custom') {
+        const profileId = apiConfig?.custom?.activeProfileId || apiConfig?.custom?.id;
+        if (profileId) {
+          const profileResult = db.prepare('SELECT * FROM default_profiles WHERE id = ?').get(profileId) as any;
+          if (profileResult) {
+            targetBaseUrl = profileResult.baseUrl;
+            targetModel = profileResult.modelName;
+            targetApiKey = profileResult.apiKey;
+
+            if (targetApiKey === '[AUTO_POOL]') {
+              const poolKey = keyRotator.getNextKey();
+              if (poolKey) {
+                targetApiKey = poolKey.apiKey;
+                targetBaseUrl = poolKey.baseUrl;
+                if (targetModel.startsWith('{')) {
+                  try {
+                    const modelMap = JSON.parse(targetModel);
+                    if (modelMap[targetBaseUrl]) {
+                      targetModel = modelMap[targetBaseUrl];
+                    }
+                  } catch (e) {}
+                }
+              }
+            }
+          }
+        }
+      }
+
+      if (targetBaseUrl && !isSafeBaseUrl(targetBaseUrl)) {
         return res.json({ webSearch: false, intent: 'general' });
       }
 
-      const baseUrl = normalizeBaseUrl(apiConfig?.[provider]?.baseUrl, provider);
+      const baseUrl = normalizeBaseUrl(targetBaseUrl, provider);
       if (!baseUrl) {
         return res.json({ webSearch: false, intent: 'general' });
       }
@@ -111,26 +145,12 @@ Do not wrap in markdown. Raw JSON only.`;
         'Content-Type': 'application/json',
       };
 
-      if (apiConfig?.[provider]?.apiKey) {
+      if (targetApiKey) {
         if (provider === 'anthropic') {
-          headers['x-api-key'] = String(apiConfig[provider].apiKey).trim();
+          headers['x-api-key'] = String(targetApiKey).trim();
           headers['anthropic-version'] = '2023-06-01';
         } else {
-          headers['Authorization'] = `Bearer ${String(apiConfig[provider]?.apiKey).trim()}`;
-        }
-      } else {
-        if (provider === 'custom') {
-          const requestedModel = apiConfig?.[provider]?.modelName || '';
-          const allowedGroqModels = ['qwen/qwen3.6-27b', 'openai/gpt-oss-120b', 'qwen/qwen3.8-27b', 'openai/gpt-oss-20b', 'allam-2-7b', 'groq/compound'];
-          const allowedGeminiModels = ['gemini-3.1-flash-lite', 'gemini-1.5-flash'];
-          const groqKey = process.env.DEFAULT_GROQ_KEY || process.env.GROQ_API_KEY;
-          const geminiKey = process.env.DEFAULT_GEMINI_KEY || process.env.GEMINI_API_KEY;
-          
-          if (allowedGroqModels.includes(requestedModel.toLowerCase()) && groqKey) {
-            headers['Authorization'] = `Bearer ${groqKey}`;
-          } else if (allowedGeminiModels.includes(requestedModel.toLowerCase()) && geminiKey) {
-            headers['Authorization'] = `Bearer ${geminiKey}`;
-          }
+          headers['Authorization'] = `Bearer ${String(targetApiKey).trim()}`;
         }
       }
 
@@ -142,7 +162,7 @@ Do not wrap in markdown. Raw JSON only.`;
       const userHeaders = parseCustomHeaders(apiConfig?.custom?.customHeaders);
       Object.assign(headers, userHeaders);
 
-      let model = apiConfig?.[provider]?.modelName;
+      let model = targetModel;
       if (!model) {
         if (provider === 'deepseek') model = 'deepseek-chat';
         else if (provider === 'openai') model = 'gpt-4o-mini';
