@@ -37,9 +37,9 @@ class ModelDiscoveryService {
     return [];
   }
 
-  public async getBestModelForRole(poolKeys: PoolKey[], role: string, fallbackModel: string): Promise<{poolKey: PoolKey, modelId: string}> {
+  public async getBestModelForRole(poolKeys: PoolKey[], role: string, fallbackModel: string): Promise<{poolKey: PoolKey, modelId: string, isFallback?: boolean}> {
     if (!poolKeys || poolKeys.length === 0) {
-      return { poolKey: { baseUrl: '', apiKey: '' }, modelId: fallbackModel };
+      return { poolKey: { baseUrl: '', apiKey: '' }, modelId: fallbackModel, isFallback: true };
     }
 
     // Priority heuristics based on role
@@ -81,7 +81,7 @@ class ModelDiscoveryService {
       for (const keyword of priorities) {
         const match = availableIds.find(id => id.includes(keyword));
         if (match) {
-          return { poolKey, modelId: models.find(m => m.id.toLowerCase() === match)!.id };
+          return { poolKey, modelId: models.find(m => m.id.toLowerCase() === match)!.id, isFallback: false };
         }
       }
     }
@@ -90,12 +90,12 @@ class ModelDiscoveryService {
     for (const poolKey of poolKeys) {
       const models = await this.fetchModels(poolKey);
       if (models && models.length > 0) {
-        return { poolKey, modelId: models[0].id };
+        return { poolKey, modelId: models[0].id, isFallback: true };
       }
     }
 
     // 3. Absolute fallback
-    return { poolKey: poolKeys[0], modelId: fallbackModel };
+    return { poolKey: poolKeys[0], modelId: fallbackModel, isFallback: true };
   }
 }
 

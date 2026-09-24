@@ -166,7 +166,20 @@ router.post('/api/chat/stream', chatStreamLimiter, async (req, res) => {
             
 
             // Auto-detect best model for the slot
-            const best = await modelDiscovery.getBestModelForRole(poolKeys, customProfileId, 'gpt-4o-mini'); targetApiKey = best.poolKey.apiKey; targetBaseUrl = best.poolKey.baseUrl; usedPoolKey = best.poolKey.apiKey; targetModel = best.modelId;
+            const best = await modelDiscovery.getBestModelForRole(poolKeys, customProfileId, 'gpt-4o-mini');
+            targetApiKey = best.poolKey.apiKey;
+            targetBaseUrl = best.poolKey.baseUrl;
+            usedPoolKey = best.poolKey.apiKey;
+            targetModel = best.modelId;
+            
+            if (best.isFallback && (customProfileId === 'free_vision' || customProfileId === 'vision')) {
+              const hasImage = messages.some((m) => m.imageUrl || (m.imageUrls && m.imageUrls.length > 0));
+              if (hasImage) {
+                sendChunk({ error: 'کاربر گرامی، در حال حاضر مدل بینایی رایگان در سیستم موجود نمی‌باشد و شما در نسخه رایگان امکان پردازش اسناد و تصاویر را ندارید. لطفاً برای استفاده از قابلیت‌های پردازش تصویر، از نسخه اعتباری (پولی) استفاده نمایید.' });
+                sendChunk({ done: true });
+                return finishStream();
+              }
+            }
           } else {
             sendChunk({ error: 'ظرفیت کلیدهای عمومی در حال حاضر پر شده است. لطفاً چند دقیقه دیگر تلاش کنید.' });
             sendChunk({ done: true });
