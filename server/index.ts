@@ -109,7 +109,10 @@ initializeSchema();
 
 // Start Background Services
 initNewsCron();
-startAutoProfilesSync();
+// Delay AutoProfiles slightly so initial Turso DB sync has time to complete
+setTimeout(() => {
+  startAutoProfilesSync();
+}, 2000);
 
 app.use('/', modelsRouter);
 app.use('/', chatRouter);
