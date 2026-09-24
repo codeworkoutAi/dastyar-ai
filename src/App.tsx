@@ -1,8 +1,9 @@
-﻿import { useEffect, lazy, Suspense } from 'react';
+import { useEffect, lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { useSettingsStore } from './store/settingsStore';
 import { useAuthStore } from './store/authStore';
 import { useUIStore } from './store/uiStore';
+import { Capacitor } from '@capacitor/core';
 
 // Critical Pages (loaded immediately)
 import { ChatApp } from './pages/chat/ChatApp';
@@ -98,7 +99,8 @@ export default function App() {
 
  function HomeRoute() {
  const isAuthenticated = useAuthStore(state => state.isAuthenticated);
- return isAuthenticated ? <ChatApp /> : <LandingPage />;
+ const isNative = Capacitor.isNativePlatform();
+ return (isAuthenticated || isNative) ? <ChatApp /> : <LandingPage />;
  }
 
  return (

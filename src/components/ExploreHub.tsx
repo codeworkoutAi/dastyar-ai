@@ -167,7 +167,7 @@ export const ExploreHub: React.FC = () => {
 
  return (
  <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/75 backdrop-blur-md animate-fadeIn">
- <div className="relative w-full clay-card  max-w-4xl max-h-[90vh] flex flex-col rounded-3xl clay-surface  overflow-hidden text-zinc-900 dark:text-zinc-100 font-sans">
+ <div className="relative w-full clay-card max-w-4xl max-h-[90vh] flex flex-col rounded-3xl overflow-hidden text-zinc-900 dark:text-zinc-100 font-sans">
  {/* Top Header */}
  <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--card-border)] clay-surface/60">
  <div className="flex items-center gap-3">
@@ -206,8 +206,8 @@ export const ExploreHub: React.FC = () => {
  onClick={() => setActiveTab('prompts')}
  className={`px-4 py-2 rounded-2xl text-xs sm:text-sm font-bold flex items-center gap-2 transition-all cursor-pointer ${
  activeTab === 'prompts'
- ? 'bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400'
- : 'text-zinc-700 dark:text-zinc-400 hover:text-zinc-800 dark:text-zinc-200 clay-icon-btn/50'
+ ? 'clay-btn-primary text-white'
+ : 'clay-btn border border-[var(--card-border)] text-[var(--text-main)]'
  }`}
  >
  <LightbulbOutlineIcon className="w-4 h-4" />
@@ -219,8 +219,8 @@ export const ExploreHub: React.FC = () => {
  onClick={() => setActiveTab('images')}
  className={`px-4 py-2 rounded-2xl text-xs sm:text-sm font-bold flex items-center gap-2 transition-all cursor-pointer ${
  activeTab === 'images'
- ? 'bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400'
- : 'text-zinc-700 dark:text-zinc-400 hover:text-zinc-800 dark:text-zinc-200 clay-icon-btn/50'
+ ? 'clay-btn-primary text-white'
+ : 'clay-btn border border-[var(--card-border)] text-[var(--text-main)]'
  }`}
  >
  <GalleryOutlineIcon className="w-4 h-4" />
@@ -243,8 +243,8 @@ export const ExploreHub: React.FC = () => {
  onClick={() => setSelectedCategory(cat.id)}
  className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold whitespace-nowrap transition-all border cursor-pointer ${
  selectedCategory === cat.id
- ? 'bg-purple-500/10 border-purple-500/50 text-purple-600 dark:text-purple-400 shadow-sm'
- : 'bg-white dark:clay-card-thick border-[var(--card-border)] dark:border-white/10 text-zinc-600 dark:text-zinc-400 hover:clay-surface dark:hover:bg-zinc-800/50'
+ ? 'clay-btn-primary border-purple-500/50 text-white shadow-sm'
+ : 'clay-btn border border-[var(--card-border)] text-[var(--text-main)]'
  }`}
  >
  <span className="chat-emoji">{cat.icon}</span>
@@ -258,14 +258,14 @@ export const ExploreHub: React.FC = () => {
  {PROMPT_CATEGORIES.find((c) => c.id === selectedCategory)?.prompts.map((p, idx) => (
  <div
  key={idx}
- className="p-5 rounded-2xl clay-surface/60 border border-[var(--card-border)] hover:border-purple-500/40 hover:clay-surface transition-all flex flex-col justify-between group"
+ className="p-5 rounded-2xl clay-card border border-[var(--card-border)] hover:border-purple-500/40 transition-all flex flex-col justify-between group"
  >
  <div>
  <div className="flex items-center justify-between mb-2">
  <span className="font-bold text-sm text-zinc-900 dark:text-zinc-100 group-hover:text-purple-400 transition-colors">
  {p.title}
  </span>
- <span className="text-[10px] px-2 py-0.5 rounded-full clay-surface text-zinc-700 dark:text-zinc-400">
+ <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-purple-100/80 text-purple-800 dark:bg-purple-500/20 dark:text-purple-300">
  {p.tag}
  </span>
  </div>
@@ -299,7 +299,7 @@ export const ExploreHub: React.FC = () => {
  {EXPLORE_IMAGE_PREVIEWS.map((item) => (
  <div
  key={item.id}
- className="group relative p-5 rounded-3xl text-right flex flex-col justify-between transition-all duration-300 hover:-translate-y-1 overflow-hidden border border-[var(--card-border)] clay-surface/60 hover:shadow-[0_0_25px_rgba(168,85,247,0.2)] hover:border-purple-500/40"
+ className="group relative p-5 rounded-3xl text-right flex flex-col justify-between transition-all duration-300 hover:-translate-y-1 overflow-hidden border border-[var(--card-border)] clay-card hover:shadow-[0_0_25px_rgba(168,85,247,0.2)] hover:border-purple-500/40"
  >
  <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/10 blur-3xl rounded-full -translate-y-1/2 translate-x-1/2 group-hover:bg-purple-500/20 transition-colors pointer-events-none" />
 
@@ -319,7 +319,7 @@ export const ExploreHub: React.FC = () => {
  <button
  type="button"
  onClick={() => handleOpenStudioWithPrompt(item.desc, item.engine)}
- className="w-full py-2.5 px-3 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-xs font-bold flex items-center justify-center gap-2 shadow-md transition-all cursor-pointer relative z-10"
+ className="w-full py-2.5 px-3 rounded-xl clay-btn-primary text-white text-xs font-bold flex items-center justify-center gap-2 shadow-md transition-all cursor-pointer relative z-10"
  >
  <GalleryOutlineIcon className="w-4 h-4" />
  ساخت تصویر در استودیو

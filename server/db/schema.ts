@@ -293,18 +293,18 @@ export function initializeSchema() {
       `);
 
       // 1. Free Default
-      seedStmt.run('free_default', 'دستیار چت و گفتگو (رایگان)', 'https://api.openai.com/v1', process.env.DEFAULT_OPENAI_KEY || '', 'gpt-4o-mini', '', 'default', 0, 1);
+      seedStmt.run('free_default', 'دستیار چت و گفتگو', 'https://api.openai.com/v1', process.env.DEFAULT_OPENAI_KEY || '', 'gpt-4o-mini', '', 'default', 0, 1);
       // 2. Free Coding
-      seedStmt.run('free_coding', 'دستیار کدنویسی و تحلیل (رایگان)', 'https://api.deepseek.com/v1', process.env.DEFAULT_DEEPSEEK_KEY || '', 'deepseek-v3', '', 'coding', 1, 1);
+      seedStmt.run('free_coding', 'دستیار کدنویسی و تحلیل', 'https://api.deepseek.com/v1', process.env.DEFAULT_DEEPSEEK_KEY || '', 'deepseek-v3', '', 'coding', 1, 1);
       // 3. Free Vision
-      seedStmt.run('free_vision', 'دستیار بینایی و اسناد (رایگان)', 'https://generativelanguage.googleapis.com/v1beta/openai', process.env.DEFAULT_GEMINI_KEY || '', 'gemini-1.5-flash', '', 'vision', 2, 1);
+      seedStmt.run('free_vision', 'دستیار بینایی و اسناد', 'https://generativelanguage.googleapis.com/v1beta/openai', process.env.DEFAULT_GEMINI_KEY || '', 'gemini-1.5-flash', '', 'vision', 2, 1);
       
       // 4. Paid Default
-      seedStmt.run('paid_default', 'دستیار هوشمند لونا (اعتباری)', 'https://router.cheap/v1', process.env.ROUTER_CHEAP_KEY || '', 'gpt-5.6-luna', '', 'paid_default', 3, 1);
+      seedStmt.run('paid_default', 'دستیار هوشمند لونا', 'https://router.cheap/v1', process.env.ROUTER_CHEAP_KEY || '', 'gpt-5.6-luna', '', 'paid_default', 3, 1);
       // 5. Paid Coding
-      seedStmt.run('paid_coding', 'دستیار مهندسی دیپ‌سیک (اعتباری)', 'https://router.cheap/v1', process.env.ROUTER_CHEAP_KEY || '', 'deepseek-v3', '', 'paid_coding', 4, 1);
+      seedStmt.run('paid_coding', 'دستیار مهندسی دیپ‌سیک', 'https://router.cheap/v1', process.env.ROUTER_CHEAP_KEY || '', 'deepseek-v3', '', 'paid_coding', 4, 1);
       // 6. Paid Vision
-      seedStmt.run('paid_vision', 'دستیار اسناد و بینایی جمینای (اعتباری)', 'https://router.cheap/v1', process.env.ROUTER_CHEAP_KEY || '', 'gemini-3.8-flash', '', 'paid_vision', 5, 1);
+      seedStmt.run('paid_vision', 'دستیار اسناد و بینایی جمینای', 'https://router.cheap/v1', process.env.ROUTER_CHEAP_KEY || '', 'gemini-3.8-flash', '', 'paid_vision', 5, 1);
     }
   } catch (seedErr) {
     console.error('[Database] Failed to seed default profiles:', seedErr);

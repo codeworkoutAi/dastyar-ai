@@ -26,6 +26,7 @@ import { useAuthStore } from '../store/authStore';
 import { ShieldCheck } from 'lucide-react';
 import { SmartRoutingAnimation } from './ChatBox';
 import { ThemeToggle } from './ThemeToggle';
+import { UIStyleToggle } from './UIStyleToggle';
 import { ModelSelectorDropdown } from './ModelSelectorDropdown';
 
 export const SmartRoutingBadge: React.FC<{ isStreaming: boolean }> = ({ isStreaming }) => {
@@ -135,7 +136,7 @@ export const Header: React.FC = React.memo(() => {
  <div className={`absolute inset-0 px-2.5 sm:px-4 md:px-6 flex items-center justify-between w-full h-full transition-all duration-500 ease-out ${isAnimating ? 'opacity-0 scale-95 pointer-events-none' : 'opacity-100 scale-100 pointer-events-auto'}`}>
 
  {/* 1. Right Side (Start) - Sidebar Toggle & Chat Title */}
- <div className="flex items-center gap-1.5 sm:gap-3 min-w-0 z-10 w-1/3 justify-start">
+ <div className="flex items-center gap-1.5 sm:gap-3 min-w-0 z-10 w-[45%] sm:w-1/3 justify-start">
  <Tooltip content="منوی گفتگوها">
  <button
  id="sidebar-toggle-btn"
@@ -148,9 +149,9 @@ export const Header: React.FC = React.memo(() => {
  </Tooltip>
 
  <div className="min-w-0 flex flex-col justify-center">
- <h1 className="font-extrabold text-xs sm:text-base md:text-lg tracking-tight truncate flex items-center gap-1.5">
- <ChatRoundDotsOutlineIcon className="w-4 h-4 opacity-50 hidden md:block" />
- <span className="hidden sm:inline">دستیار هوشمند</span>
+ <h1 className="font-extrabold text-xs sm:text-base md:text-lg tracking-tight truncate flex items-center gap-1.5 sm:gap-2">
+ <img src="/pwa-192x192.png" alt="Logo" className="w-5 h-5 sm:w-7 sm:h-7 object-contain drop-shadow-md" />
+ <span>دستیار هوشمند</span>
  <span className="sr-only">دستیار هوشمند | چت با هوش مصنوعی رایگان و فارسی</span>
  </h1>
  <p className="text-[10px] sm:text-[11px] opacity-70 truncate hidden sm:block">
@@ -167,24 +168,12 @@ export const Header: React.FC = React.memo(() => {
  </div>
 
  {/* 3. Left Side (End) - Tools & Mobile Menu */}
- <div className="flex items-center gap-1 sm:gap-2 md:gap-3 shrink-0 z-10 w-1/3 justify-end">
+ <div className="flex items-center gap-1 sm:gap-2 md:gap-3 shrink-0 z-10 w-[45%] sm:w-1/3 justify-end">
 
  {/* Desktop View Tools (Hidden on Mobile) */}
  <div className="hidden sm:flex items-center gap-1 sm:gap-2 md:gap-3">
 
- {/* Export Button */}
- {activeConversation && activeConversation.messages.length > 0 && (
- <Tooltip content="خروجی و ذخیره گفتگو">
- <button
- id="header-export-btn"
- onClick={() => setIsExportOpen(true)}
- className="clay-icon-btn w-11 h-11 flex items-center justify-center rounded-xl sm:rounded-2xl cursor-pointer clay-icon"
- aria-label="Export Chat"
- >
- <DownloadMinimalisticLinearIcon className="w-4 h-4 sm:w-5 sm:h-5" />
- </button>
- </Tooltip>
- )}
+
 
  {/* Install PWA Button */}
  {isInstallable && (
@@ -201,6 +190,7 @@ export const Header: React.FC = React.memo(() => {
 
  {/* Theme Toggle Button */}
  <ThemeToggle variant="clay" />
+ <UIStyleToggle variant="clay" />
 
  {/* Admin panel button */}
  {user?.role === 'admin' && (
@@ -208,7 +198,7 @@ export const Header: React.FC = React.memo(() => {
  <button
  id="header-admin-btn"
  onClick={() => setIsAdminOpen(true)}
- className="clay-icon-btn w-11 h-11 flex items-center justify-center relative rounded-xl sm:rounded-2xl cursor-pointer text-blue-600 dark:text-blue-400 clay-icon"
+ className="clay-icon-btn w-11 h-11 flex items-center justify-center relative rounded-xl sm:rounded-2xl cursor-pointer text-rose-500 dark:text-rose-400 clay-icon"
  aria-label="Admin Settings"
  >
  <ShieldCheck className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -224,15 +214,13 @@ export const Header: React.FC = React.memo(() => {
  className="clay-icon-btn w-11 h-11 flex items-center justify-center relative rounded-xl sm:rounded-2xl cursor-pointer clay-icon"
  aria-label="Open Settings"
  >
- <SettingsMinimalisticLinearIcon className="w-4 h-4 sm:w-5 sm:h-5" />
+ <SettingsMinimalisticLinearIcon className="w-4 h-4 sm:w-5 sm:h-5 text-amber-500 dark:text-amber-400" />
  </button>
  </Tooltip>
  </div>
 
  {/* Mobile Dropdown Menu (Visible on Mobile) */}
  <div className="sm:hidden flex items-center gap-1.5" ref={mobileMenuRef}>
- {/* Quick Theme Toggle on Mobile */}
- <ThemeToggle variant="clay" className="!w-10 !h-10 !rounded-xl" />
 
  <Tooltip content="ابزارهای بیشتر">
  <button
@@ -240,21 +228,19 @@ export const Header: React.FC = React.memo(() => {
  className="clay-icon-btn w-10 h-10 flex items-center justify-center rounded-xl cursor-pointer clay-icon"
  aria-label="More Options"
  >
- <MenuDotsLinearIcon className="w-5 h-5" />
+ <MenuDotsLinearIcon className="w-5 h-5 text-zinc-500 dark:text-zinc-400" />
  </button>
  </Tooltip>
 
  {showMobileMenu && (
- <div className="absolute top-full mt-2 left-0 w-52 clay-card z-50 flex flex-col gap-1 p-2 animate-fadeIn border border-subtle" dir="rtl">
+  <div className="absolute top-full mt-2 left-0 w-52 clay-card z-50 flex flex-col gap-1 p-2 animate-fadeIn border border-subtle" dir="rtl">
+  
+  <div className="flex items-center justify-around p-2 mb-1 bg-black/5 dark:bg-white/5 rounded-lg border border-black/5 dark:border-white/5">
+     <ThemeToggle variant="clay" className="!w-10 !h-10 !rounded-xl" />
+     <UIStyleToggle variant="clay" className="!w-10 !h-10 !rounded-xl" />
+  </div>
 
- {activeConversation && activeConversation.messages.length > 0 && (
- <button onClick={() => { setIsExportOpen(true); setShowMobileMenu(false); }} className="flex items-center gap-2 p-2 rounded-lg hover:bg-[var(--bg-main)] transition-colors text-right cursor-pointer">
- <DownloadMinimalisticLinearIcon className="w-4 h-4 text-emerald-400" />
- <span className="text-xs font-bold text-[var(--text-main)]">خروجی گفتگو</span>
- </button>
- )}
-
- {isInstallable && (
+  {isInstallable && (
  <button onClick={() => { install(); setShowMobileMenu(false); }} className="flex items-center gap-2 p-2 rounded-lg hover:bg-[var(--bg-main)] transition-colors text-right cursor-pointer">
  <SmartphoneLinearIcon className="w-4 h-4 text-blue-500" />
  <span className="text-xs font-bold text-[var(--text-main)]">نصب برنامه</span>

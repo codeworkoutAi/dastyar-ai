@@ -500,8 +500,8 @@ export const LandingPage: React.FC = () => {
       <header className="sticky top-2 sm:top-3 z-50 max-w-6xl mx-2 sm:mx-4 md:mx-auto px-2 sm:px-6 h-14 sm:h-16 flex items-center justify-between clay-card-thick backdrop-blur-xl transition-all">
         {/* Brand */}
         <Link to="/" className="flex items-center gap-2.5 sm:gap-3 group shrink-0">
-          <div className="w-9 h-9 rounded-2xl clay-btn-primary-thick flex items-center justify-center font-bold text-sm  transition-transform group-hover:scale-105 shrink-0">
-            <Sparkles className="w-4 h-4" />
+          <div className="w-10 h-10 transition-transform group-hover:scale-105 shrink-0 flex items-center justify-center">
+            <img src="/pwa-192x192.png" alt="Logo" className="w-full h-full object-contain drop-shadow-md" />
           </div>
           <div className="flex flex-col text-right">
             <span className="text-sm sm:text-base font-black text-[#0f1420] dark:text-white tracking-tight whitespace-nowrap" style={{ fontFamily: "'Estedad', sans-serif" }}>
@@ -1542,8 +1542,8 @@ export const LandingPage: React.FC = () => {
       {dynamicVisibility.cta !== false && dynamicCta?.enabled !== false && (
         <section id="cta" className="py-16 sm:py-20 px-4 sm:px-6 max-w-5xl mx-auto border-t border-black/5 dark:border-white/5">
           <div className="clay-card-thick p-8 sm:p-14 rounded-3xl text-center relative overflow-hidden flex flex-col items-center border border-[var(--card-border)]  shadow-2xl">
-            <div className="w-14 h-14 rounded-2xl clay-btn-primary-thick flex items-center justify-center text-white mb-6 shadow-md shadow-blue-500/25">
-              <Sparkles className="w-7 h-7" />
+            <div className="w-16 h-16 transition-transform hover:scale-105 flex items-center justify-center mb-6">
+              <img src="/pwa-192x192.png" alt="Logo" className="w-full h-full object-contain drop-shadow-lg" />
             </div>
             <h2 className="text-2xl sm:text-4xl font-black text-[#0f1420] dark:text-white py-2 px-1 mb-3" style={{ fontFamily: "'Estedad', sans-serif" }}>
               {dynamicCta?.title || 'همین حالا گفتگوی هوشمند را شروع کنید'}

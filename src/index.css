@@ -16,6 +16,12 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* Global UI Font Size Fixed to 15px */
+html {
+  font-size: 15px !important;
+}
+
+
 @theme {
   /* Fonts */
   --font-sans: var(--user-font-family);
@@ -227,20 +233,20 @@
 }
 
 :root, [data-theme="light"], .light {
-  --bg-main: #F4F1EA; /* Noticeably warm paper/clay background */
-  --header-bg: rgba(244, 241, 234, 0.85);
-  --sidebar-bg: #F4F1EA;
-  --card-bg: #F4F1EA;
+  --bg-main: #FAF9F6; /* Noticeably warm paper/clay background */
+  --header-bg: rgba(250, 249, 246, 0.85);
+  --sidebar-bg: #FAF9F6;
+  --card-bg: #FAF9F6;
   --card-border: transparent; /* Clay doesn't use hard borders usually */
   
-  --btn-bg: #F4F1EA;
-  --btn-hover: #E8E4DB;
+  --btn-bg: #FAF9F6;
+  --btn-hover: #F2F1ED;
   
-  --input-bg: #F4F1EA;
+  --input-bg: #FAF9F6;
   --input-border: transparent;
   
   --bubble-ai-bg: transparent;
-  --bubble-user-bg: #E8E4DB; /* Slightly deeper for contrast */
+  --bubble-user-bg: #F2F1ED; /* Slightly deeper for contrast */
   
   --text-main: #292524; /* Stone 800 - warmer dark gray */
   --text-muted: #44403C; /* Stone 700 */
@@ -258,11 +264,11 @@
   --error-border: transparent;
   
   /* True Claymorphism Shadows - Light Mode (noticeably warm shadows) */
-  --clay-shadow-out: 8px 8px 16px rgba(150, 145, 140, 0.22), inset 4px 4px 8px rgba(255, 255, 255, 0.9), inset -4px -4px 8px rgba(150, 145, 140, 0.15);
-  --clay-shadow-out-sm: 4px 4px 8px rgba(150, 145, 140, 0.18), inset 2px 2px 4px rgba(255, 255, 255, 0.9), inset -2px -2px 4px rgba(150, 145, 140, 0.15);
-  --clay-shadow-out-hover: 12px 12px 24px rgba(150, 145, 140, 0.25), inset 4px 4px 8px rgba(255, 255, 255, 1), inset -4px -4px 8px rgba(150, 145, 140, 0.1);
-  --clay-shadow-in: inset 4px 4px 8px rgba(150, 145, 140, 0.22), inset -4px -4px 8px rgba(255, 255, 255, 0.9);
-  --clay-shadow-in-deep: inset 6px 6px 12px rgba(150, 145, 140, 0.3), inset -6px -6px 12px rgba(255, 255, 255, 1);
+  --clay-shadow-out: 8px 8px 16px rgba(150, 145, 140, 0.22), inset 4px 4px 8px rgba(255, 255, 255, 0.15), inset -4px -4px 8px rgba(150, 145, 140, 0.15);
+  --clay-shadow-out-sm: 4px 4px 8px rgba(150, 145, 140, 0.18), inset 2px 2px 4px rgba(255, 255, 255, 0.15), inset -2px -2px 4px rgba(150, 145, 140, 0.15);
+  --clay-shadow-out-hover: 12px 12px 24px rgba(150, 145, 140, 0.25), inset 4px 4px 8px rgba(255, 255, 255, 0.2), inset -4px -4px 8px rgba(150, 145, 140, 0.1);
+  --clay-shadow-in: inset 4px 4px 8px rgba(150, 145, 140, 0.22), inset -4px -4px 8px rgba(255, 255, 255, 0.15);
+  --clay-shadow-in-deep: inset 6px 6px 12px rgba(150, 145, 140, 0.3), inset -6px -6px 12px rgba(255, 255, 255, 0.2);
 
   /* Radius tokens — overridden per theme */
   --radius-card: 28px;
@@ -296,7 +302,7 @@
   --text-muted: #D1D5DB; 
   --text-dim: #9CA3AF; 
   
-  --border-subtle: rgba(255, 255, 255, 0.05);
+  --border-subtle: rgba(255, 255, 255, 0.01);
   --border-strong: rgba(255, 255, 255, 0.1);
   
   --accent-primary: #3b82f6;
@@ -307,11 +313,11 @@
   --error-text: #fecaca;
   --error-border: transparent;
   
-  --clay-shadow-out: 8px 8px 16px rgba(0, 0, 0, 0.6), inset 4px 4px 8px rgba(255, 255, 255, 0.05), inset -4px -4px 8px rgba(0, 0, 0, 0.4);
-  --clay-shadow-out-sm: 4px 4px 8px rgba(0, 0, 0, 0.5), inset 2px 2px 4px rgba(255, 255, 255, 0.04), inset -2px -2px 4px rgba(0, 0, 0, 0.3);
-  --clay-shadow-out-hover: 12px 12px 24px rgba(0, 0, 0, 0.7), inset 4px 4px 8px rgba(255, 255, 255, 0.07), inset -4px -4px 8px rgba(0, 0, 0, 0.3);
+  --clay-shadow-out: 8px 8px 16px rgba(0, 0, 0, 0.6), inset 4px 4px 8px rgba(255, 255, 255, 0.01), inset -4px -4px 8px rgba(0, 0, 0, 0.4);
+  --clay-shadow-out-sm: 4px 4px 8px rgba(0, 0, 0, 0.5), inset 2px 2px 4px rgba(255, 255, 255, 0.01), inset -2px -2px 4px rgba(0, 0, 0, 0.3);
+  --clay-shadow-out-hover: 12px 12px 24px rgba(0, 0, 0, 0.7), inset 4px 4px 8px rgba(255, 255, 255, 0.02), inset -4px -4px 8px rgba(0, 0, 0, 0.3);
   --clay-shadow-in: inset 4px 4px 8px rgba(0, 0, 0, 0.6), inset -4px -4px 8px rgba(255, 255, 255, 0.03);
-  --clay-shadow-in-deep: inset 6px 6px 12px rgba(0, 0, 0, 0.8), inset -6px -6px 12px rgba(255, 255, 255, 0.04);
+  --clay-shadow-in-deep: inset 6px 6px 12px rgba(0, 0, 0, 0.8), inset -6px -6px 12px rgba(255, 255, 255, 0.01);
 }
 
 /* ==========================================================================
@@ -335,8 +341,14 @@
 .clay-sidebar {
   background: var(--sidebar-bg);
   box-shadow: var(--clay-shadow-out);
-  border-radius: var(--radius-sidebar); /* Theme-aware */
-  margin: 16px; /* Sidebar usually floats in clay */
+  border-radius: var(--radius-sidebar);
+}
+@media (max-width: 768px) {
+  .clay-sidebar {
+    margin: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+  }
 }
 
 /* Base Card (Extruded) */
@@ -594,18 +606,18 @@
 
 /* Custom sleek scrollbar */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  display: none;
+  width: 0px;
+  height: 0px;
 }
 ::-webkit-scrollbar-track {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: var(--border-strong);
-  border-radius: 9999px;
+  background: transparent;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--text-dim);
+  background: transparent;
 }
 
 /* Code block & pre styling: Strict isolation of code and monospace */
@@ -781,9 +793,9 @@ pre {
   -ms-overflow-style: none !important;
 }
 #chat-message-input::-webkit-scrollbar {
-  display: none !important;
-  width: 0 !important;
-  height: 0 !important;
+  display: none;
+  width: 0px;
+  height: 0px;
 }
 
 @keyframes errorProgress {
@@ -1023,9 +1035,9 @@ pre.code-block-pre code {
   -ms-overflow-style: none !important;
 }
 #chat-message-input::-webkit-scrollbar {
-  display: none !important;
-  width: 0 !important;
-  height: 0 !important;
+  display: none;
+  width: 0px;
+  height: 0px;
 }
 
 @keyframes errorProgress {
@@ -1236,7 +1248,7 @@ img.emoji {
   box-shadow: 
     14px 20px 40px rgba(0, 0, 0, 0.45),
     -4px -4px 12px rgba(255, 255, 255, 0.02),
-    inset 2px 2px 4px rgba(255, 255, 255, 0.04),
+    inset 2px 2px 4px rgba(255, 255, 255, 0.01),
     inset -3px -3px 8px rgba(0, 0, 0, 0.35);
 }
 
@@ -1247,8 +1259,8 @@ img.emoji {
   border-radius: 32px;
   box-shadow: 
     14px 20px 38px rgba(160, 160, 160, 0.6),
-    -6px -6px 14px rgba(255, 255, 255, 0.9),
-    inset 3px 3px 6px rgba(255, 255, 255, 0.9),
+    -6px -6px 14px rgba(255, 255, 255, 0.15),
+    inset 3px 3px 6px rgba(255, 255, 255, 0.15),
     inset -4px -4px 8px rgba(160, 160, 160, 0.35);
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -1259,7 +1271,7 @@ img.emoji {
   box-shadow: 
     18px 26px 48px rgba(0, 0, 0, 0.55),
     -6px -6px 16px rgba(255, 255, 255, 0.02),
-    inset 3px 3px 6px rgba(255, 255, 255, 0.05),
+    inset 3px 3px 6px rgba(255, 255, 255, 0.01),
     inset -4px -4px 10px rgba(0, 0, 0, 0.4);
 }
 
@@ -1287,7 +1299,7 @@ img.emoji {
   box-shadow: 
     14px 20px 40px rgba(0, 0, 0, 0.45),
     -4px -4px 12px rgba(255, 255, 255, 0.02),
-    inset 2px 2px 4px rgba(255, 255, 255, 0.04),
+    inset 2px 2px 4px rgba(255, 255, 255, 0.01),
     inset -3px -3px 8px rgba(0, 0, 0, 0.35);
 }
 
@@ -1309,7 +1321,7 @@ img.emoji {
   box-shadow: 
     14px 20px 40px rgba(0, 0, 0, 0.45),
     -4px -4px 12px rgba(255, 255, 255, 0.02),
-    inset 2px 2px 4px rgba(255, 255, 255, 0.04),
+    inset 2px 2px 4px rgba(255, 255, 255, 0.01),
     inset -3px -3px 8px rgba(0, 0, 0, 0.35);
 }
 
@@ -1334,7 +1346,7 @@ img.emoji {
   box-shadow: 
     14px 20px 40px rgba(0, 0, 0, 0.45),
     -4px -4px 12px rgba(255, 255, 255, 0.02),
-    inset 2px 2px 4px rgba(255, 255, 255, 0.04),
+    inset 2px 2px 4px rgba(255, 255, 255, 0.01),
     inset -3px -3px 8px rgba(0, 0, 0, 0.35);
 }
 
@@ -1793,7 +1805,7 @@ img.emoji {
   border: 1px solid rgba(255, 255, 255, 0.08);
   box-shadow: 
     8px 12px 24px rgba(0, 0, 0, 0.3),
-    -4px -4px 12px rgba(255, 255, 255, 0.05),
+    -4px -4px 12px rgba(255, 255, 255, 0.01),
     inset 2px 2px 6px rgba(255, 255, 255, 0.15),
     inset -4px -4px 9px rgba(0, 0, 0, 0.5);
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
@@ -1831,7 +1843,7 @@ img.emoji {
   border-radius: 9999px;
   box-shadow: 
     5px 7px 16px rgba(0, 0, 0, 0.3),
-    -3px -3px 8px rgba(255, 255, 255, 0.04),
+    -3px -3px 8px rgba(255, 255, 255, 0.01),
     inset 3px 3px 5px rgba(255, 255, 255, 0.16),
     inset -3px -3px 6px rgba(0, 0, 0, 0.45);
 }
@@ -1843,7 +1855,7 @@ img.emoji {
   border: 1px solid rgba(255, 255, 255, 0.02);
   box-shadow: 
     8px 12px 24px rgba(40, 37, 68, 0.35),
-    -4px -4px 12px rgba(255, 255, 255, 0.05),
+    -4px -4px 12px rgba(255, 255, 255, 0.01),
     inset 2px 2px 6px rgba(255, 255, 255, 0.18),
     inset -4px -4px 9px rgba(20, 18, 38, 0.6);
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
@@ -1880,7 +1892,7 @@ img.emoji {
   border-radius: 9999px;
   box-shadow: 
     5px 7px 16px rgba(20, 18, 38, 0.6),
-    -3px -3px 8px rgba(255, 255, 255, 0.05),
+    -3px -3px 8px rgba(255, 255, 255, 0.01),
     inset 3px 3px 5px rgba(255, 255, 255, 0.2),
     inset -3px -3px 6px rgba(20, 18, 38, 0.7);
 }
@@ -1971,22 +1983,22 @@ html:not([data-ui-style]) {
 html[data-ui-style="neumorphic"],
 :root[data-ui-style="neumorphic"] {
   /* Warm paper/clay to prevent icy blue optical illusion */
-  --bg-main:    #F4F1EA;
-  --sidebar-bg: #F4F1EA;
-  --card-bg:    #F4F1EA;
-  --input-bg:   #F4F1EA;
-  --btn-bg:     #F4F1EA;
-  --btn-hover:  #E8E4DB;
-  --header-bg:  rgba(244, 241, 234, 0.92);
-  --bubble-user-bg: #E8E4DB;
+  --bg-main:    #FAF9F6;
+  --sidebar-bg: #FAF9F6;
+  --card-bg:    #FAF9F6;
+  --input-bg:   #FAF9F6;
+  --btn-bg:     #FAF9F6;
+  --btn-hover:  #F2F1ED;
+  --header-bg:  rgba(250, 249, 246, 0.92);
+  --bubble-user-bg: #F2F1ED;
   --card-border: transparent;
 
-  /* Pure neumorphic two-shadow derived from warm clay */
-  --clay-shadow-out:       4px 4px 9px #D6D2C8, -4px -4px 9px #FFFFFF;
-  --clay-shadow-out-sm:    2px 2px 5px #D6D2C8, -2px -2px 5px #FFFFFF;
-  --clay-shadow-out-hover: 6px 6px 14px #D6D2C8, -6px -6px 14px #FFFFFF;
-  --clay-shadow-in:        inset 3px 3px 6px #D6D2C8, inset -3px -3px 6px #FFFFFF;
-  --clay-shadow-in-deep:   inset 5px 5px 10px #D6D2C8, inset -5px -5px 10px #FFFFFF;
+  /* Pure neumorphic two-shadow derived from warm clay - Softened white highlights to prevent radioactive glowing halos */
+  --clay-shadow-out:       4px 4px 9px #D6D2C8, -3px -3px 6px rgba(255, 255, 255, 0);
+  --clay-shadow-out-sm:    2px 2px 5px #D6D2C8, -1px -1px 3px rgba(255, 255, 255, 0);
+  --clay-shadow-out-hover: 6px 6px 14px #D6D2C8, -4px -4px 8px rgba(255, 255, 255, 0);
+  --clay-shadow-in:        inset 3px 3px 6px #D6D2C8, inset -2px -2px 4px rgba(255, 255, 255, 0);
+  --clay-shadow-in-deep:   inset 5px 5px 10px #D6D2C8, inset -3px -3px 6px rgba(255, 255, 255, 0);
 
   /* Smaller, more conservative radius */
   --radius-card:     16px;
@@ -2015,10 +2027,10 @@ html[data-ui-style="neumorphic"],
     --bubble-user-bg: #282A2C;
   
     /* Pure neumorphic dark shadow — matte, no glowing light halo */
-    --clay-shadow-out:       5px 5px 14px rgba(0, 0, 0, 0.55);
-    --clay-shadow-out-sm:    3px 3px 8px  rgba(0, 0, 0, 0.45);
-    --clay-shadow-out-hover: 8px 8px 18px rgba(0, 0, 0, 0.7);
-    --clay-shadow-in:        inset 4px 4px 8px rgba(0, 0, 0, 0.5);
+    --clay-shadow-out:       5px 5px 14px rgba(0, 0, 0, 0.55), -3px -3px 6px rgba(255, 255, 255, 0);
+    --clay-shadow-out-sm:    3px 3px 8px  rgba(0, 0, 0, 0.45), -1px -1px 3px rgba(255, 255, 255, 0);
+    --clay-shadow-out-hover: 8px 8px 18px rgba(0, 0, 0, 0.7), -4px -4px 8px rgba(255, 255, 255, 0);
+    --clay-shadow-in:        inset 4px 4px 8px rgba(0, 0, 0, 0.5), inset -2px -2px 4px rgba(255, 255, 255, 0);
     --clay-shadow-in-deep:   inset 6px 6px 12px #14151e, inset -6px -6px 12px #20222a;
 
     --border-subtle: transparent;
@@ -2141,7 +2153,7 @@ html.dark[data-ui-style="neumorphic"] .clay-icon {
   html.dark[data-ui-style="neumorphic"] .clay-modal,
   html[data-ui-style="neumorphic"] .dark .clay-modal {
     box-shadow: 0 20px 48px -12px rgba(0, 0, 0, 0.75) !important;
-    border: 1px solid rgba(255, 255, 255, 0.05) !important;
+    border: 1px solid rgba(255, 255, 255, 0.01) !important;
   }
   
   html[data-ui-style="neumorphic"] .clay-inset-thick,
@@ -2489,4 +2501,40 @@ html.dark[data-ui-style="neumorphic"] .clay-icon {
 .dark .admin-border,
 [data-theme="dark"] .admin-border {
   border-color: rgba(255, 255, 255, 0.08);
+}
+
+
+* {
+  scrollbar-width: none; /* Firefox */
+}
+
+
+/* Removed generic button height override to fix sidebar layout */
+
+/* Fix Chrome/Webkit Autofill Styles breaking dark mode / claymorphism */
+input:-webkit-autofill,
+input:-webkit-autofill:hover, 
+input:-webkit-autofill:focus, 
+input:-webkit-autofill:active {
+    -webkit-text-fill-color: var(--text-main) !important;
+    transition: background-color 5000s ease-in-out 0s !important;
+    background-color: transparent !important;
+}
+
+
+/* --- Mobile App Optimizations (Capacitor/Native Feel) --- */
+html, body {
+  /* Prevent bounce / rubber-banding / pull-to-refresh */
+  overscroll-behavior-y: none;
+  /* Prevent text selection and highlight globally */
+  -webkit-user-select: none;
+  user-select: none;
+  /* Prevent long-press context menu on mobile */
+  -webkit-touch-callout: none;
+}
+
+/* Allow text selection ONLY on inputs, textareas, and chat messages */
+input, textarea, select, .chat-message-text, .markdown-body, .prose {
+  -webkit-user-select: auto;
+  user-select: auto;
 }

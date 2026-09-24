@@ -36,7 +36,8 @@ if (syncUrl && authToken) {
       syncPeriod: 120 // 2 minutes background sync (non-blocking Rust thread)
     } as any);
   } catch (initErr: any) {
-    if (initErr?.message?.includes('InvalidLocalState') || initErr?.message?.includes('metadata file exists') || initErr?.message?.includes('WalConflict')) {
+    const errMsg = initErr?.message?.toLowerCase() || '';
+    if (errMsg.includes('invalid local state') || errMsg.includes('metadata file exists') || errMsg.includes('walconflict')) {
       console.warn('[Database] Invalid local replica state detected. Cleaning up local replica files and retrying...');
       try {
         if (fs.existsSync(dbPath)) fs.unlinkSync(dbPath);

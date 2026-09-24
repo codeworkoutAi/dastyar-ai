@@ -39,9 +39,10 @@ interface GroupedConversations {
 }
 
 export const Sidebar: React.FC = React.memo(() => {
-    const { sidebarOpen, setSidebarOpen, setIsImageStudioOpen, setIsExploreOpen, setIsUiGuideOpen, setIsAdminOpen, setIsSettingsOpen, setIsWalletOpen } = useUIStore();
+    const { sidebarOpen, setSidebarOpen, setIsImageStudioOpen, setIsExploreOpen, setIsUiGuideOpen, setIsAdminOpen, setIsSettingsOpen, setIsWalletOpen, setIsExportOpen } = useUIStore();
     const { settings } = useSettingsStore();
     const { conversations, activeId, setActiveId, createChat, deleteConversation, updateConversation, clearAllConversations } = useChatStore();
+    const activeConversation = conversations.find((c) => c.id === activeId) || null;
 
     const { user, isAuthenticated, logout, setAuthModalOpen } = useAuthStore();
     const usePersianDigits = settings.appearance.persianNumerals;
@@ -529,22 +530,35 @@ export const Sidebar: React.FC = React.memo(() => {
                 {/* ---------------- 3. اکشن اصلی: دکمه گفتگوی جدید + سرچ ---------------- */}
                 <div className="px-3 pt-0.5 pb-2 shrink-0 space-y-2.5">
                     {/* دکمه گفتگوی جدید - ظریف و زیبا */}
-                    <button
-                        id="sidebar-new-chat-btn"
-                        onClick={() => {
-                            createChat(settings.providers[settings.providers.activeProvider]?.modelName);
-                            if (window.innerWidth < 768) setSidebarOpen(false);
-                        }}
-                        className="w-full flex items-center justify-between text-xs font-bold text-[var(--color-text-dim)] dark:text-[var(--color-text-dim)] hover:text-[var(--color-accent-primary)] dark:hover:text-[var(--color-accent-text)] group transition-all px-1 py-1"
-                    >
-                        <div className="flex items-center gap-1.5">
-                            <Plus className="w-4 h-4 transition-transform group-hover:rotate-90 group-active:scale-95" strokeWidth={2.5} />
-                            <span>گفتگوی جدید</span>
-                        </div>
-                        <span className="text-[10px] opacity-0 group-hover:opacity-100 font-mono dir-ltr font-normal px-1 py-0.5 rounded text-zinc-400 dark:text-zinc-500 transition-opacity">
-                            Ctrl+K
-                        </span>
-                    </button>
+                    <div className="flex items-center justify-between w-full gap-2">
+                        <button
+                            id="sidebar-new-chat-btn"
+                            onClick={() => {
+                                createChat(settings.providers[settings.providers.activeProvider]?.modelName);
+                                if (window.innerWidth < 768) setSidebarOpen(false);
+                            }}
+                            className="flex-1 flex items-center justify-between text-xs font-bold text-[var(--color-text-dim)] dark:text-[var(--color-text-dim)] hover:text-[var(--color-accent-primary)] dark:hover:text-[var(--color-accent-text)] group transition-all px-1 py-1"
+                        >
+                            <div className="flex items-center gap-1.5">
+                                <Plus className="w-4 h-4 transition-transform group-hover:rotate-90 group-active:scale-95" strokeWidth={2.5} />
+                                <span>گفتگوی جدید</span>
+                            </div>
+                            <span className="text-[10px] opacity-0 group-hover:opacity-100 font-mono dir-ltr font-normal px-1 py-0.5 rounded text-zinc-400 dark:text-zinc-500 transition-opacity">
+                                Ctrl+K
+                            </span>
+                        </button>
+
+                        {activeConversation && activeConversation.messages.length > 0 && (
+                            <Tooltip content="خروجی و ذخیره گفتگو">
+                                <button
+                                    onClick={() => setIsExportOpen(true)}
+                                    className="p-1.5 text-zinc-400 hover:text-teal-500 transition-colors rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800/50"
+                                >
+                                    <DownloadMinimalisticLinearIcon className="w-4 h-4 text-teal-500 dark:text-teal-400" />
+                                </button>
+                            </Tooltip>
+                        )}
+                    </div>
 
                     {/* کادر سرچ کامل و باکیفیت - مونوکروم و عریض */}
                     <div className="relative flex items-center w-full group">

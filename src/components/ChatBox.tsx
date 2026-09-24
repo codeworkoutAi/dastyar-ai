@@ -326,7 +326,7 @@ export const ChatBox: React.FC = React.memo(() => {
  key={msg.id}
  id={`message-${msg.id}`}
  className={`group flex flex-col gap-1.5 ${
- isUser ? 'w-fit max-w-[85%] sm:max-w-[75%] mr-0 ml-auto self-start items-start' : 'w-full self-stretch'
+ isUser ? 'w-fit max-w-[85%] sm:max-w-[75%] mr-auto ml-0 self-end items-end' : 'w-full self-stretch'
  }`}
  dir="rtl"
  >
@@ -334,7 +334,7 @@ export const ChatBox: React.FC = React.memo(() => {
  <div
  className={`relative chat-message-bubble transition-all text-right ${
  isUser
-? 'bg-[var(--color-bubble-user-bg)] text-[var(--color-text-main)] rounded-bubble rounded-br-sm px-5 py-3 shadow-[inset_0_2px_6px_rgba(0,0,0,0.08)] dark:shadow-[inset_0_2px_6px_rgba(0,0,0,0.3)] border border-[var(--color-border-subtle)]'
+? 'bg-[var(--color-bubble-user-bg)] text-[var(--color-text-main)] rounded-bubble rounded-bl-sm px-4 py-2 shadow-[inset_0_2px_6px_rgba(0,0,0,0.08)] dark:shadow-[inset_0_2px_6px_rgba(0,0,0,0.3)] border border-[var(--color-border-subtle)]'
  : msg.error
  ? 'border border-[var(--color-error-border)] rounded-card p-4 bg-[var(--color-error-bg)] text-[var(--color-error-text)]'
  : 'text-zinc-800 dark:text-zinc-200 border-none bg-transparent py-2'
@@ -594,7 +594,7 @@ title="دانلود تصویر"
 {msg.modelUsed && (
 <div className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-[var(--color-accent-primary)]/10 border border-[var(--color-accent-primary)]/20 text-[var(--color-accent-text)] font-mono select-none shrink-0" title="مدل پردازش‌کننده">
 <Sparkles className="w-3 h-3" />
-<span dir="ltr">{msg.modelUsed.replace(' (Auto)', '')}</span>
+<span dir="ltr">{msg.modelUsed.replace(' (Auto)', '').split('/').pop()}</span>
 </div>
 )}
 

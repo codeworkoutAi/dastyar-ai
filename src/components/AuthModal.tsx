@@ -1,39 +1,12 @@
 import { ClayButton } from './ui/ClayButton';
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuthStore } from '../store/authStore';
-import { 
-  X, Loader2, ArrowRight, ArrowLeft, Mail, Lock, LogIn, 
+import {
+  X, Loader2, ArrowRight, ArrowLeft, Mail, Lock, LogIn,
   UserPlus, UserCircle, Check, Smartphone, RefreshCw, KeyRound, ShieldCheck
 } from 'lucide-react';
 import { GoogleOAuthProvider, useGoogleLogin } from '@react-oauth/google';
 import { toPersianDigits, toEnglishDigits } from '../lib/persianUtils';
-
-function handleInputInvalid(
-  e: React.FormEvent<HTMLInputElement>,
-  fieldName: string,
-  type?: 'email' | 'password' | 'phone' | 'text'
-) {
-  const target = e.currentTarget;
-  const validity = target.validity;
-
-  if (validity.valueMissing) {
-    if (type === 'email') {
-      target.setCustomValidity('لطفاً آدرس ایمیل خود را وارد نمایید.');
-    } else if (type === 'password') {
-      target.setCustomValidity('لطفاً رمز عبور خود را وارد نمایید.');
-    } else if (type === 'phone') {
-      target.setCustomValidity('لطفاً شماره موبایل خود را وارد نمایید.');
-    } else {
-      target.setCustomValidity(`لطفاً ${fieldName} را تکمیل نمایید.`);
-    }
-  } else if (validity.typeMismatch && type === 'email') {
-    target.setCustomValidity('لطفاً یک آدرس ایمیل معتبر وارد کنید (شامل @ و دامنه، مانند example@mail.com).');
-  } else if (validity.tooShort && type === 'password') {
-    target.setCustomValidity('رمز عبور باید حداقل ۶ کاراکتر باشد.');
-  } else {
-    target.setCustomValidity(`لطفاً این فیلد را به درستی تکمیل نمایید.`);
-  }
-}
 
 function GoogleLoginButton({ onSuccess, onError, loading }: { onSuccess: (token: string) => void, onError: () => void, loading: boolean }) {
   const login = useGoogleLogin({
@@ -63,7 +36,7 @@ function TelegramLoginButton({ onClick, loading }: { onClick: () => void, loadin
       className="w-full flex items-center justify-center gap-2 py-2.5 clay-btn text-[#229ED9] rounded-xl font-bold transition-all active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed text-xs sm:text-sm"
     >
       <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
-        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 00-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.74-.55 2.92-1.27 4.86-2.11 5.83-2.51 2.78-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .38z"/>
+        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 00-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.74-.55 2.92-1.27 4.86-2.11 5.83-2.51 2.78-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .38z" />
       </svg>
       <span>تلگرام</span>
     </ClayButton>
@@ -72,10 +45,10 @@ function TelegramLoginButton({ onClick, loading }: { onClick: () => void, loadin
 
 export default function AuthModal() {
   const { isAuthModalOpen, setAuthModalOpen, login } = useAuthStore();
-  
+
   // Method: 'phone' (Default per user instruction) or 'email'
   const [authMethod, setAuthMethod] = useState<'phone' | 'email'>('phone');
-  
+
   // Phone OTP Flow State
   const [phoneStep, setPhoneStep] = useState<'input' | 'otp'>('input');
   const [phone, setPhone] = useState('');
@@ -259,10 +232,10 @@ export default function AuthModal() {
       const res = await fetch('/api/auth/otp/verify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          phone: cleanedPhone, 
+        body: JSON.stringify({
+          phone: cleanedPhone,
           code: cleanedCode,
-          promoCode: promo 
+          promoCode: promo
         })
       });
       const data = await res.json();
@@ -453,10 +426,9 @@ export default function AuthModal() {
               key={i}
               type="button"
               onClick={() => setSelectedAvatar(url)}
-              className={`relative rounded-full p-0.5 transition-all flex-shrink-0 ${
-                (selectedAvatar === url || (!selectedAvatar && i === 0))
-                  ? 'ring-2 ring-blue-500 scale-105' : 'opacity-70 hover:opacity-100 hover:scale-105'
-              }`}
+              className={`relative rounded-full p-0.5 transition-all flex-shrink-0 ${(selectedAvatar === url || (!selectedAvatar && i === 0))
+                ? 'ring-2 ring-blue-500 scale-105' : 'opacity-70 hover:opacity-100 hover:scale-105'
+                }`}
             >
               <img src={url} alt={`avatar-${i}`} className="w-10 h-10 rounded-full shadow-md transition-all" />
             </ClayButton>
@@ -464,10 +436,10 @@ export default function AuthModal() {
         </div>
       </div>
       <div>
-        <label className="block mb-1.5 text-xs font-medium text-zinc-600 dark:text-zinc-400">نام نمایشی</label>
+        <label className="block mb-1.5 text-xs font-medium text-zinc-600 dark:text-zinc-400">نام</label>
         <div className="relative">
           <UserCircle className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400" size={18} />
-          <input type="text" value={name} onChange={e => setName(e.target.value)} style={{ paddingRight: '2.85rem' }} className="w-full pl-3 pr-10 py-2.5 clay-input rounded-xl focus:ring-2 focus:ring-zinc-400 dark:focus:ring-zinc-500 focus:border-transparent transition-all outline-none text-zinc-900 dark:text-zinc-100 text-sm"
+          <input type="text" value={name} onChange={e => setName(e.target.value)} style={{ paddingRight: '2.85rem' }} className="w-full pl-3 pr-10 py-2.5 clay-input rounded-xl  transition-all outline-none text-zinc-900 dark:text-zinc-100 text-sm"
             placeholder="مثال: علی رضایی"
             required
             minLength={2}
@@ -478,6 +450,24 @@ export default function AuthModal() {
     </div>
   );
 
+
+  const renderStatusMessages = () => (
+    <>
+      {error && (
+        <div className="mb-4 text-xs sm:text-sm text-red-600 dark:text-red-400 flex items-center gap-2">
+          <div className="w-1.5 h-1.5 rounded-full bg-red-500 shrink-0 animate-pulse" />
+          <span>{error}</span>
+        </div>
+      )}
+      {successMsg && (
+        <div className="mb-4 text-xs sm:text-sm text-emerald-600 dark:text-emerald-400 flex items-center gap-2">
+          <Check className="w-4 h-4 shrink-0" />
+          <span>{successMsg}</span>
+        </div>
+      )}
+    </>
+  );
+
   return (
     <GoogleOAuthProvider clientId={clientId}>
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-0">
@@ -485,7 +475,7 @@ export default function AuthModal() {
           onClick={() => setAuthModalOpen(false)}
         />
         <div className="relative w-full max-w-md clay-modal overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-          
+
           {/* Header */}
           <div className="flex items-center justify-between p-5 border-b border-black/5 dark:border-white/10">
             <div className="flex items-center gap-2.5">
@@ -535,25 +525,15 @@ export default function AuthModal() {
 
           {/* Body */}
           <div className="p-5 sm:p-6">
-            {error && (
-              <div className="mb-4 p-3 text-xs sm:text-sm text-red-600 bg-red-50 dark:bg-red-950/40 dark:text-red-300 rounded-xl border border-red-200 dark:border-red-900/40 flex items-center gap-2">
-                <div className="w-1.5 h-1.5 rounded-full bg-red-500 shrink-0 animate-pulse" />
-                <span>{error}</span>
-              </div>
-            )}
-            {successMsg && (
-              <div className="mb-4 p-3 text-xs sm:text-sm text-emerald-700 bg-emerald-50 dark:bg-emerald-950/40 dark:text-emerald-300 rounded-xl border border-emerald-200 dark:border-emerald-900/40 flex items-center gap-2">
-                <Check className="w-4 h-4 shrink-0" />
-                <span>{successMsg}</span>
-              </div>
-            )}
+
 
             {/* Telegram Waiting Screen */}
+            {telegramWaiting && renderStatusMessages()}
             {telegramWaiting ? (
               <div className="text-center py-5 space-y-4">
                 <div className="w-16 h-16 mx-auto rounded-2xl bg-[#229ED9]/10 text-[#229ED9] flex items-center justify-center animate-pulse shadow-sm">
                   <svg className="w-9 h-9 fill-current" viewBox="0 0 24 24">
-                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 00-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.74-.55 2.92-1.27 4.86-2.11 5.83-2.51 2.78-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .38z"/>
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 00-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.74-.55 2.92-1.27 4.86-2.11 5.83-2.51 2.78-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .38z" />
                   </svg>
                 </div>
                 <div className="space-y-1">
@@ -589,14 +569,12 @@ export default function AuthModal() {
               </div>
             ) : resetToken ? (
               /* Reset Password Form */
-              <form onSubmit={handleResetPasswordSubmit} className="space-y-5">
+              <form noValidate onSubmit={handleResetPasswordSubmit} className="space-y-5">
                 <div>
                   <label className="block mb-2 text-xs font-medium text-zinc-700 dark:text-zinc-300">رمز عبور جدید</label>
                   <div className="relative">
                     <Lock className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400" size={18} />
-                    <input type="password" value={password} onChange={e => setPassword(e.target.value)}
-                      onInvalid={e => handleInputInvalid(e, 'رمز عبور', 'password')}
-                      onInput={e => e.currentTarget.setCustomValidity('')}
+                    <input type="password" value={password} onChange={e => { setPassword(e.target.value); setError(''); }}
                       className="w-full pl-3 pr-10 py-2.5 clay-input rounded-xl focus:outline-none transition-all text-zinc-900 dark:text-zinc-100 text-sm"
                       placeholder="حداقل ۶ کاراکتر"
                       required
@@ -606,6 +584,7 @@ export default function AuthModal() {
                   </div>
                 </div>
 
+                {renderStatusMessages()}
                 <button type="submit" disabled={loading}
                   className="w-full flex items-center justify-center gap-2 py-3 clay-btn-primary text-white rounded-xl font-bold disabled:opacity-70 disabled:cursor-not-allowed text-sm"
                 >
@@ -615,7 +594,7 @@ export default function AuthModal() {
               </form>
             ) : isForgotPassword ? (
               /* Forgot Password Form */
-              <form onSubmit={handleForgotPasswordSubmit} className="space-y-5">
+              <form noValidate onSubmit={handleForgotPasswordSubmit} className="space-y-5">
                 <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
                   ایمیل حساب خود را وارد کنید تا لینک اختصاصی بازیابی رمز عبور برای شما ارسال شود.
                 </p>
@@ -623,9 +602,7 @@ export default function AuthModal() {
                   <label className="block mb-2 text-xs font-medium text-zinc-700 dark:text-zinc-300">ایمیل</label>
                   <div className="relative">
                     <Mail className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400" size={18} />
-                    <input type="email" value={email} onChange={e => setEmail(e.target.value)}
-                      onInvalid={e => handleInputInvalid(e, 'ایمیل', 'email')}
-                      onInput={e => e.currentTarget.setCustomValidity('')}
+                    <input type="email" value={email} onChange={e => { setEmail(e.target.value); setError(''); }}
                       className="w-full pl-3 pr-10 py-2.5 clay-input rounded-xl focus:outline-none transition-all text-zinc-900 dark:text-zinc-100 text-sm"
                       placeholder="example@mail.com"
                       required
@@ -634,6 +611,7 @@ export default function AuthModal() {
                   </div>
                 </div>
 
+                {renderStatusMessages()}
                 <button type="submit" disabled={loading}
                   className="w-full flex items-center justify-center gap-2 py-3 clay-btn-primary text-white rounded-xl font-bold disabled:opacity-70 disabled:cursor-not-allowed text-sm"
                 >
@@ -653,7 +631,7 @@ export default function AuthModal() {
               /* --- Mobile OTP Flow (Default) --- */
               phoneStep === 'input' ? (
                 /* Step 1: Input Phone Number */
-                <form onSubmit={handleSendOtp} className="space-y-4">
+                <form noValidate onSubmit={handleSendOtp} className="space-y-4">
                   <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">
                     شماره موبایل خود را وارد نمایید تا کد تایید ۵ رقمی پیامک شود:
                   </p>
@@ -670,8 +648,6 @@ export default function AuthModal() {
                           const val = toEnglishDigits(e.target.value).replace(/[^\d]/g, '');
                           if (val.length <= 11) setPhone(val);
                         }}
-                        onInvalid={e => handleInputInvalid(e, 'شماره موبایل', 'phone')}
-                        onInput={e => e.currentTarget.setCustomValidity('')}
                         className="w-full pl-4 pr-11 py-2.5 clay-input rounded-xl focus:outline-none transition-all text-zinc-900 dark:text-zinc-100 text-sm font-semibold tracking-wider text-left placeholder:text-left placeholder:text-zinc-400"
                         style={{ fontFamily: "'Vazirmatn', sans-serif" }}
                         placeholder="۰۹۱۲۳۴۵۶۷۸۹"
@@ -683,6 +659,7 @@ export default function AuthModal() {
                     </div>
                   </div>
 
+                  {renderStatusMessages()}
                   <button
                     type="submit"
                     disabled={loading || phone.length < 11}
@@ -730,7 +707,7 @@ export default function AuthModal() {
                 </form>
               ) : (
                 /* Step 2: Input 5-Digit OTP Code */
-                <form ref={otpFormRef} onSubmit={handleVerifyOtp} className="space-y-4">
+                <form noValidate ref={otpFormRef} onSubmit={handleVerifyOtp} className="space-y-4">
                   <div className="text-center space-y-1">
                     <div className="w-12 h-12 mx-auto rounded-2xl bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center mb-2">
                       <ShieldCheck size={24} />
@@ -818,26 +795,24 @@ export default function AuthModal() {
               )
             ) : (
               /* --- Email & Password Mode --- */
-              <form onSubmit={handleEmailSubmit} className="space-y-4">
+              <form noValidate onSubmit={handleEmailSubmit} className="space-y-4">
                 {/* Switch between Login / Register tabs */}
                 <div className="flex p-1 clay-surface rounded-xl border border-subtle mb-3">
                   <button
                     type="button"
                     onClick={() => { setIsEmailLogin(true); setError(''); setSuccessMsg(''); }}
-                    className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all ${
-                      isEmailLogin ? 'clay-btn-primary text-white shadow-sm' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900'
-                    }`}
+                    className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all ${isEmailLogin ? 'clay-btn-primary text-white shadow-sm' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900'
+                      }`}
                   >
                     ورود
                   </button>
                   <button
                     type="button"
                     onClick={() => { setIsEmailLogin(false); setError(''); setSuccessMsg(''); }}
-                    className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all ${
-                      !isEmailLogin ? 'clay-btn-primary text-white shadow-sm' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900'
-                    }`}
+                    className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all ${!isEmailLogin ? 'clay-btn-primary text-white shadow-sm' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900'
+                      }`}
                   >
-                    ثبت‌نام جدید
+                    ثبت‌ نام جدید
                   </button>
                 </div>
 
@@ -847,9 +822,7 @@ export default function AuthModal() {
                   <label className="block mb-1.5 text-xs font-medium text-zinc-700 dark:text-zinc-300">ایمیل</label>
                   <div className="relative">
                     <Mail className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400" size={18} />
-                    <input type="email" value={email} onChange={e => setEmail(e.target.value)}
-                      onInvalid={e => handleInputInvalid(e, 'ایمیل', 'email')}
-                      onInput={e => e.currentTarget.setCustomValidity('')}
+                    <input type="email" value={email} onChange={e => { setEmail(e.target.value); setError(''); }}
                       className="w-full pl-3 pr-10 py-2.5 clay-input rounded-xl focus:outline-none transition-all text-zinc-900 dark:text-zinc-100 text-sm"
                       placeholder="example@mail.com"
                       required
@@ -871,9 +844,7 @@ export default function AuthModal() {
                   </div>
                   <div className="relative">
                     <Lock className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400" size={18} />
-                    <input type="password" value={password} onChange={e => setPassword(e.target.value)}
-                      onInvalid={e => handleInputInvalid(e, 'رمز عبور', 'password')}
-                      onInput={e => e.currentTarget.setCustomValidity('')}
+                    <input type="password" value={password} onChange={e => { setPassword(e.target.value); setError(''); }}
                       className="w-full pl-3 pr-10 py-2.5 clay-input rounded-xl focus:outline-none transition-all text-zinc-900 dark:text-zinc-100 text-sm"
                       placeholder="حداقل ۶ کاراکتر"
                       required
@@ -883,6 +854,7 @@ export default function AuthModal() {
                   </div>
                 </div>
 
+                {renderStatusMessages()}
                 <button type="submit" disabled={loading}
                   className="w-full flex items-center justify-center gap-2 py-3 clay-btn-primary text-white rounded-xl font-bold disabled:opacity-70 disabled:cursor-not-allowed text-sm shadow-sm"
                 >

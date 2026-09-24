@@ -524,50 +524,50 @@ export function ImageGenStudio() {
 
  return (
  <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm sm:p-3 lg:p-4 transition-all" dir="rtl">
- <div className="clay-surface dark:clay-surface w-full h-full sm:h-[95vh] sm:max-h-[1100px] max-w-[96vw] xl:max-w-[1550px] sm:rounded-3xl flex flex-col lg:flex-row overflow-hidden relative border border-[var(--card-border)] dark:border-white/10 animate-scaleIn">
- {/* Mobile Header (Only visible on small screens) */}
- <div className="lg:hidden flex items-center justify-between p-4 border-b border-[var(--card-border)] dark:border-white/10 bg-white/50 dark:clay-card-thick/50 backdrop-blur-md z-10">
- <div className="flex items-center gap-2 text-purple-500">
- <Sparkles className="w-5 h-5" />
- <h2 className="font-extrabold text-sm text-zinc-800 dark:text-zinc-100">
- {showHistory ? 'گالری تصاویر' : 'استودیوی تصویر'}
- </h2>
- </div>
- <div className="flex items-center gap-2">
- {!showHistory && (imageUrl || error) && (
- <button
- onClick={() => {
- setImageUrl(null);
- setError(null);
- }}
- className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400 text-xs font-bold border border-purple-500/20 hover:bg-purple-500/20 transition-all cursor-pointer"
- title="پاک کردن بوم و بازگشت به ویترین ایده‌ها"
- >
- <Sparkles className="w-3.5 h-3.5" />
- <span>بوم جدید</span>
- </button>
- )}
- <button onClick={() => { setShowHistory(!showHistory); setSelectedDetailImage(null); }} className={`p-2 rounded-full transition-colors ${showHistory ? 'bg-purple-500 text-white' : 'clay-surface dark:bg-white/5 text-zinc-600 dark:text-zinc-300'}`}
- title={showHistory ? 'بازگشت به بوم' : 'گالری'}
- >
- {showHistory ? <ArrowRight className="w-4 h-4" /> : <History className="w-4 h-4" />}
- </button>
- {!showHistory && (
- <button onClick={() => setIsMobileSettingsOpen(!isMobileSettingsOpen)} className={`p-2 rounded-full transition-colors ${isMobileSettingsOpen ? 'bg-purple-500 text-white' : 'clay-surface dark:bg-white/5 text-zinc-600 dark:text-zinc-300'}`}
- >
- <Sliders className="w-4 h-4" />
- </button>
- )}
- <button onClick={onClose} className="p-2 bg-rose-500/10 text-rose-500 hover:bg-rose-500/20 rounded-full transition-colors">
- <X className="w-4 h-4" />
- </button>
- </div>
- </div>
+ <div className="clay-card w-full h-full sm:h-[95vh] sm:max-h-[1100px] max-w-[96vw] xl:max-w-[1550px] sm:rounded-3xl flex flex-col lg:flex-row overflow-hidden relative border border-[var(--card-border)] dark:border-white/10 animate-scaleIn">
+        {/* Mobile Header (Only visible on small screens) */}
+        <div className="lg:hidden flex items-center justify-between px-4 pb-4 pt-[calc(env(safe-area-inset-top,0px)+16px)] border-b border-[var(--card-border)] dark:border-white/10 clay-card backdrop-blur-md z-10">
+          <div className="flex items-center gap-2 text-purple-500">
+            <Sparkles className="w-5 h-5" />
+            <h2 className="font-extrabold text-sm text-[var(--text-main)]">
+              {showHistory ? 'گالری تصاویر' : 'استودیوی تصویر'}
+            </h2>
+          </div>
+          <div className="flex items-center gap-1.5">
+            {!showHistory && (imageUrl || error) && (
+              <button
+                onClick={() => {
+                  setImageUrl(null);
+                  setError(null);
+                }}
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl clay-btn-primary text-white text-xs font-bold transition-all cursor-pointer"
+                title="پاک کردن بوم و بازگشت به ویترین ایده‌ها"
+              >
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>بوم جدید</span>
+              </button>
+            )}
+            <button onClick={() => { setShowHistory(!showHistory); setSelectedDetailImage(null); }} className={`p-2 rounded-xl transition-colors ${showHistory ? 'clay-btn-primary text-white' : 'clay-btn text-zinc-600 dark:text-zinc-300'}`}
+              title={showHistory ? 'بازگشت به بوم' : 'گالری'}
+            >
+              {showHistory ? <ArrowRight className="w-4 h-4" /> : <History className="w-4 h-4" />}
+            </button>
+            {!showHistory && (
+              <button onClick={() => setIsMobileSettingsOpen(!isMobileSettingsOpen)} className={`p-2 rounded-xl transition-colors ${isMobileSettingsOpen ? 'clay-btn-primary text-white' : 'clay-btn text-zinc-600 dark:text-zinc-300'}`}
+              >
+                <Sliders className="w-4 h-4" />
+              </button>
+            )}
+            <button onClick={onClose} className="p-2 clay-btn text-rose-500 hover:text-rose-600 rounded-xl transition-colors cursor-pointer">
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
 
  {/* --- 1. SETTINGS SIDEBAR (RIGHT SIDE on Desktop in RTL, Drawer on Mobile) --- */}
  {!showHistory && (
  <div className={`
- fixed lg:static inset-y-0 right-0 w-[280px] sm:w-[320px] lg:w-80 clay-surface dark:clay-surface lg:bg-transparent
+ fixed lg:static inset-y-0 right-0 w-[280px] sm:w-[320px] lg:w-80 clay-card lg:!shadow-none lg:!bg-transparent
  border-l border-[var(--card-border)] dark:border-white/10 lg:shadow-none
  flex flex-col z-[70] transform transition-transform duration-300 ease-out
  ${isMobileSettingsOpen ? 'translate-x-0' : 'translate-x-full lg:translate-x-0'}
@@ -578,7 +578,7 @@ export function ImageGenStudio() {
  <Sliders className="w-5 h-5" />
  <h2 className="font-extrabold text-sm text-zinc-800 dark:text-white">تنظیمات استودیو</h2>
  </div>
- <button onClick={onClose} className="p-2 bg-zinc-200/50 dark:bg-white/5 hover:bg-rose-500/10 hover:text-rose-500 rounded-full transition-colors cursor-pointer">
+ <button onClick={onClose} className="p-2 clay-btn hover:bg-rose-500/10 hover:text-rose-500 rounded-full transition-colors cursor-pointer">
  <X className="w-4 h-4" />
  </button>
  </div>
@@ -588,7 +588,7 @@ export function ImageGenStudio() {
  <Sliders className="w-4 h-4" />
  <h3 className="font-bold text-sm">تنظیمات</h3>
  </div>
- <button onClick={() => setIsMobileSettingsOpen(false)} className="p-2 bg-zinc-200/50 dark:bg-white/10 rounded-full cursor-pointer">
+ <button onClick={() => setIsMobileSettingsOpen(false)} className="p-2 clay-btn rounded-full cursor-pointer">
  <X className="w-4 h-4" />
  </button>
  </div>
@@ -606,7 +606,7 @@ export function ImageGenStudio() {
  onClick={() => setAspectRatio(ar.id)}
  className={`flex flex-col items-center justify-center gap-2 p-3 rounded-2xl border transition-all cursor-pointer ${
  aspectRatio === ar.id ? 'bg-blue-500/10 border-blue-500 text-blue-600 dark:text-blue-400 shadow-sm'
- : 'bg-white dark:clay-card-thick border-[var(--card-border)] dark:border-white/10 text-zinc-700 dark:text-zinc-400 hover:clay-surface dark:hover:bg-black/5 dark:hover:bg-white/5'
+ : 'clay-btn border border-[var(--card-border)] text-zinc-700 dark:text-zinc-400 hover:clay-surface'
  }`}
  >
  <div className={`border-2 rounded-sm flex items-center justify-center ${ar.w} ${ar.h} ${aspectRatio === ar.id ? 'border-current' : 'border-zinc-400 dark:border-zinc-500'}`}></div>
@@ -647,7 +647,7 @@ export function ImageGenStudio() {
  : 'bg-emerald-50 dark:bg-emerald-500/10 border-emerald-500 text-emerald-700 dark:text-emerald-400 shadow-sm'
  : isLocked
  ? 'clay-surface dark:clay-card-thick/50 border-[var(--card-border)] dark:border-white/5 opacity-60 hover:opacity-80 grayscale'
- : 'bg-white dark:clay-card-thick border-[var(--card-border)] dark:border-white/10 hover:border-zinc-300 dark:hover:border-white/20'
+ : 'clay-btn border border-[var(--card-border)] hover:border-zinc-300'
  }`}
  >
  {isLocked && (
@@ -682,7 +682,7 @@ export function ImageGenStudio() {
  )}
 
  {/* --- 2. MAIN CONTENT AREA (CANVAS OR FULLSCREEN GALLERY) --- */}
- <div className="flex-1 relative flex flex-col bg-zinc-100/60 dark:bg-black/40 overflow-hidden min-h-0">
+ <div className="flex-1 relative flex flex-col bg-transparent overflow-hidden min-h-0">
  {/* Top Navigation Bar */}
  {!showHistory ? (
  /* Canvas Top Bar */
@@ -838,7 +838,7 @@ export function ImageGenStudio() {
  )}
 
  {/* Main Body Area */}
- <div className={`flex-1 min-h-0 w-full flex items-center justify-center relative ${showHistory ? 'overflow-y-auto p-4 lg:p-8 custom-scrollbar' : 'overflow-hidden p-2 sm:p-4 lg:p-6'}`}>
+ <div className={`flex-1 min-h-0 w-full flex items-center justify-center relative ${showHistory ? 'overflow-y-auto p-4 lg:p-8 custom-scrollbar' : 'overflow-hidden p-2 sm:p-4 lg:p-6 mx-3 sm:mx-4 mb-2 mt-2 sm:mt-0 rounded-[2rem] clay-inset-thick'}`}>
  {showHistory ? (
  /* --- PRO GALLERY VIEW WITH DYNAMIC GRID DENSITY --- */
  <div className="w-full max-w-6xl h-full flex flex-col animate-fadeIn">
@@ -980,7 +980,7 @@ export function ImageGenStudio() {
 
  {/* --- DOCKED BOTTOM PROMPT BAR --- */}
  {!showHistory && (
- <div className="shrink-0 w-full p-2.5 sm:p-4 bg-gradient-to-t from-zinc-100 via-zinc-100/95 dark:from-[#0a0a0a] dark:via-[#0a0a0a]/95 to-transparent z-20">
+ <div className="shrink-0 w-full p-2.5 sm:p-4 bg-gradient-to-t from-[var(--card-bg)] via-[var(--card-bg)] dark:from-[#0a0a0a] dark:via-[#0a0a0a]/95 to-transparent z-20">
  <div className="max-w-4xl mx-auto flex flex-col gap-2.5">
  {/* Docked Action Bar when an image is generated (Claymorphic) */}
  {imageUrl && !loading && (
@@ -1102,29 +1102,7 @@ export function ImageGenStudio() {
  )}
 
  {/* Claymorphic Prompt Box */}
- <div className="relative flex items-end gap-2.5 clay-card-thick p-2.5 sm:p-3 rounded-3xl border border-[var(--card-border)]  shadow-xl transition-all">
- {/* Random Idea Dice Button */}
- <button
- type="button"
- onClick={handleRandomPrompt}
- disabled={loading}
- className="shrink-0 p-3 clay-btn-thick text-amber-500 rounded-2xl transition-all disabled:opacity-50 shadow-xs hover:scale-105 active:scale-95 cursor-pointer"
- title="ایده تصادفی (تاس پرامپت)"
- >
- <Dices className="w-5 h-5 hover:rotate-12 transition-transform" />
- </button>
-
- {/* Magic Enhance Button */}
- <button
- type="button"
- onClick={handleEnhancePrompt}
- disabled={enhancing || loading || !prompt.trim()}
- className="shrink-0 p-3 clay-btn-primary-thick text-white rounded-2xl transition-all disabled:opacity-50 disabled:grayscale shadow-md shadow-blue-500/25 hover:scale-105 active:scale-95 cursor-pointer"
- title="ارتقای جادویی پرامپت با هوش مصنوعی"
- >
- <Wand2 className={`w-5 h-5 ${enhancing ? 'animate-pulse' : ''}`} />
- </button>
-
+ <div className="relative flex flex-col gap-3 clay-card-thick p-2.5 sm:p-3 rounded-3xl border border-[var(--card-border)] shadow-xl transition-all">
  <textarea
  value={prompt}
  onChange={(e) => {
@@ -1132,7 +1110,7 @@ export function ImageGenStudio() {
  setActiveEnglishPrompt(null);
  }}
  placeholder="توصیف تصویر مورد نظرتان را به فارسی یا انگلیسی بنویسید..."
- className="flex-1 clay-inset-thick px-4 py-3 rounded-2xl border-none outline-none resize-none text-xs sm:text-sm text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-500 min-h-[46px] max-h-32 custom-scrollbar transition-all font-medium"
+ className="w-full clay-inset-thick px-4 py-3 rounded-2xl border-none outline-none resize-none text-xs sm:text-sm text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-500 min-h-[70px] max-h-32 custom-scrollbar transition-all font-medium"
  rows={Math.min(3, prompt.split('\n').length || 1)}
  onKeyDown={(e) => {
  if (e.key === 'Enter' && !e.shiftKey) {
@@ -1141,15 +1119,41 @@ export function ImageGenStudio() {
  }
  }}
  />
+ 
+ <div className="flex items-center justify-between w-full">
+ <div className="flex items-center gap-2">
+ {/* Random Idea Dice Button */}
+ <button
+ type="button"
+ onClick={handleRandomPrompt}
+ disabled={loading}
+ className="shrink-0 p-2 sm:p-3 clay-btn-thick text-amber-500 rounded-2xl transition-all disabled:opacity-50 shadow-xs hover:scale-105 active:scale-95 cursor-pointer"
+ title="ایده تصادفی (تاس پرامپت)"
+ >
+ <Dices className="w-4 h-4 sm:w-5 sm:h-5 hover:rotate-12 transition-transform" />
+ </button>
+
+ {/* Magic Enhance Button */}
+ <button
+ type="button"
+ onClick={handleEnhancePrompt}
+ disabled={enhancing || loading || !prompt.trim()}
+ className="shrink-0 p-2 sm:p-3 clay-btn-primary-thick text-white rounded-2xl transition-all disabled:opacity-50 disabled:grayscale shadow-md shadow-blue-500/25 hover:scale-105 active:scale-95 cursor-pointer"
+ title="ارتقای جادویی پرامپت با هوش مصنوعی"
+ >
+ <Wand2 className={`w-4 h-4 sm:w-5 sm:h-5 ${enhancing ? 'animate-pulse' : ''}`} />
+ </button>
+ </div>
 
  <button
  onClick={handleGenerate}
  disabled={loading || !prompt.trim()}
- className="shrink-0 p-3 clay-btn-primary-thick text-white rounded-2xl transition-all disabled:opacity-50 shadow-md shadow-blue-500/25 hover:scale-105 active:scale-95 flex items-center justify-center cursor-pointer"
+ className="shrink-0 p-2 sm:p-3 clay-btn-primary-thick text-white rounded-2xl transition-all disabled:opacity-50 shadow-md shadow-blue-500/25 hover:scale-105 active:scale-95 flex items-center justify-center cursor-pointer"
  title="تولید تصویر"
  >
- {loading ? <RotateCcw className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
+ {loading ? <RotateCcw className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" /> : <Send className="w-4 h-4 sm:w-5 sm:h-5" />}
  </button>
+ </div>
  </div>
  </div>
  </div>

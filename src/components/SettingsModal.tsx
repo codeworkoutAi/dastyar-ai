@@ -511,7 +511,7 @@ export const SettingsModal: React.FC = () => {
  <div className="w-full sm:w-[95vw] md:w-full max-w-4xl clay-modal flex flex-col sm:flex-row overflow-hidden text-zinc-900 dark:text-zinc-100 h-[92dvh] sm:h-auto sm:max-h-[85dvh]">
 
  {/* Sidebar Tabs */}
- <div className="w-full sm:w-64 clay-surface-inset border-b sm:border-b-0 sm:border-l border-[var(--card-border)] flex flex-col shrink-0">
+ <div className="w-full sm:w-64 bg-transparent border-b sm:border-b-0 sm:border-l border-[var(--card-border)] flex flex-col shrink-0">
  <div className="px-4 py-3 sm:p-5 border-b border-[var(--card-border)] flex items-center justify-between">
  <div className="flex items-center gap-2">
  <div className="p-1.5 bg-blue-500/10 rounded-lg text-blue-400">
@@ -686,7 +686,7 @@ export const SettingsModal: React.FC = () => {
  <div className="clay-card rounded-2xl p-4 sm:p-5 mt-4">
 
  <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
- <button type="button" onClick={() => handleTestConnection('custom')} disabled={testing} className="w-full sm:w-auto px-5 py-2.5 rounded-xl font-medium text-sm border border-zinc-300  clay-surface clay-icon-btn text-zinc-700 dark:text-zinc-300 transition-colors flex items-center justify-center gap-2">
+ <button type="button" onClick={() => handleTestConnection('custom')} disabled={testing} className="w-auto px-4 py-2 sm:py-2.5 rounded-xl font-medium text-sm border border-zinc-300 bg-transparent hover:bg-black/5 dark:hover:bg-white/5 text-zinc-700 dark:text-zinc-300 transition-colors flex items-center justify-center gap-2">
  {testing ? <><div className="w-4 h-4 border-2 border-zinc-500 border-t-white rounded-full animate-spin" /> بررسی ارتباط...</> : <><GlobalOutlineIcon className="w-4 h-4" /> تست اتصال</>}
  </button>
  {testResult && (
@@ -894,7 +894,7 @@ export const SettingsModal: React.FC = () => {
  </div>
 
  {/* Footer */}
- <div className="p-4 border-t border-[var(--card-border)] clay-surface-inset clay-surface backdrop-blur flex justify-end gap-3 shrink-0 rounded-b-3xl">
+ <div className="p-4 border-t border-[var(--card-border)] bg-transparent flex justify-end gap-3 shrink-0 rounded-b-3xl">
  <button onClick={onClose} className="px-5 py-2.5 rounded-xl font-bold text-sm transition-all clay-btn-secondary">انصراف</button>
  <button onClick={handleSave} className="px-6 py-2.5 rounded-xl font-bold text-sm transition-all flex items-center gap-2 clay-btn-primary">
  <DisketteOutlineIcon className="w-4 h-4" /> ذخیره و اعمال
