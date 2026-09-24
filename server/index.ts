@@ -74,8 +74,8 @@ app.use(helmet({
 // CORS configuration
 app.use(cors({
   origin: process.env.NODE_ENV === 'production' 
-    ? (process.env.WEB_URL || 'https://dastyarai.com')
-    : 'http://localhost:3000',
+    ? [process.env.WEB_URL || 'https://dastyarai.com', 'http://localhost', 'capacitor://localhost']
+    : ['http://localhost:3000', 'http://localhost', 'capacitor://localhost'],
   credentials: false,
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization'],
