@@ -190,7 +190,7 @@ router.post('/api/chat/stream', chatStreamLimiter, async (req, res) => {
         apiConfig[provider].apiKey = targetApiKey;
         apiConfig[provider].id = customProfileId; // Ensure injected key works
 
-        if (profileResult.name?.includes('رایگان') || profileResult.name?.toLowerCase().includes('free') || profileResult.name?.includes('[AUTO]')) {
+        if (customProfileId.startsWith('free_') || profileResult.name?.includes('رایگان') || profileResult.name?.toLowerCase().includes('free') || profileResult.name?.includes('[AUTO]')) {
           isFreeModel = true;
         }
       }

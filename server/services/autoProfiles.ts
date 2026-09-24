@@ -7,19 +7,19 @@ import { SocksProxyAgent } from 'socks-proxy-agent';
 const SLOT_PRIORITIES = [
   {
     role: 'default',
-    name: 'دستیار چت و گفتگو',
+    name: 'دستیار چت و گفتگو (رایگان)',
     orderIndex: 1,
     priorityModels: ['gpt-4o-mini', 'gpt-3.5-turbo', 'qwen-turbo', 'llama-3-8b']
   },
   {
     role: 'coding',
-    name: 'دستیار کدنویسی و تحلیل',
+    name: 'دستیار کدنویسی و تحلیل (رایگان)',
     orderIndex: 2,
     priorityModels: ['deepseek-v3', 'deepseek', 'claude-3-5-sonnet', 'claude-3-5-haiku', 'gpt-4o']
   },
   {
     role: 'vision',
-    name: 'دستیار بینایی و اسناد',
+    name: 'دستیار بینایی و اسناد (رایگان)',
     orderIndex: 3,
     priorityModels: ['gemini-2.0-flash', 'gemini-1.5-flash', 'mimo', 'gpt-4-vision-preview']
   }
