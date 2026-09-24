@@ -1,6 +1,7 @@
 import express from 'express';
 import rateLimit from 'express-rate-limit';
 import db from '../db/database';
+import { modelDiscovery } from '../services/modelDiscovery';
 import { isSafeBaseUrl, getGeminiClient, extractCleanErrorMessage, sanitizeErrorMessage, formatContentsForGemini, sleep, getPollinationsImageUrl, translateAndEnhanceImagePrompt, normalizeBaseUrl, parseCustomHeaders } from '../services/utils';
 import { GoogleGroundingAgent } from '../services/GoogleGroundingAgent';
 import { WikipediaAgent } from '../services/WikipediaAgent';
@@ -164,21 +165,8 @@ router.post('/api/chat/stream', chatStreamLimiter, async (req, res) => {
             targetBaseUrl = poolKey.baseUrl;
             usedPoolKey = poolKey.apiKey;
 
-            // Resolve dynamic model mapping based on the selected Base URL
-            if (targetModel.startsWith('{')) {
-              try {
-                const modelMap = JSON.parse(targetModel);
-                if (modelMap[targetBaseUrl]) {
-                  targetModel = modelMap[targetBaseUrl];
-                } else if (modelMap['default']) {
-                  targetModel = modelMap['default'];
-                } else {
-                  targetModel = Object.values(modelMap)[0] as string;
-                }
-              } catch (e) {
-                console.error('[Chat] Failed to parse dynamic model mapping:', e);
-              }
-            }
+            // Auto-detect best model for the slot
+            targetModel = await modelDiscovery.getBestModelForRole(poolKey, customProfileId, 'gpt-4o-mini');
           } else {
             sendChunk({ error: 'ظرفیت کلیدهای عمومی در حال حاضر پر شده است. لطفاً چند دقیقه دیگر تلاش کنید.' });
             sendChunk({ done: true });

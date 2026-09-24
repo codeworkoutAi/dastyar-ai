@@ -1,5 +1,6 @@
 import express from 'express';
 import { isSafeBaseUrl, getGeminiClient, normalizeBaseUrl, parseCustomHeaders } from '../services/utils';
+import { modelDiscovery } from '../services/modelDiscovery';
 import { aiRouteLimiter } from '../middleware/rateLimiter';
 import db from '../db/database';
 import { keyRotator } from '../services/keyRotator';
@@ -117,18 +118,8 @@ Do not wrap in markdown. Raw JSON only.`;
               if (poolKey) {
                 targetApiKey = poolKey.apiKey;
                 targetBaseUrl = poolKey.baseUrl;
-                if (targetModel.startsWith('{')) {
-                  try {
-                    const modelMap = JSON.parse(targetModel);
-                    if (modelMap[targetBaseUrl]) {
-                      targetModel = modelMap[targetBaseUrl];
-                    } else if (modelMap['default']) {
-                      targetModel = modelMap['default'];
-                    } else {
-                      targetModel = Object.values(modelMap)[0] as string;
-                    }
-                  } catch (e) {}
-                }
+                // Auto-detect best model for the slot
+                targetModel = await modelDiscovery.getBestModelForRole(poolKey, profileId, 'gpt-4o-mini');
               }
             }
           }
