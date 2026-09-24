@@ -1570,8 +1570,9 @@ export const LandingPage: React.FC = () => {
               دارای اپلیکیشن اختصاصی با سرعت بالا و طراحی کاملاً یکپارچه، مناسب برای گوشی‌های اندرویدی.
             </p>
             <a 
-              href="/dastyar-ai.apk" 
-              download="dastyar-ai.apk" 
+              href="https://abrehamrahi.ir/o/public/r9yjoJaw/" 
+              target="_blank"
+              rel="noopener noreferrer"
               className="w-full py-3 px-4 rounded-xl clay-btn-primary bg-rose-500 hover:bg-rose-600 text-white font-bold flex items-center justify-center gap-2 transition-colors"
             >
               <Download className="w-4 h-4" />
