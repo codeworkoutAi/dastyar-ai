@@ -37,14 +37,11 @@ class ModelDiscoveryService {
     return [];
   }
 
-  public async getBestModelForRole(poolKey: PoolKey, role: string, fallbackModel: string): Promise<string> {
-    const models = await this.fetchModels(poolKey);
-    if (!models || models.length === 0) {
-      return fallbackModel; // Fallback if API fails
+  public async getBestModelForRole(poolKeys: PoolKey[], role: string, fallbackModel: string): Promise<{poolKey: PoolKey, modelId: string}> {
+    if (!poolKeys || poolKeys.length === 0) {
+      return { poolKey: { baseUrl: '', apiKey: '' }, modelId: fallbackModel };
     }
 
-    const availableIds = models.map(m => m.id.toLowerCase());
-    
     // Priority heuristics based on role
     let priorities: string[] = [];
     
@@ -75,16 +72,30 @@ class ModelDiscoveryService {
       ];
     }
 
-    // 1. Try exact or partial matches from high priority list
-    for (const keyword of priorities) {
-      const match = availableIds.find(id => id.includes(keyword));
-      if (match) {
-        return models.find(m => m.id.toLowerCase() === match)!.id;
+    // 1. Try to find a high priority match across ALL keys
+    for (const poolKey of poolKeys) {
+      const models = await this.fetchModels(poolKey);
+      if (!models || models.length === 0) continue;
+      
+      const availableIds = models.map(m => m.id.toLowerCase());
+      for (const keyword of priorities) {
+        const match = availableIds.find(id => id.includes(keyword));
+        if (match) {
+          return { poolKey, modelId: models.find(m => m.id.toLowerCase() === match)!.id };
+        }
       }
     }
 
-    // 2. Fallback to just the first available model if nothing matched
-    return models[0].id;
+    // 2. Fallback to the first available model on the first working key
+    for (const poolKey of poolKeys) {
+      const models = await this.fetchModels(poolKey);
+      if (models && models.length > 0) {
+        return { poolKey, modelId: models[0].id };
+      }
+    }
+
+    // 3. Absolute fallback
+    return { poolKey: poolKeys[0], modelId: fallbackModel };
   }
 }
 

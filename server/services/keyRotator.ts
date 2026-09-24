@@ -59,6 +59,24 @@ class KeyRotatorService {
     return [];
   }
 
+  public getHealthyKeys(): PoolKey[] {
+    const keys = this.getPoolKeys();
+    if (keys.length === 0) return [];
+    
+    const now = Date.now();
+    const healthyKeys = keys.filter(k => {
+      const health = this.healthMap.get(k.apiKey);
+      return !health || health.cooldownUntil <= now;
+    });
+
+    // If all keys are on cooldown, return all keys so we can at least try
+    if (healthyKeys.length === 0) return keys;
+
+    // Rotate the healthy keys so we don't always check the same first key (Load Balancing)
+    this.currentIndex = (this.currentIndex + 1) % healthyKeys.length;
+    return [...healthyKeys.slice(this.currentIndex), ...healthyKeys.slice(0, this.currentIndex)];
+  }
+
   /**
    * Get next healthy API key in round-robin fashion
    */

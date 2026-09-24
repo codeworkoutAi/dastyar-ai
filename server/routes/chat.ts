@@ -159,14 +159,14 @@ router.post('/api/chat/stream', chatStreamLimiter, async (req, res) => {
         targetApiKey = profileResult.apiKey;
         
         if (targetApiKey === '[AUTO_POOL]') {
-          const poolKey = keyRotator.getNextKey();
-          if (poolKey) {
-            targetApiKey = poolKey.apiKey;
-            targetBaseUrl = poolKey.baseUrl;
-            usedPoolKey = poolKey.apiKey;
+          const poolKeys = keyRotator.getHealthyKeys();
+          if (poolKeys && poolKeys.length > 0) {
+            
+            
+            
 
             // Auto-detect best model for the slot
-            targetModel = await modelDiscovery.getBestModelForRole(poolKey, customProfileId, 'gpt-4o-mini');
+            const best = await modelDiscovery.getBestModelForRole(poolKeys, customProfileId, 'gpt-4o-mini'); targetApiKey = best.poolKey.apiKey; targetBaseUrl = best.poolKey.baseUrl; usedPoolKey = best.poolKey.apiKey; targetModel = best.modelId;
           } else {
             sendChunk({ error: 'ظرفیت کلیدهای عمومی در حال حاضر پر شده است. لطفاً چند دقیقه دیگر تلاش کنید.' });
             sendChunk({ done: true });
