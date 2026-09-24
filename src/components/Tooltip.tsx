@@ -70,7 +70,7 @@ export const Tooltip: React.FC<TooltipProps> = React.memo(({
  {isVisible && (
  <div
  role="tooltip"
- className={`absolute z-50 pointer-events-none whitespace-nowrap px-2.5 py-1 text-[11px] font-medium leading-tight rounded-lg bg-zinc-900/95 dark:bg-zinc-800/95 text-zinc-100 dark:text-zinc-100 shadow-xl backdrop-blur-md animate-fadeIn ${getPositionClass()}`}
+ className={`hidden md:block absolute z-50 pointer-events-none whitespace-nowrap px-2.5 py-1 text-[11px] font-medium leading-tight rounded-lg bg-zinc-900/95 dark:bg-zinc-800/95 text-zinc-100 dark:text-zinc-100 shadow-xl backdrop-blur-md animate-fadeIn ${getPositionClass()}`}
  >
  {content}
  </div>
