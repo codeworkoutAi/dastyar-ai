@@ -114,12 +114,12 @@ Do not wrap in markdown. Raw JSON only.`;
             targetApiKey = profileResult.apiKey;
 
             if (targetApiKey === '[AUTO_POOL]') {
-              const poolKey = keyRotator.getNextKey();
-              if (poolKey) {
-                targetApiKey = poolKey.apiKey;
-                targetBaseUrl = poolKey.baseUrl;
-                // Auto-detect best model for the slot
-                targetModel = await modelDiscovery.getBestModelForRole(poolKey, profileId, 'gpt-4o-mini');
+              const poolKeys = keyRotator.getHealthyKeys();
+              if (poolKeys && poolKeys.length > 0) {
+                const best = await modelDiscovery.getBestModelForRole(poolKeys, profileId, 'gpt-4o-mini');
+                targetApiKey = best.poolKey.apiKey;
+                targetBaseUrl = best.poolKey.baseUrl;
+                targetModel = best.modelId;
               }
             }
           }
