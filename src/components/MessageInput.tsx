@@ -248,7 +248,8 @@ export const MessageInput: React.FC = React.memo(() => {
 
  const processPdfHybrid = async () => {
  try {
- const pdfjsLib = await import('pdfjs-dist');
+ const pdfjsModule = await import("pdfjs-dist");
+          const pdfjsLib = pdfjsModule.default || pdfjsModule;
  pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`;
  const arrayBuffer = await file.arrayBuffer();
  const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
@@ -334,7 +335,7 @@ export const MessageInput: React.FC = React.memo(() => {
  }
  } catch (err) {
  console.error('PDF processing error:', err);
- alert('خطا در پردازش فایل PDF.');
+ alert(`خطا در پردازش فایل PDF: ${err?.message || "مشکل نامعلوم"}`);
  removeAttachment(attachmentId);
  }
  };
