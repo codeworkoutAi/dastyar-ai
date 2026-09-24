@@ -170,6 +170,10 @@ router.post('/api/chat/stream', chatStreamLimiter, async (req, res) => {
                 const modelMap = JSON.parse(targetModel);
                 if (modelMap[targetBaseUrl]) {
                   targetModel = modelMap[targetBaseUrl];
+                } else if (modelMap['default']) {
+                  targetModel = modelMap['default'];
+                } else {
+                  targetModel = Object.values(modelMap)[0] as string;
                 }
               } catch (e) {
                 console.error('[Chat] Failed to parse dynamic model mapping:', e);
