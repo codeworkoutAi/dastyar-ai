@@ -124,9 +124,9 @@ app.use('/api/news', newsRouter);
 app.get('/api/public-settings', (req, res) => {
   try {
     const row = db.prepare('SELECT value FROM site_settings WHERE key = ?').get('ui_style') as { value: string } | undefined;
-    res.json({ ui_style: row?.value || 'clay' });
+    res.json({ ui_style: row?.value || 'neumorphic' });
   } catch (err) {
-    res.json({ ui_style: 'clay' });
+    res.json({ ui_style: 'neumorphic' });
   }
 });
 

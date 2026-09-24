@@ -137,7 +137,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
 
  // Site Settings state
  const [newsAutoPublish, setNewsAutoPublish] = useState<boolean>(false);
-  const [uiStyle, setUiStyle] = useState<string>('clay');
+  const [uiStyle, setUiStyle] = useState<string>('neumorphic');
  const [siteSettingsLoading, setSiteSettingsLoading] = useState<boolean>(false);
  const [siteSettingsSaving, setSiteSettingsSaving] = useState<boolean>(false);
 

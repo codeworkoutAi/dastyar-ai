@@ -8,7 +8,7 @@ interface UIStyleToggleProps {
 }
 
 export const UIStyleToggle: React.FC<UIStyleToggleProps> = ({ className = '', variant = 'default' }) => {
-  const [uiStyle, setUiStyle] = useState<'clay' | 'neumorphic'>('clay');
+  const [uiStyle, setUiStyle] = useState<'clay' | 'neumorphic'>('neumorphic');
 
   useEffect(() => {
     // Initial load: check localStorage first, then fallback to current DOM attribute
