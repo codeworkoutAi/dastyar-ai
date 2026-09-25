@@ -1,5 +1,5 @@
 import express from 'express';
-import { isSafeBaseUrl, getGeminiClient, normalizeBaseUrl, parseCustomHeaders } from '../services/utils';
+import { isSafeBaseUrl, getGeminiClient, normalizeBaseUrl, parseCustomHeaders, getGeminiKeyFromPool } from '../services/utils';
 import { aiRouteLimiter } from '../middleware/rateLimiter';
 import db from '../db/database';
 
