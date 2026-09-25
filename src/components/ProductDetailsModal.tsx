@@ -140,7 +140,7 @@ export const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({ produc
  <div key={idx} className="border border-[var(--card-border)] rounded-xl overflow-hidden transition-all duration-300"
  >
  <button onClick={() => setOpenFaqIndex(openFaqIndex === idx ? null : idx)}
- className="w-full flex items-center justify-between p-3 sm:p-3.5 clay-surface clay-icon-btn/60 transition-colors text-right"
+ className="w-full flex items-center justify-between p-3 sm:p-3.5 clay-surface hover:bg-black/5 dark:hover:bg-white/5 transition-colors text-right cursor-pointer"
  >
  <span className="text-xs sm:text-sm font-bold text-zinc-800 dark:text-zinc-200">{faq.q}</span>
  {openFaqIndex === idx ? (

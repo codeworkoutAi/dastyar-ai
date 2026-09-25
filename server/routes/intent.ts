@@ -1,9 +1,7 @@
 import express from 'express';
 import { isSafeBaseUrl, getGeminiClient, normalizeBaseUrl, parseCustomHeaders } from '../services/utils';
-import { modelDiscovery } from '../services/modelDiscovery';
 import { aiRouteLimiter } from '../middleware/rateLimiter';
 import db from '../db/database';
-import { keyRotator } from '../services/keyRotator';
 
 const router = express.Router();
 
@@ -78,6 +76,37 @@ Do not wrap in markdown. Raw JSON only.`;
 
     const promptText = `User Message: "${userText}"`;
 
+    let targetBaseUrl = apiConfig?.[provider]?.baseUrl || '';
+    let targetModel = apiConfig?.[provider]?.modelName || '';
+    let targetApiKey = apiConfig?.[provider]?.apiKey || '';
+
+    if (provider === 'custom') {
+      const profileId = apiConfig?.custom?.activeProfileId || apiConfig?.custom?.id;
+      if (profileId) {
+        const profileResult = db.prepare('SELECT * FROM default_profiles WHERE id = ?').get(profileId) as any;
+        if (profileResult) {
+          targetBaseUrl = profileResult.baseUrl;
+          targetModel = profileResult.modelName;
+          targetApiKey = profileResult.apiKey;
+
+          if (profileId.startsWith('free_') || profileResult.name?.includes('رایگان') || profileResult.name?.toLowerCase().includes('free')) {
+            if (targetModel.toLowerCase().includes('gemini')) {
+              const poolKey = getGeminiKeyFromPool();
+              if (poolKey) {
+                targetBaseUrl = 'https://generativelanguage.googleapis.com';
+                targetApiKey = poolKey;
+                
+                if (provider !== 'gemini') {
+                  apiConfig['gemini'] = { ...apiConfig[provider], apiKey: targetApiKey, baseUrl: targetBaseUrl };
+                }
+                provider = 'gemini';
+              }
+            }
+          }
+        }
+      }
+    }
+
     if (provider === 'gemini') {
       const ai = getGeminiClient(apiConfig?.[provider]?.apiKey);
       // We force a fast, non-thinking model for Intent Routing to prevent <think> tags from breaking JSON
@@ -100,32 +129,6 @@ Do not wrap in markdown. Raw JSON only.`;
 
     } else {
       // DeepSeek / OpenAI / Custom
-      let targetBaseUrl = apiConfig?.[provider]?.baseUrl || '';
-      let targetModel = apiConfig?.[provider]?.modelName || '';
-      let targetApiKey = apiConfig?.[provider]?.apiKey || '';
-
-      if (provider === 'custom') {
-        const profileId = apiConfig?.custom?.activeProfileId || apiConfig?.custom?.id;
-        if (profileId) {
-          const profileResult = db.prepare('SELECT * FROM default_profiles WHERE id = ?').get(profileId) as any;
-          if (profileResult) {
-            targetBaseUrl = profileResult.baseUrl;
-            targetModel = profileResult.modelName;
-            targetApiKey = profileResult.apiKey;
-
-            if (targetApiKey === '[AUTO_POOL]') {
-              const poolKeys = keyRotator.getHealthyKeys();
-              if (poolKeys && poolKeys.length > 0) {
-                const best = await modelDiscovery.getBestModelForRole(poolKeys, profileId, 'gpt-4o-mini');
-                targetApiKey = best.poolKey.apiKey;
-                targetBaseUrl = best.poolKey.baseUrl;
-                targetModel = best.modelId;
-              }
-            }
-          }
-        }
-      }
-
       if (targetBaseUrl && !isSafeBaseUrl(targetBaseUrl)) {
         return res.json({ webSearch: false, intent: 'general' });
       }
@@ -240,7 +243,9 @@ function parseLLMJsonResponse(text: string, userText: string) {
   }
 
   try {
-    const parsed = JSON.parse(cleanText);
+    const jsonMatch = cleanText.match(/\{[\s\S]*?\}/);
+    const textToParse = jsonMatch ? jsonMatch[0] : cleanText;
+    const parsed = JSON.parse(textToParse);
     const resolvedTool = (parsed.tool && parsed.tool !== 'none') ? parsed.tool : heuristicTool;
     return {
       webSearch: resolvedTool === 'none' ? (isDefinitiveWebSearch || !!parsed.webSearch) : false,
@@ -248,7 +253,6 @@ function parseLLMJsonResponse(text: string, userText: string) {
       intent: ['coding', 'vision', 'general'].includes(parsed.intent) ? parsed.intent : 'general'
     };
   } catch (e) {
-    console.error('[Intent Router] Failed to parse JSON:', text);
     return { 
       webSearch: heuristicTool === 'none' ? isDefinitiveWebSearch : false, 
       tool: heuristicTool, 

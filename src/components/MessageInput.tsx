@@ -724,10 +724,15 @@ export const MessageInput: React.FC = React.memo(() => {
  }, [text, attachments]);
 
  const confirmImageGen = (engine: string) => {
- setShowImageEngineModal(false);
- sendMessage(pendingImagePrompt, undefined, undefined, undefined, engine);
- setText('');
- setPendingImagePrompt('');
+   setShowImageEngineModal(false);
+   const currentUser = useAuthStore.getState().user;
+   if (!currentUser) {
+     useUIStore.getState().setIsAuthModalOpen(true);
+     return;
+   }
+   sendMessage(pendingImagePrompt, undefined, undefined, undefined, engine);
+   setText('');
+   setPendingImagePrompt('');
  };
 
  return (
@@ -826,46 +831,44 @@ export const MessageInput: React.FC = React.memo(() => {
  <div className="absolute bottom-full right-0 left-0 mb-2 z-[70] flex items-center justify-between gap-2 px-3 py-2 rounded-2xl clay-surface backdrop-blur-xl border border-[var(--card-border)] select-none" dir="rtl"
  >
  <div className="flex items-center gap-1.5 overflow-x-auto py-0.5 custom-scrollbar min-w-0 flex-1">
- <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400 shrink-0 ml-1">
- موتور تصویر:
- </span>
+ <span className="text-xs font-semibold text-zinc-600 dark:text-zinc-300 shrink-0 ml-1">
+                 تولید تصویر استودیویی (پولی):
+               </span>
 
- {/* Sana NVIDIA */}
- <button type="button"
- onClick={() => confirmImageGen('sana')}
- className="px-3 py-1.5 rounded-xl clay-surface hover:clay-btn-secondary dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 border border-[var(--card-border)] text-xs font-medium transition-all shrink-0 active:scale-95 cursor-pointer"
- title="مدل نسل جدید انویدیا با رزولوشن بالا و سرعت آنی"
- >
- Sana (NVIDIA)
- </button>
+               {/* Google Imagen 3 */}
+               <button type="button"
+                 onClick={() => confirmImageGen('imagen-3')}
+                 className="px-3 py-1.5 rounded-xl clay-btn-primary text-xs font-medium transition-all shrink-0 active:scale-95 cursor-pointer flex items-center gap-1"
+                 title="کیفیت شاهکار فوتورئال گوگل - کسر از کیف پول (~۶,۰۰۰ تومان)"
+               >
+                 <span>Google Imagen 3</span>
+                 <span className="text-[10px] opacity-80">(۶,۰۰۰ ت)</span>
+               </button>
 
- {/* Flux.1 */}
- <button type="button"
- onClick={() => confirmImageGen('flux')}
- className="px-3 py-1.5 rounded-xl clay-surface hover:clay-btn-secondary dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 border border-[var(--card-border)] text-xs font-medium transition-all shrink-0 active:scale-95 cursor-pointer"
- title="کیفیت عالی، طبیعی و واقع‌گرایانه"
- >
- Flux.1 Realism
- </button>
+               {/* DALL-E 3 */}
+               <button type="button"
+                 onClick={() => confirmImageGen('dalle-3')}
+                 className="px-3 py-1.5 rounded-xl clay-surface hover:clay-btn-secondary dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 border border-[var(--card-border)] text-xs font-medium transition-all shrink-0 active:scale-95 cursor-pointer flex items-center gap-1"
+                 title="هوش درک زبان اوپن‌ای‌آی - کسر از کیف پول (~۸,۰۰۰ تومان)"
+               >
+                 <span>DALL-E 3</span>
+                 <span className="text-[10px] opacity-80">(۸,۰۰۰ ت)</span>
+               </button>
 
- {/* DALL-E 3 */}
- <button type="button"
- onClick={() => confirmImageGen('dalle-3')}
- className="px-3 py-1.5 rounded-xl clay-surface hover:clay-btn-secondary dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 border border-[var(--card-border)] text-xs font-medium transition-all shrink-0 active:scale-95 cursor-pointer"
- title="هوش بالا - نیازمند کلید OpenAI"
- >
- DALL-E 3
- </button>
-
- {/* Imagen 3 */}
- <button type="button"
- onClick={() => confirmImageGen('imagen-3')}
- className="px-3 py-1.5 rounded-xl clay-surface hover:clay-btn-secondary dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 border border-[var(--card-border)] text-xs font-medium transition-all shrink-0 active:scale-95 cursor-pointer"
- title="کیفیت استودیو گوگل - رسمی"
- >
- Imagen 3
- </button>
- </div>
+               {/* Open Studio for free */}
+               <button
+                 type="button"
+                 onClick={() => {
+                   setShowImageEngineModal(false);
+                   useUIStore.getState().setImageStudioInitial({ prompt: pendingImagePrompt, engine: 'flux' });
+                   useUIStore.getState().setIsImageStudioOpen(true);
+                 }}
+                 className="px-2.5 py-1.5 rounded-xl text-blue-600 dark:text-blue-400 hover:bg-blue-500/10 text-xs font-medium transition-all shrink-0 cursor-pointer"
+                 title="مشاهده استودیوی کامل و مدل‌های رایگان"
+               >
+                 استودیو و مدل‌های رایگان ←
+               </button>
+             </div>
 
  {/* Dismiss button */}
  <button type="button"

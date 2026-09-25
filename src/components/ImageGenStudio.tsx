@@ -40,8 +40,8 @@ const IMAGE_ENGINES = [
  { id: 'sana', name: 'Sana (NVIDIA 1.0)', tag: 'فوق‌سریع ۴K', desc: 'مدل انقلابی انویدیا با معماری خطی، سرعت آنی و وضوح فوق‌العاده', tier: 'free' },
  { id: 'turbo', name: 'SDXL Turbo v2', tag: 'آنی', desc: 'تولید سریع و بدون وقفه تصاویر در یک مرحله', tier: 'free' },
  { id: 'flux-anime', name: 'Flux Anime & Art', tag: 'انیمه و هنر', desc: 'طراحی تخصصی سبک انیمه ژاپنی، فانتزی و تصویرگری دیجیتال', tier: 'free' },
- { id: 'dalle-3', name: 'DALL-E 3', tag: 'ویژه OpenAI', desc: 'نیازمند API Key (درک عمیق زبان و هوش بالای دال-ای ۳)', tier: 'pro' },
- { id: 'imagen-3', name: 'Imagen 3 (Google)', tag: 'رسمی گوگل', desc: 'نیازمند API Key جمنای (کیفیت استودیویی Imagen 3.0 گوگل)', tier: 'pro' },
+ { id: 'imagen-3', name: 'Google Imagen 3 (Studio)', tag: 'رسمی گوگل', desc: 'کیفیت استودیویی فوتورئال فوق‌العاده گوگل (کسر از کیف پول: ~۶,۰۰۰ تومان)', tier: 'pro' },
+  { id: 'dalle-3', name: 'DALL-E 3 (OpenAI)', tag: 'ویژه OpenAI', desc: 'درک عمیق زبان و هوش بالای دال-ای ۳ (کسر از کیف پول: ~۸,۰۰۰ تومان)', tier: 'pro' },
 ];
 
 const STYLE_PRESETS = [
@@ -191,29 +191,40 @@ function preloadImage(rawUrl: string, timeoutMs = 55000): Promise<string> {
  isSettled = true;
  clearTimeout(timer);
  resolve(safeUrl);
- };
-
- img.onerror = () => {
- if (isSettled) return;
- // If direct CDN or proxy fails, attempt one fresh seed retry
- const separator = rawUrl.includes('?') ? '&' : '?';
- const fallbackUrl = `${rawUrl.replace(/seed=\d+/, '')}${separator}seed=${Math.floor(Math.random() * 10000000)}`;
- const fallbackProxy = toSafeImageUrl(fallbackUrl);
- const lastTry = new Image();
- lastTry.onload = () => {
- if (isSettled) return;
- isSettled = true;
- clearTimeout(timer);
- resolve(fallbackProxy);
- };
- lastTry.onerror = () => {
- if (isSettled) return;
- isSettled = true;
- clearTimeout(timer);
- reject(new Error('خطا در دریافت فایل تصویر از سرور. لطفاً مجدداً دکمه تولید را بزنید.'));
- };
- lastTry.src = fallbackProxy;
- };
+ };  img.onerror = () => {
+  if (isSettled) return;
+  
+  // First fallback: try direct URL bypassing proxy (useful if server backend is blocked but client VPN works)
+  const directTry = new Image();
+  directTry.onload = () => {
+  if (isSettled) return;
+  isSettled = true;
+  clearTimeout(timer);
+  resolve(rawUrl);
+  };
+  directTry.onerror = () => {
+  if (isSettled) return;
+  // Second fallback: fresh seed retry through proxy
+  const separator = rawUrl.includes('?') ? '&' : '?';
+  const fallbackUrl = `${rawUrl.replace(/seed=\d+/, '')}${separator}seed=${Math.floor(Math.random() * 10000000)}`;
+  const fallbackProxy = toSafeImageUrl(fallbackUrl);
+  const lastTry = new Image();
+  lastTry.onload = () => {
+  if (isSettled) return;
+  isSettled = true;
+  clearTimeout(timer);
+  resolve(fallbackProxy);
+  };
+  lastTry.onerror = () => {
+  if (isSettled) return;
+  isSettled = true;
+  clearTimeout(timer);
+  reject(new Error('خطا در دریافت فایل تصویر. اگر از ایران متصل هستید، ممکن است به فیلترشکن نیاز داشته باشید.'));
+  };
+  lastTry.src = fallbackProxy;
+  };
+  directTry.src = rawUrl;
+  };
 
  img.src = safeUrl;
  });
@@ -265,8 +276,7 @@ export function ImageGenStudio() {
 
  // Settings
  const settings = loadSettings();
- const hasOpenAiKey = !!settings.providers.openai?.apiKey;
- const hasGeminiKey = !!(settings.providers.gemini?.apiKey || settings.providers.custom?.profiles?.some(p => ((p as any).type === 'gemini' || p.baseUrl?.includes('generativelanguage') || p.modelName?.toLowerCase().includes('gemini')) && p.apiKey));
+ // Central system keys are used - no personal API keys required
 
  // Horizontal Inspiration Scroll Ref & Navigation
  const inspirationScrollRef = useRef<HTMLDivElement>(null);
@@ -411,18 +421,15 @@ export function ImageGenStudio() {
  setError('لطفاً توصیف تصویر را وارد کنید.');
  return;
  }
- // Check Pro lock
- const selectedEngineConf = IMAGE_ENGINES.find(e => e.id === activeEngine);
- if (selectedEngineConf?.tier === 'pro') {
- if (activeEngine === 'dalle-3' && !hasOpenAiKey) {
- setError('برای استفاده از مدل DALL-E 3 باید کلید OpenAI API را در بخش تنظیمات وارد کنید.');
- return;
- }
- if (activeEngine === 'imagen-3' && !hasGeminiKey) {
- setError('برای استفاده از مدل Imagen 3 باید کلید Gemini API را در بخش تنظیمات وارد کنید.');
- return;
- }
- }
+  // Check Pro lock
+  const selectedEngineConf = IMAGE_ENGINES.find(e => e.id === activeEngine);
+  if (selectedEngineConf?.tier === 'pro') {
+    if (!user) {
+      useUIStore.getState().setIsAuthModalOpen(true);
+      setError('برای استفاده از مدل‌های استودیویی (Google Imagen 3 و DALL-E 3)، لطفاً ابتدا وارد حساب کاربری خود شوید.');
+      return;
+    }
+  }
 
  setLoading(true);
  setError(null);
@@ -436,9 +443,15 @@ export function ImageGenStudio() {
  }
 
  try {
- const res = await fetch('/api/generate-image', {
- method: 'POST',
- headers: { 'Content-Type': 'application/json' },
+ const authToken = useAuthStore.getState().token;
+    const reqHeaders: Record<string, string> = { 'Content-Type': 'application/json' };
+    if (authToken) {
+      reqHeaders['Authorization'] = `Bearer ${authToken}`;
+    }
+
+    const res = await fetch('/api/generate-image', {
+      method: 'POST',
+      headers: reqHeaders,
  body: JSON.stringify({
  prompt: finalPrompt,
  englishPrompt: customEnglishPrompt,
@@ -451,8 +464,12 @@ export function ImageGenStudio() {
 
  const data = await res.json();
  if (!res.ok || data.error) {
- throw new Error(data.error || 'خطا در تولید تصویر');
- }
+        throw new Error(data.error || 'خطا در تولید تصویر');
+      }
+
+      if (data.balanceAfter !== undefined && user) {
+        useAuthStore.getState().setUser({ ...user, walletBalance: data.balanceAfter });
+      }
  if (data.imageUrl) {
  // Preload image in memory with fallback retry before showing
  const finalLoadedUrl = await preloadImage(data.imageUrl);
@@ -621,59 +638,50 @@ export function ImageGenStudio() {
  <label className="text-xs font-bold text-zinc-700 dark:text-zinc-400 flex items-center gap-2">
  <div className="w-1.5 h-1.5 rounded-full bg-emerald-500"></div> موتور پردازش
  </label>
- <div className="flex flex-col gap-2">
- {IMAGE_ENGINES.map((eng) => {
- const isLocked = eng.tier === 'pro' && (
- eng.id === 'dalle-3' ? !hasOpenAiKey : !hasGeminiKey
- );
- const isSelected = engine === eng.id;
+   <div className="flex flex-col gap-2">
+            {IMAGE_ENGINES.map((eng) => {
+              const isSelected = engine === eng.id;
+              const isPro = eng.tier === 'pro';
 
- return (
- <button
- key={eng.id}
- onClick={() => {
- if (isLocked) {
- alert(eng.id === 'dalle-3' ? 'برای استفاده از DALL-E 3 باید کلید OpenAI API خود را در تنظیمات وارد کنید.' : 'برای استفاده از Imagen 3 باید کلید Gemini API خود را در تنظیمات وارد کنید.'
- );
- return;
- }
- setEngine(eng.id);
- if (window.innerWidth < 1024) setIsMobileSettingsOpen(false);
- }}
- className={`relative flex flex-col items-start p-3 sm:p-3.5 pr-3 pl-9 rounded-2xl border transition-all text-right cursor-pointer ${
- isSelected
- ? eng.tier === 'pro'
- ? 'bg-amber-50 dark:bg-amber-500/10 border-amber-500 text-amber-700 dark:text-amber-400 shadow-sm'
- : 'bg-emerald-50 dark:bg-emerald-500/10 border-emerald-500 text-emerald-700 dark:text-emerald-400 shadow-sm'
- : isLocked
- ? 'clay-surface dark:clay-card-thick/50 border-[var(--card-border)] dark:border-white/5 opacity-60 hover:opacity-80 grayscale'
- : 'clay-btn border border-[var(--card-border)] hover:border-zinc-300'
- }`}
- >
- {isLocked && (
- <div className="absolute top-3.5 left-3 clay-btn-secondary p-1.5 rounded-full text-zinc-700 dark:text-zinc-500">
- <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
- </div>
- )}
- {isSelected && !isLocked && (
- <div className="absolute top-3.5 left-3 text-emerald-500">
- <Check className="w-4 h-4" />
- </div>
- )}
- <div className="flex items-center gap-2 mb-1">
- <span className={`font-extrabold text-xs sm:text-sm ${isSelected ? '' : 'text-zinc-700 dark:text-zinc-200'}`}>{eng.name}</span>
- <span className={`text-[9px] px-1.5 py-0.5 rounded-md font-bold ${
- isSelected
- ? eng.tier === 'pro' ? 'bg-amber-200/50 dark:bg-amber-500/20' : 'bg-emerald-200/50 dark:bg-emerald-500/20'
- : 'clay-btn-secondary text-zinc-700 dark:text-zinc-500'
- }`}>
- {eng.tag}
- </span>
- </div>
- <p className={`text-[9px] sm:text-[10px] leading-relaxed line-clamp-1 ${isSelected ? 'opacity-90' : 'text-zinc-700 dark:text-zinc-400'}`}>{eng.desc}</p>
- </button>
- );
- })}
+              return (
+                <button
+                  key={eng.id}
+                  onClick={() => {
+                    setEngine(eng.id);
+                    if (window.innerWidth < 1024) setIsMobileSettingsOpen(false);
+                  }}
+                  className={`relative flex flex-col items-start p-3 sm:p-3.5 pr-3 pl-9 rounded-2xl border transition-all text-right cursor-pointer ${
+                    isSelected
+                      ? isPro
+                        ? 'bg-amber-500/10 border-amber-500 text-amber-700 dark:text-amber-400 shadow-sm'
+                        : 'bg-emerald-500/10 border-emerald-500 text-emerald-700 dark:text-emerald-400 shadow-sm'
+                      : 'clay-btn border border-[var(--card-border)] hover:border-zinc-300'
+                  }`}
+                >
+                  {isSelected ? (
+                    <div className={`absolute top-3.5 left-3 ${isPro ? 'text-amber-500' : 'text-emerald-500'}`}>
+                      <Check className="w-4 h-4" />
+                    </div>
+                  ) : isPro ? (
+                    <div className="absolute top-3.5 left-3 text-amber-500 opacity-70" title="مدل اعتباری کیف پول">
+                      <Sparkles className="w-3.5 h-3.5" />
+                    </div>
+                  ) : null}
+
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className={`font-extrabold text-xs sm:text-sm ${isSelected ? '' : 'text-zinc-700 dark:text-zinc-200'}`}>{eng.name}</span>
+                    <span className={`text-[9px] px-1.5 py-0.5 rounded-md font-bold ${
+                      isSelected
+                        ? isPro ? 'bg-amber-200/50 dark:bg-amber-500/20 text-amber-800 dark:text-amber-300' : 'bg-emerald-200/50 dark:bg-emerald-500/20 text-emerald-800 dark:text-emerald-300'
+                        : isPro ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20' : 'clay-btn-secondary text-zinc-700 dark:text-zinc-400'
+                    }`}>
+                      {eng.tag}
+                    </span>
+                  </div>
+                  <p className={`text-[9px] sm:text-[10px] leading-relaxed line-clamp-1 ${isSelected ? 'opacity-90' : 'text-zinc-600 dark:text-zinc-400'}`}>{eng.desc}</p>
+                </button>
+              );
+            })}
  </div>
  </div>
 

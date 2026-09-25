@@ -1,15 +1,13 @@
 import express from 'express';
 import rateLimit from 'express-rate-limit';
 import db from '../db/database';
-import { modelDiscovery } from '../services/modelDiscovery';
-import { isSafeBaseUrl, getGeminiClient, extractCleanErrorMessage, sanitizeErrorMessage, formatContentsForGemini, sleep, getPollinationsImageUrl, translateAndEnhanceImagePrompt, normalizeBaseUrl, parseCustomHeaders } from '../services/utils';
+import { isSafeBaseUrl, getGeminiClient, extractCleanErrorMessage, sanitizeErrorMessage, formatContentsForGemini, sleep, getPollinationsImageUrl, translateAndEnhanceImagePrompt, normalizeBaseUrl, parseCustomHeaders, getGeminiKeyFromPool } from '../services/utils';
 import { GoogleGroundingAgent } from '../services/GoogleGroundingAgent';
 import { WikipediaAgent } from '../services/WikipediaAgent';
 import { ToolsAgent } from '../services/ToolsAgent';
 import { SpecializedKnowledgeService } from '../services/SpecializedKnowledgeService';
 import { responseCache, CACHE_TTL_MS, computeCacheKey, setCachedResponse } from '../services/CacheService';
-import { hasSufficientBalance, deductChatCost, calculateModelCostUsd, getUserWallet } from '../services/walletService';
-import { keyRotator } from '../services/keyRotator';
+import { hasSufficientBalance, deductChatCost, calculateModelCostUsd, getUserWallet, logFreeChatUsage, deductImageCost } from '../services/walletService';
 import jwt from 'jsonwebtoken';
 import { JWT_SECRET } from '../middleware/auth';
 const router = express.Router();
@@ -147,7 +145,6 @@ router.post('/api/chat/stream', chatStreamLimiter, async (req, res) => {
     let targetModel = model;
     let targetApiKey = '';
     let resolvedSystemProfile = null;
-    let usedPoolKey = '';
     
     if (provider === 'custom' && customProfileId) {
       // 1. Try to fetch from DB if it's a system default
@@ -158,36 +155,6 @@ router.post('/api/chat/stream', chatStreamLimiter, async (req, res) => {
         targetModel = profileResult.modelName;
         targetApiKey = profileResult.apiKey;
         
-        if (targetApiKey === '[AUTO_POOL]') {
-          const poolKeys = keyRotator.getHealthyKeys();
-          if (poolKeys && poolKeys.length > 0) {
-            
-            
-            
-
-            // Auto-detect best model for the slot
-            const best = await modelDiscovery.getBestModelForRole(poolKeys, customProfileId, 'gpt-4o-mini');
-            targetApiKey = best.poolKey.apiKey;
-            targetBaseUrl = best.poolKey.baseUrl;
-            usedPoolKey = best.poolKey.apiKey;
-            targetModel = best.modelId;
-            
-            if (best.isFallback && (customProfileId === 'free_vision' || customProfileId === 'vision')) {
-              const hasImage = messages.some((m) => m.imageUrl || (m.imageUrls && m.imageUrls.length > 0));
-              if (hasImage) {
-                sendChunk({ error: 'کاربر گرامی، در حال حاضر مدل بینایی رایگان در سیستم موجود نمی‌باشد و شما در نسخه رایگان امکان پردازش اسناد و تصاویر را ندارید. لطفاً برای استفاده از قابلیت‌های پردازش تصویر، از نسخه اعتباری (پولی) استفاده نمایید.' });
-                sendChunk({ done: true });
-                return finishStream();
-              }
-            }
-          } else {
-            sendChunk({ error: 'ظرفیت کلیدهای عمومی در حال حاضر پر شده است. لطفاً چند دقیقه دیگر تلاش کنید.' });
-            sendChunk({ done: true });
-            return finishStream();
-          }
-        }
-        // No process.env fallbacks here anymore! Keys MUST be managed via the Database / Admin Panel.
-        
         // Override apiConfig with the resolved values so the rest of the file uses the correct dynamic keys/urls
         if (!apiConfig[provider]) apiConfig[provider] = {};
         apiConfig[provider].baseUrl = targetBaseUrl;
@@ -195,8 +162,23 @@ router.post('/api/chat/stream', chatStreamLimiter, async (req, res) => {
         apiConfig[provider].apiKey = targetApiKey;
         apiConfig[provider].id = customProfileId; // Ensure injected key works
 
-        if (customProfileId.startsWith('free_') || profileResult.name?.includes('رایگان') || profileResult.name?.toLowerCase().includes('free') || profileResult.name?.includes('[AUTO]')) {
+        if (customProfileId.startsWith('free_') || profileResult.name?.includes('رایگان') || profileResult.name?.toLowerCase().includes('free')) {
           isFreeModel = true;
+          // Use smart routing with Gemini Keys Pool ONLY if the selected model is Gemini
+          if (targetModel.toLowerCase().includes('gemini')) {
+            const poolKey = getGeminiKeyFromPool();
+            if (poolKey) {
+              targetBaseUrl = 'https://generativelanguage.googleapis.com';
+              targetApiKey = poolKey;
+              apiConfig[provider].baseUrl = targetBaseUrl;
+              apiConfig[provider].apiKey = targetApiKey;
+              // If we are overriding a custom profile to use Gemini native SDK, ensure the config is moved
+              if (provider !== 'gemini') {
+                apiConfig['gemini'] = { ...apiConfig[provider], apiKey: targetApiKey, baseUrl: targetBaseUrl };
+              }
+              provider = 'gemini'; // Ensure we use the Gemini SDK flow
+            }
+          }
         }
       }
     }
@@ -204,7 +186,8 @@ router.post('/api/chat/stream', chatStreamLimiter, async (req, res) => {
     // Check 24-hour rolling window limit for Free Models
     if (isFreeModel && !hasCustomUserKey && userRole !== 'admin') {
       const now = Date.now();
-      const WINDOW_MS = 24 * 60 * 60 * 1000; // 24 hours
+      const cooldownHours = parseInt((db.prepare("SELECT value FROM site_settings WHERE key = 'free_cooldown_hours'").get() as any)?.value || '24', 10) || 24;
+      const WINDOW_MS = cooldownHours * 60 * 60 * 1000;
       const identifier = userId ? `user:${userId}` : `ip:${req.ip}`;
       
       const limitStr = userId ? 
@@ -255,7 +238,7 @@ router.post('/api/chat/stream', chatStreamLimiter, async (req, res) => {
           const timeLeftStr = hoursLeft > 0 ? `${hoursLeft} ساعت و ${minsLeft} دقیقه` : `${minsLeft} دقیقه`;
           
           sendChunk({
-            error: `سهمیه ${windowLimit} پیام رایگان شما به پایان رسیده است. ⏱️ سهمیه بعدی شما حدود ${timeLeftStr} دیگر فعال خواهد شد. در صورت تمایل می‌توانید با شارژ کیف پول خود به هر میزان دلخواه، با مدل‌های پیشرفته اعتباری به گفتگو ادامه دهید.`,
+            error: `سهمیه ${windowLimit} پیام رایگان روزانه شما به پایان رسیده است. ⏱️ سهمیه بعدی شما حدود ${timeLeftStr} دیگر فعال خواهد شد. در صورت تمایل می‌توانید با شارژ کیف پول خود به هر میزان دلخواه، با مدل‌های پیشرفته اعتباری به گفتگو ادامه دهید.`,
             insufficientBalance: true,
             quotaExceeded: true,
             done: true
@@ -608,12 +591,6 @@ router.post('/api/chat/stream', chatStreamLimiter, async (req, res) => {
             }
 
             let generatedImageUrl: string | undefined = undefined;
-            if (targetImagePrompt) {
-              const enhancedPrompt = await translateAndEnhanceImagePrompt(targetImagePrompt);
-              const rawUrl = getPollinationsImageUrl(enhancedPrompt, '1:1', 'flux');
-              generatedImageUrl = `/api/proxy-image?url=${encodeURIComponent(rawUrl)}`;
-              sendChunk({ imageUrl: generatedImageUrl });
-            }
 
             // Cache full response in-memory for instant recall
             if (fullText) {
@@ -687,6 +664,8 @@ router.post('/api/chat/stream', chatStreamLimiter, async (req, res) => {
         }
         if (isFreeModel) {
           geminiUsage = { ...geminiUsage, costToman: 0 };
+          const costUsd = calculateModelCostUsd(successfulCandidate, geminiUsage.promptTokens || 0, geminiUsage.completionTokens || 0);
+          logFreeChatUsage(userId, successfulCandidate, geminiUsage.promptTokens || 0, geminiUsage.completionTokens || 0, costUsd);
         } else {
           const costUsd = calculateModelCostUsd(successfulCandidate, geminiUsage.promptTokens || 0, geminiUsage.completionTokens || 0);
           const deductResult = deductChatCost(
@@ -900,9 +879,7 @@ router.post('/api/chat/stream', chatStreamLimiter, async (req, res) => {
           errorText = await response.text();
         } catch { }
 
-        if ((response.status === 429 || response.status === 401 || response.status === 402 || response.status === 403 || response.status === 404) && usedPoolKey) {
-          keyRotator.reportRateLimit(usedPoolKey, 300); // 5 minutes cooldown for failures
-        }
+
 
         let cleanError = sanitizeErrorMessage(errorText || `Status ${response.status}`);
         if (response.status === 401) {
@@ -1041,6 +1018,9 @@ router.post('/api/chat/stream', chatStreamLimiter, async (req, res) => {
         }
         if (isFreeModel) {
           openaiUsage = { ...openaiUsage, costToman: 0 };
+          const modelName = requestedModel || apiConfig?.[provider]?.modelName || 'free';
+          const costUsd = calculateModelCostUsd(modelName, openaiUsage.promptTokens || 0, openaiUsage.completionTokens || 0);
+          logFreeChatUsage(userId, modelName, openaiUsage.promptTokens || 0, openaiUsage.completionTokens || 0, costUsd);
         } else {
           const modelName = requestedModel || apiConfig?.[provider]?.modelName || 'custom';
           const costUsd = calculateModelCostUsd(modelName, openaiUsage.promptTokens || 0, openaiUsage.completionTokens || 0);

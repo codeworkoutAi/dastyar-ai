@@ -53,17 +53,23 @@ if (syncUrl && authToken) {
       syncPeriod: 120 // 2 minutes background sync (non-blocking Rust thread)
       } as any);
     } else {
-      throw initErr;
+      console.warn(`[Database] ⚠️ Turso Cloud connection failed (${initErr?.message || 'Network/DNS error'}). Falling back gracefully to local SQLite database mode.`);
+      db = new Database(dbPath);
+      try {
+        db.exec('PRAGMA journal_mode = WAL;');
+      } catch (e) {}
     }
   }
   // Run initial sync asynchronously in the background so it doesn't block Node startup
   setTimeout(() => {
     try {
-      console.log('[Database] Synchronizing schema and data with Turso Cloud...');
-      db.sync();
-      console.log('[Database] Successfully synchronized with Turso Cloud.');
-    } catch (syncErr) {
-      console.warn('[Database] Initial Turso sync failed, continuing locally:', syncErr.message || syncErr);
+      if (db && typeof db.sync === 'function') {
+        console.log('[Database] Synchronizing schema and data with Turso Cloud...');
+        db.sync();
+        console.log('[Database] Successfully synchronized with Turso Cloud.');
+      }
+    } catch (syncErr: any) {
+      console.warn('[Database] Initial Turso sync failed, continuing locally:', syncErr?.message || syncErr);
     }
   }, 100);
 

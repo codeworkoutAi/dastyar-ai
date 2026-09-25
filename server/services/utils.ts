@@ -1,6 +1,24 @@
 import { GoogleGenAI } from '@google/genai';
 import db from '../db/database';
 
+let currentGeminiKeyIndex = 0;
+
+export function getGeminiKeyFromPool(): string | null {
+  try {
+    const row = db.prepare("SELECT value FROM site_settings WHERE key = 'gemini_keys_pool'").get() as any;
+    if (row && row.value) {
+      const keys = row.value.split('\n').map((k: string) => k.trim()).filter(Boolean);
+      if (keys.length > 0) {
+        currentGeminiKeyIndex = (currentGeminiKeyIndex + 1) % keys.length;
+        return keys[currentGeminiKeyIndex];
+      }
+    }
+  } catch (err) {
+    console.error('Error fetching gemini keys pool:', err);
+  }
+  return null;
+}
+
 const FORBIDDEN_HOSTNAMES = new Set([
   'localhost',
   '127.0.0.1',
@@ -188,64 +206,13 @@ export async function generatePollinationsImage(
   const seed = Math.floor(Math.random() * 10000000);
   const encodedPrompt = encodeURIComponent(styledPrompt);
   
-  // Base raw URL for reference
   const rawUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=${dimW}&height=${dimH}&model=${modelParam}&nologo=true&seed=${seed}`;
 
-  // Helper to attempt a single model fetch with timeout
-  const tryModel = async (model: string, timeoutMs: number): Promise<PollinationsImageResult> => {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), timeoutMs);
-    const targetUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=${dimW}&height=${dimH}&model=${model}&nologo=true&seed=${seed}`;
-    
-    try {
-      const res = await fetch(targetUrl, {
-        method: 'GET',
-        signal: controller.signal,
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-        }
-      });
-      clearTimeout(timeout);
-
-      if (res.ok) {
-        const buffer = await res.arrayBuffer();
-        if (buffer.byteLength > 1000) {
-          const contentType = res.headers.get('content-type') || 'image/jpeg';
-          const base64 = Buffer.from(buffer).toString('base64');
-          return {
-            dataUrl: `data:${contentType};base64,${base64}`,
-            rawUrl: targetUrl,
-          };
-        }
-      }
-      throw new Error(`Model ${model} returned HTTP ${res.status} or tiny response`);
-    } catch (err: any) {
-      clearTimeout(timeout);
-      throw err;
-    }
+  // Return instantly and let the client-side preloadImage handle the actual fetching and timeout
+  return {
+    dataUrl: rawUrl,
+    rawUrl: rawUrl
   };
-
-  // Pick a single fallback model (different from primary)
-  const fallbackModel = modelParam === 'flux-realism' ? 'sana' : 'flux-realism';
-
-  // Strategy: Race primary model (18s timeout) against fallback (delayed start after 12s)
-  // This gives the primary model a fair chance while starting fallback early if it's slow
-  try {
-    const result = await Promise.any([
-      tryModel(modelParam, 18000),
-      new Promise<PollinationsImageResult>((resolve, reject) => {
-        // Give primary 12s head start before trying fallback
-        setTimeout(() => {
-          tryModel(fallbackModel, 15000).then(resolve).catch(reject);
-        }, 12000);
-      }),
-    ]);
-    return result;
-  } catch (aggregateErr: any) {
-    console.warn('[Pollinations] All model attempts failed:', aggregateErr?.errors?.map((e: any) => e?.message) || aggregateErr?.message);
-  }
-
-  throw new Error('سرور تولید تصویر در حال حاضر پاسخگو نیست. لطفاً مجدداً امتحان کنید.');
 }
 
 // Helper to translate and enhance image prompts into professional English prompts
@@ -496,7 +463,7 @@ export function sanitizeErrorMessage(err: any): string {
 
   // 401 / Unauthorized & Invalid API Key
   if (msg.includes('Authentication Fails') || msg.includes('Invalid API Key') || msg.includes('invalid_api_key') || msg.includes('401') || msg.includes('Unauthorized')) {
-    return 'کلید دسترسی (API Key) نامعتبر است یا اشتباه وارد شده است (کد ۴۰۱). لطفاً کلید معتبر خود را در بخش تنظیمات وارد کنید.';
+    return 'کلید دسترسی سرور (System API Key) به این ارائه‌دهنده نامعتبر است (کد ۴۰۱). لطفاً در پنل ادمین بررسی کنید.';
   }
 
   // 400 / Bad Request
@@ -516,7 +483,7 @@ export function sanitizeErrorMessage(err: any): string {
 
   // 403 / Permission Denied
   if (msg.includes('API_KEY_INVALID') || msg.includes('API key not valid') || msg.includes('403') || msg.includes('PERMISSION_DENIED')) {
-    return 'کلید دسترسی (API Key) نامعتبر است یا دسترسی لازم به این مدل را ندارد (کد ۴۰۳). لطفاً در تنظیمات کلید صحیح را وارد کنید.';
+    return 'دسترسی کلید سرور (System API Key) به این مدل محدود شده است یا نامعتبر می‌باشد (کد ۴۰۳). لطفاً پنل ادمین را بررسی کنید.';
   }
 
   // 404 / Model Not Found or Not Available

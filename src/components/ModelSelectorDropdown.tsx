@@ -19,14 +19,13 @@ export const ModelSelectorDropdown: React.FC = () => {
     const allProfiles = settings.providers.custom.profiles || [];
     const systemProfiles = allProfiles.filter(p => p.isSystemDefault);
 
-    // Group into Free and Pro
-    const freeProfiles: CustomProfile[] = [];
+    // Group into Base/Fast (Smart Routing defaults) and Pro/Advanced
+    const baseProfiles: CustomProfile[] = [];
     const proProfiles: CustomProfile[] = [];
 
     systemProfiles.forEach(p => {
-        const details = getModelDetails({ id: p.modelName, name: p.name, isFree: p.id.startsWith('free_') });
-        if (details.isFree) {
-            freeProfiles.push(p);
+        if (p.id.startsWith('free_') || p.id === 'default' || p.id === 'coding' || p.id === 'vision') {
+            baseProfiles.push(p);
         } else {
             proProfiles.push(p);
         }
@@ -93,7 +92,7 @@ export const ModelSelectorDropdown: React.FC = () => {
             <button
                 key={p.id}
                 onClick={() => handleSelect(p.id)}
-                className={`w-full text-right flex items-center justify-between p-3 rounded-xl transition-colors ${isSelected ? 'bg-zinc-200/70 dark:bg-zinc-100' : 'clay-icon-btn/50'
+                className={`w-full text-right flex items-center justify-between p-3 rounded-xl transition-colors ${isSelected ? 'bg-zinc-200/70 dark:bg-zinc-100' : 'hover:bg-black/5 dark:hover:bg-white/5'
                     }`}
             >
                 <div className="flex gap-3 items-center w-full">
@@ -149,7 +148,7 @@ export const ModelSelectorDropdown: React.FC = () => {
                 <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-80 max-h-[70vh] overflow-y-auto clay-card z-50 p-2 overflow-x-hidden flex flex-col gap-3 rtl [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                     <button
                         onClick={handleToggleSmartRouting}
-                        className={`w-full text-right flex items-center justify-between p-3 rounded-xl transition-colors ${settings.tools.smartRouting ? 'bg-zinc-200/70 dark:bg-zinc-100' : 'clay-icon-btn/50'
+                        className={`w-full text-right flex items-center justify-between p-3 rounded-xl transition-colors ${settings.tools.smartRouting ? 'bg-zinc-200/70 dark:bg-zinc-100' : 'hover:bg-black/5 dark:hover:bg-white/5'
                             }`}
                     >
                         <div className="flex flex-col gap-1 items-start">
@@ -164,21 +163,21 @@ export const ModelSelectorDropdown: React.FC = () => {
                     </button>
 
                     <div className="h-px clay-btn-secondary/80 mx-2" />
-                    {freeProfiles.length > 0 && (
+                    {baseProfiles.length > 0 && (
                         <div>
-                            <div className="px-3 pb-1.5 mb-1.5 text-sm font-bold text-emerald-600 dark:text-emerald-400 border-b border-[var(--card-border)]  flex items-center gap-1.5">
-                                🎁 مدل‌های رایگان (روزمره)
+                            <div className="px-3 pb-1.5 mb-1.5 text-xs font-bold text-sky-600 dark:text-sky-400 border-b border-[var(--card-border)] flex items-center gap-1.5">
+                                ⚡ دستیاران پایه و سریع (پیش‌فرض مسیریاب)
                             </div>
                             <div className="flex flex-col gap-1">
-                                {freeProfiles.map(renderProfileItem)}
+                                {baseProfiles.map(renderProfileItem)}
                             </div>
                         </div>
                     )}
 
                     {proProfiles.length > 0 && (
                         <div>
-                            <div className="px-3 pb-1.5 mb-1.5 text-sm font-bold text-indigo-600 dark:text-indigo-400 border-b border-[var(--card-border)]  flex items-center gap-1.5">
-                                🚀 مدل‌های اعتباری
+                            <div className="px-3 pb-1.5 mb-1.5 text-xs font-bold text-indigo-600 dark:text-indigo-400 border-b border-[var(--card-border)] flex items-center gap-1.5">
+                                ✨ دستیاران حرفه‌ای و تخصصی
                             </div>
                             <div className="flex flex-col gap-1">
                                 {proProfiles.map(renderProfileItem)}
@@ -186,7 +185,7 @@ export const ModelSelectorDropdown: React.FC = () => {
                         </div>
                     )}
 
-                    {freeProfiles.length === 0 && proProfiles.length === 0 && (
+                    {baseProfiles.length === 0 && proProfiles.length === 0 && (
                         <div className="p-4 text-center text-sm text-zinc-500">
                             هیچ مدلی یافت نشد.
                         </div>

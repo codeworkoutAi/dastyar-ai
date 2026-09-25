@@ -27,14 +27,14 @@ Persian AI Chatbox is a highly polished, full-stack AI platform for Persian-spea
 ### 2. Six-Card Unified Model Architecture (Single Source of Truth)
 The platform operates exclusively on **exactly six stable system profiles** (divided into 3 Free and 3 Paid/Credit models). User BYOK personal profiles are completely eliminated in favor of managed system stability:
 
-- **Free Tier Models (System Key Pool):**
-  1. `free_default`: **دستیار چت و گفتگو (رایگان)** ⬅️ `role: 'default'` | مدل: `gpt-4o-mini`
-  2. `free_coding`: **دستیار کدنویسی و تحلیل (رایگان)** ⬅️ `role: 'coding'` | مدل: `deepseek-v3`
-  3. `free_vision`: **دستیار بینایی و اسناد (رایگان)** ⬅️ `role: 'vision'` | مدل: `gemini-flash`
-- **Paid Tier Models (Pay-As-You-Go / Router.cheap):**
-  4. `paid_default`: **دستیار هوشمند لونا (اعتباری)** ⬅️ `role: 'paid_default'` | مدل: `gpt-5.6-luna`
-  5. `paid_coding`: **دستیار مهندسی دیپ‌سیک (اعتباری)** ⬅️ `role: 'paid_coding'` | مدل: `deepseek-v3`
-  6. `paid_vision`: **دستیار اسناد و بینایی جمینای (اعتباری)** ⬅️ `role: 'paid_vision'` | مدل: `gemini-3.8-flash`
+- **Base/Fast Models (Lightweight & Cost-Effective, Smart Routing Defaults):**
+  1. `free_default`: **دستیار چت و گفتگو** ⬅️ `role: 'default'` | مدل: `minimax-m3`
+  2. `free_coding`: **دستیار برنامه‌نویسی و کد** ⬅️ `role: 'coding'` | مدل: `deepseek-v4-flash`
+  3. `free_vision`: **دستیار بینایی و اسناد** ⬅️ `role: 'vision'` | مدل: `gemini-3.5-flash`
+- **Pro/Advanced Models (Pay-As-You-Go / Router.cheap):**
+  4. `paid_default`: **دستیار هوشمند کلود** ⬅️ `role: 'paid_default'` | مدل: `claude-sonnet-4-6`
+  5. `paid_coding`: **دستیار مهندسی دیپ‌سیک** ⬅️ `role: 'paid_coding'` | مدل: `deepseek-v4-pro`
+  6. `paid_vision`: **دستیار اسناد و بینایی جمینای** ⬅️ `role: 'paid_vision'` | مدل: `gemini-3.8-flash`
 
 - **Key Security & Injection**:
   - The public endpoint `GET /api/default-profiles` returns sanitized profile metadata with `apiKey: ''` masked.
@@ -45,11 +45,15 @@ The platform operates exclusively on **exactly six stable system profiles** (div
 ### 3. Usage Quotas, Fair Use & Seamless Auto-Switch
 - **Mandatory Login Policy (No Guest Chat)**:
   - Users MUST be authenticated before starting a chat session. Guest users attempting to send messages are prompted with the authentication modal (`AuthModal.tsx`).
-- **Free Quota**: Each registered user receives **15 free messages** within a rolling **4-hour cooldown window** (`windowStart` in `free_daily_usage`).
+- **Free Quota (15 Messages per 24-Hour Day)**:
+  - Each registered user receives **15 free messages** within a rolling **24-hour cooldown window** (`windowStart` in `free_daily_usage`).
+  - Configuration in `site_settings`: `free_daily_limit_user = '15'` and `free_cooldown_hours = '24'`.
+- **Accurate 24-Hour Cooldown Timer**:
+  - If quota is exhausted and wallet balance is empty, the server returns an exact Persian cooldown counter (`ساعت و دقیقه باقی‌مانده`) based strictly on the 24-hour window until the next refill.
 - **Seamless Auto-Switch to Credit**:
   - When a free user exhausts their 15-message quota:
     - **If wallet balance exists**: The stream automatically switches to the corresponding paid profile (`paid_default`, `paid_coding`, or `paid_vision`) without cutting off the user or showing an error.
-    - **If wallet balance is empty**: A courteous Persian notice is returned indicating the exact remaining cooldown time (hours/minutes) along with a direct action button to top up the wallet.
+    - **If wallet balance is empty**: A courteous Persian notice is returned indicating the exact remaining cooldown time (hours/minutes of the 24-hour window) along with a direct action button to top up the wallet (`ErrorCapsule.tsx` with standard `.clay-btn`).
 
 ### 4. Explore Hub (Prompt Library Focus)
 - The **Explore Hub** (`src/pages/explore/ExploreHub.tsx`) is dedicated exclusively to **prompts, personas, and prompt discovery**.
@@ -59,6 +63,9 @@ The platform operates exclusively on **exactly six stable system profiles** (div
 - **Images**: Converted to Base64 and resized/compressed via Canvas (max 1200px) *before* saving to state to reduce `localStorage` pressure.
 - **Documents & Text**: PDF (up to 10MB), text, code (`.js`, `.py`, etc.), datasets (`.csv`, `.json`). Text is extracted and injected into the prompt.
 - **UI Logic**: Non-image files use a `FileText` fallback layout — never render them as `<img>`.
+- **AI Image Generation Policy**:
+  - **In Chat (`ChatBox` / `MessageInput`)**: Strictly PAID and studio-tier using **Google Imagen 3** (`imagen-3`) and **DALL-E 3** (`dalle-3`). Low-quality free models are never used in chat. Deducts directly from user wallet balance (~6,000 to ~8,000 Tomans).
+  - **In Image Generation Studio (`ImageGenStudio.tsx`)**: User has full freedom — free engines (`flux`, `sana`, etc.) remain 100% free via Pollinations for test/fun, while studio engines (`imagen-3`, `dalle-3`) deduct from wallet balance using system API keys without requiring personal BYOK keys.
 
 ### 6. LocalStorage Quota Management
 - Conversation history is stored in `localStorage`.
@@ -73,6 +80,10 @@ The platform operates exclusively on **exactly six stable system profiles** (div
 - **Wallet & Billing**:
   - Subscription packages (Bronze, Silver, Gold) have been replaced by a modern **Pay-As-You-Go** model. Users can top up their wallet with any custom amount (starting from 50,000 Tomans) with lifetime validity and per-token billing.
   - Payment methods include online gateway integration and manual card-to-card with receipt review and Telegram alerts.
+  - Financial calculations account for both `chat_usage` and `image_usage` in revenue and treasury consumption.
+- **Free Subsidies Monitoring (`free_usage`)**:
+  - All free chat turns log exact prompt/completion tokens and estimated USD cost to `wallet_transactions` (`type = 'free_usage'`, amount 0 Toman).
+  - Admin Finance Tab (`AdminFinanceTab.tsx`) includes an active KPI card for **سهمیه و یارانه رایگان کاربران** calculating total subsidized messages, tokens, and Toman/USD cost to the platform.
 - **Admin**: Profile key management, promo codes, transaction audits, and system configuration (`server/routes/admin.ts`).
 - **Turso note**: `db.transaction()` is not supported in embedded-replica mode — avoid transactions or guard them.
 

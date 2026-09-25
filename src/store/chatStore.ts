@@ -237,13 +237,19 @@ stopGeneration: () => {
 
     try {
       if (isImageGen) {
+        const authToken = useAuthStore.getState().token;
+        const imgHeaders: Record<string, string> = { 'Content-Type': 'application/json' };
+        if (authToken) {
+          imgHeaders['Authorization'] = `Bearer ${authToken}`;
+        }
+
         const res = await fetch('/api/generate-image', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: imgHeaders,
           body: JSON.stringify({ 
             prompt: promptText, 
             settings: payloadSettings,
-            engine: imageEngine,
+            engine: imageEngine || 'imagen-3',
             apiKey: imageEngine === 'dalle-3' ? payloadSettings.providers.openai?.apiKey : imageEngine === 'imagen-3' ? payloadSettings.providers.gemini?.apiKey : undefined 
           }),
           signal: controller.signal,
@@ -251,6 +257,13 @@ stopGeneration: () => {
         const data = await res.json();
         if (data.error) {
           throw new Error(data.error);
+        }
+
+        if (data.balanceAfter !== undefined) {
+          const currentUser = useAuthStore.getState().user;
+          if (currentUser) {
+            useAuthStore.getState().setUser({ ...currentUser, walletBalance: data.balanceAfter });
+          }
         }
 
         const totalTimeMs = Math.round(performance.now() - requestStartTime);

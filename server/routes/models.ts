@@ -3,6 +3,8 @@ import db from '../db/database';
 import { isSafeBaseUrl, getGeminiClient, extractCleanErrorMessage, sanitizeErrorMessage, normalizeBaseUrl, parseCustomHeaders } from '../services/utils';
 import { modelTestRateLimiter } from '../middleware/rateLimiter';
 
+import { MODEL_PRICING_USD, getApiDollarRate } from '../services/walletService';
+
 const router = express.Router();
 
 router.get('/api/health', (_req, res) => {
@@ -34,6 +36,66 @@ router.get('/api/default-profiles', (_req, res) => {
   } catch (error) {
     console.error('[Models API] Error fetching public default profiles:', error);
     res.status(500).json({ error: 'خطا در دریافت پروفایل‌های پیش‌فرض' });
+  }
+});
+
+// 1.5 GET /api/models-pricing (Public: Live pricing & tariffs for all supported models)
+router.get('/api/models-pricing', (_req, res) => {
+  try {
+    const sellingRate = getApiDollarRate();
+    const defaultProfiles = db.prepare('SELECT id, name, modelName, role FROM default_profiles WHERE isActive = 1').all() as any[];
+    const defaultModelIds = new Set(defaultProfiles.map(p => (p.modelName || '').toLowerCase()));
+
+    const models = Object.entries(MODEL_PRICING_USD).map(([id, [promptUsd, completionUsd]]) => {
+      const promptToman = Math.round(promptUsd * sellingRate);
+      const completionToman = Math.round(completionUsd * sellingRate);
+      // Average message cost: ~500 prompt tokens + ~300 completion tokens
+      const avgCostToman = Math.round(((promptUsd * 500) + (completionUsd * 300)) / 1000000 * sellingRate);
+      const idLower = id.toLowerCase();
+
+      let provider = 'سایر';
+      if (idLower.includes('gpt') || idLower.includes('openai') || idLower.includes('o1') || idLower.includes('o3')) provider = 'OpenAI';
+      else if (idLower.includes('claude')) provider = 'Anthropic';
+      else if (idLower.includes('gemini')) provider = 'Google';
+      else if (idLower.includes('deepseek')) provider = 'DeepSeek';
+      else if (idLower.includes('kimi')) provider = 'Moonshot Kimi';
+      else if (idLower.includes('glm')) provider = 'Zhipu AI';
+      else if (idLower.includes('minimax')) provider = 'MiniMax';
+      else if (idLower.includes('grok')) provider = 'xAI';
+      else if (idLower.includes('qwen')) provider = 'Alibaba';
+      else if (idLower.includes('llama')) provider = 'Meta';
+
+      const isVision = idLower.includes('vision') || idLower.includes('gemini') || idLower.includes('gpt-4o') || idLower.includes('gpt-5') || idLower.includes('omni') || idLower.includes('sonnet') || idLower.includes('opus');
+      const isCoding = idLower.includes('code') || idLower.includes('deepseek') || idLower.includes('claude') || idLower.includes('coder');
+      const isFast = idLower.includes('flash') || idLower.includes('mini') || idLower.includes('haiku') || idLower.includes('lite') || idLower.includes('fast');
+
+      const matchedProfile = defaultProfiles.find(p => (p.modelName || '').toLowerCase() === idLower);
+
+      return {
+        id,
+        name: matchedProfile?.name || id,
+        provider,
+        promptPriceUsd: promptUsd,
+        completionPriceUsd: completionUsd,
+        promptPriceToman: promptToman,
+        completionPriceToman: completionToman,
+        estimatedMsgCostToman: Math.max(10, avgCostToman),
+        isVision,
+        isCoding,
+        isFast,
+        isDefaultProfile: defaultModelIds.has(idLower),
+        defaultRole: matchedProfile?.role || null,
+        profileId: matchedProfile?.id || null,
+      };
+    });
+
+    res.json({
+      sellingRate,
+      models
+    });
+  } catch (error) {
+    console.error('[Models API] Error fetching pricing list:', error);
+    res.status(500).json({ error: 'خطا در دریافت لیست قیمت مدل‌ها' });
   }
 });
 

@@ -24,6 +24,16 @@ export function initializeSchema() {
       }
     } catch (e) {}
 
+    // Force update existing free profiles to use Gemini Pool instead of router.cheap
+    try {
+      console.log('[Database] Migrating free profiles to Gemini Keys Pool...');
+      db.prepare("UPDATE default_profiles SET baseUrl = 'https://generativelanguage.googleapis.com', modelName = 'gemini-2.5-flash', apiKey = '' WHERE id = 'free_default'").run();
+      db.prepare("UPDATE default_profiles SET baseUrl = 'https://generativelanguage.googleapis.com', modelName = 'gemini-2.0-pro-exp-02-05', apiKey = '' WHERE id = 'free_coding'").run();
+      db.prepare("UPDATE default_profiles SET baseUrl = 'https://generativelanguage.googleapis.com', modelName = 'gemini-2.5-flash', apiKey = '' WHERE id = 'free_vision'").run();
+    } catch (e) {
+      console.error('[Database] Failed to migrate free profiles:', e);
+    }
+
     // Add telegramId to users
     try {
       const usersTableInfo = db.prepare('PRAGMA table_info(users)').all() as any[];
@@ -292,17 +302,17 @@ export function initializeSchema() {
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
       `);
 
-      // 1. Free Default
-      seedStmt.run('free_default', 'دستیار چت و گفتگو', 'https://api.openai.com/v1', process.env.DEFAULT_OPENAI_KEY || '', 'gpt-4o-mini', '', 'default', 0, 1);
+      // 1. Free Default (Ultra-economic general chat)
+      seedStmt.run('free_default', 'دستیار چت و گفتگو', 'https://generativelanguage.googleapis.com', '', 'gemini-2.5-flash', '', 'default', 0, 1);
       // 2. Free Coding
-      seedStmt.run('free_coding', 'دستیار کدنویسی و تحلیل', 'https://api.deepseek.com/v1', process.env.DEFAULT_DEEPSEEK_KEY || '', 'deepseek-v3', '', 'coding', 1, 1);
+      seedStmt.run('free_coding', 'دستیار برنامه‌نویسی و کد', 'https://generativelanguage.googleapis.com', '', 'gemini-2.0-pro-exp-02-05', '', 'coding', 1, 1);
       // 3. Free Vision
-      seedStmt.run('free_vision', 'دستیار بینایی و اسناد', 'https://generativelanguage.googleapis.com/v1beta/openai', process.env.DEFAULT_GEMINI_KEY || '', 'gemini-1.5-flash', '', 'vision', 2, 1);
+      seedStmt.run('free_vision', 'دستیار بینایی و اسناد', 'https://generativelanguage.googleapis.com', '', 'gemini-2.5-flash', '', 'vision', 2, 1);
       
-      // 4. Paid Default
-      seedStmt.run('paid_default', 'دستیار هوشمند لونا', 'https://router.cheap/v1', process.env.ROUTER_CHEAP_KEY || '', 'gpt-5.6-luna', '', 'paid_default', 3, 1);
+      // 4. Paid Default (Pro smart Claude assistant)
+      seedStmt.run('paid_default', 'دستیار هوشمند کلود', 'https://router.cheap/v1', process.env.ROUTER_CHEAP_KEY || '', 'claude-sonnet-4-6', '', 'paid_default', 3, 1);
       // 5. Paid Coding
-      seedStmt.run('paid_coding', 'دستیار مهندسی دیپ‌سیک', 'https://router.cheap/v1', process.env.ROUTER_CHEAP_KEY || '', 'deepseek-v3', '', 'paid_coding', 4, 1);
+      seedStmt.run('paid_coding', 'دستیار مهندسی دیپ‌سیک', 'https://router.cheap/v1', process.env.ROUTER_CHEAP_KEY || '', 'deepseek-v4-pro', '', 'paid_coding', 4, 1);
       // 6. Paid Vision
       seedStmt.run('paid_vision', 'دستیار اسناد و بینایی جمینای', 'https://router.cheap/v1', process.env.ROUTER_CHEAP_KEY || '', 'gemini-3.8-flash', '', 'paid_vision', 5, 1);
     }
@@ -364,8 +374,8 @@ export function initializeSchema() {
       db.prepare("UPDATE site_settings SET value = 'true' WHERE key = 'news_auto_publish'").run();
     } catch {}
     seedSetting('api_dollar_rate', '200000'); // 200,000 Tomans per $1 API by default
-    seedSetting('free_key_pool', ''); // Comma- or newline-separated free keys for round-robin
-    seedSetting('free_daily_limit_user', '15'); // 15 free messages per 4-hour window
+    seedSetting('free_daily_limit_user', '15'); // 15 free messages per 24-hour day
+    seedSetting('free_cooldown_hours', '24'); // 24-hour daily quota cooldown
     seedSetting('free_daily_limit_guest', '5');
   } catch (err) {
     console.error('[Database] Failed to seed site settings:', err);
@@ -398,6 +408,15 @@ export function initializeSchema() {
   try {
     db.exec(`ALTER TABLE free_daily_usage ADD COLUMN windowStart INTEGER DEFAULT 0;`);
   } catch {}
+
+  // Create Free Image Daily Usage table
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS free_image_usage (
+      userId INTEGER PRIMARY KEY,
+      count INTEGER DEFAULT 0,
+      windowStart INTEGER DEFAULT 0
+    )
+  `);
 
   // Create Telegram Pending Receipts table (for card-to-card payment flow)
   db.exec(`

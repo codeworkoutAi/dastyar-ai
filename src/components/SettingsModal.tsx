@@ -162,7 +162,7 @@ export const VisualRoleSelect: React.FC<VisualRoleSelectProps> = ({
  isSelected
  ? 'bg-indigo-950/40 border-indigo-500/50 text-indigo-200'
  : isRecommendedForRole
- ? 'clay-surface/80 border-zinc-300  hover:border-zinc-600 clay-icon-btn/70 text-zinc-800 dark:text-zinc-200'
+ ? 'clay-surface/80 border-zinc-300 hover:border-zinc-600 text-zinc-800 dark:text-zinc-200'
  : 'clay-surface border-[var(--card-border)]/60 hover:clay-surface/50 text-zinc-700 dark:text-zinc-400 opacity-80 hover:opacity-100'
  }`}
  >
@@ -258,7 +258,7 @@ export const SearchableCombobox = ({ value, onChange, options, placeholder, clas
  filteredOptions.map((opt: any) => (
  <div
  key={opt.id}
- className="p-3 clay-icon-btn cursor-pointer text-sm font-mono border-b border-[var(--card-border)]/50 last:border-0 truncate text-left"
+ className="p-3 hover:bg-black/5 dark:hover:bg-white/5 cursor-pointer text-sm font-mono border-b border-[var(--card-border)]/50 last:border-0 truncate text-left transition-colors"
  onClick={() => {
  onChange(opt.id);
  setIsOpen(false);

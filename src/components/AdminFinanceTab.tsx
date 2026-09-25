@@ -7,6 +7,7 @@ import { Coins, TrendingUp, TrendingDown, Plus, Trash2, Save, CheckCircle2, Aler
 } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import { PromoCodesManager } from './PromoCodesManager';
+import { toPersianDigits } from '../lib/persianUtils';
 
 export const AdminFinanceTab: React.FC = () => {
  const { token } = useAuthStore();
@@ -28,7 +29,6 @@ export const AdminFinanceTab: React.FC = () => {
  const [sellingRate, setSellingRate] = useState('200000');
  const [welcomeBonus, setWelcomeBonus] = useState('50000');
  const [welcomeBonusEnabled, setWelcomeBonusEnabled] = useState(true);
- const [freeKeyPool, setFreeKeyPool] = useState('');
 
  // Zarinpal Gateway state
  const [zarinpalMerchantId, setZarinpalMerchantId] = useState('');
@@ -158,7 +158,6 @@ export const AdminFinanceTab: React.FC = () => {
  if (settings.api_dollar_rate) setSellingRate(settings.api_dollar_rate);
  if (settings.welcome_bonus_amount) setWelcomeBonus(settings.welcome_bonus_amount);
  if (settings.welcome_bonus_enabled) setWelcomeBonusEnabled(settings.welcome_bonus_enabled === 'true');
- if (settings.free_key_pool) setFreeKeyPool(settings.free_key_pool);
  if (settings.zarinpal_merchant_id) setZarinpalMerchantId(settings.zarinpal_merchant_id);
  if (settings.zarinpal_sandbox !== undefined) setZarinpalSandbox(settings.zarinpal_sandbox === 'true');
  }
@@ -494,7 +493,7 @@ export const AdminFinanceTab: React.FC = () => {
  )}
 
  {/* KPI Cards Header */}
- <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5">
  {/* Total USD Purchased */}
  <div className="p-4 rounded-2xl admin-card flex flex-col justify-between">
  <div>
@@ -589,9 +588,31 @@ export const AdminFinanceTab: React.FC = () => {
  </div>
  <div className="text-[11px] font-medium text-zinc-500 dark:text-zinc-400 mt-2.5 pt-2 border-t admin-border ">
  درآمد کسر شده: <span className="font-bold text-zinc-700 dark:text-zinc-300">{(summary?.totalDeductedToman || 0).toLocaleString('fa-IR')}</span> تومان
- </div>
- </div>
- </div>
+          </div>
+        </div>
+
+        {/* Subsidized Free Usage Monitoring */}
+        <div className="p-4 rounded-2xl admin-card flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-semibold text-zinc-500 dark:text-zinc-400">یارانه و سهمیه رایگان</span>
+              <div className="w-8 h-8 rounded-xl bg-rose-500/10 text-rose-500 flex items-center justify-center shrink-0">
+                <Gift className="w-4 h-4" />
+              </div>
+            </div>
+            <div className="flex items-baseline gap-1.5 mt-1">
+              <span className="text-2xl font-black text-rose-600 dark:text-rose-400 font-mono" dir="ltr">
+                {(summary?.freeStats?.totalFreeCostToman || 0).toLocaleString('fa-IR')}
+              </span>
+              <span className="text-xs font-medium text-zinc-400">تومان یارانه</span>
+            </div>
+          </div>
+          <div className="text-[11px] font-medium text-zinc-500 dark:text-zinc-400 mt-2.5 pt-2 border-t admin-border flex items-center justify-between">
+            <span>{toPersianDigits(summary?.freeStats?.totalFreeMessages || 0)} پیام چت</span>
+            <span>~{toPersianDigits(Math.round((summary?.freeStats?.totalFreeTokens || 0) / 1000))}K توکن</span>
+          </div>
+        </div>
+      </div>
 
   {/* Promo Codes Manager */}
   <div className="mb-6">
@@ -615,7 +636,7 @@ export const AdminFinanceTab: React.FC = () => {
  </button>
  </div>
 
- <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+ <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
  {/* Selling Rate */}
  <div className="space-y-1.5 flex flex-col justify-between">
  <div>
@@ -640,26 +661,8 @@ export const AdminFinanceTab: React.FC = () => {
 
 
 
- {/* Free Key Pool Info */}
- <div className="space-y-1.5 flex flex-col justify-between">
- <div>
- <label className="text-xs font-semibold text-zinc-700 dark:text-zinc-300 block mb-1.5">
- استخر کلیدهای رایگان (Round-Robin):
- </label>
- <textarea
- rows={2}
- value={freeKeyPool}
- onChange={(e) => setFreeKeyPool(e.target.value)}
- placeholder="کلیدهای متعدد Gemini یا Groq را با کاما یا خط جدید وارد کنید..."
- className="w-full px-3 py-2 rounded-xl admin-input text-xs font-mono focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all resize-none"
- />
  </div>
- <p className="text-[11px] text-zinc-500 dark:text-zinc-400 leading-relaxed mt-1">
- سیستم به نوبت (Round-Robin) از این کلیدها استفاده کرده و سقف درخواست را تقسیم می‌کند.
- </p>
- </div>
- </div>
- </div>
+  </div>
 
  {/* ZarinPal Payment Gateway Section */}
  <div className="p-5 rounded-2xl admin-card space-y-4">
@@ -937,6 +940,8 @@ export const AdminFinanceTab: React.FC = () => {
  <option value="all">همه تراکنش‌ها</option>
  <option value="deposit">افزایش اعتبار (+)</option>
  <option value="deduct">مصرف (-)</option>
+                <option value="free_usage">یارانه و سهمیه رایگان (۰ تومان)</option>
+                <option value="image_usage">تصویرسازی استودیویی</option>
  </select>
 
  <select

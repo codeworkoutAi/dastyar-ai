@@ -785,7 +785,7 @@ onClick={(e) => e.stopPropagation()}
 <div className="absolute -bottom-14 left-1/2 -translate-x-1/2 flex items-center gap-3">
 <button
 onClick={() => handleDownloadMedia(lightboxMedia.url, lightboxMedia.type === 'video')}
-className="flex items-center gap-2 px-4 py-2 clay-surface clay-icon-btn text-white rounded-btn border border-[var(--color-border-strong)] transition-colors cursor-pointer text-sm"
+className="flex items-center gap-2 px-4 py-2 clay-btn text-white rounded-btn border border-[var(--color-border-strong)] transition-colors cursor-pointer text-sm"
 >
 <Download className="w-4 h-4" />
 دانلود

@@ -264,37 +264,91 @@ router.post('/checkout-manual', checkoutLimiter, requireAuth, (req: any, res) =>
 });
 
 // GET /api/store/mock-payment (Dummy gateway to simulate successful payment)
-router.get('/mock-payment', requireAuth, (req: any, res) => {
+router.get('/mock-payment', (req: any, res) => {
   const rawOrderId = typeof req.query.orderId === 'string' ? req.query.orderId : '';
   if (!rawOrderId || !/^[a-zA-Z0-9_-]{1,64}$/.test(rawOrderId)) {
     return res.status(400).send('شماره سفارش نامعتبر است');
   }
-  const order = db.prepare('SELECT id, paymentStatus FROM orders WHERE id = ?').get(rawOrderId) as any;
+  const order = db.prepare('SELECT id, amount, paymentStatus, userId, productId FROM orders WHERE id = ?').get(rawOrderId) as any;
   if (!order || order.paymentStatus !== 'pending') {
-    return res.status(404).send('سفارش معتبری در وضعیت پرداخت یافت نشد.');
+    return res.status(404).send(`
+      <html dir="rtl" lang="fa">
+        <head><meta charset="UTF-8"><title>وضعیت سفارش</title></head>
+        <body style="font-family: Tahoma, sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; background: #f4f4f5;">
+          <div style="background: white; padding: 30px; border-radius: 16px; text-align: center; box-shadow: 0 4px 20px rgba(0,0,0,0.1);">
+            <h3 style="color: #ef4444;">سفارش یافت نشد یا قبلاً پرداخت شده است.</h3>
+            <a href="/dashboard" style="display: inline-block; margin-top: 15px; padding: 10px 20px; background: #2563eb; color: white; text-decoration: none; border-radius: 8px;">بازگشت به داشبورد</a>
+          </div>
+        </body>
+      </html>
+    `);
   }
   const safeOrderId = encodeURIComponent(rawOrderId);
+  const formattedAmount = (order.amount || 0).toLocaleString('fa-IR');
   
-  // Create a beautiful HTML dummy payment page
+  // Create an authentic, beautiful HTML dummy payment page
   res.send(`
+    <!DOCTYPE html>
     <html dir="rtl" lang="fa">
       <head>
         <meta charset="UTF-8">
-        <title>درگاه پرداخت آزمایشی</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>درگاه پرداخت اینترنتی شاپرک (محیط تستی)</title>
         <style>
-          body { font-family: Tahoma, sans-serif; background: #f4f4f5; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; }
-          .card { background: white; padding: 30px; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); text-align: center; max-width: 400px; width: 100%; }
-          .btn { background: #2563eb; color: white; border: none; padding: 12px 24px; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 20px; text-decoration: none; display: inline-block; }
-          .btn-danger { background: #ef4444; }
+          * { box-sizing: border-box; }
+          body { font-family: Tahoma, 'Vazirmatn', sans-serif; background: #0f172a; color: #1e293b; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; padding: 20px; }
+          .card { background: #ffffff; border-radius: 24px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); max-width: 440px; width: 100%; overflow: hidden; }
+          .header { background: linear-gradient(135deg, #1e3a8a, #3b82f6); color: white; padding: 24px; text-align: center; }
+          .header h2 { margin: 0 0 6px 0; font-size: 18px; font-weight: 800; }
+          .header p { margin: 0; font-size: 12px; opacity: 0.85; }
+          .body { padding: 24px; }
+          .info-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #f1f5f9; font-size: 13px; }
+          .info-label { color: #64748b; font-weight: 500; }
+          .info-val { font-weight: 700; color: #0f172a; }
+          .amount-val { color: #059669; font-size: 18px; font-weight: 900; }
+          .badge { background: #fef3c7; color: #92400e; padding: 4px 10px; border-radius: 9999px; font-size: 11px; font-weight: 700; display: inline-block; margin-top: 12px; }
+          .actions { display: flex; flex-direction: column; gap: 10px; margin-top: 24px; }
+          .btn { display: block; text-align: center; padding: 14px; border-radius: 14px; font-weight: 800; font-size: 14px; text-decoration: none; cursor: pointer; transition: all 0.2s; }
+          .btn-success { background: #059669; color: white; box-shadow: 0 10px 15px -3px rgba(5, 150, 105, 0.3); }
+          .btn-success:hover { background: #047857; transform: translateY(-1px); }
+          .btn-danger { background: #f1f5f9; color: #64748b; border: 1px solid #e2e8f0; }
+          .btn-danger:hover { background: #fee2e2; color: #dc2626; }
+          .footer { text-align: center; font-size: 11px; color: #94a3b8; padding: 0 24px 20px 24px; }
         </style>
       </head>
       <body>
         <div class="card">
-          <h2 style="color: #2563eb">درگاه پرداخت تستی</h2>
-          <p>شما در حال پرداخت سفارش <strong>${safeOrderId}</strong> هستید.</p>
-          <div style="display: flex; gap: 10px; justify-content: center; margin-top: 20px;">
-            <a href="/api/store/mock-callback?orderId=${safeOrderId}&status=success" class="btn">پرداخت موفق</a>
-            <a href="/api/store/mock-callback?orderId=${safeOrderId}&status=failed" class="btn btn-danger">انصراف</a>
+          <div class="header">
+            <h2>درگاه پرداخت اینترنتی</h2>
+            <p>شبکه الکترونیکی پرداخت کارت (شاپرک) - شبیه‌ساز امن</p>
+          </div>
+          <div class="body">
+            <div class="info-row">
+              <span class="info-label">پذیرنده:</span>
+              <span class="info-val">دستیار هوشمند (Fa-Chatbox)</span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">شماره سفارش:</span>
+              <span class="info-val" style="font-family: monospace; letter-spacing: 0.5px;">${safeOrderId}</span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">مبلغ قابل پرداخت:</span>
+              <span class="amount-val">${formattedAmount} تومان</span>
+            </div>
+            <div style="text-align: center;">
+              <span class="badge">⚡ حالت آزمایشی / بدون نیاز به رمز دوم</span>
+            </div>
+            <div class="actions">
+              <a href="/api/store/mock-callback?orderId=${safeOrderId}&status=success" class="btn btn-success">
+                ✓ تایید و پرداخت موفقیت‌آمیز
+              </a>
+              <a href="/api/store/mock-callback?orderId=${safeOrderId}&status=failed" class="btn btn-danger">
+                انصراف و بازگشت
+              </a>
+            </div>
+          </div>
+          <div class="footer">
+            اتصال امن رمزنگاری‌شده شاپرک
           </div>
         </div>
       </body>
@@ -303,12 +357,12 @@ router.get('/mock-payment', requireAuth, (req: any, res) => {
 });
 
 // GET /api/store/mock-callback (Handles the return from Dummy gateway)
-router.get('/mock-callback', requireAuth, async (req: any, res) => {
+router.get('/mock-callback', async (req: any, res) => {
   const rawOrderId = typeof req.query.orderId === 'string' ? req.query.orderId : '';
   const status = typeof req.query.status === 'string' ? req.query.status : '';
   
   if (!rawOrderId || !/^[a-zA-Z0-9_-]{1,64}$/.test(rawOrderId)) {
-    return res.redirect('/store?payment=failed');
+    return res.redirect('/dashboard?payment=failed');
   }
   const orderId = rawOrderId;
 
@@ -318,12 +372,7 @@ router.get('/mock-callback', requireAuth, async (req: any, res) => {
       const order = orderStmt.get(orderId) as any;
       
       if (!order || order.paymentStatus !== 'pending') {
-        return res.redirect('/store?payment=failed');
-      }
-
-      // Verify the authenticated user owns this order
-      if (order.userId !== req.user.id) {
-        return res.redirect('/store?payment=failed&msg=unauthorized');
+        return res.redirect('/dashboard?payment=already_processed');
       }
 
       // Check if wallet top-up or digital pricing plan
@@ -335,12 +384,12 @@ router.get('/mock-callback', requireAuth, async (req: any, res) => {
         const creditAmount = isPlan ? getPlanCreditAmount(product) : order.amount;
         const desc = isPlan 
           ? `خرید ${product?.title || 'بسته تعرفه'} - سفارش ${orderId}`
-          : `شارژ آزمایشی کیف پول کاربری - سفارش ${orderId}`;
+          : `شارژ آنلاین کیف پول کاربری - سفارش ${orderId}`;
 
-        db.prepare("UPDATE orders SET paymentStatus = 'success', refId = 'MOCK-PAY' WHERE id = ?").run(orderId);
+        db.prepare("UPDATE orders SET paymentStatus = 'success', refId = 'MOCK-SHAPARAK' WHERE id = ?").run(orderId);
         depositWallet(order.userId, creditAmount, desc);
         syncDatabase();
-        return res.redirect(`/store?tab=wallet&payment=success&orderId=${orderId}&refId=MOCK-PAY&amount=${creditAmount}`);
+        return res.redirect(`/dashboard?payment=success&orderId=${orderId}&refId=MOCK-SHAPARAK&amount=${creditAmount}`);
       }
 
       // Send Telegram notification that order is pending review
@@ -362,13 +411,13 @@ router.get('/mock-callback', requireAuth, async (req: any, res) => {
       res.redirect('/store?payment=success&orderId=' + orderId);
     } catch (err) {
       console.error(err);
-      res.redirect('/store?payment=failed');
+      res.redirect('/dashboard?payment=failed');
     }
   } else {
     // Failed payment
     db.prepare('UPDATE orders SET paymentStatus = ? WHERE id = ?').run('failed', orderId);
     syncDatabase();
-    res.redirect('/store?payment=failed');
+    res.redirect('/dashboard?payment=cancelled');
   }
 });
 

@@ -96,23 +96,18 @@ import adminRouter from './routes/admin';
 import storeRouter from './routes/store';
 import newsRouter from './routes/news';
 import landingRouter from './routes/landing';
-import { startTelegramBot } from './telegram/bot';
 import { initNewsCron } from './services/newsCron';
-import { startAutoProfilesSync } from './services/autoProfiles';
-
-import { initializeSchema } from './db/schema';
-import db from './db/database';
+import { startTelegramBot } from './telegram/bot';
 import { sitemapHandler } from './seo/sitemap';
 import { renderHtmlWithSeo } from './seo/htmlInjector';
+import { initializeSchema } from './db/schema';
+import db from './db/database';
+
 // Initialize SQLite tables
 initializeSchema();
 
 // Start Background Services
 initNewsCron();
-// Delay AutoProfiles slightly so initial Turso DB sync has time to complete
-setTimeout(() => {
-  startAutoProfilesSync();
-}, 2000);
 
 app.use('/', modelsRouter);
 app.use('/', chatRouter);

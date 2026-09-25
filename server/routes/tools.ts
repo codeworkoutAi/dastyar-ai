@@ -1,8 +1,11 @@
 import express from 'express';
 import { Modality } from '@google/genai';
 import db from '../db/database';
-import { isSafeBaseUrl, getGeminiClient, sanitizeErrorMessage, getPollinationsImageUrl, translateAndEnhanceImagePrompt, generatePollinationsImage } from '../services/utils';
+import { isSafeBaseUrl, getGeminiClient, sanitizeErrorMessage, getPollinationsImageUrl, translateAndEnhanceImagePrompt, generatePollinationsImage, getGeminiKeyFromPool } from '../services/utils';
 import { aiRouteLimiter } from '../middleware/rateLimiter';
+import jwt from 'jsonwebtoken';
+import { JWT_SECRET } from '../middleware/auth';
+import { deductImageCost, refundImageCost, deductOrUseFreeImageQuota } from '../services/walletService';
 
 const router = express.Router();
 
@@ -247,11 +250,45 @@ router.post('/api/fetch-models', aiRouteLimiter, async (req, res) => {
 
 // 4. Image Generation endpoint
 router.post('/api/generate-image', aiRouteLimiter, async (req, res) => {
+  let userId: number | null = null;
+  let deductResult: any = null;
+  const engine = req.body.engine || 'imagen-3';
+  const isPaidEngine = engine === 'imagen-3' || engine === 'dalle-3';
+
   try {
-    const { prompt, englishPrompt, aspectRatio = '1:1', negativePrompt, engine, apiKey, settings } = req.body;
+    const { prompt, englishPrompt, aspectRatio = '1:1', negativePrompt, apiKey, settings } = req.body;
     if (!prompt && !englishPrompt) {
       console.warn('[ImageGen API] ❌ Error: Missing prompt');
       return res.status(400).json({ error: 'دستور ساخت تصویر الزامی است.' });
+    }
+
+    // Extract user from JWT token
+    const authHeader = req.headers.authorization;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      try {
+        const decoded = jwt.verify(authHeader.substring(7), JWT_SECRET) as any;
+        userId = decoded.id;
+      } catch {}
+    }
+
+    if (isPaidEngine) {
+      if (!userId) {
+        return res.status(401).json({
+          error: 'برای ساخت تصویر با کیفیت استودیویی (Google Imagen 3 / DALL-E 3)، لطفاً ابتدا وارد حساب کاربری خود شوید.'
+        });
+      }
+
+      deductResult = deductOrUseFreeImageQuota(
+        userId,
+        engine,
+        `ساخت تصویر استودیویی (${engine === 'dalle-3' ? 'DALL-E 3' : 'Google Imagen 3'})`
+      );
+
+      if (!deductResult.success) {
+        return res.status(402).json({
+          error: deductResult.error || 'موجودی کیف پول شما کافی نیست و سهمیه رایگان روزانه شما به پایان رسیده است. لطفاً کیف پول خود را شارژ کنید.'
+        });
+      }
     }
 
     let fullPrompt = (prompt || englishPrompt) as string;
@@ -263,57 +300,117 @@ router.post('/api/generate-image', aiRouteLimiter, async (req, res) => {
       ? englishPrompt.trim()
       : await translateAndEnhanceImagePrompt(fullPrompt, settings?.providers?.gemini?.apiKey || apiKey);
 
-    if (engine === 'dalle-3') {
-      const openAiKey = apiKey || settings?.providers?.openai?.apiKey;
-      if (!openAiKey) throw new Error('کلید API برای OpenAI تنظیم نشده است.');
-      
-      const response = await fetch('https://api.openai.com/v1/images/generations', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${openAiKey}` },
-        body: JSON.stringify({
-          model: 'dall-e-3',
-          prompt: enhancedPrompt,
-          n: 1,
-          size: '1024x1024',
-        })
-      });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error?.message || 'خطا در DALL-E 3');
-      return res.json({ imageUrl: data.data[0].url, enhancedPrompt });
-    }
+    if (engine === 'dalle-3' || engine === 'imagen-3') {
+      let sysKey = apiKey;
+      let sysBaseUrl = 'https://api.openai.com/v1';
+      let sysModel = engine === 'dalle-3' ? 'dall-e-3' : 'gpt-image-2.5'; // Default mappings
 
-    if (engine === 'imagen-3') {
-      const geminiKey = apiKey || settings?.providers?.gemini?.apiKey;
-      if (!geminiKey) throw new Error('کلید API برای جمنای تنظیم نشده است.');
-      
-      const ai = getGeminiClient(geminiKey);
+      if (!sysKey) {
+        // Fallback to Router.cheap/DB
+        const sysProfile = db.prepare("SELECT apiKey, baseUrl FROM default_profiles WHERE isActive = 1 AND apiKey != '' AND (baseUrl LIKE '%router.cheap%' OR baseUrl LIKE '%openai%' OR baseUrl LIKE '%googleapis%') LIMIT 1").get() as any;
+        if (sysProfile) {
+          sysKey = sysProfile.apiKey;
+          if (sysProfile.baseUrl) sysBaseUrl = sysProfile.baseUrl;
+        } else {
+          sysKey = engine === 'dalle-3' ? process.env.OPENAI_API_KEY : (process.env.DEFAULT_GEMINI_KEY || process.env.GEMINI_API_KEY);
+          if (engine === 'imagen-3' && !sysProfile) {
+             sysBaseUrl = 'https://router.cheap/v1'; // Fallback assumptions
+          }
+        }
+      }
+
+      if (!sysKey) throw new Error(`کلید سیستم برای ساخت تصویر با ${engine} یافت نشد.`);
+
+      // If the baseUrl is Router.cheap, we must use one of their supported image models
+      if (sysBaseUrl.includes('router.cheap')) {
+        sysModel = engine === 'imagen-3' ? 'gpt-image-2.5-flare' : 'gpt-image-2.5-sunburst'; // Use router.cheap specific models
+      } else if (sysBaseUrl.includes('googleapis')) {
+          // If the user actually provided a googleapis base URL and a gemini key, we use the Gemini SDK
+          const ai = getGeminiClient(sysKey);
+          let response;
+          try {
+            response = await ai.models.generateContent({
+              model: 'gemini-3.1-flash-image',
+              contents: enhancedPrompt,
+              config: { 
+                 outputOptions: { mimeType: 'image/jpeg' } 
+              } as any
+            });
+          } catch (err002: any) {
+            console.warn('[ImageGen API] gemini-3.1-flash-image failed:', err002);
+            // Fallback to 2.5 if 3.1 is not available for this specific key yet
+            response = await ai.models.generateContent({
+              model: 'gemini-2.5-flash-image',
+              contents: enhancedPrompt,
+              config: { 
+                 outputOptions: { mimeType: 'image/jpeg' } 
+              } as any
+            });
+          }
+          
+          const part = response?.candidates?.[0]?.content?.parts?.[0];
+          if (part && part.inlineData && part.inlineData.data) {
+            const base64 = part.inlineData.data;
+            return res.json({
+              imageUrl: `data:${part.inlineData.mimeType || 'image/jpeg'};base64,${base64}`,
+              enhancedPrompt,
+              costToman: deductResult?.costToman || 0,
+              balanceAfter: deductResult?.balanceAfter
+            });
+          }
+          throw new Error('خطا در دریافت تصویر از Imagen 3 / Gemini Image');
+      }
+
+      // Standard OpenAI / Router.cheap fetch
+      const endpoint = sysBaseUrl.endsWith('/') ? `${sysBaseUrl}images/generations` : `${sysBaseUrl}/images/generations`;
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 60000); // 60s timeout
+
       let response;
       try {
-        response = await ai.models.generateImages({
-          model: 'imagen-3.0-generate-002',
-          prompt: enhancedPrompt,
-          config: { numberOfImages: 1, aspectRatio: aspectRatio as any }
+        response = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${sysKey}` },
+          body: JSON.stringify({
+            model: sysModel,
+            prompt: enhancedPrompt,
+            n: 1,
+            size: '1024x1024',
+          }),
+          signal: controller.signal
         });
-      } catch (err002) {
-        console.warn('[ImageGen API] imagen-3.0-generate-002 fallback to 001:', err002);
-        response = await ai.models.generateImages({
-          model: 'imagen-3.0-generate-001',
-          prompt: enhancedPrompt,
-          config: { numberOfImages: 1, aspectRatio: aspectRatio as any }
-        });
+      } finally {
+        clearTimeout(timeoutId);
       }
-      if (response.generatedImages && response.generatedImages[0].image.imageBytes) {
-        const base64 = response.generatedImages[0].image.imageBytes;
-        return res.json({ imageUrl: `data:image/jpeg;base64,${base64}`, enhancedPrompt });
+      
+      let data;
+      try {
+        const text = await response.text();
+        data = JSON.parse(text);
+      } catch (parseError) {
+        throw new Error('دریافت پاسخ نامعتبر از سرور (احتمالاً ترافیک بالا یا خطای شبکه در Router.cheap)');
       }
-      throw new Error('خطا در دریافت تصویر از Imagen 3');
+
+      if (!response.ok) throw new Error(data.error?.message || `خطا در دریافت تصویر از ${sysBaseUrl}`);
+      
+      return res.json({
+        imageUrl: data.data[0].url,
+        enhancedPrompt,
+        costToman: deductResult?.costToman || 0,
+        balanceAfter: deductResult?.balanceAfter
+      });
     }
 
     const { dataUrl, rawUrl } = await generatePollinationsImage(enhancedPrompt, aspectRatio, engine);
     console.log('[ImageGen API] ✅ Image generated successfully:', rawUrl);
-    res.json({ imageUrl: dataUrl, rawImageUrl: rawUrl, enhancedPrompt });
+    res.json({ imageUrl: dataUrl, rawImageUrl: rawUrl, enhancedPrompt, costToman: 0 });
   } catch (err: any) {
     console.error('[ImageGen API] 💥 Error in image generation:', err);
+    // Refund the user if they were charged from wallet (not free quota) but generation failed
+    if (deductResult && deductResult.success && !deductResult.isFree && userId && isPaidEngine) {
+      refundImageCost(userId, deductResult.costToman, engine);
+      console.log(`[ImageGen API] 💰 Refunded ${deductResult.costToman} Toman for failed ${engine} generation`);
+    }
     res.status(500).json({ error: sanitizeErrorMessage(err) });
   }
 });

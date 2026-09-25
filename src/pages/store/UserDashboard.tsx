@@ -1,14 +1,17 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useAuthStore } from '../../store/authStore';
 import { useUIStore } from '../../store/uiStore';
+import { useChatStore } from '../../store/chatStore';
+import { useSettingsStore } from '../../store/settingsStore';
 import { 
   ShoppingBag, User as UserIcon, LifeBuoy, 
   Key, Package, CheckCircle2, XCircle, Clock, Save, Lock, LogOut,
   Receipt, Printer, ArrowRight, Home, ExternalLink, ShieldCheck, ChevronLeft, ChevronRight,
   Wallet, Zap, Coins, Cpu, MessageSquare, Plus, ArrowUpRight, ArrowDownLeft,
-  Filter, Sparkles, RefreshCw, BarChart2, Gift, CreditCard
+  Filter, Sparkles, RefreshCw, BarChart2, Gift, CreditCard,
+  Search, Code, Eye
 } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { toPersianDigits } from '../../lib/persianUtils';
 
 export const UserDashboard = () => {
@@ -35,10 +38,87 @@ export const UserDashboard = () => {
     transactions: any[];
   } | null>(null);
   const [walletLoading, setWalletLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState<'wallet' | 'orders' | 'redeem'>('wallet');
+  const [activeTab, setActiveTab] = useState<'wallet' | 'pricing' | 'orders' | 'redeem'>('wallet');
   const [txFilter, setTxFilter] = useState<'all' | 'chat' | 'deposits'>('all');
 
+  const [searchParams, setSearchParams] = useSearchParams();
+  const paymentStatus = searchParams.get('payment');
+  const paidOrderId = searchParams.get('orderId');
+  const paidRefId = searchParams.get('refId');
+  const paidAmount = searchParams.get('amount');
+
+  // Live Models Pricing & Tariffs State
+  const [pricingData, setPricingData] = useState<{ sellingRate: number; models: any[] } | null>(null);
+  const [pricingLoading, setPricingLoading] = useState(false);
+  const [pricingSearch, setPricingSearch] = useState('');
+  const [pricingFilter, setPricingFilter] = useState<'all' | 'system' | 'fast' | 'coding' | 'vision'>('all');
+
+  const { createChat } = useChatStore();
+  const { updateSettings } = useSettingsStore();
+
   const navigate = useNavigate();
+
+  const fetchPricing = async () => {
+    setPricingLoading(true);
+    try {
+      const res = await fetch('/api/models-pricing');
+      if (res.ok) {
+        const data = await res.json();
+        setPricingData(data);
+      }
+    } catch (err) {
+      console.error('Error fetching models pricing:', err);
+    } finally {
+      setPricingLoading(false);
+    }
+  };
+
+  const handleStartChatWithModel = (model: any) => {
+    if (model.profileId) {
+      updateSettings(prev => ({
+        ...prev,
+        providers: {
+          ...prev.providers,
+          custom: {
+            ...prev.providers.custom,
+            activeProfileId: model.profileId,
+          }
+        }
+      }));
+    }
+    createChat(model.name || model.id);
+    navigate('/chat');
+  };
+
+  const filteredPricingModels = useMemo(() => {
+    if (!pricingData?.models) return [];
+    return pricingData.models.filter(m => {
+      if (pricingFilter === 'system' && !m.isDefaultProfile) return false;
+      if (pricingFilter === 'fast' && !m.isFast) return false;
+      if (pricingFilter === 'coding' && !m.isCoding) return false;
+      if (pricingFilter === 'vision' && !m.isVision) return false;
+
+      if (pricingSearch.trim()) {
+        const q = pricingSearch.trim().toLowerCase();
+        const matchId = (m.id || '').toLowerCase().includes(q);
+        const matchName = (m.name || '').toLowerCase().includes(q);
+        const matchProvider = (m.provider || '').toLowerCase().includes(q);
+        return matchId || matchName || matchProvider;
+      }
+      return true;
+    });
+  }, [pricingData, pricingFilter, pricingSearch]);
+
+  useEffect(() => {
+    fetchPricing();
+  }, []);
+
+  useEffect(() => {
+    if (paymentStatus === 'success') {
+      fetchWalletData();
+      fetchPurchases();
+    }
+  }, [paymentStatus]);
 
   // Redeem Code
   const [redeemCode, setRedeemCode] = useState('');
@@ -273,6 +353,68 @@ export const UserDashboard = () => {
 
       <main className="max-w-6xl mx-auto px-4 md:px-8 mt-6 space-y-6">
         
+        {/* Payment Result Alert Banner */}
+        {paymentStatus === 'success' && (
+          <div className="p-4 sm:p-5 rounded-3xl clay-card-thick border border-emerald-500/30 bg-emerald-500/10 flex items-center justify-between gap-4 animate-fadeIn">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                <CheckCircle2 size={20} />
+              </div>
+              <div>
+                <h4 className="font-black text-sm text-emerald-700 dark:text-emerald-300" style={{ fontFamily: "'Estedad', sans-serif" }}>
+                  پرداخت شما با موفقیت در شاپرک تأیید شد!
+                </h4>
+                <p className="text-xs text-emerald-600/90 dark:text-emerald-400/90 mt-0.5">
+                  {paidAmount ? `مبلغ ${toPersianDigits(Number(paidAmount).toLocaleString('fa-IR'))} تومان به کیف پول شما اضافه شد.` : 'کیف پول شما با موفقیت شارژ شد.'}
+                  {paidOrderId && <span className="mr-2 font-mono text-[11px]">سفارش: {paidOrderId}</span>}
+                  {paidRefId && <span className="mr-2 font-mono text-[11px]">پیگیری: {paidRefId}</span>}
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => {
+                const next = new URLSearchParams(searchParams);
+                next.delete('payment');
+                next.delete('orderId');
+                next.delete('refId');
+                next.delete('amount');
+                setSearchParams(next);
+              }}
+              className="px-3 py-1.5 clay-btn-thick text-xs font-bold text-zinc-600 dark:text-zinc-300 rounded-xl cursor-pointer"
+            >
+              بستن
+            </button>
+          </div>
+        )}
+
+        {(paymentStatus === 'failed' || paymentStatus === 'cancelled') && (
+          <div className="p-4 sm:p-5 rounded-3xl clay-card-thick border border-red-500/30 bg-red-500/10 flex items-center justify-between gap-4 animate-fadeIn">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-red-500/20 text-red-600 dark:text-red-400 flex items-center justify-center shrink-0">
+                <XCircle size={20} />
+              </div>
+              <div>
+                <h4 className="font-black text-sm text-red-700 dark:text-red-300" style={{ fontFamily: "'Estedad', sans-serif" }}>
+                  {paymentStatus === 'cancelled' ? 'پرداخت توسط شما لغو شد.' : 'تراکنش پرداخت ناموفق بود.'}
+                </h4>
+                <p className="text-xs text-red-600/90 dark:text-red-400/90 mt-0.5">
+                  هیچ مبلغی از حساب شما کسر نشده است. می‌توانید مجدداً اقدام به پرداخت نمایید.
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => {
+                const next = new URLSearchParams(searchParams);
+                next.delete('payment');
+                setSearchParams(next);
+              }}
+              className="px-3 py-1.5 clay-btn-thick text-xs font-bold text-zinc-600 dark:text-zinc-300 rounded-xl cursor-pointer"
+            >
+              بستن
+            </button>
+          </div>
+        )}
+
         {/* Row 1: Welcome & Quick Action Bar (Claymorphic) */}
         <div className="p-6 md:p-7 rounded-3xl clay-card-thick border border-[var(--card-border)]  shadow-lg flex flex-col md:flex-row md:items-center justify-between gap-4 relative overflow-hidden">
           <div className="space-y-1">
@@ -572,11 +714,11 @@ export const UserDashboard = () => {
           <div className="lg:col-span-2 flex flex-col gap-6 order-1 lg:order-2">
             
             {/* Segmented Navigation Tabs */}
-            <div className="flex items-center gap-2 p-1.5 rounded-2xl clay-inset-thick border border-black/5 dark:border-white/5">
+            <div className="flex items-center gap-2 p-1.5 rounded-2xl clay-inset-thick border border-black/5 dark:border-white/5 overflow-x-auto">
               <button
                 type="button"
                 onClick={() => setActiveTab('wallet')}
-                className={`flex-1 py-2.5 px-3 rounded-xl text-xs font-extrabold flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                className={`flex-1 py-2.5 px-3 rounded-xl text-xs font-extrabold flex items-center justify-center gap-1.5 transition-all cursor-pointer whitespace-nowrap ${
                   activeTab === 'wallet'
                     ? 'clay-btn-thick text-blue-600 dark:text-cyan-400 shadow-sm'
                     : 'text-[#525d75] dark:text-[#9aa5bc] hover:text-zinc-900 dark:hover:text-zinc-200'
@@ -588,8 +730,21 @@ export const UserDashboard = () => {
 
               <button
                 type="button"
+                onClick={() => { setActiveTab('pricing'); if (!pricingData) fetchPricing(); }}
+                className={`flex-1 py-2.5 px-3 rounded-xl text-xs font-extrabold flex items-center justify-center gap-1.5 transition-all cursor-pointer whitespace-nowrap ${
+                  activeTab === 'pricing'
+                    ? 'clay-btn-thick text-blue-600 dark:text-cyan-400 shadow-sm'
+                    : 'text-[#525d75] dark:text-[#9aa5bc] hover:text-zinc-900 dark:hover:text-zinc-200'
+                }`}
+              >
+                <Sparkles size={15} className={activeTab === 'pricing' ? 'text-blue-500 dark:text-cyan-400' : ''} />
+                <span>تعرفه و قیمت مدل‌ها</span>
+              </button>
+
+              <button
+                type="button"
                 onClick={() => setActiveTab('orders')}
-                className={`flex-1 py-2.5 px-3 rounded-xl text-xs font-extrabold flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                className={`flex-1 py-2.5 px-3 rounded-xl text-xs font-extrabold flex items-center justify-center gap-1.5 transition-all cursor-pointer whitespace-nowrap ${
                   activeTab === 'orders'
                     ? 'clay-btn-thick text-blue-600 dark:text-cyan-400 shadow-sm'
                     : 'text-[#525d75] dark:text-[#9aa5bc] hover:text-zinc-900 dark:hover:text-zinc-200'
@@ -602,7 +757,7 @@ export const UserDashboard = () => {
               <button
                 type="button"
                 onClick={() => setActiveTab('redeem')}
-                className={`flex-1 py-2.5 px-3 rounded-xl text-xs font-extrabold flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                className={`flex-1 py-2.5 px-3 rounded-xl text-xs font-extrabold flex items-center justify-center gap-1.5 transition-all cursor-pointer whitespace-nowrap ${
                   activeTab === 'redeem'
                     ? 'clay-btn-thick text-blue-600 dark:text-cyan-400 shadow-sm'
                     : 'text-[#525d75] dark:text-[#9aa5bc] hover:text-zinc-900 dark:hover:text-zinc-200'
@@ -881,12 +1036,22 @@ export const UserDashboard = () => {
                         <div className="flex items-center gap-2 sm:flex-col sm:items-end justify-between border-t border-black/5 dark:border-white/5 sm:border-0 pt-2 sm:pt-0">
                           {getStatusBadge(p.paymentStatus)}
                           
-                          <button 
-                            onClick={() => setSelectedInvoice(p)}
-                            className="flex items-center gap-1.5 px-3 py-1.5 clay-btn-thick rounded-xl text-[11px] font-bold transition-all cursor-pointer hover:scale-105"
-                          >
-                            <Receipt size={12} /> فاکتور
-                          </button>
+                          <div className="flex items-center gap-1.5">
+                            {p.paymentStatus === 'pending' && (
+                              <a 
+                                href={`/api/store/mock-payment?orderId=${p.orderId}`}
+                                className="flex items-center gap-1 px-2.5 py-1.5 clay-btn-primary-thick text-white rounded-xl text-[11px] font-bold transition-all cursor-pointer hover:scale-105"
+                              >
+                                <CreditCard size={12} /> پرداخت آنلاین
+                              </a>
+                            )}
+                            <button 
+                              onClick={() => setSelectedInvoice(p)}
+                              className="flex items-center gap-1.5 px-3 py-1.5 clay-btn-thick rounded-xl text-[11px] font-bold transition-all cursor-pointer hover:scale-105"
+                            >
+                              <Receipt size={12} /> فاکتور
+                            </button>
+                          </div>
                         </div>
                       </div>
                     ))
@@ -933,6 +1098,207 @@ export const UserDashboard = () => {
                   <div className={`mt-4 px-3.5 py-2.5 rounded-2xl text-xs font-bold flex items-center gap-2 ${redeemMessage.type === 'success' ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25' : 'bg-red-500/15 text-red-600 dark:text-red-400 border border-red-500/25'}`}>
                     {redeemMessage.type === 'success' ? <CheckCircle2 size={14}/> : <XCircle size={14}/>}
                     <span>{redeemMessage.text}</span>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* TAB 4: Models Pricing & Live Tariffs */}
+            {activeTab === 'pricing' && (
+              <div className="flex flex-col gap-6">
+                {/* Header Banner: Real-Time Dollar Rate & Pay-As-You-Go Explanation */}
+                <div className="p-5 md:p-6 rounded-3xl clay-card-thick border border-[var(--card-border)] shadow-lg relative overflow-hidden flex flex-col gap-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div>
+                      <h3 className="font-black text-base dark:text-white flex items-center gap-2 mb-1" style={{ fontFamily: "'Estedad', sans-serif" }}>
+                        <Sparkles size={18} className="text-blue-500 dark:text-cyan-400" />
+                        <span>تعرفه و قیمت مدل‌های هوش مصنوعی</span>
+                      </h3>
+                      <p className="text-xs text-[#525d75] dark:text-[#9aa5bc] leading-relaxed">
+                        محاسبه بر مبنای دقیق توکن‌های مصرفی (Pay-As-You-Go) و بدون تاریخ انقضای موجودی. هزینه هر پیام به‌صورت میانگین تنها ۲۰ تا ۱۰۰ تومان است.
+                      </p>
+                    </div>
+
+                    <button
+                      onClick={() => setIsWalletOpen(true)}
+                      className="px-4 py-2.5 clay-btn-primary-thick text-white rounded-2xl text-xs font-black flex items-center justify-center gap-2 shrink-0 shadow-md shadow-blue-500/20 active:scale-95 transition-all cursor-pointer"
+                      style={{ fontFamily: "'Estedad', sans-serif" }}
+                    >
+                      <Plus size={15} />
+                      <span>افزایش موجودی</span>
+                    </button>
+                  </div>
+
+                  {/* Live Exchange Rate Capsule */}
+                  <div className="p-3.5 rounded-2xl bg-black/[0.02] dark:bg-white/[0.03] border border-black/5 dark:border-white/5 flex flex-wrap items-center justify-between gap-3 text-xs">
+                    <div className="flex items-center gap-2 font-bold text-zinc-700 dark:text-zinc-300">
+                      <Coins size={16} className="text-amber-500" />
+                      <span>نرخ تبدیل دلار پایه به تومان:</span>
+                      <span className="text-blue-600 dark:text-cyan-400 font-black text-sm" style={{ fontFamily: "'Estedad', sans-serif" }}>
+                        {toPersianDigits((pricingData?.sellingRate || 150000).toLocaleString('fa-IR'))} تومان
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-2 text-[11px] text-[#525d75] dark:text-[#9aa5bc]">
+                      <Clock size={13} className="text-emerald-500" />
+                      <span>بروزرسانی زنده بر اساس نرخ سیستم</span>
+                      <button
+                        onClick={fetchPricing}
+                        disabled={pricingLoading}
+                        className="p-1.5 clay-btn-thick rounded-lg hover:scale-105 active:scale-95 text-blue-500 transition-all cursor-pointer"
+                        title="تازه سازی قیمت‌ها"
+                      >
+                        <RefreshCw size={12} className={pricingLoading ? 'animate-spin' : ''} />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Filters & Search Bar */}
+                <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
+                  {/* Category Pills */}
+                  <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 text-xs">
+                    {[
+                      { key: 'all', label: 'همه مدل‌ها' },
+                      { key: 'system', label: '⭐ دستیاران سامانه' },
+                      { key: 'fast', label: '⚡ سریع و اقتصادی' },
+                      { key: 'coding', label: '💻 کدنویسی' },
+                      { key: 'vision', label: '👁️ اسناد و بینایی' }
+                    ].map(tab => (
+                      <button
+                        key={tab.key}
+                        onClick={() => setPricingFilter(tab.key as any)}
+                        className={`px-3 py-1.5 rounded-xl font-bold transition-all whitespace-nowrap cursor-pointer text-xs ${
+                          pricingFilter === tab.key
+                            ? 'clay-btn-thick text-blue-600 dark:text-cyan-400 font-black shadow-xs'
+                            : 'text-[#525d75] dark:text-[#9aa5bc] hover:text-zinc-900 dark:hover:text-white'
+                        }`}
+                      >
+                        {tab.label}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Search Input */}
+                  <div className="relative min-w-[200px]">
+                    <Search size={14} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-400" />
+                    <input
+                      type="text"
+                      placeholder="جستجوی مدل یا سازنده..."
+                      value={pricingSearch}
+                      onChange={e => setPricingSearch(e.target.value)}
+                      className="w-full pl-3 pr-9 py-2 rounded-xl bg-black/[0.02] dark:bg-white/[0.03] border border-black/5 dark:border-white/5 outline-none text-xs focus:border-blue-500/30 transition-all"
+                    />
+                    {pricingSearch && (
+                      <button
+                        onClick={() => setPricingSearch('')}
+                        className="absolute left-2.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 text-xs cursor-pointer"
+                      >
+                        ✕
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Models Grid */}
+                {pricingLoading && !pricingData ? (
+                  <div className="p-12 rounded-3xl clay-card-thick text-center">
+                    <RefreshCw size={28} className="animate-spin text-blue-500 mx-auto mb-3" />
+                    <span className="text-xs font-bold text-[#525d75] dark:text-[#9aa5bc]">در حال دریافت جدیدترین تعرفه مدل‌ها...</span>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {filteredPricingModels.map((model) => (
+                      <div
+                        key={model.id}
+                        className="p-5 rounded-3xl clay-card-thick border border-[var(--card-border)] shadow-md flex flex-col justify-between gap-4 transition-all hover:scale-[1.01]"
+                      >
+                        {/* Top: Header & Badges */}
+                        <div>
+                          <div className="flex items-start justify-between gap-2 mb-2">
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <h4 className="font-black text-sm text-zinc-900 dark:text-white" style={{ fontFamily: "'Estedad', sans-serif" }}>
+                                  {model.name}
+                                </h4>
+                                {model.isDefaultProfile && (
+                                  <span className="clay-pill-thick text-[9px] px-2 py-0.5 text-blue-600 dark:text-cyan-400 font-extrabold">
+                                    دستیار اصلی
+                                  </span>
+                                )}
+                              </div>
+                              <span className="text-[11px] text-zinc-500 dark:text-zinc-400 font-mono tracking-tight" dir="ltr">
+                                {model.id}
+                              </span>
+                            </div>
+                            
+                            <span className="text-[10px] font-bold px-2 py-1 rounded-lg bg-black/5 dark:bg-white/5 text-zinc-600 dark:text-zinc-300">
+                              {model.provider}
+                            </span>
+                          </div>
+
+                          {/* Capability Tags */}
+                          <div className="flex flex-wrap gap-1.5 my-2.5">
+                            {model.isFast && (
+                              <span className="text-[10px] px-2 py-0.5 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-1">
+                                <Zap size={10} /> سریع و کم‌مصرف
+                              </span>
+                            )}
+                            {model.isCoding && (
+                              <span className="text-[10px] px-2 py-0.5 rounded-lg bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 font-bold flex items-center gap-1">
+                                <Code size={10} /> مهندسی کد
+                              </span>
+                            )}
+                            {model.isVision && (
+                              <span className="text-[10px] px-2 py-0.5 rounded-lg bg-purple-500/10 text-purple-600 dark:text-purple-400 font-bold flex items-center gap-1">
+                                <Eye size={10} /> بینایی و اسناد
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Middle: Flat Pricing Breakdown (No sunken inset) */}
+                        <div className="p-3.5 rounded-2xl bg-black/[0.025] dark:bg-white/[0.035] border border-black/5 dark:border-white/5 flex flex-col gap-2">
+                          <div className="flex items-center justify-between pb-2 border-b border-black/5 dark:border-white/5">
+                            <span className="text-[11px] font-bold text-zinc-600 dark:text-zinc-300">
+                              تخمین میانگین هر پیام:
+                            </span>
+                            <span className="text-xs font-black text-emerald-600 dark:text-emerald-400" style={{ fontFamily: "'Estedad', sans-serif" }}>
+                              ~{toPersianDigits(model.estimatedMsgCostToman.toLocaleString('fa-IR'))} تومان
+                            </span>
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-2 text-[10px]">
+                            <div>
+                              <span className="text-[#525d75] dark:text-[#9aa5bc] block">ورودی (۱M توکن):</span>
+                              <span className="font-extrabold text-zinc-800 dark:text-zinc-200">
+                                {toPersianDigits(model.promptPriceToman.toLocaleString('fa-IR'))} ت
+                              </span>
+                              <span className="text-zinc-400 text-[9px] mr-1" dir="ltr">(${model.promptPriceUsd})</span>
+                            </div>
+
+                            <div>
+                              <span className="text-[#525d75] dark:text-[#9aa5bc] block">خروجی (۱M توکن):</span>
+                              <span className="font-extrabold text-zinc-800 dark:text-zinc-200">
+                                {toPersianDigits(model.completionPriceToman.toLocaleString('fa-IR'))} ت
+                              </span>
+                              <span className="text-zinc-400 text-[9px] mr-1" dir="ltr">(${model.completionPriceUsd})</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Bottom: Action Button */}
+                        <button
+                          type="button"
+                          onClick={() => handleStartChatWithModel(model)}
+                          className="w-full py-2.5 px-4 clay-btn-thick text-blue-600 dark:text-cyan-400 font-bold rounded-2xl text-xs flex items-center justify-center gap-2 transition-all hover:scale-[1.02] active:scale-98 cursor-pointer"
+                          style={{ fontFamily: "'Estedad', sans-serif" }}
+                        >
+                          <MessageSquare size={13} />
+                          <span>شروع گفتگو با این مدل</span>
+                        </button>
+                      </div>
+                    ))}
                   </div>
                 )}
               </div>

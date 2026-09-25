@@ -197,8 +197,8 @@ export function loadSettings(): AppSettings {
       } catch {}
     }
 
-    // Migration: ensure clean 6-profile system architecture & purge legacy cached cards (v4 to fix JSON cache)
-    if (localStorage.getItem('fa_chat_profiles_clean_v4') !== 'true') {
+    // Migration: ensure clean 6-profile system architecture & purge legacy cached cards (v7 to sync ultra-economic minimax-m3 & pro claude-sonnet-4-6)
+    if (localStorage.getItem('fa_chat_profiles_clean_v7') !== 'true') {
       merged.providers.custom.profiles = [];
       merged.providers.custom.activeProfileId = 'free_default';
       merged.tools.routingRoles = {
@@ -207,7 +207,7 @@ export function loadSettings(): AppSettings {
         vision: 'free_vision'
       };
       try {
-        localStorage.setItem('fa_chat_profiles_clean_v4', 'true');
+        localStorage.setItem('fa_chat_profiles_clean_v7', 'true');
       } catch {}
     }
 
@@ -252,15 +252,21 @@ export function mergeSystemProfiles(currentSettings: AppSettings, serverProfiles
     activeProfileId = newProfiles.find(p => p.id === 'free_default')?.id || newProfiles[0]?.id || '';
   }
 
-  // Update routing roles strictly to the free profiles
+  // Update routing roles: preserve user customized roles if valid, otherwise fallback to standard defaults
   const routingRoles = { ...currentSettings.tools.routingRoles };
   const freeDefault = newProfiles.find(p => p.id === 'free_default' || p.role === 'default');
   const freeCoding = newProfiles.find(p => p.id === 'free_coding' || p.role === 'coding');
   const freeVision = newProfiles.find(p => p.id === 'free_vision' || p.role === 'vision');
 
-  if (freeDefault) routingRoles.default = freeDefault.id;
-  if (freeCoding) routingRoles.coding = freeCoding.id;
-  if (freeVision) routingRoles.vision = freeVision.id;
+  if (!routingRoles.default || !newProfiles.some(p => p.id === routingRoles.default)) {
+    routingRoles.default = freeDefault?.id || newProfiles[0]?.id || '';
+  }
+  if (!routingRoles.coding || !newProfiles.some(p => p.id === routingRoles.coding)) {
+    routingRoles.coding = freeCoding?.id || newProfiles[0]?.id || '';
+  }
+  if (!routingRoles.vision || !newProfiles.some(p => p.id === routingRoles.vision)) {
+    routingRoles.vision = freeVision?.id || newProfiles[0]?.id || '';
+  }
 
   // Sync active profile fields if active profile is in newProfiles
   const activeProfile = newProfiles.find(p => p.id === activeProfileId);

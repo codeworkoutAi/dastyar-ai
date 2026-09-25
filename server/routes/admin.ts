@@ -1162,6 +1162,10 @@ router.get('/wallet-transactions', (req, res) => {
       query += ` AND wt.amount > 0`;
     } else if (typeFilter === 'deduct') {
       query += ` AND wt.amount < 0`;
+    } else if (typeFilter === 'free_usage') {
+      query += ` AND wt.type = 'free_usage'`;
+    } else if (typeFilter === 'image_usage') {
+      query += ` AND wt.type = 'image_usage'`;
     }
 
     if (dateFilter === 'today') {

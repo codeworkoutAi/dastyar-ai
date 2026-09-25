@@ -137,9 +137,12 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
 
  // Site Settings state
  const [newsAutoPublish, setNewsAutoPublish] = useState<boolean>(false);
-  const [uiStyle, setUiStyle] = useState<string>('neumorphic');
+ const [uiStyle, setUiStyle] = useState<string>('neumorphic');
  const [siteSettingsLoading, setSiteSettingsLoading] = useState<boolean>(false);
  const [siteSettingsSaving, setSiteSettingsSaving] = useState<boolean>(false);
+ const [freeDailyLimitUser, setFreeDailyLimitUser] = useState<string>('15');
+ const [freeDailyImageLimit, setFreeDailyImageLimit] = useState<string>('4');
+ const [geminiKeysPool, setGeminiKeysPool] = useState<string>('');
 
  const formRef = useRef<HTMLDivElement>(null);
 
@@ -406,12 +409,35 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
  const data = await res.json();
  setNewsAutoPublish(data.news_auto_publish === 'true');
    if (data.ui_style) setUiStyle(data.ui_style);
+   if (data.free_daily_limit_user) setFreeDailyLimitUser(data.free_daily_limit_user);
+   if (data.free_daily_image_limit) setFreeDailyImageLimit(data.free_daily_image_limit);
+   if (data.gemini_keys_pool) setGeminiKeysPool(data.gemini_keys_pool);
  }
  } catch (err) {
  console.error('Failed to fetch site settings:', err);
  } finally {
  setSiteSettingsLoading(false);
  }
+ };
+
+ const handleSaveSetting = async (key: string, value: string) => {
+   try {
+     setSiteSettingsSaving(true);
+     const res = await fetch('/api/admin/settings', {
+       method: 'PUT',
+       headers: {
+         'Content-Type': 'application/json',
+         'Authorization': `Bearer ${token}`
+       },
+       body: JSON.stringify({ key, value })
+     });
+     if (!res.ok) throw new Error('خطا در ذخیره تنظیمات');
+   } catch (err) {
+     console.error(err);
+     alert('خطا در ارتباط با سرور');
+   } finally {
+     setSiteSettingsSaving(false);
+   }
  };
 
  
@@ -1711,6 +1737,89 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
      <option value="neumorphic">نئومورفیزم (Neumorphism)</option>
                   </select>
    </div>
+
+  {/* Gemini Keys Pool */}
+  <div className="flex flex-col sm:flex-row justify-between gap-4 p-4 rounded-xl admin-card mt-4">
+    <div className="flex flex-col gap-1 w-full sm:w-1/2">
+      <span className="text-sm font-bold text-zinc-800 dark:text-zinc-200">استخر کلیدهای Gemini (Key Pool)</span>
+      <span className="text-xs text-zinc-500 dark:text-zinc-400">
+        کلیدهای API رایگان گوگل را وارد کنید (هر خط یک کلید). سیستم به صورت خودکار برای دور زدن محدودیت‌ها (Rate Limits) بین این کلیدها گردش می‌کند و جایگزین کلیدهای پولی می‌شود.
+      </span>
+    </div>
+    <div className="w-full sm:w-1/2 flex flex-col gap-2">
+      <textarea
+        value={geminiKeysPool}
+        onChange={(e) => setGeminiKeysPool(e.target.value)}
+        className="w-full px-3 py-2 rounded-xl admin-input text-sm text-zinc-800 dark:text-zinc-200 focus:border-blue-500 outline-none transition-colors min-h-[100px]"
+        dir="ltr"
+        placeholder="AIzaSy...\nAIzaSy..."
+      />
+      <button
+        type="button"
+        onClick={() => handleSaveSetting('gemini_keys_pool', geminiKeysPool)}
+        disabled={siteSettingsSaving || siteSettingsLoading}
+        className="self-end px-4 py-2 admin-btn-primary text-white rounded-lg text-xs font-bold transition-all"
+      >
+        {siteSettingsSaving ? 'در حال ذخیره...' : 'ذخیره کلیدها'}
+      </button>
+    </div>
+  </div>
+
+  {/* Free Quotas */}
+  <div className="flex flex-col sm:flex-row justify-between gap-4 p-4 rounded-xl admin-card mt-4 mb-4">
+    <div className="flex flex-col gap-1 w-full sm:w-1/2">
+      <span className="text-sm font-bold text-zinc-800 dark:text-zinc-200">سهمیه رایگان روزانه کاربران</span>
+      <span className="text-xs text-zinc-500 dark:text-zinc-400">
+        تعداد درخواست‌های رایگان متنی و تصویری که به هر کاربر در ۲۴ ساعت اختصاص می‌یابد را تنظیم کنید. پس از پایان سهمیه، هزینه از کیف پول کسر می‌شود.
+      </span>
+    </div>
+    <div className="w-full sm:w-1/2 flex flex-col gap-3">
+      <div>
+        <label className="block text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-1">
+          سهمیه پیام متنی (چت)
+        </label>
+        <div className="flex gap-2">
+          <input
+            type="number"
+            value={freeDailyLimitUser}
+            onChange={(e) => setFreeDailyLimitUser(e.target.value)}
+            className="w-full px-3 py-2 rounded-xl admin-input text-sm text-zinc-800 dark:text-zinc-200 focus:border-blue-500 outline-none transition-colors"
+            dir="ltr"
+          />
+          <button
+            type="button"
+            onClick={() => handleSaveSetting('free_daily_limit_user', freeDailyLimitUser)}
+            disabled={siteSettingsSaving || siteSettingsLoading}
+            className="px-4 py-2 admin-btn-primary text-white rounded-lg text-xs font-bold transition-all whitespace-nowrap"
+          >
+            ذخیره
+          </button>
+        </div>
+      </div>
+      <div>
+        <label className="block text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-1">
+          سهمیه تولید تصویر
+        </label>
+        <div className="flex gap-2">
+          <input
+            type="number"
+            value={freeDailyImageLimit}
+            onChange={(e) => setFreeDailyImageLimit(e.target.value)}
+            className="w-full px-3 py-2 rounded-xl admin-input text-sm text-zinc-800 dark:text-zinc-200 focus:border-blue-500 outline-none transition-colors"
+            dir="ltr"
+          />
+          <button
+            type="button"
+            onClick={() => handleSaveSetting('free_daily_image_limit', freeDailyImageLimit)}
+            disabled={siteSettingsSaving || siteSettingsLoading}
+            className="px-4 py-2 admin-btn-primary text-white rounded-lg text-xs font-bold transition-all whitespace-nowrap"
+          >
+            ذخیره
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
 
   {/* Danger Zone Section */}
  <div className="admin-card p-6 rounded-2xl">

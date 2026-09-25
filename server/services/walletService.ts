@@ -2,7 +2,7 @@ import db, { syncDatabase } from '../db/database';
 import crypto from 'crypto';
 
 // Model pricing per 1 million tokens in USD [promptPrice, completionPrice]
-const MODEL_PRICING_USD: Record<string, [number, number]> = {
+export const MODEL_PRICING_USD: Record<string, [number, number]> = {
   // OpenAI
   'gpt-4o': [2.50, 10.00],
   'gpt-4o-mini': [0.15, 0.60],
@@ -198,6 +198,14 @@ export function grantWelcomeBonusIfEligible(userId: number, promoCode?: string):
 }
 
 /**
+ * Fixed USD pricing for AI Image Generators
+ */
+export const IMAGE_PRICING_USD: Record<string, number> = {
+  'imagen-3': 0.03, // Google Imagen 3 official API cost ($0.03 / image)
+  'dalle-3': 0.04,  // OpenAI DALL-E 3 standard 1024x1024 ($0.04 / image)
+};
+
+/**
  * Deduct chat cost from user wallet
  */
 export function deductChatCost(
@@ -245,6 +253,222 @@ export function deductChatCost(
   } catch (error) {
     console.error('[WalletService] Error deducting chat cost:', error);
     return { success: false, costToman: 0, balanceAfter: 0 };
+  }
+}
+
+/**
+ * Log subsidized free chat usage (0 Toman deduction, but tracks tokens and USD cost to site)
+ */
+export function logFreeChatUsage(
+  userId: number,
+  model: string,
+  promptTokens: number,
+  completionTokens: number,
+  costUsd: number
+): void {
+  try {
+    const txId = `tx-free-${Date.now()}-${crypto.randomBytes(4).toString('hex')}`;
+    const user = db.prepare('SELECT walletBalance FROM users WHERE id = ?').get(userId) as any;
+    const currentBalance = user?.walletBalance || 0;
+
+    db.prepare(`
+      INSERT INTO wallet_transactions (
+        id, userId, type, amount, balanceAfter, model, promptTokens, completionTokens, costUsd, description
+      )
+      VALUES (?, ?, 'free_usage', 0, ?, ?, ?, ?, ?, 'مصرف سهمیه رایگان روزانه')
+    `).run(
+      txId,
+      userId,
+      currentBalance,
+      model,
+      promptTokens,
+      completionTokens,
+      costUsd
+    );
+
+    syncDatabase();
+  } catch (error) {
+    console.error('[WalletService] Error logging free chat usage:', error);
+  }
+}
+
+/**
+ * Deduct image generation cost, or use free daily quota if available
+ */
+export function deductOrUseFreeImageQuota(
+  userId: number,
+  engine: string,
+  description?: string
+): { success: boolean; costToman: number; costUsd: number; balanceAfter: number; error?: string; isFree: boolean } {
+  try {
+    const user = db.prepare('SELECT walletBalance FROM users WHERE id = ?').get(userId) as any;
+    const currentBalance = user?.walletBalance || 0;
+
+    // Check free image quota
+    const limitSetting = db.prepare("SELECT value FROM site_settings WHERE key = 'free_daily_image_limit'").get() as any;
+    const dailyLimit = parseInt(limitSetting?.value || '4', 10);
+    const cooldownHours = parseInt((db.prepare("SELECT value FROM site_settings WHERE key = 'free_cooldown_hours'").get() as any)?.value || '24', 10) || 24;
+
+    const row = db.prepare(`
+      SELECT windowStart, count 
+      FROM free_image_usage 
+      WHERE userId = ?
+    `).get(userId) as any;
+
+    const now = Date.now();
+    const windowMs = cooldownHours * 60 * 60 * 1000;
+    
+    let currentCount = 0;
+
+    if (row) {
+      const timeSinceStart = now - row.windowStart;
+      if (timeSinceStart < windowMs) {
+        currentCount = row.count;
+      } else {
+        // Reset window
+        db.prepare('UPDATE free_image_usage SET windowStart = ?, count = 0 WHERE userId = ?').run(now, userId);
+      }
+    } else {
+      try {
+        db.prepare('INSERT INTO free_image_usage (userId, count, windowStart) VALUES (?, 0, ?)').run(userId, now);
+      } catch (e) {
+        // Fallback if table somehow doesn't exist
+        db.exec(`
+          CREATE TABLE IF NOT EXISTS free_image_usage (
+            userId INTEGER PRIMARY KEY,
+            count INTEGER DEFAULT 0,
+            windowStart INTEGER DEFAULT 0
+          )
+        `);
+        db.prepare('INSERT INTO free_image_usage (userId, count, windowStart) VALUES (?, 0, ?)').run(userId, now);
+      }
+    }
+
+    if (currentCount < dailyLimit) {
+      // Use free quota
+      db.prepare('UPDATE free_image_usage SET count = count + 1 WHERE userId = ?').run(userId);
+      const costUsd = IMAGE_PRICING_USD[engine] || 0.03;
+      
+      const txId = `tx-freeimg-${Date.now()}-${crypto.randomBytes(4).toString('hex')}`;
+      db.prepare(`
+        INSERT INTO wallet_transactions (
+          id, userId, type, amount, balanceAfter, model, promptTokens, completionTokens, costUsd, description
+        )
+        VALUES (?, ?, 'free_usage', 0, ?, ?, 0, 0, ?, ?)
+      `).run(
+        txId,
+        userId,
+        currentBalance,
+        engine,
+        costUsd,
+        'مصرف سهمیه رایگان روزانه تصویرساز'
+      );
+      syncDatabase();
+
+      return { success: true, costToman: 0, costUsd, balanceAfter: currentBalance, isFree: true };
+    }
+
+    // Deduct from wallet if free quota is exhausted
+    const deductRes = deductImageCost(userId, engine, description);
+    return { ...deductRes, isFree: false };
+  } catch (err: any) {
+    console.error('[WalletService] Error in deductOrUseFreeImageQuota:', err);
+    return { success: false, costToman: 0, costUsd: 0, balanceAfter: 0, error: 'خطای سرور در کسر هزینه', isFree: false };
+  }
+}
+
+/**
+ * Deduct image generation cost from user wallet
+ */
+export function deductImageCost(
+  userId: number,
+  engine: string,
+  description?: string
+): { success: boolean; costToman: number; costUsd: number; balanceAfter: number; error?: string } {
+  try {
+    const dollarRate = getApiDollarRate();
+    const costUsd = IMAGE_PRICING_USD[engine] || 0.03;
+    const rawCostToman = costUsd * dollarRate;
+    const costToman = Math.max(1, Math.round(rawCostToman));
+
+    const user = db.prepare('SELECT walletBalance FROM users WHERE id = ?').get(userId) as any;
+    const currentBalance = user?.walletBalance || 0;
+
+    if (currentBalance < costToman) {
+      return {
+        success: false,
+        costToman,
+        costUsd,
+        balanceAfter: currentBalance,
+        error: `موجودی ناکافی است. برای ساخت تصویر با مدل ${engine === 'dalle-3' ? 'DALL-E 3' : 'Imagen 3'} نیاز به ${costToman.toLocaleString('fa-IR')} تومان اعتبار است.`
+      };
+    }
+
+    const newBalance = Math.max(0, currentBalance - costToman);
+    db.prepare('UPDATE users SET walletBalance = ? WHERE id = ?').run(newBalance, userId);
+
+    const txId = `tx-img-${Date.now()}-${crypto.randomBytes(4).toString('hex')}`;
+    db.prepare(`
+      INSERT INTO wallet_transactions (
+        id, userId, type, amount, balanceAfter, model, promptTokens, completionTokens, costUsd, description
+      )
+      VALUES (?, ?, 'image_usage', ?, ?, ?, 0, 0, ?, ?)
+    `).run(
+      txId,
+      userId,
+      -costToman,
+      newBalance,
+      engine,
+      costUsd,
+      description || `ساخت تصویر با هوش مصنوعی (${engine})`
+    );
+
+    syncDatabase();
+
+    return { success: true, costToman, costUsd, balanceAfter: newBalance };
+  } catch (error: any) {
+    console.error('[WalletService] Error deducting image cost:', error);
+    return { success: false, costToman: 0, costUsd: 0, balanceAfter: 0, error: 'خطا در کسر از کیف پول' };
+  }
+}
+
+/**
+ * Refund image generation cost back to user wallet if generation fails
+ */
+export function refundImageCost(
+  userId: number,
+  amountToman: number,
+  engine: string,
+  description?: string
+): { success: boolean; balanceAfter: number } {
+  try {
+    const user = db.prepare('SELECT walletBalance FROM users WHERE id = ?').get(userId) as any;
+    const currentBalance = user?.walletBalance || 0;
+    const newBalance = currentBalance + amountToman;
+
+    db.prepare('UPDATE users SET walletBalance = ? WHERE id = ?').run(newBalance, userId);
+
+    const txId = `tx-refund-img-${Date.now()}-${crypto.randomBytes(4).toString('hex')}`;
+    db.prepare(`
+      INSERT INTO wallet_transactions (
+        id, userId, type, amount, balanceAfter, model, promptTokens, completionTokens, costUsd, description
+      )
+      VALUES (?, ?, 'refund', ?, ?, ?, 0, 0, 0, ?)
+    `).run(
+      txId,
+      userId,
+      amountToman,
+      newBalance,
+      engine,
+      description || `بازگشت وجه به دلیل خطای ساخت تصویر (${engine})`
+    );
+
+    syncDatabase();
+
+    return { success: true, balanceAfter: newBalance };
+  } catch (error: any) {
+    console.error('[WalletService] Error refunding image cost:', error);
+    return { success: false, balanceAfter: 0 };
   }
 }
 
@@ -411,6 +635,12 @@ export function getAdminFinancialSummary(): {
   totalDeductedToman: number;
   remainingTreasuryUsd: number;
   totalTokensUsed: number;
+  freeStats: {
+    totalFreeMessages: number;
+    totalFreeTokens: number;
+    totalFreeCostUsd: number;
+    totalFreeCostToman: number;
+  };
 } {
   try {
     const purchases = db.prepare('SELECT * FROM api_purchases ORDER BY createdAt DESC').all() as any[];
@@ -425,19 +655,35 @@ export function getAdminFinancialSummary(): {
     const averagePurchaseRateToman = totalPurchasedUsd > 0 ? Math.round(totalSpentToman / totalPurchasedUsd) : 0;
     const sellingRateToman = getApiDollarRate();
 
-    // Stats from usage transactions
+    // Stats from paid usage transactions (both text chat and image generations)
     const usageStats = db.prepare(`
       SELECT 
         COALESCE(SUM(costUsd), 0) as totalConsumedUsd,
         COALESCE(SUM(ABS(amount)), 0) as totalDeductedToman,
         COALESCE(SUM(promptTokens + completionTokens), 0) as totalTokensUsed
       FROM wallet_transactions 
-      WHERE type = 'chat_usage'
+      WHERE type IN ('chat_usage', 'image_usage')
     `).get() as any;
 
     const totalConsumedUsd = Number(usageStats?.totalConsumedUsd) || 0;
     const totalDeductedToman = Number(usageStats?.totalDeductedToman) || 0;
     const totalTokensUsed = Number(usageStats?.totalTokensUsed) || 0;
+
+    // Stats from subsidized free usage transactions
+    const freeStatsRow = db.prepare(`
+      SELECT 
+        COUNT(*) as totalFreeMessages,
+        COALESCE(SUM(promptTokens + completionTokens), 0) as totalFreeTokens,
+        COALESCE(SUM(costUsd), 0) as totalFreeCostUsd
+      FROM wallet_transactions 
+      WHERE type = 'free_usage'
+    `).get() as any;
+
+    const totalFreeMessages = Number(freeStatsRow?.totalFreeMessages) || 0;
+    const totalFreeTokens = Number(freeStatsRow?.totalFreeTokens) || 0;
+    const totalFreeCostUsd = Number(freeStatsRow?.totalFreeCostUsd) || 0;
+    const effectiveBuyRate = averagePurchaseRateToman > 0 ? averagePurchaseRateToman : 20000;
+    const totalFreeCostToman = Math.round(totalFreeCostUsd * effectiveBuyRate);
 
     const remainingTreasuryUsd = Math.max(0, totalPurchasedUsd - totalConsumedUsd);
 
@@ -450,7 +696,13 @@ export function getAdminFinancialSummary(): {
       totalConsumedUsd,
       totalDeductedToman,
       remainingTreasuryUsd,
-      totalTokensUsed
+      totalTokensUsed,
+      freeStats: {
+        totalFreeMessages,
+        totalFreeTokens,
+        totalFreeCostUsd,
+        totalFreeCostToman
+      }
     };
   } catch (error) {
     console.error('[WalletService] getAdminFinancialSummary error:', error);
@@ -463,7 +715,13 @@ export function getAdminFinancialSummary(): {
       totalConsumedUsd: 0,
       totalDeductedToman: 0,
       remainingTreasuryUsd: 0,
-      totalTokensUsed: 0
+      totalTokensUsed: 0,
+      freeStats: {
+        totalFreeMessages: 0,
+        totalFreeTokens: 0,
+        totalFreeCostUsd: 0,
+        totalFreeCostToman: 0
+      }
     };
   }
 }
