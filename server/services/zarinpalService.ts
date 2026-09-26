@@ -275,7 +275,7 @@ export async function verifyZarinpalPayment(options: PaymentVerifyOptions): Prom
  * Test merchant connectivity
  */
 export async function testZarinpalMerchant(
-  customMerchantId?: string,
+  customMerchantId?: string, 
   sandbox = false,
   customCallbackUrl?: string
 ): Promise<{ valid: boolean; message: string }> {
@@ -350,13 +350,13 @@ export async function getServerPublicIp(): Promise<string | null> {
       const data = await res.json();
       return data.ip || null;
     }
-  } catch (e) { }
+  } catch (e) {}
   try {
     const res2 = await fetch('https://ifconfig.me/ip', { signal: AbortSignal.timeout(3000) });
     if (res2.ok) {
       const text = await res2.text();
       return text.trim() || null;
     }
-  } catch (e2) { }
+  } catch (e2) {}
   return null;
 }
