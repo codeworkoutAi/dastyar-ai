@@ -9,6 +9,16 @@ import { deductImageCost, refundImageCost, deductOrUseFreeImageQuota } from '../
 
 const router = express.Router();
 
+router.get('/api/server-ip', async (req, res) => {
+  try {
+    const response = await fetch('https://api.ipify.org?format=json');
+    const data = await response.json();
+    res.json({ ip: data.ip, message: 'این آی‌پی خروجی سرور شما روی Render است. آن را در زرین‌پال وارد کنید.' });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 router.post('/api/fetch-models', aiRouteLimiter, async (req, res) => {
   try {
     let { baseUrl, apiKey, customHeaders, profileId } = req.body;
