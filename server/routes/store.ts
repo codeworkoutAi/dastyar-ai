@@ -11,7 +11,7 @@ import { notifyOrderSuccessBySms } from '../services/kavenegarService';
 const router = express.Router();
 
 function getSafeBaseUrl(req: express.Request): string {
-  const configuredUrl = (process.env.APP_URL || process.env.WEBSITE_URL || process.env.WEB_URL || '').replace(/\/+$/, '');
+  const configuredUrl = (process.env.APP_URL || process.env.WEBSITE_URL || process.env.WEB_URL || '').trim().replace(/\/+$/, '');
   if (configuredUrl) return configuredUrl;
   const host = req.get('host') || 'localhost:3000';
   const protocol = req.protocol === 'https' || req.get('x-forwarded-proto') === 'https' ? 'https' : 'http';

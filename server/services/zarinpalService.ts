@@ -1,63 +1,4 @@
 import db from '../db/database';
-import https from 'https';
-import { SocksProxyAgent } from 'socks-proxy-agent';
-import { HttpsProxyAgent } from 'https-proxy-agent';
-import { URL } from 'url';
-
-async function zpFetch(url: string, payload?: any): Promise<any> {
-  const proxyUrl = process.env.PROXY_URL;
-  // Use proxy if it's available (especially useful in production on Render to bypass Zarinpal IP bans)
-  if (proxyUrl) {
-    return new Promise((resolve, reject) => {
-      try {
-        let agent: https.Agent | undefined;
-        if (proxyUrl.startsWith('socks')) agent = new SocksProxyAgent(proxyUrl);
-        else if (proxyUrl.startsWith('http')) agent = new HttpsProxyAgent(proxyUrl);
-        
-        const parsedUrl = new URL(url);
-        const method = payload ? 'POST' : 'GET';
-        const options: https.RequestOptions = {
-          hostname: parsedUrl.hostname,
-          port: parsedUrl.port || 443,
-          path: parsedUrl.pathname + parsedUrl.search,
-          method: method,
-          headers: payload ? { 'Content-Type': 'application/json', 'Accept': 'application/json' } : { 'Accept': 'application/json' },
-          agent
-        };
-
-        const req = https.request(options, (res) => {
-          let body = '';
-          res.on('data', (chunk) => body += chunk);
-          res.on('end', () => {
-            try {
-              resolve(JSON.parse(body));
-            } catch (e) {
-              reject(new Error('Invalid JSON response from Zarinpal'));
-            }
-          });
-        });
-
-        req.on('error', reject);
-        if (payload) {
-          req.write(JSON.stringify(payload));
-        }
-        req.end();
-      } catch (e) {
-        reject(e);
-      }
-    });
-  }
-
-  // Fallback to native fetch if no proxy
-  const method = payload ? 'POST' : 'GET';
-  const headers: any = payload ? { 'Content-Type': 'application/json', 'Accept': 'application/json' } : { 'Accept': 'application/json' };
-  const res = await fetch(url, {
-    method,
-    headers,
-    body: payload ? JSON.stringify(payload) : undefined
-  });
-  return res.json();
-}
 
 export interface ZarinpalConfig {
   merchantId: string;
@@ -215,7 +156,20 @@ export async function requestZarinpalPayment(options: PaymentRequestOptions): Pr
       if (options.email) payload.metadata.email = options.email;
     }
 
-    const json = await zpFetch(endpoints.request, payload);
+    const response = await fetch(endpoints.request, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify(payload)
+    });
+
+    if (!response.ok && response.status !== 400) {
+      throw new Error(`HTTP Error ${response.status}`);
+    }
+
+    const json = await response.json();
 
     if (json.data && json.data.code === 100 && json.data.authority) {
       return {
@@ -265,7 +219,16 @@ export async function verifyZarinpalPayment(options: PaymentVerifyOptions): Prom
       authority: options.authority
     };
 
-    const json = await zpFetch(endpoints.verify, payload);
+    const response = await fetch(endpoints.verify, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify(payload)
+    });
+
+    const json = await response.json();
 
     // Code 100: Successful initial verification
     if (json.data && json.data.code === 100) {
@@ -312,7 +275,7 @@ export async function verifyZarinpalPayment(options: PaymentVerifyOptions): Prom
  * Test merchant connectivity
  */
 export async function testZarinpalMerchant(
-  customMerchantId?: string, 
+  customMerchantId?: string,
   sandbox = false,
   customCallbackUrl?: string
 ): Promise<{ valid: boolean; message: string }> {
@@ -335,7 +298,16 @@ export async function testZarinpalMerchant(
       callback_url: callbackUrl
     };
 
-    const json = await zpFetch(endpoints.request, testPayload);
+    const response = await fetch(endpoints.request, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify(testPayload)
+    });
+
+    const json = await response.json();
 
     if (json.data && json.data.code === 100) {
       return { valid: true, message: 'اتصال به زرین‌پال با موفقیت برقرار شد و مرچنت کاملاً معتبر و فعال است.' };
@@ -373,19 +345,18 @@ export async function testZarinpalMerchant(
  */
 export async function getServerPublicIp(): Promise<string | null> {
   try {
-    // Use zpFetch to ensure we check the IP through the same proxy Zarinpal uses
-    const res = await zpFetch('https://api.ipify.org?format=json', {});
-    if (res && res.ip) return res.ip;
-  } catch (e) {}
-  
-  // Fallback (might not use proxy if zpFetch fails for some reason)
-  try {
-    const res2 = await fetch('https://api.ipify.org?format=json');
-    if (res2.ok) {
-      const data = await res2.json();
+    const res = await fetch('https://api.ipify.org?format=json', { signal: AbortSignal.timeout(3000) });
+    if (res.ok) {
+      const data = await res.json();
       return data.ip || null;
     }
-  } catch (e2) {}
-  
+  } catch (e) { }
+  try {
+    const res2 = await fetch('https://ifconfig.me/ip', { signal: AbortSignal.timeout(3000) });
+    if (res2.ok) {
+      const text = await res2.text();
+      return text.trim() || null;
+    }
+  } catch (e2) { }
   return null;
 }
