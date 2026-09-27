@@ -126,35 +126,10 @@ router.post('/checkout', checkoutLimiter, requireAuth, async (req: any, res) => 
     syncDatabase();
 
     const zarinpal = getZarinpalConfig();
-    const baseUrl = getSafeBaseUrl(req);
-
-    // If ZarinPal is configured and enabled, request real Authority
-    if (zarinpal.enabled) {
-      const userRow = db.prepare('SELECT email, phone FROM users WHERE id = ?').get(userId) as any;
-      const zpResult = await requestZarinpalPayment({
-        amountToman: product.price,
-        description: `خرید ${product.title} - شماره سفارش ${orderId}`,
-        callbackUrl: `${baseUrl}/api/store/zarinpal/callback?orderId=${orderId}`,
-        email: userRow?.email,
-        mobile: userRow?.phone
-      });
-
-      if (zpResult.success && zpResult.authority && zpResult.paymentUrl) {
-        db.prepare('UPDATE orders SET authority = ? WHERE id = ?').run(zpResult.authority, orderId);
-        syncDatabase();
-        return res.json({ message: 'فاکتور ایجاد شد', orderId, paymentUrl: zpResult.paymentUrl });
-      } else {
-        console.warn('[Store API] ZarinPal request failed:', zpResult.error);
-        if (process.env.NODE_ENV !== 'production') {
-          const paymentUrl = `/api/store/mock-payment?orderId=${orderId}`;
-          return res.json({ message: 'فاکتور ایجاد شد (آزمایشی)', orderId, paymentUrl });
-        }
-        return res.status(400).json({ error: zpResult.error || 'خطا در ایجاد تراکنش درگاه زرین‌پال' });
-      }
+    let paymentUrl = `/api/store/pay?orderId=${orderId}`;
+    if (!zarinpal.enabled) {
+      paymentUrl = `/api/store/mock-payment?orderId=${orderId}`;
     }
-
-    // Mock payment link (Fallback when ZarinPal is not configured yet)
-    const paymentUrl = `/api/store/mock-payment?orderId=${orderId}`;
 
     res.json({ message: 'فاکتور ایجاد شد', orderId, paymentUrl });
 
@@ -188,33 +163,11 @@ router.post('/wallet-topup', checkoutLimiter, requireAuth, async (req: any, res)
     syncDatabase();
 
     const zarinpal = getZarinpalConfig();
-    const baseUrl = getSafeBaseUrl(req);
-
-    if (zarinpal.enabled) {
-      const userRow = db.prepare('SELECT email, phone FROM users WHERE id = ?').get(userId) as any;
-      const zpResult = await requestZarinpalPayment({
-        amountToman: numAmount,
-        description: `شارژ کیف پول حساب کاربری - سفارش ${orderId}`,
-        callbackUrl: `${baseUrl}/api/store/zarinpal/callback?orderId=${orderId}`,
-        email: userRow?.email,
-        mobile: userRow?.phone
-      });
-
-      if (zpResult.success && zpResult.authority && zpResult.paymentUrl) {
-        db.prepare('UPDATE orders SET authority = ? WHERE id = ?').run(zpResult.authority, orderId);
-        syncDatabase();
-        return res.json({ message: 'فاکتور شارژ ایجاد شد', orderId, paymentUrl: zpResult.paymentUrl });
-      } else {
-        console.warn('[Store API] ZarinPal topup error:', zpResult.error);
-        if (process.env.NODE_ENV !== 'production') {
-          const paymentUrl = `/api/store/mock-payment?orderId=${orderId}`;
-          return res.json({ message: 'فاکتور شارژ ایجاد شد (آزمایشی)', orderId, paymentUrl });
-        }
-        return res.status(400).json({ error: zpResult.error || 'خطا در ایجاد تراکنش شارژ زرین‌پال' });
-      }
+    let paymentUrl = `/api/store/pay?orderId=${orderId}`;
+    if (!zarinpal.enabled) {
+      paymentUrl = `/api/store/mock-payment?orderId=${orderId}`;
     }
 
-    const paymentUrl = `/api/store/mock-payment?orderId=${orderId}`;
     res.json({ message: 'فاکتور شارژ ایجاد شد', orderId, paymentUrl });
 
   } catch (err) {
@@ -262,6 +215,73 @@ router.post('/checkout-manual', checkoutLimiter, requireAuth, (req: any, res) =>
     res.status(500).json({ error: 'خطای سرور در ثبت پرداخت کارت به کارت' });
   }
 });
+
+// GET /api/store/pay (Handles generating payment from a browser to send a strict-origin-when-cross-origin Referer)
+router.get('/pay', async (req: any, res) => {
+  try {
+    const rawOrderId = typeof req.query.orderId === 'string' ? req.query.orderId : '';
+    if (!rawOrderId || !/^[a-zA-Z0-9_-]{1,64}$/.test(rawOrderId)) {
+      return res.status(400).send('شماره سفارش نامعتبر است');
+    }
+    const orderId = rawOrderId;
+    const order = db.prepare(`
+      SELECT o.id, o.amount, o.paymentStatus, o.userId, p.title, u.email, u.phone 
+      FROM orders o 
+      LEFT JOIN products p ON o.productId = p.id
+      LEFT JOIN users u ON o.userId = u.id
+      WHERE o.id = ?
+    `).get(orderId) as any;
+
+    if (!order || order.paymentStatus !== 'pending') {
+      return res.redirect('/dashboard?payment=invalid_or_paid');
+    }
+
+    const zarinpal = getZarinpalConfig();
+    const baseUrl = getSafeBaseUrl(req);
+
+    if (zarinpal.enabled) {
+      const zpResult = await requestZarinpalPayment({
+        amountToman: order.amount,
+        description: `خرید ${order.title || ''} - ${orderId}`,
+        callbackUrl: `${baseUrl}/api/store/zarinpal/callback?orderId=${orderId}`,
+        mobile: order.phone,
+        email: order.email
+      });
+
+      if (zpResult.success && zpResult.authority && zpResult.paymentUrl) {
+        db.prepare('UPDATE orders SET authority = ? WHERE id = ?').run(zpResult.authority, orderId);
+        syncDatabase();
+        // Render an HTML page that auto-redirects with strict Referrer-Policy
+        return res.send(`
+          <!DOCTYPE html>
+          <html>
+            <head>
+              <meta charset="UTF-8">
+              <meta name="referrer" content="strict-origin-when-cross-origin">
+              <title>در حال انتقال به درگاه...</title>
+            </head>
+            <body>
+              <div style="font-family: Tahoma, sans-serif; text-align: center; margin-top: 50px;">
+                <p>در حال انتقال به درگاه پرداخت زرین‌پال، لطفاً منتظر بمانید...</p>
+                <a id="zarinpalLink" href="${zpResult.paymentUrl}" style="display:none;">پرداخت</a>
+              </div>
+              <script>
+                document.getElementById('zarinpalLink').click();
+              </script>
+            </body>
+          </html>
+        `);
+      }
+    }
+
+    // Fallback to mock payment
+    res.redirect(`/api/store/mock-payment?orderId=${orderId}`);
+  } catch (error) {
+    console.error('[Store API] Pay proxy error:', error);
+    res.status(500).send('خطای سرور');
+  }
+});
+
 
 // GET /api/store/mock-payment (Dummy gateway to simulate successful payment)
 router.get('/mock-payment', (req: any, res) => {

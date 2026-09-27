@@ -5,7 +5,7 @@ import { HttpsProxyAgent } from 'https-proxy-agent';
 import { SocksProxyAgent } from 'socks-proxy-agent';
 import jwt from 'jsonwebtoken';
 import { telegramAuthSessions, JWT_SECRET } from '../services/telegramAuthSessions';
-import { requestZarinpalPayment, getZarinpalConfig } from '../services/zarinpalService';
+import { getZarinpalConfig } from '../services/zarinpalService';
 
 export let bot: Telegraf<any> | null = null;
 
@@ -520,23 +520,10 @@ async function sendStoreShowcase(ctx: any, page: number = 0, isEdit: boolean = f
     const keyboardButtons: any[] = [];
 
     if (isOnlineUrl) {
-      let paymentUrl = `${rawUrl}/api/store/mock-payment?orderId=${orderId}`;
+      let paymentUrl = `${rawUrl}/api/store/pay?orderId=${orderId}`;
       const zarinpal = getZarinpalConfig();
-      if (zarinpal.enabled) {
-        try {
-          const zpResult = await requestZarinpalPayment({
-            amountToman: product.price,
-            description: `خرید تلگرام ${product.title} - ${orderId}`,
-            callbackUrl: `${rawUrl}/api/store/zarinpal/callback?orderId=${orderId}`
-          });
-          if (zpResult.success && zpResult.authority && zpResult.paymentUrl) {
-            paymentUrl = zpResult.paymentUrl;
-            db.prepare('UPDATE orders SET authority = ? WHERE id = ?').run(zpResult.authority, orderId);
-            syncDatabase();
-          }
-        } catch (zpErr) {
-          console.warn('[Telegram] Zarinpal request error:', zpErr);
-        }
+      if (!zarinpal.enabled) {
+        paymentUrl = `${rawUrl}/api/store/mock-payment?orderId=${orderId}`;
       }
       keyboardButtons.push([Markup.button.url('💳 پرداخت آنلاین (زرین‌پال / شتاب)', paymentUrl)]);
       keyboardButtons.push([Markup.button.callback('💳 پرداخت کارت به کارت', `c2c_${orderId}`)]);

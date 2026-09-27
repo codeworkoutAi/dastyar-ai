@@ -156,11 +156,13 @@ export async function requestZarinpalPayment(options: PaymentRequestOptions): Pr
       if (options.email) payload.metadata.email = options.email;
     }
 
+    const baseUrl = process.env.WEBSITE_URL || process.env.WEB_URL || process.env.APP_URL || 'https://dastyarai.com';
     const response = await fetch(endpoints.request, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Accept': 'application/json'
+        'Accept': 'application/json',
+        'Referer': baseUrl
       },
       body: JSON.stringify(payload)
     });
@@ -219,11 +221,13 @@ export async function verifyZarinpalPayment(options: PaymentVerifyOptions): Prom
       authority: options.authority
     };
 
+    const baseUrl = process.env.WEBSITE_URL || process.env.WEB_URL || process.env.APP_URL || 'https://dastyarai.com';
     const response = await fetch(endpoints.verify, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Accept': 'application/json'
+        'Accept': 'application/json',
+        'Referer': baseUrl
       },
       body: JSON.stringify(payload)
     });
