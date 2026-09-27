@@ -23,7 +23,7 @@ export function renderHtmlWithSeo(req: express.Request, res: express.Response, d
     let html = fs.readFileSync(indexPath, 'utf-8');
     const protocol = req.protocol === 'https' || req.headers['x-forwarded-proto'] === 'https' ? 'https' : 'http';
     const host = req.get('host');
-    const baseUrl = `${protocol}://${host}`;
+    const baseUrl = process.env.NODE_ENV === 'production' ? (process.env.WEB_URL || 'https://dastyarai.com') : `${protocol}://${host}`;
     const urlPath = req.path;
 
     let pageTitle = 'دستیار هوشمند | چت با هوش مصنوعی رایگان، فارسی و پیشرفته';

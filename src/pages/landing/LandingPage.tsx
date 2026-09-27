@@ -535,6 +535,9 @@ export const LandingPage: React.FC = () => {
           <Link to="/store" className="px-2.5 py-1.5 rounded-xl hover:text-[#0f1420] dark:hover:text-white transition-all whitespace-nowrap">
             فروشگاه
           </Link>
+          <Link to="/blog" className="px-2.5 py-1.5 rounded-xl hover:text-[#0f1420] dark:hover:text-white transition-all whitespace-nowrap">
+            مجله هوش مصنوعی
+          </Link>
         </nav>
 
         {/* Actions */}
@@ -592,6 +595,9 @@ export const LandingPage: React.FC = () => {
             </a>
             <Link to="/store" onClick={() => setIsMobileMenuOpen(false)} className="block px-3 py-2 rounded-xl text-xs font-bold text-[#525d75] dark:text-[#9aa5bc]">
               فروشگاه محصولات
+            </Link>
+            <Link to="/blog" onClick={() => setIsMobileMenuOpen(false)} className="block px-3 py-2 rounded-xl text-xs font-bold text-[#525d75] dark:text-[#9aa5bc]">
+              مجله هوش مصنوعی
             </Link>
           </div>
         )}
