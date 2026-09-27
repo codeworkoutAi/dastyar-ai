@@ -63,11 +63,12 @@ export function renderHtmlWithSeo(req: express.Request, res: express.Response, d
 
         structuredData = {
           '@context': 'https://schema.org',
-          '@type': 'BlogPosting',
+          '@type': 'Article',
           headline: pageTitle,
           description: pageDesc,
           image: pageImage,
           datePublished: datePublished,
+          dateModified: datePublished,
           author: {
             '@type': 'Organization',
             name: authorName
