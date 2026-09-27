@@ -363,8 +363,7 @@ export function Blog() {
  <article className="max-w-3xl mx-auto animate-fadeIn">
 {selectedPost.image && (
   <div className="mb-8 w-full overflow-hidden rounded-card shadow-sm border border-[var(--card-border)]  aspect-video">
-  <img 
-  src={selectedPost.image} 
+  <img loading="lazy" decoding="async" src={selectedPost.image} 
   alt={selectedPost.title} 
   className="w-full h-full object-cover"
   />
@@ -611,8 +610,7 @@ export function Blog() {
  >
  {displayedNews[0].image ? (
  <div className="w-full md:w-1/2 aspect-square md:aspect-auto overflow-hidden relative">
- <img 
- src={displayedNews[0].image} 
+ <img loading="lazy" decoding="async" src={displayedNews[0].image} 
  alt={displayedNews[0].title} 
  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
  />
@@ -669,8 +667,7 @@ export function Blog() {
  viewMode === 'grid' ? "aspect-[16/9] w-full overflow-hidden relative shrink-0" : "aspect-video sm:aspect-square sm:w-48 overflow-hidden relative shrink-0"
  }>
  {item.image ? (
- <img 
- src={item.image} 
+ <img loading="lazy" decoding="async" src={item.image} 
  alt={item.title} 
  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
  />

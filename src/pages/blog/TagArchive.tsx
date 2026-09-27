@@ -162,8 +162,7 @@ export function TagArchive() {
  >
  {item.image ? (
  <div className="aspect-[16/9] w-full overflow-hidden relative">
- <img 
- src={item.image} 
+ <img loading="lazy" decoding="async" src={item.image} 
  alt={item.title} 
  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
  />
