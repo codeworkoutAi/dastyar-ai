@@ -8,6 +8,19 @@ export function clearSitemapCache() {
   sitemapCache = null;
 }
 
+const escapeXml = (unsafe: string) => {
+  return unsafe.replace(/[<>&'"]/g, (c) => {
+    switch (c) {
+      case '<': return '&lt;';
+      case '>': return '&gt;';
+      case '&': return '&amp;';
+      case '\\'': return '&apos;';
+      case '"': return '&quot;';
+      default: return c;
+    }
+  });
+};
+
 export const sitemapHandler = (req: express.Request, res: express.Response) => {
   try {
     const now = Date.now();
@@ -30,7 +43,7 @@ export const sitemapHandler = (req: express.Request, res: express.Response) => {
       { path: '/store', priority: '0.9', changefreq: 'daily' },
     ];
     for (const page of staticPages) {
-      xml += `  <url>\n    <loc>${baseUrl}${page.path}</loc>\n    <changefreq>${page.changefreq}</changefreq>\n    <priority>${page.priority}</priority>\n  </url>\n`;
+      xml += `  <url>\n    <loc>${escapeXml(baseUrl + page.path)}</loc>\n    <changefreq>${page.changefreq}</changefreq>\n    <priority>${page.priority}</priority>\n  </url>\n`;
     }
 
     // Dynamic Blog pages
@@ -39,10 +52,10 @@ export const sitemapHandler = (req: express.Request, res: express.Response) => {
 
     for (const item of news) {
       const date = item.createdAt ? new Date(item.createdAt).toISOString().split('T')[0] : new Date().toISOString().split('T')[0];
-      xml += `  <url>\n    <loc>${baseUrl}/blog/${item.id}</loc>\n    <lastmod>${date}</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>0.8</priority>\n`;
+      xml += `  <url>\n    <loc>${escapeXml(`${baseUrl}/blog/${item.id}`)}</loc>\n    <lastmod>${date}</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>0.8</priority>\n`;
       if (item.image) {
         const imgUrl = item.image.startsWith('http') ? item.image : `${baseUrl}${item.image}`;
-        xml += `    <image:image>\n      <image:loc>${imgUrl}</image:loc>\n      <image:title><![CDATA[${item.title || ''}]]></image:title>\n    </image:image>\n`;
+        xml += `    <image:image>\n      <image:loc>${escapeXml(imgUrl)}</image:loc>\n      <image:title><![CDATA[${item.title || ''}]]></image:title>\n    </image:image>\n`;
       }
       xml += `  </url>\n`;
 
@@ -59,18 +72,18 @@ export const sitemapHandler = (req: express.Request, res: express.Response) => {
 
     // Tag pages
     for (const tag of allTags) {
-      xml += `  <url>\n    <loc>${baseUrl}/blog/tag/${encodeURIComponent(tag)}</loc>\n    <changefreq>weekly</changefreq>\n    <priority>0.6</priority>\n  </url>\n`;
+      xml += `  <url>\n    <loc>${escapeXml(`${baseUrl}/blog/tag/${encodeURIComponent(tag)}`)}</loc>\n    <changefreq>weekly</changefreq>\n    <priority>0.6</priority>\n  </url>\n`;
     }
 
     // Dynamic Store pages
     const products = db.prepare('SELECT id, title, image, bannerImage, createdAt FROM products ORDER BY createdAt DESC').all() as any[];
     for (const item of products) {
       const date = item.createdAt ? new Date(item.createdAt).toISOString().split('T')[0] : new Date().toISOString().split('T')[0];
-      xml += `  <url>\n    <loc>${baseUrl}/store/${item.id}</loc>\n    <lastmod>${date}</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>0.8</priority>\n`;
+      xml += `  <url>\n    <loc>${escapeXml(`${baseUrl}/store/${item.id}`)}</loc>\n    <lastmod>${date}</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>0.8</priority>\n`;
       const prodImg = item.bannerImage || item.image;
       if (prodImg) {
         const imgUrl = prodImg.startsWith('http') ? prodImg : `${baseUrl}${prodImg}`;
-        xml += `    <image:image>\n      <image:loc>${imgUrl}</image:loc>\n      <image:title><![CDATA[${item.title || ''}]]></image:title>\n    </image:image>\n`;
+        xml += `    <image:image>\n      <image:loc>${escapeXml(imgUrl)}</image:loc>\n      <image:title><![CDATA[${item.title || ''}]]></image:title>\n    </image:image>\n`;
       }
       xml += `  </url>\n`;
     }
