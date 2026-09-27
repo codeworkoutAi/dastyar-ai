@@ -602,7 +602,7 @@ export function Blog() {
  {displayedNews.length > 0 ? (
  <div className="space-y-12 animate-fadeIn">
  {/* Featured Post (Latest) - Only show if no search/filter to keep UI clean, or just always show first as featured */}
- <div 
+ <Link 
  onClick={() => {
  setSelectedPost(displayedNews[0]);
  navigate(`/blog/${displayedNews[0].id}`);
@@ -642,7 +642,7 @@ export function Blog() {
  </div>
  </div>
  </div>
- </div>
+ </Link>
 
  {/* Grid/List/Compact for remaining posts */}
  {displayedNews.length > 1 && (
@@ -650,7 +650,7 @@ export function Blog() {
  viewMode === 'grid' ?"grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8" :"flex flex-col gap-4 md:gap-6"
  }>
  {displayedNews.slice(1).map((item) => (
- <div 
+ <Link 
  key={item.id}
  onClick={() => {
  setSelectedPost(item);
@@ -713,7 +713,7 @@ export function Blog() {
  </div>
  </div>
  </div>
- </div>
+ </Link>
  ))}
  </div>
  )}

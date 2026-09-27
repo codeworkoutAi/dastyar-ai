@@ -20,6 +20,16 @@ process.on('unhandledRejection', (reason) => {
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Remove trailing slashes (except for root '/')
+app.use((req, res, next) => {
+  if (req.path.endsWith('/') && req.path.length > 1) {
+    const query = req.url.slice(req.path.length);
+    res.redirect(301, req.path.slice(0, -1) + query);
+  } else {
+    next();
+  }
+});
+
 // Security: Disable X-Powered-By header to prevent fingerprinting
 app.disable('x-powered-by');
 

@@ -32,6 +32,7 @@ export function renderHtmlWithSeo(req: express.Request, res: express.Response, d
     let pageType = 'website';
     let canonicalUrl = `${baseUrl}${urlPath}`;
     let structuredData: any = null;
+    let postContent = '';
 
     let extraMetaTags = '';
 
@@ -42,7 +43,8 @@ export function renderHtmlWithSeo(req: express.Request, res: express.Response, d
       const post = db.prepare('SELECT * FROM news WHERE id = ?').get(blogId) as any;
       if (post) {
         pageTitle = `${post.title} | مجله هوش مصنوعی`;
-        const rawText = (post.content || '').replace(/[#*`_\\[\\]()\\-!>]/g, '').trim();
+        postContent = post.content || '';
+        const rawText = postContent.replace(/[#*`_\\[\\]()\\-!>]/g, '').trim();
         pageDesc = rawText.slice(0, 160) || pageDesc;
         if (post.image) {
           pageImage = post.image.startsWith('http') ? post.image : `${baseUrl}${post.image}`;
@@ -228,6 +230,14 @@ export function renderHtmlWithSeo(req: express.Request, res: express.Response, d
     const safeCanonical = escapeHtml(canonicalUrl);
     const safeImage = escapeHtml(pageImage);
     const safeType = escapeHtml(pageType);
+
+    if (postContent) {
+      const ssrHtml = `<div id="ssr-content" style="display:none;" aria-hidden="true">
+        <h1>${safeTitle}</h1>
+        <article>${escapeHtml(postContent)}</article>
+      </div>`;
+      html = html.replace('<div id="root"></div>', `<div id="root"></div>\n    ${ssrHtml}`);
+    }
 
     // Replace Title
     html = html.replace(/<title>.*?<\/title>/i, `<title>${safeTitle}</title>`);
