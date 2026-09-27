@@ -53,7 +53,7 @@ export const sitemapHandler = (req: express.Request, res: express.Response) => {
     for (const item of news) {
       const date = item.createdAt ? new Date(item.createdAt).toISOString().split('T')[0] : new Date().toISOString().split('T')[0];
       xml += `  <url>\n    <loc>${escapeXml(`${baseUrl}/blog/${item.id}`)}</loc>\n    <lastmod>${date}</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>0.8</priority>\n`;
-      if (item.image) {
+      if (item.image && !item.image.startsWith('data:')) {
         const imgUrl = item.image.startsWith('http') ? item.image : `${baseUrl}${item.image}`;
         xml += `    <image:image>\n      <image:loc>${escapeXml(imgUrl)}</image:loc>\n      <image:title><![CDATA[${item.title || ''}]]></image:title>\n    </image:image>\n`;
       }
@@ -81,7 +81,7 @@ export const sitemapHandler = (req: express.Request, res: express.Response) => {
       const date = item.createdAt ? new Date(item.createdAt).toISOString().split('T')[0] : new Date().toISOString().split('T')[0];
       xml += `  <url>\n    <loc>${escapeXml(`${baseUrl}/store/${item.id}`)}</loc>\n    <lastmod>${date}</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>0.8</priority>\n`;
       const prodImg = item.bannerImage || item.image;
-      if (prodImg) {
+      if (prodImg && !prodImg.startsWith('data:')) {
         const imgUrl = prodImg.startsWith('http') ? prodImg : `${baseUrl}${prodImg}`;
         xml += `    <image:image>\n      <image:loc>${escapeXml(imgUrl)}</image:loc>\n      <image:title><![CDATA[${item.title || ''}]]></image:title>\n    </image:image>\n`;
       }
