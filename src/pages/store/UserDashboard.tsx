@@ -9,7 +9,7 @@ import {
   Receipt, Printer, ArrowRight, Home, ExternalLink, ShieldCheck, ChevronLeft, ChevronRight,
   Wallet, Zap, Coins, Cpu, MessageSquare, Plus, ArrowUpRight, ArrowDownLeft,
   Filter, Sparkles, RefreshCw, BarChart2, Gift, CreditCard,
-  Search, Code, Eye
+  Search, Code, Eye, Copy
 } from 'lucide-react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { toPersianDigits } from '../../lib/persianUtils';
@@ -1301,7 +1301,7 @@ export const UserDashboard = () => {
       {selectedInvoice && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-900/80 backdrop-blur-sm animate-fadeIn" onClick={() => setSelectedInvoice(null)}>
           <div 
-            className="w-full max-w-md clay-modal overflow-hidden p-6 rounded-3xl shadow-2xl border border-[var(--card-border)] " 
+            className="w-full max-w-2xl clay-modal overflow-y-auto max-h-[90vh] p-6 sm:p-8 rounded-3xl shadow-2xl border border-[var(--card-border)] custom-scrollbar" 
             onClick={e => e.stopPropagation()}
           >
             <div id="invoice-print-area">
@@ -1332,15 +1332,31 @@ export const UserDashboard = () => {
                     <span className="text-xs font-bold text-blue-600 dark:text-cyan-400">{selectedInvoice.licenseKey.startsWith('http') ? 'لینک فعال‌سازی اختصاصی شما:' : 'کد لایسنس اختصاصی شما:'}
                     </span>
                     {selectedInvoice.licenseKey.startsWith('http') ? (
-                      <a 
-                        href={selectedInvoice.licenseKey}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="font-mono text-[11px] sm:text-xs leading-relaxed break-all font-semibold text-blue-700 dark:text-cyan-300 hover:text-blue-800 dark:hover:text-cyan-200 hover:underline underline-offset-4 clay-inset-thick p-3 sm:px-4 sm:py-3 rounded-xl transition-all block" 
-                        dir="ltr"
-                      >
-                        {selectedInvoice.licenseKey}
-                      </a>
+                      <div className="relative group">
+                        <a 
+                          href={selectedInvoice.licenseKey}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="font-mono text-[11px] sm:text-xs leading-relaxed break-all font-semibold text-blue-700 dark:text-cyan-300 hover:text-blue-800 dark:hover:text-cyan-200 hover:underline underline-offset-4 clay-inset-thick p-3 sm:px-4 sm:py-3 pe-12 sm:pe-14 rounded-xl transition-all block" 
+                          dir="ltr"
+                        >
+                          {selectedInvoice.licenseKey}
+                        </a>
+                        <button
+                          onClick={(e) => {
+                            e.preventDefault();
+                            navigator.clipboard.writeText(selectedInvoice.licenseKey);
+                            const el = e.currentTarget;
+                            const originalHTML = el.innerHTML;
+                            el.innerHTML = '<span class="text-[10px] font-sans">کپی شد</span>';
+                            setTimeout(() => { el.innerHTML = originalHTML; }, 2000);
+                          }}
+                          className="absolute top-1/2 -translate-y-1/2 right-2 p-2 bg-blue-500/10 hover:bg-blue-500/20 text-blue-600 dark:text-cyan-400 rounded-lg transition-colors border border-blue-500/20 flex items-center justify-center min-w-[32px] min-h-[32px]"
+                          title="کپی لینک"
+                        >
+                          <Copy className="w-4 h-4" />
+                        </button>
+                      </div>
                     ) : (
                       <span className="font-mono text-center tracking-widest text-base font-bold text-blue-600 dark:text-cyan-400 clay-inset-thick py-2.5 rounded-xl select-all" dir="ltr">{selectedInvoice.licenseKey}</span>
                     )}
@@ -1353,7 +1369,7 @@ export const UserDashboard = () => {
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
                       راهنمای تحویل و استفاده:
                     </span>
-                    <div className="text-xs text-zinc-700 dark:text-zinc-300 leading-relaxed prose prose-sm dark:prose-invert max-w-none">
+                    <div className="text-[10px] sm:text-[11px] text-zinc-700 dark:text-zinc-300 leading-normal prose dark:prose-invert max-w-none prose-p:leading-relaxed prose-headings:text-sm prose-p:text-[11px]">
                       <MarkdownRenderer content={selectedInvoice.deliveryGuide} />
                     </div>
                   </div>
@@ -1397,4 +1413,8 @@ export const UserDashboard = () => {
     </div>
   );
 };
+
+
+
+
 
