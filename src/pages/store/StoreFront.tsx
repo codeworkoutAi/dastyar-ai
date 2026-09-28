@@ -372,10 +372,10 @@ return (
   
 
   </div>
-    <div className="mt-auto pt-4 border-t border-[var(--card-border)] flex justify-end">
-      <span className="flex items-center gap-1 text-[12px] font-bold text-[var(--color-accent-primary)] opacity-80 group-hover:opacity-100 transition-opacity">
+    <div className="mt-auto pt-4 pb-4 border-t border-[var(--card-border)] flex justify-start px-4">
+      <span className="flex items-center gap-1 text-[12.5px] font-bold text-[var(--color-accent-primary)] opacity-85 group-hover:opacity-100 transition-opacity">
         مشاهده جزئیات محصول
-        <ChevronLeft size={14} className="group-hover:-translate-x-1 transition-transform" />
+        <ChevronLeft size={15} className="group-hover:-translate-x-1 transition-transform" />
       </span>
     </div>
   </div>
@@ -404,5 +404,6 @@ return (
  </div>
  );
 }
+
 
 
