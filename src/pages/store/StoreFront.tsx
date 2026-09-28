@@ -5,6 +5,7 @@ import { CheckoutModal } from '../../components/CheckoutModal';
 import { ProductDetailsModal } from '../../components/ProductDetailsModal';
 import { Footer } from '../../components/Footer';
 import { ThemeToggle } from '../../components/ThemeToggle';
+import { GlobalHeader } from '../../components/GlobalHeader';
 import { useAuthStore } from '../../store/authStore';
 import { useUIStore } from '../../store/uiStore';
 import { useSettingsStore } from '../../store/settingsStore';
@@ -179,46 +180,7 @@ export function StoreFront() {
  };
 return (
   <div className="flex flex-col min-h-screen clay-landing-bg transition-colors duration-300">
-  <header className="sticky top-0 z-40 clay-surface dark:clay-surface backdrop-blur-md clay-card-thick rounded-none border-0">
-  <div className="container mx-auto px-3 sm:px-4 h-16 flex items-center justify-between">
-  <div className="flex items-center gap-2 sm:gap-4">
-  <Link 
-  to="/" 
-  className="p-2 clay-btn-thick shrink-0"
-  title="بازگشت به چت"
-  aria-label="بازگشت به چت"
-  >
-  <Home size={20} />
-  </Link>
-  <h1 className="text-lg sm:text-xl font-black bg-[var(--gemini-gradient)] bg-clip-text text-transparent flex items-center gap-1.5 sm:gap-2 truncate">
-  <Store size={22} className="text-[var(--color-accent-primary)] shrink-0" />
-  <span>فروشگاه</span>
-  </h1>
-  </div>
-  
-  <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
-  {user && (
-  <Link
-  to="/dashboard"
-  className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 clay-btn-thick text-sm font-bold"
-  title="داشبورد کاربری"
-  >
-  داشبورد
-  </Link>
-  )}
-  <ThemeToggle variant="minimal" />
-  {user?.role === 'admin' && (
-  <button
-  onClick={() => setIsAdminOpen(true)}
-  className="flex items-center gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 clay-btn-thick text-xs sm:text-sm font-bold"
-  >
-  <Settings size={15} />
-  <span>مدیریت</span>
-  </button>
-  )}
-  </div>
-  </div>
-  </header>
+  <GlobalHeader />
 
 <main className="flex-1 container mx-auto px-4 py-8 max-w-7xl">
   <div className="mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -354,9 +316,9 @@ return (
   <div 
   key={p.id} 
   className="group flex flex-col clay-card-thick overflow-hidden cursor-pointer transition-all hover:-translate-y-1" 
-  onClick={() => setDetailsProduct(p)}
+  onClick={() => navigate(`/store/product/${p.id}`)}
   >
-  <div className="w-full h-48 clay-inset-thick relative flex-shrink-0 overflow-hidden rounded-b-none border-t-0 border-l-0 border-r-0">
+  <div className="w-full aspect-video relative flex-shrink-0 overflow-hidden border-b border-[var(--card-border)] bg-[var(--card-bg)]">
   {p.bannerImage || p.image ? (
   <img src={p.bannerImage || p.image} alt={p.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
   ) : p.category === 'plan' ? (
@@ -454,20 +416,7 @@ return (
  }} 
  />
 
- {/* Product Details Modal */}
- <ProductDetailsModal
- product={detailsProduct}
- isOpen={!!detailsProduct}
- onClose={() => setDetailsProduct(null)}
- onBuy={(p) => {
- if (!user) {
- window.dispatchEvent(new CustomEvent('open-auth-modal'));
- } else {
- setSelectedProduct(p);
- navigate(`/store/${p.id}`);
- }
- }}
- />
+ 
  </div>
  );
 }

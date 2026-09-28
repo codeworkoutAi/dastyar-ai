@@ -2549,3 +2549,12 @@ input, textarea, select, .chat-message-text, .markdown-body, .prose {
   -webkit-user-select: auto;
   user-select: auto;
 }
+
+/* Custom distinct background for the Step-by-Step Guide Card in the Store */
+.guide-card {
+  --card-bg: #eff6ff !important;
+}
+.dark .guide-card {
+  --card-bg: #0f172a !important;
+}
+

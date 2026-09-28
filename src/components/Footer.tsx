@@ -42,14 +42,14 @@ export function Footer() {
  }, []);
 
  return (
- <footer className="relative mt-20 pt-8 pb-12 overflow-hidden border-t border-black/5 dark:border-white/5 clay-surface  backdrop-blur-2xl">
+ <footer className="relative mt-20 pt-8 pb-12 overflow-hidden border-t border-black/5 dark:border-white/5 backdrop-blur-2xl">
  {/* Ambient background glow accents */}
  <div className="absolute top-0 left-1/4 -translate-x-1/2 w-96 h-36 bg-indigo-500/5 dark:bg-indigo-500/10 blur-3xl pointer-events-none" />
  <div className="absolute top-0 right-1/4 translate-x-1/2 w-96 h-36 bg-amber-500/5 dark:bg-amber-500/10 blur-3xl pointer-events-none" />
 
  <div className="max-w-6xl mx-auto px-4 sm:px-6 relative z-10 space-y-6">
  {/* Main Claymorphic Mega Card */}
- <div className="clay-card-thick p-6 sm:p-10">
+ <div className="clay-card p-6 sm:p-10">
  <div className="grid grid-cols-2 md:grid-cols-12 gap-8 lg:gap-10">
  {/* 1. Brand & Description (Col 5) */}
  <div className="col-span-2 md:col-span-5 space-y-5 text-right">

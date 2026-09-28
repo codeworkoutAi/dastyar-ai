@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import { Home, BookOpen, Clock, ChevronRight, Hash, MessageCircle, LayoutDashboard } from 'lucide-react';
 import { NeuralBanner } from '../../components/NeuralBanner';
 import { Footer } from '../../components/Footer';
-import { ThemeToggle } from '../../components/ThemeToggle';
+import { GlobalHeader } from '../../components/GlobalHeader';
 import { setPageSeo } from '../../lib/seo';
 
 interface NewsItem {
@@ -93,40 +93,7 @@ export function TagArchive() {
 
  return (
  <div className="flex flex-col min-h-screen clay-landing-bg transition-colors duration-300 font-sans">
- <header className="sticky top-0 z-40 clay-header backdrop-blur-xl border-b border-[var(--border-subtle)] ">
- <div className="container mx-auto px-4 h-16 flex items-center justify-between max-w-5xl">
- <h1 className="text-xl font-black bg-gradient-to-l from-emerald-600 to-teal-600 bg-clip-text text-transparent flex items-center gap-2">
- <Hash size={24} className="text-emerald-600" />
- آرشیو تگ: {tagName}
- </h1>
- <div className="flex items-center gap-2.5">
-            <Link 
-              to="/dashboard"
-              style={{ borderRadius: '12px' }}
-              className="h-10 px-3.5 clay-btn flex items-center gap-2 text-sm font-bold text-zinc-700 dark:text-zinc-200 transition-all cursor-pointer hover:text-emerald-600 dark:hover:text-emerald-400"
-              title="داشبورد کاربری"
-            >
-              <LayoutDashboard size={17} />
-              <span className="hidden sm:inline">داشبورد</span>
-            </Link>
-
-            <ThemeToggle 
-              variant="clay" 
-              className="!h-10 !w-10 !rounded-xl !p-0 flex items-center justify-center shrink-0" 
-            />
-
-            <button 
-              onClick={() => navigate('/blog')}
-              style={{ borderRadius: '12px' }}
-              className="h-10 px-3.5 clay-btn flex items-center gap-1.5 text-sm font-bold text-zinc-700 dark:text-zinc-200 transition-all cursor-pointer hover:text-emerald-600 dark:hover:text-emerald-400"
-              title="بازگشت به مجله"
-            >
-              <ChevronRight size={17} />
-              <span>بازگشت به مجله</span>
-            </button>
-          </div>
-        </div>
-      </header>
+ <GlobalHeader />
 
  <main className="flex-1 container mx-auto px-4 py-8 lg:py-12 max-w-5xl">
  {/* Interactive Prompt Banner */}

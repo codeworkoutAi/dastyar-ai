@@ -1,10 +1,10 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import { Home, BookOpen, Clock, ChevronRight, Share2, Send, PenTool, MessageCircle, Search, CalendarDays, Hash, ChevronDown, Check, LayoutGrid, List, AlignJustify, LayoutDashboard } from 'lucide-react';
 import { MarkdownRenderer } from '../../components/MarkdownRenderer';
 import { NeuralBanner } from '../../components/NeuralBanner';
 import { Footer } from '../../components/Footer';
-import { ThemeToggle } from '../../components/ThemeToggle';
+import { GlobalHeader } from '../../components/GlobalHeader';
 import { setPageSeo } from '../../lib/seo';
 import 'sahel-font/dist/font-face.css';
 
@@ -151,9 +151,12 @@ export function Blog() {
  if (Array.isArray(data)) {
  setNews(data);
  if (id) {
- const found = data.find(item => item.id.toString() === id);
- if (found) setSelectedPost(found);
- }
+  const found = data.find(item => item.id.toString() === id);
+  if (found) setSelectedPost(found);
+  else setSelectedPost(null);
+  } else {
+  setSelectedPost(null);
+  }
  }
  setLoading(false);
  })
@@ -302,55 +305,7 @@ export function Blog() {
 
  return (
  <div className="flex flex-col min-h-screen clay-landing-bg transition-colors duration-300 font-sans">
- <header className="sticky top-0 z-40 clay-header backdrop-blur-xl border-b border-[var(--border-subtle)]">
- <div className="container mx-auto px-4 h-16 flex items-center justify-between max-w-5xl">
-{selectedPost ? (
-  <span className="text-xl font-black bg-[var(--gemini-gradient)] bg-clip-text text-transparent flex items-center gap-2">
-  مجله هوش مصنوعی
-  </span>
-  ) : (
-  <h1 className="text-xl font-black bg-[var(--gemini-gradient)] bg-clip-text text-transparent flex items-center gap-2">
-  <BookOpen size={24} className="text-[var(--color-accent-primary)]" />
-  مجله هوش مصنوعی
-  </h1>
-  )}
- <div className="flex items-center gap-2.5">
-            <Link 
-              to="/dashboard"
-              className="h-10 px-3.5 clay-btn flex items-center gap-2 text-sm font-bold text-[var(--color-text-main)] transition-all cursor-pointer hover:text-[var(--color-accent-primary)] dark:hover:text-[var(--color-accent-text)]"
-              title="داشبورد کاربری"
-              aria-label="داشبورد کاربری"
-            >
-              <LayoutDashboard size={17} />
-              <span className="hidden sm:inline">داشبورد</span>
-            </Link>
-
-            <ThemeToggle 
-              variant="clay" 
-              className="!h-10 !w-10 !rounded-xl !p-0 flex items-center justify-center shrink-0" 
-            />
-
-            <button 
-              onClick={handleBack}
-              className="h-10 px-3.5 clay-btn flex items-center gap-1.5 text-sm font-bold text-[var(--color-text-main)] transition-all cursor-pointer hover:text-[var(--color-accent-primary)] dark:hover:text-[var(--color-accent-text)]"
-              title={selectedPost ? 'بازگشت به لیست اخبار' : 'بازگشت به چت'}
-              aria-label={selectedPost ? 'بازگشت به لیست اخبار' : 'بازگشت به چت'}
-            >
-              {selectedPost ? (
-                <>
-                  <ChevronRight size={17} />
-                  <span>بازگشت</span>
-                </>
-              ) : (
-                <>
-                  <Home size={17} />
-                  <span className="hidden sm:inline">خانه</span>
-                </>
-              )}
-            </button>
-          </div>
-        </div>
-      </header>
+ <GlobalHeader />
 
  <main className="flex-1 container mx-auto px-4 py-8 lg:py-12 max-w-5xl">
  {!selectedPost && <NeuralBanner />}

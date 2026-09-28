@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+﻿import React, { useState, useEffect, useMemo } from 'react';
 import { useAuthStore } from '../../store/authStore';
 import { useUIStore } from '../../store/uiStore';
 import { useChatStore } from '../../store/chatStore';
@@ -13,6 +13,8 @@ import {
 } from 'lucide-react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { toPersianDigits } from '../../lib/persianUtils';
+import { MarkdownRenderer } from '../../components/MarkdownRenderer';
+import { GlobalHeader } from '../../components/GlobalHeader';
 
 export const UserDashboard = () => {
   const { user, token, checkAuth, logout, setWalletBalance } = useAuthStore();
@@ -312,44 +314,7 @@ export const UserDashboard = () => {
   return (
     <div className="flex flex-col min-h-screen clay-landing-bg font-sans pb-16 transition-colors duration-300" style={{ fontFamily: "'Vazirmatn', sans-serif" }}>
       {/* Top Navbar: Clean full-width glassmorphic header matching Blog/Store */}
-      <header className="sticky top-0 z-40 clay-surface dark:bg-[var(--bg-main)]/80 backdrop-blur-xl border-b border-black/5 dark:border-white/5 px-4 md:px-8 py-3 flex items-center justify-between shadow-xs">
-        <div className="flex items-center gap-3">
-          <Link 
-            to="/" 
-            className="flex items-center justify-center w-10 h-10 rounded-2xl clay-btn-thick text-zinc-700 dark:text-zinc-200 hover:text-blue-500 transition-all cursor-pointer shadow-xs"
-            title="بازگشت به صفحه اصلی"
-          >
-            <ChevronRight size={18} />
-          </Link>
-          <h1 className="text-base sm:text-lg font-black dark:text-white" style={{ fontFamily: "'Estedad', sans-serif" }}>
-            داشبورد کاربری
-          </h1>
-        </div>
-        
-        <div className="flex items-center gap-2.5 sm:gap-4">
-          <Link 
-            to="/store" 
-            className="px-3.5 py-2 rounded-xl clay-btn-thick text-xs font-bold text-zinc-700 dark:text-zinc-300 hover:text-blue-600 dark:hover:text-cyan-400 transition-all flex items-center gap-1.5 shadow-xs"
-          >
-            <ExternalLink size={14} /> 
-            <span className="hidden sm:inline">فروشگاه</span>
-          </Link>
-          <button 
-            onClick={handleLogout} 
-            className="px-3.5 py-2 rounded-xl clay-btn-thick text-xs font-bold text-red-500 hover:text-red-600 transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
-          >
-            <LogOut size={14} /> 
-            <span className="hidden sm:inline">خروج</span>
-          </button>
-          <div className="w-10 h-10 rounded-2xl clay-btn-thick overflow-hidden p-0.5 shadow-xs shrink-0 mr-1">
-            {user.avatar ? (
-              <img src={user.avatar} className="w-full h-full object-cover rounded-xl" alt="avatar" />
-            ) : (
-              <UserIcon className="w-full h-full p-2 text-zinc-500" />
-            )}
-          </div>
-        </div>
-      </header>
+      <GlobalHeader />
 
       <main className="max-w-6xl mx-auto px-4 md:px-8 mt-6 space-y-6">
         
@@ -1366,6 +1331,18 @@ export const UserDashboard = () => {
                   <div className="flex flex-col gap-2 p-3 bg-blue-500/10 rounded-2xl border border-blue-500/20 mt-4">
                     <span className="text-xs font-bold text-blue-600 dark:text-cyan-400">کد لایسنس اختصاصی شما:</span>
                     <span className="font-mono text-center tracking-widest text-base font-bold text-blue-600 dark:text-cyan-400 clay-inset-thick py-2.5 rounded-xl select-all" dir="ltr">{selectedInvoice.licenseKey}</span>
+                  </div>
+                )}
+                
+                {selectedInvoice.deliveryGuide && selectedInvoice.paymentStatus === 'success' && selectedInvoice.licenseKey && (
+                  <div className="flex flex-col gap-2 p-4 bg-emerald-500/10 rounded-2xl border border-emerald-500/20 mt-2">
+                    <span className="text-xs font-bold text-emerald-700 dark:text-emerald-400 flex items-center gap-2">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                      راهنمای تحویل و استفاده:
+                    </span>
+                    <div className="text-xs text-zinc-700 dark:text-zinc-300 leading-relaxed prose prose-sm dark:prose-invert max-w-none">
+                      <MarkdownRenderer content={selectedInvoice.deliveryGuide} />
+                    </div>
                   </div>
                 )}
               </div>

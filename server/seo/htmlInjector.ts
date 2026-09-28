@@ -38,7 +38,58 @@ export function renderHtmlWithSeo(req: express.Request, res: express.Response, d
 
     // Check /blog/:id
     const blogMatch = urlPath.match(/^\/blog\/(\d+)$/);
-    if (blogMatch) {
+    const productMatch = urlPath.match(/^\/store\/product\/(\d+)$/);
+    
+    if (productMatch) {
+      const pId = parseInt(productMatch[1], 10);
+      try {
+        const product = db.prepare("SELECT title, description, longDescription, price, stock, category, image, bannerImage, faqs FROM products WHERE id = ?").get(pId) as any;
+        if (product) {
+          pageTitle = `خرید ${product.title} | فروشگاه هوش مصنوعی`;
+          pageDesc = product.description || product.title;
+          pageType = 'product';
+          pageImage = product.bannerImage || product.image || pageImage;
+          
+          let parsedFaqs = [];
+          try { if (product.faqs) parsedFaqs = JSON.parse(product.faqs); } catch (e) {}
+
+          const isAvailable = (product.stock > 0 || product.category === 'plan' || product.category === 'package') ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock';
+          
+          structuredData = {
+            '@context': 'https://schema.org',
+            '@type': 'Product',
+            name: product.title,
+            image: pageImage,
+            description: pageDesc,
+            sku: `AI-PROD-${pId}`,
+            brand: {
+              '@type': 'Brand',
+              name: 'فروشگاه هوش مصنوعی'
+            },
+            offers: {
+              '@type': 'Offer',
+              url: canonicalUrl,
+              priceCurrency: 'IRR',
+              price: (product.price || 0) * 10,
+              availability: isAvailable,
+              itemCondition: 'https://schema.org/NewCondition'
+            }
+          };
+
+          if (parsedFaqs.length > 0) {
+            extraMetaTags = `\n  <script type="application/ld+json">\n  ${JSON.stringify({
+              '@context': 'https://schema.org',
+              '@type': 'FAQPage',
+              mainEntity: parsedFaqs.map((f: any) => ({
+                '@type': 'Question',
+                name: f.q,
+                acceptedAnswer: { '@type': 'Answer', text: f.a }
+              }))
+            }, null, 2)}\n  </script>`;
+          }
+        }
+      } catch (err) {}
+    } else if (blogMatch) {
       const blogId = blogMatch[1];
       const post = db.prepare('SELECT * FROM news WHERE id = ?').get(blogId) as any;
       if (post) {

@@ -46,6 +46,19 @@ export const sitemapHandler = (req: express.Request, res: express.Response) => {
       xml += `  <url>\n    <loc>${escapeXml(baseUrl + page.path)}</loc>\n    <changefreq>${page.changefreq}</changefreq>\n    <priority>${page.priority}</priority>\n  </url>\n`;
     }
 
+    // Dynamic Store Products
+    const storeProducts = db.prepare('SELECT id, title, bannerImage, image FROM products').all() as any[];
+    for (const p of storeProducts) {
+      const today = new Date().toISOString().split('T')[0];
+      xml += `  <url>\n    <loc>${escapeXml(`${baseUrl}/store/product/${p.id}`)}</loc>\n    <lastmod>${today}</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>0.85</priority>\n`;
+      const pImg = p.bannerImage || p.image;
+      if (pImg && !pImg.startsWith('data:')) {
+        const imgUrl = pImg.startsWith('http') ? pImg : `${baseUrl}${pImg}`;
+        xml += `    <image:image>\n      <image:loc>${escapeXml(imgUrl)}</image:loc>\n      <image:title><![CDATA[${p.title || ''}]]></image:title>\n    </image:image>\n`;
+      }
+      xml += `  </url>\n`;
+    }
+
     // Dynamic Blog pages
     const news = db.prepare('SELECT id, title, image, createdAt, tags FROM news ORDER BY createdAt DESC').all() as any[];
     const allTags = new Set<string>();

@@ -138,6 +138,7 @@ export function initializeSchema() {
       title TEXT NOT NULL,
       description TEXT,
       longDescription TEXT,
+      faqs TEXT,
       price INTEGER NOT NULL,
       category TEXT NOT NULL,
       image TEXT,
@@ -195,7 +196,11 @@ export function initializeSchema() {
       db.exec(`ALTER TABLE products ADD COLUMN showOnLanding INTEGER DEFAULT 1`);
       console.log('[DB Schema] Added showOnLanding column to products table.');
     }
-
+    const hasFaqs = tableInfo.some(col => col.name === 'faqs');
+    if (!hasFaqs) {
+      db.exec(`ALTER TABLE products ADD COLUMN faqs TEXT`);
+      console.log('[DB Schema] Added faqs column to products table.');
+    }
 
   } catch (e) {
     console.error('Migration error:', e);

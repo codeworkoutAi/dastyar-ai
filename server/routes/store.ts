@@ -412,6 +412,10 @@ router.get('/mock-callback', async (req: any, res) => {
         return res.redirect(`/dashboard?payment=success&orderId=${orderId}&refId=MOCK-SHAPARAK&amount=${creditAmount}`);
       }
 
+      // Digital store product - update paymentStatus to success, but leave licenseId null
+      db.prepare("UPDATE orders SET paymentStatus = 'success', refId = 'MOCK-SHAPARAK' WHERE id = ?").run(orderId);
+      syncDatabase();
+
       // Send Telegram notification that order is pending review
       try {
         const orderUser = db.prepare('SELECT telegramId FROM users WHERE id = ?').get(order.userId) as any;
@@ -519,15 +523,8 @@ router.get('/zarinpal/callback', async (req, res) => {
       }
 
       // Digital store product
+      // We do NOT auto-assign license anymore for digital products per admin's request
       let licenseId: number | null = null;
-
-      if (product && product.category !== 'package' && product.category !== 'plan') {
-        const availLicense = db.prepare('SELECT id FROM licenses WHERE productId = ? AND status = ? LIMIT 1').get(product.id, 'available') as any;
-        if (availLicense) {
-          licenseId = availLicense.id;
-          db.prepare("UPDATE licenses SET status = 'sold' WHERE id = ?").run(licenseId);
-        }
-      }
 
       db.prepare("UPDATE orders SET paymentStatus = 'success', paymentMethod = 'zarinpal', licenseId = ?, authority = ?, refId = ?, cardPan = ? WHERE id = ?")
         .run(licenseId, authority, refId, cardPan, orderId);
@@ -537,18 +534,13 @@ router.get('/zarinpal/callback', async (req, res) => {
       try {
         const orderUser = db.prepare('SELECT telegramId FROM users WHERE id = ?').get(order.userId) as any;
         if (orderUser?.telegramId && bot) {
-          let msg = `✅ **پرداخت شما با موفقیت انجام شد!**\n\n` +
+          let msg = `✅ **سفارش شما با موفقیت ثبت شد!**\n\n` +
                     `📦 **محصول:** ${product?.title || ''}\n` +
                     `🔢 **شماره سفارش:** \`${orderId}\`\n` +
                     `🧾 **کد پیگیری شاپرک:** \`${refId}\`\n` +
-                    `💰 **مبلغ:** ${order.amount.toLocaleString('fa-IR')} تومان\n\n`;
-          if (licenseId) {
-            const lic = db.prepare('SELECT key FROM licenses WHERE id = ?').get(licenseId) as any;
-            if (lic?.key) {
-              msg += `🔑 **کد لایسنس شما:**\n\`${lic.key}\`\n\n`;
-            }
-          }
-          msg += `با تشکر از اعتماد شما به دستیار هوشمند.`;
+                    `💰 **مبلغ پرداخت شده:** ${order.amount.toLocaleString('fa-IR')} تومان\n\n` +
+                    `⏳ سفارش شما در انتظار تایید مدیریت می‌باشد و به زودی پردازش خواهد شد. پس از تخصیص لایسنس، رسید نهایی برای شما ارسال می‌گردد.`;
+          
           bot.telegram.sendMessage(orderUser.telegramId, msg, { parse_mode: 'Markdown' }).catch(() => {});
         }
       } catch (tgErr) {
@@ -588,6 +580,7 @@ router.get('/purchases', requireAuth, (req: any, res) => {
         p.category,
         p.image,
         p.description,
+        p.deliveryGuide,
         l.key as licenseKey
       FROM orders o
       JOIN products p ON o.productId = p.id

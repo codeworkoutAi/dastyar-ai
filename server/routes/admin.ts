@@ -103,7 +103,7 @@ router.get('/products', (req, res) => {
 router.post('/products', (req, res) => {
   try {
     const { 
-      title, description, longDescription, price, category, image, bannerImage, baseUrl, deliveryGuide,
+      title, description, longDescription, faqs, price, category, image, bannerImage, baseUrl, deliveryGuide,
       badge, features, tokenEstimate, isPopular, showOnLanding
     } = req.body;
     
@@ -113,14 +113,15 @@ router.post('/products', (req, res) => {
 
     const stmt = db.prepare(`
       INSERT INTO products (
-        title, description, longDescription, price, category, image, bannerImage, baseUrl, deliveryGuide,
+        title, description, longDescription, faqs, price, category, image, bannerImage, baseUrl, deliveryGuide,
         badge, features, tokenEstimate, isPopular, showOnLanding
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
     const info = stmt.run(
       title,
       description || '',
       longDescription || '',
+      faqs || null,
       price,
       category,
       image || null,
@@ -149,7 +150,7 @@ router.put('/products/:id', (req, res) => {
   try {
     const { id } = req.params;
     const { 
-      title, description, longDescription, price, category, image, bannerImage, baseUrl, deliveryGuide,
+      title, description, longDescription, faqs, price, category, image, bannerImage, baseUrl, deliveryGuide,
       badge, features, tokenEstimate, isPopular, showOnLanding
     } = req.body;
     
@@ -164,7 +165,7 @@ router.put('/products/:id', (req, res) => {
 
     const stmt = db.prepare(`
       UPDATE products SET 
-        title = ?, description = ?, longDescription = ?, price = ?, category = ?, 
+        title = ?, description = ?, longDescription = ?, faqs = ?, price = ?, category = ?, 
         image = ?, bannerImage = ?, baseUrl = ?, deliveryGuide = ?,
         badge = ?, features = ?, tokenEstimate = ?, isPopular = ?, showOnLanding = ?
       WHERE id = ?
@@ -173,6 +174,7 @@ router.put('/products/:id', (req, res) => {
       title,
       description || '',
       longDescription || '',
+      faqs || null,
       price,
       category,
       image || null,
@@ -946,7 +948,7 @@ router.get('/analytics-summary', (req, res) => {
       SELECT 
         DATE(createdAt) as date,
         COUNT(*) as orderCount,
-        COALESCE(SUM(totalAmount), 0) as storeRevenueToman
+        COALESCE(SUM(amount), 0) as storeRevenueToman
       FROM orders
       WHERE paymentStatus = 'success'
         AND createdAt >= datetime('now', '-' || ? || ' days')
@@ -996,7 +998,7 @@ router.get('/analytics-summary', (req, res) => {
     const totalStoreStats = db.prepare(`
       SELECT 
         COUNT(*) as totalOrders,
-        COALESCE(SUM(totalAmount), 0) as totalStoreRevenueToman
+        COALESCE(SUM(amount), 0) as totalStoreRevenueToman
       FROM orders
       WHERE paymentStatus = 'success'
         AND createdAt >= datetime('now', '-' || ? || ' days')

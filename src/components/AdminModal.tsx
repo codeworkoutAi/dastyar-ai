@@ -6,7 +6,8 @@ import {
  BoxLinearIcon
 } from '@solar-icons/react';
 import {
- Edit2,
+  HelpCircle,
+  Edit2,
  Trash2,
  Key,
  ArrowRight,
@@ -83,6 +84,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
  const [category, setCategory] = useState('account');
  const [description, setDescription] = useState('');
  const [longDescription, setLongDescription] = useState('');
+  const [faqs, setFaqs] = useState<{q: string, a: string}[]>([]);
  const [image, setImage] = useState<string>('');
  const [bannerImage, setBannerImage] = useState<string>('');
  const [baseUrl, setBaseUrl] = useState('');
@@ -862,7 +864,8 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
  category,
  description,
  longDescription,
- image,
+      faqs: faqs.length > 0 ? JSON.stringify(faqs) : '',
+      image,
  bannerImage,
  baseUrl,
  deliveryGuide,
@@ -883,7 +886,8 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
  setPrice('');
  setDescription('');
  setLongDescription('');
- setImage('');
+    setFaqs([]);
+    setImage('');
  setBannerImage('');
  setBaseUrl('');
  setDeliveryGuide('');
@@ -907,6 +911,11 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
  setPrice(String(p.price));
  setDescription(p.description || '');
  setLongDescription(p.longDescription || '');
+    try {
+      setFaqs(p.faqs ? JSON.parse(p.faqs) : []);
+    } catch (e) {
+      setFaqs([]);
+    }
  setCategory(p.category);
  setImage(p.image || '');
  setBannerImage(p.bannerImage || '');
@@ -2131,7 +2140,129 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
  </div>
 
  <div className="flex flex-col gap-1.5">
- <label className="text-xs font-bold text-zinc-600 dark:text-zinc-400">آدرس سرور / Base URL (اختیاری برای کلید API)</label>
+ 
+            {/* FAQs Section */}
+            <div className="flex flex-col gap-3 p-5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/30">
+              <div className="flex items-center justify-between">
+                <label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">سوالات متداول (FAQ)</label>
+                <button
+                  type="button"
+                  onClick={() => setFaqs([...faqs, { q: '', a: '' }])}
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-indigo-600 bg-indigo-50 dark:text-indigo-400 dark:bg-indigo-900/30 rounded-lg hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition-colors"
+                >
+                  <AddSquareOutlineIcon className="w-4 h-4" />
+                  افزودن سوال
+                </button>
+              </div>
+              
+              <div className="flex flex-col gap-3">
+                {faqs.map((faq, index) => (
+                  <div key={index} className="flex flex-col gap-2 p-3 bg-white dark:bg-[#1a1b26] border border-zinc-200 dark:border-zinc-800 rounded-lg relative group">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-[10px] font-bold text-zinc-400">سوال {index + 1}</span>
+                      <button
+                        type="button"
+                        onClick={() => setFaqs(faqs.filter((_, i) => i !== index))}
+                        className="p-1.5 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-md transition-colors"
+                        title="حذف سوال"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                    <input
+                      type="text"
+                      value={faq.q}
+                      onChange={(e) => {
+                        const newFaqs = [...faqs];
+                        newFaqs[index].q = e.target.value;
+                        setFaqs(newFaqs);
+                      }}
+                      placeholder="پرسش..."
+                      className="w-full px-3 py-2 rounded-lg admin-input text-sm font-bold outline-none"
+                    />
+                    <textarea
+                      value={faq.a}
+                      onChange={(e) => {
+                        const newFaqs = [...faqs];
+                        newFaqs[index].a = e.target.value;
+                        setFaqs(newFaqs);
+                      }}
+                      placeholder="پاسخ (می‌توانید از مارک‌داون استفاده کنید)..."
+                      className="w-full px-3 py-2 rounded-lg admin-input text-sm outline-none min-h-[60px]"
+                    />
+                  </div>
+                ))}
+                {faqs.length === 0 && (
+                  <div className="text-xs text-center text-zinc-500 py-6 border-2 border-dashed border-zinc-200 dark:border-zinc-800 rounded-lg">
+                    هیچ سوالی اضافه نشده است.
+                  </div>
+                )}
+              </div>
+            </div>
+
+
+              
+            {/* FAQs Section */}
+            <div className="flex flex-col gap-3 p-5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/30">
+              <div className="flex items-center justify-between">
+                <label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">سوالات متداول (FAQ)</label>
+                <button
+                  type="button"
+                  onClick={() => setFaqs([...faqs, { q: '', a: '' }])}
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-indigo-600 bg-indigo-50 dark:text-indigo-400 dark:bg-indigo-900/30 rounded-lg hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition-colors"
+                >
+                  <AddSquareOutlineIcon className="w-4 h-4" />
+                  افزودن سوال
+                </button>
+              </div>
+              
+              <div className="flex flex-col gap-3">
+                {faqs.map((faq, index) => (
+                  <div key={index} className="flex flex-col gap-2 p-3 bg-white dark:bg-[#1a1b26] border border-zinc-200 dark:border-zinc-800 rounded-lg relative group">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-[10px] font-bold text-zinc-400">سوال {index + 1}</span>
+                      <button
+                        type="button"
+                        onClick={() => setFaqs(faqs.filter((_, i) => i !== index))}
+                        className="p-1.5 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-md transition-colors"
+                        title="حذف سوال"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                    <input
+                      type="text"
+                      value={faq.q}
+                      onChange={(e) => {
+                        const newFaqs = [...faqs];
+                        newFaqs[index].q = e.target.value;
+                        setFaqs(newFaqs);
+                      }}
+                      placeholder="پرسش..."
+                      className="w-full px-3 py-2 rounded-lg admin-input text-sm font-bold outline-none"
+                    />
+                    <textarea
+                      value={faq.a}
+                      onChange={(e) => {
+                        const newFaqs = [...faqs];
+                        newFaqs[index].a = e.target.value;
+                        setFaqs(newFaqs);
+                      }}
+                      placeholder="پاسخ (می‌توانید از مارک‌داون استفاده کنید)..."
+                      className="w-full px-3 py-2 rounded-lg admin-input text-sm outline-none min-h-[60px]"
+                    />
+                  </div>
+                ))}
+                {faqs.length === 0 && (
+                  <div className="text-xs text-center text-zinc-500 py-6 border-2 border-dashed border-zinc-200 dark:border-zinc-800 rounded-lg">
+                    هیچ سوالی اضافه نشده است.
+                  </div>
+                )}
+              </div>
+            </div>
+
+
+              <label className="text-xs font-bold text-zinc-600 dark:text-zinc-400">آدرس سرور / Base URL (اختیاری برای کلید API)</label>
  <input
  type="text"
  value={baseUrl}
@@ -2143,7 +2274,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
  </div>
 
  <div className="flex flex-col gap-1.5">
- <label className="text-xs font-bold text-zinc-600 dark:text-zinc-400">راهنمای تحویل / Delivery Guide (اختیاری)</label>
+ <label className="text-xs font-bold text-blue-600 dark:text-blue-400">کارت راهنمای گام‌به‌گام (Markdown)</label>
  <textarea
  value={deliveryGuide}
  onChange={(e) => setDeliveryGuide(e.target.value)}
@@ -2234,8 +2365,8 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
 
  {/* Image Banner */}
  <div className="w-full h-36 bg-zinc-100 dark:bg-zinc-800 border-b admin-border relative flex-shrink-0">
- {p.image ? (
- <img src={p.image} alt={p.title} className="w-full h-full object-cover" />
+ {p.bannerImage || p.image ? (
+ <img src={p.bannerImage || p.image} alt={p.title} className="w-full h-full object-cover" />
  ) : (
  <div className="w-full h-full flex items-center justify-center text-zinc-400">
  <BoxLinearIcon className="w-10 h-10 opacity-50" />

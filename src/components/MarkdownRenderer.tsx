@@ -825,10 +825,10 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = React.memo(({
  return <tr className="hover:bg-black/[0.02] dark:hover:bg-white/[0.02] transition-colors">{children}</tr>;
  },
  th({ children }) {
- return <th className="px-4 py-2.5 font-bold text-inherit !text-start">{replaceEmojisWithSolarIcons(children)}</th>;
+ return <th className="px-4 py-3 sm:px-6 first:ps-6 sm:first:ps-8 last:pe-6 sm:last:pe-8 font-bold text-inherit !text-start">{replaceEmojisWithSolarIcons(children)}</th>;
  },
  td({ children }) {
- return <td className="px-4 py-2.5 text-inherit opacity-90 !text-start">{replaceEmojisWithSolarIcons(children)}</td>;
+ return <td className="px-4 py-3 sm:px-6 first:ps-6 sm:first:ps-8 last:pe-6 sm:last:pe-8 text-inherit opacity-90 !text-start">{replaceEmojisWithSolarIcons(children)}</td>;
  },
 
  // Links

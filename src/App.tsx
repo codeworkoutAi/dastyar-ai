@@ -12,6 +12,7 @@ import { ChatApp } from './pages/chat/ChatApp';
 // Lazy-loaded Pages
 const LandingPage = lazy(() => import('./pages/landing/LandingPage').then(m => ({ default: m.LandingPage })));
 const StoreFront = lazy(() => import('./pages/store/StoreFront').then(m => ({ default: m.StoreFront })));
+const ProductDetails = lazy(() => import('./pages/store/ProductDetails').then(m => ({ default: m.ProductDetails })));
 const UserDashboard = lazy(() => import('./pages/store/UserDashboard').then(m => ({ default: m.UserDashboard })));
 const Blog = lazy(() => import('./pages/blog/Blog').then(m => ({ default: m.Blog })));
 const TagArchive = lazy(() => import('./pages/blog/TagArchive').then(m => ({ default: m.TagArchive })));
@@ -123,7 +124,7 @@ export default function App() {
  <Route path="/landing" element={<LandingPage />} />
  <Route path="/chat" element={<ChatApp />} />
  <Route path="/store" element={<StoreFront />} />
- <Route path="/store/:id" element={<StoreFront />} />
+ <Route path="/store/product/:id" element={<ProductDetails />} />
  <Route path="/blog" element={<Blog />} />
  <Route path="/blog/:id" element={<Blog />} />
  <Route path="/blog/tag/:tagName" element={<TagArchive />} />

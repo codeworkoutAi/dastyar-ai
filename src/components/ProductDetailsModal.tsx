@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, ChevronDown, ChevronUp, Store, ShieldCheck, Zap } from 'lucide-react';
+import { X, ChevronDown, ChevronUp, Store, ShieldCheck, Zap, HelpCircle } from 'lucide-react';
 import { MarkdownRenderer } from './MarkdownRenderer';
 import { useSettingsStore } from '../store/settingsStore';
 import { toPersianDigits } from '../lib/persianUtils';
@@ -57,15 +57,12 @@ export const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({ produc
 
  <div className="overflow-y-auto custom-scrollbar flex-1">
  {/* Header Image */}
- <div className="w-full h-48 sm:h-60 clay-btn-secondary relative shrink-0 overflow-hidden">
- {product.bannerImage ? (
- <img src={product.bannerImage} alt={product.title} className="w-full h-full object-cover" />
- ) : product.image ? (
- <div className="w-full h-full relative flex items-center justify-center">
- <img src={product.image} alt="Background Blur" className="absolute inset-0 w-full h-full object-cover blur-xl scale-125 opacity-50 dark:opacity-40" />
- <img src={product.image} alt={product.title} className="relative z-10 w-full h-full object-contain p-4 drop-" />
- </div>
- ) : (
+ <div className="w-full aspect-[16/9] sm:aspect-[21/9] clay-btn-secondary relative shrink-0 overflow-hidden">
+    {product.bannerImage ? (
+      <img src={product.bannerImage} alt={product.title} className="w-full h-full object-cover" />
+    ) : product.image ? (
+      <img src={product.image} alt={product.title} className="w-full h-full object-cover" />
+    ) : (
  <div className="w-full h-full flex flex-col items-center justify-center text-zinc-400 gap-2 relative z-10">
  <Store className="w-12 h-12 opacity-30" />
  <span className="text-xs font-medium opacity-50">بدون تصویر</span>
