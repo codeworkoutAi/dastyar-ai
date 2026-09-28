@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { ChevronLeft, CheckCircle2, ShieldCheck, Zap, HelpCircle, AlertCircle } from 'lucide-react';
 import { MarkdownRenderer } from '../../components/MarkdownRenderer';
@@ -207,7 +207,7 @@ export function ProductDetails() {
             >
               {product.category !== 'package' && product.category !== 'plan' && product.stock <= 0 
                 ? 'ناموجود' 
-                : 'ادامه به پرداخت'}
+                : 'خرید'}
             </button>
             
             <p className="text-center text-[10px] text-[var(--color-text-dim)] pt-2 flex items-center justify-center gap-1">
@@ -319,3 +319,4 @@ export function ProductDetails() {
     </div>
   );
 }
+
