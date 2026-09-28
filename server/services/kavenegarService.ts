@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Kavenegar SMS & OTP Service
  * Handles SMS delivery and OTP lookup verification through Kavenegar REST API.
  */
@@ -6,7 +6,7 @@
 import db from '../db/database';
 
 const KAVENEGAR_API_KEY = (process.env.KAVENEGAR_API_KEY || '').trim();
-const KAVENEGAR_SENDER = (process.env.KAVENEGAR_SENDER || '10004347').trim();
+const KAVENEGAR_SENDER = (process.env.KAVENEGAR_SENDER || '').trim();
 
 /**
  * Normalizes Persian/Arabic digits to standard ASCII English digits
@@ -116,21 +116,7 @@ export async function sendOtpSms(phone: string, token: string): Promise<{ succes
 /**
  * Sends a warm welcome SMS when a new user registers.
  */
-export async function sendWelcomeSms(phone: string, hasBonus?: boolean, bonusAmount?: number): Promise<void> {
-  const normalized = normalizePhoneNumber(phone);
-  if (!isValidIranianMobile(normalized)) return;
-  
-  let message = `به دستیار هوشمند خوش آمدید 🌟\nحساب کاربری شما با موفقیت فعال شد.\nورود و گفتگو: dastyarai.com`;
-  if (hasBonus && bonusAmount && bonusAmount > 0) {
-    message = `به دستیار هوشمند خوش آمدید 🌟\nحساب کاربری شما فعال شد و هدیه کد معرف (${bonusAmount.toLocaleString('fa-IR')} تومان) به کیف پول شما منظور گردید.\nورود و گفتگو: dastyarai.com`;
-  }
-
-  try {
-    await sendGeneralSms(normalized, message);
-  } catch (err) {
-    console.warn('[Kavenegar] Welcome SMS failed:', err);
-  }
-}
+export async function sendWelcomeSms(phone: string, hasBonus?: boolean, bonusAmount?: number): Promise<void> { return; }
 
 /**
  * Sends a general SMS via Kavenegar's dedicated line.
@@ -150,7 +136,9 @@ export async function sendGeneralSms(receptor: string, message: string): Promise
   try {
     const url = new URL(`https://api.kavenegar.com/v1/${KAVENEGAR_API_KEY}/sms/send.json`);
     url.searchParams.set('receptor', normalized);
-    url.searchParams.set('sender', KAVENEGAR_SENDER);
+    if (KAVENEGAR_SENDER) {
+      url.searchParams.set('sender', KAVENEGAR_SENDER);
+    }
     url.searchParams.set('message', message);
 
     const res = await fetch(url.toString(), { method: 'GET' });
@@ -204,28 +192,8 @@ export async function sendOrderSuccessSms(params: {
 /**
  * Looks up order details and dispatches a customer confirmation SMS if phone exists.
  */
-export async function notifyOrderSuccessBySms(orderId: string, licenseId?: number | bigint | null): Promise<void> {
-  try {
-    const row = db.prepare(`
-      SELECT o.id, o.userId, u.phone, p.title as productTitle, p.category as productCategory, l.key as licenseKey
-      FROM orders o
-      JOIN users u ON o.userId = u.id
-      JOIN products p ON o.productId = p.id
-      LEFT JOIN licenses l ON l.id = ?
-      WHERE o.id = ?
-    `).get(licenseId || null, orderId) as any;
+export async function notifyOrderSuccessBySms(orderId: string, licenseId?: number | bigint | null): Promise<void> { return; }
 
-    if (row && row.phone) {
-      await sendOrderSuccessSms({
-        phone: row.phone,
-        orderId: row.id,
-        productTitle: row.productTitle,
-        licenseKey: row.licenseKey,
-        isPlan: row.productCategory === 'plan'
-      });
-    }
-  } catch (err) {
-    console.error('[Kavenegar] notifyOrderSuccessBySms error:', err);
-  }
-}
+
+
 
