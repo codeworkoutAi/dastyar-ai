@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { Link, useSearchParams, useNavigate, useParams } from 'react-router-dom';
-import { Home, Store, Settings, Key, CheckCircle2, XCircle, BookOpen, Package, Zap, Sparkles } from 'lucide-react';
+import { Home, Store, Settings, Key, CheckCircle2, XCircle, BookOpen, Package, Zap, Sparkles, ChevronLeft } from 'lucide-react';
 import { CheckoutModal } from '../../components/CheckoutModal';
 import { ProductDetailsModal } from '../../components/ProductDetailsModal';
 import { Footer } from '../../components/Footer';
@@ -372,6 +372,12 @@ return (
   
 
   </div>
+    <div className="mt-auto pt-4 border-t border-[var(--card-border)] flex justify-end">
+      <span className="flex items-center gap-1 text-[12px] font-bold text-[var(--color-accent-primary)] opacity-80 group-hover:opacity-100 transition-opacity">
+        مشاهده جزئیات محصول
+        <ChevronLeft size={14} className="group-hover:-translate-x-1 transition-transform" />
+      </span>
+    </div>
   </div>
   ))}
   </div>
@@ -398,4 +404,5 @@ return (
  </div>
  );
 }
+
 
