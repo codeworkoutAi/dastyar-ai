@@ -370,29 +370,7 @@ return (
   </div>
   )}
   
-  <div className="mt-auto pt-4 border-t border-[var(--card-border)]  flex items-center justify-between">
-  <div className="flex flex-col">
-  <span className="text-[11px] mb-0.5">مبلغ پرداختی</span>
-  <span className="text-lg font-bold">
-  {formatPrice(p.price)} <span className="text-xs font-normal">تومان</span>
-  </span>
-  </div>
-  <button 
-  onClick={(e) => {
-  e.stopPropagation();
-  if (!user) {
-  window.dispatchEvent(new CustomEvent('open-auth-modal'));
-  } else {
-  setSelectedProduct(p);
-  navigate(`/store/${p.id}`);
-  }
-  }}
-  disabled={p.category !== 'package' && p.category !== 'plan' && p.stock <= 0}
-  className="px-4 py-2.5 clay-btn-primary-thick text-sm font-bold disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-  >
-  {p.category !== 'package' && p.category !== 'plan' && p.stock <= 0 ? 'ناموجود' : 'خرید'}
-  </button>
-  </div>
+
   </div>
   </div>
   ))}
@@ -420,3 +398,4 @@ return (
  </div>
  );
 }
+
