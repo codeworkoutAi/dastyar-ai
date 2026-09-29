@@ -329,7 +329,7 @@ export function renderHtmlWithSeo(req: express.Request, res: express.Response, d
         ${ssrArticle}
         ${internalNavHtml}
       </div>`;
-    html = html.replace('<div id="root"></div>', `<div id="root"></div>\n    ${ssrHtml}`);
+    html = html.replace('</body>', `  ${ssrHtml}\n</body>`);
 
     // Replace Title
     html = html.replace(/<title>.*?<\/title>/i, `<title>${safeTitle}</title>`);
