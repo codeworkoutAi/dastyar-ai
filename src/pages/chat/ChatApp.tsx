@@ -19,8 +19,8 @@ export function ChatApp() {
 
  useEffect(() => {
  setPageSeo({
- title: 'دستیار هوشمند | چت با هوش مصنوعی رایگان، فارسی و پیشرفته',
- description: 'چت‌باکس هوش مصنوعی فارسی با پشتیبانی از مدل‌های برتر (ChatGPT, Claude, Gemini)، جستجوی زنده وب، تولید تصویر، مجله اخبار هوش مصنوعی و فروشگاه اختصاصی.',
+ title: 'دستیار هوشمند | چت با هوش مصنوعی رایگان و پیشرفته',
+ description: 'چت با هوش مصنوعی رایگان فارسی با مدل‌های ChatGPT، Claude و Gemini. جستجوی زنده وب، تولید تصویر و فروشگاه ابزارهای AI بدون نیاز به فیلترشکن.',
  canonical: window.location.origin + '/',
  schema: {
  '@context': 'https://schema.org',

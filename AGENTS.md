@@ -99,7 +99,7 @@ The platform operates exclusively on **exactly six stable system profiles** (div
 ### 11. SEO & eNamad
 - Dynamic `/sitemap.xml` (static routes + blog + tags + store products) and `/robots.txt` in `server/index.ts`.
 - Production SPA fallback injects title/description/OG/Twitter/JSON-LD via `renderHtmlWithSeo`. Client SPA updates use `src/lib/seo.ts` (`setPageSeo`).
-- Default page title: `دستیار هوشمند | چت با هوش مصنوعی رایگان، فارسی و پیشرفته`.
+- Default page title: `دستیار هوشمند | چت با هوش مصنوعی رایگان و پیشرفته`.
 - **eNamad**: Keep `<meta name="enamad" content="60366138" />` in `index.html` and the trust seal markup in `src/components/Footer.tsx` (including `referrerpolicy="origin"`). Do not remove or casually rewrite verification assets (`60366138.txt` in root/public) unless explicitly asked.
 
 ---

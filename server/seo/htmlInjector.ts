@@ -26,8 +26,8 @@ export function renderHtmlWithSeo(req: express.Request, res: express.Response, d
     const baseUrl = process.env.NODE_ENV === 'production' ? (process.env.WEB_URL || 'https://dastyarai.com') : `${protocol}://${host}`;
     const urlPath = req.path;
 
-    let pageTitle = 'دستیار هوشمند | چت با هوش مصنوعی رایگان، فارسی و پیشرفته';
-    let pageDesc = 'چت‌باکس هوش مصنوعی فارسی با پشتیبانی از مدل‌های برتر (ChatGPT, Claude, Gemini)، جستجوی زنده وب، تولید تصویر، مجله اخبار هوش مصنوعی و فروشگاه اختصاصی.';
+    let pageTitle = 'دستیار هوشمند | چت با هوش مصنوعی رایگان و پیشرفته';
+    let pageDesc = 'چت با هوش مصنوعی رایگان فارسی با مدل‌های ChatGPT، Claude و Gemini. جستجوی زنده وب، تولید تصویر و فروشگاه ابزارهای AI بدون نیاز به فیلترشکن.';
     let pageImage = `${baseUrl}/pwa-512x512.png`;
     let pageType = 'website';
     let canonicalUrl = `${baseUrl}${urlPath}`;

@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
 import {
@@ -203,6 +203,14 @@ export const LandingPage: React.FC = () => {
   const navigate = useNavigate();
   const { isAuthenticated, setAuthModalOpen } = useAuthStore();
   const { setIsWalletOpen } = useUIStore();
+
+  useEffect(() => {
+    setPageSeo({
+      title: 'دستیار هوشمند | چت با هوش مصنوعی رایگان و پیشرفته',
+      description: 'چت با هوش مصنوعی رایگان فارسی با مدل‌های ChatGPT، Claude و Gemini. جستجوی زنده وب، تولید تصویر و فروشگاه ابزارهای AI بدون نیاز به فیلترشکن.',
+      canonical: window.location.origin + '/',
+    });
+  }, []);
 
   const [activeFaq, setActiveFaq] = useState<number | null>(0);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
