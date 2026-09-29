@@ -685,10 +685,11 @@ stopGeneration: () => {
 
   // Regenerate last response
   regenerate: () => {
-    if (!(get().conversations.find((c) => c.id === get().activeId)) || (get().conversations.find((c) => c.id === get().activeId)).messages.length === 0 || get().isStreaming) return;
-    
+    const activeConv = get().conversations.find((c) => c.id === get().activeId);
+    if (!activeConv || activeConv.messages.length === 0 || get().isStreaming) return;
+
     // Find last user message
-    const msgs = [...(get().conversations.find((c) => c.id === get().activeId)).messages];
+    const msgs = [...activeConv.messages];
     let lastUserIndex = -1;
     for (let i = msgs.length - 1; i >= 0; i--) {
       if (msgs[i].role === 'user') {
@@ -704,7 +705,8 @@ stopGeneration: () => {
     // Remove messages after that user message
     const truncated = msgs.slice(0, lastUserIndex);
 
-    set({ conversations: get().conversations.map((c) => (c.id === (get().conversations.find((c) => c.id === get().activeId)).id ? { ...c, messages: truncated } : c)) });
+    // Use the shared updater so localStorage stays in sync (see subscriber below).
+    get().updateConversation(activeConv.id, (c) => ({ ...c, messages: truncated }));
 
     setTimeout(() => {
       get().sendMessage(userText, userImageUrl);
@@ -720,10 +722,10 @@ stopGeneration: () => {
     const userMessageId = 'msg_user_' + Date.now();
     const assistantMessageId = 'msg_ai_' + (Date.now() + 1);
     
-    const newMessages = [
+    const newMessages: ChatMessage[] = [
       ...activeConv.messages,
-        { id: userMessageId, role: 'user' as any, content: '/image ' + prompt, timestamp: Date.now() },
-        { id: assistantMessageId, role: 'assistant' as any, content: '![' + prompt + '](' + imageUrl + ')', timestamp: Date.now(), isImageGen: true }
+        { id: userMessageId, role: 'user', content: '/image ' + prompt, timestamp: Date.now() },
+        { id: assistantMessageId, role: 'assistant', content: '![' + prompt + '](' + imageUrl + ')', timestamp: Date.now(), isImageGen: true }
     ];
     
     const newConvs = get().conversations.map(c => c.id === activeId ? { ...c, messages: newMessages } : c);
@@ -732,16 +734,18 @@ stopGeneration: () => {
   },
 
   editMessage: (messageId: string, newText: string) => {
-    if (!(get().conversations.find((c) => c.id === get().activeId)) || get().isStreaming || !newText.trim()) return;
+    const activeConv = get().conversations.find((c) => c.id === get().activeId);
+    if (!activeConv || get().isStreaming || !newText.trim()) return;
 
-    const msgs = [...(get().conversations.find((c) => c.id === get().activeId)).messages];
+    const msgs = [...activeConv.messages];
     const targetIndex = msgs.findIndex((m) => m.id === messageId);
     if (targetIndex === -1) return;
 
     // Truncate conversation to remove this user message and subsequent responses
     const truncated = msgs.slice(0, targetIndex);
 
-    set({ conversations: get().conversations.map((c) => (c.id === (get().conversations.find((c) => c.id === get().activeId)).id ? { ...c, messages: truncated } : c)) });
+    // Use the shared updater so localStorage stays in sync (see subscriber below).
+    get().updateConversation(activeConv.id, (c) => ({ ...c, messages: truncated }));
 
     setTimeout(() => {
       get().sendMessage(newText.trim());

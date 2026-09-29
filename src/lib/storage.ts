@@ -86,7 +86,7 @@ function stripOlderImages(conversations: Conversation[]): Conversation[] {
         if (hasBase64Image) {
           return {
             ...msg,
-            content: msg.content + "\n\n*(????? ??? ??)*",
+            content: msg.content + "\n\n*(تصویر این پیام برای کاهش حجم حافظه مرورگر حذف شد. اگر تاریخچه گفتگو را بازخوانی کنید، تصویر در دسترس نیست.)*",
           };
         }
         return msg;
