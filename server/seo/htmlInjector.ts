@@ -295,17 +295,41 @@ export function renderHtmlWithSeo(req: express.Request, res: express.Response, d
     const safeImage = escapeHtml(pageImage);
     const safeType = escapeHtml(pageType);
 
+    // Generate crawlable internal links and semantic outline for search engine bots
+    let internalNavHtml = '';
+    try {
+      const topProducts = db.prepare("SELECT id, title FROM products WHERE status = 'active' OR status IS NULL ORDER BY id DESC LIMIT 8").all() as any[];
+      const topNews = db.prepare("SELECT id, title FROM news ORDER BY createdAt DESC LIMIT 8").all() as any[];
+
+      const productItems = topProducts.map(p => `<li><a href="${baseUrl}/store/product/${p.id}">خرید ${escapeHtml(p.title)}</a></li>`).join('');
+      const newsItems = topNews.map(n => `<li><a href="${baseUrl}/blog/${n.id}">${escapeHtml(n.title)}</a></li>`).join('');
+
+      internalNavHtml = `
+      <section aria-label="پیوندهای مفید سایت" class="sr-only" style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;">
+        <h2>دستیار هوشمند | دسترسی سریع به بخش‌های اصلی و مقالات هوش مصنوعی</h2>
+        <nav aria-label="پیوندهای مفید سایت">
+          <ul>
+            <li><a href="${baseUrl}/">چت هوش مصنوعی رایگان فارسی</a></li>
+            <li><a href="${baseUrl}/store">فروشگاه ابزارها و اکانت‌های هوش مصنوعی</a></li>
+            <li><a href="${baseUrl}/blog">مجله آموزش و اخبار هوش مصنوعی</a></li>
+            ${productItems}
+            ${newsItems}
+          </ul>
+        </nav>
+        <p>${safeDesc}</p>
+        <p>دستیار هوشمند پلتفرم جامع چت هوش مصنوعی فارسی با پشتیبانی از مدل‌های Claude، ChatGPT و Gemini بدون فیلترشکن است.</p>
+      </section>`;
+    } catch (dbErr) {}
+
     const ssrHeading = `<h1 class="sr-only" style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;">${safeTitle}</h1>`;
-    if (postContent) {
-      const ssrHtml = `<div id="ssr-content" style="display:none;" aria-hidden="true">
+    const ssrArticle = postContent ? `<article class="sr-only" style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;">${escapeHtml(postContent)}</article>` : '';
+
+    const ssrHtml = `<div id="ssr-content">
         ${ssrHeading}
-        <article>${escapeHtml(postContent)}</article>
+        ${ssrArticle}
+        ${internalNavHtml}
       </div>`;
-      html = html.replace('<div id="root"></div>', `<div id="root"></div>\n    ${ssrHtml}`);
-    } else {
-      const ssrHtml = `<div id="ssr-content" style="display:none;" aria-hidden="true">\n        ${ssrHeading}\n      </div>`;
-      html = html.replace('<div id="root"></div>', `<div id="root"></div>\n    ${ssrHtml}`);
-    }
+    html = html.replace('<div id="root"></div>', `<div id="root"></div>\n    ${ssrHtml}`);
 
     // Replace Title
     html = html.replace(/<title>.*?<\/title>/i, `<title>${safeTitle}</title>`);
@@ -322,6 +346,11 @@ export function renderHtmlWithSeo(req: express.Request, res: express.Response, d
     html = html.replace(/<meta\s+property="og:image"\s+content=".*?"\s*\/?>/i, `<meta property="og:image" content="${safeImage}" />`);
     html = html.replace(/<meta\s+property="og:type"\s+content=".*?"\s*\/?>/i, `<meta property="og:type" content="${safeType}" />`);
     html = html.replace(/<meta\s+property="og:locale"\s+content=".*?"\s*\/?>/i, `<meta property="og:locale" content="fa_IR" />`);
+    html = html.replace(/<meta\s+property="og:url"\s+content=".*?"\s*\/?>/i, `<meta property="og:url" content="${safeCanonical}" />`);
+
+    // Replace Hreflang to self-reference current canonical URL
+    html = html.replace(/<link\s+rel="alternate"\s+hreflang="fa"\s+href=".*?"\s*\/?>/i, `<link rel="alternate" hreflang="fa" href="${safeCanonical}" />`);
+    html = html.replace(/<link\s+rel="alternate"\s+hreflang="x-default"\s+href=".*?"\s*\/?>/i, `<link rel="alternate" hreflang="x-default" href="${safeCanonical}" />`);
 
     // Replace Twitter Tags
     html = html.replace(/<meta\s+name="twitter:title"\s+content=".*?"\s*\/?>/i, `<meta name="twitter:title" content="${safeTitle}" />`);
