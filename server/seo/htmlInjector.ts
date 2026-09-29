@@ -208,7 +208,7 @@ export function renderHtmlWithSeo(req: express.Request, res: express.Response, d
             };
           }
         } else if (urlPath === '/store') {
-          pageTitle = 'فروشگاه هوش مصنوعی | خرید اکانت ChatGPT Plus، کلیدهای API و آموزش‌ها';
+          pageTitle = 'فروشگاه ابزارهای هوش مصنوعی | دستیار هوشمند';
           pageDesc = 'فروشگاه خدمات و ابزارهای هوش مصنوعی: خرید اکانت پرمیوم ChatGPT Plus، کلیدهای API معتبر و پکیج‌های آموزشی تخصصی با پرداخت ریالی و تحویل فوری.';
           
           const storeProducts = db.prepare('SELECT id, title, price FROM products ORDER BY id DESC LIMIT 12').all() as any[];
@@ -295,11 +295,15 @@ export function renderHtmlWithSeo(req: express.Request, res: express.Response, d
     const safeImage = escapeHtml(pageImage);
     const safeType = escapeHtml(pageType);
 
+    const ssrHeading = `<h1 class="sr-only" style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;">${safeTitle}</h1>`;
     if (postContent) {
       const ssrHtml = `<div id="ssr-content" style="display:none;" aria-hidden="true">
-        <h1>${safeTitle}</h1>
+        ${ssrHeading}
         <article>${escapeHtml(postContent)}</article>
       </div>`;
+      html = html.replace('<div id="root"></div>', `<div id="root"></div>\n    ${ssrHtml}`);
+    } else {
+      const ssrHtml = `<div id="ssr-content" style="display:none;" aria-hidden="true">\n        ${ssrHeading}\n      </div>`;
       html = html.replace('<div id="root"></div>', `<div id="root"></div>\n    ${ssrHtml}`);
     }
 

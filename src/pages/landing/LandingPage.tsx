@@ -204,14 +204,6 @@ export const LandingPage: React.FC = () => {
   const { isAuthenticated, setAuthModalOpen } = useAuthStore();
   const { setIsWalletOpen } = useUIStore();
 
-  useEffect(() => {
-    setPageSeo({
-      title: 'دستیار هوشمند | چت با هوش مصنوعی رایگان و پیشرفته',
-      description: 'چت با هوش مصنوعی رایگان فارسی با مدل‌های ChatGPT، Claude و Gemini. جستجوی زنده وب، تولید تصویر و فروشگاه ابزارهای AI بدون نیاز به فیلترشکن.',
-      canonical: window.location.origin + '/',
-    });
-  }, []);
-
   const [activeFaq, setActiveFaq] = useState<number | null>(0);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
   const [activeScenario, setActiveScenario] = useState<DemoScenario>(landingPageContent.demoScenarios[0]);
@@ -347,8 +339,8 @@ export const LandingPage: React.FC = () => {
     };
 
     setPageSeo({
-      title: 'دستیار هوشمند | چت با هوش مصنوعی فارسی، Claude 3.5، GPT-4o و استودیو تصویرساز',
-      description: 'پلتفرم جامع هوش مصنوعی فارسی بدون فیلترشکن. دسترسی مستقیم به Claude 3.5 Sonnet، GPT-4o، Gemini 2.0 Flash و استودیو تولید تصویر همراه با پرداخت شتاب و دسترسی فوق‌سریع.',
+      title: 'دستیار هوشمند | چت با هوش مصنوعی رایگان و پیشرفته',
+      description: 'چت با هوش مصنوعی رایگان فارسی با مدل‌های ChatGPT، Claude و Gemini. جستجوی زنده وب، تولید تصویر و فروشگاه ابزارهای AI بدون نیاز به فیلترشکن.',
       keywords: 'هوش مصنوعی فارسی, چت با هوش مصنوعی, چت جی پی تی بدون فیلترشکن, کلود فارسی, خرید توکن هوش مصنوعی, تولید تصویر هوش مصنوعی, هوش مصنوعی رایگان, دستیار هوشمند',
       canonical: 'https://dastyarai.com/',
       schema: {

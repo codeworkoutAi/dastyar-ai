@@ -111,7 +111,7 @@ export function StoreFront() {
  });
  } else {
  setPageSeo({
- title: 'فروشگاه هوش مصنوعی | خرید اکانت ChatGPT Plus، کلیدهای API و آموزش‌ها',
+ title: 'فروشگاه ابزارهای هوش مصنوعی | دستیار هوشمند',
  description: 'فروشگاه تخصصی هوش مصنوعی: خرید اکانت‌های اختصاصی ChatGPT Plus، کلیدهای API معتبر و پکیج‌های آموزشی با پرداخت ریالی و تحویل فوری.',
  canonical: `${window.location.origin}/store`,
  ogType: 'website',
@@ -185,7 +185,7 @@ return (
 <main className="flex-1 container mx-auto px-4 py-8 max-w-7xl">
   <div className="mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
   <div>
-  <h2 className="text-2xl font-bold mb-2">محصولات دیجیتال</h2>
+  <h1 className="text-2xl font-bold mb-2">فروشگاه ابزارهای هوش مصنوعی</h1>
   <p className="text-[var(--color-text-muted)]">کلید API، اکانت پرمیوم و دوره‌های آموزشی.</p>
   </div>
   </div>
