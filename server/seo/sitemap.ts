@@ -60,11 +60,13 @@ export const sitemapHandler = (req: express.Request, res: express.Response) => {
     }
 
     // Dynamic Blog pages
-    const news = db.prepare('SELECT id, title, image, createdAt, tags FROM news ORDER BY createdAt DESC').all() as any[];
+    const news = db.prepare('SELECT id, title, image, createdAt, updatedAt, tags FROM news ORDER BY createdAt DESC').all() as any[];
     const allTags = new Set<string>();
 
     for (const item of news) {
-      const date = item.createdAt ? new Date(item.createdAt).toISOString().split('T')[0] : new Date().toISOString().split('T')[0];
+      const date = item.updatedAt 
+        ? new Date(item.updatedAt).toISOString().split('T')[0]
+        : (item.createdAt ? new Date(item.createdAt).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]);
       xml += `  <url>\n    <loc>${escapeXml(`${baseUrl}/blog/${item.id}`)}</loc>\n    <lastmod>${date}</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>0.8</priority>\n`;
       if (item.image && !item.image.startsWith('data:')) {
         const imgUrl = item.image.startsWith('http') ? item.image : `${baseUrl}${item.image}`;
@@ -89,9 +91,11 @@ export const sitemapHandler = (req: express.Request, res: express.Response) => {
     }
 
     // Dynamic Store pages
-    const products = db.prepare('SELECT id, title, image, bannerImage, createdAt FROM products ORDER BY createdAt DESC').all() as any[];
+    const products = db.prepare('SELECT id, title, image, bannerImage, createdAt, updatedAt FROM products ORDER BY createdAt DESC').all() as any[];
     for (const item of products) {
-      const date = item.createdAt ? new Date(item.createdAt).toISOString().split('T')[0] : new Date().toISOString().split('T')[0];
+      const date = item.updatedAt 
+        ? new Date(item.updatedAt).toISOString().split('T')[0]
+        : (item.createdAt ? new Date(item.createdAt).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]);
       xml += `  <url>\n    <loc>${escapeXml(`${baseUrl}/store/${item.id}`)}</loc>\n    <lastmod>${date}</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>0.8</priority>\n`;
       const prodImg = item.bannerImage || item.image;
       if (prodImg && !prodImg.startsWith('data:')) {

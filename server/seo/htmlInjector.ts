@@ -111,6 +111,7 @@ export function renderHtmlWithSeo(req: express.Request, res: express.Response, d
 
         const authorName = post.author || 'دستیار هوشمند';
         const datePublished = post.createdAt ? new Date(post.createdAt).toISOString() : new Date().toISOString();
+        const dateModified = post.updatedAt ? new Date(post.updatedAt).toISOString() : datePublished;
 
         structuredData = {
           '@context': 'https://schema.org',
@@ -119,7 +120,7 @@ export function renderHtmlWithSeo(req: express.Request, res: express.Response, d
           description: pageDesc,
           image: pageImage,
           datePublished: datePublished,
-          dateModified: datePublished,
+          dateModified: dateModified,
           author: {
             '@type': 'Organization',
             name: authorName
@@ -131,6 +132,17 @@ export function renderHtmlWithSeo(req: express.Request, res: express.Response, d
               '@type': 'ImageObject',
               url: `${baseUrl}/pwa-512x512.png`
             }
+          },
+          mainEntityOfPage: canonicalUrl,
+          articleSection: parsedKeywords.length > 0 ? parsedKeywords[0] : 'هوش مصنوعی',
+          inLanguage: 'fa-IR',
+          breadcrumb: {
+            '@type': 'BreadcrumbList',
+            itemListElement: [
+              { '@type': 'ListItem', position: 1, name: 'خانه', item: `${baseUrl}/` },
+              { '@type': 'ListItem', position: 2, name: 'مجله هوش مصنوعی', item: `${baseUrl}/blog` },
+              { '@type': 'ListItem', position: 3, name: post.title, item: canonicalUrl }
+            ]
           }
         };
 
@@ -305,11 +317,15 @@ export function renderHtmlWithSeo(req: express.Request, res: express.Response, d
     html = html.replace(/<meta\s+property="og:description"\s+content=".*?"\s*\/?>/i, `<meta property="og:description" content="${safeDesc}" />`);
     html = html.replace(/<meta\s+property="og:image"\s+content=".*?"\s*\/?>/i, `<meta property="og:image" content="${safeImage}" />`);
     html = html.replace(/<meta\s+property="og:type"\s+content=".*?"\s*\/?>/i, `<meta property="og:type" content="${safeType}" />`);
+    html = html.replace(/<meta\s+property="og:locale"\s+content=".*?"\s*\/?>/i, `<meta property="og:locale" content="fa_IR" />`);
 
     // Replace Twitter Tags
     html = html.replace(/<meta\s+name="twitter:title"\s+content=".*?"\s*\/?>/i, `<meta name="twitter:title" content="${safeTitle}" />`);
     html = html.replace(/<meta\s+name="twitter:description"\s+content=".*?"\s*\/?>/i, `<meta name="twitter:description" content="${safeDesc}" />`);
     html = html.replace(/<meta\s+name="twitter:image"\s+content=".*?"\s*\/?>/i, `<meta name="twitter:image" content="${safeImage}" />`);
+
+    // Ensure absolute og:image / twitter:image URLs (relative → absolute)
+    html = html.replace(/content="\/pwa-512x512\.png"/g, `content="${baseUrl}/pwa-512x512.png"`);
 
     // Inject Dynamic JSON-LD Schema & extra meta tags
     if (extraMetaTags) {

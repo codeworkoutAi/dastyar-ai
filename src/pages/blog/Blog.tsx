@@ -571,13 +571,14 @@ export function Blog() {
  {displayedNews.length > 0 ? (
  <div className="space-y-12 animate-fadeIn">
  {/* Featured Post (Latest) - Only show if no search/filter to keep UI clean, or just always show first as featured */}
- <Link 
- onClick={() => {
- setSelectedPost(displayedNews[0]);
- navigate(`/blog/${displayedNews[0].id}`);
- }}
- className="group cursor-pointer clay-card-elevated rounded-[32px] overflow-hidden hover:-translate-y-1.5 transition-all duration-300 flex flex-col md:flex-row"
- >
+<Link 
+  to={`/blog/${displayedNews[0].id}`}
+  onClick={() => {
+    setSelectedPost(displayedNews[0]);
+    navigate(`/blog/${displayedNews[0].id}`);
+  }}
+  className="group cursor-pointer clay-card-elevated rounded-[32px] overflow-hidden hover:-translate-y-1.5 transition-all duration-300 flex flex-col md:flex-row"
+>
  {displayedNews[0].image ? (
  <div className="w-full md:w-1/2 aspect-square md:aspect-auto overflow-hidden relative">
  <img loading="lazy" decoding="async" src={displayedNews[0].image} 
@@ -618,18 +619,19 @@ export function Blog() {
  viewMode === 'grid' ?"grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8" :"flex flex-col gap-4 md:gap-6"
  }>
  {displayedNews.slice(1).map((item) => (
- <Link 
- key={item.id}
- onClick={() => {
- setSelectedPost(item);
- navigate(`/blog/${item.id}`);
- }}
- className={`group cursor-pointer clay-card-thick hover:clay-card-elevated hover:-translate-y-2 transition-all duration-300 overflow-hidden ${
-                viewMode === 'grid' ? 'flex flex-col rounded-[28px]' : 
-                viewMode === 'list' ? 'flex flex-col sm:flex-row rounded-[28px]' : 
-                'flex flex-col sm:flex-row items-center p-4 md:p-5 rounded-2xl hover:-translate-y-1'
+<Link 
+  key={item.id}
+  to={`/blog/${item.id}`}
+  onClick={() => {
+    setSelectedPost(item);
+    navigate(`/blog/${item.id}`);
+  }}
+  className={`group cursor-pointer clay-card-thick hover:clay-card-elevated hover:-translate-y-2 transition-all duration-300 overflow-hidden ${
+                 viewMode === 'grid' ? 'flex flex-col rounded-[28px]' : 
+                 viewMode === 'list' ? 'flex flex-col sm:flex-row rounded-[28px]' : 
+                 'flex flex-col sm:flex-row items-center p-4 md:p-5 rounded-2xl hover:-translate-y-1'
               }`}
- >
+>
  
  {/* Image Logic */}
  {viewMode !== 'compact' && (

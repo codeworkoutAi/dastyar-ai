@@ -250,8 +250,8 @@ export const MessageInput: React.FC = React.memo(() => {
  try {
  const pdfjsModule = await import("pdfjs-dist");
           const pdfjsLib = pdfjsModule.default || pdfjsModule;
- const workerUrl = await import('pdfjs-dist/build/pdf.worker.min.mjs?url');
-          pdfjsLib.GlobalWorkerOptions.workerSrc = workerUrl.default || workerUrl;
+const workerUrl = await import('pdfjs-dist/build/pdf.worker.min.mjs?url');
+           pdfjsLib.GlobalWorkerOptions.workerSrc = (workerUrl.default || workerUrl) as string;
  const arrayBuffer = await file.arrayBuffer();
  const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
  const numPages = pdf.numPages;
@@ -303,7 +303,7 @@ export const MessageInput: React.FC = React.memo(() => {
  canvas.height = viewport.height;
  const ctx = canvas.getContext('2d');
  if (ctx) {
- await page.render({ canvasContext: ctx, viewport }).promise;
+ await page.render({ canvasContext: ctx, viewport } as any).promise;
  const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
  const pageAttachmentId = `att_pdf_page_${i}_${Date.now()}`;
  addAttachmentWithProgress(pageAttachmentId, dataUrl, 'image/jpeg', `${file.name} - Page ${i}`, 'Scanned Page');
@@ -323,7 +323,7 @@ export const MessageInput: React.FC = React.memo(() => {
  canvas.height = viewport.height;
  const ctx = canvas.getContext('2d');
  if (ctx) {
- await page1.render({ canvasContext: ctx, viewport }).promise;
+ await page1.render({ canvasContext: ctx, viewport } as any).promise;
  const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
  // Store extracted text inside this single attachment to be sent later
  addAttachmentWithProgress(`att_pdf_cover_${Date.now()}`, dataUrl, 'image/jpeg', `${file.name}`, 'PDF Cover', extractedText);

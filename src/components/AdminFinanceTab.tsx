@@ -25,12 +25,13 @@ export const AdminFinanceTab: React.FC = () => {
  const [page, setPage] = useState(1);
  const LIMIT = 50;
 
- // Settings state
- const [sellingRate, setSellingRate] = useState('200000');
- const [welcomeBonus, setWelcomeBonus] = useState('50000');
- const [welcomeBonusEnabled, setWelcomeBonusEnabled] = useState(true);
+// Settings state
+  const [sellingRate, setSellingRate] = useState('200000');
+  const [welcomeBonus, setWelcomeBonus] = useState('50000');
+const [welcomeBonusEnabled, setWelcomeBonusEnabled] = useState(true);
+  const [freeKeyPool, setFreeKeyPool] = useState('');
 
- // Zarinpal Gateway state
+  // Zarinpal Gateway state
  const [zarinpalMerchantId, setZarinpalMerchantId] = useState('');
  const [zarinpalSandbox, setZarinpalSandbox] = useState(false);
  const [gatewayEnabled, setGatewayEnabled] = useState(false);

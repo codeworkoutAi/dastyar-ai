@@ -39,6 +39,7 @@ interface AuthState {
   isAuthModalOpen: boolean;
   login: (user: User, token: string) => void;
   logout: () => void;
+  setUser: (user: User | null) => void;
   updateUser: (updates: Partial<User>) => void;
   setWalletBalance: (balance: number) => void;
   setAuthModalOpen: (isOpen: boolean) => void;
@@ -96,6 +97,11 @@ export const useAuthStore = create<AuthState>((set) => ({
     localStorage.removeItem('token');
     set({ user: null, token: null, isAuthenticated: false });
     notifyAuthChange(null);
+  },
+
+  setUser: (user) => {
+    set({ user });
+    if (user) notifyAuthChange(user.id);
   },
 
   updateUser: (updates) => {

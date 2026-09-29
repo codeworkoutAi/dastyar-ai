@@ -38,25 +38,30 @@ export function ProductDetails() {
         setProduct(found);
         
         // Setup SEO dynamically
-        setPageSeo({
+setPageSeo({
           title: `خرید ${found.title} | فروشگاه هوش مصنوعی`,
           description: found.description || found.title,
-          ogImage: found.bannerImage || found.image ? [found.bannerImage || found.image] : undefined,
-          sku: `AI-PROD-${found.id}`,
-          brand: {
-            '@type': 'Brand',
-            name: 'فروشگاه هوش مصنوعی'
-          },
-          offers: {
-            '@type': 'Offer',
-            itemOffered: {
-              '@type': 'Product',
-              name: found.title,
-              url: `${window.location.origin}/store/product/${found.id}`
+          ogImage: (found.bannerImage || found.image) || undefined,
+          schema: {
+            '@context': 'https://schema.org',
+            '@type': 'Product',
+            name: found.title,
+            sku: `AI-PROD-${found.id}`,
+            brand: {
+              '@type': 'Brand',
+              name: 'فروشگاه هوش مصنوعی'
             },
-            price: (found.price || 0) * 10,
-            priceCurrency: 'IRR',
-            availability: (found.stock > 0 || found.category === 'plan' || found.category === 'package') ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock'
+            offers: {
+              '@type': 'Offer',
+              itemOffered: {
+                '@type': 'Product',
+                name: found.title,
+                url: `${window.location.origin}/store/product/${found.id}`
+              },
+              price: (found.price || 0) * 10,
+              priceCurrency: 'IRR',
+              availability: (found.stock > 0 || found.category === 'plan' || found.category === 'package') ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock'
+            }
           }
         });
       } else {
