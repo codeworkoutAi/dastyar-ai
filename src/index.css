@@ -302,74 +302,78 @@ html {
      type-badge     pills and counters        11
    ========================================================================== */
 
-@layer components {
-  .type-display {
-    font-size: var(--text-5xl);
-    line-height: var(--leading-tight);
-    letter-spacing: -0.02em;
-    font-weight: 800;
-  }
+/* Declared with `@utility` rather than inside `@layer components` because
+   Tailwind v4 only generates responsive variants (`sm:type-meta`, etc.) for
+   utilities. A class in `@layer components` compiles flat, so a variant prefix
+   on it would be silently dropped at every breakpoint — a failure with no build
+   error. The scale steps on mobile/desktop via the token overrides above, so
+   most consumers still need no variant at all. */
+@utility type-display {
+  font-size: var(--text-5xl);
+  line-height: var(--leading-tight);
+  letter-spacing: -0.02em;
+  font-weight: 800;
+}
 
-  .type-h1 {
-    font-size: var(--text-3xl);
-    line-height: var(--leading-snug);
-    font-weight: 800;
-  }
+@utility type-h1 {
+  font-size: var(--text-3xl);
+  line-height: var(--leading-snug);
+  font-weight: 800;
+}
 
-  .type-h2 {
-    font-size: var(--text-2xl);
-    line-height: var(--leading-snug);
-    font-weight: 700;
-  }
+@utility type-h2 {
+  font-size: var(--text-2xl);
+  line-height: var(--leading-snug);
+  font-weight: 700;
+}
 
-  .type-h3 {
-    font-size: var(--text-xl);
-    line-height: var(--leading-snug);
-    font-weight: 700;
-  }
+@utility type-h3 {
+  font-size: var(--text-xl);
+  line-height: var(--leading-snug);
+  font-weight: 700;
+}
 
-  .type-h4 {
-    font-size: var(--text-lg);
-    line-height: var(--leading-snug);
-    font-weight: 700;
-  }
+@utility type-h4 {
+  font-size: var(--text-lg);
+  line-height: var(--leading-snug);
+  font-weight: 700;
+}
 
-  .type-body {
-    font-size: var(--text-base);
-    line-height: var(--leading-relaxed);
-  }
+@utility type-body {
+  font-size: var(--text-base);
+  line-height: var(--leading-relaxed);
+}
 
-  .type-secondary {
-    font-size: var(--text-sm);
-    line-height: var(--leading-relaxed);
-  }
+@utility type-secondary {
+  font-size: var(--text-sm);
+  line-height: var(--leading-relaxed);
+}
 
-  .type-meta {
-    font-size: var(--text-xs);
-    line-height: var(--leading-normal);
-  }
+@utility type-meta {
+  font-size: var(--text-xs);
+  line-height: var(--leading-normal);
+}
 
-  .type-badge {
-    font-size: var(--text-2xs);
-    line-height: var(--leading-normal);
-  }
+@utility type-badge {
+  font-size: var(--text-2xs);
+  line-height: var(--leading-normal);
+}
 
-  /* Blog / tag-archive card title.
+/* Blog / tag-archive card title.
 
-     Persian AI-news headlines run 70-90 characters, so they need three lines at
-     the ~450px card width that `max-w-5xl` allows in a 2-column grid. Clamping
-     to 2 lines clipped 86% of real headlines; the reserved min-height keeps
-     every card's excerpt on the same baseline regardless of title length. */
-  .type-card-title {
-    font-size: var(--text-xl);
-    line-height: var(--leading-snug);
-    font-weight: 700;
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 3;
-    overflow: hidden;
-    min-height: calc(var(--leading-snug) * var(--text-xl) * 3);
-  }
+   Persian AI-news headlines run 70-90 characters, so they need three lines at
+   the ~450px card width that `max-w-5xl` allows in a 2-column grid. Clamping
+   to 2 lines clipped 86% of real headlines; the reserved min-height keeps
+   every card's excerpt on the same baseline regardless of title length. */
+@utility type-card-title {
+  font-size: var(--text-xl);
+  line-height: var(--leading-snug);
+  font-weight: 700;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
+  min-height: calc(var(--leading-snug) * var(--text-xl) * 3);
 }
 
 /* ==========================================================================

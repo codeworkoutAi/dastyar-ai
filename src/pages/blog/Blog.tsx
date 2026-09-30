@@ -377,7 +377,7 @@ export function Blog() {
  <Link 
  key={idx} 
  to={`/blog/tag/${encodeURIComponent(tag)}`}
- style={{ borderRadius: "10px" }} className="px-3.5 py-1.5 clay-btn type-meta text-zinc-700 dark:text-zinc-300 hover:text-emerald-600 dark:hover:text-emerald-400 text-xs font-semibold transition-all border border-[var(--card-border)] "
+ style={{ borderRadius: "10px" }} className="px-3.5 py-1.5 clay-btn type-meta text-zinc-700 dark:text-zinc-300 hover:text-emerald-600 dark:hover:text-emerald-400 font-semibold transition-all border border-[var(--card-border)] "
  >
  #{tag}
  </Link>
@@ -482,7 +482,7 @@ export function Blog() {
                     setTimeDropdownOpen(!timeDropdownOpen);
                     setTagDropdownOpen(false);
                   }}
-                  style={{ borderRadius: "10px" }} className={`flex items-center gap-2 px-3.5 py-2 type-secondary font-semibold transition-all cursor-pointer ${timeFilter !== 'all' ? 'clay-btn bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30' : 'clay-btn type-meta text-zinc-700 dark:text-zinc-300'}`}
+                  style={{ borderRadius: "10px" }} className={`flex items-center gap-2 px-3.5 py-2 type-meta font-semibold transition-all cursor-pointer ${timeFilter !== 'all' ? 'clay-btn bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30' : 'clay-btn text-zinc-700 dark:text-zinc-300'}`}
  >
  <CalendarDays size={16} />
  <span>{
@@ -527,7 +527,7 @@ export function Blog() {
                     setTagDropdownOpen(!tagDropdownOpen);
                     setTimeDropdownOpen(false);
                   }}
-                  style={{ borderRadius: "10px" }} className={`flex items-center gap-2 px-3.5 py-2 type-secondary font-semibold transition-all cursor-pointer ${selectedTag ? 'clay-btn bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30' : 'clay-btn type-meta text-zinc-700 dark:text-zinc-300'}`}
+                  style={{ borderRadius: "10px" }} className={`flex items-center gap-2 px-3.5 py-2 type-meta font-semibold transition-all cursor-pointer ${selectedTag ? 'clay-btn bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30' : 'clay-btn text-zinc-700 dark:text-zinc-300'}`}
  >
  <Hash size={16} />
  <span>{selectedTag ? `#${selectedTag.substring(0, 10)}${selectedTag.length > 10 ? '...' : ''}` : 'برچسب‌ها'}</span>
