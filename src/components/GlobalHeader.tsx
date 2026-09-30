@@ -59,7 +59,7 @@ export const GlobalHeader: React.FC = () => {
                   }`}
                 >
                   <Icon size={16} className="shrink-0" />
-                  <span className="text-[10px] font-bold hidden sm:block">{link.name}</span>
+                  <span className="type-badge font-bold hidden sm:block">{link.name}</span>
                 </Link>
               );
             })}

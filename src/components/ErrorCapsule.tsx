@@ -58,10 +58,10 @@ export const ErrorCapsule: React.FC = React.memo(() => {
               <AlertCircle className="w-4 h-4 text-rose-500 dark:text-rose-400" />
             </div>
             <div className="flex-1 min-w-0">
-              <h5 className="font-bold text-xs sm:text-[13px] text-zinc-900 dark:text-zinc-100 mb-1 flex items-center gap-1.5">
+              <h5 className="font-bold type-h4 text-zinc-900 dark:text-zinc-100 mb-1 flex items-center gap-1.5">
                 <span>خطای برقراری ارتباط با مدل هوش مصنوعی</span>
               </h5>
-              <p className="text-[12px] sm:text-[12.5px] text-zinc-700 dark:text-zinc-300 leading-relaxed break-words font-normal">
+              <p className="type-meta text-zinc-700 dark:text-zinc-300 leading-relaxed break-words font-normal">
                 {error.message}
               </p>
             </div>
@@ -83,7 +83,7 @@ export const ErrorCapsule: React.FC = React.memo(() => {
 
         {/* Action Buttons Row */}
         <div className="flex items-center justify-between gap-2 pt-2.5 border-t border-[var(--card-border)] text-xs">
-          <span className="text-[11px] text-zinc-500 dark:text-zinc-400 font-normal">
+          <span className="type-badge text-zinc-500 dark:text-zinc-400 font-normal">
             ⏳ خودکار بسته می‌شود
           </span>
 

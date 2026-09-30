@@ -33,7 +33,7 @@ export const SmartRoutingBadge: React.FC<{ isStreaming: boolean }> = ({ isStream
  return (
  <div className="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full bg-blue-500/10 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/20 shadow-[0_0_10px_rgba(37,99,235,0.05)] dark:shadow-[0_0_10px_rgba(59,130,246,0.1)] transition-all">
  <StarsOutlineIcon className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 animate-[spin_4s_linear_infinite]" />
- <span className="text-[11px] sm:text-xs font-bold text-blue-600 dark:text-blue-400 routing-glow-text tracking-wide animate-routing-text-breathe whitespace-nowrap">
+ <span className="type-badge sm:type-meta font-bold text-blue-600 dark:text-blue-400 routing-glow-text tracking-wide animate-routing-text-breathe whitespace-nowrap">
  مسیریابی هوشمند
  </span>
  </div>
@@ -153,7 +153,7 @@ export const Header: React.FC = React.memo(() => {
  <span>دستیار هوشمند</span>
  <span className="sr-only">دستیار هوشمند | چت با هوش مصنوعی رایگان و فارسی</span>
  </h1>
- <p className="text-[10px] sm:text-[11px] opacity-70 truncate hidden sm:block">
+ <p className="type-badge opacity-70 truncate hidden sm:block">
  قدرتمند شده با زبان فارسی
  </p>
  </div>

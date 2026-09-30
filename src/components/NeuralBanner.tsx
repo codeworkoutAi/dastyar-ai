@@ -142,7 +142,7 @@ export const NeuralBanner: React.FC = () => {
  : 'clay-btn text-zinc-400 dark:text-zinc-500 border-[var(--card-border)] '
  }`}
  >
- <span className="font-bold text-[11px]">DS</span>
+ <span className="font-bold type-badge">DS</span>
  <div className={`absolute whitespace-nowrap text-xs font-['Vazirmatn'] transition-all duration-300 ${
  activeRow === 0
  ? 'font-bold text-cyan-600 dark:text-cyan-300 drop-shadow-sm'

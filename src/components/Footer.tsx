@@ -67,11 +67,11 @@ export function Footer() {
  >
  {footerData.brandTitle || 'دستیار هوشمند'}
  </h2>
- <span className="clay-pill-thick text-[10px] font-black text-indigo-600 dark:text-indigo-400 px-2 py-0.5">
+ <span className="clay-pill-thick type-badge font-black text-indigo-600 dark:text-indigo-400 px-2 py-0.5">
  نسخه ۲.۵
  </span>
  </div>
- <p className="text-[11px] font-bold text-[#64748b] dark:text-[#94a3b8] mt-0.5">
+ <p className="type-badge font-bold text-[#64748b] dark:text-[#94a3b8] mt-0.5">
  هوش مصنوعی یکپارچه به زبان فارسی
  </p>
  </div>
@@ -215,7 +215,7 @@ export function Footer() {
  </a>
  </div>
 
- <p className="text-[11px] text-[#64748b] dark:text-[#94a3b8] font-medium leading-relaxed">
+ <p className="type-badge text-[#64748b] dark:text-[#94a3b8] font-medium leading-relaxed">
  پرداخت آنلاین امن با درگاه شاپرک و زرین‌پال
  </p>
  </div>
@@ -234,7 +234,7 @@ export function Footer() {
  {/* Social Icons & Status Badge */}
  <div className="flex items-center gap-3.5">
  {/* System Status Pill */}
- <div className="clay-pill-thick px-3 py-1.5 inline-flex items-center gap-2 text-[11px] font-bold text-emerald-600 dark:text-emerald-400">
+ <div className="clay-pill-thick px-3 py-1.5 inline-flex items-center gap-2 type-badge font-bold text-emerald-600 dark:text-emerald-400">
  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
  <span>سیستم فعال</span>
  </div>
