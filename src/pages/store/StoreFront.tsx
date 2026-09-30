@@ -197,13 +197,13 @@ return (
   <BookOpen className="w-6 h-6 text-[var(--color-accent-primary)]" />
   </div>
   <div>
-  <h3 className="font-bold text-lg mb-1">آموزش استفاده از ابزارها</h3>
-  <p className="text-sm">نحوه اتصال API و استفاده از مدل‌ها را در مجله هوش مصنوعی بخوانید.</p>
+  <h3 className="type-h4 font-bold mb-1">آموزش استفاده از ابزارها</h3>
+  <p className="type-secondary">نحوه اتصال API و استفاده از مدل‌ها را در مجله هوش مصنوعی بخوانید.</p>
   </div>
   </div>
   <Link 
   to="/blog"
-  className="px-5 py-2.5 clay-btn-primary-thick font-bold text-sm shrink-0 w-full sm:w-auto text-center"
+  className="px-5 py-2.5 clay-btn-primary-thick font-bold type-secondary shrink-0 w-full sm:w-auto text-center"
   >
   مشاهده آموزش‌ها
   </Link>
@@ -216,14 +216,14 @@ return (
   </div>
   <div className="flex-1 text-center sm:text-right">
   <h3 className="font-bold text-[var(--color-accent-text)] dark:text-[var(--color-accent-text)] mb-1">پرداخت با موفقیت در شاپرک تأیید شد!</h3>
-  <p className="text-sm text-[var(--color-accent-text)] flex flex-wrap items-center gap-x-3 gap-y-1">
+  <p className="type-secondary text-[var(--color-accent-text)] flex flex-wrap items-center gap-x-3 gap-y-1">
   <span>شماره سفارش: <span className="font-mono font-bold">{orderId}</span></span>
   {refId && <span>شماره تراکنش بانکی (شاپرک): <span className="font-mono font-bold">{refId}</span></span>}
   </p>
   </div>
   <button 
   onClick={() => navigate('/store', { replace: true })}
-  className="px-4 py-2 clay-btn-thick text-[var(--color-accent-text)] dark:text-[var(--color-accent-text)] text-sm font-bold shrink-0 w-full sm:w-auto cursor-pointer"
+  className="px-4 py-2 clay-btn-thick text-[var(--color-accent-text)] dark:text-[var(--color-accent-text)] type-secondary font-bold shrink-0 w-full sm:w-auto cursor-pointer"
   >
   متوجه شدم
   </button>
@@ -237,13 +237,13 @@ return (
   </div>
   <div className="flex-1 text-center sm:text-right">
   <h3 className="font-bold text-[var(--color-error-text)] mb-1">پرداخت ناموفق بود</h3>
-  <p className="text-sm text-[var(--color-error-text)]">
+  <p className="type-secondary text-[var(--color-error-text)]">
   {msg ? decodeURIComponent(msg) : 'در صورت کسر وجه از حساب شما، مبلغ تا ۷۲ ساعت آینده به کارت شما بازخواهد گشت.'}
   </p>
   </div>
   <button 
   onClick={() => navigate('/store', { replace: true })}
-  className="px-4 py-2 bg-[var(--color-error-bg)] text-[var(--color-error-text)] rounded-btn text-sm font-bold hover:bg-[var(--color-error-bg)]/80 transition-colors shrink-0 w-full sm:w-auto cursor-pointer"
+  className="px-4 py-2 bg-[var(--color-error-bg)] text-[var(--color-error-text)] rounded-btn type-secondary font-bold hover:bg-[var(--color-error-bg)]/80 transition-colors shrink-0 w-full sm:w-auto cursor-pointer"
   >
   بستن
   </button>
@@ -263,7 +263,7 @@ return (
   ) : products.length === 0 ? (
   <div className="flex flex-col items-center justify-center h-64 opacity-60 clay-card-thick">
   <Store size={48} className="mb-4" />
-  <h2 className="text-xl font-bold mb-2">هنوز محصولی اضافه نشده است</h2>
+  <h2 className="type-h2 mb-2">هنوز محصولی اضافه نشده است</h2>
   </div>
   ) : (
  <div className="space-y-6">
@@ -279,7 +279,7 @@ return (
   <button
   key={cat.id}
   onClick={() => setSelectedCategory(cat.id)}
-  className={`px-4 py-2 rounded-btn text-xs sm:text-sm font-bold whitespace-nowrap transition-all cursor-pointer ${
+  className={`px-4 py-2 rounded-btn type-badge font-bold whitespace-nowrap transition-all cursor-pointer ${
   selectedCategory === cat.id
   ? 'clay-btn-primary-thick'
   : 'clay-btn-thick'
@@ -297,7 +297,7 @@ return (
     return (
     <div className="flex flex-col items-center justify-center py-16 opacity-60 clay-card-thick">
     <Store size={40} className="mb-3" />
-    <p className="text-sm font-bold">محصولی در این دسته‌بندی یافت نشد.</p>
+    <p className="type-secondary font-bold">محصولی در این دسته‌بندی یافت نشد.</p>
     </div>
     );
   }
@@ -324,7 +324,7 @@ return (
   ) : p.category === 'plan' ? (
   <div className="w-full h-full bg-[var(--gemini-gradient-subtle)] flex flex-col items-center justify-center text-[var(--color-accent-primary)] dark:text-[var(--color-accent-primary)] gap-2">
   <Sparkles className="w-12 h-12 opacity-40" />
-  <span className="text-xs font-bold opacity-60">اشتراک ویژه</span>
+  <span className="type-badge font-bold opacity-60">اشتراک ویژه</span>
   </div>
   ) : (
   <div className="w-full h-full flex items-center justify-center">
@@ -344,7 +344,7 @@ return (
   </div>
   
   <div className="flex flex-col flex-1 p-5">
-  <h3 className={`text-lg mb-2 leading-tight line-clamp-2 ${getProductTitleStyle(p.title, p.category)}`} title={p.title}>
+  <h3 className={`type-h3 mb-2 leading-tight line-clamp-2 ${getProductTitleStyle(p.title, p.category)}`} title={p.title}>
                     {usePersianDigits ? toPersianDigits(p.title) : p.title}
                   </h3>
 
@@ -356,7 +356,7 @@ return (
   )}
 
   {p.description && (
-  <p className="text-[13px] text-[var(--color-text-muted)] line-clamp-2 mb-4 leading-relaxed opacity-80">{p.description}</p>
+  <p className="type-secondary text-[var(--color-text-muted)] line-clamp-2 mb-4 leading-relaxed opacity-80">{p.description}</p>
   )}
 
   {p.category === 'plan' && p.features && (

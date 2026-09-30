@@ -326,11 +326,11 @@ export function Blog() {
   )}
  
  <div className="mb-8 text-right">
- <h1 className="text-xl md:text-2xl font-black leading-snug mb-4 clay-news-title">
+ <h1 className="type-h1 mb-4 clay-news-title">
               {selectedPost.title}
             </h1>
  
- <div className="flex flex-wrap items-center justify-between gap-4 py-4 border-y border-[var(--card-border)]  text-sm text-[#525d75] dark:text-[#9aa5bc]">
+ <div className="flex flex-wrap items-center justify-between gap-4 py-4 border-y border-[var(--card-border)]  type-secondary text-[#525d75] dark:text-[#9aa5bc]">
  <div className="flex flex-wrap items-center gap-4 md:gap-6">
  <div className="flex items-center gap-1.5">
  <PenTool size={16} className="text-emerald-600" />
@@ -377,7 +377,7 @@ export function Blog() {
  <Link 
  key={idx} 
  to={`/blog/tag/${encodeURIComponent(tag)}`}
- style={{ borderRadius: "10px" }} className="px-3.5 py-1.5 clay-btn text-zinc-700 dark:text-zinc-300 hover:text-emerald-600 dark:hover:text-emerald-400 text-xs font-semibold transition-all border border-[var(--card-border)] "
+ style={{ borderRadius: "10px" }} className="px-3.5 py-1.5 clay-btn type-meta text-zinc-700 dark:text-zinc-300 hover:text-emerald-600 dark:hover:text-emerald-400 text-xs font-semibold transition-all border border-[var(--card-border)] "
  >
  #{tag}
  </Link>
@@ -392,10 +392,10 @@ export function Blog() {
  {/* CTA Banner */}
   <div className="mt-12 p-6 md:p-8 rounded-[32px] bg-gradient-to-br from-emerald-500/10 to-teal-500/10 border border-emerald-500/20 flex flex-col md:flex-row items-center justify-between gap-6 backdrop-blur-sm shadow-sm group">
   <div className="flex-1 w-full">
-  <h3 className="text-lg md:text-xl font-bold text-zinc-900 dark:text-white mb-2">
+  <h3 className="type-h4 type-h4 font-bold text-zinc-900 dark:text-white mb-2">
   سوالی درباره این خبر دارید؟
   </h3>
-  <p className="text-sm text-[#525d75] dark:text-[#9aa5bc] mb-4">
+  <p className="type-secondary text-[#525d75] dark:text-[#9aa5bc] mb-4">
   برای درک بهتر مفاهیم تخصصی این مقاله، با دستیار هوشمند ما گفتگو کنید!
   </p>
   <div className="flex flex-wrap items-center gap-2">
@@ -407,7 +407,7 @@ export function Blog() {
     <Link 
       key={idx}
       to={`/?prompt=${encodeURIComponent(chip + ': ' + selectedPost.title + '\nلینک خبر: ' + window.location.href)}`}
-      className="px-4 py-2 rounded-xl text-xs font-semibold bg-white/60 dark:bg-zinc-800/60 border border-[var(--card-border)] hover:bg-emerald-50 dark:hover:bg-emerald-900/30 hover:border-emerald-500/30 text-[#525d75] dark:text-[#9aa5bc] hover:text-emerald-600 dark:hover:text-emerald-400 transition-all duration-300"
+      className="px-4 py-2 rounded-xl type-badge font-semibold bg-white/60 dark:bg-zinc-800/60 border border-[var(--card-border)] hover:bg-emerald-50 dark:hover:bg-emerald-900/30 hover:border-emerald-500/30 text-[#525d75] dark:text-[#9aa5bc] hover:text-emerald-600 dark:hover:text-emerald-400 transition-all duration-300"
     >
       {chip}
     </Link>
@@ -440,7 +440,7 @@ export function Blog() {
  placeholder="جستجو در اخبار..."
  value={searchQuery}
  onChange={(e) => setSearchQuery(e.target.value)}
- className="block w-full bg-transparent border-none py-2 pr-9 pl-4 text-sm text-zinc-900 dark:text-zinc-100 focus:ring-0 focus:outline-none outline-none placeholder-zinc-500"
+ className="block w-full bg-transparent border-none py-2 pr-9 pl-4 type-secondary text-zinc-900 dark:text-zinc-100 focus:ring-0 focus:outline-none outline-none placeholder-zinc-500"
  />
  </div>
 
@@ -482,7 +482,7 @@ export function Blog() {
                     setTimeDropdownOpen(!timeDropdownOpen);
                     setTagDropdownOpen(false);
                   }}
-                  style={{ borderRadius: "10px" }} className={`flex items-center gap-2 px-3.5 py-2 text-sm font-semibold transition-all cursor-pointer ${timeFilter !== 'all' ? 'clay-btn bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30' : 'clay-btn text-zinc-700 dark:text-zinc-300'}`}
+                  style={{ borderRadius: "10px" }} className={`flex items-center gap-2 px-3.5 py-2 type-secondary font-semibold transition-all cursor-pointer ${timeFilter !== 'all' ? 'clay-btn bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30' : 'clay-btn type-meta text-zinc-700 dark:text-zinc-300'}`}
  >
  <CalendarDays size={16} />
  <span>{
@@ -509,7 +509,7 @@ export function Blog() {
  setTimeFilter(tab.id as any);
  setTimeDropdownOpen(false);
  }}
- className="w-full text-right px-4 py-2.5 text-sm flex items-center justify-between hover:clay-surface dark:hover:bg-zinc-800/50 transition-colors"
+ className="w-full text-right px-4 py-2.5 type-secondary flex items-center justify-between hover:clay-surface dark:hover:bg-zinc-800/50 transition-colors"
  >
  <span className={timeFilter === tab.id ? 'font-bold text-emerald-600 dark:text-emerald-400' : 'text-zinc-700 dark:text-zinc-300'}>{tab.label}</span>
  {timeFilter === tab.id && <Check size={16} className="text-emerald-600 dark:text-emerald-400" />}
@@ -527,7 +527,7 @@ export function Blog() {
                     setTagDropdownOpen(!tagDropdownOpen);
                     setTimeDropdownOpen(false);
                   }}
-                  style={{ borderRadius: "10px" }} className={`flex items-center gap-2 px-3.5 py-2 text-sm font-semibold transition-all cursor-pointer ${selectedTag ? 'clay-btn bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30' : 'clay-btn text-zinc-700 dark:text-zinc-300'}`}
+                  style={{ borderRadius: "10px" }} className={`flex items-center gap-2 px-3.5 py-2 type-secondary font-semibold transition-all cursor-pointer ${selectedTag ? 'clay-btn bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30' : 'clay-btn type-meta text-zinc-700 dark:text-zinc-300'}`}
  >
  <Hash size={16} />
  <span>{selectedTag ? `#${selectedTag.substring(0, 10)}${selectedTag.length > 10 ? '...' : ''}` : 'برچسب‌ها'}</span>
@@ -541,7 +541,7 @@ export function Blog() {
  setSelectedTag(null);
  setTagDropdownOpen(false);
  }}
- className="w-full text-right px-4 py-2.5 text-sm flex items-center justify-between hover:clay-surface dark:hover:bg-zinc-800/50 transition-colors border-b border-[var(--card-border)] "
+ className="w-full text-right px-4 py-2.5 type-secondary flex items-center justify-between hover:clay-surface dark:hover:bg-zinc-800/50 transition-colors border-b border-[var(--card-border)] "
  >
  <span className={!selectedTag ? 'font-bold text-emerald-600 dark:text-emerald-400' : 'text-zinc-700 dark:text-zinc-300'}>همه برچسب‌ها</span>
  {!selectedTag && <Check size={16} className="text-emerald-600 dark:text-emerald-400" />}
@@ -553,7 +553,7 @@ export function Blog() {
  setSelectedTag(tag);
  setTagDropdownOpen(false);
  }}
- className="w-full text-right px-4 py-2.5 text-sm flex items-center justify-between hover:clay-surface dark:hover:bg-zinc-800/50 transition-colors"
+ className="w-full text-right px-4 py-2.5 type-secondary flex items-center justify-between hover:clay-surface dark:hover:bg-zinc-800/50 transition-colors"
  >
  <span className={selectedTag === tag ? 'font-bold text-emerald-600 dark:text-emerald-400' : 'text-zinc-700 dark:text-zinc-300'}>#{tag}</span>
  {selectedTag === tag && <Check size={16} className="text-emerald-600 dark:text-emerald-400" />}
@@ -586,7 +586,7 @@ export function Blog() {
  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
  />
  {displayedNews[0].id === news[0]?.id && (
- <div className="absolute top-4 right-4 bg-emerald-600 text-white text-xs font-bold px-3 py-1.5 rounded-lg shadow-sm">
+ <div className="absolute top-4 right-4 bg-emerald-600 text-white type-badge font-bold px-3 py-1.5 rounded-lg shadow-sm">
  جدیدترین خبر
  </div>
  )}
@@ -598,13 +598,13 @@ export function Blog() {
  )}
  
  <div className="p-6 md:p-8 w-full md:w-1/2 flex flex-col justify-center">
- <h3 className="text-lg md:text-xl font-bold mb-5 clay-news-title leading-snug">
+ <h3 className="type-h2 mb-4 clay-news-title">
               {displayedNews[0].title}
             </h3>
- <p className="text-[#525d75] dark:text-[#9aa5bc] mb-4 line-clamp-3 text-xs md:text-sm leading-relaxed">
+ <p className="text-[#525d75] dark:text-[#9aa5bc] mb-4 line-clamp-3 type-secondary">
  {displayedNews[0].content.replace(/[*_#`\[\]]/g, '').substring(0, 200)}...
  </p>
- <div className="flex items-center gap-4 text-zinc-400 text-xs mt-auto font-medium">
+ <div className="flex items-center gap-4 text-zinc-400 type-meta mt-auto font-medium">
  <div className="flex items-center gap-1.5">
  <Clock size={15} />
  <span>{formatDateTime(displayedNews[0].createdAt)}</span>
@@ -656,21 +656,21 @@ export function Blog() {
                 viewMode === 'compact' ? "flex-1 flex flex-col sm:flex-row sm:items-center justify-between w-full gap-4" : "p-5 sm:p-6 flex-1 flex flex-col justify-between"
               }>
                 <div className={viewMode === 'compact' ? "flex-1" : ""}>
-                  <h3 className={`font-bold clay-news-title transition-all leading-snug ${
-                    viewMode === 'compact' ? 'text-sm mb-1' : 'text-sm md:text-[15px] mb-5 sm:mb-6 line-clamp-2'
+                  <h3 className={`clay-news-title transition-all ${
+                    viewMode === 'compact' ? 'type-h4 mb-1' : 'type-h3 mb-4 sm:mb-5 line-clamp-2'
                   }`}>
                     {item.title}
                   </h3>
                   
                   {viewMode !== 'compact' && (
-                    <p className="text-[#525d75] dark:text-[#9aa5bc] mb-3 line-clamp-3 text-xs leading-relaxed">
+                    <p className="text-[#525d75] dark:text-[#9aa5bc] mb-3 line-clamp-3 type-secondary">
                       {item.content.replace(/[*_#`\[\]]/g, '').substring(0, 220)}...
                     </p>
                   )}
                 </div>
 
- <div className={`flex items-center gap-4 text-zinc-400 font-medium ${
- viewMode === 'compact' ? 'text-xs shrink-0' : 'text-xs mt-auto'
+ <div className={`flex items-center gap-4 text-zinc-400 font-medium type-meta ${
+ viewMode === 'compact' ? 'shrink-0' : 'mt-auto'
  }`}>
  <div className="flex items-center gap-1.5">
  <Clock size={viewMode === 'compact' ? 14 : 14} />
@@ -700,7 +700,7 @@ export function Blog() {
  </div>
  ) : displayedNews.length > 0 && (
  <div className="flex justify-center pt-8 pb-4">
- <p className="text-sm text-zinc-400 dark:text-[#525d75] clay-surface px-6 py-2 rounded-full">
+ <p className="type-secondary text-zinc-400 dark:text-[#525d75] clay-surface px-6 py-2 rounded-full">
  شما تمام اخبار را خواندید! 🎉
  </p>
  </div>
@@ -713,7 +713,7 @@ export function Blog() {
  <div className="w-20 h-20 rounded-full clay-btn-thick flex items-center justify-center mb-6">
  <Search size={32} className="text-zinc-400" />
  </div>
- <h2 className="text-xl font-bold mb-2">نتیجه‌ای یافت نشد</h2>
+ <h2 className="type-h2 mb-2">نتیجه‌ای یافت نشد</h2>
  <p className="text-[#525d75]">مقاله‌ای با این مشخصات پیدا نکردیم.</p>
  <button 
  onClick={() => {
@@ -721,7 +721,7 @@ export function Blog() {
  setTimeFilter('all');
  setSelectedTag(null);
  }}
- className="mt-4 px-6 py-2 clay-btn-thick hover:bg-zinc-300 dark:hover:bg-zinc-700 text-sm font-bold rounded-xl transition-colors"
+ className="mt-4 px-6 py-2 clay-btn-thick hover:bg-zinc-300 dark:hover:bg-zinc-700 type-secondary font-bold rounded-xl transition-colors"
  >
  پاک کردن فیلترها
  </button>

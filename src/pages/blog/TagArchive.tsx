@@ -142,14 +142,14 @@ export function TagArchive() {
  
  <div className="p-5 sm:p-6 flex-1 flex flex-col justify-between">
  <div>
- <h3 className="text-sm md:text-[15px] font-bold mb-5 sm:mb-6 clay-news-title line-clamp-2 leading-snug">
+ <h3 className="type-h3 mb-4 sm:mb-5 clay-news-title line-clamp-2">
  {item.title}
  </h3>
- <p className="text-[#525d75] dark:text-[#9aa5bc] mb-4 line-clamp-3 text-xs md:text-sm leading-relaxed">
+ <p className="text-[#525d75] dark:text-[#9aa5bc] mb-4 line-clamp-3 type-secondary">
  {item.content.replace(/[*_#`\[\]]/g, '').substring(0, 220)}...
  </p>
  </div>
- <div className="flex items-center gap-4 text-zinc-400 text-xs mt-auto">
+ <div className="flex items-center gap-4 text-zinc-400 type-meta mt-auto">
  <div className="flex items-center gap-1.5">
  <Clock size={14} />
  <span>{formatDateOnly(item.createdAt)}</span>
