@@ -616,7 +616,7 @@ export function Blog() {
  {/* Grid/List/Compact for remaining posts */}
  {displayedNews.length > 1 && (
  <div className={
- viewMode === 'grid' ?"grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8" :"flex flex-col gap-4 md:gap-6"
+ viewMode === 'grid' ?"grid grid-cols-1 md:grid-cols-2 gap-8" :"flex flex-col gap-4 md:gap-6"
  }>
  {displayedNews.slice(1).map((item) => (
 <Link 
@@ -657,8 +657,8 @@ export function Blog() {
               }>
                 <div className={viewMode === 'compact' ? "flex-1" : ""}>
                   <h3 className={`clay-news-title transition-all ${
-                    viewMode === 'compact' ? 'type-h4 mb-1' : 'type-h3 mb-4 sm:mb-5 line-clamp-2'
-                  }`}>
+                    viewMode === 'compact' ? 'type-h4 mb-1' : 'type-card-title mb-2'
+                  }`} title={item.title}>
                     {item.title}
                   </h3>
                   

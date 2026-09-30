@@ -120,7 +120,7 @@ export function TagArchive() {
  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600"></div>
  </div>
  ) : news.length > 0 ? (
- <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+ <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
  {news.map((item) => (
  <div 
  key={item.id}
@@ -142,7 +142,7 @@ export function TagArchive() {
  
  <div className="p-5 sm:p-6 flex-1 flex flex-col justify-between">
  <div>
- <h3 className="type-h3 mb-4 sm:mb-5 clay-news-title line-clamp-2">
+ <h3 className="type-card-title mb-3 clay-news-title" title={item.title}>
  {item.title}
  </h3>
  <p className="text-[#525d75] dark:text-[#9aa5bc] mb-4 line-clamp-3 type-secondary">

@@ -353,6 +353,23 @@ html {
     font-size: var(--text-2xs);
     line-height: var(--leading-normal);
   }
+
+  /* Blog / tag-archive card title.
+
+     Persian AI-news headlines run 70-90 characters, so they need three lines at
+     the ~450px card width that `max-w-5xl` allows in a 2-column grid. Clamping
+     to 2 lines clipped 86% of real headlines; the reserved min-height keeps
+     every card's excerpt on the same baseline regardless of title length. */
+  .type-card-title {
+    font-size: var(--text-xl);
+    line-height: var(--leading-snug);
+    font-weight: 700;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    overflow: hidden;
+    min-height: calc(var(--leading-snug) * var(--text-xl) * 3);
+  }
 }
 
 /* ==========================================================================
