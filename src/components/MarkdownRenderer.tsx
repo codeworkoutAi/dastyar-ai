@@ -464,7 +464,35 @@ const loadKatexCss = () => {
 };
 
 
-export const MarkdownRenderer: React.FC<MarkdownRendererProps> = React.memo(({
+// Stable plugin identities: recreating these arrays on every render defeats
+// react-markdown internal node memoization during token-by-token streaming.
+const REMARK_PLUGINS = [remarkGfm, remarkMath, remarkBreaks];
+const REHYPE_PLUGINS = [rehypeKatex];
+
+/**
+ * Split a partially received markdown answer into:
+ *   settled : everything up to the last COMPLETED block boundary (render once)
+ *   tail    : the small in-flight block that is still receiving tokens
+ *
+ * Previously the ENTIRE accumulated text was re-parsed with remark/rehype on every
+ * single token (O(n) work per token => O(n^2) per answer). The main thread could not
+ * keep up with the socket buffer, so tokens appeared in bursts / all at once.
+ */
+const splitSettledBlocks = (raw: string): { settled: string; tail: string } => {
+  if (!raw) return { settled: "", tail: raw };
+
+  // Never split inside an unterminated fenced code block, otherwise the tail
+  // would render as a broken half-written code block.
+  const fenceCount = (raw.match(/```/g) || []).length;
+  const searchCeiling = fenceCount % 2 === 1 ? raw.lastIndexOf("```") : raw.length;
+
+  const boundary = raw.lastIndexOf("\n\n", searchCeiling);
+  if (boundary === -1) return { settled: "", tail: raw };
+
+  return { settled: raw.slice(0, boundary + 2), tail: raw.slice(boundary + 2) };
+};
+
+const MarkdownSegment: React.FC<MarkdownRendererProps> = React.memo(({
  content,
  isStreaming = false,
  usePersianDigits = false,
@@ -489,8 +517,8 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = React.memo(({
  style={{ unicodeBidi: 'isolate', fontSize: 'var(--chat-font-size)' }}
  >
  <ReactMarkdown
- remarkPlugins={[remarkGfm, remarkMath, remarkBreaks]}
- rehypePlugins={[rehypeKatex]}
+ remarkPlugins={REMARK_PLUGINS}
+ rehypePlugins={REHYPE_PLUGINS}
  components={{
  // Paragraph formatting with robust recursive RTL detection and Callout support
  p({ children }) {
@@ -888,6 +916,53 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = React.memo(({
  </ReactMarkdown>
  </div>
  );
+});
+
+/**
+ * Streaming-aware entry point.
+ *
+ * While tokens arrive, only the in-flight tail is re-parsed on each token. The settled
+ * prefix goes to a memoized <MarkdownSegment> whose props do not change between tokens,
+ * so React bails out of re-rendering it entirely. When the stream ends the whole answer
+ * renders as one single segment.
+ */
+export const MarkdownRenderer: React.FC<MarkdownRendererProps> = React.memo(({
+  content,
+  isStreaming = false,
+  usePersianDigits = false,
+  stripReasoning = false,
+}) => {
+  const { settled, tail } = React.useMemo(
+    () => (isStreaming ? splitSettledBlocks(content) : { settled: "", tail: content }),
+    [content, isStreaming]
+  );
+
+  if (!settled) {
+    return (
+      <MarkdownSegment
+        content={tail}
+        isStreaming={isStreaming}
+        usePersianDigits={usePersianDigits}
+        stripReasoning={stripReasoning}
+      />
+    );
+  }
+
+  return (
+    <>
+      <MarkdownSegment
+        content={settled}
+        usePersianDigits={usePersianDigits}
+        stripReasoning={stripReasoning}
+      />
+      <MarkdownSegment
+        content={tail}
+        isStreaming={isStreaming}
+        usePersianDigits={usePersianDigits}
+        stripReasoning={stripReasoning}
+      />
+    </>
+  );
 });
 
 interface CodeBlockProps {

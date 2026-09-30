@@ -474,6 +474,31 @@ stopGeneration: () => {
       let buffer = '';
       let accumulatedContent = '';
       let streamHadError = false;
+
+      // Coalesce token-driven React updates into at most one per animation frame.
+      // Without this, a fast provider fires dozens of setState calls per frame and
+      // starves the render loop, which is what made tokens look batched/buffered.
+      let streamRafId: number | null = null;
+      const flushStreamingContent = () => {
+        if (streamRafId !== null) {
+          cancelAnimationFrame(streamRafId);
+          streamRafId = null;
+        }
+        set({ conversations: get().conversations.map((c) => {
+          if (c.id !== targetConv!.id) return c;
+          const msgs = c.messages.map((m) =>
+            m.id === assistantMessageId ? { ...m, content: accumulatedContent } : m
+          );
+          return { ...c, messages: msgs };
+        }) });
+      };
+      const scheduleStreamingUpdate = () => {
+        if (streamRafId !== null) return;
+        streamRafId = requestAnimationFrame(() => {
+          streamRafId = null;
+          flushStreamingContent();
+        });
+      };
       let serverUsage: { promptTokens?: number; completionTokens?: number; totalTokens?: number; costToman?: number; balanceAfter?: number } | undefined = undefined;
 
       try {
@@ -517,16 +542,8 @@ stopGeneration: () => {
                 }
                 accumulatedContent += data.chunk;
 
-                // Update UI incrementally
-                set({ conversations: get().conversations.map((c) => {
-                    if (c.id !== targetConv!.id) return c;
-                    const msgs = c.messages.map((m) =>
-                      m.id === assistantMessageId
-                        ? { ...m, content: accumulatedContent }
-                        : m
-                    );
-                    return { ...c, messages: msgs };
-                  }) });
+                // Update UI at most once per frame (still live, but never floods React).
+                scheduleStreamingUpdate();
               }
 
               if (data.usage) {
@@ -571,6 +588,12 @@ stopGeneration: () => {
           throw readErr;
         }
       } finally {
+        // Drop any pending frame; the final full content is written further below.
+        if (streamRafId !== null) {
+          cancelAnimationFrame(streamRafId);
+          streamRafId = null;
+        }
+
         // Always cancel reader to prevent memory leaks
         try {
           reader.cancel();
