@@ -5,8 +5,16 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
+// Test isolation: vitest sets VITEST=true. Under test we must never touch the real
+// database — the previous behaviour read TURSO_* from .env at module load and
+// connected to the live Turso Cloud database (and synced the schema into it) simply
+// because a test file imported this module. A throwaway SQLite file keeps tests hermetic.
+const IS_TEST = !!process.env.VITEST || process.env.NODE_ENV === 'test';
+
 // Ensure data directory exists
-const dataDir = path.join(process.cwd(), 'server', 'data');
+const dataDir = IS_TEST
+  ? path.join(process.cwd(), 'server', 'data', '.test-tmp')
+  : path.join(process.cwd(), 'server', 'data');
 if (!fs.existsSync(dataDir)) {
   fs.mkdirSync(dataDir, { recursive: true });
 }
@@ -22,8 +30,9 @@ if (!fs.existsSync(dbPath) && fs.existsSync(dbInfoPath)) {
   } catch (e) {}
 }
 
-const syncUrl = (process.env.TURSO_DATABASE_URL || '').trim();
-const authToken = (process.env.TURSO_AUTH_TOKEN || '').trim();
+// Under test, ignore Turso credentials entirely even though .env supplies them.
+const syncUrl = IS_TEST ? '' : (process.env.TURSO_DATABASE_URL || '').trim();
+const authToken = IS_TEST ? '' : (process.env.TURSO_AUTH_TOKEN || '').trim();
 
 let db: any;
 
