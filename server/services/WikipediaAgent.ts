@@ -18,6 +18,79 @@ export class WikipediaAgent {
   private static readonly TIMEOUT = 6000;
   private static readonly USER_AGENT = 'DastyarAI/1.0 (https://dastyarai.com; info@dastyarai.com)';
 
+  // --- Relevance guard -------------------------------------------------------
+  // `searchTitle` blindly took `pages[0]`, so a question like "قیمت ارز چنده" was
+  // reduced to "قیمت ارز" and Wikipedia happily returned an article about currencies
+  // (units, history) that has nothing to do with the user's question. That irrelevant
+  // summary was then injected as "اطلاعات موثق", i.e. another wrong source.
+  // An article is only accepted when its title actually covers what was asked about.
+  // A single shared word is not enough for a multi-word query: "قیمت ارز" must not be
+  // answered with the article "ارز" (currency units and history), which is what the old
+  // `pages[0]` behaviour did. A one-word query still needs only one hit.
+  private static requiredOverlap(termWords: string[]): number {
+    return Math.min(2, termWords.length);
+  }
+
+  /** Words too common to prove an article is about the requested entity. */
+  private static readonly TITLE_STOPWORDS = new Set([
+    'و', 'در', 'از', 'که', 'را', 'با', 'برای', 'است', 'هست', 'های', 'ها', 'یا', 'تا',
+    'بر', 'این', 'آن', 'یک', 'هر', 'چه', 'چیست', 'کیست', 'کی', 'چه', 'چگونه', 'چطور',
+    'درباره', 'راجع', 'معرفی', 'توضیح', 'تاریخچه', 'بیوگرافی', 'زندگینامه', 'تعریف',
+    'مفهوم', 'بگو', 'بگید', 'لطفا', 'خلاصه', 'ویکی', 'پدیا', 'پدیای', 'دانشنامه',
+    'منبع', 'مقاله', 'صفحه', 'اطلاعات', 'the', 'of', 'and', 'in', 'is', 'who', 'what',
+  ]);
+
+  /** Persian/Arabic folding so "ي"/"ی" and "ك"/"ک" compare equal. */
+  private static normalize(input: string): string {
+    return (input || '')
+      .replace(/[\u064B-\u0652\u0670]/g, '')
+      .replace(/[\u200c\u200f\u200e]/g, ' ')
+      .replace(/\u064A/g, '\u06CC')
+      .replace(/\u0649/g, '\u06CC')
+      .replace(/\u0643/g, '\u06A9')
+      .replace(/[\u0623\u0625\u0622]/g, '\u0627')
+      .replace(/[^\p{L}\p{N}\s]+/gu, ' ')
+      .replace(/\s+/g, ' ')
+      .trim()
+      .toLowerCase();
+  }
+
+  /** Content words of a text, stopwords removed. */
+  private static contentWords(input: string): string[] {
+    return this.normalize(input)
+      .split(' ')
+      .filter((w) => w.length >= 3 && !this.TITLE_STOPWORDS.has(w));
+  }
+
+  /**
+   * True when the article title plausibly refers to the thing the user asked about.
+   * Single-character and stopword matches are rejected; otherwise an article about
+   * "قیمت ارز" would be accepted for a question about "قیمت نفت".
+   */
+  private static isTitleRelevant(title: string, term: string): boolean {
+    const termWords = this.contentWords(term);
+    if (termWords.length === 0) return false;
+
+    const titleWords = this.contentWords(title);
+    if (titleWords.length === 0) return false;
+
+    let hits = 0;
+    for (const tw of termWords) {
+      if (titleWords.some((t) => t === tw || (Math.min(t.length, tw.length) >= 4 && (t.startsWith(tw) || tw.startsWith(t))))) {
+        hits += 1;
+      }
+    }
+    return hits >= this.requiredOverlap(termWords);
+  }
+
+  // --- In-memory cache -------------------------------------------------------
+  // Identical definitional questions are extremely common, and the Wikipedia REST API
+  // is a free but rate-limited public service. 30 minutes is plenty for encyclopedic
+  // data, which changes far more slowly than news.
+  private static readonly CACHE_TTL_MS = 30 * 60 * 1000;
+  private static readonly CACHE_MAX = 200;
+  private static readonly cache = new Map<string, { result: WikipediaResult; timestamp: number }>();
+
   /**
    * Clean and extract the core search subject/entity from a user query
    */
@@ -67,7 +140,17 @@ export class WikipediaAgent {
   }
 
   /**
-   * Search and fetch summary from Wikipedia (first Persian, then English fallback if applicable)
+   * Search and fetch summary from Wikipedia.
+   *
+   * Optimizations over the previous sequential version:
+   *  - 30-minute in-memory cache, so a repeated question costs zero network calls and
+   *    does not hammer the free (and rate-limited) Wikipedia API.
+   *  - The Persian and English fallbacks are now fetched CONCURRENTLY instead of one
+   *    after the other. The old code could spend 3 sequential requests (~18s worst
+   *    case) before giving up.
+   *  - Every candidate article must pass `isTitleRelevant()`. Without it a question
+   *    like "قیمت ارز چنده" was answered with an encyclopedic article about currencies
+   *    and injected as "اطلاعات موثق".
    */
   public static async searchAndSummarize(query: string): Promise<WikipediaResult> {
     const { term, lang } = this.extractSearchEntity(query);
@@ -75,41 +158,63 @@ export class WikipediaAgent {
       return { found: false };
     }
 
+    const cacheKey = `${lang}:${this.normalize(term)}`;
+    const cached = this.cache.get(cacheKey);
+    if (cached && Date.now() - cached.timestamp < this.CACHE_TTL_MS) {
+      return cached.result;
+    }
+
+    /** Accept a candidate only when its title is actually about what was asked. */
+    const accept = (res: WikipediaResult): WikipediaResult | null => {
+      if (!res.found) return null;
+      if (!this.isTitleRelevant(res.title || '', term)) {
+        console.log(`[WikipediaAgent] Rejected off-topic article "${res.title}" for query "${term}"`);
+        return null;
+      }
+      return res;
+    };
+
     try {
       console.log(`[WikipediaAgent] Searching Wikipedia for entity: "${term}" (Primary lang: ${lang})`);
 
-      // 1. Try primary language
-      let res = await this.fetchPageSummary(term, lang);
-      if (res.found) return res;
+      // 1. Direct title lookup on the primary language — the cheapest and most precise path.
+      const direct = accept(await this.fetchPageSummary(term, lang));
+      if (direct) return this.remember(cacheKey, direct);
 
-      // 2. If not found in primary and it was Persian, try searching via fulltext API in Persian
-      if (lang === 'fa') {
-        const searchTitle = await this.searchTitle(term, 'fa');
-        if (searchTitle) {
-          res = await this.fetchPageSummary(searchTitle, 'fa');
-          if (res.found) return res;
-        }
+      // 2. Otherwise resolve the real title via fulltext search, running the Persian and
+      //    English lookups at the same time instead of waiting for the first to fail.
+      const otherLang: 'fa' | 'en' = lang === 'fa' ? 'en' : 'fa';
+      const [primaryTitles, otherTitles] = await Promise.all([
+        this.searchTitles(term, lang),
+        this.searchTitles(term, otherLang),
+      ]);
 
-        // 3. Fallback to English if Persian had no results
-        const enTitle = await this.searchTitle(term, 'en');
-        if (enTitle) {
-          res = await this.fetchPageSummary(enTitle, 'en');
-          if (res.found) return res;
-        }
-      } else {
-        // Primary was English, search title
-        const searchTitle = await this.searchTitle(term, 'en');
-        if (searchTitle) {
-          res = await this.fetchPageSummary(searchTitle, 'en');
-          if (res.found) return res;
-        }
-      }
+      const candidates: Array<{ title: string; lang: 'fa' | 'en' }> = [
+        ...primaryTitles.map((title) => ({ title, lang })),
+        ...otherTitles.map((title) => ({ title, lang: otherLang })),
+      ];
 
-      return { found: false };
+      const results = await Promise.all(
+        candidates.map(async (c) => accept(await this.fetchPageSummary(c.title, c.lang)))
+      );
+      const hit = results.find((r): r is WikipediaResult => r !== null);
+      if (hit) return this.remember(cacheKey, hit);
+
+      return this.remember(cacheKey, { found: false });
     } catch (err: any) {
       console.warn(`[WikipediaAgent] Search error for "${term}":`, err?.message || err);
       return { found: false };
     }
+  }
+
+  /** Store in the LRU cache and return the value. */
+  private static remember(cacheKey: string, result: WikipediaResult): WikipediaResult {
+    if (this.cache.size >= this.CACHE_MAX) {
+      const firstKey = this.cache.keys().next().value;
+      if (firstKey) this.cache.delete(firstKey);
+    }
+    this.cache.set(cacheKey, { result, timestamp: Date.now() });
+    return result;
   }
 
   /**
@@ -144,11 +249,16 @@ export class WikipediaAgent {
   }
 
   /**
-   * Search matching title using Wikipedia Search REST API
+   * Search matching titles using the Wikipedia Search REST API.
+   *
+   * Previously this returned only `pages[0]` and trusted it blindly. It now returns
+   * several candidates, each already filtered by `isTitleRelevant()`, so a fuzzy fulltext
+   * match ("قیمت ارز" matching an article about currency units) can no longer be injected
+   * as if it were an answer to the user's question.
    */
-  private static async searchTitle(query: string, lang: 'fa' | 'en'): Promise<string | null> {
+  private static async searchTitles(query: string, lang: 'fa' | 'en'): Promise<string[]> {
     try {
-      const url = `https://${lang}.wikipedia.org/w/rest.php/v1/search/page?q=${encodeURIComponent(query)}&limit=3`;
+      const url = `https://${lang}.wikipedia.org/w/rest.php/v1/search/page?q=${encodeURIComponent(query)}&limit=5`;
       const response = await fetch(url, {
         headers: {
           'User-Agent': this.USER_AGENT,
@@ -157,15 +267,17 @@ export class WikipediaAgent {
         signal: AbortSignal.timeout(this.TIMEOUT)
       });
 
-      if (!response.ok) return null;
+      if (!response.ok) return [];
 
       const data = await response.json();
-      const firstPage = data?.pages?.[0];
-      if (firstPage && firstPage.title) {
-        return firstPage.title;
-      }
+      const pages: any[] = Array.isArray(data?.pages) ? data.pages : [];
+
+      return pages
+        .map((p) => p?.title)
+        .filter((title): title is string => typeof title === 'string' && title.length > 0)
+        .filter((title) => this.isTitleRelevant(title, query));
     } catch (e) {}
-    return null;
+    return [];
   }
 
   /**

@@ -132,6 +132,17 @@ The platform operates exclusively on **exactly six stable system profiles** (div
 12. **PWA `/api`**: Keep API routes out of the service worker cache.
 13. **Env awareness**: `server/.env.example` may lag real usage. Important vars include `DEFAULT_GEMINI_KEY` / `GEMINI_API_KEY`, `DEFAULT_GROQ_KEY`, `TURSO_*`, `JWT_SECRET`, `TELEGRAM_*`, `PROXY_URL`, `KAVENEGAR_API_KEY`, `SMTP_*`, `WEBSITE_URL`/`WEB_URL`/`APP_URL`, `NODE_ENV`, `PORT`.
 14. **Frontend Monitoring**: Always use the `chrome-devtools-mcp` to monitor console errors and network requests directly when making frontend changes to ensure no hidden client-side errors exist.
+15. **Web Grounding Architecture (single live layer)**: The product goal is one thing: let the main model answer from *fresh* web data plus its own knowledge, in one coherent answer. Everything in the retrieval pipeline exists to serve that and nothing more. `server/routes/chat.ts` runs the grounding layers **concurrently** via `Promise.allSettled` and merges the non-empty results:
+    - `GoogleGroundingAgent` → the live layer. **No `site:` operator and no allowlist**: Gemini Search Grounding already ranks by relevance, and restricting domains made recall worse. Sources are taken from `groundingSupports` (the spans the engine actually grounded in), not from every returned chunk, and each one carries its supporting snippet. If `groundingSupports` is absent, fall back to all sources rather than dropping every citation.
+    - `WikipediaAgent` → free, fast, and the best source for definitional/biographical questions. Guarded by `isTitleRelevant()` (see rule 16).
+    - `SpecializedKnowledgeService` → Quran, Ganjoor poetry, cinema, sports, health, botany. Genuinely more precise than web search for those domains; internally parallel and cached.
+    - `ToolsAgent.getCurrency` / `getDigikalaProduct` → exact unit-labelled numbers that prose search cannot produce. Run **only** when the intent router selected them, but never *instead of* Grounding.
+    - **There is deliberately no `getWeather()`** and no `allowed_domains.json`. Do not reintroduce either: the wttr.in scraper was slower, uncited and a silent failure mode, and the allowlist was the root cause of the irrelevant-source bug (rule 18).
+    - Never reintroduce an `else if` chain here. It previously meant a routed tool silently skipped Google Grounding, so the answer was built from stale scraped data with no live lookup.
+16. **Wikipedia Relevance Guard**: `searchTitle` used to return `pages[0]` blindly, so "قیمت ارز چنده" was answered with the article "ارز" and injected as «اطلاعات موثق». `searchTitles()` now returns several candidates, each filtered by `isTitleRelevant()`, which requires `min(2, termWords.length)` shared content words after Persian folding (`ي/ی`, `ك/ک`, alef variants, ZWNJ) with stopwords removed. One shared word is **not** enough for a multi-word query. When the guard rejects everything, Wikipedia returns nothing and Grounding carries the answer — that is the intended, safe fallback.
+17. **Citation Prompt Discipline**: the `webSearchWrapper` `<instructions>` block is intentionally short (~3 sentences). It previously held 12 numbered rules (~2500 chars) that were patch-work for a bug whose real cause was the allowlist. A long rules block *degrades* model adherence instead of improving it. If citation quality regresses, fix the source injection — do not grow the prompt. Keep these: cite only sources whose evidence is in the context, inline or as a `**منابع:**` line, one entry per outlet, and never invent an unrelated or fabricated link.
+18. **Citation Root Cause (historical, do not reintroduce)**: the "irrelevant source" bug was **not** primarily a prompting failure. `GoogleGroundingAgent` used to flatten every category of `server/allowed_domains.json` into one OR-joined `site:` filter, so a foreign-policy question was *forced* to retrieve pages from `tgju.org` (gold/currency) and `coingecko.com`; those pages were injected as `📌 منابع:` and the model faithfully cited the only sources it was given. The allowlist and `searchRelevance.ts` have been deleted. A hand-rolled lexical source filter was tried first and abandoned: it dropped semantically relevant articles that shared no vocabulary with the query (e.g. a Reuters piece titled "واکنش آمریکا به توافق هسته‌ای" for "سیاست خارجی ایران"). `groundingSupports` replaced it because it is the engine's own relevance signal, not a guess.
+19. **Runtime Tests Required for Renderer/Util Logic**: `tsc --noEmit` and `vite build` do **not** catch logic bugs in string/regex utilities — a `/g`-flagged regex used with `String.match` returns no capture groups and type-checks fine. The project has vitest (`npm test`, see `src/lib/storage.test.ts` and `src/store/chatStore.test.ts`); add real test files there for new helpers, or exercise them with a throwaway `npx tsx` script (delete it afterwards). Cover the positive case, the negative case, and empty input.
 
 ---
 
@@ -143,11 +154,13 @@ server/routes/{auth,admin,store,news,tools,intent,models}.ts
 server/db/database.ts        # libsql + Turso
 server/telegram/bot.ts       # Proxy skip in production
 server/services/newsCron.ts  # Hourly AI news pipeline
+server/services/searchRelevance.ts # Topic-aware allowlist routing + source relevance filter
 src/store/chatStore.ts       # Web-search kill-switch + smart routing
 src/lib/storage.ts           # Quota stripping, defaults, 6-profile sync
 src/lib/seo.ts               # Client-side SEO updates
 src/components/Footer.tsx    # eNamad trust seal
 src/components/MarkdownRenderer.tsx
+src/lib/citationUtils.ts     # dedupeCitations(): unique sources in the "منابع:" block
 src/pages/explore/ExploreHub.tsx # Prompts & Personas Hub
 index.html                   # Shell SEO + enamad meta
 ```

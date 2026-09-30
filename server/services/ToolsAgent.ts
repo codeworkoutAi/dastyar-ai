@@ -2,39 +2,14 @@ export class ToolsAgent {
   private static readonly TIMEOUT = 10000;
 
   /**
-   * Fetches weather data for a given city from wttr.in
+   * NOTE: there is deliberately no `getWeather()`.
+   *
+   * It used to scrape wttr.in and was the only source for weather questions. Google
+   * Search Grounding now covers weather as part of the normal live layer, which is more
+   * current and actually cited, so the scraper only added latency plus a silent failure
+   * mode. Weather questions fall through to Grounding, and the intent router's "weather"
+   * tool no longer disables the live layer (see chatStore.ts).
    */
-  static async getWeather(query: string = 'Tehran'): Promise<string> {
-    try {
-      console.log(`[ToolsAgent] Fetching weather for: ${query}`);
-      // Remove any Persian words that might confuse the API
-      const city = query.replace(/(آب و هوا|وضعیت هوا|هوای|در|شهر|استان|روستا)/gi, '').trim() || 'Tehran';
-      
-      const response = await fetch(`https://wttr.in/${encodeURIComponent(city)}?format=j1`, {
-        signal: AbortSignal.timeout(this.TIMEOUT)
-      });
-      
-      if (!response.ok) return '';
-      
-      const data = await response.json();
-      const current = data.current_condition?.[0];
-      const area = data.nearest_area?.[0];
-      
-      if (!current) return '';
-
-      const location = area ? `${area.areaName[0].value}, ${area.country[0].value}` : city;
-      
-      return `[ابزار آب و هوا]
-مکان: ${location}
-دمای فعلی: ${current.temp_C}°C
-وضعیت: ${current.weatherDesc[0].value}
-رطوبت: ${current.humidity}%
-سرعت باد: ${current.windspeedKmph} km/h`;
-    } catch (error) {
-      console.error('[ToolsAgent] Weather API Error:', error);
-      return '';
-    }
-  }
 
   /**
    * Scrapes free market currency and gold rates from tgju.org
