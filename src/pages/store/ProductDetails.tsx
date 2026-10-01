@@ -130,7 +130,7 @@ setPageSeo({
           {/* Hero Banner Area */}
           <div className="w-full mb-8">
             <div className="w-full aspect-video rounded-2xl overflow-hidden relative mb-4 group shadow-lg border border-[var(--card-border)] bg-[var(--card-bg)]">
-              <span className="absolute top-4 right-4 z-10 inline-block px-3 py-1.5 bg-[var(--color-accent-primary)] text-white text-[10px] sm:text-xs font-bold rounded-full shadow-lg">
+              <span className="absolute top-4 right-4 z-10 inline-block px-3 py-1.5 bg-[var(--color-accent-primary)] text-white type-badge sm:type-meta font-bold rounded-full shadow-lg">
                 {product.badge || (product.category === 'plan' ? 'اشتراک پرمیوم' : product.category === 'api' ? 'کلید API' : 'محصول اختصاصی')}
               </span>
               {(product.bannerImage || product.image) ? (
@@ -215,7 +215,7 @@ setPageSeo({
                 : 'خرید'}
             </button>
             
-            <p className="text-center text-[10px] text-[var(--color-text-dim)] pt-2 flex items-center justify-center gap-1">
+            <p className="text-center type-badge text-[var(--color-text-dim)] pt-2 flex items-center justify-center gap-1">
               <ShieldCheck className="w-3 h-3" />
               پرداخت امن از طریق درگاه رسمی
             </p>

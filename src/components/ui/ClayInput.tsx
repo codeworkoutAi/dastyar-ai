@@ -16,7 +16,7 @@ export const ClayInput = forwardRef<HTMLInputElement | HTMLTextAreaElement, Clay
 
  return (
  <div className="flex flex-col gap-1.5 w-full">
- {label && <label className="text-[11px] font-bold text-zinc-600 dark:text-zinc-400 mr-1">{label}</label>}
+ {label && <label className="type-badge font-bold text-zinc-600 dark:text-zinc-400 mr-1">{label}</label>}
  {multiline ? (
  <textarea
  ref={ref as React.Ref<HTMLTextAreaElement>}
@@ -30,7 +30,7 @@ export const ClayInput = forwardRef<HTMLInputElement | HTMLTextAreaElement, Clay
  {...(props as React.InputHTMLAttributes<HTMLInputElement>)}
  />
  )}
- {error && <span className="text-[10px] text-rose-500 font-medium px-1">{error}</span>}
+ {error && <span className="type-badge text-rose-500 font-medium px-1">{error}</span>}
  </div>
  );
  }

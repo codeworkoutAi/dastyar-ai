@@ -177,7 +177,7 @@ export const ExploreHub: React.FC = () => {
  <div>
  <h2 className="text-base sm:text-lg font-black tracking-tight flex items-center gap-2">
  مرکز کاوش و مدل‌ها
- <span className="text-[11px] font-normal px-2.5 py-0.5 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30">
+ <span className="type-badge font-normal px-2.5 py-0.5 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30">
  Explore Hub
  </span>
  </h2>
@@ -265,7 +265,7 @@ export const ExploreHub: React.FC = () => {
  <span className="font-bold text-sm text-zinc-900 dark:text-zinc-100 group-hover:text-purple-400 transition-colors">
  {p.title}
  </span>
- <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-purple-100/80 text-purple-800 dark:bg-purple-500/20 dark:text-purple-300">
+ <span className="type-badge font-bold px-2.5 py-1 rounded-full bg-purple-100/80 text-purple-800 dark:bg-purple-500/20 dark:text-purple-300">
  {p.tag}
  </span>
  </div>
@@ -307,7 +307,7 @@ export const ExploreHub: React.FC = () => {
  <div className="flex items-center gap-3 mb-3">
  <span className="text-3xl chat-emoji">{item.icon}</span>
  <div>
- <span className="text-[10px] text-purple-400 font-bold">{item.category}</span>
+ <span className="type-badge text-purple-400 font-bold">{item.category}</span>
  <h4 className="font-bold text-sm text-zinc-900 dark:text-zinc-100">{item.title}</h4>
  </div>
  </div>

@@ -100,7 +100,7 @@ export const GuestLanding: React.FC = () => {
  className={`p-4 clay-card border backdrop-blur-xl text-right flex flex-col justify-between`}
  >
  <div>
- <span className="text-[10px] font-bold opacity-75 uppercase">{m.provider}</span>
+ <span className="type-badge font-bold opacity-75 uppercase">{m.provider}</span>
  <h4 className="text-base font-black text-zinc-900 dark:text-zinc-100 mt-0.5">{m.name}</h4>
  </div>
  <p className="text-xs text-zinc-600 dark:text-zinc-400 mt-2 font-medium leading-relaxed">

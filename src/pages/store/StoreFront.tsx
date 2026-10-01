@@ -332,12 +332,12 @@ return (
   </div>
   )}
   
-  <span className="absolute top-3.5 right-3.5 text-[11px] font-bold px-2.5 py-1 rounded-btn bg-[var(--color-input-bg)]/80 text-[var(--color-text-main)] dark:text-[var(--color-text-main)] backdrop-blur-md border border-[var(--card-border)] shadow-xs">
+  <span className="absolute top-3.5 right-3.5 type-badge font-bold px-2.5 py-1 rounded-btn bg-[var(--color-input-bg)]/80 text-[var(--color-text-main)] dark:text-[var(--color-text-main)] backdrop-blur-md border border-[var(--card-border)] shadow-xs">
   {p.category === 'plan' ? 'پلن تعرفه' : p.category === 'api' ? 'کلید API' : p.category === 'account' ? 'اکانت پرمیوم' : 'پکیج'}
   </span>
 
   {p.badge && (
-  <span className="absolute top-3.5 left-3.5 text-[11px] font-black px-2.5 py-1 bg-[var(--color-accent-primary)] text-white rounded-btn shadow-sm">
+  <span className="absolute top-3.5 left-3.5 type-badge font-black px-2.5 py-1 bg-[var(--color-accent-primary)] text-white rounded-btn shadow-sm">
   {p.badge}
   </span>
   )}
@@ -373,7 +373,7 @@ return (
 
   </div>
     <div className="mt-auto pt-4 pb-4 border-t border-[var(--card-border)] flex justify-start px-4">
-      <span className="flex items-center gap-1 text-[12.5px] font-bold text-[var(--color-accent-primary)] opacity-85 group-hover:opacity-100 transition-opacity">
+      <span className="flex items-center gap-1 type-meta font-bold text-[var(--color-accent-primary)] opacity-85 group-hover:opacity-100 transition-opacity">
         مشاهده جزئیات محصول
         <ChevronLeft size={15} className="group-hover:-translate-x-1 transition-transform" />
       </span>

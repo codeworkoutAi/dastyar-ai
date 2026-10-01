@@ -101,12 +101,12 @@ export const ModelSelectorDropdown: React.FC = () => {
                     </div>
                     <div className="flex flex-col gap-1 items-start flex-1">
                         <div className="flex items-center gap-2">
-                            <span className={`font-semibold text-[13px] ${isSelected ? 'text-zinc-900' : 'text-zinc-800 dark:text-zinc-200'}`}>
+                            <span className={`font-semibold type-secondary ${isSelected ? 'text-zinc-900' : 'text-zinc-800 dark:text-zinc-200'}`}>
                                 {p.name || p.modelName}
                             </span>
                         </div>
                         {details.description && (
-                            <span className="text-[11px] text-zinc-500 dark:text-zinc-400 text-right line-clamp-2 leading-relaxed">
+                            <span className="type-badge text-zinc-500 dark:text-zinc-400 text-right line-clamp-2 leading-relaxed">
                                 {details.description}
                             </span>
                         )}
@@ -133,7 +133,7 @@ export const ModelSelectorDropdown: React.FC = () => {
                 )}
                 <div className="hidden sm:flex flex-col items-start">
                     {!settings.tools.smartRouting && (
-                        <span className="text-[10px] text-zinc-500 dark:text-zinc-400 font-medium leading-tight">مدل فعلی</span>
+                        <span className="type-badge text-zinc-500 dark:text-zinc-400 font-medium leading-tight">مدل فعلی</span>
                     )}
                     <div className="flex items-center gap-1.5">
                         <span className="font-bold text-sm leading-tight whitespace-nowrap text-zinc-800 dark:text-zinc-200">
@@ -155,7 +155,7 @@ export const ModelSelectorDropdown: React.FC = () => {
                             <span className={`font-bold text-sm ${settings.tools.smartRouting ? 'text-zinc-900' : 'text-zinc-800 dark:text-zinc-200'}`}>
                                 مسیریابی هوشمند (خودکار)
                             </span>
-                            <span className={`text-[11px] text-right leading-relaxed ${settings.tools.smartRouting ? 'text-zinc-600' : 'text-zinc-500 dark:text-zinc-400'}`}>
+                            <span className={`type-badge text-right leading-relaxed ${settings.tools.smartRouting ? 'text-zinc-600' : 'text-zinc-500 dark:text-zinc-400'}`}>
                                 انتخاب خودکار بهترین مدل بر اساس نوع درخواست شما (کدنویسی، تصویر، چت روزمره).
                             </span>
                         </div>
