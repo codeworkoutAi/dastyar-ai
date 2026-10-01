@@ -1,3 +1,4 @@
+console.log("HELLO RENDER - STARTING UP");
 import express from 'express';
 import path from 'path';
 import fs from 'fs';
@@ -10,11 +11,28 @@ dotenv.config();
 
 // In-Memory Response Cache for normalized identical queries (TTL: 1 hour)
 
+// Tracks whether app.listen() has succeeded. Before that point the process cannot serve
+// anything, so an uncaught exception means startup is dead: swallowing it leaves a
+// zombie process alive with no bound port, and Render then burns the full 15-minute
+// health-check window before reporting "Port scan timeout reached, no open ports
+// detected" with no clue as to why. Exiting immediately turns that silent hang into an
+// explicit crash with the real stack trace. After the server is listening we keep the
+// original log-and-continue behaviour so one bad chat stream cannot take the site down.
+let serverListening = false;
+
 process.on('uncaughtException', (err) => {
   console.error('[Server] Uncaught Exception:', err);
+  if (!serverListening) {
+    console.error('[Server] FATAL: exception during startup, exiting so the failure is visible.');
+    process.exit(1);
+  }
 });
 process.on('unhandledRejection', (reason) => {
   console.error('[Server] Unhandled Rejection:', reason);
+  if (!serverListening) {
+    console.error('[Server] FATAL: rejection during startup, exiting so the failure is visible.');
+    process.exit(1);
+  }
 });
 
 const app = express();
@@ -97,7 +115,7 @@ app.use(express.urlencoded({ limit: '50mb', extended: true }));
 // Rate limiter for test benchmark endpoint to prevent API quota drain and abuse
 
 
-import modelsRouter from './routes/models';
+import modelsRouter, { markStartupReady } from './routes/models';
 import chatRouter from './routes/chat';
 import toolsRouter from './routes/tools';
 import intentRouter from './routes/intent';
@@ -113,12 +131,12 @@ import { renderHtmlWithSeo } from './seo/htmlInjector';
 import { initializeSchema } from './db/schema';
 import db from './db/database';
 
-// Initialize SQLite tables
-initializeSchema();
-
-// Start Background Services
-initNewsCron();
-
+// NOTE: initializeSchema() / initNewsCron() deliberately run AFTER app.listen().
+// Everything above this line runs at import time, and the libsql embedded-replica
+// constructor performs its initial remote sync synchronously. On a fresh container
+// with an empty local replica that download can take many minutes, which leaves the
+// process alive but not listening -> Render reports "Port scan timeout reached, no
+// open ports detected" and fails the deploy after 15 minutes. See AGENTS.md rule 23.
 app.use('/', modelsRouter);
 app.use('/', chatRouter);
 app.use('/', toolsRouter);
@@ -208,9 +226,40 @@ async function start() {
     });
   }
 
-  app.listen(Number(PORT), '0.0.0.0', () => {
+  const server = app.listen(Number(PORT), '0.0.0.0', () => {
+    serverListening = true;
+    markStartupReady();
     console.log(`Persian AI Chatbox Server running on http://localhost:${PORT}`);
-    startTelegramBot();
+    console.log('[Startup] Listening. Health check is live; initialising database next.');
+
+    // Deferred startup work, run on a macrotask so the port starts accepting and
+    // SERVING requests first. This matters: the libsql replica handshake is a blocking
+    // native call, so doing it inline here would freeze the event loop and the health
+    // check would still time out even though the port is bound.
+    setTimeout(() => {
+      try {
+        initializeSchema();
+      } catch (schemaErr: any) {
+        console.error('[Startup] FATAL: initializeSchema() failed:', schemaErr);
+      }
+      try {
+        initNewsCron();
+      } catch (cronErr: any) {
+        console.error('[Startup] FATAL: initNewsCron() failed:', cronErr);
+      }
+
+      try {
+        startTelegramBot();
+      } catch (tgErr: any) {
+        console.error('[Startup] Telegram bot failed to start:', tgErr);
+      }
+      console.log('[Startup] Ready.');
+    }, 0);
+  });
+
+  server.on('error', (err: any) => {
+    console.error(`[Startup] FATAL: could not bind port ${PORT}:`, err?.message || err);
+    process.exit(1);
   });
 }
 
