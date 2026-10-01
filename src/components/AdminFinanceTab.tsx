@@ -3,7 +3,8 @@ import { Coins, TrendingUp, TrendingDown, Plus, Trash2, Save, CheckCircle2, Aler
  Gift,
  CreditCard,
  ShieldCheck,
- Loader2
+ Loader2,
+ Users
 } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import { PromoCodesManager } from './PromoCodesManager';
@@ -15,6 +16,9 @@ export const AdminFinanceTab: React.FC = () => {
 
  const [summary, setSummary] = useState<any>(null);
  const [transactions, setTransactions] = useState<any[]>([]);
+ const [totalCount, setTotalCount] = useState(0);
+ const [usageRows, setUsageRows] = useState<any[]>([]);
+ const [usageSearch, setUsageSearch] = useState('');
  const [loading, setLoading] = useState(false);
  const [actionLoading, setActionLoading] = useState(false);
  const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
@@ -103,7 +107,8 @@ const [welcomeBonusEnabled, setWelcomeBonusEnabled] = useState(true);
  });
  if (txRes.ok) {
  const txData = await txRes.json();
- setTransactions(txData);
+ setTransactions(txData.transactions || []);
+ setTotalCount(txData.total || 0);
  }
  } catch (err: any) {
  console.error('Failed to fetch transactions:', err);
@@ -139,7 +144,8 @@ const [welcomeBonusEnabled, setWelcomeBonusEnabled] = useState(true);
  }
  if (txRes.ok) {
  const txData = await txRes.json();
- setTransactions(txData);
+ setTransactions(txData.transactions || []);
+ setTotalCount(txData.total || 0);
  }
  } catch (err: any) {
  console.error('Failed to fetch finance data:', err);
@@ -147,6 +153,24 @@ const [welcomeBonusEnabled, setWelcomeBonusEnabled] = useState(true);
  setLoading(false);
  }
  };
+
+ const fetchUsageSummary = async (q = usageSearch) => {
+  try {
+    const url = new URL(window.location.origin + '/api/admin/user-usage-summary');
+    if (q) url.searchParams.append('search', q);
+    const res = await fetch(url.toString(), {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    if (res.ok) setUsageRows(await res.json());
+  } catch (err) {
+    console.error('Failed to fetch usage summary:', err);
+  }
+};
+
+ useEffect(() => {
+  const t = setTimeout(() => { fetchUsageSummary(usageSearch); }, 400);
+  return () => clearTimeout(t);
+ }, [usageSearch]);
 
  const fetchSettings = async () => {
  try {
@@ -917,6 +941,99 @@ const [welcomeBonusEnabled, setWelcomeBonusEnabled] = useState(true);
  </div>
  </div>
 
+ {/* Aggregated per-user consumption */}
+ <div className="p-5 rounded-2xl admin-card space-y-4">
+  <div className="flex flex-col sm:flex-row items-center justify-between border-b admin-border pb-4 gap-3">
+   <div className="flex items-center gap-2">
+    <Users className="w-5 h-5 text-blue-500" />
+    <h3 className="text-sm font-bold text-zinc-900 dark:text-zinc-100">تجمیع مصرف کاربران</h3>
+   </div>
+   <div className="flex items-center gap-2 w-full sm:w-auto">
+    <input
+     type="text"
+     placeholder="جستجوی نام، موبایل یا کد کاربری (UC-10027)..."
+     value={usageSearch}
+     onChange={(e) => setUsageSearch(e.target.value)}
+     className="w-full sm:w-72 px-3 py-1.5 rounded-xl admin-input text-xs focus:outline-none focus:border-blue-500 transition-colors"
+    />
+    <button
+     onClick={() => fetchUsageSummary(usageSearch)}
+     className="h-9 w-9 flex items-center justify-center rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 hover:bg-blue-500/20 transition-all cursor-pointer shrink-0"
+     title="بروزرسانی"
+    >
+     <RefreshCw className="w-4 h-4" />
+    </button>
+   </div>
+  </div>
+
+  <div className="overflow-x-auto">
+   <table className="w-full text-xs text-right">
+    <thead>
+     <tr className="border-b admin-border text-zinc-500 dark:text-zinc-400">
+      <th className="py-3 px-3.5 font-bold">کاربر</th>
+      <th className="py-3 px-3.5 font-bold">پیام</th>
+      <th className="py-3 px-3.5 font-bold">توکن کل</th>
+      <th className="py-3 px-3.5 font-bold">یارانه رایگان</th>
+      <th className="py-3 px-3.5 font-bold">مصرفی (تومان)</th>
+      <th className="py-3 px-3.5 font-bold">هزینه (دلار)</th>
+      <th className="py-3 px-3.5 font-bold">آخرین استفاده</th>
+     </tr>
+    </thead>
+    <tbody className="divide-y divide-zinc-200/60 dark:divide-zinc-800">
+     {usageRows.length > 0 ? (
+      usageRows.map((r: any) => (
+       <tr key={r.userId} className="hover:bg-zinc-100/50 dark:hover:bg-zinc-800/30 transition-colors">
+        <td className="py-3 px-3.5">
+         <div className="flex flex-col gap-0.5">
+          <span className="font-bold text-zinc-800 dark:text-zinc-200">
+           {r.userName || r.userEmail || r.userPhone || 'بدون نام'}
+          </span>
+          <span className="text-[11px] text-zinc-400">
+           کد کاربری: <span className="font-mono font-semibold text-zinc-600 dark:text-zinc-400">UC-{toPersianDigits(10000 + r.userId)}</span>
+          </span>
+         </div>
+        </td>
+        <td className="py-3 px-3.5 font-semibold text-zinc-800 dark:text-zinc-200">
+         {toPersianDigits(r.messageCount)}
+        </td>
+        <td className="py-3 px-3.5">
+         <div className="flex flex-col gap-0.5">
+          <span className="font-semibold text-zinc-800 dark:text-zinc-200">{toPersianDigits(r.totalTokens)}</span>
+          <span className="text-[10px] text-zinc-400">
+           {toPersianDigits(r.promptTokens)} ورودی / {toPersianDigits(r.completionTokens)} خروجی
+          </span>
+         </div>
+        </td>
+        <td className="py-3 px-3.5">
+         {r.freeMessages > 0 ? (
+          <span className="font-semibold text-amber-600 dark:text-amber-400">{toPersianDigits(r.freeMessages)} پیام</span>
+         ) : (
+          <span className="text-zinc-400">—</span>
+         )}
+        </td>
+        <td className="py-3 px-3.5 font-bold text-zinc-800 dark:text-zinc-200">
+         {toPersianDigits(r.paidToman + r.imageToman)}
+        </td>
+        <td className="py-3 px-3.5 font-semibold text-zinc-600 dark:text-zinc-300">
+         {Number(r.costUsd || 0).toFixed(4)}
+        </td>
+        <td className="py-3 px-3.5 text-zinc-500 dark:text-zinc-400">
+         {r.lastUsedAt ? new Date(r.lastUsedAt).toLocaleDateString('fa-IR') : '—'}
+        </td>
+       </tr>
+      ))
+     ) : (
+      <tr>
+       <td colSpan={7} className="py-8 text-center text-zinc-400">
+        مصرفی برای نمایش وجود ندارد.
+       </td>
+      </tr>
+     )}
+    </tbody>
+   </table>
+  </div>
+ </div>
+
  {/* User Usage Logs */}
  <div className="p-5 rounded-2xl admin-card space-y-4">
  <div className="flex flex-col xl:flex-row items-start xl:items-center justify-between border-b admin-border  pb-4 gap-4">
@@ -1087,11 +1204,11 @@ const [welcomeBonusEnabled, setWelcomeBonusEnabled] = useState(true);
  صفحه قبل
  </button>
  <span className="text-xs font-mono text-zinc-500 dark:text-zinc-400">
- صفحه {page}
+ صفحه {toPersianDigits(page)} از {toPersianDigits(Math.max(1, Math.ceil(totalCount / LIMIT)))}
  </span>
  <button
  onClick={() => setPage(p => p + 1)}
- disabled={!transactions || transactions.length < LIMIT}
+ disabled={page * LIMIT >= totalCount}
  className="px-3 py-1.5 text-xs font-bold rounded-lg admin-btn-secondary text-zinc-700 dark:text-zinc-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
  >
  صفحه بعد

@@ -1137,33 +1137,38 @@ router.get('/wallet-transactions', (req, res) => {
     const params: any[] = [];
     
     if (search) {
-      let isUcSearch = false;
-      let targetId = -1;
-      if (search.startsWith('uc-')) {
-        const num = parseInt(search.replace('uc-', ''), 10);
-        if (!isNaN(num)) {
-          targetId = num - 10000;
-          isUcSearch = true;
-        }
-      } else if (/^\d+$/.test(search) && parseInt(search, 10) > 10000) {
-        targetId = parseInt(search, 10) - 10000;
-        isUcSearch = true;
-      }
+      const ucMatch = search.match(/^(?:uc-)?(\d+)$/);
+      const digits = ucMatch ? parseInt(ucMatch[1], 10) : NaN;
 
-      if (isUcSearch) {
-        query += ` AND u.id = ?`;
-        params.push(targetId);
+      if (ucMatch && digits > 10000 && digits < 100000) {
+        // 'uc-10027' or '10027' -> user id 27.
+        // The upper bound matters: an 11-digit phone number is also all-digits, and
+        // without it '09126755014' became u.id 9116745014 and matched nothing.
+        query += ` AND wt.userId = ?`;
+        params.push(digits - 10000);
+      } else if (/^\+?\d[\d\s-]{9,}$/.test(search)) {
+        const phoneLike = search.replace(/[\s-]/g, '');
+        // Three forms: as typed, without '+', and Iranian local (98 -> 0).
+        // A stored '+989126755014' must also be found by typing '09126755014'.
+        query += ` AND (IFNULL(u.phone,'') LIKE ? OR IFNULL(u.phone,'') LIKE ? OR IFNULL(u.phone,'') LIKE ?)`;
+        const localDigits = phoneLike.replace(/^\+/, '').replace(/^98/, '0');
+        params.push(`%${phoneLike}%`, `%${phoneLike.replace(/^\+/, '')}%`, `%${localDigits}%`);
+      } else if (/^\d+$/.test(search)) {
+        // A small bare number is a real internal user id.
+        query += ` AND wt.userId = ?`;
+        params.push(parseInt(search, 10));
       } else {
-        query += ` AND (LOWER(IFNULL(wt.model, '')) LIKE ? OR LOWER(IFNULL(u.name, '')) LIKE ? OR LOWER(IFNULL(u.email, '')) LIKE ? OR LOWER(IFNULL(u.phone, '')) LIKE ? OR LOWER(IFNULL(wt.type, '')) LIKE ? OR IFNULL(u.telegramId, '') LIKE ?)`;
+        query += ` AND (LOWER(IFNULL(wt.model, '')) LIKE ? OR LOWER(IFNULL(u.name, '')) LIKE ? OR LOWER(IFNULL(u.email, '')) LIKE ? OR IFNULL(u.phone, '') LIKE ? OR LOWER(IFNULL(wt.type, '')) LIKE ? OR IFNULL(u.telegramId, '') LIKE ?)`;
         const searchParam = `%${search}%`;
         params.push(searchParam, searchParam, searchParam, searchParam, searchParam, searchParam);
       }
     }
-
     if (typeFilter === 'deposit') {
       query += ` AND wt.amount > 0`;
     } else if (typeFilter === 'deduct') {
-      query += ` AND wt.amount < 0`;
+      // Include free_usage: those rows have amount = 0, so a plain amount < 0 test
+      // silently dropped every subsidised message from the "consumption" filter.
+      query += ` AND (wt.amount < 0 OR wt.type = 'free_usage')`;
     } else if (typeFilter === 'free_usage') {
       query += ` AND wt.type = 'free_usage'`;
     } else if (typeFilter === 'image_usage') {
@@ -1189,15 +1194,88 @@ router.get('/wallet-transactions', (req, res) => {
     }
 
     const offset = parseInt(req.query.offset as string, 10) || 0;
+
+    // Total count for real pagination. Computed with the same WHERE clauses but
+    // without LIMIT/OFFSET, so the UI can show "page X of Y" and stop guessing
+    // from transactions.length < LIMIT (which breaks on exact multiples of LIMIT).
+    const countQuery = query.replace(/ ORDER BY [\s\S]*$/, '') + ` ORDER BY wt.id ASC LIMIT 1 OFFSET 999999999`;
+    const countParams = [...params];
+    const total = Number((db.prepare(countQuery).get(...countParams) as any)?.c) || 0;
+
     query += ` LIMIT ? OFFSET ?`;
     params.push(limit, offset);
     
     const transactions = db.prepare(query).all(...params);
 
-    res.json(transactions);
+    res.json({ transactions, total });
   } catch (error) {
     console.error('[Admin API] Error fetching transactions:', error);
     res.status(500).json({ error: 'خطا در دریافت تراکنش‌ها' });
+  }
+});
+
+// GET /api/admin/user-usage-summary (Aggregated per-user consumption report)
+// This is the "who consumed what" view. The raw transaction list cannot answer it:
+// it is paginated and mixes deposits/bonuses with usage rows.
+router.get('/user-usage-summary', (req, res) => {
+  try {
+    const search = req.query.search ? String(req.query.search).trim().toLowerCase() : '';
+
+    let query = `
+      SELECT
+        wt.userId AS userId,
+        u.name AS userName,
+        u.phone AS userPhone,
+        u.email AS userEmail,
+        COUNT(*) AS messageCount,
+        COALESCE(SUM(IFNULL(wt.promptTokens,0) + IFNULL(wt.completionTokens,0)), 0) AS totalTokens,
+        COALESCE(SUM(IFNULL(wt.promptTokens,0)), 0) AS promptTokens,
+        COALESCE(SUM(IFNULL(wt.completionTokens,0)), 0) AS completionTokens,
+        COALESCE(SUM(CASE WHEN wt.type = 'free_usage' THEN 1 ELSE 0 END), 0) AS freeMessages,
+        COALESCE(SUM(CASE WHEN wt.type = 'chat_usage' THEN ABS(wt.amount) ELSE 0 END), 0) AS paidToman,
+        COALESCE(SUM(CASE WHEN wt.type = 'image_usage' THEN ABS(wt.amount) ELSE 0 END), 0) AS imageToman,
+        COALESCE(SUM(CASE WHEN wt.type = 'chat_usage' THEN IFNULL(wt.costUsd,0)
+                          WHEN wt.type = 'free_usage' THEN IFNULL(wt.costUsd,0)
+                          ELSE 0 END), 0) AS costUsd,
+        MAX(wt.createdAt) AS lastUsedAt
+      FROM wallet_transactions wt
+      LEFT JOIN users u ON wt.userId = u.id
+      WHERE wt.type IN ('chat_usage', 'free_usage', 'image_usage')
+    `;
+    const params: any[] = [];
+
+    // Same search semantics as /wallet-transactions: distinguish a UC code from a
+    // phone number. Previously a numeric phone like '09126755014' matched
+    // "number > 10000" and was turned into a bogus u.id, returning zero rows.
+    if (search) {
+      const ucMatch = search.match(/^(?:uc-)?(\d+)$/);
+      const digits = ucMatch ? parseInt(ucMatch[1], 10) : NaN;
+      if (ucMatch && digits > 10000 && digits < 100000) {
+        // 'uc-10027' or '10027' -> user id 27
+        query += ` AND wt.userId = ?`;
+        params.push(digits - 10000);
+      } else if (/^\+?\d[\d\s-]{9,}$/.test(search)) {
+        // A real phone number: search the phone column, never treat it as a UC code.
+        const phoneLike = search.replace(/[\s-]/g, '');
+        // Three forms: as typed, without '+', and Iranian local (98 -> 0).
+        // A stored '+989126755014' must also be found by typing '09126755014'.
+        query += ` AND (IFNULL(u.phone,'') LIKE ? OR IFNULL(u.phone,'') LIKE ? OR IFNULL(u.phone,'') LIKE ?)`;
+        const localDigits = phoneLike.replace(/^\+/, '').replace(/^98/, '0');
+        params.push(`%${phoneLike}%`, `%${phoneLike.replace(/^\+/, '')}%`, `%${localDigits}%`);
+      } else {
+        query += ` AND (LOWER(IFNULL(u.name,'')) LIKE ? OR LOWER(IFNULL(u.email,'')) LIKE ? OR IFNULL(u.phone,'') LIKE ? OR IFNULL(u.telegramId,'') LIKE ? OR LOWER(IFNULL(wt.model,'')) LIKE ?)`;
+        const p = `%${search}%`;
+        params.push(p, p, p, p, p);
+      }
+    }
+
+    query += ` GROUP BY wt.userId ORDER BY totalTokens DESC`;
+
+    const rows = db.prepare(query).all(...params);
+    res.json(rows);
+  } catch (error) {
+    console.error('[Admin API] Error fetching user usage summary:', error);
+    res.status(500).json({ error: 'خطا در دریافت خلاصه مصرف کاربران' });
   }
 });
 
