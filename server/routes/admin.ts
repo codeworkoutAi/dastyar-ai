@@ -1,6 +1,7 @@
 import express from 'express';
 import db, { syncDatabase } from '../db/database';
 import { requireAuth } from '../middleware/auth';
+import { adminRateLimiter, adminReportRateLimiter, adminExternalQueryRateLimiter } from '../middleware/rateLimiter';
 import { bot, sendTelegramOrderSuccess } from '../telegram/bot';
 import { notifyOrderSuccessBySms } from '../services/kavenegarService';
 import { clearSitemapCache } from '../seo/sitemap';
@@ -20,8 +21,59 @@ const requireAdmin = (req: any, res: any, next: any) => {
   next();
 };
 
-// Apply auth and admin check to all admin routes
-router.use(requireAuth, requireAdmin);
+// Apply auth and admin check to all admin routes.
+// adminRateLimiter sits AFTER auth on purpose: keying the counter on the IP of an
+// unauthenticated flooder would let one attacker exhaust the budget for the real
+// admin's IP. Auth first means only authenticated admin traffic consumes quota.
+router.use(requireAuth, requireAdmin, adminRateLimiter);
+
+// ==========================================
+// SHARED HELPERS
+// ==========================================
+
+/**
+ * Never send a real provider key to the browser.
+ *
+ * The admin UI needs to know WHICH key is set (to render "configured" state and to
+ * let the operator leave the field untouched when editing a profile), but it must
+ * never receive the secret itself. AGENTS.md rule 3 is explicit: provider calls are
+ * server-side only. Returning `SELECT *` here used to leak every Gemini/Groq/
+ * router.cheap key into the client bundle at runtime, so a single XSS or a leaked
+ * admin token on the browser side exposed the whole key pool.
+ *
+ * The edit form already treats an empty apiKey as "keep the existing one" (see
+ * PUT /default-profiles/:id), so masking is safe for the round-trip.
+ */
+function maskApiKey(key?: string | null): string {
+  if (!key) return '';
+  const trimmed = String(key);
+  if (trimmed.length <= 8) return '••••';
+  return `${trimmed.slice(0, 4)}••••${trimmed.slice(-4)}`;
+}
+
+/** Strip secret fields from a default_profiles row before it leaves the server. */
+function sanitizeProfile(row: any): any {
+  if (!row) return row;
+  const { apiKey, ...rest } = row;
+  return {
+    ...rest,
+    apiKey: maskApiKey(apiKey),          // masked for display only
+    hasApiKey: !!apiKey,                  // the flag the UI actually needs
+    isApiKeyMasked: true,                 // tells the form not to re-submit the mask
+  };
+}
+
+// Destructive, irreversible, and unauthenticated by anything stronger than a JWT.
+// In production it is disabled outright: a single stray click, a replayed request or
+// a CSRF-style call would otherwise wipe every order, license and user wallet.
+// In dev/test it stays available, but only behind an explicit typed confirmation
+// that the server verifies, so a bare `curl -X POST /api/admin/reset-database`
+// is no longer enough.
+const RESET_CONFIRMATION_PHRASE = 'RESET-DB';
+
+function canResetDatabase(): boolean {
+  return process.env.NODE_ENV !== 'production' || process.env.ALLOW_ADMIN_DB_RESET === 'true';
+}
 
 
 
@@ -373,9 +425,20 @@ router.put('/orders/:id/status', (req, res) => {
 
     if (status === 'success') {
       if (order.productCategory === 'plan') {
-        const product = db.prepare('SELECT * FROM products WHERE id = ?').get(order.productId) as any;
-        const creditAmount = getPlanCreditAmount(product);
-        depositWallet(order.userId, creditAmount, `تایید سفارش ${product?.title || 'بسته تعرفه'} توسط مدیریت - سفارش ${id}`);
+        // Guard against double-crediting. depositWallet() credits the balance and
+        // writes its own transaction row; the `UPDATE orders` below is a separate
+        // statement. If anything failed between them, the order stayed 'pending'
+        // while the user already had the credit — and approving it again credited a
+        // second time. Approving an order that is ALREADY 'success' is therefore a
+        // no-op for credit purposes: the money has (or has not) already moved, and
+        // only the license/delivery fields may still need fixing.
+        if (order.paymentStatus !== 'success') {
+          const product = db.prepare('SELECT * FROM products WHERE id = ?').get(order.productId) as any;
+          const creditAmount = getPlanCreditAmount(product);
+          depositWallet(order.userId, creditAmount, `تایید سفارش ${product?.title || 'بسته تعرفه'} توسط مدیریت - سفارش ${id}`);
+        } else {
+          warning = 'این سفارش قبلاً تایید شده بود؛ اعتبار کاربر دوباره واریز نشد. در صورت نیاز به بررسی، تراکنش‌های کیف پول کاربر را مشاهده کنید.';
+        }
       } else if (order.productCategory !== 'package' && !licenseId) {
         // Atomic license assignment to prevent race conditions
         const availLicense = db.prepare(`
@@ -438,6 +501,33 @@ router.post('/orders/:id/assign-license', (req, res) => {
       return res.status(404).json({ error: 'سفارش یافت نشد.' });
     }
 
+    if (providedLicenseId) {
+      // Validate BEFORE releasing the previous license, so a rejected request
+      // cannot leave the order with no license at all.
+      //
+      // Previously the id was trusted blindly: any existing license could be
+      // pointed at this order regardless of which product it belonged to, and a
+      // license already sold to someone else could be re-sold here. The same
+      // `sold` row would then be referenced by two orders.
+      const target = db.prepare(
+        'SELECT id, productId, status FROM licenses WHERE id = ?'
+      ).get(providedLicenseId) as any;
+
+      if (!target) {
+        return res.status(404).json({ error: 'لایسنس انتخاب‌شده یافت نشد.' });
+      }
+      if (Number(target.productId) !== Number(order.productId)) {
+        return res.status(400).json({
+          error: 'لایسنس انتخاب‌شده متعلق به این محصول نیست و قابل تخصیص نیست.'
+        });
+      }
+      if (target.status === 'sold' && Number(target.id) !== Number(order.licenseId)) {
+        return res.status(400).json({
+          error: 'این لایسنس قبلاً به سفارش دیگری فروخته شده است. ابتدا سفارش مربوطه را اصلاح کنید.'
+        });
+      }
+    }
+
     // Release old license if already had one
     if (order.licenseId) {
       db.prepare('UPDATE licenses SET status = ? WHERE id = ?').run('available', order.licenseId);
@@ -498,12 +588,63 @@ router.delete('/orders/:id', (req, res) => {
 
 // POST /api/admin/reset-database
 // NOTE: No db.transaction() – embedded replica does not support it.
+//
+// This is the most destructive endpoint in the whole app: it deletes every order,
+// license, product, conversation, OTP and news row, then every user except the
+// caller. The only thing that used to stand between a stray click and total data
+// loss was a `window.confirm()` in the browser — which is not a control at all,
+// since any direct POST with an admin token skipped it entirely.
+//
+// Two independent guards are now enforced server-side:
+//   1. a typed confirmation phrase the server verifies (so a replayed/curl request
+//      without the phrase is rejected), and
+//   2. a hard block in production unless ALLOW_ADMIN_DB_RESET=true is set
+//      explicitly, so production data cannot be wiped by accident.
 router.post('/reset-database', (req, res) => {
   try {
+    if (!canResetDatabase()) {
+      console.error('[Admin API] BLOCKED reset-database attempt in production.', {
+        userId: (req as any).user?.id,
+        ip: req.ip,
+      });
+      return res.status(403).json({
+        error: 'پاکسازی دیتابیس در محیط عملیاتی غیرفعال است. برای اجرای آن باید متغیر محیطی ALLOW_ADMIN_DB_RESET فعال شود.'
+      });
+    }
+
+    const { confirm } = req.body || {};
+    if (confirm !== RESET_CONFIRMATION_PHRASE) {
+      return res.status(400).json({
+        error: `برای تأیید عملیات، عبارت «${RESET_CONFIRMATION_PHRASE}» را ارسال کنید.`
+      });
+    }
+
     const adminId = (req as any).user.id;
-    
+    const ip = req.ip;
+
+    // Audit log BEFORE mutating anything: this is unrecoverable, so the record of
+    // who triggered it must survive even if a later step throws.
+    console.warn('[Admin API] DESTRUCTIVE: admin reset-database executed', {
+      adminId,
+      ip,
+      at: new Date().toISOString(),
+    });
+
     // IMPORTANT: Order matters because of FOREIGN KEY constraints
-    const tables = ['orders', 'licenses', 'products', 'conversations', 'otps', 'news'];
+    // wallet_transactions and free_daily_usage are included on purpose. Leaving
+    // them behind while zeroing users.walletBalance produced reports where every
+    // user had a 0 balance but a full transaction history, so the finance and
+    // analytics tabs disagreed with each other and with the ledger.
+    const tables = [
+      'wallet_transactions',
+      'free_daily_usage',
+      'orders',
+      'licenses',
+      'products',
+      'conversations',
+      'otps',
+      'news',
+    ];
     for (const table of tables) {
       db.exec(`DELETE FROM ${table}`);
     }
@@ -521,7 +662,11 @@ router.post('/reset-database', (req, res) => {
 // GET /api/admin/users
 router.get('/users', (req, res) => {
   try {
-    const users = db.prepare('SELECT id, name, email, phone, telegramId, role, botState, createdAt FROM users ORDER BY id DESC').all();
+    // isArchived is returned so the UI can show archived accounts distinctly
+    // instead of silently making them disappear.
+    const users = db.prepare(
+      'SELECT id, name, email, phone, telegramId, role, botState, isArchived, createdAt FROM users ORDER BY id DESC'
+    ).all();
     res.json(users);
   } catch (error) {
     console.error('[Admin API] Error fetching users:', error);
@@ -529,26 +674,112 @@ router.get('/users', (req, res) => {
   }
 });
 
-// DELETE /api/admin/users/:id
+// DELETE /api/admin/users/:id  →  HARD DELETE (with full dependent cleanup)
+//
+// The admin's workflow is to create throwaway accounts, sign in with them, then
+// remove them — so "delete" has to mean the row is really gone. A soft archive
+// left the account sitting in the users table forever and did not match the
+// request.
+//
+// The original hard delete was still wrong, in the opposite direction: it removed
+// only the users row and left every dependent record behind. wallet_transactions
+// and orders are declared ON DELETE CASCADE, but SQLite does NOT enforce foreign
+// keys unless `PRAGMA foreign_keys = ON` is issued, and this project never issues
+// it. So the cascade never fired and the delete orphaned real rows: the ledger
+// kept the user's transactions with a userId that resolved to nothing, and the
+// finance/analytics tabs could no longer attribute that money to anyone.
+//
+// So the children are deleted explicitly, in an order that satisfies the declared
+// constraints, before the parent goes. Licenses are released back to stock rather
+// than deleted: they are shop inventory, not user data, and deleting them would
+// destroy unsold keys.
+//
+// `?archive=true` is still available for the rare case where the financial history
+// must be preserved; the UI uses the hard delete by default.
 router.delete('/users/:id', (req, res) => {
   try {
     const { id } = req.params;
-    
+    const archive = req.query.archive === 'true';
+
     // Prevent deleting the currently logged-in admin
     const adminId = (req as any).user.id;
-    if (parseInt(id) === adminId) {
+    if (parseInt(id, 10) === adminId) {
       return res.status(403).json({ error: 'شما نمی‌توانید اکانت خودتان را حذف کنید.' });
     }
 
-    const checkStmt = db.prepare('SELECT id FROM users WHERE id = ?');
-    if (!checkStmt.get(id)) {
+    const target = db.prepare('SELECT id, name, phone, email, role, isArchived FROM users WHERE id = ?').get(id) as any;
+    if (!target) {
       return res.status(404).json({ error: 'کاربر یافت نشد.' });
     }
 
+    // Never let one admin delete another admin account by accident.
+    if (target.role === 'admin') {
+      return res.status(403).json({ error: 'حذف حساب‌های مدیر مجاز نیست.' });
+    }
+
+    if (archive) {
+      db.prepare(`
+        UPDATE users
+        SET isArchived = 1,
+            phone = NULL,
+            email = NULL,
+            googleId = NULL,
+            telegramId = NULL,
+            passwordHash = NULL,
+            resetToken = NULL,
+            resetTokenExpiry = NULL
+        WHERE id = ?
+      `).run(id);
+      syncDatabase();
+      return res.json({
+        success: true,
+        archived: true,
+        message: 'کاربر بایگانی شد. سوابق مالی و سفارش‌های او حفظ شده است.'
+      });
+    }
+
+    // Audit log BEFORE mutating: this is unrecoverable.
+    console.warn('[Admin API] DESTRUCTIVE: permanent user delete', {
+      targetUserId: id,
+      targetName: target.name,
+      targetPhone: target.phone,
+      adminId,
+      ip: req.ip,
+      at: new Date().toISOString(),
+    });
+
+    // Inventory check, so the response can report exactly what was cleaned up.
+    const orderCount = Number((db.prepare('SELECT COUNT(*) as c FROM orders WHERE userId = ?').get(id) as any)?.c || 0);
+    const txCount = Number((db.prepare('SELECT COUNT(*) as c FROM wallet_transactions WHERE userId = ?').get(id) as any)?.c || 0);
+
+    // 1. Release any license this user holds back to sellable stock. The license
+    //    rows are shop inventory and must survive; only the claim is removed.
+    db.prepare(`
+      UPDATE licenses SET status = 'available'
+      WHERE id IN (SELECT licenseId FROM orders WHERE userId = ? AND licenseId IS NOT NULL)
+    `).run(id);
+
+    // 2. Orders, then wallet rows, then conversations. Explicit because SQLite
+    //    foreign-key cascades are inert without PRAGMA foreign_keys = ON.
+    //    free_daily_usage / free_image_usage are keyed by 'user:<id>' / userId
+    //    rather than by a real foreign key, so they are never cascaded at all.
+    db.prepare('DELETE FROM orders WHERE userId = ?').run(id);
+    db.prepare('DELETE FROM wallet_transactions WHERE userId = ?').run(id);
+    db.prepare('DELETE FROM conversations WHERE userId = ?').run(id);
+    db.prepare('DELETE FROM free_daily_usage WHERE id = ?').run(`user:${id}`);
+    db.prepare('DELETE FROM free_image_usage WHERE userId = ?').run(id);
+
+    // 3. Finally the parent row.
     db.prepare('DELETE FROM users WHERE id = ?').run(id);
+
     syncDatabase();
 
-    res.json({ success: true, message: 'کاربر با موفقیت حذف شد.' });
+    res.json({
+      success: true,
+      deleted: true,
+      cleaned: { orders: orderCount, transactions: txCount },
+      message: 'کاربر و تمام اطلاعات او (سفارش‌ها، تراکنش‌ها و گفتگوها) به‌طور کامل حذف شد.'
+    });
   } catch (error) {
     console.error('[Admin API] Error deleting user:', error);
     res.status(500).json({ error: 'خطا در حذف کاربر' });
@@ -559,7 +790,8 @@ router.delete('/users/:id', (req, res) => {
 router.get('/default-profiles', (req, res) => {
   try {
     const profiles = db.prepare('SELECT * FROM default_profiles ORDER BY orderIndex ASC, createdAt ASC').all();
-    res.json(profiles);
+    // apiKey is masked here: the client must never receive the real provider key.
+    res.json((profiles as any[]).map(sanitizeProfile));
   } catch (error) {
     console.error('[Admin API] Error fetching default profiles:', error);
     res.status(500).json({ error: 'خطا در دریافت پروفایل‌های پیش‌فرض' });
@@ -593,7 +825,7 @@ router.post('/default-profiles', (req, res) => {
     syncDatabase();
 
     const created = db.prepare('SELECT * FROM default_profiles WHERE id = ?').get(id);
-    res.status(201).json(created);
+    res.status(201).json(sanitizeProfile(created));
   } catch (error) {
     console.error('[Admin API] Error creating default profile:', error);
     res.status(500).json({ error: 'خطا در ایجاد پروفایل پیش‌فرض' });
@@ -611,7 +843,16 @@ router.put('/default-profiles/:id', (req, res) => {
       return res.status(404).json({ error: 'پروفایل پیش‌فرض یافت نشد.' });
     }
 
-    const newApiKey = apiKey !== undefined ? String(apiKey).trim() : existing.apiKey;
+    // The client only ever sees a masked key (see GET /default-profiles). If it
+    // echoes that mask straight back, treat the field as "unchanged" and keep the
+    // stored secret — otherwise editing a profile's name would overwrite the real
+    // key with the literal string "abcd••••wxyz".
+    const submittedKey = apiKey !== undefined ? String(apiKey).trim() : '';
+    const isMaskedEcho = submittedKey.includes('••••');
+    const newApiKey = (!submittedKey || isMaskedEcho)
+      ? existing.apiKey
+      : submittedKey;
+
     const stmt = db.prepare(`
       UPDATE default_profiles 
       SET name = ?, baseUrl = ?, apiKey = ?, modelName = ?, customHeaders = ?, role = ?, orderIndex = ?, isActive = ?, updatedAt = CURRENT_TIMESTAMP
@@ -631,7 +872,7 @@ router.put('/default-profiles/:id', (req, res) => {
     syncDatabase();
 
     const updated = db.prepare('SELECT * FROM default_profiles WHERE id = ?').get(id);
-    res.json(updated);
+    res.json(sanitizeProfile(updated));
   } catch (error) {
     console.error('[Admin API] Error updating default profile:', error);
     res.status(500).json({ error: 'خطا در ویرایش پروفایل پیش‌فرض' });
@@ -713,9 +954,14 @@ router.get('/financial-export', (req, res) => {
     let params: any[] = [];
     
     if (type === 'orders') {
+      // cardPan is intentionally NOT selected. The export used to include the full
+      // card number of every manual card-to-card order; a CSV is the easiest file
+      // to forward by accident. The last 4 digits are enough to reconcile.
       query = `
         SELECT o.id, o.userId, o.productId, o.amount, o.paymentStatus, o.paymentMethod, 
-               o.trackingNumber, o.authority, o.refId, o.cardPan, o.createdAt,
+               o.trackingNumber, o.authority, o.refId,
+               substr(IFNULL(o.cardPan,''), -4) as cardPanLast4,
+               o.createdAt,
                u.name as userName, u.phone as userPhone, u.email as userEmail,
                p.title as productTitle, p.category as productCategory
         FROM orders o
@@ -748,14 +994,21 @@ router.get('/financial-export', (req, res) => {
       params.push(to);
     }
     
-    query += ' ORDER BY createdAt DESC';
-    
+    // Hard row cap. This endpoint materialises every matching row into memory and
+    // then builds the entire CSV as one JS string; on a real dataset that is
+    // enough to exhaust the heap. Narrow the window with from/to instead.
+    const EXPORT_ROW_LIMIT = 10000;
+    query += ` ORDER BY createdAt DESC LIMIT ${EXPORT_ROW_LIMIT}`;
+
     const rows = db.prepare(query).all(...params) as any[];
-    
+
     if (rows.length === 0) {
       return res.status(404).json({ error: 'داده‌ای برای خروجی یافت نشد' });
     }
-    
+    if (rows.length >= EXPORT_ROW_LIMIT) {
+      console.warn(`[Admin API] financial-export hit the ${EXPORT_ROW_LIMIT}-row cap; output truncated.`);
+    }
+
     // Generate CSV
     const headers = Object.keys(rows[0]);
     const csvLines = [
@@ -763,7 +1016,13 @@ router.get('/financial-export', (req, res) => {
       ...rows.map(row => headers.map(h => {
         const val = row[h];
         if (val === null || val === undefined) return '';
-        const str = String(val).replace(/"/g, '""');
+        let str = String(val).replace(/"/g, '""');
+        // Neutralise spreadsheet formula injection. A cell starting with =, +, - or @
+        // is executed by Excel/Sheets on open; user-controlled fields (product
+        // title, description, tracking number) must not be able to run there.
+        if (/^[=+\-@\t\r]/.test(str)) {
+          str = `'${str}`;
+        }
         return str.includes(',') || str.includes('"') || str.includes('\n') ? `"${str}"` : str;
       }).join(','))
     ];
@@ -823,7 +1082,7 @@ router.get('/financial-summary', (req, res) => {
 });
 
 // GET /api/admin/provider-live-balances (Query live balance from proxy/provider APIs)
-router.get('/provider-live-balances', async (req, res) => {
+router.get('/provider-live-balances', adminExternalQueryRateLimiter, async (req, res) => {
   try {
     const profiles = db.prepare("SELECT id, name, modelName, baseUrl, apiKey FROM default_profiles WHERE isActive = 1").all() as any[];
     const uniqueKeys = new Map<string, any>();
@@ -918,7 +1177,7 @@ router.get('/provider-live-balances', async (req, res) => {
 });
 
 // GET /api/admin/analytics-summary (Aggregated charts and metrics data)
-router.get('/analytics-summary', (req, res) => {
+router.get('/analytics-summary', adminReportRateLimiter, (req, res) => {
   try {
     const period = (req.query.period as string) || '30d';
     let days = 30;
@@ -1217,7 +1476,7 @@ router.get('/wallet-transactions', (req, res) => {
 // GET /api/admin/user-usage-summary (Aggregated per-user consumption report)
 // This is the "who consumed what" view. The raw transaction list cannot answer it:
 // it is paginated and mixes deposits/bonuses with usage rows.
-router.get('/user-usage-summary', (req, res) => {
+router.get('/user-usage-summary', adminReportRateLimiter, (req, res) => {
   try {
     const search = req.query.search ? String(req.query.search).trim().toLowerCase() : '';
 
@@ -1301,7 +1560,9 @@ router.post('/users/:id/wallet', (req, res) => {
 
     db.prepare('UPDATE users SET walletBalance = ? WHERE id = ?').run(newBalance, id);
 
-    const txId = `tx-adm-${Date.now()}`;
+    // randomUUID, not Date.now(): two wallet operations issued in the same
+    // millisecond produced the same id, which collides on the primary key.
+    const txId = `tx-adm-${crypto.randomUUID()}`;
     db.prepare(`
       INSERT INTO wallet_transactions (id, userId, type, amount, balanceAfter, description)
       VALUES (?, ?, ?, ?, ?, ?)
@@ -1406,7 +1667,35 @@ router.post('/site-design/upload-image', (req, res) => {
       return res.status(400).json({ error: 'فرمت Base64 تصویر نامعتبر است.' });
     }
 
-    const ext = matches[1] === 'jpeg' ? 'jpg' : matches[1];
+    // `folder` used to flow straight into path.join, so "../../.." escaped
+    // public/images and let the request write to an arbitrary path on disk.
+    // `filename` was already sanitised; the directory was not. Allowlist it, the
+    // same way sectionKey is allowlisted in PUT /site-design/:sectionKey.
+    const ALLOWED_UPLOAD_FOLDERS = ['custom', 'hero', 'gallery', 'professions', 'products', 'blog', 'avatars', 'landing'];
+    if (!ALLOWED_UPLOAD_FOLDERS.includes(String(folder))) {
+      return res.status(400).json({
+        error: 'پوشه مقصد نامعتبر است. پوشه‌های مجاز: ' + ALLOWED_UPLOAD_FOLDERS.join('، ')
+      });
+    }
+
+    // Reject oversized images before decoding. express.json accepts 50mb bodies
+    // (see server/index.ts), so without this a single request could allocate
+    // ~37MB of Buffer for an image that is never valid.
+    const MAX_IMAGE_BYTES = 5 * 1024 * 1024; // 5MB
+    const approxBytes = Math.floor((matches[2].length * 3) / 4);
+    if (approxBytes > MAX_IMAGE_BYTES) {
+      return res.status(413).json({
+        error: 'حجم تصویر بیش از حد مجاز است (حداکثر ۵ مگابایت). لطفاً تصویر را فشرده سازید.'
+      });
+    }
+
+    const rawExt = matches[1].toLowerCase();
+    const ALLOWED_IMAGE_EXTS = ['png', 'jpg', 'jpeg', 'webp', 'gif', 'avif'];
+    if (!ALLOWED_IMAGE_EXTS.includes(rawExt)) {
+      return res.status(400).json({ error: 'فرمت تصویر پشتیبانی نمی‌شود.' });
+    }
+
+    const ext = rawExt === 'jpeg' ? 'jpg' : rawExt;
     const buffer = Buffer.from(matches[2], 'base64');
 
     const targetDir = path.join(process.cwd(), 'public', 'images', folder);

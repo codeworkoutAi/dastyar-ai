@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+﻿import React, { useState, useEffect, useRef } from 'react';
 import { Coins, TrendingUp, TrendingDown, Plus, Trash2, Save, CheckCircle2, AlertCircle, RefreshCw, Zap, DollarSign, Layers, User, Clock, Receipt,
  Gift,
  CreditCard,
@@ -193,45 +193,53 @@ const [welcomeBonusEnabled, setWelcomeBonusEnabled] = useState(true);
  if (gw.serverIp) setDetectedServerIp(gw.serverIp);
  setGatewayEnabled(gw.enabled);
  }
- } catch (err) {}
+ } catch (err: any) {
+   // Previously an empty catch: when /api/admin/settings or /gateway-status failed,
+   // the panel silently kept its hardcoded defaults (sellingRate 200000,
+   // welcomeBonus 50000). An operator would then hit "save" and overwrite the real
+   // rate/bonus with those defaults, with no indication anything had gone wrong.
+   console.error('Failed to load finance settings:', err);
+   setFeedback({
+     type: 'error',
+     text: 'بارگذاری تنظیمات مالی ناموفق بود. لطفاً صفحه را بازخوانی کنید؛ تا آن زمان مقادیر نمایش‌داده‌شده پیش‌فرض هستند و ذخیره نکنید.'
+   });
+ }
  };
 
  const handleSaveSettings = async () => {
  setActionLoading(true);
  setFeedback(null);
  try {
- await Promise.all([
- fetch('/api/admin/settings', {
- method: 'PUT',
- headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
- body: JSON.stringify({ key: 'api_dollar_rate', value: sellingRate })
- }),
- fetch('/api/admin/settings', {
- method: 'PUT',
- headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
- body: JSON.stringify({ key: 'welcome_bonus_amount', value: welcomeBonus })
- }),
- fetch('/api/admin/settings', {
- method: 'PUT',
- headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
- body: JSON.stringify({ key: 'welcome_bonus_enabled', value: String(welcomeBonusEnabled) })
- }),
- fetch('/api/admin/settings', {
- method: 'PUT',
- headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
- body: JSON.stringify({ key: 'free_key_pool', value: freeKeyPool })
- }),
- fetch('/api/admin/settings', {
- method: 'PUT',
- headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
- body: JSON.stringify({ key: 'zarinpal_merchant_id', value: zarinpalMerchantId.trim() })
- }),
- fetch('/api/admin/settings', {
- method: 'PUT',
- headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
- body: JSON.stringify({ key: 'zarinpal_sandbox', value: String(zarinpalSandbox) })
- })
- ]);
+  // A bare fetch() only rejects on network failure. A 400/401/403/500 from the
+  // server resolves normally, so the old Promise.all reported
+  // success even when every PUT had been rejected, leaving some keys written and
+  // others not. Each response is now checked.
+  const settingsToSave: Array<[string, string]> = [
+    ['api_dollar_rate', sellingRate],
+    ['welcome_bonus_amount', welcomeBonus],
+    ['welcome_bonus_enabled', String(welcomeBonusEnabled)],
+    ['free_key_pool', freeKeyPool],
+    ['zarinpal_merchant_id', zarinpalMerchantId.trim()],
+    ['zarinpal_sandbox', String(zarinpalSandbox)]
+  ];
+
+  await Promise.all(
+    settingsToSave.map(async ([key, value]) => {
+      const res = await fetch('/api/admin/settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+        body: JSON.stringify({ key, value })
+      });
+      if (!res.ok) {
+        let msg = 'خطا در ذخیره تنظیم ' + key;
+        try {
+          const data = await res.json();
+          if (data?.error) msg = data.error;
+        } catch { /* response had no JSON body */ }
+        throw new Error(msg);
+      }
+    })
+  );
 
  setGatewayEnabled(zarinpalMerchantId.trim().length >= 30);
  setFeedback({ type: 'success', text: 'تنظیمات با موفقیت ذخیره شد.' });

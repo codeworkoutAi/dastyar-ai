@@ -69,6 +69,9 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
  const [orderSearch, setOrderSearch] = useState('');
  const [orderStatusFilter, setOrderStatusFilter] = useState<'all' | 'pending' | 'success' | 'failed'>('all');
  const [selectedOrder, setSelectedOrder] = useState<any>(null);
+ // Mirrors selectedOrder.id so async handlers can read the CURRENT selection
+ // instead of the value captured when the handler was created.
+ const selectedOrderIdRef = useRef<string | null>(null);
  const [orderActionLoadingId, setOrderActionLoadingId] = useState<string | null>(null);
  const [customLicenseInput, setCustomLicenseInput] = useState('');
  const [orderFeedback, setOrderFeedback] = useState<{ type: 'success' | 'warning' | 'error'; text: string } | null>(null);
@@ -123,6 +126,9 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
  const [profileFormName, setProfileFormName] = useState('');
  const [profileFormBaseUrl, setProfileFormBaseUrl] = useState('');
  const [profileFormApiKey, setProfileFormApiKey] = useState('');
+ // Whether the stored profile already has a provider key. The server never
+ // returns the real value, so the form must not pretend the field is empty.
+ const [profileFormHasStoredKey, setProfileFormHasStoredKey] = useState(false);
  const [profileFormModelName, setProfileFormModelName] = useState('');
  const [profileFormCustomHeaders, setProfileFormCustomHeaders] = useState('');
  const [profileFormRole, setProfileFormRole] = useState<'default' | 'coding' | 'vision'>('default');
@@ -186,6 +192,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
  setProfileFormRole('default');
  setProfileFormOrderIndex(0);
  setProfileFormIsActive(true);
+ setProfileFormHasStoredKey(false);
  setEditingDefaultProfile(null);
  setIsAddingDefaultProfile(false);
  setFetchedModelsList([]);
@@ -198,7 +205,8 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
  setIsAddingDefaultProfile(true);
  setProfileFormName(profile.name || '');
  setProfileFormBaseUrl(profile.baseUrl || '');
- setProfileFormApiKey(profile.apiKey || '');
+ setProfileFormApiKey('');
+ setProfileFormHasStoredKey(!!profile.hasApiKey);
  setProfileFormModelName(profile.modelName || '');
  setProfileFormCustomHeaders(profile.customHeaders || '');
  setProfileFormRole(profile.role || 'default');
@@ -528,23 +536,31 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
  }
  };
 
- const handleDeleteUser = async (userId: string) => {
- if (!confirm('آیا از حذف این کاربر اطمینان دارید؟ این عمل غیرقابل بازگشت است.')) return;
- try {
- setError(null);
- const res = await fetch(`/api/admin/users/${userId}`, {
- method: 'DELETE',
- headers: { 'Authorization': `Bearer ${token}` }
- });
- if (!res.ok) {
- const data = await res.json();
- throw new Error(data.error || 'خطا در حذف کاربر');
- }
- fetchUsers();
- } catch (err: any) {
- setError(err.message || 'خطای سرور');
- }
- };
+  const removeUser = async (userId: string, mode: 'delete' | 'archive') => {
+  // 'delete'  = the account and all its data are really removed (the normal
+  //              action for throwaway test accounts).
+  // 'archive' = credentials are cleared but the financial history is kept.
+  const isDelete = mode === 'delete';
+  const message = isDelete
+    ? 'این کاربر و تمام اطلاعات او (سفارش‌ها، تراکنش‌ها و گفتگوها) برای همیشه حذف می‌شود. ادامه می‌دهید؟'
+    : 'بایگانی می‌شود: حساب از ورود خارج می‌شود اما سوابق مالی و سفارش‌های او حفظ می‌شود. ادامه می‌دهید؟';
+  if (!window.confirm(message)) return;
+  try {
+  setError(null);
+  const url = isDelete ? `/api/admin/users/${userId}` : `/api/admin/users/${userId}?archive=true`;
+  const res = await fetch(url, {
+  method: 'DELETE',
+  headers: { 'Authorization': `Bearer ${token}` }
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+  throw new Error(data.error || (isDelete ? 'خطا در حذف کاربر' : 'خطا در بایگانی کاربر'));
+  }
+  fetchUsers();
+  } catch (err: any) {
+  setError(err.message || 'خطای سرور');
+  }
+  };
 
  const fetchOrders = async () => {
  try {
@@ -592,11 +608,18 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
  }
 
  await fetchOrders();
- if (selectedOrder && selectedOrder.id === orderId) {
+ // Read the CURRENT selection through the ref, not the `selectedOrder` captured
+ // when this handler was created: the admin may have opened a different order
+ // during the awaits above, and the stale value would overwrite that panel.
+ if (selectedOrderIdRef.current === orderId) {
  const updated = await fetch(`/api/admin/orders/${orderId}`, {
- headers: { 'Authorization': `Bearer ${token}` }
+  headers: { 'Authorization': `Bearer ${token}` }
  }).then(r => r.json());
+ // Re-check after the round-trip for the same reason.
+ if (selectedOrderIdRef.current === orderId) {
+ selectedOrderIdRef.current = updated?.id != null ? String(updated.id) : null;
  setSelectedOrder(updated);
+ }
  }
  } catch (err: any) {
  setOrderFeedback({ type: 'error', text: err.message || 'خطای سرور' });
@@ -630,6 +653,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
  const updated = await fetch(`/api/admin/orders/${orderId}`, {
  headers: { 'Authorization': `Bearer ${token}` }
  }).then(r => r.json());
+ selectedOrderIdRef.current = updated?.id != null ? String(updated.id) : null;
  setSelectedOrder(updated);
  } catch (err: any) {
  setOrderFeedback({ type: 'error', text: err.message || 'خطا در تخصیص لایسنس' });
@@ -653,6 +677,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
 
  setOrderFeedback({ type: 'success', text: 'سفارش با موفقیت حذف شد.' });
  if (selectedOrder?.id === orderId) {
+ selectedOrderIdRef.current = null;
  setSelectedOrder(null);
  }
  setOrderToDelete(null);
@@ -1233,27 +1258,42 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
  )}
  </td>
  <td className="py-4 px-6">
- <span className={`px-2 py-1 rounded-full text-xs font-bold ${u.role === 'admin'
- ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-400'
- : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 border admin-border'
- }`}>
- {u.role === 'admin' ? 'مدیر' : 'کاربر'}
- </span>
+ {u.isArchived ? (
+  <span className="px-2 py-1 rounded-full text-xs font-bold bg-zinc-200 text-zinc-600 dark:bg-zinc-700 dark:text-zinc-300">
+    بایگانی‌شده
+  </span>
+ ) : (
+  <span className={`px-2 py-1 rounded-full text-xs font-bold ${u.role === 'admin'}
+    ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-400'
+    : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 border admin-border'`}>
+   {u.role === 'admin' ? 'مدیر' : 'کاربر'}
+  </span>
+ )}
  </td>
  <td className="py-4 px-6 text-xs text-zinc-500">
  {new Date(u.createdAt).toLocaleDateString('fa-IR')}
  </td>
  <td className="py-4 px-6">
- <div className="flex items-center justify-center">
- <button
- onClick={() => handleDeleteUser(u.id)}
- disabled={u.id === user?.id}
- className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-xl transition-colors disabled:opacity-30"
- title={u.id === user?.id ?"شما نمی‌توانید اکانت خودتان را حذف کنید" :"حذف کاربر"}
- >
- <Trash2 className="w-4 h-4" />
- </button>
- </div>
+  <div className="flex items-center justify-center gap-1">
+  {/* بایگانی: ورود بسته می‌شود ولی سوابق مالی می‌ماند */}
+  <button
+  onClick={() => removeUser(u.id, 'archive')}
+  disabled={u.id === user?.id || u.role === 'admin'}
+  className="p-2 text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/30 rounded-xl transition-colors disabled:opacity-30"
+  title="بایگانی کاربر (حفظ سوابق مالی)"
+  >
+  <BoxLinearIcon className="w-4 h-4" />
+  </button>
+  {/* حذف کامل: رکورد کاربر و تمام داده‌هایش واقعاً پاک می‌شود */}
+  <button
+  onClick={() => removeUser(u.id, 'delete')}
+  disabled={u.id === user?.id || u.role === 'admin'}
+  className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-xl transition-colors disabled:opacity-30"
+  title={u.id === user?.id ? "شما نمی‌توانید اکانت خودتان را حذف کنید" : "حذف کامل کاربر و تمام اطلاعات او"}
+  >
+  <Trash2 className="w-4 h-4" />
+  </button>
+  </div>
  </td>
  </tr>
  ))
@@ -1476,9 +1516,12 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
  className="w-full px-3.5 py-2.5 rounded-xl admin-input text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-blue-500 transition-colors"
  dir="ltr"
  />
- <span className="text-[10px] text-zinc-400 mt-1 block">
- این کلید در سرور ذخیره می‌شود و هرگز به مرورگر کاربران ارسال نخواهد شد.
- </span>
+ {editingDefaultProfile && !profileFormHasStoredKey && (
+  <span className="text-[10px] text-zinc-400 mt-1 block">
+   این کلید در سرور ذخیره می‌شود و هرگز به مرورگر کاربران ارسال نخواهد شد.
+  </span>
+ )}
+
  </div>
 
  <div>
@@ -1842,11 +1885,22 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
 
  <button
  onClick={async () => {
- if (window.confirm('آیا از پاک کردن کل دیتابیس مطمئن هستید؟ این عملیات غیرقابل بازگشت است!')) {
+ // The server requires this exact phrase in the request body and blocks the
+ // endpoint entirely in production unless ALLOW_ADMIN_DB_RESET=true. The old
+ // window.confirm() was not a control: any direct POST skipped it.
+ const phrase = window.prompt(
+  'برای تأیید این عملیات غیرقابل بازگشت، عبارت RESET-DB را تایپ کنید:'
+ );
+ if (phrase === null) return;
+ if (phrase.trim() !== 'RESET-DB') {
+  alert('عبارت تایپ‌شده مطابقت ندارد. عملیات لغو شد.');
+  return;
+ }
  try {
  const res = await fetch('/api/admin/reset-database', {
  method: 'POST',
- headers: { 'Authorization': `Bearer ${token}` }
+ headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+ body: JSON.stringify({ confirm: 'RESET-DB' })
  });
  const data = await res.json();
  if (res.ok) {
@@ -1857,7 +1911,6 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
  }
  } catch (e) {
  alert('خطا در ارتباط با سرور');
- }
  }
  }}
  className="px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl font-bold text-sm transition-colors flex items-center justify-center gap-2 max-w-xs shadow-red-600/20"
@@ -2992,6 +3045,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
  onClick={(e) => {
  e.stopPropagation();
  setSelectedOrder(o);
+ selectedOrderIdRef.current = o?.id != null ? String(o.id) : null;
  }}
  className="p-1.5 hover:bg-blue-50 dark:hover:bg-blue-900/30 text-zinc-500 hover:text-blue-600 dark:hover:text-blue-400 rounded-xl transition-colors"
  title="مشاهده جزئیات و مدیریت لایسنس"
@@ -3026,7 +3080,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
  <div className="fixed inset-0 z-[120] flex items-center justify-center p-3 sm:p-4 animate-fadeIn">
  <div
  className="absolute inset-0 bg-black/60 backdrop-blur-sm"
- onClick={() => setSelectedOrder(null)}
+ onClick={() => { selectedOrderIdRef.current = null; setSelectedOrder(null); }}
  />
 
  <div className="relative w-full max-w-xl admin-modal-container rounded-2xl overflow-hidden flex flex-col max-h-[90vh] animate-slideUpScale">
@@ -3052,7 +3106,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
  </div>
  </div>
  <button
- onClick={() => setSelectedOrder(null)}
+ onClick={() => { selectedOrderIdRef.current = null; setSelectedOrder(null); }}
  className="w-8 h-8 rounded-full flex items-center justify-center  text-zinc-500 transition-colors"
  >
  <X className="w-5 h-5" />
@@ -3227,7 +3281,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
  {/* Modal Footer */}
  <div className="p-4 border-t admin-border  flex items-center justify-end shrink-0">
  <button
- onClick={() => setSelectedOrder(null)}
+ onClick={() => { selectedOrderIdRef.current = null; setSelectedOrder(null); }}
  className="px-5 py-2.5 admin-btn-secondary text-zinc-700 dark:text-zinc-200 rounded-xl text-xs font-bold transition-colors"
  >
  بستن

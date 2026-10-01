@@ -83,6 +83,14 @@ export function initializeSchema() {
         console.log('[Database] Adding hasReceivedWelcomeBonus column to users table...');
         db.exec("ALTER TABLE users ADD COLUMN hasReceivedWelcomeBonus INTEGER DEFAULT 0;");
       }
+      // Soft-delete marker. Admin user removal is an ARCHIVE, not a hard DELETE:
+      // orders, wallet_transactions and sold licenses are financial records that
+      // must keep resolving to a real user row, otherwise the finance and
+      // analytics tabs report orphaned money with no owner.
+      if (usersTableInfo.length > 0 && !usersTableInfo.some(col => col.name === 'isArchived')) {
+        console.log('[Database] Adding isArchived column to users table...');
+        db.exec("ALTER TABLE users ADD COLUMN isArchived INTEGER DEFAULT 0;");
+      }
     } catch (e) {
       console.error('[Database] Failed to add wallet columns to users:', e);
     }
