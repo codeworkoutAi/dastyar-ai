@@ -612,23 +612,23 @@ export const CustomProviderCards: React.FC<CustomProviderCardsProps> = ({
  <div className="flex items-center justify-between gap-2 text-xs">
  <div className="flex items-center gap-1.5 font-mono min-w-0 flex-1">
  <ChartOutlineIcon className="w-3.5 h-3.5 shrink-0 text-zinc-400 dark:text-zinc-500" />
- <span className="truncate clay-btn-secondary text-zinc-700 dark:text-zinc-300 px-1.5 py-0.5 rounded text-[11px]" title={profile.modelName}>
+ <span className="truncate clay-btn-secondary text-zinc-700 dark:text-zinc-300 px-1.5 py-0.5 rounded type-badge" title={profile.modelName}>
  {profile.modelName || 'بدون مدل'}
  </span>
  </div>
  {profile.isSystemDefault ? (
- <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 shrink-0">
+ <span className="type-badge font-bold px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 shrink-0">
  رایگان سیستم
  </span>
  ) : (
- <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-zinc-500/10 text-zinc-600 dark:text-zinc-400 border border-zinc-500/20 shrink-0">
+ <span className="type-badge font-bold px-2 py-0.5 rounded-full bg-zinc-500/10 text-zinc-600 dark:text-zinc-400 border border-zinc-500/20 shrink-0">
  شخصی
  </span>
  )}
  </div>
  <div className="flex items-center gap-1.5 text-xs text-zinc-500 dark:text-zinc-400 font-mono truncate" dir="ltr">
  <LinkOutlineIcon className="w-3.5 h-3.5 shrink-0 text-zinc-400 dark:text-zinc-500" />
- <span className="truncate text-[10.5px]" title={profile.baseUrl}>
+ <span className="truncate type-badge" title={profile.baseUrl}>
  {profile.baseUrl ? profile.baseUrl.replace(/^https?:\/\//, '') : 'بدون آدرس'}
  </span>
  </div>
@@ -707,7 +707,7 @@ export const CustomProviderCards: React.FC<CustomProviderCardsProps> = ({
  className="flex items-center gap-1.5 px-2 py-1 rounded bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
  title="خروجی گرفتن از کل لیست به صورت فایل متنی با مشخصات کامل"
  >
- <DownloadOutlineIcon className="w-3 h-3" /> <span className="text-[10px]">خروجی لیست</span>
+ <DownloadOutlineIcon className="w-3 h-3" /> <span className="type-badge">خروجی لیست</span>
  </button>
  <span className="text-zinc-700 dark:text-zinc-500 group-open:rotate-180 transition-transform">▼</span>
  </div>
@@ -742,7 +742,7 @@ export const CustomProviderCards: React.FC<CustomProviderCardsProps> = ({
  <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-1.5 mb-3" dir="rtl">
  <button type="button"
  onClick={() => setActiveTag('all')}
- className={`flex items-center justify-center sm:justify-start gap-1.5 px-2.5 sm:px-3 py-2 sm:py-1.5 rounded-xl sm:rounded-full text-[11px] font-medium cursor-pointer transition-colors border select-none w-full sm:w-auto truncate ${
+ className={`flex items-center justify-center sm:justify-start gap-1.5 px-2.5 sm:px-3 py-2 sm:py-1.5 rounded-xl sm:rounded-full type-badge font-medium cursor-pointer transition-colors border select-none w-full sm:w-auto truncate ${
  activeTag === 'all' ? 'bg-zinc-700 text-zinc-900 dark:text-zinc-100 border-zinc-500 shadow-sm' : 'clay-surface text-zinc-700 dark:text-zinc-400 border-[var(--card-border)]  hover:border-zinc-300 '
  }`}
  >
@@ -750,7 +750,7 @@ export const CustomProviderCards: React.FC<CustomProviderCardsProps> = ({
  </button>
  <button type="button"
  onClick={() => setActiveTag(activeTag === 'coding' ? 'all' : 'coding')}
- className={`flex items-center justify-center sm:justify-start gap-1.5 px-2.5 sm:px-3 py-2 sm:py-1.5 rounded-xl sm:rounded-full text-[11px] font-medium cursor-pointer transition-colors border select-none w-full sm:w-auto truncate ${
+ className={`flex items-center justify-center sm:justify-start gap-1.5 px-2.5 sm:px-3 py-2 sm:py-1.5 rounded-xl sm:rounded-full type-badge font-medium cursor-pointer transition-colors border select-none w-full sm:w-auto truncate ${
  activeTag === 'coding' ? 'bg-cyan-500/25 text-cyan-300 border-cyan-500/40 shadow-sm' : 'clay-surface text-zinc-700 dark:text-zinc-400 border-[var(--card-border)]  hover:border-zinc-300 '
  }`}
  >
@@ -758,7 +758,7 @@ export const CustomProviderCards: React.FC<CustomProviderCardsProps> = ({
  </button>
  <button type="button"
  onClick={() => setActiveTag(activeTag === 'vision' ? 'all' : 'vision')}
- className={`flex items-center justify-center sm:justify-start gap-1.5 px-2.5 sm:px-3 py-2 sm:py-1.5 rounded-xl sm:rounded-full text-[11px] font-medium cursor-pointer transition-colors border select-none w-full sm:w-auto truncate ${
+ className={`flex items-center justify-center sm:justify-start gap-1.5 px-2.5 sm:px-3 py-2 sm:py-1.5 rounded-xl sm:rounded-full type-badge font-medium cursor-pointer transition-colors border select-none w-full sm:w-auto truncate ${
  activeTag === 'vision' ? 'bg-amber-500/25 text-amber-300 border-amber-500/40 shadow-sm' : 'clay-surface text-zinc-700 dark:text-zinc-400 border-[var(--card-border)]  hover:border-zinc-300 '
  }`}
  >
@@ -766,7 +766,7 @@ export const CustomProviderCards: React.FC<CustomProviderCardsProps> = ({
  </button>
  <button type="button"
  onClick={() => setActiveTag(activeTag === 'reasoning' ? 'all' : 'reasoning')}
- className={`flex items-center justify-center sm:justify-start gap-1.5 px-2.5 sm:px-3 py-2 sm:py-1.5 rounded-xl sm:rounded-full text-[11px] font-medium cursor-pointer transition-colors border select-none w-full sm:w-auto truncate ${
+ className={`flex items-center justify-center sm:justify-start gap-1.5 px-2.5 sm:px-3 py-2 sm:py-1.5 rounded-xl sm:rounded-full type-badge font-medium cursor-pointer transition-colors border select-none w-full sm:w-auto truncate ${
  activeTag === 'reasoning' ? 'bg-purple-500/25 text-purple-300 border-purple-500/40 shadow-sm' : 'clay-surface text-zinc-700 dark:text-zinc-400 border-[var(--card-border)]  hover:border-zinc-300 '
  }`}
  >
@@ -774,7 +774,7 @@ export const CustomProviderCards: React.FC<CustomProviderCardsProps> = ({
  </button>
  <button type="button"
  onClick={() => setActiveTag(activeTag === 'fast' ? 'all' : 'fast')}
- className={`flex items-center justify-center sm:justify-start gap-1.5 px-2.5 sm:px-3 py-2 sm:py-1.5 rounded-xl sm:rounded-full text-[11px] font-medium cursor-pointer transition-colors border select-none w-full sm:w-auto truncate ${
+ className={`flex items-center justify-center sm:justify-start gap-1.5 px-2.5 sm:px-3 py-2 sm:py-1.5 rounded-xl sm:rounded-full type-badge font-medium cursor-pointer transition-colors border select-none w-full sm:w-auto truncate ${
  activeTag === 'fast' ? 'bg-emerald-500/25 text-emerald-300 border-emerald-500/40 shadow-sm' : 'clay-surface text-zinc-700 dark:text-zinc-400 border-[var(--card-border)]  hover:border-zinc-300 '
  }`}
  >
@@ -782,7 +782,7 @@ export const CustomProviderCards: React.FC<CustomProviderCardsProps> = ({
  </button>
  <button type="button"
  onClick={() => setActiveTag(activeTag === 'free' ? 'all' : 'free')}
- className={`flex items-center justify-center sm:justify-start gap-1.5 px-2.5 sm:px-3 py-2 sm:py-1.5 rounded-xl sm:rounded-full text-[11px] font-medium cursor-pointer transition-colors border select-none w-full sm:w-auto truncate ${
+ className={`flex items-center justify-center sm:justify-start gap-1.5 px-2.5 sm:px-3 py-2 sm:py-1.5 rounded-xl sm:rounded-full type-badge font-medium cursor-pointer transition-colors border select-none w-full sm:w-auto truncate ${
  activeTag === 'free' ? 'bg-emerald-500/25 text-emerald-300 border-emerald-500/40 shadow-sm' : 'clay-surface text-zinc-700 dark:text-zinc-400 border-[var(--card-border)]  hover:border-zinc-300 '
  }`}
  >
@@ -822,12 +822,12 @@ export const CustomProviderCards: React.FC<CustomProviderCardsProps> = ({
  {m.name || m.id}
  </span>
  {meta.isRecommended && (
- <span className="flex items-center gap-1 bg-amber-500/15 text-amber-400 border border-amber-500/30 text-[9px] px-1.5 py-0.5 rounded font-medium shrink-0">
+ <span className="flex items-center gap-1 bg-amber-500/15 text-amber-400 border border-amber-500/30 type-badge px-1.5 py-0.5 rounded font-medium shrink-0">
  <StarOutlineIcon className="w-2.5 h-2.5 fill-amber-400" /> پیشنهادی
  </span>
  )}
  {meta.contextFormatted && (
- <span className="bg-indigo-500/10 text-indigo-300 border border-indigo-500/25 text-[9px] px-1.5 py-0.5 rounded font-mono shrink-0">
+ <span className="bg-indigo-500/10 text-indigo-300 border border-indigo-500/25 type-badge px-1.5 py-0.5 rounded font-mono shrink-0">
  {meta.contextFormatted}
  </span>
  )}
@@ -835,48 +835,48 @@ export const CustomProviderCards: React.FC<CustomProviderCardsProps> = ({
  {/* Capability Badges (Multi-tag) */}
  <div className="flex items-center gap-1 shrink-0 flex-wrap justify-end">
  {meta.isFree && (
- <span className="flex items-center gap-1 bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 text-[9px] px-1.5 py-0.5 rounded font-medium">
+ <span className="flex items-center gap-1 bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 type-badge px-1.5 py-0.5 rounded font-medium">
  <StarsOutlineIcon className="w-2.5 h-2.5" /> رایگان
  </span>
  )}
  {meta.tags.map((t, idx) => {
  if (t.type === 'coding') {
  return (
- <span key={idx} className="flex items-center gap-1 bg-cyan-500/15 text-cyan-400 border border-cyan-500/30 text-[9px] px-1.5 py-0.5 rounded font-medium">
+ <span key={idx} className="flex items-center gap-1 bg-cyan-500/15 text-cyan-400 border border-cyan-500/30 type-badge px-1.5 py-0.5 rounded font-medium">
  <CodeOutlineIcon className="w-2.5 h-2.5" /> {t.label}
  </span>
  );
  }
  if (t.type === 'reasoning') {
  return (
- <span key={idx} className="flex items-center gap-1 bg-purple-500/15 text-purple-400 border border-purple-500/30 text-[9px] px-1.5 py-0.5 rounded font-medium">
+ <span key={idx} className="flex items-center gap-1 bg-purple-500/15 text-purple-400 border border-purple-500/30 type-badge px-1.5 py-0.5 rounded font-medium">
  <BrainOutlineIcon className="w-2.5 h-2.5" /> {t.label}
  </span>
  );
  }
  if (t.type === 'vision') {
  return (
- <span key={idx} className="flex items-center gap-1 bg-amber-500/15 text-amber-400 border border-amber-500/30 text-[9px] px-1.5 py-0.5 rounded font-medium">
+ <span key={idx} className="flex items-center gap-1 bg-amber-500/15 text-amber-400 border border-amber-500/30 type-badge px-1.5 py-0.5 rounded font-medium">
  <EyeOutlineIcon className="w-2.5 h-2.5" /> {t.label}
  </span>
  );
  }
  if (t.type === 'fast') {
  return (
- <span key={idx} className="flex items-center gap-1 bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 text-[9px] px-1.5 py-0.5 rounded font-medium">
+ <span key={idx} className="flex items-center gap-1 bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 type-badge px-1.5 py-0.5 rounded font-medium">
  <BoltOutlineIcon className="w-2.5 h-2.5" /> {t.label}
  </span>
  );
  }
  if (t.type === 'creative') {
  return (
- <span key={idx} className="flex items-center gap-1 bg-rose-500/15 text-rose-400 border border-rose-500/30 text-[9px] px-1.5 py-0.5 rounded font-medium">
+ <span key={idx} className="flex items-center gap-1 bg-rose-500/15 text-rose-400 border border-rose-500/30 type-badge px-1.5 py-0.5 rounded font-medium">
  <StarsOutlineIcon className="w-2.5 h-2.5" /> {t.label}
  </span>
  );
  }
  return (
- <span key={idx} className="flex items-center gap-1 bg-blue-500/10 text-blue-400 border border-blue-500/20 text-[9px] px-1.5 py-0.5 rounded font-medium">
+ <span key={idx} className="flex items-center gap-1 bg-blue-500/10 text-blue-400 border border-blue-500/20 type-badge px-1.5 py-0.5 rounded font-medium">
  <DocumentTextOutlineIcon className="w-2.5 h-2.5" /> {t.label}
  </span>
  );
@@ -885,9 +885,9 @@ export const CustomProviderCards: React.FC<CustomProviderCardsProps> = ({
  </div>
 
  {/* Bottom Row: Description + Technical ID */}
- <div className="flex items-center justify-between text-[11px] text-zinc-700 dark:text-zinc-400 pt-0.5">
- <span className="text-zinc-700 dark:text-zinc-400 truncate text-[11px] leading-relaxed">{meta.description}</span>
- <span className="font-mono text-[10px] text-zinc-700 dark:text-zinc-500 truncate mr-2 clay-surface px-1.5 py-0.5 rounded border border-[var(--card-border)] shrink-0" dir="ltr">
+ <div className="flex items-center justify-between type-badge text-zinc-700 dark:text-zinc-400 pt-0.5">
+ <span className="text-zinc-700 dark:text-zinc-400 truncate type-badge leading-relaxed">{meta.description}</span>
+ <span className="font-mono type-badge text-zinc-700 dark:text-zinc-500 truncate mr-2 clay-surface px-1.5 py-0.5 rounded border border-[var(--card-border)] shrink-0" dir="ltr">
  {m.id}
  </span>
  </div>
@@ -898,7 +898,7 @@ export const CustomProviderCards: React.FC<CustomProviderCardsProps> = ({
  </>
  )}
  </div>
- <div className="text-[10px] text-zinc-700 dark:text-zinc-500 mt-2.5 text-center">برای انتخاب مدل روی آن کلیک کنید.</div>
+ <div className="type-badge text-zinc-700 dark:text-zinc-500 mt-2.5 text-center">برای انتخاب مدل روی آن کلیک کنید.</div>
  </div>
  </details>
  </div>

@@ -213,13 +213,13 @@ export const Sidebar: React.FC = React.memo(() => {
                                     deleteConversation(conv.id);
                                     setConfirmDeleteId(null);
                                 }}
-                                className="px-2 py-1 rounded-btn bg-[var(--color-error-bg)] hover:bg-[var(--color-error-bg)]/80 text-[var(--color-error-text)] font-bold text-[11px] cursor-pointer"
+                                className="px-2 py-1 rounded-btn bg-[var(--color-error-bg)] hover:bg-[var(--color-error-bg)]/80 text-[var(--color-error-text)] font-bold type-badge cursor-pointer"
                             >
                                 بله
                             </button>
                             <button
                                 onClick={() => setConfirmDeleteId(null)}
-                                className="px-2 py-1 rounded-btn bg-[var(--color-input-bg)] hover:bg-[var(--color-input-bg)]/80 text-[var(--color-text-main)] dark:text-[var(--color-text-main)] text-[11px] cursor-pointer"
+                                className="px-2 py-1 rounded-btn bg-[var(--color-input-bg)] hover:bg-[var(--color-input-bg)]/80 text-[var(--color-text-main)] dark:text-[var(--color-text-main)] type-badge cursor-pointer"
                             >
                                 خیر
                             </button>
@@ -228,7 +228,7 @@ export const Sidebar: React.FC = React.memo(() => {
                     ) : (
                         <>
                             <div className="flex items-center gap-2 overflow-hidden flex-1 min-w-0">
-                                <span className={`text-xs sm:text-[13px] truncate ${isActive ? 'font-bold text-zinc-900 dark:text-zinc-100' : 'text-zinc-700 dark:text-zinc-300'}`}>
+                                <span className={`type-secondary truncate ${isActive ? 'font-bold text-zinc-900 dark:text-zinc-100' : 'text-zinc-700 dark:text-zinc-300'}`}>
                                     {conv.title}
                                 </span>
                             </div>
@@ -293,12 +293,12 @@ export const Sidebar: React.FC = React.memo(() => {
 
                 {/* Date, Time, and Message Count Metadata */}
                 {!isEditing && !isDeleting && (
-                    <div className="flex items-center justify-between text-[11px] text-zinc-700 dark:text-zinc-400 mt-1.5">
+                    <div className="flex items-center justify-between type-badge text-zinc-700 dark:text-zinc-400 mt-1.5">
                         <span className="flex items-center gap-1">
                             <MessageSquare className="w-3 h-3 opacity-60" />
                             <span>{formattedMsgCount} پیام</span>
                         </span>
-                        <span className="shrink-0 font-medium text-[10px]">
+                        <span className="shrink-0 font-medium type-badge">
                             {formatPersianRelativeTime(conv.updatedAt || conv.createdAt, usePersianDigits)}
                         </span>
                     </div>
@@ -349,14 +349,14 @@ export const Sidebar: React.FC = React.memo(() => {
                                         <span className="text-xs font-bold text-zinc-900 dark:text-zinc-100 truncate" dir={user?.name ? 'rtl' : 'ltr'}>
                                             {user?.name || user?.phone || user?.email}
                                         </span>
-                                        <span className="text-[10px] text-zinc-500 dark:text-zinc-400 font-medium">
+                                        <span className="type-badge text-zinc-500 dark:text-zinc-400 font-medium">
                                             {user?.role === 'admin' ? 'مدیر سیستم' : 'کاربر عادی'}
                                         </span>
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-1.5 shrink-0">
                                     {user?.role === 'admin' && (
-                                        <span className="text-[9px] px-1.5 py-0.5 rounded-md bg-[var(--color-accent-primary)]/15 text-[var(--color-accent-text)] dark:text-[var(--color-accent-text)] font-bold">
+                                        <span className="type-badge px-1.5 py-0.5 rounded-md bg-[var(--color-accent-primary)]/15 text-[var(--color-accent-text)] dark:text-[var(--color-accent-text)] font-bold">
                                             ادمین
                                         </span>
                                     )}
@@ -408,7 +408,7 @@ export const Sidebar: React.FC = React.memo(() => {
             <span className="text-xs font-bold text-[var(--color-text-main)] truncate" dir={user?.name ? 'rtl' : 'ltr'}>
                 {user?.name || user?.phone || user?.email}
             </span>
-            <span className="text-[10px] text-[var(--color-accent-text)] dark:text-[var(--color-accent-text)] font-bold">
+            <span className="type-badge text-[var(--color-accent-text)] dark:text-[var(--color-accent-text)] font-bold">
                 {user?.role === 'admin' ? 'مدیر سیستم' : 'کاربر عادی'}
             </span>
         </div>
@@ -543,7 +543,7 @@ export const Sidebar: React.FC = React.memo(() => {
                                 <Plus className="w-4 h-4 transition-transform group-hover:rotate-90 group-active:scale-95" strokeWidth={2.5} />
                                 <span>گفتگوی جدید</span>
                             </div>
-                            <span className="text-[10px] opacity-0 group-hover:opacity-100 font-mono dir-ltr font-normal px-1 py-0.5 rounded text-zinc-400 dark:text-zinc-500 transition-opacity">
+                            <span className="type-badge opacity-0 group-hover:opacity-100 font-mono dir-ltr font-normal px-1 py-0.5 rounded text-zinc-400 dark:text-zinc-500 transition-opacity">
                                 Ctrl+K
                             </span>
                         </button>
@@ -591,7 +591,7 @@ export const Sidebar: React.FC = React.memo(() => {
                             <span className="text-xs font-bold text-[var(--color-text-main)]">تاریخچه گفتگوها</span>
                         </div>
                         {conversations.length > 0 && (
-                            <span className="text-[10px] font-medium text-[var(--color-text-dim)] bg-[var(--color-input-bg)] dark:bg-[var(--color-input-bg)] px-2 py-0.5 rounded-badge border border-[var(--card-border)]">
+                            <span className="type-badge font-medium text-[var(--color-text-dim)] bg-[var(--color-input-bg)] dark:bg-[var(--color-input-bg)] px-2 py-0.5 rounded-badge border border-[var(--card-border)]">
                                 {usePersianDigits ? toPersianDigits(conversations.length) : conversations.length} گفتگو
                             </span>
                         )}
@@ -607,7 +607,7 @@ export const Sidebar: React.FC = React.memo(() => {
                             <div className="flex items-center gap-1.5">
                                 <PinBoldIcon className="w-3.5 h-3.5" />
                                 <span>گفتگوهای سنجاق شده</span>
-                                <span className="text-[10px] font-medium text-amber-400/90 bg-[var(--color-accent-primary)]/10 px-1.5 py-0.5 rounded-badge">
+                                <span className="type-badge font-medium text-amber-400/90 bg-[var(--color-accent-primary)]/10 px-1.5 py-0.5 rounded-badge">
                                     {usePersianDigits ? toPersianDigits(pinnedConversations.length) : pinnedConversations.length}
                                 </span>
                             </div>
@@ -633,7 +633,7 @@ export const Sidebar: React.FC = React.memo(() => {
                                         <div className="flex items-center gap-1.5">
                                             <CalendarLinearIcon className="w-3.5 h-3.5 text-[var(--color-text-dim)] group-hover:text-[var(--color-text-main)] dark:group-hover:text-[var(--color-text-main)]" />
                                             <span>{group.label}</span>
-                                            <span className="text-[10px] font-medium text-[var(--color-text-dim)] bg-[var(--color-input-bg)] dark:bg-[var(--color-input-bg)] px-1.5 py-0.5 rounded-badge">
+                                            <span className="type-badge font-medium text-[var(--color-text-dim)] bg-[var(--color-input-bg)] dark:bg-[var(--color-input-bg)] px-1.5 py-0.5 rounded-badge">
                                                 {usePersianDigits ? toPersianDigits(group.items.length) : group.items.length}
                                             </span>
                                         </div>
@@ -660,7 +660,7 @@ export const Sidebar: React.FC = React.memo(() => {
                                 <div className="space-y-2">
                                     <StarsMinimalisticBoldIcon className="w-8 h-8 mx-auto text-[var(--color-accent-primary)] opacity-60" />
                                     <p className="text-xs font-semibold text-[var(--color-text-main)]">تاریخچه گفتگوها خالی است</p>
-                                    <p className="text-[11px] text-[var(--color-text-muted)]">یک گفتگوی جدید را آغاز کنید</p>
+                                    <p className="type-badge text-[var(--color-text-muted)]">یک گفتگوی جدید را آغاز کنید</p>
                                 </div>
                             )}
                         </div>
@@ -675,7 +675,7 @@ export const Sidebar: React.FC = React.memo(() => {
                                 <Coins className="w-4 h-4" />
                             </div>
                             <div className="flex flex-col text-right">
-                                <span className="text-[10px] text-[var(--color-text-dim)] font-medium">کیف پول</span>
+                                <span className="type-badge text-[var(--color-text-dim)] font-medium">کیف پول</span>
                                 <span className="text-xs font-bold text-[var(--color-text-main)]">
                                     {usePersianDigits
                                         ? toPersianDigits((user?.walletBalance || 0).toLocaleString('fa-IR'))
@@ -688,7 +688,7 @@ export const Sidebar: React.FC = React.memo(() => {
                                 setIsWalletOpen(true);
                                 if (window.innerWidth < 768) setSidebarOpen(false);
                             }}
-                            className="px-2.5 py-1 text-[11px] font-bold bg-[var(--color-accent-primary)] hover:bg-[var(--color-accent-hover)] text-white rounded-btn transition-all shadow-sm cursor-pointer"
+                            className="px-2.5 py-1 type-badge font-bold bg-[var(--color-accent-primary)] hover:bg-[var(--color-accent-hover)] text-white rounded-btn transition-all shadow-sm cursor-pointer"
                         >
                             شارژ
                         </button>
@@ -697,7 +697,7 @@ export const Sidebar: React.FC = React.memo(() => {
 
                 {/* Bottom Storage & Metrics (فوتر خلوت) */}
                 <div className="mx-3 mb-3 p-2 rounded-xl shrink-0 border border-transparent">
-                    <div className="flex items-center justify-between text-[10px] sm:text-[11px] text-zinc-500 dark:text-zinc-400 px-1">
+                    <div className="flex items-center justify-between type-badge text-zinc-500 dark:text-zinc-400 px-1">
                         <div className="flex items-center gap-1.5 truncate">
                             <DatabaseLinearIcon className="w-3.5 h-3.5 text-blue-500 shrink-0" />
                             <span>حافظه: {usePersianDigits ? toPersianDigits(storageStats.usedKb) : storageStats.usedKb} KB</span>
@@ -724,7 +724,7 @@ export const Sidebar: React.FC = React.memo(() => {
 
                     {showClearConfirm && (
                         <div className="mt-2 p-2 rounded-xl bg-red-950/40 border border-red-800/60 space-y-1.5 text-xs animate-fadeIn">
-                            <div className="flex items-center gap-1.5 text-red-400 font-bold text-[11px]">
+                            <div className="flex items-center gap-1.5 text-red-400 font-bold type-badge">
                                 <AlertTriangle className="w-3.5 h-3.5" />
                                 <span>حذف تمام تاریخچه؟</span>
                             </div>
@@ -734,13 +734,13 @@ export const Sidebar: React.FC = React.memo(() => {
                                         clearAllConversations();
                                         setShowClearConfirm(false);
                                     }}
-                                    className="flex-1 py-1 px-2 rounded-lg bg-red-600 text-white font-bold text-[10px] hover:bg-red-500 transition-colors cursor-pointer"
+                                    className="flex-1 py-1 px-2 rounded-lg bg-red-600 text-white font-bold type-badge hover:bg-red-500 transition-colors cursor-pointer"
                                 >
                                     بله، حذف کن
                                 </button>
                                 <button
                                     onClick={() => setShowClearConfirm(false)}
-                                    className="flex-1 py-1 px-2 rounded-lg bg-zinc-200  text-zinc-700 dark:text-zinc-300 text-[10px] hover:bg-zinc-300 dark:hover:bg-zinc-700 transition-colors cursor-pointer"
+                                    className="flex-1 py-1 px-2 rounded-lg bg-zinc-200  text-zinc-700 dark:text-zinc-300 type-badge hover:bg-zinc-300 dark:hover:bg-zinc-700 transition-colors cursor-pointer"
                                 >
                                     انصراف
                                 </button>

@@ -627,7 +627,7 @@ export function ImageGenStudio() {
  }`}
  >
  <div className={`border-2 rounded-sm flex items-center justify-center ${ar.w} ${ar.h} ${aspectRatio === ar.id ? 'border-current' : 'border-zinc-400 dark:border-zinc-500'}`}></div>
- <span className="text-[10px] font-bold">{ar.name}</span>
+ <span className="type-badge font-bold">{ar.name}</span>
  </button>
  ))}
  </div>
@@ -670,7 +670,7 @@ export function ImageGenStudio() {
 
                   <div className="flex items-center gap-2 mb-1">
                     <span className={`font-extrabold text-xs sm:text-sm ${isSelected ? '' : 'text-zinc-700 dark:text-zinc-200'}`}>{eng.name}</span>
-                    <span className={`text-[9px] px-1.5 py-0.5 rounded-md font-bold ${
+                    <span className={`type-badge px-1.5 py-0.5 rounded-md font-bold ${
                       isSelected
                         ? isPro ? 'bg-amber-200/50 dark:bg-amber-500/20 text-amber-800 dark:text-amber-300' : 'bg-emerald-200/50 dark:bg-emerald-500/20 text-emerald-800 dark:text-emerald-300'
                         : isPro ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20' : 'clay-btn-secondary text-zinc-700 dark:text-zinc-400'
@@ -678,7 +678,7 @@ export function ImageGenStudio() {
                       {eng.tag}
                     </span>
                   </div>
-                  <p className={`text-[9px] sm:text-[10px] leading-relaxed line-clamp-1 ${isSelected ? 'opacity-90' : 'text-zinc-600 dark:text-zinc-400'}`}>{eng.desc}</p>
+                  <p className={`type-badge leading-relaxed line-clamp-1 ${isSelected ? 'opacity-90' : 'text-zinc-600 dark:text-zinc-400'}`}>{eng.desc}</p>
                 </button>
               );
             })}
@@ -702,7 +702,7 @@ export function ImageGenStudio() {
  <History className="w-4 h-4 text-purple-500" />
  <span className="text-xs sm:text-sm font-bold">گالری من</span>
  {history.length > 0 && (
- <span className="bg-purple-500/15 text-purple-600 dark:text-purple-400 text-[10px] px-2 py-0.5 rounded-full font-mono font-bold">
+ <span className="bg-purple-500/15 text-purple-600 dark:text-purple-400 type-badge px-2 py-0.5 rounded-full font-mono font-bold">
  {history.length}
  </span>
  )}
@@ -750,7 +750,7 @@ export function ImageGenStudio() {
  <div className="flex items-center gap-1 clay-card dark:border-white/10 p-1 rounded-xl shadow-xs">
  <button
  onClick={() => handleSetGridDensity('compact')}
- className={`px-2 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
+ className={`px-2 py-1 rounded-lg type-badge font-bold transition-all cursor-pointer ${
  gridDensity === 'compact'
  ? 'bg-purple-600 text-white shadow-xs'
  : 'text-zinc-700 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-800 dark:text-zinc-200'
@@ -761,7 +761,7 @@ export function ImageGenStudio() {
  </button>
  <button
  onClick={() => handleSetGridDensity('medium')}
- className={`px-2 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
+ className={`px-2 py-1 rounded-lg type-badge font-bold transition-all cursor-pointer ${
  gridDensity === 'medium'
  ? 'bg-purple-600 text-white shadow-xs'
  : 'text-zinc-700 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-800 dark:text-zinc-200'
@@ -772,7 +772,7 @@ export function ImageGenStudio() {
  </button>
  <button
  onClick={() => handleSetGridDensity('large')}
- className={`px-2 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
+ className={`px-2 py-1 rounded-lg type-badge font-bold transition-all cursor-pointer ${
  gridDensity === 'large'
  ? 'bg-purple-600 text-white shadow-xs'
  : 'text-zinc-700 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-800 dark:text-zinc-200'
@@ -837,7 +837,7 @@ export function ImageGenStudio() {
  style={{ fontFamily:"'Estedad', sans-serif" }}
  >
  <span>{eng.name}</span>
- <span className="text-[10px] opacity-80 font-mono">({toPersianDigits(count)})</span>
+ <span className="type-badge opacity-80 font-mono">({toPersianDigits(count)})</span>
  </button>
  );
  })}
@@ -876,19 +876,19 @@ export function ImageGenStudio() {
  <div className="w-full h-full flex items-center justify-center clay-surface">
  <div className="text-center p-3">
  <ImageIcon className="w-8 h-8 text-zinc-400 mx-auto mb-1" />
- <p className="text-[10px] text-zinc-500 line-clamp-2">{item.prompt}</p>
+ <p className="type-badge text-zinc-500 line-clamp-2">{item.prompt}</p>
  </div>
  </div>
  )}
  {/* Permanent Badges (Corner Tags) */}
  <div className="absolute top-2.5 right-2.5 flex items-center gap-1.5 z-10 pointer-events-none">
- <span className="text-[10px] font-bold text-white bg-black/60 backdrop-blur-md px-2 py-0.5 rounded-lg border border-black/10 dark:border-white/10 shadow-sm">
+ <span className="type-badge font-bold text-white bg-black/60 backdrop-blur-md px-2 py-0.5 rounded-lg border border-black/10 dark:border-white/10 shadow-sm">
  {engineInfo?.name || item.engine}
  </span>
  </div>
 
  <div className="absolute bottom-2.5 left-2.5 z-10 pointer-events-none">
- <span className="text-[9px] text-white/80 bg-black/60 backdrop-blur-md px-2 py-0.5 rounded-md font-sans">
+ <span className="type-badge text-white/80 bg-black/60 backdrop-blur-md px-2 py-0.5 rounded-md font-sans">
  {getRelativeTime(item.timestamp)}
  </span>
  </div>
@@ -1074,7 +1074,7 @@ export function ImageGenStudio() {
  className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl object-cover shadow-xs group-hover:scale-105 transition-transform"
  loading="lazy"
  />
- <span className="text-[11px] sm:text-xs font-bold text-zinc-800 dark:text-zinc-200 group-hover:text-purple-600 dark:group-hover:text-purple-400 whitespace-nowrap select-none">
+ <span className="type-badge sm:text-xs font-bold text-zinc-800 dark:text-zinc-200 group-hover:text-purple-600 dark:group-hover:text-purple-400 whitespace-nowrap select-none">
  {item.title}
  </span>
  <span
@@ -1198,7 +1198,7 @@ export function ImageGenStudio() {
  <span className="text-xs font-black text-purple-600 dark:text-purple-400 clay-pill-thick px-3 py-1" style={{ fontFamily:"'Estedad', sans-serif" }}>
  {IMAGE_ENGINES.find(e => e.id === selectedDetailImage.engine)?.name || selectedDetailImage.engine}
  </span>
- <span className="text-[11px] text-zinc-500 dark:text-zinc-400">
+ <span className="type-badge text-zinc-500 dark:text-zinc-400">
  {getRelativeTime(selectedDetailImage.timestamp)}
  </span>
  </div>
@@ -1216,7 +1216,7 @@ export function ImageGenStudio() {
  <label className="text-xs font-bold text-zinc-700 dark:text-zinc-300">پرامپت استفاده‌شده:</label>
  <button
  onClick={() => copyPromptText(selectedDetailImage.prompt, 'modal_prompt')}
- className="flex items-center gap-1 text-[11px] font-bold text-purple-600 dark:text-purple-400 hover:text-purple-500 dark:hover:text-purple-300 cursor-pointer"
+ className="flex items-center gap-1 type-badge font-bold text-purple-600 dark:text-purple-400 hover:text-purple-500 dark:hover:text-purple-300 cursor-pointer"
  >
  {copiedId === 'modal_prompt' ? (
  <>
@@ -1239,10 +1239,10 @@ export function ImageGenStudio() {
  {/* Enhanced prompt if exists */}
  {selectedDetailImage.enhancedPrompt && selectedDetailImage.enhancedPrompt !== selectedDetailImage.prompt && (
  <div className="space-y-1.5">
- <label className="text-[11px] font-bold text-indigo-600 dark:text-indigo-400 flex items-center gap-1">
+ <label className="type-badge font-bold text-indigo-600 dark:text-indigo-400 flex items-center gap-1">
  <Wand2 className="w-3 h-3" /> پرامپت ارتقایافته:
  </label>
- <p className="text-[11px] text-zinc-700 dark:text-zinc-300 clay-inset-thick p-2.5 rounded-xl line-clamp-3">
+ <p className="type-badge text-zinc-700 dark:text-zinc-300 clay-inset-thick p-2.5 rounded-xl line-clamp-3">
  {selectedDetailImage.enhancedPrompt}
  </p>
  </div>

@@ -578,7 +578,7 @@ export const LandingPage: React.FC = () => {
                       </div>
                       <div className="text-right">
                         <div className="text-sm font-black text-[#0f1420] dark:text-white" style={{ fontFamily: "'Estedad', sans-serif" }}>GPT-4o</div>
-                        <div className="text-[10px] font-bold text-[#525d75] dark:text-[#9aa5bc]">OpenAI</div>
+                        <div className="type-badge font-bold text-[#525d75] dark:text-[#9aa5bc]">OpenAI</div>
                       </div>
                     </div>
                     
@@ -589,7 +589,7 @@ export const LandingPage: React.FC = () => {
                       </div>
                       <div className="text-right">
                         <div className="text-sm font-black text-[#0f1420] dark:text-white" style={{ fontFamily: "'Estedad', sans-serif" }}>Claude 3.5</div>
-                        <div className="text-[10px] font-bold text-[#525d75] dark:text-[#9aa5bc]">Anthropic</div>
+                        <div className="type-badge font-bold text-[#525d75] dark:text-[#9aa5bc]">Anthropic</div>
                       </div>
                     </div>
 
@@ -600,7 +600,7 @@ export const LandingPage: React.FC = () => {
                       </div>
                       <div className="text-right">
                         <div className="text-sm font-black text-[#0f1420] dark:text-white" style={{ fontFamily: "'Estedad', sans-serif" }}>Gemini 1.5</div>
-                        <div className="text-[10px] font-bold text-[#525d75] dark:text-[#9aa5bc]">Google</div>
+                        <div className="type-badge font-bold text-[#525d75] dark:text-[#9aa5bc]">Google</div>
                       </div>
                     </div>
 
@@ -611,7 +611,7 @@ export const LandingPage: React.FC = () => {
                       </div>
                       <div className="text-right">
                         <div className="text-sm font-black text-[#0f1420] dark:text-white" style={{ fontFamily: "'Estedad', sans-serif" }}>Flux 8K</div>
-                        <div className="text-[10px] font-bold text-[#525d75] dark:text-[#9aa5bc]">Black Forest</div>
+                        <div className="type-badge font-bold text-[#525d75] dark:text-[#9aa5bc]">Black Forest</div>
                       </div>
                     </div>
 
@@ -622,7 +622,7 @@ export const LandingPage: React.FC = () => {
                       </div>
                       <div className="text-right">
                         <div className="text-sm font-black text-[#0f1420] dark:text-white" style={{ fontFamily: "'Estedad', sans-serif" }}>DeepSeek V3</div>
-                        <div className="text-[10px] font-bold text-[#525d75] dark:text-[#9aa5bc]">DeepSeek</div>
+                        <div className="type-badge font-bold text-[#525d75] dark:text-[#9aa5bc]">DeepSeek</div>
                       </div>
                     </div>
                   </React.Fragment>
@@ -684,19 +684,19 @@ export const LandingPage: React.FC = () => {
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
                 <div className="h-full flex flex-col justify-center items-center p-3.5 rounded-2xl clay-indigo text-center text-white transition-transform hover:-translate-y-1">
                   <span className="block font-black text-xs text-white">Claude 3.5</span>
-                  <span className="text-[10px] text-white/80 font-medium">استاد نگارش و ادبیات</span>
+                  <span className="type-badge text-white/80 font-medium">استاد نگارش و ادبیات</span>
                 </div>
                 <div className="h-full flex flex-col justify-center items-center p-3.5 rounded-2xl clay-charcoal text-center text-white transition-transform hover:-translate-y-1">
                   <span className="block font-black text-xs text-white">GPT-4o</span>
-                  <span className="text-[10px] text-white/80 font-medium">پرچم‌دار همه‌کاره</span>
+                  <span className="type-badge text-white/80 font-medium">پرچم‌دار همه‌کاره</span>
                 </div>
                 <div className="h-full flex flex-col justify-center items-center p-3.5 rounded-2xl clay-gold-noglow text-center text-white transition-transform hover:-translate-y-1">
                   <span className="block font-black text-xs text-white">Gemini 2.0</span>
-                  <span className="text-[10px] text-white/80 font-medium">تحلیل چندرسانه‌ای و سرعت</span>
+                  <span className="type-badge text-white/80 font-medium">تحلیل چندرسانه‌ای و سرعت</span>
                 </div>
                 <div className="h-full flex flex-col justify-center items-center p-3.5 rounded-2xl clay-rose-noglow text-center text-white transition-transform hover:-translate-y-1">
                   <span className="block font-black text-xs text-white">DeepSeek V3</span>
-                  <span className="text-[10px] text-white/80 font-medium">کدنویسی و استدلال</span>
+                  <span className="type-badge text-white/80 font-medium">کدنویسی و استدلال</span>
                 </div>
               </div>
             </div>
@@ -740,7 +740,7 @@ export const LandingPage: React.FC = () => {
                 آپلود مستقیم کتاب‌ها و مقالات علمی PDF تا سقف ۵۰ مگابایت، فایل‌های کدنویسی و فایل‌های اکسل جهت تلخیص، استخراج اطلاعات و پرسش و پاسخ.
               </p>
             </div>
-            <div className="mt-6 pt-4 border-t border-black/5 dark:border-white/5 text-[11px] font-semibold text-[#717b91]">
+            <div className="mt-6 pt-4 border-t border-black/5 dark:border-white/5 type-badge font-semibold text-[#717b91]">
               پشتیبانی از PDF، کدهای برنامه‌نویسی و اسناد متنی
             </div>
           </div>
@@ -778,7 +778,7 @@ export const LandingPage: React.FC = () => {
         {dynamicVisibility.manifesto !== false && dynamicManifesto?.enabled !== false && (
         <div className="reveal-init clay-card-elevated p-6 sm:p-10 mb-14">
           <div className="max-w-3xl">
-            <span className="inline-block px-3.5 py-1 clay-pill-thick text-[11px] font-bold text-blue-600 dark:text-zinc-200 mb-3.5">
+            <span className="inline-block px-3.5 py-1 clay-pill-thick type-badge font-bold text-blue-600 dark:text-zinc-200 mb-3.5">
               {dynamicManifesto?.badge || 'بیانیه شفافیت و فلسفه طراحی'}
             </span>
             <h2
@@ -826,7 +826,7 @@ export const LandingPage: React.FC = () => {
                   <h3 className="font-bold text-xs sm:text-sm text-[#0f1420] dark:text-white mb-1.5" style={{ fontFamily: "'Estedad', sans-serif" }}>
                     {r.title}
                   </h3>
-                  <p className="text-[11px] sm:text-xs text-[#525d75] dark:text-[#9aa5bc] leading-relaxed">
+                  <p className="type-badge sm:text-xs text-[#525d75] dark:text-[#9aa5bc] leading-relaxed">
                     {r.desc}
                   </p>
                 </div>
@@ -950,7 +950,7 @@ export const LandingPage: React.FC = () => {
                         <button
                           type="button"
                           onClick={() => copyProfessionPrompt(currentProfession.prompt)}
-                          className="inline-flex items-center gap-1.5 text-[11px] font-bold clay-btn-thick px-3 py-1 rounded-xl text-[#525d75] dark:text-[#9aa5bc] hover:text-[#0f1420] dark:hover:text-white transition-all cursor-pointer"
+                          className="inline-flex items-center gap-1.5 type-badge font-bold clay-btn-thick px-3 py-1 rounded-xl text-[#525d75] dark:text-[#9aa5bc] hover:text-[#0f1420] dark:hover:text-white transition-all cursor-pointer"
                         >
                           {copiedProfessionPrompt ? (
                             <>
@@ -1026,10 +1026,10 @@ export const LandingPage: React.FC = () => {
                         }}
                       />
                       <div className="overflow-hidden">
-                        <span className="block text-[11px] font-bold text-[#0f1420] dark:text-white truncate">
+                        <span className="block type-badge font-bold text-[#0f1420] dark:text-white truncate">
                           {p.badge}
                         </span>
-                        <span className="block text-[9px] text-[#717b91] truncate">
+                        <span className="block type-badge text-[#717b91] truncate">
                           مشاهده پرامپت
                         </span>
                       </div>
@@ -1139,7 +1139,7 @@ export const LandingPage: React.FC = () => {
                           }
                         }}
                       />
-                      <div className="absolute top-2.5 right-2.5 px-3 py-1 rounded-full clay-charcoal text-[10px] font-bold">
+                      <div className="absolute top-2.5 right-2.5 px-3 py-1 rounded-full clay-charcoal type-badge font-bold">
                         {img.tag}
                       </div>
                     </div>
@@ -1149,7 +1149,7 @@ export const LandingPage: React.FC = () => {
                         <h3 className="font-bold text-sm sm:text-base text-[#0f1420] dark:text-white mb-1.5" style={{ fontFamily: "'Estedad', sans-serif" }}>
                           {img.title}
                         </h3>
-                        <p className="text-[11px] text-[#525d75] dark:text-[#9aa5bc] line-clamp-2 leading-relaxed font-mono" dir="ltr">
+                        <p className="type-badge text-[#525d75] dark:text-[#9aa5bc] line-clamp-2 leading-relaxed font-mono" dir="ltr">
                           {img.prompt}
                         </p>
                       </div>
@@ -1157,7 +1157,7 @@ export const LandingPage: React.FC = () => {
                       <div className="pt-3 border-t border-black/5 dark:border-white/5 flex items-center justify-between">
                         <button
                           onClick={() => copyPromptToClipboard(img.prompt, idx)}
-                          className="inline-flex items-center gap-1.5 text-[11px] font-bold clay-btn-thick px-3 py-1.5 rounded-xl text-[#525d75] dark:text-[#9aa5bc] hover:text-[#0f1420] dark:hover:text-white transition-all cursor-pointer"
+                          className="inline-flex items-center gap-1.5 type-badge font-bold clay-btn-thick px-3 py-1.5 rounded-xl text-[#525d75] dark:text-[#9aa5bc] hover:text-[#0f1420] dark:hover:text-white transition-all cursor-pointer"
                         >
                           {copiedPromptIndex === idx ? (
                             <>
@@ -1172,7 +1172,7 @@ export const LandingPage: React.FC = () => {
                           )}
                         </button>
 
-                        <Link to="/chat" className="text-[11px] font-black text-[#2563eb] dark:text-white hover:underline">
+                        <Link to="/chat" className="type-badge font-black text-[#2563eb] dark:text-white hover:underline">
                           تست این سبک
                         </Link>
                       </div>
@@ -1255,7 +1255,7 @@ export const LandingPage: React.FC = () => {
                   <Check className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
                   <div>
                     <div className="text-xs font-bold text-[#0f1420] dark:text-white mb-0.5">اعتبار بدون تاریخ انقضا</div>
-                    <div className="text-[11px] text-[#525d75] dark:text-[#9aa5bc]">موجودی کیف پول شما هرگز منقضی یا صفر نخواهد شد.</div>
+                    <div className="type-badge text-[#525d75] dark:text-[#9aa5bc]">موجودی کیف پول شما هرگز منقضی یا صفر نخواهد شد.</div>
                   </div>
                 </div>
 
@@ -1263,7 +1263,7 @@ export const LandingPage: React.FC = () => {
                   <Check className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
                   <div>
                     <div className="text-xs font-bold text-[#0f1420] dark:text-white mb-0.5">محاسبه دقیق بر اساس توکن</div>
-                    <div className="text-[11px] text-[#525d75] dark:text-[#9aa5bc]">شفافیت ۱۰۰٪ و مشاهده هزینه و توکن مصرفی هر چت.</div>
+                    <div className="type-badge text-[#525d75] dark:text-[#9aa5bc]">شفافیت ۱۰۰٪ و مشاهده هزینه و توکن مصرفی هر چت.</div>
                   </div>
                 </div>
 
@@ -1271,7 +1271,7 @@ export const LandingPage: React.FC = () => {
                   <Check className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
                   <div>
                     <div className="text-xs font-bold text-[#0f1420] dark:text-white mb-0.5">شارژ با مبالغ خرد</div>
-                    <div className="text-[11px] text-[#525d75] dark:text-[#9aa5bc]">آزادی عمل برای شارژ از ۵۰,۰۰۰ تومان تا مبالغ دلخواه.</div>
+                    <div className="type-badge text-[#525d75] dark:text-[#9aa5bc]">آزادی عمل برای شارژ از ۵۰,۰۰۰ تومان تا مبالغ دلخواه.</div>
                   </div>
                 </div>
 
@@ -1279,7 +1279,7 @@ export const LandingPage: React.FC = () => {
                   <Check className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
                   <div>
                     <div className="text-xs font-bold text-[#0f1420] dark:text-white mb-0.5">۱۵ چت رایگان روزانه</div>
-                    <div className="text-[11px] text-[#525d75] dark:text-[#9aa5bc]">استفاده رایگان در هر چرخه ۴ ساعته برای همه کاربران.</div>
+                    <div className="type-badge text-[#525d75] dark:text-[#9aa5bc]">استفاده رایگان در هر چرخه ۴ ساعته برای همه کاربران.</div>
                   </div>
                 </div>
               </div>
@@ -1301,7 +1301,7 @@ export const LandingPage: React.FC = () => {
                   <span>ورود و شارژ با مبلغ دلخواه</span>
                   <ArrowLeft className="w-4 h-4" />
                 </button>
-                <span className="text-[11px] font-medium text-[#525d75] dark:text-[#9aa5bc]">
+                <span className="type-badge font-medium text-[#525d75] dark:text-[#9aa5bc]">
                   پشتیبانی از کلیه کارت‌های شتاب با درگاه امن بانکی
                 </span>
               </div>
@@ -1317,20 +1317,20 @@ export const LandingPage: React.FC = () => {
                     </div>
                     <div>
                       <div className="text-xs font-bold text-[#0f1420] dark:text-white">کیف پول هوشمند</div>
-                      <div className="text-[10px] text-[#525d75] dark:text-[#9aa5bc]">موجودی لحظه‌ای کاربر</div>
+                      <div className="type-badge text-[#525d75] dark:text-[#9aa5bc]">موجودی لحظه‌ای کاربر</div>
                     </div>
                   </div>
-                  <span className="px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+                  <span className="px-2.5 py-1 rounded-full type-badge font-extrabold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
                     فعال
                   </span>
                 </div>
 
                 <div className="clay-surface-inset p-4 rounded-2xl text-center space-y-1">
-                  <div className="text-[11px] text-[#525d75] dark:text-[#9aa5bc] font-medium">نمونه موجودی قابل شارژ</div>
+                  <div className="type-badge text-[#525d75] dark:text-[#9aa5bc] font-medium">نمونه موجودی قابل شارژ</div>
                   <div className="text-2xl sm:text-3xl font-black text-[#0f1420] dark:text-white tracking-tight" style={{ fontFamily: "'Estedad', sans-serif" }}>
                     {toPersianDigits('50,000')} <span className="text-xs font-bold opacity-70">تومان</span>
                   </div>
-                  <div className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold pt-0.5">
+                  <div className="type-badge text-emerald-600 dark:text-emerald-400 font-bold pt-0.5">
                     معادل ~{toPersianDigits('500,000')} توکن سهمیه مکالمه
                   </div>
                 </div>
@@ -1484,7 +1484,7 @@ export const LandingPage: React.FC = () => {
               <Download className="w-4 h-4" />
               دانلود فایل APK
             </a>
-            <p className="text-[10px] opacity-60 mt-3">نکته: در صورت نمایش پیام اخطار گوگل (Play Protect)، گزینه Install anyway را انتخاب کنید.</p>
+            <p className="type-badge opacity-60 mt-3">نکته: در صورت نمایش پیام اخطار گوگل (Play Protect)، گزینه Install anyway را انتخاب کنید.</p>
           </div>
 
           {/* iOS & Tablet Card */}
@@ -1501,7 +1501,7 @@ export const LandingPage: React.FC = () => {
             >
               Share &gt; Add to Home Screen
             </button>
-            <p className="text-[10px] opacity-60 mt-3">از طریق مرورگر سافاری روی آیفون، این گزینه را انتخاب کنید.</p>
+            <p className="type-badge opacity-60 mt-3">از طریق مرورگر سافاری روی آیفون، این گزینه را انتخاب کنید.</p>
           </div>
 
           {/* Desktop Card */}
@@ -1516,7 +1516,7 @@ export const LandingPage: React.FC = () => {
             <div className="w-full py-3 px-4 rounded-xl clay-surface-inset border border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-400 font-bold flex items-center justify-center gap-2">
               اجرای مستقیم در وب
             </div>
-            <p className="text-[10px] opacity-60 mt-3">روی آیکون نصب در نوار آدرس مرورگر کلیک کنید.</p>
+            <p className="type-badge opacity-60 mt-3">روی آیکون نصب در نوار آدرس مرورگر کلیک کنید.</p>
           </div>
 
         </div>
