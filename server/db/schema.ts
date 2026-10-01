@@ -351,6 +351,16 @@ export function initializeSchema() {
       FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE
     )
   `);
+  // Indexes for wallet_transactions.
+  // This is the highest-write table in the system (one row per chat turn) and every
+  // admin finance query filters/sorts on createdAt, userId or type. Without these,
+  // EXPLAIN QUERY PLAN showed "SCAN wt" + "USE TEMP B-TREE FOR ORDER BY" on all of them.
+  // Idempotent and safe to re-run against existing databases.
+  db.exec(`
+    CREATE INDEX IF NOT EXISTS idx_wt_createdAt ON wallet_transactions(createdAt DESC);
+    CREATE INDEX IF NOT EXISTS idx_wt_userId ON wallet_transactions(userId, createdAt DESC);
+    CREATE INDEX IF NOT EXISTS idx_wt_type ON wallet_transactions(type, createdAt DESC);
+  `);
 
   // Create API Purchases table (Admin multi-provider purchase logs)
   db.exec(`

@@ -639,6 +639,11 @@ router.post('/api/chat/stream', chatStreamLimiter, async (req, res) => {
 
             streamedSuccessfully = true;
             lastError = null;
+            // Capture the text actually streamed to the client so the billing block
+            // below (which gates on accumulatedGeminiText) can account for this turn.
+            // Without these assignments every Gemini turn was billed as zero usage.
+            accumulatedGeminiText = fullText;
+            successfulCandidate = candidate;
             break;
           } catch (err: any) {
             lastError = err;
@@ -686,7 +691,7 @@ router.post('/api/chat/stream', chatStreamLimiter, async (req, res) => {
         }
       }
 
-      if (userId && !hasCustomUserKey && accumulatedGeminiText) {
+      if (userId && !hasCustomUserKey && accumulatedGeminiText && successfulCandidate) {
         if (!geminiUsage || !geminiUsage.totalTokens) {
           const promptEstimate = Math.ceil(JSON.stringify(prunedMessages).length / 4);
           const completionEstimate = Math.ceil(accumulatedGeminiText.length / 4);
