@@ -1,4 +1,3 @@
-console.log("HELLO RENDER - STARTING UP");
 import express from 'express';
 import path from 'path';
 import fs from 'fs';
@@ -130,6 +129,9 @@ import { sitemapHandler } from './seo/sitemap';
 import { renderHtmlWithSeo } from './seo/htmlInjector';
 import { initializeSchema } from './db/schema';
 import db from './db/database';
+
+console.log("HELLO RENDER - NODE STARTED SUCCESSFULLY");
+
 
 // NOTE: initializeSchema() / initNewsCron() deliberately run AFTER app.listen().
 // Everything above this line runs at import time, and the libsql embedded-replica
