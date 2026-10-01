@@ -71,16 +71,16 @@ export const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({ produc
  <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-transparent" />
  <div className="absolute bottom-3.5 right-5 left-5">
  <div className="flex items-center gap-2 mb-1.5 flex-wrap">
- <span className="inline-block text-[11px] font-bold px-2.5 py-0.5 bg-blue-600 text-white rounded-md shadow-sm">
+ <span className="inline-block type-badge font-bold px-2.5 py-0.5 bg-blue-600 text-white rounded-md shadow-sm">
  {product.category === 'plan' ? 'پلن تعرفه' : product.category === 'api' ? 'کلید API' : product.category === 'account' ? 'اکانت پرمیوم' : 'پکیج آموزشی'}
  </span>
  {product.badge && (
- <span className="inline-block text-[11px] font-black px-2.5 py-0.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-md shadow-sm">
+ <span className="inline-block type-badge font-black px-2.5 py-0.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-md shadow-sm">
  {product.badge}
  </span>
  )}
  {product.tokenEstimate && (
- <span className="inline-block text-[11px] font-medium px-2 py-0.5 bg-zinc-800/80 text-blue-300 rounded-md border border-blue-500/30">
+ <span className="inline-block type-badge font-medium px-2 py-0.5 bg-zinc-800/80 text-blue-300 rounded-md border border-blue-500/30">
  {usePersianDigits ? toPersianDigits(product.tokenEstimate) : product.tokenEstimate}
  </span>
  )}
@@ -112,7 +112,7 @@ export const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({ produc
  </div>
  <div>
  <h4 className="font-bold text-xs sm:text-sm text-zinc-900 dark:text-zinc-100">تحویل آنی</h4>
- <p className="text-[11px] text-zinc-500 mt-0.5">بلافاصله پس از پرداخت</p>
+ <p className="type-badge text-zinc-500 mt-0.5">بلافاصله پس از پرداخت</p>
  </div>
  </div>
  <div className="flex items-center gap-3 p-3 clay-surface rounded-xl border border-[var(--card-border)]">
@@ -121,7 +121,7 @@ export const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({ produc
  </div>
  <div>
  <h4 className="font-bold text-xs sm:text-sm text-zinc-900 dark:text-zinc-100">تضمین کیفیت</h4>
- <p className="text-[11px] text-zinc-500 mt-0.5">پشتیبانی و گارانتی معتبر</p>
+ <p className="type-badge text-zinc-500 mt-0.5">پشتیبانی و گارانتی معتبر</p>
  </div>
  </div>
  </div>
@@ -161,7 +161,7 @@ export const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({ produc
  {/* Footer */}
  <div className="p-4 sm:p-5 clay-surface border-t border-[var(--card-border)]  flex flex-col sm:flex-row items-center justify-between gap-3 shrink-0">
  <div className="flex flex-col w-full sm:w-auto text-center sm:text-right">
- <span className="text-[11px] sm:text-xs text-zinc-500 dark:text-zinc-400 mb-0.5">مبلغ قابل پرداخت:</span>
+ <span className="type-badge sm:type-meta text-zinc-500 dark:text-zinc-400 mb-0.5">مبلغ قابل پرداخت:</span>
  <span className="text-lg sm:text-xl font-black text-zinc-900 dark:text-zinc-100">
  {formatPrice(product.price)} <span className="text-xs font-normal text-zinc-500">تومان</span>
  </span>

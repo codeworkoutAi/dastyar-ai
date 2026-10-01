@@ -130,7 +130,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ product, isOpen, o
  <ShopLinearIcon className="w-8 h-8 opacity-40" />
  </div>
  )}
- <span className="absolute top-2.5 right-2.5 text-[10.5px] font-bold px-2 py-0.5 bg-black/65 text-white rounded-md backdrop-blur-md shadow-xs z-20">
+ <span className="absolute top-2.5 right-2.5 type-badge font-bold px-2 py-0.5 bg-black/65 text-white rounded-md backdrop-blur-md shadow-xs z-20">
  {product.category === 'api' ? 'کلید API' : product.category === 'account' ? 'اکانت پرمیوم' : 'پکیج آموزشی'}
  </span>
  </div>
@@ -191,7 +191,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ product, isOpen, o
  </div>
  <div className="flex-1">
  <span className="font-bold block text-zinc-800 dark:text-zinc-200">درگاه امن بانکی شاپرک (زرین‌پال)</span>
- <span className="text-[11px] text-zinc-500 dark:text-zinc-400">پرداخت آنی و امن با تمامی کارت‌های عضو شبکه شتاب</span>
+ <span className="type-badge text-zinc-500 dark:text-zinc-400">پرداخت آنی و امن با تمامی کارت‌های عضو شبکه شتاب</span>
  </div>
  </div>
  )}
@@ -201,10 +201,10 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ product, isOpen, o
  <div className="p-3 bg-blue-50 dark:bg-blue-900/10 rounded-xl border border-blue-100 dark:border-blue-900/30 text-center flex flex-col gap-1.5">
  <span className="text-xs text-blue-800 dark:text-blue-200">لطفا مبلغ فوق را به شماره کارت زیر واریز نمایید:</span>
  <span className="text-lg font-bold font-mono tracking-widest text-blue-900 dark:text-white select-all" dir="ltr">5894-6311-1590-7644</span>
- <span className="text-[11px] font-bold text-blue-700 dark:text-blue-300">به نام: علی ابراهیمی قرخلو (بانک رفاه)</span>
+ <span className="type-badge font-bold text-blue-700 dark:text-blue-300">به نام: علی ابراهیمی قرخلو (بانک رفاه)</span>
  </div>
  <div>
- <label className="block text-[11px] font-bold text-zinc-600 dark:text-zinc-400 mb-1.5">شماره پیگیری یا ۴ رقم آخر کارت:</label>
+ <label className="block type-badge font-bold text-zinc-600 dark:text-zinc-400 mb-1.5">شماره پیگیری یا ۴ رقم آخر کارت:</label>
  <input type="text" value={trackingNumber}
  onChange={(e) => setTrackingNumber(e.target.value)}
  placeholder="مثال: 123456 یا 8765"
@@ -244,7 +244,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ product, isOpen, o
  )}
  </button>
  )}
- <p className="text-[11px] text-center text-zinc-500 dark:text-zinc-500">
+ <p className="type-badge text-center text-zinc-500 dark:text-zinc-500">
  {paymentMethod === 'online' ? 'با کلیک روی دکمه بالا، به درگاه پرداخت امن منتقل خواهید شد.'
  : 'پس از ثبت، برای ارسال عکس فیش به تلگرام پشتیبانی هدایت می‌شوید.'
  }

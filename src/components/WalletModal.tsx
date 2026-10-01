@@ -132,7 +132,7 @@ export const WalletModal: React.FC = () => {
  <div className="flex items-center gap-2 clay-surface backdrop-blur-md px-3.5 py-2.5 rounded-2xl border border-[var(--card-border)] text-xs">
  <Zap className="w-4 h-4 text-amber-500 shrink-0" />
  <div>
- <span className="text-zinc-500 dark:text-zinc-400 block text-[10px]">تخمین اعتبار باقی‌مانده:</span>
+ <span className="text-zinc-500 dark:text-zinc-400 block type-badge">تخمین اعتبار باقی‌مانده:</span>
  <span className="font-bold text-zinc-800 dark:text-zinc-200" dir="ltr">
  ~{approxRemainingTokens.toLocaleString('fa-IR')} توکن
  </span>
@@ -192,7 +192,7 @@ export const WalletModal: React.FC = () => {
  <span className="text-xs font-black text-zinc-900 dark:text-zinc-100">
  پیشنهاد ویژه و آفرهای تخفیف
  </span>
- <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-700 dark:text-amber-300">
+ <span className="type-badge font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-700 dark:text-amber-300">
  آفر فعال
  </span>
  </div>
@@ -218,12 +218,12 @@ export const WalletModal: React.FC = () => {
  <CreditCard className="w-4 h-4 text-emerald-500" />
  <span>افزایش موجودی و شارژ کیف پول (تومان)</span>
  </label>
- <span className="text-[11px] text-zinc-400">حداقل ۵,۰۰۰ تومان</span>
+ <span className="type-badge text-zinc-400">حداقل ۵,۰۰۰ تومان</span>
  </div>
 
  {/* Quick Presets */}
  <div>
- <div className="text-[11px] text-zinc-500 dark:text-zinc-400 mb-1.5 font-medium">مبالغ پیشنهادی سریع:</div>
+ <div className="type-badge text-zinc-500 dark:text-zinc-400 mb-1.5 font-medium">مبالغ پیشنهادی سریع:</div>
  <div className="flex flex-wrap gap-2">
  {PRESET_AMOUNTS.map((amt) => {
  const isSelected = customAmount === amt.toString();
@@ -286,7 +286,7 @@ export const WalletModal: React.FC = () => {
 
  {/* Tokens Estimation info */}
  {customAmount && parseInt(customAmount, 10) >= 5000 && (
- <div className="text-[11px] text-zinc-500 dark:text-zinc-400 flex items-center gap-1.5 pt-1">
+ <div className="type-badge text-zinc-500 dark:text-zinc-400 flex items-center gap-1.5 pt-1">
  <Sparkles className="w-3.5 h-3.5 text-blue-500" />
  <span>
  معادل تقریبی: <strong className="text-emerald-600 dark:text-emerald-400">{(parseInt(customAmount, 10) * 5).toLocaleString('fa-IR')} توکن چت هوشمند</strong>
@@ -296,7 +296,7 @@ export const WalletModal: React.FC = () => {
  </div>
 
  {/* General Policy Note */}
- <div className="flex items-center gap-2 p-3 rounded-2xl bg-blue-50/60 dark:bg-blue-950/20 border border-blue-200/60 dark:border-blue-800/30 text-blue-700 dark:text-blue-300 text-[11px]">
+ <div className="flex items-center gap-2 p-3 rounded-2xl bg-blue-50/60 dark:bg-blue-950/20 border border-blue-200/60 dark:border-blue-800/30 text-blue-700 dark:text-blue-300 type-badge">
  <Sparkles className="w-4 h-4 shrink-0 text-blue-500" />
  <span>اعتبار شما هرگز منقضی نمی‌شود و تنها به میزان مصرف کلمات و درخواست‌های ارسالی کسر می‌گردد.</span>
  </div>
@@ -345,7 +345,7 @@ export const WalletModal: React.FC = () => {
  <span className="font-bold text-zinc-800 dark:text-zinc-200 block">
  {tx.description || (isPositive ? 'افزایش موجودی' : `مصرف چت (${tx.model || 'عمومی'})`)}
  </span>
- <div className="flex items-center gap-2 text-[10px] text-zinc-400 mt-0.5">
+ <div className="flex items-center gap-2 type-badge text-zinc-400 mt-0.5">
  <span>{new Date(tx.createdAt).toLocaleDateString('fa-IR')}</span>
  {tx.promptTokens + tx.completionTokens > 0 && (
  <>
@@ -363,7 +363,7 @@ export const WalletModal: React.FC = () => {
  }`} dir="ltr">
  {isPositive ? `+${tx.amount.toLocaleString()}` : `${tx.amount.toLocaleString()}`} تومان
  </span>
- <span className="text-[10px] text-zinc-400 block" dir="rtl">
+ <span className="type-badge text-zinc-400 block" dir="rtl">
  مانده: {tx.balanceAfter?.toLocaleString('fa-IR')} تومان
  </span>
  </div>

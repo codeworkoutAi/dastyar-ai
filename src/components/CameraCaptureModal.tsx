@@ -363,12 +363,12 @@ export const CameraCaptureModal: React.FC<CameraCaptureModalProps> = ({
  <h3 className="text-sm font-bold text-white flex items-center gap-2">
  ثبت تصویر با دوربین
  {actualResolution && !capturedImage && (
- <span className="text-[10px] font-normal px-2 py-0.5 rounded-full bg-black/5 dark:bg-white/10 text-sky-300 font-mono" dir="ltr">
+ <span className="type-badge font-normal px-2 py-0.5 rounded-full bg-black/5 dark:bg-white/10 text-sky-300 font-mono" dir="ltr">
  {actualResolution.width}×{actualResolution.height}
  </span>
  )}
  </h3>
- <p className="text-[11px] text-slate-400">عکسبرداری زنده و تحلیل هوشمند</p>
+ <p className="type-badge text-slate-400">عکسبرداری زنده و تحلیل هوشمند</p>
  </div>
  </div>
 
@@ -386,7 +386,7 @@ export const CameraCaptureModal: React.FC<CameraCaptureModalProps> = ({
  aria-label="تنظیمات رزولوشن"
  >
  <Sliders className="w-3.5 h-3.5" />
- <span className="text-[11px] font-medium">{currentPresetInfo.badge}</span>
+ <span className="type-badge font-medium">{currentPresetInfo.badge}</span>
  </button>
  )}
  <button
@@ -408,7 +408,7 @@ export const CameraCaptureModal: React.FC<CameraCaptureModalProps> = ({
  <Sparkles className="w-3.5 h-3.5 text-sky-400" />
  انتخاب کیفیت و رزولوشن دوربین:
  </span>
- <span className="text-[10px] text-slate-400">با انطباق خودکار سخت‌افزار</span>
+ <span className="type-badge text-slate-400">با انطباق خودکار سخت‌افزار</span>
  </div>
  <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
  {RESOLUTION_PRESETS.map((preset) => {
@@ -424,10 +424,10 @@ export const CameraCaptureModal: React.FC<CameraCaptureModalProps> = ({
  : 'clay-surface border-black/5 dark:border-white/5 text-slate-300 hover:bg-black/5 dark:hover:bg-white/10 hover:border-white/15'
  }`}
  >
- <span className={`font-bold text-[11px] ${isSelected ? 'text-sky-300' : 'text-slate-200'}`}>
+ <span className={`font-bold type-badge ${isSelected ? 'text-sky-300' : 'text-slate-200'}`}>
  {preset.title}
  </span>
- <span className="text-[9.5px] text-slate-400 leading-tight truncate">{preset.desc}</span>
+ <span className="type-badge text-slate-400 leading-tight truncate">{preset.desc}</span>
  </button>
  );
  })}

@@ -108,7 +108,7 @@ export const ExportModal: React.FC = () => {
  <h2 className="text-base sm:text-lg font-extrabold tracking-tight truncate">
  خروجی و ذخیره تاریخچه
  </h2>
- <p className="text-[11px] sm:text-xs opacity-70 truncate">
+ <p className="type-badge sm:type-meta opacity-70 truncate">
  ذخیره گفتگوها در قالب‌های Markdown، JSON، متن یا PDF
  </p>
  </div>
@@ -145,7 +145,7 @@ export const ExportModal: React.FC = () => {
  <FileText className="w-4 h-4 text-teal-600 dark:text-teal-400 shrink-0" />
  <div className="overflow-hidden min-w-0">
  <div className="text-xs font-bold truncate">همین گفتگوی فعلی</div>
- <div className="text-[11px] opacity-70 truncate">
+ <div className="type-badge opacity-70 truncate">
  {activeConversation?.title || 'انتخاب نشده'}
  </div>
  </div>
@@ -163,7 +163,7 @@ export const ExportModal: React.FC = () => {
  <Layers className="w-4 h-4 text-teal-600 dark:text-teal-400 shrink-0" />
  <div>
  <div className="text-xs font-bold">تمام گفتگوها ({allConversations.length})</div>
- <div className="text-[11px] opacity-70">نسخه پشتیبان کامل</div>
+ <div className="type-badge opacity-70">نسخه پشتیبان کامل</div>
  </div>
  </button>
  </div>
@@ -196,7 +196,7 @@ export const ExportModal: React.FC = () => {
  >
  <Icon className="w-4 h-4 text-teal-600 dark:text-teal-400" />
  <span className="text-xs font-bold">{f.label}</span>
- <span className="text-[10px] opacity-70">{f.desc}</span>
+ <span className="type-badge opacity-70">{f.desc}</span>
  </button>
  );
  })}
@@ -212,7 +212,7 @@ export const ExportModal: React.FC = () => {
  <button
  type="button"
  onClick={handleCopyPreview}
- className="text-[11px] opacity-70 hover:opacity-100 flex items-center gap-1 transition-colors"
+ className="type-badge opacity-70 hover:opacity-100 flex items-center gap-1 transition-colors"
  >
  {copied ? (
  <>

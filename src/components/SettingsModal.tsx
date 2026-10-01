@@ -98,13 +98,13 @@ export const VisualRoleSelect: React.FC<VisualRoleSelectProps> = ({
  <div className="flex items-center gap-2">
  <span className="font-bold text-xs sm:text-sm text-zinc-900 dark:text-zinc-100 truncate">{selectedProfile.name}</span>
  {selectedMeta && (
- <span className="text-[10px] px-1.5 py-0.5 rounded clay-surface text-zinc-700 dark:text-zinc-400 font-medium">
+ <span className="type-badge px-1.5 py-0.5 rounded clay-surface text-zinc-700 dark:text-zinc-400 font-medium">
  {selectedMeta.providerLabel}
  </span>
  )}
  </div>
  <div className="flex items-center gap-2 mt-0.5 text-xs text-zinc-700 dark:text-zinc-400 font-mono truncate" dir="ltr">
- <span className="truncate text-[11px] text-zinc-700 dark:text-zinc-400">{selectedProfile.modelName || 'بدون مدل'}</span>
+ <span className="truncate type-badge text-zinc-700 dark:text-zinc-400">{selectedProfile.modelName || 'بدون مدل'}</span>
  </div>
  </div>
  ) : (
@@ -116,7 +116,7 @@ export const VisualRoleSelect: React.FC<VisualRoleSelectProps> = ({
  {selectedMeta && selectedMeta.tags.slice(0, 2).map((t, idx) => (
  <span
  key={idx}
- className={`hidden sm:inline-block text-[10px] px-2 py-0.5 rounded-full font-medium ${
+ className={`hidden sm:inline-block type-badge px-2 py-0.5 rounded-full font-medium ${
  t.type === 'coding'
  ? 'bg-cyan-500/15 text-cyan-300 border border-cyan-500/30'
  : t.type === 'vision'
@@ -135,7 +135,7 @@ export const VisualRoleSelect: React.FC<VisualRoleSelectProps> = ({
 
  {isOpen && (
  <div className="absolute z-[70] w-full mt-2 clay-card  rounded-2xl max-h-72 overflow-y-auto p-1.5 animate-fadeIn space-y-1">
- <div className="px-3 py-1.5 text-[11px] text-zinc-700 dark:text-zinc-400 border-b border-[var(--card-border)] font-medium flex items-center justify-between">
+ <div className="px-3 py-1.5 type-badge text-zinc-700 dark:text-zinc-400 border-b border-[var(--card-border)] font-medium flex items-center justify-between">
  <span>پروفایل‌های موجود ({profiles.length})</span>
  <span className="text-zinc-700 dark:text-zinc-400">مرتب‌شده بر اساس سازگاری با نقش</span>
  </div>
@@ -182,20 +182,20 @@ export const VisualRoleSelect: React.FC<VisualRoleSelectProps> = ({
  <div className="flex items-center gap-2">
  <span className="font-bold text-xs text-zinc-900 dark:text-zinc-100 truncate">{p.name}</span>
  {isRecommendedForRole && (
- <span className="text-[10px] text-amber-400 flex items-center gap-0.5 font-medium">
+ <span className="type-badge text-amber-400 flex items-center gap-0.5 font-medium">
  ⭐ پیشنهادی
  </span>
  )}
  </div>
- <span className="text-[11px] text-zinc-700 dark:text-zinc-400 font-mono truncate" dir="ltr">{p.modelName || 'بدون مدل'}</span>
+ <span className="type-badge text-zinc-700 dark:text-zinc-400 font-mono truncate" dir="ltr">{p.modelName || 'بدون مدل'}</span>
  </div>
  </div>
 
  <div className="flex items-center gap-1.5 shrink-0">
  {meta.isFree && (
- <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-400 font-medium">رایگان</span>
+ <span className="type-badge px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-400 font-medium">رایگان</span>
  )}
- <span className="text-[10px] px-1.5 py-0.5 rounded clay-surface text-zinc-700 dark:text-zinc-300 font-mono">
+ <span className="type-badge px-1.5 py-0.5 rounded clay-surface text-zinc-700 dark:text-zinc-300 font-mono">
  {meta.providerLabel}
  </span>
  {isSelected && <span className="text-indigo-400 text-xs font-bold mr-1">✓</span>}
@@ -804,7 +804,7 @@ export const SettingsModal: React.FC = () => {
  <div>
  <div className="font-medium text-sm flex items-center gap-2">
  <span>تفکر عمیق (Deep Thinking/Reasoning)</span>
- <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">جدید</span>
+ <span className="px-1.5 py-0.5 rounded type-badge font-bold bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">جدید</span>
  </div>
  <div className="text-xs text-zinc-700 dark:text-zinc-400">تحلیل عمیق و استدلال مرحله‌به‌مرحله قبل از پاسخ (در مدل‌های پشتیبانی شده)</div>
  </div>
