@@ -1,5 +1,6 @@
-﻿import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
+import { parseDbDate } from '../../lib/dateUtils';
 import { Home, BookOpen, Clock, ChevronRight, Hash, MessageCircle, LayoutDashboard } from 'lucide-react';
 import { NeuralBanner } from '../../components/NeuralBanner';
 import { Footer } from '../../components/Footer';
@@ -21,16 +22,9 @@ const getReadingTime = (text: string) => {
  return `${minutes} دقیقه`;
 };
 
-const parseDbDate = (dateString: string): Date => {
- if (!dateString) return new Date();
- let str = dateString.trim();
- if (/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/.test(str)) {
- str = str.replace(' ', 'T') + 'Z';
- } else if (!str.endsWith('Z') && !str.includes('+') && str.includes('T')) {
- str = str + 'Z';
- }
- return new Date(str);
-};
+// Parsing lives in lib/dateUtils so every surface treats DB timestamps (which are
+// UTC with no offset marker) as UTC, instead of the engine silently reading them
+// as local time and shifting every timestamp by the host UTC offset.
 
 const formatDateOnly = (dateString: string) => {
  const date = parseDbDate(dateString);

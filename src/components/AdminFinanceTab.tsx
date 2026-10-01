@@ -9,6 +9,7 @@ import { Coins, TrendingUp, TrendingDown, Plus, Trash2, Save, CheckCircle2, Aler
 import { useAuthStore } from '../store/authStore';
 import { PromoCodesManager } from './PromoCodesManager';
 import { toPersianDigits } from '../lib/persianUtils';
+import { formatTehranDate, formatTehranDateTime, formatTehranTime } from '../lib/dateUtils';
 
 export const AdminFinanceTab: React.FC = () => {
  const { token } = useAuthStore();
@@ -348,7 +349,7 @@ const [welcomeBonusEnabled, setWelcomeBonusEnabled] = useState(true);
  const tokens = tx.tokensUsed || 0;
  const amount = tx.amount || 0;
  const balance = tx.balanceAfter || 0;
- const date = new Date(tx.createdAt).toLocaleString('fa-IR');
+ const date = formatTehranDateTime(tx.createdAt);
 
  return [userCode, name, contact, model, type, tokens, amount, balance, date].map(val => `"${val}"`).join(',');
  });
@@ -379,7 +380,7 @@ const [welcomeBonusEnabled, setWelcomeBonusEnabled] = useState(true);
  <td>${tx.model || tx.type || '-'}</td>
  <td dir="ltr" style="color: ${isPositive ? 'green' : 'inherit'}">${isPositive ? '+' : ''}${tx.amount.toLocaleString()}</td>
  <td>${tx.balanceAfter ? tx.balanceAfter.toLocaleString() : '-'}</td>
- <td dir="ltr">${new Date(tx.createdAt).toLocaleString('fa-IR')}</td>
+ <td dir="ltr">${formatTehranDateTime(tx.createdAt)}</td>
  </tr>
  `;
  }).join('');
@@ -925,7 +926,7 @@ const [welcomeBonusEnabled, setWelcomeBonusEnabled] = useState(true);
  <td className="py-2.5 px-3 font-mono text-blue-600 dark:text-blue-400 font-bold" dir="ltr">${p.amountUsd}</td>
  <td className="py-2.5 px-3 font-mono">{p.costToman.toLocaleString('fa-IR')} تومان</td>
  <td className="py-2.5 px-3 font-mono text-emerald-600 dark:text-emerald-400 font-bold">{p.unitRateToman.toLocaleString('fa-IR')} ت</td>
- <td className="py-2.5 px-3 text-zinc-400">{new Date(p.createdAt).toLocaleDateString('fa-IR')}</td>
+ <td className="py-2.5 px-3 text-zinc-400">{formatTehranDate(p.createdAt)}</td>
  <td className="py-2.5 px-3 text-center">
  <button
  onClick={() => handleDeletePurchase(p.id)}
@@ -1026,7 +1027,7 @@ const [welcomeBonusEnabled, setWelcomeBonusEnabled] = useState(true);
          {Number(r.costUsd || 0).toFixed(4)}
         </td>
         <td className="py-3 px-3.5 text-zinc-500 dark:text-zinc-400">
-         {r.lastUsedAt ? new Date(r.lastUsedAt).toLocaleDateString('fa-IR') : '—'}
+         {r.lastUsedAt ? formatTehranDate(r.lastUsedAt) : '—'}
         </td>
        </tr>
       ))
@@ -1184,8 +1185,8 @@ const [welcomeBonusEnabled, setWelcomeBonusEnabled] = useState(true);
  </td>
  <td className="py-3 px-3.5">
  <div className="flex flex-col text-[11px] text-zinc-500 dark:text-zinc-400 leading-tight">
- <span>{new Date(tx.createdAt).toLocaleTimeString('fa-IR', { hour: '2-digit', minute: '2-digit' })}</span>
- <span className="text-[10px] text-zinc-400 mt-0.5">{new Date(tx.createdAt).toLocaleDateString('fa-IR')}</span>
+ <span>{formatTehranTime(tx.createdAt)}</span>
+ <span className="text-[10px] text-zinc-400 mt-0.5">{formatTehranDate(tx.createdAt)}</span>
  </div>
  </td>
  </tr>

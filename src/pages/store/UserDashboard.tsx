@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useAuthStore } from '../../store/authStore';
 import { useUIStore } from '../../store/uiStore';
 import { useChatStore } from '../../store/chatStore';
@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { toPersianDigits } from '../../lib/persianUtils';
+import { formatTehranDate, formatTehranDateTime, formatTehranShortDate } from '../../lib/dateUtils';
 import { MarkdownRenderer } from '../../components/MarkdownRenderer';
 import { GlobalHeader } from '../../components/GlobalHeader';
 
@@ -907,13 +908,7 @@ export const UserDashboard = () => {
                                   </div>
                                   <div className="text-[11px] text-zinc-500 dark:text-zinc-400 flex items-center gap-2 mt-1">
                                     <span dir="ltr">
-                                      {new Date(tx.createdAt).toLocaleDateString('fa-IR', {
-                                        year: 'numeric',
-                                        month: 'short',
-                                        day: 'numeric',
-                                        hour: '2-digit',
-                                        minute: '2-digit'
-                                      })}
+                                      {formatTehranDateTime(tx.createdAt)}
                                     </span>
                                     {isChat && (
                                       <>
@@ -991,7 +986,7 @@ export const UserDashboard = () => {
                           <div>
                             <h4 className="font-bold text-xs dark:text-white mb-1">{p.title}</h4>
                             <div className="text-[11px] text-zinc-500 dark:text-zinc-400 flex items-center gap-2">
-                              <span dir="ltr">{new Date(p.orderDate).toLocaleDateString('fa-IR')}</span>
+                              <span dir="ltr">{formatTehranDate(p.orderDate)}</span>
                               <span>•</span>
                               <span className="font-bold text-zinc-700 dark:text-zinc-300">{p.amount.toLocaleString('fa-IR')} تومان</span>
                             </div>
@@ -1314,7 +1309,7 @@ export const UserDashboard = () => {
                 </div>
                 <div className="text-left clay-inset-thick p-2.5 rounded-xl">
                   <div className="text-xs font-bold dark:text-white mb-1" dir="ltr">#{selectedInvoice.orderId.split('-')[1] || selectedInvoice.orderId}</div>
-                  <div className="text-[10px] text-zinc-500" dir="ltr">{new Date(selectedInvoice.orderDate).toLocaleString('fa-IR', { year: 'numeric', month: '2-digit', day: '2-digit' })}</div>
+                  <div className="text-[10px] text-zinc-500" dir="ltr">{formatTehranShortDate(selectedInvoice.orderDate)}</div>
                 </div>
               </div>
 

@@ -39,6 +39,7 @@ import {
 } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import { toEnglishDigits } from '../lib/persianUtils';
+import { formatTehranDate, formatTehranDateTime } from '../lib/dateUtils';
 import { AdminFinanceTab } from './AdminFinanceTab';
 import { AdminAnalyticsTab } from './AdminAnalyticsTab';
 
@@ -1271,7 +1272,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
  )}
  </td>
  <td className="py-4 px-6 text-xs text-zinc-500">
- {new Date(u.createdAt).toLocaleDateString('fa-IR')}
+ {formatTehranDate(u.createdAt)}
  </td>
  <td className="py-4 px-6">
   <div className="flex items-center justify-center gap-1">
@@ -2990,12 +2991,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
 
  {/* Date */}
  <td className="px-4 py-3.5 text-[11px] text-zinc-500 dark:text-zinc-400 whitespace-nowrap" dir="ltr">
- {new Date(o.createdAt).toLocaleDateString('fa-IR', {
- month: 'numeric',
- day: 'numeric',
- hour: '2-digit',
- minute: '2-digit'
- })}
+  {formatTehranDateTime(o.createdAt)}
  </td>
 
  {/* Actions */}
@@ -3095,13 +3091,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
  جزئیات سفارش <span className="font-mono text-blue-600 dark:text-blue-400">{selectedOrder.id}</span>
  </h4>
  <span className="text-[11px] text-zinc-500 dark:text-zinc-400">
- {new Date(selectedOrder.createdAt).toLocaleDateString('fa-IR', {
- year: 'numeric',
- month: 'long',
- day: 'numeric',
- hour: '2-digit',
- minute: '2-digit'
- })}
+  {formatTehranDateTime(selectedOrder.createdAt)}
  </span>
  </div>
  </div>

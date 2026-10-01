@@ -9,6 +9,23 @@ import { bot, getTelegramBot } from '../telegram/bot';
 // Path for persistent news-cron log file
 const LOG_FILE = path.join(process.cwd(), 'server', 'data', 'news-cron.log');
 
+// Orders created in Telegram notifications carry a UTC `createdAt` from SQLite.
+// Passing that straight to `new Date()` makes the engine read it as LOCAL time,
+// shifting the displayed timestamp by the server's UTC offset (Render is UTC, so
+// the admin sees a wrong time). Parse it as UTC explicitly and render in Tehran.
+const TEHRAN_TZ = 'Asia/Tehran';
+
+function formatTehranDateTime(value: string | Date | null | undefined): string {
+  if (!value) return '-';
+  const raw: string = value instanceof Date ? value.toISOString() : String(value);
+  // SQLite stores 'YYYY-MM-DD HH:MM:SS' in UTC with no zone marker.
+  const iso = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/.test(raw)
+    ? raw.replace(' ', 'T') + 'Z'
+    : raw;
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return raw;
+  return d.toLocaleString('fa-IR', { timeZone: TEHRAN_TZ });
+}
 export function appendCronLog(level: 'INFO' | 'WARN' | 'ERROR', message: string, details?: any) {
   try {
     const dataDir = path.join(process.cwd(), 'server', 'data');
@@ -557,7 +574,7 @@ export function initNewsCron() {
                         `💰 **مبلغ:** ${Number(order.amount || 0).toLocaleString('fa-IR')} تومان\n` +
                         `🔢 **سفارش:** \`${order.id}\`\n` +
                         `👤 **کاربر:** ${order.name || 'نامشخص'} (\`${order.telegramId || 'بدون آیدی'}\`)\n` +
-                        `⏰ **ایجاد شده:** ${new Date(order.createdAt).toLocaleString('fa-IR')}\n\n` +
+                        `⏰ **ایجاد شده:** ${formatTehranDateTime(order.createdAt)}\n\n` +
                         `لطفاً در پنل ادمین بررسی و اقدام کنید.`;
             try {
               await currentBot.telegram.sendMessage(ADMIN_ID, msg, { parse_mode: 'Markdown' });

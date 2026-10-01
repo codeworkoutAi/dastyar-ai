@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { useAuthStore } from '../store/authStore';
+import { formatTehranDate } from '../lib/dateUtils';
 import { useUIStore } from '../store/uiStore';
 import { Coins, X, Sparkles, CreditCard,
  ShieldCheck,
@@ -346,7 +347,7 @@ export const WalletModal: React.FC = () => {
  {tx.description || (isPositive ? 'افزایش موجودی' : `مصرف چت (${tx.model || 'عمومی'})`)}
  </span>
  <div className="flex items-center gap-2 type-badge text-zinc-400 mt-0.5">
- <span>{new Date(tx.createdAt).toLocaleDateString('fa-IR')}</span>
+ <span>{formatTehranDate(tx.createdAt)}</span>
  {tx.promptTokens + tx.completionTokens > 0 && (
  <>
  <span>•</span>

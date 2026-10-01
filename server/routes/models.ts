@@ -7,8 +7,18 @@ import { MODEL_PRICING_USD, getApiDollarRate } from '../services/walletService';
 
 const router = express.Router();
 
+// Render polls this to decide the deploy succeeded. It must stay dependency-free and
+// must NOT require the database: schema init happens after the port is bound (see
+// AGENTS.md rule 23), so a replica that is still syncing must not fail the deploy.
+// `ready` flips once startup work has completed, which makes a slow boot visible in
+// the logs instead of an unexplained 15-minute timeout.
+let startupReady = false;
+export function markStartupReady() {
+  startupReady = true;
+}
+
 router.get('/api/health', (_req, res) => {
-  res.json({ status: 'ok', timestamp: Date.now() });
+  res.json({ status: 'ok', ready: startupReady, timestamp: Date.now() });
 });
 
 // 1. GET /api/default-profiles (Public: List active system default profiles without API keys)
