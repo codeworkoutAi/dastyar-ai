@@ -52,7 +52,7 @@ async function deletePendingReceipt(tgId: string) {
 
 export function startTelegramBot() {
   const token = process.env.TELEGRAM_BOT_TOKEN;
-  
+
   if (!token) {
     console.log('[Telegram] TELEGRAM_BOT_TOKEN not provided, bot is disabled.');
     return;
@@ -134,7 +134,7 @@ export function startTelegramBot() {
       );
     }
 
-    const welcomeMsg = 
+    const welcomeMsg =
       `${RLM}🌟 <b>سلام ${name} عزیز، به دستیار هوشمند خوش آمدید!</b>\n\n` +
       `${RLM}مرجع تخصصی خدمات و دسترسی به برترین ابزارها و مدل‌های هوش مصنوعی.\n\n` +
       `${RLM}📌 <b>امکانات در دسترس شما:</b>\n` +
@@ -168,32 +168,32 @@ export function startTelegramBot() {
   });
 
 
-function getWebsiteUrl(): string {
-  const envUrl = (process.env.WEBSITE_URL || process.env.WEB_URL || process.env.APP_URL || '').trim();
-  if (envUrl && envUrl.startsWith('http') && !envUrl.includes('MY_APP_URL')) {
-    return envUrl.replace(/\/$/, '');
-  }
-  return 'http://localhost:3000';
-}
-
-function getProductPhotoSource(p: any): any {
-  // Prioritize square 1:1 image so all Telegram card photos are uniform and consistent
-  const img = p.image || p.bannerImage;
-  if (img && typeof img === 'string') {
-    if (img.startsWith('http://') || img.startsWith('https://')) {
-      return img;
+  function getWebsiteUrl(): string {
+    const envUrl = (process.env.WEBSITE_URL || process.env.WEB_URL || process.env.APP_URL || '').trim();
+    if (envUrl && envUrl.startsWith('http') && !envUrl.includes('MY_APP_URL')) {
+      return envUrl.replace(/\/$/, '');
     }
-    if (img.startsWith('data:image/')) {
-      const base64Data = img.replace(/^data:image\/\w+;base64,/, '');
-      return { source: Buffer.from(base64Data, 'base64') };
-    }
+    return 'http://localhost:3000';
   }
-  return 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&auto=format&fit=crop&q=80';
-}
 
-async function sendStoreShowcase(ctx: any, page: number = 0, isEdit: boolean = false) {
-  try {
-    const products = db.prepare(`
+  function getProductPhotoSource(p: any): any {
+    // Prioritize square 1:1 image so all Telegram card photos are uniform and consistent
+    const img = p.image || p.bannerImage;
+    if (img && typeof img === 'string') {
+      if (img.startsWith('http://') || img.startsWith('https://')) {
+        return img;
+      }
+      if (img.startsWith('data:image/')) {
+        const base64Data = img.replace(/^data:image\/\w+;base64,/, '');
+        return { source: Buffer.from(base64Data, 'base64') };
+      }
+    }
+    return 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&auto=format&fit=crop&q=80';
+  }
+
+  async function sendStoreShowcase(ctx: any, page: number = 0, isEdit: boolean = false) {
+    try {
+      const products = db.prepare(`
       SELECT p.*, COUNT(CASE WHEN l.status = 'available' THEN 1 END) as stock
       FROM products p 
       LEFT JOIN licenses l ON p.id = l.productId
@@ -201,76 +201,76 @@ async function sendStoreShowcase(ctx: any, page: number = 0, isEdit: boolean = f
       ORDER BY p.id DESC
     `).all() as any[];
 
-    if (products.length === 0) {
-      const emptyMsg = 'در حال حاضر محصولی در فروشگاه موجود نیست.';
-      if (isEdit) await ctx.editMessageText(emptyMsg).catch(() => {});
-      else await ctx.reply(emptyMsg);
-      return;
-    }
-
-    // Ensure page is within bounds
-    if (page < 0) page = products.length - 1;
-    if (page >= products.length) page = 0;
-
-    const p = products[page];
-    const priceFa = Number(p.price || 0).toLocaleString('fa-IR');
-    const isOutOfStock = p.category !== 'package' && (p.stock || 0) <= 0;
-    const stockText = p.category !== 'package' 
-      ? (p.stock > 0 ? `${Number(p.stock).toLocaleString('fa-IR')} عدد موجود` : 'اتمام موجودی ❌') 
-      : 'نامحدود ♾';
-    const catText = p.category === 'api' ? 'کلید API' : p.category === 'account' ? 'اکانت پرمیوم' : 'پکیج آموزشی';
-
-    const caption = `${RLM}🏪 <b>ویترین فروشگاه محصولات</b>\n\n` +
-                    `${RLM}📦 <b>${p.title}</b>\n` +
-                    `${RLM}🏷 <b>دسته:</b> ${catText}  |  📊 <b>موجودی:</b> ${stockText}\n` +
-                    `${RLM}💰 <b>قیمت:</b> <b>${priceFa} تومان</b>\n\n` +
-                    `${RLM}محصول ${page + 1} از ${products.length}`;
-
-    const buyButton = isOutOfStock
-      ? [Markup.button.callback('❌ این محصول ناموجود است', 'noop')]
-      : [Markup.button.callback('💳 خرید و دریافت لایسنس', `buy_${p.id}`)];
-
-    const keyboard = [buyButton];
-
-    if (products.length > 1) {
-      keyboard.push([
-        Markup.button.callback('➡️ بعدی', `store_page_${(page + 1) % products.length}`),
-        Markup.button.callback('⬅️ قبلی', `store_page_${(page - 1 + products.length) % products.length}`)
-      ]);
-    }
-
-    const photoSource = getProductPhotoSource(p);
-
-    if (isEdit) {
-      try {
-        await ctx.editMessageMedia(
-          { type: 'photo', media: photoSource, caption, parse_mode: 'HTML' },
-          { reply_markup: { inline_keyboard: keyboard } }
-        );
-      } catch (editErr) {
-        // If edit fails (e.g. same content), just ignore or re-send
-        // But usually it's fine unless they click the same button
+      if (products.length === 0) {
+        const emptyMsg = 'در حال حاضر محصولی در فروشگاه موجود نیست.';
+        if (isEdit) await ctx.editMessageText(emptyMsg).catch(() => { });
+        else await ctx.reply(emptyMsg);
+        return;
       }
-      ctx.answerCbQuery().catch(() => {});
-    } else {
-      try {
-        await ctx.replyWithPhoto(photoSource, {
-          caption,
-          parse_mode: 'HTML',
-          reply_markup: { inline_keyboard: keyboard }
-        });
-      } catch (photoErr) {
-        await ctx.reply(caption, {
-          parse_mode: 'HTML',
-          reply_markup: { inline_keyboard: keyboard }
-        });
+
+      // Ensure page is within bounds
+      if (page < 0) page = products.length - 1;
+      if (page >= products.length) page = 0;
+
+      const p = products[page];
+      const priceFa = Number(p.price || 0).toLocaleString('fa-IR');
+      const isOutOfStock = p.category !== 'package' && (p.stock || 0) <= 0;
+      const stockText = p.category !== 'package'
+        ? (p.stock > 0 ? `${Number(p.stock).toLocaleString('fa-IR')} عدد موجود` : 'اتمام موجودی ❌')
+        : 'نامحدود ♾';
+      const catText = p.category === 'api' ? 'کلید API' : p.category === 'account' ? 'اکانت پرمیوم' : 'پکیج آموزشی';
+
+      const caption = `${RLM}🏪 <b>ویترین فروشگاه محصولات</b>\n\n` +
+        `${RLM}📦 <b>${p.title}</b>\n` +
+        `${RLM}🏷 <b>دسته:</b> ${catText}  |  📊 <b>موجودی:</b> ${stockText}\n` +
+        `${RLM}💰 <b>قیمت:</b> <b>${priceFa} تومان</b>\n\n` +
+        `${RLM}محصول ${page + 1} از ${products.length}`;
+
+      const buyButton = isOutOfStock
+        ? [Markup.button.callback('❌ این محصول ناموجود است', 'noop')]
+        : [Markup.button.callback('💳 خرید و دریافت لایسنس', `buy_${p.id}`)];
+
+      const keyboard = [buyButton];
+
+      if (products.length > 1) {
+        keyboard.push([
+          Markup.button.callback('➡️ بعدی', `store_page_${(page + 1) % products.length}`),
+          Markup.button.callback('⬅️ قبلی', `store_page_${(page - 1 + products.length) % products.length}`)
+        ]);
       }
+
+      const photoSource = getProductPhotoSource(p);
+
+      if (isEdit) {
+        try {
+          await ctx.editMessageMedia(
+            { type: 'photo', media: photoSource, caption, parse_mode: 'HTML' },
+            { reply_markup: { inline_keyboard: keyboard } }
+          );
+        } catch (editErr) {
+          // If edit fails (e.g. same content), just ignore or re-send
+          // But usually it's fine unless they click the same button
+        }
+        ctx.answerCbQuery().catch(() => { });
+      } else {
+        try {
+          await ctx.replyWithPhoto(photoSource, {
+            caption,
+            parse_mode: 'HTML',
+            reply_markup: { inline_keyboard: keyboard }
+          });
+        } catch (photoErr) {
+          await ctx.reply(caption, {
+            parse_mode: 'HTML',
+            reply_markup: { inline_keyboard: keyboard }
+          });
+        }
+      }
+    } catch (err: any) {
+      console.error('[Telegram] Store showcase error:', err);
+      ctx.reply('خطا در بارگذاری فروشگاه: ' + (err.message || err)).catch(() => { });
     }
-  } catch (err: any) {
-    console.error('[Telegram] Store showcase error:', err);
-    ctx.reply('خطا در بارگذاری فروشگاه: ' + (err.message || err)).catch(() => {});
   }
-}
 
   // Main Menu Handlers
   bot.hears(['🛍 محصولات هوش مصنوعی', '🛍 فروشگاه محصولات', 'فروشگاه'], async (ctx) => {
@@ -312,7 +312,7 @@ async function sendStoreShowcase(ctx: any, page: number = 0, isEdit: boolean = f
   bot.hears('📢 عضویت در کانال ما', (ctx) => {
     const channel = process.env.TELEGRAM_CHANNEL_ID || '@MyChannel';
     const channelLink = channel.startsWith('@') ? `https://t.me/${channel.substring(1)}` : channel;
-    
+
     ctx.reply(`برای اطلاع از آخرین اخبار، مقالات و اطلاعیه‌ها، به کانال رسمی ما بپیوندید:\n\n${channelLink}`, {
       reply_markup: {
         inline_keyboard: [
@@ -331,12 +331,12 @@ async function sendStoreShowcase(ctx: any, page: number = 0, isEdit: boolean = f
     if (!tgId) return;
     try {
       db.prepare("UPDATE users SET botState = 'support' WHERE telegramId = ?").run(tgId);
-    } catch(e) {}
+    } catch (e) { }
     ctx.reply(
       `${RLM}🎧 **ارتباط با پشتیبانی**\n\n` +
       `${RLM}شما به بخش پشتیبانی متصل شدید. لطفاً سوال یا مشکل خود را به صورت پیام متنی، صوتی و یا تصویر ارسال کنید.\n` +
       `${RLM}مدیریت در اسرع وقت پاسخگوی شما خواهد بود.\n\n` +
-      `${RLM}برای خروج از حالت پشتیبانی، روی دکمه زیر کلیک کنید.`, 
+      `${RLM}برای خروج از حالت پشتیبانی، روی دکمه زیر کلیک کنید.`,
       {
         parse_mode: 'Markdown',
         reply_markup: {
@@ -354,9 +354,9 @@ async function sendStoreShowcase(ctx: any, page: number = 0, isEdit: boolean = f
     if (tgId) {
       try {
         db.prepare("UPDATE users SET botState = 'normal' WHERE telegramId = ?").run(tgId);
-      } catch(e) {}
+      } catch (e) { }
     }
-    
+
     ctx.reply('شما از حالت پشتیبانی خارج شدید. چطور می‌توانم کمکتان کنم؟', {
       reply_markup: {
         keyboard: [
@@ -385,17 +385,17 @@ async function sendStoreShowcase(ctx: any, page: number = 0, isEdit: boolean = f
 
       const priceFa = Number(product.price || 0).toLocaleString('fa-IR');
       const isOutOfStock = product.category !== 'package' && (product.stock || 0) <= 0;
-      const stockText = product.category !== 'package' 
-        ? (product.stock > 0 ? `${product.stock.toLocaleString('fa-IR')} عدد موجود` : 'ناموجود ❌') 
+      const stockText = product.category !== 'package'
+        ? (product.stock > 0 ? `${product.stock.toLocaleString('fa-IR')} عدد موجود` : 'ناموجود ❌')
         : 'نامحدود (پکیج)';
 
       const categoryName = product.category === 'api' ? 'کلید API' : product.category === 'account' ? 'اکانت پرمیوم' : 'پکیج آموزشی';
 
       const caption = `${RLM}📦 <b>${product.title}</b>\n` +
-                      `${RLM}🏷 <b>دسته:</b> ${categoryName}\n\n` +
-                      `${RLM}📝 <b>توضیحات:</b>\n${product.description || 'توضیحی ثبت نشده است.'}\n\n` +
-                      `${RLM}💰 <b>قیمت:</b> ${priceFa} تومان\n` +
-                      `${RLM}📊 <b>موجودی:</b> ${stockText}`;
+        `${RLM}🏷 <b>دسته:</b> ${categoryName}\n\n` +
+        `${RLM}📝 <b>توضیحات:</b>\n${product.description || 'توضیحی ثبت نشده است.'}\n\n` +
+        `${RLM}💰 <b>قیمت:</b> ${priceFa} تومان\n` +
+        `${RLM}📊 <b>موجودی:</b> ${stockText}`;
 
       const buyButton = isOutOfStock
         ? [Markup.button.callback('❌ این محصول در حال حاضر ناموجود است', 'noop')]
@@ -408,7 +408,7 @@ async function sendStoreShowcase(ctx: any, page: number = 0, isEdit: boolean = f
 
       const photoSource = getProductPhotoSource(product);
 
-      await ctx.deleteMessage().catch(() => {});
+      await ctx.deleteMessage().catch(() => { });
       await ctx.replyWithPhoto(photoSource, {
         caption,
         parse_mode: 'HTML',
@@ -425,7 +425,7 @@ async function sendStoreShowcase(ctx: any, page: number = 0, isEdit: boolean = f
 
   // No-op for indicator buttons
   bot.action('noop', (ctx) => {
-    ctx.answerCbQuery().catch(() => {});
+    ctx.answerCbQuery().catch(() => { });
   });
 
   bot.action('back_to_store', async (ctx) => {
@@ -441,7 +441,7 @@ async function sendStoreShowcase(ctx: any, page: number = 0, isEdit: boolean = f
   bot.action(/buy_(\d+)/, async (ctx) => {
     const productId = ctx.match[1];
     const tgId = ctx.from?.id.toString();
-    
+
     if (!tgId) return ctx.answerCbQuery('خطا در شناسایی کاربر!');
 
     try {
@@ -465,8 +465,8 @@ async function sendStoreShowcase(ctx: any, page: number = 0, isEdit: boolean = f
       if (!hasRealContact) {
         pendingCheckouts.set(tgId, productId);
         try {
-          await ctx.deleteMessage().catch(() => {});
-        } catch (_) {}
+          await ctx.deleteMessage().catch(() => { });
+        } catch (_) { }
         return ctx.reply(
           'جهت ثبت سفارش، لطفاً **ایمیل** معتبر خود را در همین چت تایپ کرده و ارسال کنید و یا از طریق دکمه زیر شماره موبایل خود را به اشتراک بگذارید:',
           {
@@ -510,12 +510,12 @@ async function sendStoreShowcase(ctx: any, page: number = 0, isEdit: boolean = f
 
     const priceFa = Number(product.price || 0).toLocaleString('fa-IR');
     const invoiceText = `${RLM}🧾 **فاکتور خرید محصول**\n\n` +
-                        `${RLM}📦 **محصول:** ${product.title}\n` +
-                        `${RLM}🔢 **شماره سفارش:** \`${orderId}\`\n` +
-                        `${RLM}💰 **مبلغ قابل پرداخت:** ${priceFa} تومان\n\n` +
-                        (isOnlineUrl 
-                          ? `جهت پرداخت، روی دکمه درگاه پرداخت کلیک کنید:` 
-                          : `جهت ثبت فاکتور و ارسال به پنل مدیریت برای بررسی و تأیید، روی دکمه زیر بزنید:`);
+      `${RLM}📦 **محصول:** ${product.title}\n` +
+      `${RLM}🔢 **شماره سفارش:** \`${orderId}\`\n` +
+      `${RLM}💰 **مبلغ قابل پرداخت:** ${priceFa} تومان\n\n` +
+      (isOnlineUrl
+        ? `جهت پرداخت، روی دکمه درگاه پرداخت کلیک کنید:`
+        : `جهت ثبت فاکتور و ارسال به پنل مدیریت برای بررسی و تأیید، روی دکمه زیر بزنید:`);
 
     const keyboardButtons: any[] = [];
 
@@ -576,11 +576,11 @@ async function sendStoreShowcase(ctx: any, page: number = 0, isEdit: boolean = f
 
       const priceFa = Number(order.productPrice || 0).toLocaleString('fa-IR');
       const pendingMsg = `${RLM}⏳ **درخواست خرید شما با موفقیت ثبت شد.**\n\n` +
-                         `${RLM}📦 **محصول:** ${order.productTitle || 'سفارش شما'}\n` +
-                         `${RLM}🔢 **شماره سفارش:** \`${orderId}\`\n` +
-                         `${RLM}💰 **مبلغ:** ${priceFa} تومان\n` +
-                         `${RLM}📋 **وضعیت:** 🟡 **در انتظار تأیید مدیریت**\n\n` +
-                         `💡 *سفارش شما در سیستم ثبت شد و برای مدیریت ارسال گردید. به محض بررسی و تأیید توسط ادمین در پنل، کد لایسنس به صورت خودکار در همین چت تلگرام برای شما ارسال خواهد شد.*`;
+        `${RLM}📦 **محصول:** ${order.productTitle || 'سفارش شما'}\n` +
+        `${RLM}🔢 **شماره سفارش:** \`${orderId}\`\n` +
+        `${RLM}💰 **مبلغ:** ${priceFa} تومان\n` +
+        `${RLM}📋 **وضعیت:** 🟡 **در انتظار تأیید مدیریت**\n\n` +
+        `💡 *سفارش شما در سیستم ثبت شد و برای مدیریت ارسال گردید. به محض بررسی و تأیید توسط ادمین در پنل، کد لایسنس به صورت خودکار در همین چت تلگرام برای شما ارسال خواهد شد.*`;
 
       await ctx.editMessageText(pendingMsg, {
         parse_mode: 'Markdown',
@@ -603,15 +603,15 @@ async function sendStoreShowcase(ctx: any, page: number = 0, isEdit: boolean = f
     const orderId = ctx.match[1];
     const tgId = ctx.from.id.toString();
     await setPendingReceipt(tgId, orderId);
-    
-    const c2cMessage = 
+
+    const c2cMessage =
       `💳 **پرداخت کارت به کارت**\n\n` +
       `لطفاً مبلغ فاکتور را به شماره کارت زیر واریز نمایید:\n\n` +
-      `💳 \`1234-5678-9012-3456\`\n` +
-      `👤 به نام: (نام صاحب حساب در فایل bot.ts ویرایش شود)\n\n` +
+      `💳 \`5894-6311-1590-7644\`\n` +
+      `👤 به نام: علی ابراهیمی قرخلو (بانک رفاه)\n\n` +
       `📸 **پس از واریز، لطفاً عکس فیش واریزی خود را دقیقاً در همین چت ارسال کنید.**`;
-      
-    await ctx.reply(c2cMessage, { 
+
+    await ctx.reply(c2cMessage, {
       parse_mode: 'Markdown',
       reply_markup: {
         inline_keyboard: [[Markup.button.callback('انصراف و بازگشت', 'back_to_store')]]
@@ -703,15 +703,15 @@ async function sendStoreShowcase(ctx: any, page: number = 0, isEdit: boolean = f
     if (pendingOrderId) {
       if (ctx.message.photo || ctx.message.document) {
         await deletePendingReceipt(tgId);
-        
+
         if (ADMIN_ID) {
           const order = db.prepare('SELECT o.*, p.title as productTitle, p.price as productPrice FROM orders o LEFT JOIN products p ON o.productId = p.id WHERE o.id = ?').get(pendingOrderId) as any;
           const priceFa = Number(order?.productPrice || 0).toLocaleString('fa-IR');
-          
+
           await ctx.telegram.sendMessage(ADMIN_ID, `🧾 **فیش واریزی جدید (کارت به کارت)**\n\n📦 **محصول:** ${order?.productTitle}\n💰 **مبلغ:** ${priceFa} تومان\n🔢 **سفارش:** \`${pendingOrderId}\`\n👤 **کاربر:** ${ctx.from.first_name}\n🆔 **آیدی:** \`${tgId}\``, { parse_mode: 'Markdown' });
           await ctx.telegram.copyMessage(ADMIN_ID, ctx.chat.id, ctx.message.message_id);
         }
-        
+
         return ctx.reply('✅ فیش واریزی شما دریافت شد و جهت بررسی برای مدیریت ارسال گردید.\n\nپس از تایید مدیریت در پنل ادمین، لایسنس شما به صورت خودکار ارسال خواهد شد.');
       } else {
         return ctx.reply('لطفاً فقط عکس فیش واریزی را ارسال کنید.');
@@ -779,10 +779,10 @@ async function sendStoreShowcase(ctx: any, page: number = 0, isEdit: boolean = f
         }
         pendingCheckouts.delete(tgId);
         await ctx.reply('✅ اطلاعات تماس شما با موفقیت ثبت شد.', { reply_markup: { remove_keyboard: true } });
-        
+
         const user = db.prepare('SELECT * FROM users WHERE telegramId = ?').get(tgId) as any;
         const product = db.prepare(`SELECT p.*, COUNT(CASE WHEN l.status = 'available' THEN 1 END) as stock FROM products p LEFT JOIN licenses l ON p.id = l.productId WHERE p.id = ? GROUP BY p.id`).get(productId) as any;
-        
+
         if (product) {
           await createOrderAndSendInvoice(ctx, user, product);
         }
@@ -800,7 +800,7 @@ async function sendStoreShowcase(ctx: any, page: number = 0, isEdit: boolean = f
       if (u && u.botState === 'support') {
         isSupport = true;
       }
-    } catch (e) {}
+    } catch (e) { }
 
     if (isSupport) {
       const ADMIN_ID = process.env.TELEGRAM_ADMIN_ID || '';
@@ -810,7 +810,7 @@ async function sendStoreShowcase(ctx: any, page: number = 0, isEdit: boolean = f
       try {
         const header = await ctx.telegram.sendMessage(ADMIN_ID, `📩 **پیام جدید از پشتیبانی**\n👤 کاربر: ${ctx.from?.first_name || 'ناشناس'}\n🆔 آیدی: \`${tgId}\``, { parse_mode: 'Markdown' });
         const forwarded = await ctx.telegram.copyMessage(ADMIN_ID, ctx.chat.id, ctx.message.message_id);
-        
+
         // Map both the header and the forwarded message to the user
         adminMessageMap.set(header.message_id, tgId);
         adminMessageMap.set(forwarded.message_id, tgId);
@@ -826,7 +826,7 @@ async function sendStoreShowcase(ctx: any, page: number = 0, isEdit: boolean = f
     const text = ctx.message.text || '';
     if (text && !text.startsWith('/')) {
       const name = ctx.from?.first_name || 'کاربر';
-      const welcomeMsg = 
+      const welcomeMsg =
         `${RLM}🌟 **سلام ${name} عزیز، به دستیار هوشمند خوش آمدید!**\n\n` +
         `${RLM}جهت مشاهده محصولات، از دکمه‌های زیر استفاده کنید:`;
 
@@ -853,10 +853,10 @@ async function sendStoreShowcase(ctx: any, page: number = 0, isEdit: boolean = f
 
   // Enable graceful stop
   process.once('SIGINT', () => {
-    try { bot?.stop('SIGINT'); } catch(e) {}
+    try { bot?.stop('SIGINT'); } catch (e) { }
   });
   process.once('SIGTERM', () => {
-    try { bot?.stop('SIGTERM'); } catch(e) {}
+    try { bot?.stop('SIGTERM'); } catch (e) { }
   });
 }
 
@@ -897,18 +897,18 @@ function buildCurlSnippet(rawInput: string, licenseKey: string): string {
   }
 
   return `curl --request POST \\\n` +
-         `  --url "${targetUrl}" \\\n` +
-         `  --header "Authorization: Bearer ${licenseKey}" \\\n` +
-         `  --header "Content-Type: application/json" \\\n` +
-         `  --data '{\n` +
-         `    "model": "${modelName}",\n` +
-         `    "messages": [\n` +
-         `      {\n` +
-         `        "role": "user",\n` +
-         `        "content": "${contentMsg}"\n` +
-         `      }\n` +
-         `    ]\n` +
-         `  }'`;
+    `  --url "${targetUrl}" \\\n` +
+    `  --header "Authorization: Bearer ${licenseKey}" \\\n` +
+    `  --header "Content-Type: application/json" \\\n` +
+    `  --data '{\n` +
+    `    "model": "${modelName}",\n` +
+    `    "messages": [\n` +
+    `      {\n` +
+    `        "role": "user",\n` +
+    `        "content": "${contentMsg}"\n` +
+    `      }\n` +
+    `    ]\n` +
+    `  }'`;
 }
 
 export async function sendTelegramOrderSuccess(orderId: string, licenseId: number | bigint | null) {
@@ -928,22 +928,22 @@ export async function sendTelegramOrderSuccess(orderId: string, licenseId: numbe
 
     if (orderInfo?.telegramId) {
       let msg = `${RLM}🎉 <b>سفارش شما با موفقیت توسط مدیریت تأیید شد!</b>\n\n` +
-                `${RLM}📦 <b>محصول:</b> ${orderInfo.productTitle || 'سفارش شما'}\n` +
-                `${RLM}🔢 <b>شماره سفارش:</b> <code>${orderId}</code>\n\n`;
+        `${RLM}📦 <b>محصول:</b> ${orderInfo.productTitle || 'سفارش شما'}\n` +
+        `${RLM}🔢 <b>شماره سفارش:</b> <code>${orderId}</code>\n\n`;
 
       const activeLicenseId = licenseId || orderInfo.licenseId;
       if (activeLicenseId) {
         const lic = db.prepare('SELECT key FROM licenses WHERE id = ?').get(activeLicenseId) as any;
         if (lic?.key) {
           msg += `${RLM}🔑 <b>کد لایسنس شما:</b>\n<code>${lic.key}</code>\n\n`;
-          
+
           if (orderInfo.baseUrl) {
             const curlCode = buildCurlSnippet(orderInfo.baseUrl, lic.key);
             msg += `${RLM}🔗 <b>راهنمای استفاده از API:</b>\n` +
-                   `جهت استفاده از سرویس، می‌توانید از نمونه کد cURL زیر استفاده کنید:\n\n` +
-                   `<pre><code class="language-shell">${escapeHtml(curlCode)}</code></pre>\n\n`;
+              `جهت استفاده از سرویس، می‌توانید از نمونه کد cURL زیر استفاده کنید:\n\n` +
+              `<pre><code class="language-shell">${escapeHtml(curlCode)}</code></pre>\n\n`;
           }
-          
+
           if (orderInfo.deliveryGuide) {
             msg += `${RLM}📖 <b>راهنمای تحویل:</b>\n${orderInfo.deliveryGuide}\n\n`;
           }
