@@ -12,6 +12,9 @@ const config: CapacitorConfig = {
   server: {
     cleartext: true,
     androidScheme: 'http'
+  },
+  android: {
+    appendUserAgent: 'BazaarVersion'
   }
 };
 

@@ -31,6 +31,7 @@ import { useUIStore } from '../store/uiStore';
 import { useSettingsStore } from '../store/settingsStore';
 import { useChatStore } from '../store/chatStore';
 import { exportToJson } from '../lib/exportUtils';
+import { isBazaarEnvironment } from '../lib/bazaarUtils';
 
 interface GroupedConversations {
     id: 'today' | 'yesterday' | 'last7Days' | 'older';
@@ -470,16 +471,18 @@ export const Sidebar: React.FC = React.memo(() => {
                 {/* ---------------- 2. نوار ابزارهای سریع (آیکون‌های سه‌بعدی برجسته) ---------------- */}
                 <div className="px-3 pt-2.5 pb-1 mb-3.5 shrink-0">
                     <div className="flex items-center justify-between gap-1.5 px-0.5">
-                        <Tooltip content="فروشگاه محصولات" position="top" align="start">
-                            <Link
-                                to="/store"
-                                onClick={() => { if (window.innerWidth < 768) setSidebarOpen(false); }}
-                                className="clay-icon-btn w-10 h-10 flex items-center justify-center cursor-pointer clay-icon"
-                                aria-label="فروشگاه محصولات و اشتراک"
-                            >
-                                <Store className="w-5 h-5 text-emerald-500" strokeWidth={1.8} />
-                            </Link>
-                        </Tooltip>
+                        {!isBazaarEnvironment() && (
+                            <Tooltip content="فروشگاه محصولات" position="top" align="start">
+                                <Link
+                                    to="/store"
+                                    onClick={() => { if (window.innerWidth < 768) setSidebarOpen(false); }}
+                                    className="clay-icon-btn w-10 h-10 flex items-center justify-center cursor-pointer clay-icon"
+                                    aria-label="فروشگاه محصولات و اشتراک"
+                                >
+                                    <Store className="w-5 h-5 text-emerald-500" strokeWidth={1.8} />
+                                </Link>
+                            </Tooltip>
+                        )}
 
                         <Tooltip content="وبلاگ هوش مصنوعی" position="top" align="center">
                             <Link
@@ -668,7 +671,7 @@ export const Sidebar: React.FC = React.memo(() => {
                 </div>
 
                 {/* Wallet Status Widget for Authenticated Users */}
-                {user && (
+                {user && !isBazaarEnvironment() && (
                     <div className="mx-3 mb-2 p-2.5 rounded-card bg-[var(--gemini-gradient-subtle)] border border-[var(--color-accent-primary)]/20 flex items-center justify-between shadow-xs">
                         <div className="flex items-center gap-2">
                             <div className="w-8 h-8 rounded-btn bg-[var(--color-accent-primary)] text-white flex items-center justify-center shrink-0 shadow-sm">
@@ -693,6 +696,26 @@ export const Sidebar: React.FC = React.memo(() => {
                             شارژ
                         </button>
                     </div>
+                )}
+
+                {/* Website Redirect for Bazaar Users */}
+                {isBazaarEnvironment() && (
+                    <a 
+                        href="https://fa-chatbox.com/?utm_source=bazaar_app" 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="mx-3 mb-2 p-2.5 rounded-card bg-[var(--gemini-gradient-subtle)] border border-indigo-500/20 flex items-center justify-between shadow-xs hover:border-indigo-500/40 transition-all cursor-pointer"
+                    >
+                        <div className="flex items-center gap-2">
+                            <div className="w-8 h-8 rounded-btn bg-indigo-600 text-white flex items-center justify-center shrink-0 shadow-sm">
+                                <Compass className="w-4 h-4" />
+                            </div>
+                            <div className="flex flex-col text-right">
+                                <span className="text-[10px] font-medium text-indigo-500 dark:text-indigo-400">امکانات پیشرفته و حرفه‌ای</span>
+                                <span className="text-xs font-bold text-zinc-900 dark:text-zinc-100">نسخه وب‌سایت اصلی</span>
+                            </div>
+                        </div>
+                    </a>
                 )}
 
                 {/* Bottom Storage & Metrics (فوتر خلوت) */}
