@@ -99,13 +99,26 @@ app.use(helmet({
 }));
 
 // CORS configuration
+const allowedOrigins = [
+  'https://dastyarai.com',
+  'http://localhost',
+  'https://localhost',
+  'capacitor://localhost',
+  'http://localhost:3000',
+  process.env.WEB_URL,
+].filter(Boolean) as string[];
+
 app.use(cors({
-  origin: process.env.NODE_ENV === 'production' 
-    ? [process.env.WEB_URL || 'https://dastyarai.com', 'http://localhost', 'capacitor://localhost']
-    : ['http://localhost:3000', 'http://localhost', 'capacitor://localhost'],
+  origin: (origin, callback) => {
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin) || origin.includes('localhost')) {
+      return callback(null, true);
+    }
+    return callback(null, false);
+  },
   credentials: false,
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
 }));
 
 app.use(express.json({ limit: '50mb' }));

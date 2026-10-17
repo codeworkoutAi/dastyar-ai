@@ -12,19 +12,31 @@ if (Capacitor.isNativePlatform()) {
   const originalFetch = window.fetch;
   window.fetch = async function (...args) {
     let [resource, config] = args;
-    if (typeof resource === 'string' && resource.startsWith('/api/')) {
-      resource = API_BASE + resource;
+    if (typeof resource === 'string') {
+      if (resource.startsWith('/api/')) {
+        resource = API_BASE + resource;
+      }
+    } else if (resource instanceof Request) {
+      if (resource.url.startsWith('/api/') || resource.url.startsWith(window.location.origin + '/api/')) {
+        const path = resource.url.replace(window.location.origin, '');
+        resource = new Request(API_BASE + path, resource);
+      }
+    } else if (resource instanceof URL) {
+      if (resource.pathname.startsWith('/api/')) {
+        resource = new URL(resource.pathname + resource.search, API_BASE);
+      }
     }
     return originalFetch(resource, config);
   };
 
   // Intercept EventSource
   const OriginalEventSource = window.EventSource;
-  window.EventSource = function (url: string, eventSourceInitDict?: EventSourceInit) {
-    if (typeof url === 'string' && url.startsWith('/api/')) {
-      url = API_BASE + url;
+  window.EventSource = function (url: string | URL, eventSourceInitDict?: EventSourceInit) {
+    let finalUrl = typeof url === 'string' ? url : url.toString();
+    if (finalUrl.startsWith('/api/')) {
+      finalUrl = API_BASE + finalUrl;
     }
-    return new OriginalEventSource(url, eventSourceInitDict);
+    return new OriginalEventSource(finalUrl, eventSourceInitDict);
   } as any;
 }
 

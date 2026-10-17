@@ -8,6 +8,8 @@ dist/
 build/
 dev-dist/
 out/
+*.apk
+*.aab
 
 # Environment variables
 .env

@@ -190,6 +190,20 @@ router.post('/api/chat/stream', chatStreamLimiter, async (req, res) => {
     }
     // Always false: client keys are telemetry only, never a quota/billing bypass.
     const hasCustomUserKey = false;
+
+    let isBazaarUser = false;
+    if (userId) {
+       const userRow = db.prepare('SELECT email FROM users WHERE id = ?').get(userId) as any;
+       if (userRow?.email?.endsWith('@bazaar.guest')) {
+          isBazaarUser = true;
+       }
+    }
+
+    if (isBazaarUser && !isFreeModel) {
+       sendChunk({ error: 'کاربر گرامی کافه‌بازار، دسترسی به این مدل پرمیوم از داخل اپلیکیشن فعلاً غیرفعال است. لطفاً از دستیارهای پایه (سریع) استفاده کنید یا برای امکانات کامل به نسخه وب مراجعه نمایید.' });
+       sendChunk({ done: true });
+       return finishStream();
+    }
     // Check 24-hour rolling window limit for Free Models
     if (isFreeModel && !hasCustomUserKey && userRole !== 'admin') {
       const now = Date.now();
@@ -197,9 +211,13 @@ router.post('/api/chat/stream', chatStreamLimiter, async (req, res) => {
       const WINDOW_MS = cooldownHours * 60 * 60 * 1000;
       const identifier = userId ? `user:${userId}` : `ip:${req.ip}`;
       
-      const limitStr = userId ? 
+      let limitStr = userId ? 
         (db.prepare("SELECT value FROM site_settings WHERE key = 'free_daily_limit_user'").get() as any)?.value || '15' :
         (db.prepare("SELECT value FROM site_settings WHERE key = 'free_daily_limit_guest'").get() as any)?.value || '5';
+      
+      if (isBazaarUser) {
+        limitStr = '30';
+      }
       
       const windowLimit = parseInt(limitStr, 10);
       

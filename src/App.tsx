@@ -4,6 +4,7 @@ import { useSettingsStore } from './store/settingsStore';
 import { useAuthStore } from './store/authStore';
 import { useUIStore } from './store/uiStore';
 import { Capacitor } from '@capacitor/core';
+import { isBazaarEnvironment, doSilentBazaarLogin } from './lib/bazaarUtils';
 import { App as CapacitorApp } from '@capacitor/app';
 
 // Critical Pages (loaded immediately)
@@ -42,6 +43,8 @@ function ScrollToTop() {
 export default function App() {
  const { settings, systemIsDark, syncSystemProfiles } = useSettingsStore();
  const checkAuth = useAuthStore(state => state.checkAuth);
+ const login = useAuthStore(state => state.login);
+ const isAuthenticated = useAuthStore(state => state.isAuthenticated);
  const setAuthModalOpen = useAuthStore(state => state.setAuthModalOpen);
  const { isAdminOpen, setIsAdminOpen, setIsWalletOpen } = useUIStore();
 
@@ -92,6 +95,12 @@ export default function App() {
  window.removeEventListener('open-wallet-modal', handleOpenWallet);
  };
  }, [checkAuth, setAuthModalOpen, setIsWalletOpen, syncSystemProfiles]);
+
+ useEffect(() => {
+  if (isBazaarEnvironment() && !isAuthenticated) {
+    doSilentBazaarLogin(login);
+  }
+ }, [isAuthenticated, login]);
 
  useEffect(() => {
  const root = document.documentElement;
