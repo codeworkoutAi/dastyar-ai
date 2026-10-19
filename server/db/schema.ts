@@ -400,6 +400,9 @@ export function initializeSchema() {
     seedSetting('free_daily_limit_user', '15'); // 15 free messages per 24-hour day
     seedSetting('free_cooldown_hours', '24'); // 24-hour daily quota cooldown
     seedSetting('free_daily_limit_guest', '5');
+    seedSetting('bazaarpay_destination', '');
+    seedSetting('bazaarpay_token', '');
+    seedSetting('bazaarpay_enabled', 'false');
   } catch (err) {
     console.error('[Database] Failed to seed site settings:', err);
   }

@@ -3,7 +3,6 @@ import { ChevronDownIcon, CheckIcon, SparklesIcon } from 'lucide-react';
 import { useSettingsStore } from '../store/settingsStore';
 import { getModelDetails } from './CustomProviderCards';
 import { CustomProfile } from '../types';
-import { isBazaarEnvironment } from '../lib/bazaarUtils';
 
 export const ModelSelectorDropdown: React.FC = () => {
     const { settings, updateSettings } = useSettingsStore();
@@ -28,9 +27,7 @@ export const ModelSelectorDropdown: React.FC = () => {
         if (p.id.startsWith('free_') || p.id === 'default' || p.id === 'coding' || p.id === 'vision') {
             baseProfiles.push(p);
         } else {
-            if (!isBazaarEnvironment()) {
-                proProfiles.push(p);
-            }
+            proProfiles.push(p);
         }
     });
 

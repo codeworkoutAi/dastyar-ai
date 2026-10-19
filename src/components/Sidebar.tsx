@@ -31,7 +31,6 @@ import { useUIStore } from '../store/uiStore';
 import { useSettingsStore } from '../store/settingsStore';
 import { useChatStore } from '../store/chatStore';
 import { exportToJson } from '../lib/exportUtils';
-import { isBazaarEnvironment } from '../lib/bazaarUtils';
 
 interface GroupedConversations {
     id: 'today' | 'yesterday' | 'last7Days' | 'older';
@@ -454,18 +453,16 @@ export const Sidebar: React.FC = React.memo(() => {
 
                             <div className="h-px bg-[var(--color-border-subtle)] my-0.5" />
 
-                            {!isBazaarEnvironment() && (
-                                <button
-                                    onClick={() => {
-                                        logout();
-                                        setUserMenuOpen(false);
-                                    }}
-                                    className="flex items-center gap-2 w-full p-2 rounded-btn hover:bg-[var(--color-error-bg)]/10 dark:hover:bg-[var(--color-error-bg)]/10 text-[var(--color-error-text)] dark:text-[var(--color-error-text)] text-xs font-bold transition-colors text-right cursor-pointer"
-                                >
-                                    <LogOut size={16} />
-                                    <span>خروج از حساب</span>
-                                </button>
-                            )}
+                            <button
+                                onClick={() => {
+                                    logout();
+                                    setUserMenuOpen(false);
+                                }}
+                                className="flex items-center gap-2 w-full p-2 rounded-btn hover:bg-[var(--color-error-bg)]/10 dark:hover:bg-[var(--color-error-bg)]/10 text-[var(--color-error-text)] dark:text-[var(--color-error-text)] text-xs font-bold transition-colors text-right cursor-pointer"
+                            >
+                                <LogOut size={16} />
+                                <span>خروج از حساب</span>
+                            </button>
                         </div>
                     )}
                 </div>
@@ -473,18 +470,16 @@ export const Sidebar: React.FC = React.memo(() => {
                 {/* ---------------- 2. نوار ابزارهای سریع (آیکون‌های سه‌بعدی برجسته) ---------------- */}
                 <div className="px-3 pt-2.5 pb-1 mb-3.5 shrink-0">
                     <div className="flex items-center justify-between gap-1.5 px-0.5">
-                        {!isBazaarEnvironment() && (
-                            <Tooltip content="فروشگاه محصولات" position="top" align="start">
-                                <Link
-                                    to="/store"
-                                    onClick={() => { if (window.innerWidth < 768) setSidebarOpen(false); }}
-                                    className="clay-icon-btn w-10 h-10 flex items-center justify-center cursor-pointer clay-icon"
-                                    aria-label="فروشگاه محصولات و اشتراک"
-                                >
-                                    <Store className="w-5 h-5 text-emerald-500" strokeWidth={1.8} />
-                                </Link>
-                            </Tooltip>
-                        )}
+                        <Tooltip content="فروشگاه محصولات" position="top" align="start">
+                            <Link
+                                to="/store"
+                                onClick={() => { if (window.innerWidth < 768) setSidebarOpen(false); }}
+                                className="clay-icon-btn w-10 h-10 flex items-center justify-center cursor-pointer clay-icon"
+                                aria-label="فروشگاه محصولات و اشتراک"
+                            >
+                                <Store className="w-5 h-5 text-emerald-500" strokeWidth={1.8} />
+                            </Link>
+                        </Tooltip>
 
                         <Tooltip content="وبلاگ هوش مصنوعی" position="top" align="center">
                             <Link
@@ -673,7 +668,7 @@ export const Sidebar: React.FC = React.memo(() => {
                 </div>
 
                 {/* Wallet Status Widget for Authenticated Users */}
-                {user && !isBazaarEnvironment() && (
+                {user && (
                     <div className="mx-3 mb-2 p-2.5 rounded-card bg-[var(--gemini-gradient-subtle)] border border-[var(--color-accent-primary)]/20 flex items-center justify-between shadow-xs">
                         <div className="flex items-center gap-2">
                             <div className="w-8 h-8 rounded-btn bg-[var(--color-accent-primary)] text-white flex items-center justify-center shrink-0 shadow-sm">
@@ -699,46 +694,6 @@ export const Sidebar: React.FC = React.memo(() => {
                         </button>
                     </div>
                 )}
-
-                {/* Promo Banners for Bazaar Users (HIDDEN FOR INITIAL REVIEW) */}
-                {/* 
-                {isBazaarEnvironment() && (
-                    <div className="mx-3 mb-2 space-y-2">
-                        <a 
-                            href="https://fa-chatbox.com/store?utm_source=bazaar_app" 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="p-2.5 rounded-card bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border border-emerald-500/20 flex items-center justify-between shadow-xs hover:border-emerald-500/40 transition-all cursor-pointer"
-                        >
-                            <div className="flex items-center gap-2">
-                                <div className="w-8 h-8 rounded-btn bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-sm">
-                                    <Store className="w-4 h-4" />
-                                </div>
-                                <div className="flex flex-col text-right">
-                                    <span className="text-[10px] font-medium text-emerald-600 dark:text-emerald-400">خرید اکانت‌های پرمیوم و ابزارها</span>
-                                    <span className="text-xs font-bold text-zinc-900 dark:text-zinc-100">فروشگاه چت‌باکس</span>
-                                </div>
-                            </div>
-                        </a>
-                        <a 
-                            href="https://t.me/dastyaraigroup" 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="p-2.5 rounded-card bg-gradient-to-r from-blue-500/10 to-sky-500/10 border border-blue-500/20 flex items-center justify-between shadow-xs hover:border-blue-500/40 transition-all cursor-pointer"
-                        >
-                            <div className="flex items-center gap-2">
-                                <div className="w-8 h-8 rounded-btn bg-blue-500 text-white flex items-center justify-center shrink-0 shadow-sm">
-                                    <MessageSquare className="w-4 h-4" />
-                                </div>
-                                <div className="flex flex-col text-right">
-                                    <span className="text-[10px] font-medium text-blue-600 dark:text-blue-400">اطلاع از تخفیف‌ها و آپدیت‌ها</span>
-                                    <span className="text-xs font-bold text-zinc-900 dark:text-zinc-100">کانال تلگرام ما</span>
-                                </div>
-                            </div>
-                        </a>
-                    </div>
-                )}
-                */}
 
                 {/* Bottom Storage & Metrics (فوتر خلوت) */}
                 <div className="mx-3 mb-3 p-2 rounded-xl shrink-0 border border-transparent">

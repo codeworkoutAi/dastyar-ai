@@ -199,11 +199,6 @@ router.post('/api/chat/stream', chatStreamLimiter, async (req, res) => {
        }
     }
 
-    if (isBazaarUser && !isFreeModel) {
-       sendChunk({ error: 'کاربر گرامی کافه‌بازار، دسترسی به این مدل پرمیوم از داخل اپلیکیشن فعلاً غیرفعال است. لطفاً از دستیارهای پایه (سریع) استفاده کنید یا برای امکانات کامل به نسخه وب مراجعه نمایید.' });
-       sendChunk({ done: true });
-       return finishStream();
-    }
     // Check 24-hour rolling window limit for Free Models
     if (isFreeModel && !hasCustomUserKey && userRole !== 'admin') {
       const now = Date.now();

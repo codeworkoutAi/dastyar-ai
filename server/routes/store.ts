@@ -5,6 +5,12 @@ import db, { syncDatabase } from '../db/database';
 import { requireAuth } from '../middleware/auth';
 import { bot } from '../telegram/bot';
 import { requestZarinpalPayment, verifyZarinpalPayment, getZarinpalConfig } from '../services/zarinpalService';
+import { 
+  initBazaarCheckout, 
+  traceBazaarPayment, 
+  commitBazaarPayment, 
+  getBazaarPayConfig 
+} from '../services/bazaarPayService';
 import { depositWallet, getPlanCreditAmount } from '../services/walletService';
 import { notifyOrderSuccessBySms } from '../services/kavenegarService';
 
@@ -125,10 +131,23 @@ router.post('/checkout', checkoutLimiter, requireAuth, async (req: any, res) => 
     insertStmt.run(orderId, userId, productId, product.price);
     syncDatabase();
 
-    const zarinpal = getZarinpalConfig();
+    const userRow = db.prepare('SELECT email FROM users WHERE id = ?').get(userId) as any;
+    const isBazaar = req.body.gateway === 'bazaarpay' || 
+                     req.headers['x-app-environment'] === 'bazaar' || 
+                     req.get('user-agent')?.includes('BazaarVersion') || 
+                     Boolean(userRow?.email?.endsWith('@bazaar.guest'));
+
     let paymentUrl = `/api/store/pay?orderId=${orderId}`;
-    if (!zarinpal.enabled) {
-      paymentUrl = `/api/store/mock-payment?orderId=${orderId}`;
+    if (isBazaar) {
+      const bazaar = getBazaarPayConfig();
+      paymentUrl = bazaar.enabled 
+        ? `/api/store/bazaarpay/pay?orderId=${orderId}` 
+        : `/api/store/mock-payment?orderId=${orderId}&gateway=bazaarpay`;
+    } else {
+      const zarinpal = getZarinpalConfig();
+      if (!zarinpal.enabled) {
+        paymentUrl = `/api/store/mock-payment?orderId=${orderId}`;
+      }
     }
 
     res.json({ message: 'فاکتور ایجاد شد', orderId, paymentUrl });
@@ -162,10 +181,23 @@ router.post('/wallet-topup', checkoutLimiter, requireAuth, async (req: any, res)
     `).run(orderId, userId, productId, numAmount);
     syncDatabase();
 
-    const zarinpal = getZarinpalConfig();
+    const userRow = db.prepare('SELECT email FROM users WHERE id = ?').get(userId) as any;
+    const isBazaar = req.body.gateway === 'bazaarpay' || 
+                     req.headers['x-app-environment'] === 'bazaar' || 
+                     req.get('user-agent')?.includes('BazaarVersion') || 
+                     Boolean(userRow?.email?.endsWith('@bazaar.guest'));
+
     let paymentUrl = `/api/store/pay?orderId=${orderId}`;
-    if (!zarinpal.enabled) {
-      paymentUrl = `/api/store/mock-payment?orderId=${orderId}`;
+    if (isBazaar) {
+      const bazaar = getBazaarPayConfig();
+      paymentUrl = bazaar.enabled 
+        ? `/api/store/bazaarpay/pay?orderId=${orderId}` 
+        : `/api/store/mock-payment?orderId=${orderId}&gateway=bazaarpay`;
+    } else {
+      const zarinpal = getZarinpalConfig();
+      if (!zarinpal.enabled) {
+        paymentUrl = `/api/store/mock-payment?orderId=${orderId}`;
+      }
     }
 
     res.json({ message: 'فاکتور شارژ ایجاد شد', orderId, paymentUrl });
@@ -282,10 +314,60 @@ router.get('/pay', async (req: any, res) => {
   }
 });
 
+// GET /api/store/bazaarpay/pay (Initiate BazaarPay checkout flow)
+router.get('/bazaarpay/pay', async (req: any, res) => {
+  try {
+    const rawOrderId = typeof req.query.orderId === 'string' ? req.query.orderId : '';
+    if (!rawOrderId || !/^[a-zA-Z0-9_-]{1,64}$/.test(rawOrderId)) {
+      return res.status(400).send('شماره سفارش نامعتبر است');
+    }
+    const orderId = rawOrderId;
+    const order = db.prepare(`
+      SELECT o.id, o.amount, o.paymentStatus, o.userId, p.title, u.email, u.phone 
+      FROM orders o 
+      LEFT JOIN products p ON o.productId = p.id
+      LEFT JOIN users u ON o.userId = u.id
+      WHERE o.id = ?
+    `).get(orderId) as any;
+
+    if (!order || order.paymentStatus !== 'pending') {
+      return res.redirect('/dashboard?payment=invalid_or_paid');
+    }
+
+    const bazaarConfig = getBazaarPayConfig();
+    const baseUrl = getSafeBaseUrl(req);
+
+    if (bazaarConfig.enabled) {
+      const initResult = await initBazaarCheckout({
+        amountToman: order.amount,
+        serviceName: `خرید ${order.title || 'شارژ کیف پول'} - ${orderId}`,
+        phone: order.phone,
+        redirectUrl: `${baseUrl}/api/store/bazaarpay/callback?orderId=${orderId}`
+      });
+
+      if (initResult.success && initResult.checkoutToken && initResult.paymentUrl) {
+        db.prepare("UPDATE orders SET authority = ?, paymentMethod = 'bazaarpay' WHERE id = ?").run(initResult.checkoutToken, orderId);
+        syncDatabase();
+
+        // Redirect directly to BazaarPay payment page
+        return res.redirect(initResult.paymentUrl);
+      } else {
+        console.warn('[Store API] BazaarPay init failed:', initResult.error);
+      }
+    }
+
+    // Fallback to mock payment with Bazaar branding if credentials are not yet set
+    res.redirect(`/api/store/mock-payment?orderId=${orderId}&gateway=bazaarpay`);
+  } catch (error) {
+    console.error('[Store API] BazaarPay pay error:', error);
+    res.status(500).send('خطای سرور');
+  }
+});
 
 // GET /api/store/mock-payment (Dummy gateway to simulate successful payment)
 router.get('/mock-payment', (req: any, res) => {
   const rawOrderId = typeof req.query.orderId === 'string' ? req.query.orderId : '';
+  const gateway = typeof req.query.gateway === 'string' ? req.query.gateway : 'zarinpal';
   if (!rawOrderId || !/^[a-zA-Z0-9_-]{1,64}$/.test(rawOrderId)) {
     return res.status(400).send('شماره سفارش نامعتبر است');
   }
@@ -305,6 +387,7 @@ router.get('/mock-payment', (req: any, res) => {
   }
   const safeOrderId = encodeURIComponent(rawOrderId);
   const formattedAmount = (order.amount || 0).toLocaleString('fa-IR');
+  const isBazaar = gateway === 'bazaarpay';
   
   // Create an authentic, beautiful HTML dummy payment page
   res.send(`
@@ -313,12 +396,12 @@ router.get('/mock-payment', (req: any, res) => {
       <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>درگاه پرداخت اینترنتی شاپرک (محیط تستی)</title>
+        <title>${isBazaar ? 'درگاه پرداخت بازارپی (محیط آزمایشی کافه‌بازار)' : 'درگاه پرداخت اینترنتی شاپرک (محیط تستی)'}</title>
         <style>
           * { box-sizing: border-box; }
           body { font-family: Tahoma, 'Vazirmatn', sans-serif; background: #0f172a; color: #1e293b; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; padding: 20px; }
           .card { background: #ffffff; border-radius: 24px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); max-width: 440px; width: 100%; overflow: hidden; }
-          .header { background: linear-gradient(135deg, #1e3a8a, #3b82f6); color: white; padding: 24px; text-align: center; }
+          .header { background: ${isBazaar ? 'linear-gradient(135deg, #059669, #10b981)' : 'linear-gradient(135deg, #1e3a8a, #3b82f6)'}; color: white; padding: 24px; text-align: center; }
           .header h2 { margin: 0 0 6px 0; font-size: 18px; font-weight: 800; }
           .header p { margin: 0; font-size: 12px; opacity: 0.85; }
           .body { padding: 24px; }
@@ -329,7 +412,7 @@ router.get('/mock-payment', (req: any, res) => {
           .badge { background: #fef3c7; color: #92400e; padding: 4px 10px; border-radius: 9999px; font-size: 11px; font-weight: 700; display: inline-block; margin-top: 12px; }
           .actions { display: flex; flex-direction: column; gap: 10px; margin-top: 24px; }
           .btn { display: block; text-align: center; padding: 14px; border-radius: 14px; font-weight: 800; font-size: 14px; text-decoration: none; cursor: pointer; transition: all 0.2s; }
-          .btn-success { background: #059669; color: white; box-shadow: 0 10px 15px -3px rgba(5, 150, 105, 0.3); }
+          .btn-success { background: ${isBazaar ? '#10b981' : '#059669'}; color: white; box-shadow: 0 10px 15px -3px rgba(5, 150, 105, 0.3); }
           .btn-success:hover { background: #047857; transform: translateY(-1px); }
           .btn-danger { background: #f1f5f9; color: #64748b; border: 1px solid #e2e8f0; }
           .btn-danger:hover { background: #fee2e2; color: #dc2626; }
@@ -339,8 +422,8 @@ router.get('/mock-payment', (req: any, res) => {
       <body>
         <div class="card">
           <div class="header">
-            <h2>درگاه پرداخت اینترنتی</h2>
-            <p>شبکه الکترونیکی پرداخت کارت (شاپرک) - شبیه‌ساز امن</p>
+            <h2>${isBazaar ? 'درگاه پرداخت مستقیم بازارپی' : 'درگاه پرداخت اینترنتی'}</h2>
+            <p>${isBazaar ? 'سرویس پرداخت درون‌برنامه‌ای کافه‌بازار (شبیه‌ساز تستی)' : 'شبکه الکترونیکی پرداخت کارت (شاپرک) - شبیه‌ساز امن'}</p>
           </div>
           <div class="body">
             <div class="info-row">
@@ -356,19 +439,19 @@ router.get('/mock-payment', (req: any, res) => {
               <span class="amount-val">${formattedAmount} تومان</span>
             </div>
             <div style="text-align: center;">
-              <span class="badge">⚡ حالت آزمایشی / بدون نیاز به رمز دوم</span>
+              <span class="badge">⚡ حالت آزمایشی / شبیه‌ساز پرداخت</span>
             </div>
             <div class="actions">
-              <a href="/api/store/mock-callback?orderId=${safeOrderId}&status=success" class="btn btn-success">
-                ✓ تایید و پرداخت موفقیت‌آمیز
+              <a href="/api/store/mock-callback?orderId=${safeOrderId}&gateway=${encodeURIComponent(gateway)}&status=success" class="btn btn-success">
+                ✓ تایید و پرداخت موفقیت‌آمیز ${isBazaar ? '(بازارپی)' : ''}
               </a>
-              <a href="/api/store/mock-callback?orderId=${safeOrderId}&status=failed" class="btn btn-danger">
+              <a href="/api/store/mock-callback?orderId=${safeOrderId}&gateway=${encodeURIComponent(gateway)}&status=failed" class="btn btn-danger">
                 انصراف و بازگشت
               </a>
             </div>
           </div>
           <div class="footer">
-            اتصال امن رمزنگاری‌شده شاپرک
+            ${isBazaar ? 'اتصال امن زیرساخت بازارپی کافه‌بازار' : 'اتصال امن رمزنگاری‌شده شاپرک'}
           </div>
         </div>
       </body>
@@ -380,6 +463,7 @@ router.get('/mock-payment', (req: any, res) => {
 router.get('/mock-callback', async (req: any, res) => {
   const rawOrderId = typeof req.query.orderId === 'string' ? req.query.orderId : '';
   const status = typeof req.query.status === 'string' ? req.query.status : '';
+  const gateway = typeof req.query.gateway === 'string' ? req.query.gateway : 'zarinpal';
   
   if (!rawOrderId || !/^[a-zA-Z0-9_-]{1,64}$/.test(rawOrderId)) {
     return res.redirect('/dashboard?payment=failed');
@@ -395,6 +479,9 @@ router.get('/mock-callback', async (req: any, res) => {
         return res.redirect('/dashboard?payment=already_processed');
       }
 
+      const refId = gateway === 'bazaarpay' ? 'MOCK-BAZAARPAY' : 'MOCK-SHAPARAK';
+      const payMethod = gateway === 'bazaarpay' ? 'bazaarpay' : 'online';
+
       // Check if wallet top-up or digital pricing plan
       const isWalletTopup = order.id.startsWith('TOP-') || order.productId === getWalletTopupProductId();
       const product = db.prepare('SELECT * FROM products WHERE id = ?').get(order.productId) as any;
@@ -404,16 +491,16 @@ router.get('/mock-callback', async (req: any, res) => {
         const creditAmount = isPlan ? getPlanCreditAmount(product) : order.amount;
         const desc = isPlan 
           ? `خرید ${product?.title || 'بسته تعرفه'} - سفارش ${orderId}`
-          : `شارژ آنلاین کیف پول کاربری - سفارش ${orderId}`;
+          : `شارژ آنلاین کیف پول کاربری (${gateway === 'bazaarpay' ? 'بازارپی' : 'شاپرک'}) - سفارش ${orderId}`;
 
-        db.prepare("UPDATE orders SET paymentStatus = 'success', refId = 'MOCK-SHAPARAK' WHERE id = ?").run(orderId);
+        db.prepare("UPDATE orders SET paymentStatus = 'success', paymentMethod = ?, refId = ? WHERE id = ?").run(payMethod, refId, orderId);
         depositWallet(order.userId, creditAmount, desc);
         syncDatabase();
-        return res.redirect(`/dashboard?payment=success&orderId=${orderId}&refId=MOCK-SHAPARAK&amount=${creditAmount}`);
+        return res.redirect(`/store?tab=wallet&payment=success&orderId=${orderId}&refId=${refId}&amount=${creditAmount}`);
       }
 
       // Digital store product - update paymentStatus to success, but leave licenseId null
-      db.prepare("UPDATE orders SET paymentStatus = 'success', refId = 'MOCK-SHAPARAK' WHERE id = ?").run(orderId);
+      db.prepare("UPDATE orders SET paymentStatus = 'success', paymentMethod = ?, refId = ? WHERE id = ?").run(payMethod, refId, orderId);
       syncDatabase();
 
       // Send Telegram notification that order is pending review
@@ -439,7 +526,8 @@ router.get('/mock-callback', async (req: any, res) => {
     }
   } else {
     // Failed payment
-    db.prepare('UPDATE orders SET paymentStatus = ? WHERE id = ?').run('failed', orderId);
+    const payMethod = gateway === 'bazaarpay' ? 'bazaarpay' : 'online';
+    db.prepare('UPDATE orders SET paymentStatus = ?, paymentMethod = ? WHERE id = ?').run('failed', payMethod, orderId);
     syncDatabase();
     res.redirect('/dashboard?payment=cancelled');
   }
@@ -560,6 +648,138 @@ router.get('/zarinpal/callback', async (req, res) => {
     }
   } catch (err: any) {
     console.error('[Store] Error in Zarinpal callback:', err);
+    return res.redirect(`/store?payment=failed&orderId=${orderId}`);
+  }
+});
+
+// GET /api/store/bazaarpay/callback (Handles the return from BazaarPay checkout)
+router.get('/bazaarpay/callback', async (req: any, res) => {
+  const rawOrderId = typeof req.query.orderId === 'string' ? req.query.orderId : '';
+  const checkoutToken = typeof req.query.checkout_token === 'string' 
+    ? req.query.checkout_token 
+    : typeof req.query.token === 'string' 
+      ? req.query.token 
+      : '';
+
+  if (!rawOrderId || !/^[a-zA-Z0-9_-]{1,64}$/.test(rawOrderId)) {
+    return res.redirect('/store?payment=failed&msg=invalid_order');
+  }
+  const orderId = rawOrderId;
+
+  const order = db.prepare('SELECT * FROM orders WHERE id = ?').get(orderId) as any;
+  if (!order) {
+    return res.redirect('/store?payment=failed&msg=order_not_found');
+  }
+
+  // Already verified and successful
+  if (order.paymentStatus === 'success') {
+    if (order.id.startsWith('TOP-') || order.productId === getWalletTopupProductId()) {
+      return res.redirect(`/store?tab=wallet&payment=success&orderId=${orderId}&refId=${order.refId || ''}`);
+    }
+    return res.redirect(`/store?payment=success&orderId=${orderId}&refId=${order.refId || ''}`);
+  }
+
+  const tokenToTrace = checkoutToken || order.authority;
+  if (!tokenToTrace) {
+    db.prepare("UPDATE orders SET paymentStatus = 'failed', paymentMethod = 'bazaarpay' WHERE id = ?").run(orderId);
+    syncDatabase();
+    return res.redirect(`/store?payment=failed&orderId=${orderId}&msg=missing_token`);
+  }
+
+  try {
+    const traceRes = await traceBazaarPayment(tokenToTrace);
+
+    if (!traceRes.success) {
+      db.prepare("UPDATE orders SET paymentStatus = 'failed', paymentMethod = 'bazaarpay' WHERE id = ?").run(orderId);
+      syncDatabase();
+      const errMsg = encodeURIComponent(traceRes.error || 'استعلام پرداخت با خطا مواجه شد');
+      return res.redirect(`/store?payment=failed&orderId=${orderId}&msg=${errMsg}`);
+    }
+
+    // Check trace status
+    // 'paid_committed': already committed
+    // 'paid_not_committed': paid, merchant must commit now!
+    if (traceRes.status === 'paid_committed' || traceRes.status === 'paid_not_committed') {
+      if (traceRes.status === 'paid_not_committed') {
+        const commitRes = await commitBazaarPayment(tokenToTrace);
+        if (!commitRes.success) {
+          console.error('[Store] BazaarPay commit failed for order:', orderId, commitRes.error);
+          db.prepare("UPDATE orders SET paymentStatus = 'failed', paymentMethod = 'bazaarpay' WHERE id = ?").run(orderId);
+          syncDatabase();
+          return res.redirect(`/store?payment=failed&orderId=${orderId}&msg=commit_failed`);
+        }
+      }
+
+      const refId = String(tokenToTrace);
+      const product = db.prepare('SELECT * FROM products WHERE id = ?').get(order.productId) as any;
+      const isWalletTopup = order.id.startsWith('TOP-') || order.productId === getWalletTopupProductId();
+      const isPlan = product?.category === 'plan';
+
+      if (isWalletTopup || isPlan) {
+        const creditAmount = isPlan ? getPlanCreditAmount(product) : order.amount;
+        const desc = isPlan 
+          ? `خرید آنلاین ${product?.title || 'بسته تعرفه'} از طریق بازارپی - شماره پیگیری: ${refId}`
+          : `شارژ آنلاین کیف پول از طریق بازارپی کافه‌بازار - شماره پیگیری: ${refId}`;
+
+        db.prepare("UPDATE orders SET paymentStatus = 'success', paymentMethod = 'bazaarpay', authority = ?, refId = ? WHERE id = ?")
+          .run(tokenToTrace, refId, orderId);
+
+        depositWallet(order.userId, creditAmount, desc);
+        syncDatabase();
+
+        // Telegram delivery notification
+        try {
+          const orderUser = db.prepare('SELECT telegramId FROM users WHERE id = ?').get(order.userId) as any;
+          if (orderUser?.telegramId && bot) {
+            let msg = `✅ **پرداخت از طریق بازارپی با موفقیت انجام شد!**\n\n` +
+                      `📦 **پلن/خدمت:** ${product?.title || 'شارژ کیف پول'}\n` +
+                      `💰 **اعتبار شارژشده به کیف پول:** ${creditAmount.toLocaleString('fa-IR')} تومان\n` +
+                      `🔢 **شماره سفارش:** \`${orderId}\`\n` +
+                      `🧾 **کد پیگیری بازارپی:** \`${refId}\`\n\n` +
+                      `اعتبار بلافاصله به کیف پول شما در کافه‌بازار افزوده شد.`;
+            bot.telegram.sendMessage(orderUser.telegramId, msg, { parse_mode: 'Markdown' }).catch(() => {});
+          }
+        } catch (tgErr) {}
+
+        // SMS notification
+        notifyOrderSuccessBySms(orderId, null);
+
+        return res.redirect(`/store?tab=wallet&payment=success&orderId=${orderId}&refId=${refId}&amount=${creditAmount}`);
+      }
+
+      // Digital store product
+      let licenseId: number | null = null;
+      db.prepare("UPDATE orders SET paymentStatus = 'success', paymentMethod = 'bazaarpay', licenseId = ?, authority = ?, refId = ? WHERE id = ?")
+        .run(licenseId, tokenToTrace, refId, orderId);
+      syncDatabase();
+
+      try {
+        const orderUser = db.prepare('SELECT telegramId FROM users WHERE id = ?').get(order.userId) as any;
+        if (orderUser?.telegramId && bot) {
+          let msg = `✅ **سفارش بازارپی شما با موفقیت ثبت شد!**\n\n` +
+                    `📦 **محصول:** ${product?.title || ''}\n` +
+                    `🔢 **شماره سفارش:** \`${orderId}\`\n` +
+                    `🧾 **کد پیگیری بازارپی:** \`${refId}\`\n` +
+                    `💰 **مبلغ پرداخت شده:** ${order.amount.toLocaleString('fa-IR')} تومان\n\n` +
+                    `⏳ سفارش شما در انتظار تایید مدیریت است.`;
+          bot.telegram.sendMessage(orderUser.telegramId, msg, { parse_mode: 'Markdown' }).catch(() => {});
+        }
+      } catch (tgErr) {}
+
+      notifyOrderSuccessBySms(orderId, licenseId);
+      return res.redirect(`/store?payment=success&orderId=${orderId}&refId=${refId}`);
+
+    } else {
+      // Payment failed/unpaid/cancelled
+      db.prepare("UPDATE orders SET paymentStatus = 'failed', paymentMethod = 'bazaarpay', authority = ? WHERE id = ?")
+        .run(tokenToTrace, orderId);
+      syncDatabase();
+      const statusNote = traceRes.status === 'unpaid' ? 'پرداخت انجام نشد یا لغو شد' : `وضعیت: ${traceRes.status}`;
+      return res.redirect(`/store?payment=failed&orderId=${orderId}&msg=${encodeURIComponent(statusNote)}`);
+    }
+
+  } catch (err: any) {
+    console.error('[Store] Error in BazaarPay callback:', err);
     return res.redirect(`/store?payment=failed&orderId=${orderId}`);
   }
 });

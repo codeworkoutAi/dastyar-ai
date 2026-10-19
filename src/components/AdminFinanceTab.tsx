@@ -1,10 +1,11 @@
-﻿import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Coins, TrendingUp, TrendingDown, Plus, Trash2, Save, CheckCircle2, AlertCircle, RefreshCw, Zap, DollarSign, Layers, User, Clock, Receipt,
  Gift,
  CreditCard,
  ShieldCheck,
  Loader2,
- Users
+ Users,
+ Smartphone
 } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import { PromoCodesManager } from './PromoCodesManager';
@@ -43,6 +44,13 @@ const [welcomeBonusEnabled, setWelcomeBonusEnabled] = useState(true);
  const [testingGateway, setTestingGateway] = useState(false);
  const [gatewayTestResult, setGatewayTestResult] = useState<{ valid: boolean; message: string } | null>(null);
  const [detectedServerIp, setDetectedServerIp] = useState<string | null>(null);
+
+ // BazaarPay Gateway state
+ const [bazaarpayDestination, setBazaarpayDestination] = useState('');
+ const [bazaarpayToken, setBazaarpayToken] = useState('');
+ const [bazaarpayEnabled, setBazaarpayEnabled] = useState(false);
+ const [testingBazaarPay, setTestingBazaarPay] = useState(false);
+ const [bazaarPayTestResult, setBazaarPayTestResult] = useState<{ valid: boolean; message: string } | null>(null);
 
  // New purchase form
  const [isAddingPurchase, setIsAddingPurchase] = useState(false);
@@ -175,9 +183,10 @@ const [welcomeBonusEnabled, setWelcomeBonusEnabled] = useState(true);
 
  const fetchSettings = async () => {
  try {
- const [resSettings, resGateway] = await Promise.all([
+ const [resSettings, resGateway, resBazaar] = await Promise.all([
  fetch('/api/admin/settings', { headers: { Authorization: `Bearer ${token}` } }),
- fetch('/api/admin/gateway-status', { headers: { Authorization: `Bearer ${token}` } })
+ fetch('/api/admin/gateway-status', { headers: { Authorization: `Bearer ${token}` } }),
+ fetch('/api/admin/bazaarpay-status', { headers: { Authorization: `Bearer ${token}` } })
  ]);
  if (resSettings.ok) {
  const settings = await resSettings.json();
@@ -186,6 +195,9 @@ const [welcomeBonusEnabled, setWelcomeBonusEnabled] = useState(true);
  if (settings.welcome_bonus_enabled) setWelcomeBonusEnabled(settings.welcome_bonus_enabled === 'true');
  if (settings.zarinpal_merchant_id) setZarinpalMerchantId(settings.zarinpal_merchant_id);
  if (settings.zarinpal_sandbox !== undefined) setZarinpalSandbox(settings.zarinpal_sandbox === 'true');
+ if (settings.bazaarpay_destination) setBazaarpayDestination(settings.bazaarpay_destination);
+ if (settings.bazaarpay_token) setBazaarpayToken(settings.bazaarpay_token);
+ if (settings.bazaarpay_enabled !== undefined) setBazaarpayEnabled(settings.bazaarpay_enabled === 'true');
  }
  if (resGateway.ok) {
  const gw = await resGateway.json();
@@ -193,6 +205,11 @@ const [welcomeBonusEnabled, setWelcomeBonusEnabled] = useState(true);
  if (gw.sandbox !== undefined) setZarinpalSandbox(gw.sandbox);
  if (gw.serverIp) setDetectedServerIp(gw.serverIp);
  setGatewayEnabled(gw.enabled);
+ }
+ if (resBazaar.ok) {
+ const bz = await resBazaar.json();
+ if (bz.destination) setBazaarpayDestination(bz.destination);
+ if (bz.enabled !== undefined) setBazaarpayEnabled(bz.enabled);
  }
  } catch (err: any) {
    // Previously an empty catch: when /api/admin/settings or /gateway-status failed,
@@ -221,7 +238,10 @@ const [welcomeBonusEnabled, setWelcomeBonusEnabled] = useState(true);
     ['welcome_bonus_enabled', String(welcomeBonusEnabled)],
     ['free_key_pool', freeKeyPool],
     ['zarinpal_merchant_id', zarinpalMerchantId.trim()],
-    ['zarinpal_sandbox', String(zarinpalSandbox)]
+    ['zarinpal_sandbox', String(zarinpalSandbox)],
+    ['bazaarpay_destination', bazaarpayDestination.trim()],
+    ['bazaarpay_token', bazaarpayToken.trim()],
+    ['bazaarpay_enabled', String(bazaarpayEnabled)]
   ];
 
   await Promise.all(
@@ -267,6 +287,24 @@ const [welcomeBonusEnabled, setWelcomeBonusEnabled] = useState(true);
  setGatewayTestResult({ valid: false, message: 'خطا در برقراری ارتباط با سرور: ' + err.message });
  } finally {
  setTestingGateway(false);
+ }
+ };
+
+ const handleTestBazaarPay = async () => {
+ setTestingBazaarPay(true);
+ setBazaarPayTestResult(null);
+ try {
+ const res = await fetch('/api/admin/test-bazaarpay', {
+ method: 'POST',
+ headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+ body: JSON.stringify({ destination: bazaarpayDestination.trim(), token: bazaarpayToken.trim() })
+ });
+ const data = await res.json();
+ setBazaarPayTestResult(data);
+ } catch (err: any) {
+ setBazaarPayTestResult({ valid: false, message: 'خطا در برقراری ارتباط با سرور: ' + err.message });
+ } finally {
+ setTestingBazaarPay(false);
  }
  };
 
@@ -813,6 +851,129 @@ const [welcomeBonusEnabled, setWelcomeBonusEnabled] = useState(true);
  </div>
  <p className="text-[11px] text-zinc-500 dark:text-zinc-400 leading-relaxed">
  برای درگاه واقعی متصل به حساب بانکی، این گزینه باید غیرفعال باشد.
+ </p>
+ </div>
+ </div>
+ </div>
+
+ {/* BazaarPay Payment Gateway Section (Cafe Bazaar Android App) */}
+ <div className="p-5 rounded-2xl admin-card space-y-4">
+ <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b admin-border pb-3">
+ <div className="flex items-center gap-2.5">
+ <div className="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center shrink-0 font-black">
+ <Smartphone className="w-4 h-4" />
+ </div>
+ <div>
+ <div className="flex items-center gap-2">
+ <h3 className="text-sm font-bold text-zinc-900 dark:text-zinc-100">درگاه پرداخت درون‌برنامه‌ای بازارپی (کافه‌بازار)</h3>
+ <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+ bazaarpayEnabled && bazaarpayDestination.trim()
+ ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
+ : 'admin-btn-secondary text-zinc-600 dark:text-zinc-400'
+ }`}>
+ {bazaarpayEnabled && bazaarpayDestination.trim() ? 'درگاه بازارپی فعال' : 'غیرفعال (شبیه‌ساز تستی)'}
+ </span>
+ </div>
+ <p className="text-[11px] text-zinc-500">پرداخت مستقیم کاربران اپلیکیشن اندروید کافه‌بازار از طریق BazaarPay (کارمزد ۱۵٪ طبق قوانین بازار)</p>
+ </div>
+ </div>
+
+ <div className="flex items-center gap-2">
+ <button
+ onClick={handleTestBazaarPay}
+ disabled={testingBazaarPay || !bazaarpayDestination.trim()}
+ className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl admin-btn-secondary text-zinc-800 dark:text-zinc-200 font-bold text-xs transition-all cursor-pointer disabled:opacity-50"
+ >
+ {testingBazaarPay ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />}
+ <span>تست اتصال به بازارپی</span>
+ </button>
+ <button
+ onClick={handleSaveSettings}
+ disabled={actionLoading}
+ className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-md transition-all cursor-pointer disabled:opacity-50"
+ >
+ <Save className="w-3.5 h-3.5" />
+ <span>ذخیره تنظیمات بازارپی</span>
+ </button>
+ </div>
+ </div>
+
+ {bazaarPayTestResult && (
+ <div className={`fixed top-6 left-1/2 -translate-x-1/2 z-[9999] shadow-lg min-w-[300px] p-3 rounded-xl border text-xs flex items-center gap-2 ${
+ bazaarPayTestResult.valid
+ ? 'bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-800/40 text-emerald-700 dark:text-emerald-300'
+ : 'bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-800/40 text-red-700 dark:text-red-300'
+ }`}>
+ {bazaarPayTestResult.valid ? <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" /> : <AlertCircle className="w-4 h-4 text-red-500 shrink-0" />}
+ <span>{bazaarPayTestResult.message}</span>
+ </div>
+ )}
+
+ <div className="p-3 rounded-xl bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/40 text-xs flex items-center gap-2 text-emerald-700 dark:text-emerald-300">
+ <ShieldCheck className="w-4 h-4 shrink-0 text-emerald-600" />
+ <span>
+ معماری دوگانه فعال: کاربران وب‌سایت همواره به <strong>زرین‌پال</strong> هدایت می‌شوند تا کارمزد بهینه (۱٪) حفظ شود؛ و کاربران اپلیکیشن اندروید/کافه‌بازار به <strong>بازارپی</strong> هدایت می‌شوند تا تاییدیه داوران بازار تامین گردد.
+ </span>
+ </div>
+
+ <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+ {/* Destination */}
+ <div className="space-y-1.5">
+ <label className="text-xs font-semibold text-zinc-700 dark:text-zinc-300 block mb-1.5">
+ شناسه مقصد پذیرنده (Destination):
+ </label>
+ <input
+ type="text"
+ dir="ltr"
+ value={bazaarpayDestination}
+ onChange={(e) => setBazaarpayDestination(e.target.value)}
+ placeholder="مثال: fa-chatbox"
+ className="w-full px-3.5 py-2.5 rounded-xl admin-input text-xs font-mono focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all"
+ />
+ <p className="text-[11px] text-zinc-500 dark:text-zinc-400 leading-relaxed">
+ شناسه اختصاصی کسب‌وکار شما در بازارپی جهت ایجاد Checkout Token.
+ </p>
+ </div>
+
+ {/* Token */}
+ <div className="space-y-1.5">
+ <label className="text-xs font-semibold text-zinc-700 dark:text-zinc-300 block mb-1.5">
+ توکن دسترسی بازارپی (Access Token):
+ </label>
+ <input
+ type="password"
+ dir="ltr"
+ value={bazaarpayToken}
+ onChange={(e) => setBazaarpayToken(e.target.value)}
+ placeholder="توکن دریافتی از پنل توسعه‌دهندگان بازارپی"
+ className="w-full px-3.5 py-2.5 rounded-xl admin-input text-xs font-mono focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all"
+ />
+ <p className="text-[11px] text-zinc-500 dark:text-zinc-400 leading-relaxed">
+ توکن احراز هویت برای APIهای trace و commit.
+ </p>
+ </div>
+
+ {/* Enabled Toggle */}
+ <div className="space-y-1.5 flex flex-col justify-between">
+ <div>
+ <label className="text-xs font-semibold text-zinc-700 dark:text-zinc-300 block mb-1.5">
+ وضعیت درگاه بازارپی:
+ </label>
+ <div className="flex items-center gap-2 pt-2">
+ <input
+ type="checkbox"
+ id="bazaarpay-toggle"
+ checked={bazaarpayEnabled}
+ onChange={(e) => setBazaarpayEnabled(e.target.checked)}
+ className="w-4 h-4 rounded border-zinc-400 text-emerald-600 focus:ring-emerald-500 cursor-pointer"
+ />
+ <label htmlFor="bazaarpay-toggle" className="text-zinc-700 dark:text-zinc-300 text-xs font-medium cursor-pointer">
+ فعال‌سازی درگاه زنده بازارپی
+ </label>
+ </div>
+ </div>
+ <p className="text-[11px] text-zinc-500 dark:text-zinc-400 leading-relaxed">
+ در صورت غیرفعال بودن یا خالی بودن اطلاعات، شبیه‌ساز امن درگاه برای محیط تست فعال خواهد بود.
  </p>
  </div>
  </div>

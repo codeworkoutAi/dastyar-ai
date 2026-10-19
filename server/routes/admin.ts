@@ -7,6 +7,7 @@ import { notifyOrderSuccessBySms } from '../services/kavenegarService';
 import { clearSitemapCache } from '../seo/sitemap';
 import { getAdminFinancialSummary, addApiPurchase, depositWallet, getPlanCreditAmount } from '../services/walletService';
 import { getZarinpalConfig, testZarinpalMerchant, getServerPublicIp } from '../services/zarinpalService';
+import { getBazaarPayConfig, testBazaarPayMerchant } from '../services/bazaarPayService';
 import { getFullSiteDesign, saveSectionData, resetSectionData } from '../services/landingService';
 import fs from 'fs';
 import path from 'path';
@@ -1067,6 +1068,33 @@ router.post('/test-gateway', async (req, res) => {
   } catch (error: any) {
     console.error('[Admin API] Error testing gateway:', error);
     res.status(500).json({ valid: false, message: 'خطا در تست درگاه: ' + error.message });
+  }
+});
+
+// GET /api/admin/bazaarpay-status
+router.get('/bazaarpay-status', (req, res) => {
+  try {
+    const config = getBazaarPayConfig();
+    res.json({
+      destination: config.destination,
+      hasToken: Boolean(config.token && config.token.length > 0),
+      enabled: config.enabled
+    });
+  } catch (error) {
+    console.error('[Admin API] Error fetching BazaarPay status:', error);
+    res.status(500).json({ error: 'خطا در دریافت وضعیت بازارپی' });
+  }
+});
+
+// POST /api/admin/test-bazaarpay
+router.post('/test-bazaarpay', async (req, res) => {
+  try {
+    const { destination, token } = req.body;
+    const result = await testBazaarPayMerchant(destination, token);
+    res.json(result);
+  } catch (error: any) {
+    console.error('[Admin API] Error testing BazaarPay:', error);
+    res.status(500).json({ valid: false, message: 'خطا در تست بازارپی: ' + (error.message || '') });
   }
 });
 

@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { AlertCircle, RotateCw, Settings, X, Coins } from 'lucide-react';
 import { useChatStore } from '../store/chatStore';
 import { useUIStore } from '../store/uiStore';
-import { isBazaarEnvironment } from '../lib/bazaarUtils';
 export const ErrorCapsule: React.FC = React.memo(() => {
   const { activeError: error, setActiveError, regenerate } = useChatStore();
   const { setIsSettingsOpen, setIsWalletOpen } = useUIStore();
@@ -89,26 +88,14 @@ export const ErrorCapsule: React.FC = React.memo(() => {
 
           <div className="flex items-center gap-2 mr-auto">
             {(error.insufficientBalance || error.message?.includes('کیف پول') || error.message?.includes('اعتبار')) ? (
-              !isBazaarEnvironment() ? (
-                <button
-                  type="button"
-                  onClick={onOpenWallet}
-                  className="clay-btn bg-emerald-600 hover:bg-emerald-700 text-white text-xs px-3.5 py-1.5 rounded-btn flex items-center gap-1.5 font-bold cursor-pointer transition-all shadow-sm active:scale-95"
-                >
-                  <Coins className="w-3.5 h-3.5 text-white" />
-                  <span>شارژ فوری کیف پول</span>
-                </button>
-              ) : (
-                <a
-                  href="https://fa-chatbox.com/?utm_source=bazaar_error"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="clay-btn bg-indigo-600 hover:bg-indigo-700 text-white text-xs px-3.5 py-1.5 rounded-btn flex items-center gap-1.5 font-bold cursor-pointer transition-all shadow-sm active:scale-95"
-                >
-                  <Settings className="w-3.5 h-3.5 text-white" />
-                  <span>نسخه نامحدود وب</span>
-                </a>
-              )
+              <button
+                type="button"
+                onClick={onOpenWallet}
+                className="clay-btn bg-emerald-600 hover:bg-emerald-700 text-white text-xs px-3.5 py-1.5 rounded-btn flex items-center gap-1.5 font-bold cursor-pointer transition-all shadow-sm active:scale-95"
+              >
+                <Coins className="w-3.5 h-3.5 text-white" />
+                <span>شارژ فوری کیف پول</span>
+              </button>
             ) : onOpenSettings && (
               <button
                 type="button"

@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuthStore } from '../store/authStore';
 import { formatTehranDate } from '../lib/dateUtils';
 import { useUIStore } from '../store/uiStore';
@@ -11,6 +11,7 @@ import { Coins, X, Sparkles, CreditCard,
  TrendingDown
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { isBazaarEnvironment } from '../lib/bazaarUtils';
 
 export const WalletModal: React.FC = () => {
  const { isWalletOpen, setIsWalletOpen } = useUIStore();
@@ -27,6 +28,7 @@ export const WalletModal: React.FC = () => {
  const [rechargingPackId, setRechargingPackId] = useState<string | null>(null);
  const [customAmount, setCustomAmount] = useState('');
  const [payError, setPayError] = useState<string | null>(null);
+ const isBazaar = isBazaarEnvironment() || Boolean(user?.email?.endsWith('@bazaar.guest'));
 
  useEffect(() => {
  if (isWalletOpen && token) {
@@ -69,7 +71,10 @@ export const WalletModal: React.FC = () => {
  'Content-Type': 'application/json',
  'Authorization': `Bearer ${token}`
  },
- body: JSON.stringify({ amount })
+ body: JSON.stringify({ 
+  amount,
+  gateway: (isBazaarEnvironment() || Boolean(user?.email?.endsWith('@bazaar.guest'))) ? 'bazaarpay' : 'zarinpal'
+ })
  });
  const data = await res.json();
  if (!res.ok) {
@@ -279,7 +284,7 @@ export const WalletModal: React.FC = () => {
  ) : (
  <>
  <CreditCard className="w-4 h-4" />
- <span>پرداخت آنلاین با شتاب</span>
+ <span>{isBazaar ? 'پرداخت مستقیم با بازارپی' : 'پرداخت آنلاین با شتاب'}</span>
  </>
  )}
  </button>
@@ -305,7 +310,7 @@ export const WalletModal: React.FC = () => {
  <div className="pt-2 flex items-center justify-between text-xs text-zinc-500 dark:text-zinc-400">
  <span className="flex items-center gap-1.5">
  <ShieldCheck className="w-4 h-4 text-emerald-500" />
- اتصال امن به درگاه رسمی شاپرک (زرین‌پال)
+ {isBazaar ? 'اتصال امن به درگاه مستقیم بازارپی (کافه‌بازار)' : 'اتصال امن به درگاه رسمی شاپرک (زرین‌پال)'}
  </span>
  <button
  onClick={() => {
