@@ -137,16 +137,17 @@ router.post('/checkout', checkoutLimiter, requireAuth, async (req: any, res) => 
                      req.get('user-agent')?.includes('BazaarVersion') || 
                      Boolean(userRow?.email?.endsWith('@bazaar.guest'));
 
-    let paymentUrl = `/api/store/pay?orderId=${orderId}`;
+    const baseUrl = getSafeBaseUrl(req);
+    let paymentUrl = `${baseUrl}/api/store/pay?orderId=${orderId}`;
     if (isBazaar) {
       const bazaar = getBazaarPayConfig();
       paymentUrl = bazaar.enabled 
-        ? `/api/store/bazaarpay/pay?orderId=${orderId}` 
-        : `/api/store/mock-payment?orderId=${orderId}&gateway=bazaarpay`;
+        ? `${baseUrl}/api/store/bazaarpay/pay?orderId=${orderId}` 
+        : `${baseUrl}/api/store/mock-payment?orderId=${orderId}&gateway=bazaarpay`;
     } else {
       const zarinpal = getZarinpalConfig();
       if (!zarinpal.enabled) {
-        paymentUrl = `/api/store/mock-payment?orderId=${orderId}`;
+        paymentUrl = `${baseUrl}/api/store/mock-payment?orderId=${orderId}`;
       }
     }
 
@@ -187,16 +188,17 @@ router.post('/wallet-topup', checkoutLimiter, requireAuth, async (req: any, res)
                      req.get('user-agent')?.includes('BazaarVersion') || 
                      Boolean(userRow?.email?.endsWith('@bazaar.guest'));
 
-    let paymentUrl = `/api/store/pay?orderId=${orderId}`;
+    const baseUrl = getSafeBaseUrl(req);
+    let paymentUrl = `${baseUrl}/api/store/pay?orderId=${orderId}`;
     if (isBazaar) {
       const bazaar = getBazaarPayConfig();
       paymentUrl = bazaar.enabled 
-        ? `/api/store/bazaarpay/pay?orderId=${orderId}` 
-        : `/api/store/mock-payment?orderId=${orderId}&gateway=bazaarpay`;
+        ? `${baseUrl}/api/store/bazaarpay/pay?orderId=${orderId}` 
+        : `${baseUrl}/api/store/mock-payment?orderId=${orderId}&gateway=bazaarpay`;
     } else {
       const zarinpal = getZarinpalConfig();
       if (!zarinpal.enabled) {
-        paymentUrl = `/api/store/mock-payment?orderId=${orderId}`;
+        paymentUrl = `${baseUrl}/api/store/mock-payment?orderId=${orderId}`;
       }
     }
 
@@ -496,6 +498,9 @@ router.get('/mock-callback', async (req: any, res) => {
         db.prepare("UPDATE orders SET paymentStatus = 'success', paymentMethod = ?, refId = ? WHERE id = ?").run(payMethod, refId, orderId);
         depositWallet(order.userId, creditAmount, desc);
         syncDatabase();
+        if (gateway === 'bazaarpay') {
+          return res.redirect(`/?payment=success&orderId=${orderId}&refId=${refId}&amount=${creditAmount}`);
+        }
         return res.redirect(`/store?tab=wallet&payment=success&orderId=${orderId}&refId=${refId}&amount=${creditAmount}`);
       }
 
@@ -522,6 +527,9 @@ router.get('/mock-callback', async (req: any, res) => {
       res.redirect('/store?payment=success&orderId=' + orderId);
     } catch (err) {
       console.error(err);
+      if (gateway === 'bazaarpay') {
+        return res.redirect('/?payment=failed');
+      }
       res.redirect('/dashboard?payment=failed');
     }
   } else {
@@ -529,6 +537,9 @@ router.get('/mock-callback', async (req: any, res) => {
     const payMethod = gateway === 'bazaarpay' ? 'bazaarpay' : 'online';
     db.prepare('UPDATE orders SET paymentStatus = ?, paymentMethod = ? WHERE id = ?').run('failed', payMethod, orderId);
     syncDatabase();
+    if (gateway === 'bazaarpay') {
+      return res.redirect('/?payment=cancelled');
+    }
     res.redirect('/dashboard?payment=cancelled');
   }
 });
@@ -775,12 +786,12 @@ router.get('/bazaarpay/callback', async (req: any, res) => {
         .run(tokenToTrace, orderId);
       syncDatabase();
       const statusNote = traceRes.status === 'unpaid' ? 'پرداخت انجام نشد یا لغو شد' : `وضعیت: ${traceRes.status}`;
-      return res.redirect(`/store?payment=failed&orderId=${orderId}&msg=${encodeURIComponent(statusNote)}`);
+      return res.redirect(`/?payment=failed&orderId=${orderId}&msg=${encodeURIComponent(statusNote)}`);
     }
 
   } catch (err: any) {
     console.error('[Store] Error in BazaarPay callback:', err);
-    return res.redirect(`/store?payment=failed&orderId=${orderId}`);
+    return res.redirect(`/?payment=failed&orderId=${orderId}`);
   }
 });
 

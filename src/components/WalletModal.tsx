@@ -11,6 +11,7 @@ import { Coins, X, Sparkles, CreditCard,
  TrendingDown
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { Capacitor } from '@capacitor/core';
 import { isBazaarEnvironment } from '../lib/bazaarUtils';
 
 export const WalletModal: React.FC = () => {
@@ -81,7 +82,12 @@ export const WalletModal: React.FC = () => {
  throw new Error(data.error || 'خطا در ایجاد درخواست پرداخت');
  }
  if (data.paymentUrl) {
- window.location.href = data.paymentUrl;
+  let targetUrl = data.paymentUrl;
+  if (targetUrl.startsWith('/')) {
+   const apiBase = Capacitor.isNativePlatform() ? 'https://dastyarai.com' : window.location.origin;
+   targetUrl = apiBase + targetUrl;
+  }
+  window.location.href = targetUrl;
  }
  } catch (err: any) {
  setPayError(err.message || 'خطا در ارتباط با درگاه پرداخت');
@@ -312,6 +318,7 @@ export const WalletModal: React.FC = () => {
  <ShieldCheck className="w-4 h-4 text-emerald-500" />
  {isBazaar ? 'اتصال امن به درگاه مستقیم بازارپی (کافه‌بازار)' : 'اتصال امن به درگاه رسمی شاپرک (زرین‌پال)'}
  </span>
+ {!isBazaar && (
  <button
  onClick={() => {
  setIsWalletOpen(false);
@@ -321,6 +328,7 @@ export const WalletModal: React.FC = () => {
  >
  مشاهده همه محصولات فروشگاه
  </button>
+ )}
  </div>
  </div>
  ) : (

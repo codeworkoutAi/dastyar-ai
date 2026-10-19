@@ -6,7 +6,19 @@ const config: CapacitorConfig = {
   webDir: 'dist',
   server: {
     cleartext: true,
-    androidScheme: 'http'
+    androidScheme: 'http',
+    allowNavigation: [
+      'dastyarai.com',
+      '*.dastyarai.com',
+      'fa-chatbox.com',
+      '*.fa-chatbox.com',
+      'bazaar-pay.ir',
+      '*.bazaar-pay.ir',
+      'cafebazaar.ir',
+      '*.cafebazaar.ir',
+      'shaparak.ir',
+      '*.shaparak.ir'
+    ]
   },
   android: {
     appendUserAgent: 'BazaarVersion'

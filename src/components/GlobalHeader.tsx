@@ -5,6 +5,7 @@ import { useAuthStore } from '../store/authStore';
 import { ThemeToggle } from './ThemeToggle';
 import { useUIStore } from '../store/uiStore';
 import { UIStyleToggle } from './UIStyleToggle';
+import { isBazaarEnvironment } from '../lib/bazaarUtils';
 
 export const GlobalHeader: React.FC = () => {
   const { user } = useAuthStore();
@@ -20,9 +21,11 @@ export const GlobalHeader: React.FC = () => {
     window.dispatchEvent(new CustomEvent('open-auth-modal'));
   };
 
+  const isBazaar = isBazaarEnvironment() || Boolean(user?.email?.endsWith('@bazaar.guest'));
+
   const navLinks = [
     { name: 'چت', path: '/chat', icon: MessageSquare },
-    { name: 'فروشگاه', path: '/store', icon: Store },
+    ...(!isBazaar ? [{ name: 'فروشگاه', path: '/store', icon: Store }] : []),
     { name: 'وبلاگ', path: '/blog', icon: BookOpen },
   ];
 

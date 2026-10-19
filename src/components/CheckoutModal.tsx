@@ -3,6 +3,7 @@ import { CloseCircleOutlineIcon, ShopLinearIcon } from '@solar-icons/react';
 import { useAuthStore } from '../store/authStore';
 import { useSettingsStore } from '../store/settingsStore';
 import { toPersianDigits } from '../lib/persianUtils';
+import { Capacitor } from '@capacitor/core';
 
 interface CheckoutModalProps {
  product: any;
@@ -44,7 +45,12 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ product, isOpen, o
 
  // Redirect to mock payment gateway
  if (data.paymentUrl) {
- window.location.href = data.paymentUrl;
+  let targetUrl = data.paymentUrl;
+  if (targetUrl.startsWith('/')) {
+   const apiBase = Capacitor.isNativePlatform() ? 'https://dastyarai.com' : window.location.origin;
+   targetUrl = apiBase + targetUrl;
+  }
+  window.location.href = targetUrl;
  }
  } catch (err: any) {
  setError(err.message);

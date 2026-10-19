@@ -1,5 +1,5 @@
 import { useEffect, lazy, Suspense } from 'react';
-import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import { useSettingsStore } from './store/settingsStore';
 import { useAuthStore } from './store/authStore';
 import { useUIStore } from './store/uiStore';
@@ -72,7 +72,13 @@ export default function App() {
    localStorage.setItem('chatbox_promo', promoCode);
    // Optional: Clean up URL after extracting promo code
    window.history.replaceState({}, document.title, window.location.pathname);
- }
+  }
+
+  const paymentStatus = urlParams.get('payment');
+  if (paymentStatus === 'success') {
+    checkAuth();
+    window.history.replaceState({}, document.title, window.location.pathname);
+  }
 
  // Fetch public settings (ui_style theme) and apply to <html>
  fetch('/api/public-settings')
@@ -118,6 +124,14 @@ export default function App() {
  root.dir = direction;
  }, [isDarkMode, settings.appearance.font, settings.appearance.fontSize, direction]);
 
+  function StoreRoute() {
+    return isBazaarEnvironment() ? <Navigate to="/chat" replace /> : <StoreFront />;
+  }
+
+  function ProductDetailsRoute() {
+    return isBazaarEnvironment() ? <Navigate to="/chat" replace /> : <ProductDetails />;
+  }
+
  function HomeRoute() {
  const isAuthenticated = useAuthStore(state => state.isAuthenticated);
  const isNative = Capacitor.isNativePlatform();
@@ -132,8 +146,8 @@ export default function App() {
  <Route path="/" element={<HomeRoute />} />
  <Route path="/landing" element={<LandingPage />} />
  <Route path="/chat" element={<ChatApp />} />
- <Route path="/store" element={<StoreFront />} />
- <Route path="/store/product/:id" element={<ProductDetails />} />
+  <Route path="/store" element={<StoreRoute />} />
+  <Route path="/store/product/:id" element={<ProductDetailsRoute />} />
  <Route path="/blog" element={<Blog />} />
  <Route path="/blog/:id" element={<Blog />} />
  <Route path="/blog/tag/:tagName" element={<TagArchive />} />
