@@ -1,4 +1,9 @@
 export const isBazaarEnvironment = (): boolean => {
+  // 1. Build-time environment flag (e.g. VITE_BUILD_TARGET=bazaar or npm run build:bazaar)
+  if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_BUILD_TARGET === 'bazaar') {
+    return true;
+  }
+  // 2. Runtime Capacitor user-agent injection
   if (typeof navigator !== 'undefined' && navigator.userAgent) {
     return navigator.userAgent.includes('BazaarVersion');
   }

@@ -361,16 +361,6 @@ stopGeneration: () => {
         payloadSettings.tools.webSearch = false;
       }
 
-      // A structured tool must not switch off Google Search Grounding.
-      // The intent router answers "weather" with webSearch:false because it expects the
-      // backend to serve that question from the tool alone. But the tool only knows how
-      // to strip a city name out of a regex; the live grounding layer is what actually
-      // gives a current, sourced forecast. Grounding and tools now run in parallel, so
-      // there is no reason to suppress the live layer for weather questions.
-      if (detectedTool === 'weather') {
-        payloadSettings.tools.webSearch = true;
-      }
-
       // KILL-SWITCH: Never allow web search if globally disabled
       if (!globalWebSearchEnabled) {
         payloadSettings.tools.webSearch = false;

@@ -481,6 +481,17 @@ const REHYPE_PLUGINS = [rehypeKatex];
 const splitSettledBlocks = (raw: string): { settled: string; tail: string } => {
   if (!raw) return { settled: "", tail: raw };
 
+  // Never split inside an unterminated <think> reasoning block
+  const lower = raw.toLowerCase();
+  const lastThinkOpen = lower.lastIndexOf('<think>');
+  const lastThinkClose = lower.lastIndexOf('</think>');
+  const isInsideThink = lastThinkOpen !== -1 && (lastThinkClose === -1 || lastThinkClose < lastThinkOpen);
+  if (isInsideThink) {
+    const preThinkBoundary = raw.lastIndexOf("\n\n", lastThinkOpen);
+    if (preThinkBoundary === -1) return { settled: "", tail: raw };
+    return { settled: raw.slice(0, preThinkBoundary + 2), tail: raw.slice(preThinkBoundary + 2) };
+  }
+
   // Never split inside an unterminated fenced code block, otherwise the tail
   // would render as a broken half-written code block.
   const fenceCount = (raw.match(/```/g) || []).length;

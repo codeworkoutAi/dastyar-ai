@@ -31,6 +31,7 @@ import { useUIStore } from '../store/uiStore';
 import { useSettingsStore } from '../store/settingsStore';
 import { useChatStore } from '../store/chatStore';
 import { exportToJson } from '../lib/exportUtils';
+import { isBazaarEnvironment } from '../lib/bazaarUtils';
 
 interface GroupedConversations {
     id: 'today' | 'yesterday' | 'last7Days' | 'older';
@@ -46,6 +47,7 @@ export const Sidebar: React.FC = React.memo(() => {
 
     const { user, isAuthenticated, logout, setAuthModalOpen } = useAuthStore();
     const usePersianDigits = settings.appearance.persianNumerals;
+    const isBazaar = isBazaarEnvironment() || Boolean(user?.email?.endsWith('@bazaar.guest'));
 
     const [searchQuery, setSearchQuery] = useState('');
     const [editingId, setEditingId] = useState<string | null>(null);
@@ -470,18 +472,20 @@ export const Sidebar: React.FC = React.memo(() => {
                 {/* ---------------- 2. نوار ابزارهای سریع (آیکون‌های سه‌بعدی برجسته) ---------------- */}
                 <div className="px-3 pt-2.5 pb-1 mb-3.5 shrink-0">
                     <div className="flex items-center justify-between gap-1.5 px-0.5">
-                        <Tooltip content="فروشگاه محصولات" position="top" align="start">
-                            <Link
-                                to="/store"
-                                onClick={() => { if (window.innerWidth < 768) setSidebarOpen(false); }}
-                                className="clay-icon-btn w-10 h-10 flex items-center justify-center cursor-pointer clay-icon"
-                                aria-label="فروشگاه محصولات و اشتراک"
-                            >
-                                <Store className="w-5 h-5 text-emerald-500" strokeWidth={1.8} />
-                            </Link>
-                        </Tooltip>
+                        {!isBazaar && (
+                            <Tooltip content="فروشگاه محصولات" position="top" align="start">
+                                <Link
+                                    to="/store"
+                                    onClick={() => { if (window.innerWidth < 768) setSidebarOpen(false); }}
+                                    className="clay-icon-btn w-10 h-10 flex items-center justify-center cursor-pointer clay-icon"
+                                    aria-label="فروشگاه محصولات و اشتراک"
+                                >
+                                    <Store className="w-5 h-5 text-emerald-500" strokeWidth={1.8} />
+                                </Link>
+                            </Tooltip>
+                        )}
 
-                        <Tooltip content="وبلاگ هوش مصنوعی" position="top" align="center">
+                        <Tooltip content="وبلاگ هوش مصنوعی" position="top" align={isBazaar ? 'start' : 'center'}>
                             <Link
                                 to="/blog"
                                 onClick={() => { if (window.innerWidth < 768) setSidebarOpen(false); }}

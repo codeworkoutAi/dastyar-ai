@@ -1,3 +1,0 @@
-﻿url prefix: libsql://dastyarai-db-lifeenco | token length: 348
-
-=== REMOTE (Turso) authoritative state ===

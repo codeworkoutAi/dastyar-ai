@@ -28,9 +28,9 @@ Persian AI Chatbox is a highly polished, full-stack AI platform for Persian-spea
 The platform operates exclusively on **exactly six stable system profiles** (divided into 3 Free and 3 Paid/Credit models). User BYOK personal profiles are completely eliminated in favor of managed system stability:
 
 - **Base/Fast Models (Lightweight & Cost-Effective, Smart Routing Defaults):**
-  1. `free_default`: **دستیار چت و گفتگو** ⬅️ `role: 'default'` | مدل: `minimax-m3`
-  2. `free_coding`: **دستیار برنامه‌نویسی و کد** ⬅️ `role: 'coding'` | مدل: `deepseek-v4-flash`
-  3. `free_vision`: **دستیار بینایی و اسناد** ⬅️ `role: 'vision'` | مدل: `gemini-3.5-flash`
+  1. `free_default`: **دستیار چت و گفتگو** ⬅️ `role: 'default'` | مدل: `gemini-2.5-flash`
+  2. `free_coding`: **دستیار برنامه‌نویسی و کد** ⬅️ `role: 'coding'` | مدل: `gemini-2.0-pro-exp-02-05`
+  3. `free_vision`: **دستیار بینایی و اسناد** ⬅️ `role: 'vision'` | مدل: `gemini-2.5-flash`
 - **Pro/Advanced Models (Pay-As-You-Go / Router.cheap):**
   4. `paid_default`: **دستیار هوشمند کلود** ⬅️ `role: 'paid_default'` | مدل: `claude-sonnet-4-6`
   5. `paid_coding`: **دستیار مهندسی دیپ‌سیک** ⬅️ `role: 'paid_coding'` | مدل: `deepseek-v4-pro`
