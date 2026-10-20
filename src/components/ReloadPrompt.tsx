@@ -28,6 +28,18 @@ export const ReloadPrompt: React.FC = () => {
     return null;
   }
 
+  const handleUpdate = async () => {
+    try {
+      if ('caches' in window) {
+        const keys = await caches.keys();
+        await Promise.all(keys.map(k => caches.delete(k)));
+      }
+    } catch (e) {
+      console.warn('Cache purge error:', e);
+    }
+    await updateServiceWorker(true);
+  };
+
   return (
     <aside 
       aria-label="اعلان به‌روزرسانی برنامه"
@@ -47,7 +59,7 @@ export const ReloadPrompt: React.FC = () => {
 
         <div className="flex items-center gap-1.5 shrink-0">
           <button
-            onClick={() => updateServiceWorker(true)}
+            onClick={handleUpdate}
             className="clay-btn clay-btn-primary px-3 py-1.5 rounded-xl text-xs font-bold shrink-0 flex items-center gap-1.5 cursor-pointer shadow-sm active:scale-95 transition-transform"
           >
             <span>به‌روزرسانی</span>

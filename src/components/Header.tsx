@@ -235,35 +235,68 @@ export const Header: React.FC = React.memo(() => {
  </Tooltip>
 
  {showMobileMenu && (
-  <div className="absolute top-full mt-2 left-0 w-52 clay-card z-50 flex flex-col gap-1 p-2 animate-fadeIn border border-subtle" dir="rtl">
-  
-  <div className="flex items-center justify-around p-2 mb-1 bg-black/5 dark:bg-white/5 rounded-lg border border-black/5 dark:border-white/5">
-     <ThemeToggle variant="clay" className="!w-10 !h-10 !rounded-xl" />
-     <UIStyleToggle variant="clay" className="!w-10 !h-10 !rounded-xl" />
-  </div>
+    <div
+      className="absolute top-full mt-2.5 left-0 w-60 sm:w-64 clay-card rounded-2xl z-50 flex flex-col p-2.5 shadow-2xl border border-subtle backdrop-blur-xl animate-in fade-in zoom-in-95 duration-150"
+      dir="rtl"
+    >
+      {/* Top Symmetrical Appearance Bar */}
+      <div className="clay-surface rounded-xl p-1.5 flex items-center justify-between gap-1.5 mb-2 border border-subtle">
+        <div className="flex-1 flex items-center justify-center">
+          <ThemeToggle variant="clay" className="!w-full !h-9 !rounded-lg text-xs font-bold" />
+        </div>
+        <div className="w-px h-6 bg-[var(--border-color)] opacity-40 shrink-0" />
+        <div className="flex-1 flex items-center justify-center">
+          <UIStyleToggle variant="clay" className="!w-full !h-9 !rounded-lg text-xs font-bold" />
+        </div>
+      </div>
 
-  {!isBazaar && (
- <button onClick={() => { install(); setShowMobileMenu(false); }} className="flex items-center gap-2 p-2 rounded-lg hover:bg-[var(--bg-main)] transition-colors text-right cursor-pointer">
- <SmartphoneLinearIcon className="w-4 h-4 text-emerald-500" />
- <span className="text-xs font-bold text-[var(--text-main)]">نصب اپلیکیشن دستیار</span>
- </button>
- )}
+      {/* Featured Install Card (Web-only) */}
+      {!isBazaar && (
+        <button
+          onClick={() => { install(); setShowMobileMenu(false); }}
+          className="w-full flex items-center justify-between p-2 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/15 border border-emerald-500/20 transition-all text-right cursor-pointer mb-1.5 group active:scale-[0.98]"
+        >
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center text-emerald-500 shrink-0">
+              <SmartphoneLinearIcon className="w-4.5 h-4.5" />
+            </div>
+            <div className="flex flex-col min-w-0">
+              <span className="text-xs font-bold text-[var(--text-main)] truncate">نصب اپلیکیشن</span>
+              <span className="text-[10px] text-[var(--text-muted)] truncate">سریع‌تر و روان‌تر</span>
+            </div>
+          </div>
+          <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 shrink-0">
+            نصب
+          </span>
+        </button>
+      )}
 
- <div className="h-px bg-[var(--border-color)] opacity-50 my-1" />
+      {/* Tools Section */}
+      <div className="flex flex-col gap-1 border-t border-subtle pt-1.5">
+        <button
+          onClick={() => { setIsSettingsOpen(true); setShowMobileMenu(false); }}
+          className="w-full flex items-center gap-2.5 p-2 rounded-xl hover:bg-black/5 dark:hover:bg-white/5 transition-colors text-right cursor-pointer"
+        >
+          <div className="w-7 h-7 rounded-lg bg-amber-500/10 text-amber-500 flex items-center justify-center shrink-0">
+            <SettingsMinimalisticLinearIcon className="w-4 h-4" />
+          </div>
+          <span className="text-xs font-bold text-[var(--text-main)]">تنظیمات پیشرفته</span>
+        </button>
 
- {user?.role === 'admin' && (
- <button onClick={() => { setIsAdminOpen(true); setShowMobileMenu(false); }} className="flex items-center gap-2 p-2 rounded-lg hover:bg-[var(--bg-main)] transition-colors text-right cursor-pointer text-blue-600 dark:text-blue-400">
- <ShieldCheck className="w-4 h-4" />
- <span className="text-xs font-bold">پنل مدیریت سیستم</span>
- </button>
- )}
-
- <button onClick={() => { setIsSettingsOpen(true); setShowMobileMenu(false); }} className="flex items-center gap-2 p-2 rounded-lg hover:bg-[var(--bg-main)] transition-colors text-right cursor-pointer">
- <SettingsMinimalisticLinearIcon className="w-4 h-4 text-[var(--text-main)]" />
- <span className="text-xs font-bold text-[var(--text-main)]">تنظیمات پیشرفته</span>
- </button>
- </div>
- )}
+        {user?.role === 'admin' && (
+          <button
+            onClick={() => { setIsAdminOpen(true); setShowMobileMenu(false); }}
+            className="w-full flex items-center gap-2.5 p-2 rounded-xl hover:bg-black/5 dark:hover:bg-white/5 transition-colors text-right cursor-pointer"
+          >
+            <div className="w-7 h-7 rounded-lg bg-rose-500/10 text-rose-500 flex items-center justify-center shrink-0">
+              <ShieldCheck className="w-4 h-4" />
+            </div>
+            <span className="text-xs font-bold text-rose-600 dark:text-rose-400">پنل مدیریت سیستم</span>
+          </button>
+        )}
+      </div>
+    </div>
+  )}
  </div>
  </div>
  </div>

@@ -58,7 +58,9 @@ export default defineConfig(() => {
         },
         workbox: {
           maximumFileSizeToCacheInBytes: 6 * 1024 * 1024,
-          navigateFallbackDenylist: [/^\/api/]
+          navigateFallbackDenylist: [/^\/api/],
+          cleanupOutdatedCaches: true,
+          clientsClaim: true,
         }
       })
     ],
