@@ -28,6 +28,8 @@ import { SmartRoutingAnimation } from './ChatBox';
 import { ThemeToggle } from './ThemeToggle';
 import { UIStyleToggle } from './UIStyleToggle';
 import { ModelSelectorDropdown } from './ModelSelectorDropdown';
+import { Capacitor } from '@capacitor/core';
+import { isBazaarEnvironment } from '../lib/bazaarUtils';
 
 export const SmartRoutingBadge: React.FC<{ isStreaming: boolean }> = ({ isStreaming }) => {
  return (
@@ -53,6 +55,7 @@ export const Header: React.FC = React.memo(() => {
  const dropdownRef = useRef<HTMLDivElement>(null);
 
  const { isInstallable, install } = usePWAInstall();
+ const isBazaar = isBazaarEnvironment() || Capacitor.isNativePlatform();
 
  useEffect(() => {
  const handleClickOutside = (event: MouseEvent) => {
@@ -239,10 +242,10 @@ export const Header: React.FC = React.memo(() => {
      <UIStyleToggle variant="clay" className="!w-10 !h-10 !rounded-xl" />
   </div>
 
-  {isInstallable && (
+  {!isBazaar && (
  <button onClick={() => { install(); setShowMobileMenu(false); }} className="flex items-center gap-2 p-2 rounded-lg hover:bg-[var(--bg-main)] transition-colors text-right cursor-pointer">
- <SmartphoneLinearIcon className="w-4 h-4 text-blue-500" />
- <span className="text-xs font-bold text-[var(--text-main)]">نصب برنامه</span>
+ <SmartphoneLinearIcon className="w-4 h-4 text-emerald-500" />
+ <span className="text-xs font-bold text-[var(--text-main)]">نصب اپلیکیشن دستیار</span>
  </button>
  )}
 

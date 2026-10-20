@@ -67,10 +67,10 @@ export const PWAInstallBanner: React.FC = () => {
             </div>
             <div className="flex flex-col min-w-0">
               <span className="text-xs sm:text-sm font-bold text-[var(--text-main)] truncate">
-                نصب نسخه وب‌اپلیکیشن (PWA)
+                نصب اپلیکیشن دستیار
               </span>
               <span className="text-[11px] text-[var(--text-muted)] truncate">
-                دسترسی سریع‌تر، روان و بدون نیاز به فیلترشکن
+                سریع‌تر و روان‌تر
               </span>
             </div>
           </div>
@@ -171,9 +171,9 @@ export const PWAInstallBanner: React.FC = () => {
                     ۱
                   </div>
                   <div>
-                    روی منوی سه‌نقطه (
+                    در بالاترین قسمت صفحه، روی منوی سه‌نقطه مرورگر (
                     <MoreVertical className="inline w-3.5 h-3.5 text-zinc-400 mx-0.5 align-baseline" />
-                    ) در گوشه بالای مرورگر بزنید.
+                    کنار آدرس سایت) بزنید.
                   </div>
                 </div>
 
@@ -182,7 +182,7 @@ export const PWAInstallBanner: React.FC = () => {
                     ۲
                   </div>
                   <div>
-                    گزینه <span className="font-bold text-emerald-500">«نصب برنامه»</span> یا{' '}
+                    در منوی بازشده مرورگر، گزینه <span className="font-bold text-emerald-500">«نصب برنامه»</span> یا{' '}
                     <span className="font-bold">«افزودن به صفحه اصلی»</span> (Install app / Add to Home screen) را انتخاب کنید.
                   </div>
                 </div>
