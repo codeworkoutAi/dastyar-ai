@@ -26,7 +26,8 @@ android {
     }
     buildTypes {
         release {
-            minifyEnabled false
+            minifyEnabled true
+            shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
             signingConfig signingConfigs.release
         }
@@ -117,7 +118,27 @@ tasks.register("copyVersionedOutputs") {
     }
 }
 
+tasks.register("pruneAndroidAssets") {
+    doLast {
+        def assetsPublic = file("src/main/assets/public")
+        if (assetsPublic.exists()) {
+            def imagesDir = file("src/main/assets/public/images")
+            if (imagesDir.exists()) {
+                delete imagesDir
+                logger.lifecycle("[pruneAndroidAssets] Pruned web-only images directory from Android assets.")
+            }
+            def enamadFile = file("src/main/assets/public/60366138.txt")
+            if (enamadFile.exists()) delete enamadFile
+            def bingFile = file("src/main/assets/public/BingSiteAuth.xml")
+            if (bingFile.exists()) delete bingFile
+            def llmsFile = file("src/main/assets/public/llms.txt")
+            if (llmsFile.exists()) delete llmsFile
+        }
+    }
+}
+
 afterEvaluate {
+    tasks.findByName("preBuild")?.dependsOn("pruneAndroidAssets")
     tasks.findByName("assembleRelease")?.configure {
         finalizedBy("copyVersionedOutputs")
     }

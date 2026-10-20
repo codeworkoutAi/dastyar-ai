@@ -7,6 +7,8 @@
     "dev": "tsx server/index.ts",
     "build": "vite build && esbuild server/index.ts --bundle --platform=node --format=cjs --packages=external --sourcemap --outfile=dist/server.cjs",
     "build:bazaar": "vite build --mode bazaar",
+    "cap:sync": "npx cap sync android && node scripts/prune-android-assets.cjs",
+    "build:bazaar:sync": "npm run build:bazaar && npm run cap:sync",
     "start": "node dist/server.cjs",
     "preview": "vite preview",
     "clean": "rm -rf dist dev-dist",

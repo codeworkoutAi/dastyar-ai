@@ -1,21 +1,35 @@
 # Add project specific ProGuard rules here.
 # You can control the set of applied configuration files using the
 # proguardFiles setting in build.gradle.
-#
-# For more details, see
-#   http://developer.android.com/guide/developing/tools/proguard.html
 
-# If your project uses WebView with JS, uncomment the following
-# and specify the fully qualified class name to the JavaScript interface
-# class:
-#-keepclassmembers class fqcn.of.javascript.interface.for.webview {
-#   public *;
-#}
+# Preserve debugging stack traces
+-keepattributes SourceFile,LineNumberTable
+-keepattributes Exceptions,InnerClasses,Signature,Deprecated,EnclosingMethod
 
-# Uncomment this to preserve the line number information for
-# debugging stack traces.
-#-keepattributes SourceFile,LineNumberTable
+# Capacitor Core & Bridge
+-keep class com.getcapacitor.** { *; }
+-keep interface com.getcapacitor.** { *; }
+-keep class * extends com.getcapacitor.Plugin { *; }
+-keep class * extends com.getcapacitor.BridgeActivity { *; }
+-keep class * extends com.getcapacitor.BridgeFragment { *; }
+-keep class * extends com.getcapacitor.Bridge { *; }
 
-# If you keep the line number information, uncomment this to
-# hide the original source file name.
-#-renamesourcefileattribute SourceFile
+# Preserve JavaScript Interface methods accessed from WebView
+-keepattributes JavascriptInterface
+-keepattributes *Annotation*
+-keepclassmembers class * {
+    @android.webkit.JavascriptInterface <methods>;
+}
+
+# Preserve WebKit WebView clients
+-keepclassmembers class * extends android.webkit.WebViewClient { *; }
+-keepclassmembers class * extends android.webkit.WebChromeClient { *; }
+
+# Preserve Cordova plugin compatibility
+-keep class org.apache.cordova.** { *; }
+-keep interface org.apache.cordova.** { *; }
+-dontwarn org.apache.cordova.**
+-dontwarn com.getcapacitor.**
+
+# Project MainActivity
+-keep class com.lifeencoder.chatbox.MainActivity { *; }
