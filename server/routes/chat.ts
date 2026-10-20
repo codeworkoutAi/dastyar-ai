@@ -51,7 +51,9 @@ router.post('/api/chat/stream', chatStreamLimiter, async (req, res) => {
       if (!res.writableEnded && !res.destroyed) {
         res.end();
       }
-    } catch { }
+    } catch (e) {
+      console.warn('[Chat] Silent error during stream res.end():', (e as Error)?.message || e);
+    }
   };
 
   const sendChunk = (data: {
@@ -124,7 +126,9 @@ router.post('/api/chat/stream', chatStreamLimiter, async (req, res) => {
         const decoded = jwt.verify(token, JWT_SECRET) as any;
         if (decoded?.id) userId = decoded.id;
         if (decoded?.role) userRole = decoded.role;
-      } catch (e) {}
+      } catch (e) {
+        console.warn('[Chat] JWT verification failed:', (e as Error)?.message || e);
+      }
     }
 
     if (!userId) {
@@ -625,7 +629,9 @@ router.post('/api/chat/stream', chatStreamLimiter, async (req, res) => {
                   const inner = typeof jsonParsed.action_input === 'string' ? JSON.parse(jsonParsed.action_input) : jsonParsed.action_input;
                   if (inner.prompt) targetImagePrompt = inner.prompt;
                 }
-              } catch (e) { }
+              } catch (e) {
+                console.warn('[Chat] Failed to parse structured image prompt JSON (using raw text fallback):', (e as Error)?.message || e);
+              }
 
               if (!targetImagePrompt) {
                 targetImagePrompt = lastUserMsg
@@ -929,7 +935,9 @@ router.post('/api/chat/stream', chatStreamLimiter, async (req, res) => {
         let errorText = '';
         try {
           errorText = await response.text();
-        } catch { }
+        } catch (e) {
+          console.warn('[Chat] Failed to read response error body:', (e as Error)?.message || e);
+        }
 
 
 
@@ -1044,7 +1052,9 @@ router.post('/api/chat/stream', chatStreamLimiter, async (req, res) => {
                 fullAccumulatedCustom += contentChunk;
                 sendChunk({ chunk: contentChunk });
               }
-            } catch { }
+            } catch (e) {
+              console.warn('[Chat] Failed to parse custom OpenAI SSE chunk:', (e as Error)?.message || e);
+            }
           }
         }
       }

@@ -34,7 +34,9 @@ router.post('/api/fetch-models', aiRouteLimiter, async (req, res) => {
       try {
         const row = db.prepare('SELECT apiKey FROM default_profiles WHERE id = ?').get(profileId) as any;
         if (row?.apiKey) apiKey = row.apiKey;
-      } catch {}
+      } catch (err) {
+        console.warn('[Tools] Could not load apiKey from default_profiles for profile:', profileId, (err as Error)?.message || err);
+      }
     }
 
     // Fallback to server env keys for known providers if still empty
@@ -57,7 +59,9 @@ router.post('/api/fetch-models', aiRouteLimiter, async (req, res) => {
       try {
         const parsed = JSON.parse(customHeaders);
         Object.assign(headers, parsed);
-      } catch (e) {}
+      } catch (e) {
+        console.warn('[Tools] Invalid customHeaders JSON:', (e as Error)?.message || e);
+      }
     }
 
     // Smart and modular endpoint normalization for any OpenAI-compatible provider
@@ -103,7 +107,9 @@ router.post('/api/fetch-models', aiRouteLimiter, async (req, res) => {
       try {
         const errJson = await response.json();
         errText = errJson.error?.message || errJson.message || errText;
-      } catch (e) {}
+      } catch (e) {
+        console.warn('[Tools] Could not parse error response JSON:', (e as Error)?.message || e);
+      }
       throw new Error(`خطای سرور (${response.status}): ${errText}`);
     }
 
@@ -278,7 +284,9 @@ router.post('/api/generate-image', aiRouteLimiter, async (req, res) => {
       try {
         const decoded = jwt.verify(authHeader.substring(7), JWT_SECRET) as any;
         userId = decoded.id;
-      } catch {}
+      } catch (err) {
+        console.warn('[Tools/ImageGen] JWT verification failed:', (err as Error)?.message || err);
+      }
     }
 
     if (isPaidEngine) {

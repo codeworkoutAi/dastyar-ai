@@ -26,7 +26,7 @@ import { useChatStore } from '../store/chatStore';
 import { useAuthStore } from '../store/authStore';
 
 import { CameraCaptureModal } from './CameraCaptureModal';
-import { getModelIntro } from './ChatBox';
+import { getModelIntro } from '../lib/modelMetadata';
 import { getModelDetails } from './CustomProviderCards';
 
 
@@ -184,19 +184,16 @@ export const MessageInput: React.FC = React.memo(() => {
  setAttachments(prev => prev.filter(a => a.id !== id));
  };
 
- const handlePaste = (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
- if (e.clipboardData.files && e.clipboardData.files.length > 0) {
- e.preventDefault();
- // Support multiple files from clipboard
- const files = Array.from(e.clipboardData.files);
- files.forEach(file => {
- const fakeEvent = {
- target: { files: [file], value: '' }
- } as unknown as React.ChangeEvent<HTMLInputElement>;
- handleFileChange(fakeEvent);
- });
- }
- };
+  const handlePaste = (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
+    if (e.clipboardData.files && e.clipboardData.files.length > 0) {
+      e.preventDefault();
+      // Support multiple files from clipboard
+      const files = Array.from(e.clipboardData.files);
+      files.forEach(file => {
+        processSingleFile(file);
+      });
+    }
+  };
 
  // Helper: add attachment with progress animation then mark ready
  const addAttachmentWithProgress = (id: string, dataUrl: string, mimeType: string, name: string, size: string, extractedText?: string) => {
@@ -214,9 +211,7 @@ export const MessageInput: React.FC = React.memo(() => {
  }, 100);
  };
 
- const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
- const file = e.target.files?.[0];
- if (!file) return;
+  const processSingleFile = (file: File) => {
  const attachmentId = `att_${Date.now()}_${Math.random().toString(36).slice(2)}`;
 
  // 1. Text, Markdown, and Code files -> Extract client-side text
@@ -345,7 +340,6 @@ const workerUrl = await import('pdfjs-dist/build/pdf.worker.min.mjs?url');
  else if (file.type.startsWith('image/')) {
  if (file.size > 10 * 1024 * 1024) {
  alert('حجم تصویر بیش از حد مجاز است (حداکثر ۱۰ مگابایت).');
- e.target.value = '';
  return;
  }
  const reader = new FileReader();
@@ -378,7 +372,6 @@ const workerUrl = await import('pdfjs-dist/build/pdf.worker.min.mjs?url');
  else if (file.type.startsWith('audio/')) {
  if (file.size > 15 * 1024 * 1024) {
  alert('حجم فایل صوتی بیش از حد مجاز است (حداکثر ۱۵ مگابایت).');
- e.target.value = '';
  return;
  }
  const reader = new FileReader();
@@ -394,7 +387,6 @@ const workerUrl = await import('pdfjs-dist/build/pdf.worker.min.mjs?url');
  else if (file.type.startsWith('video/')) {
  if (file.size > 25 * 1024 * 1024) {
  alert('حجم فایل ویدیویی بیش از حد مجاز است (حداکثر ۲۵ مگابایت).');
- e.target.value = '';
  return;
  }
  const reader = new FileReader();
@@ -411,7 +403,6 @@ const workerUrl = await import('pdfjs-dist/build/pdf.worker.min.mjs?url');
  else {
  if (file.size > 5 * 1024 * 1024) {
  alert('حجم فایل انتخابی بیش از حد مجاز است (حداکثر ۵ مگابایت).');
- e.target.value = '';
  return;
  }
  const reader = new FileReader();
@@ -424,8 +415,15 @@ const workerUrl = await import('pdfjs-dist/build/pdf.worker.min.mjs?url');
  };
  reader.readAsDataURL(file);
  }
- e.target.value = '';
- };
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      processSingleFile(file);
+    }
+    e.target.value = '';
+  };
 
  // Handle camera trigger depending on platform (Mobile vs PC)
  const handleCameraClick = () => {

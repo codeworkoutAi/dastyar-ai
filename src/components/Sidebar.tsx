@@ -39,11 +39,58 @@ interface GroupedConversations {
     items: Conversation[];
 }
 
+// Selective subscription for sidebar: only re-render when conversations are added/removed,
+// renamed, pinned, or when a new message turn is added - not on each token of an in-progress stream.
+function useSidebarConversations(): Conversation[] {
+    const [conversations, setConversations] = useState<Conversation[]>(() => useChatStore.getState().conversations);
+
+    useEffect(() => {
+        let prev = useChatStore.getState().conversations;
+        return useChatStore.subscribe((state) => {
+            const next = state.conversations;
+            if (prev === next) return;
+
+            let hasChanged = prev.length !== next.length;
+            if (!hasChanged) {
+                for (let i = 0; i < next.length; i++) {
+                    const p = prev[i];
+                    const n = next[i];
+                    if (
+                        p.id !== n.id ||
+                        p.title !== n.title ||
+                        p.isPinned !== n.isPinned ||
+                        p.createdAt !== n.createdAt ||
+                        p.updatedAt !== n.updatedAt ||
+                        p.modelUsed !== n.modelUsed ||
+                        p.messages.length !== n.messages.length
+                    ) {
+                        hasChanged = true;
+                        break;
+                    }
+                }
+            }
+
+            if (hasChanged) {
+                prev = next;
+                setConversations(next);
+            }
+        });
+    }, []);
+
+    return conversations;
+}
+
 export const Sidebar: React.FC = React.memo(() => {
     const { sidebarOpen, setSidebarOpen, setIsImageStudioOpen, setIsExploreOpen, setIsUiGuideOpen, setIsAdminOpen, setIsSettingsOpen, setIsWalletOpen, setIsExportOpen } = useUIStore();
     const { settings } = useSettingsStore();
-    const { conversations, activeId, setActiveId, createChat, deleteConversation, updateConversation, clearAllConversations } = useChatStore();
-    const activeConversation = conversations.find((c) => c.id === activeId) || null;
+    const activeId = useChatStore((s) => s.activeId);
+    const setActiveId = useChatStore((s) => s.setActiveId);
+    const createChat = useChatStore((s) => s.createChat);
+    const deleteConversation = useChatStore((s) => s.deleteConversation);
+    const updateConversation = useChatStore((s) => s.updateConversation);
+    const clearAllConversations = useChatStore((s) => s.clearAllConversations);
+    const conversations = useSidebarConversations();
+    const activeConversation = React.useMemo(() => conversations.find((c) => c.id === activeId) || null, [conversations, activeId]);
 
     const { user, isAuthenticated, logout, setAuthModalOpen } = useAuthStore();
     const usePersianDigits = settings.appearance.persianNumerals;
@@ -70,23 +117,25 @@ export const Sidebar: React.FC = React.memo(() => {
 
     // Filter conversations based on deferred search query (React 19 non-blocking concurrent transition)
     const deferredQuery = useDeferredValue(searchQuery);
-    const filtered = conversations.filter((c) => {
-        if (!deferredQuery.trim()) return true;
+    const filtered = React.useMemo(() => {
+        if (!deferredQuery.trim()) return conversations;
         const q = deferredQuery.toLowerCase();
-        const matchesTitle = c.title.toLowerCase().includes(q);
-        const matchesMessage = c.messages.some((m) => m.content.toLowerCase().includes(q));
-        return matchesTitle || matchesMessage;
-    });
+        return conversations.filter((c) => {
+            const matchesTitle = c.title.toLowerCase().includes(q);
+            const matchesMessage = c.messages.some((m) => m.content.toLowerCase().includes(q));
+            return matchesTitle || matchesMessage;
+        });
+    }, [conversations, deferredQuery]);
 
-    const pinnedConversations = filtered.filter((c) => c.isPinned);
-    const regularConversations = filtered.filter((c) => !c.isPinned);
+    const pinnedConversations = React.useMemo(() => filtered.filter((c) => c.isPinned), [filtered]);
+    const regularConversations = React.useMemo(() => filtered.filter((c) => !c.isPinned), [filtered]);
 
     // Group conversations by date (Today, Yesterday, Previous 7 Days, Older)
-    const groupConversationsByDate = (convList: Conversation[]): GroupedConversations[] => {
+    const dateGroups = React.useMemo(() => {
         const now = new Date();
         const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
         const startOfYesterday = startOfToday - 24 * 60 * 60 * 1000;
-        const startOf7Days = startOfToday - 6 * 24 * 60 * 1000;
+        const startOf7Days = startOfToday - 6 * 24 * 60 * 60 * 1000;
 
         const todayItems: Conversation[] = [];
         const yesterdayItems: Conversation[] = [];
@@ -94,7 +143,7 @@ export const Sidebar: React.FC = React.memo(() => {
         const olderItems: Conversation[] = [];
 
         // Sort by latest activity timestamp
-        const sorted = [...convList].sort(
+        const sorted = [...regularConversations].sort(
             (a, b) => (b.updatedAt || b.createdAt) - (a.updatedAt || a.createdAt)
         );
 
@@ -119,9 +168,7 @@ export const Sidebar: React.FC = React.memo(() => {
         ];
 
         return groups.filter((g) => g.items.length > 0);
-    };
-
-    const dateGroups = groupConversationsByDate(regularConversations);
+    }, [regularConversations, usePersianDigits]);
 
     const toggleGroupCollapse = (groupId: string) => {
         setCollapsedGroups((prev) => ({
