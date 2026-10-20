@@ -25,6 +25,7 @@ const ImageGenStudio = lazy(() => import('./components/ImageGenStudio').then(m =
 const UiGuideModal = lazy(() => import('./components/UiGuideModal').then(m => ({ default: m.UiGuideModal })));
 const ExploreHub = lazy(() => import('./components/ExploreHub').then(m => ({ default: m.ExploreHub })));
 const ReloadPrompt = lazy(() => import('./components/ReloadPrompt').then(m => ({ default: m.ReloadPrompt })));
+const PWAInstallBanner = lazy(() => import('./components/PWAInstallBanner').then(m => ({ default: m.PWAInstallBanner })));
 const AuthModal = lazy(() => import('./components/AuthModal'));
 const AdminModal = lazy(() => import('./components/AdminModal').then(m => ({ default: m.AdminModal })));
 const AboutModal = lazy(() => import('./components/AboutModal').then(m => ({ default: m.AboutModal })));
@@ -166,6 +167,7 @@ export default function App() {
  <ContactModal />
  <WalletModal />
  <ReloadPrompt />
+ <PWAInstallBanner />
  </Suspense>
  </BrowserRouter>
  );

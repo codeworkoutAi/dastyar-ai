@@ -1,55 +1,66 @@
 import React from 'react';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 import { RefreshCcw, X } from 'lucide-react';
+import { Capacitor } from '@capacitor/core';
+import { isBazaarEnvironment } from '../lib/bazaarUtils';
 
 export const ReloadPrompt: React.FC = () => {
- const {
- offlineReady: [offlineReady, setOfflineReady],
- needRefresh: [needRefresh, setNeedRefresh],
- updateServiceWorker,
- } = useRegisterSW({
- onRegistered() {
- console.log('SW Registered');
- },
- onRegisterError(error) {
- console.log('SW registration error', error);
- },
- });
+  const {
+    offlineReady: [, setOfflineReady],
+    needRefresh: [needRefresh, setNeedRefresh],
+    updateServiceWorker,
+  } = useRegisterSW({
+    onRegistered() {
+      // SW Registered successfully
+    },
+    onRegisterError(error) {
+      console.warn('SW registration error:', error);
+    },
+  });
 
- const close = () => {
- setOfflineReady(false);
- setNeedRefresh(false);
- };
+  const close = () => {
+    setOfflineReady(false);
+    setNeedRefresh(false);
+  };
 
- if (!needRefresh) {
- return null;
- }
+  // Strictly guard: Never show in native Capacitor app, Cafe Bazaar builds, or if refresh is not needed
+  if (!needRefresh || Capacitor.isNativePlatform() || isBazaarEnvironment()) {
+    return null;
+  }
 
- return (
- <div className="fixed bottom-4 right-4 z-50 flex flex-col gap-2 animate-fadeIn">
- <div className="bg-blue-600/90 backdrop-blur-md text-white px-4 py-3 rounded-2xl flex items-center gap-4 border border-blue-400/30">
- <div className="flex-1 text-sm font-medium">
- <span>نسخه جدیدی از دستیار آماده است. برای اعمال رفرش کنید.</span>
- </div>
- <div className="flex items-center gap-2">
- {needRefresh && (
- <button
- onClick={() => updateServiceWorker(true)}
- className="flex items-center gap-1 bg-white/20 hover:bg-white/30 px-3 py-1.5 rounded-xl text-xs font-bold transition-colors"
- >
- <RefreshCcw className="w-3.5 h-3.5" />
- <span>به‌روزرسانی</span>
- </button>
- )}
- <button
- onClick={close}
- className="p-1.5 rounded-full hover:bg-white/20 transition-colors"
- aria-label="بستن اعلان به‌روزرسانی"
- >
- <X className="w-4 h-4" />
- </button>
- </div>
- </div>
- </div>
- );
+  return (
+    <aside 
+      aria-label="اعلان به‌روزرسانی برنامه"
+      className="fixed top-18 sm:top-20 inset-x-0 mx-auto z-40 w-[92%] sm:w-auto sm:max-w-md pointer-events-auto animate-slideDown"
+      dir="rtl"
+    >
+      <div className="clay-card rounded-2xl p-2.5 sm:p-3 shadow-xl border border-blue-500/30 bg-gradient-to-r from-blue-600/15 via-indigo-600/10 to-blue-600/15 backdrop-blur-md flex items-center justify-between gap-3 text-right">
+        <div className="flex items-center gap-2.5 min-w-0 flex-1">
+          <div className="w-8 h-8 rounded-xl bg-blue-500/15 flex items-center justify-center shrink-0 border border-blue-500/20 text-blue-500">
+            <RefreshCcw className="w-4 h-4 animate-spin" />
+          </div>
+          <div className="flex flex-col min-w-0">
+            <span className="text-xs sm:text-sm font-bold text-[var(--text-main)] truncate">نسخه جدید دستیار آماده است</span>
+            <span className="text-[11px] text-[var(--text-muted)]">برای اعمال تغییرات به‌روزرسانی کنید</span>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-1.5 shrink-0">
+          <button
+            onClick={() => updateServiceWorker(true)}
+            className="clay-btn clay-btn-primary px-3 py-1.5 rounded-xl text-xs font-bold shrink-0 flex items-center gap-1.5 cursor-pointer shadow-sm active:scale-95 transition-transform"
+          >
+            <span>به‌روزرسانی</span>
+          </button>
+          <button
+            onClick={close}
+            className="p-1.5 rounded-xl hover:bg-black/5 dark:hover:bg-white/5 text-[var(--text-muted)] hover:text-[var(--text-main)] transition-colors shrink-0 cursor-pointer"
+            aria-label="بستن اعلان به‌روزرسانی"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+    </aside>
+  );
 };
