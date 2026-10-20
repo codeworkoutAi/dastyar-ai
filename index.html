@@ -11,6 +11,18 @@
 
     gtag('config', 'G-KLCT7WN190');
   </script>
+  <script>
+    window.__deferredPrompt = null;
+    window.addEventListener('beforeinstallprompt', function (e) {
+      e.preventDefault();
+      window.__deferredPrompt = e;
+      window.dispatchEvent(new CustomEvent('pwa-prompt-ready'));
+    });
+    window.addEventListener('appinstalled', function () {
+      window.__deferredPrompt = null;
+      window.dispatchEvent(new CustomEvent('pwa-app-installed'));
+    });
+  </script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="theme-color" content="#0f172a" />

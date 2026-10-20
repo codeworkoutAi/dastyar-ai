@@ -9,76 +9,115 @@ interface BeforeInstallPromptEvent extends Event {
   prompt(): Promise<void>;
 }
 
+declare global {
+  interface Window {
+    __deferredPrompt?: BeforeInstallPromptEvent | null;
+  }
+}
+
 export function usePWAInstall() {
-  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(() => {
+    if (typeof window !== 'undefined' && window.__deferredPrompt) {
+      return window.__deferredPrompt;
+    }
+    return null;
+  });
   const [isInstallable, setIsInstallable] = useState(false);
   const [isStandalone, setIsStandalone] = useState(false);
   const [isIOS, setIsIOS] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
-    // Check if running in standalone mode (installed PWA)
+    // Check if running in standalone mode (already installed PWA)
     const checkStandalone = () => {
       const isWindowStandalone = window.matchMedia('(display-mode: standalone)').matches;
       const isNavigatorStandalone = (window.navigator as unknown as { standalone?: boolean }).standalone === true;
       return Boolean(isWindowStandalone || isNavigatorStandalone);
     };
 
-    setIsStandalone(checkStandalone());
+    const standalone = checkStandalone();
+    setIsStandalone(standalone);
 
     // Check iOS device
-    const checkIOS = () => {
-      const ua = window.navigator.userAgent;
-      return /iPad|iPhone|iPod/.test(ua) && !(window as unknown as { MSStream?: unknown }).MSStream;
+    const ua = window.navigator.userAgent;
+    const isAppleDevice = /iPad|iPhone|iPod/.test(ua) && !(window as unknown as { MSStream?: unknown }).MSStream;
+    setIsIOS(isAppleDevice);
+
+    // Check Mobile
+    const checkIsMobile = () => {
+      return /Android|iPhone|iPad|iPod|Mobile/i.test(window.navigator.userAgent) || window.innerWidth < 768;
     };
-    setIsIOS(checkIOS());
+    setIsMobile(checkIsMobile());
+
+    // If early event was already caught in index.html head script
+    if (window.__deferredPrompt) {
+      setDeferredPrompt(window.__deferredPrompt);
+      setIsInstallable(true);
+    }
+
+    const handlePromptReady = () => {
+      if (window.__deferredPrompt) {
+        setDeferredPrompt(window.__deferredPrompt);
+        setIsInstallable(true);
+      }
+    };
 
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
+      window.__deferredPrompt = e as BeforeInstallPromptEvent;
       setDeferredPrompt(e as BeforeInstallPromptEvent);
       setIsInstallable(true);
     };
 
-    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-
     const handleAppInstalled = () => {
+      window.__deferredPrompt = null;
+      setDeferredPrompt(null);
       setIsInstallable(false);
       setIsStandalone(true);
-      setDeferredPrompt(null);
     };
 
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    window.addEventListener('pwa-prompt-ready', handlePromptReady);
     window.addEventListener('appinstalled', handleAppInstalled);
+    window.addEventListener('pwa-app-installed', handleAppInstalled);
 
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      window.removeEventListener('pwa-prompt-ready', handlePromptReady);
       window.removeEventListener('appinstalled', handleAppInstalled);
+      window.removeEventListener('pwa-app-installed', handleAppInstalled);
     };
   }, []);
 
   const install = useCallback(async (): Promise<'accepted' | 'dismissed' | 'unsupported'> => {
-    if (!deferredPrompt) {
+    const promptEvent = deferredPrompt || window.__deferredPrompt;
+    if (!promptEvent) {
       return 'unsupported';
     }
     try {
-      await deferredPrompt.prompt();
-      const choice = await deferredPrompt.userChoice;
+      await promptEvent.prompt();
+      const choice = await promptEvent.userChoice;
       if (choice.outcome === 'accepted') {
         setIsInstallable(false);
         setIsStandalone(true);
       }
       setDeferredPrompt(null);
+      window.__deferredPrompt = null;
       return choice.outcome;
     } catch (err) {
       console.warn('PWA install prompt failed:', err);
       setDeferredPrompt(null);
+      window.__deferredPrompt = null;
       return 'unsupported';
     }
   }, [deferredPrompt]);
 
   return {
-    isInstallable,
+    isInstallable: isInstallable || Boolean(deferredPrompt) || Boolean(typeof window !== 'undefined' && window.__deferredPrompt),
     isStandalone,
     isIOS,
-    hasDeferredPrompt: Boolean(deferredPrompt),
+    isMobile,
+    hasDeferredPrompt: Boolean(deferredPrompt) || Boolean(typeof window !== 'undefined' && window.__deferredPrompt),
     install,
   };
 }
