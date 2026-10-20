@@ -239,15 +239,10 @@ export const Header: React.FC = React.memo(() => {
       className="absolute top-full mt-2.5 left-0 w-60 sm:w-64 clay-card rounded-2xl z-50 flex flex-col p-2.5 shadow-2xl border border-subtle backdrop-blur-xl animate-in fade-in zoom-in-95 duration-150"
       dir="rtl"
     >
-      {/* Top Symmetrical Appearance Bar */}
-      <div className="clay-surface rounded-xl p-1.5 flex items-center justify-between gap-1.5 mb-2 border border-subtle">
-        <div className="flex-1 flex items-center justify-center">
-          <ThemeToggle variant="clay" className="!w-full !h-9 !rounded-lg text-xs font-bold" />
-        </div>
-        <div className="w-px h-6 bg-[var(--border-color)] opacity-40 shrink-0" />
-        <div className="flex-1 flex items-center justify-center">
-          <UIStyleToggle variant="clay" className="!w-full !h-9 !rounded-lg text-xs font-bold" />
-        </div>
+            {/* Top Appearance Controls: Symmetrical, equal-sized icon buttons on the LEFT, flush/flat */}
+      <div className="flex items-center gap-2 justify-start px-0.5 pt-0.5 pb-2.5" dir="ltr">
+        <ThemeToggle variant="clay" className="!w-10 !h-10 !rounded-xl shrink-0" />
+        <UIStyleToggle variant="clay" className="!w-10 !h-10 !rounded-xl shrink-0" />
       </div>
 
       {/* Featured Install Card (Web-only) */}

@@ -69,7 +69,9 @@ app.use(helmet({
         "'self'",
         "'unsafe-inline'",  // Google Identity Services uses inline scripts in popup
         "https://accounts.google.com/",
-        "https://accounts.gstatic.com/"
+        "https://accounts.gstatic.com/",
+        "https://www.googletagmanager.com",
+        "https://*.googletagmanager.com"
       ],
       scriptSrcAttr: ["'unsafe-inline'"],
       styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
@@ -86,7 +88,11 @@ app.use(helmet({
         "https://api.openrouter.ai",
         "https://accounts.google.com/",
         "https://oauth2.googleapis.com/",
-        "https://www.googleapis.com/"
+        "https://www.googleapis.com/",
+        "https://www.google-analytics.com",
+        "https://analytics.google.com",
+        "https://*.google-analytics.com",
+        "https://*.googletagmanager.com"
       ],
       frameSrc: [
         "'self'", 

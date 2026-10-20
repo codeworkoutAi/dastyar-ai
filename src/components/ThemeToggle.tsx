@@ -26,7 +26,7 @@ export const ThemeToggle: React.FC<ThemeToggleProps> = ({
 
  const baseButtonClasses =
  variant === 'clay'
- ? 'clay-btn w-11 h-11 flex items-center justify-center hover:opacity-90 rounded-xl sm:rounded-2xl cursor-pointer relative overflow-hidden group transition-all duration-300'
+ ? 'clay-icon-btn w-11 h-11 flex items-center justify-center rounded-xl sm:rounded-2xl cursor-pointer relative overflow-hidden group transition-all duration-300'
  : 'p-2 sm:p-2.5 rounded-xl transition-all duration-300 hover:bg-zinc-200/70 dark:hover:bg-zinc-800/80 text-zinc-700 dark:text-zinc-200 border border-[var(--card-border)] clay-surface shadow-sm backdrop-blur-md cursor-pointer flex items-center justify-center gap-2 group';
 
  return (
@@ -41,7 +41,7 @@ export const ThemeToggle: React.FC<ThemeToggleProps> = ({
  <div className="relative w-5 h-5 flex items-center justify-center">
  {/* Sun icon for dark mode (click to switch to light) */}
  <Sun
- className={`w-[19px] h-[19px] text-amber-400 absolute transition-all duration-500 transform ${
+ className={`w-5 h-5 text-amber-400 absolute transition-all duration-500 transform ${
  isDarkMode
  ? 'rotate-0 scale-100 opacity-100'
  : 'rotate-90 scale-0 opacity-0'
@@ -49,7 +49,7 @@ export const ThemeToggle: React.FC<ThemeToggleProps> = ({
  />
  {/* Moon icon for light mode (click to switch to dark) */}
  <Moon
- className={`w-[19px] h-[19px] text-indigo-600 dark:text-indigo-400 absolute transition-all duration-500 transform ${
+ className={`w-5 h-5 text-indigo-600 dark:text-indigo-400 absolute transition-all duration-500 transform ${
  isDarkMode
  ? '-rotate-90 scale-0 opacity-0'
  : 'rotate-0 scale-100 opacity-100'
