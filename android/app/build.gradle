@@ -62,28 +62,66 @@ try {
     logger.info("google-services.json not found, google-services plugin not applied. Push Notifications won't work")
 }
 
-tasks.register("copyVersionedApk") {
+tasks.register("copyVersionedOutputs") {
     doLast {
-        def releaseDir = file("build/outputs/apk/release")
+        def ver = android.defaultConfig.versionName
         def releaseApk = file("build/outputs/apk/release/app-release.apk")
+        def releaseAab = file("build/outputs/bundle/release/app-release.aab")
+        def desktopDir = file("${System.getProperty('user.home')}/Desktop/Chatbox_Releases")
         def rootReleaseDir = file("../../release_apks")
+
         if (releaseApk.exists()) {
             copy {
                 from releaseApk
-                into releaseDir
-                rename { "app-release-v${android.defaultConfig.versionName}.apk" }
+                into "build/outputs/apk/release"
+                rename { "app-release-v${ver}.apk" }
+            }
+            if (desktopDir.exists()) {
+                copy {
+                    from releaseApk
+                    into desktopDir
+                    rename { "FaChatbox-Bazaar-v${ver}.apk" }
+                }
+                copy {
+                    from releaseApk
+                    into desktopDir
+                    rename { "FaChatbox-Bazaar.apk" }
+                }
             }
             copy {
                 from releaseApk
                 into rootReleaseDir
-                rename { "Dastyar-Bazaar-v${android.defaultConfig.versionName}.apk" }
+                rename { "FaChatbox-Bazaar-v${ver}.apk" }
+            }
+        }
+
+        if (releaseAab.exists()) {
+            if (desktopDir.exists()) {
+                copy {
+                    from releaseAab
+                    into desktopDir
+                    rename { "FaChatbox-Bazaar-v${ver}.aab" }
+                }
+                copy {
+                    from releaseAab
+                    into desktopDir
+                    rename { "FaChatbox-Bazaar.aab" }
+                }
+            }
+            copy {
+                from releaseAab
+                into rootReleaseDir
+                rename { "FaChatbox-Bazaar-v${ver}.aab" }
             }
         }
     }
 }
 
 afterEvaluate {
-    tasks.named("assembleRelease").configure {
-        finalizedBy("copyVersionedApk")
+    tasks.findByName("assembleRelease")?.configure {
+        finalizedBy("copyVersionedOutputs")
+    }
+    tasks.findByName("bundleRelease")?.configure {
+        finalizedBy("copyVersionedOutputs")
     }
 }
