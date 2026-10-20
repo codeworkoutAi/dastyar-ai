@@ -61,3 +61,23 @@ try {
 } catch(Exception e) {
     logger.info("google-services.json not found, google-services plugin not applied. Push Notifications won't work")
 }
+
+tasks.register("copyVersionedApk") {
+    doLast {
+        def releaseDir = file("build/outputs/apk/release")
+        def releaseApk = file("build/outputs/apk/release/app-release.apk")
+        if (releaseApk.exists()) {
+            copy {
+                from releaseApk
+                into releaseDir
+                rename { "app-release-v${android.defaultConfig.versionName}.apk" }
+            }
+        }
+    }
+}
+
+afterEvaluate {
+    tasks.named("assembleRelease").configure {
+        finalizedBy("copyVersionedApk")
+    }
+}
