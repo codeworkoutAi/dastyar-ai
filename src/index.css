@@ -480,8 +480,8 @@ html {
   --text-muted: #D1D5DB; 
   --text-dim: #9CA3AF; 
   
-  --border-subtle: rgba(255, 255, 255, 0.01);
-  --border-strong: rgba(255, 255, 255, 0.1);
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.15);
   
   --accent-primary: #3b82f6;
   --accent-hover: #60a5fa;
