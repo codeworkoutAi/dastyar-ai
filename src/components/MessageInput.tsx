@@ -903,21 +903,21 @@ const workerUrl = await import('pdfjs-dist/build/pdf.worker.min.mjs?url');
  <div ref={menuRef}
  dir="rtl"
  style={{ position: 'fixed', bottom: `${menuCoords.bottom}px`, right: `${menuCoords.right}px`, zIndex: 999999 }}
- className="w-44 bg-white dark:clay-card-thick border border-[var(--card-border)] dark: rounded-2xl p-1.5 flex flex-col gap-1 origin-bottom-right animate-fadeIn"
+ className="w-44 clay-card border border-[var(--card-border)] rounded-2xl p-1.5 flex flex-col gap-1 origin-bottom-right animate-fadeIn shadow-xl backdrop-blur-xl"
  >
  <button type="button"
  onClick={() => {
  fileInputRef.current?.click();
  setIsAttachmentMenuOpen(false);
  }}
- className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:clay-surface dark:hover:bg-black/5 dark:hover:bg-white/10 transition-colors text-right cursor-pointer text-zinc-700 dark:text-slate-200"
+ className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-black/5 dark:hover:bg-white/10 active:scale-[0.98] transition-all text-right cursor-pointer text-[var(--text-main)]"
  >
  <CloudUploadLinearIcon className="w-4 h-4 text-emerald-500 dark:text-emerald-400 shrink-0" />
  <span className="text-xs font-medium">بارگذاری فایل</span>
  </button>
  <button type="button"
  onClick={handleCameraClick}
- className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:clay-surface dark:hover:bg-black/5 dark:hover:bg-white/10 transition-colors text-right cursor-pointer text-zinc-700 dark:text-slate-200"
+ className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-black/5 dark:hover:bg-white/10 active:scale-[0.98] transition-all text-right cursor-pointer text-[var(--text-main)]"
  >
  <CameraLinearIcon className="w-4 h-4 text-sky-500 dark:text-sky-400 shrink-0" />
  <span className="text-xs font-medium">دوربین</span>
@@ -993,12 +993,12 @@ const workerUrl = await import('pdfjs-dist/build/pdf.worker.min.mjs?url');
 
  {/* Textarea */}
  {slashMenuOpen && slashCommands.filter(c => c.cmd.startsWith(slashQuery)).length > 0 && (
- <div className="absolute bottom-full right-0 mb-1 w-full max-w-[240px] bg-white dark:clay-card-thick border border-[var(--card-border)] dark: rounded-xl z-[60] flex flex-col p-0.5 animate-fadeIn">
+ <div className="absolute bottom-full right-2 mb-2 w-full max-w-[260px] clay-card border border-[var(--card-border)] rounded-2xl z-[60] flex flex-col p-1.5 gap-1 animate-fadeIn shadow-xl backdrop-blur-xl">
  {slashCommands.filter(c => c.cmd.startsWith(slashQuery)).map((c, idx) => (
  <button
  key={idx}
  type="button"
- className="flex flex-col text-right px-2.5 py-1.5 hover:clay-surface dark:hover:bg-black/5 dark:hover:bg-white/10 rounded-lg transition-colors w-full"
+ className="flex flex-col text-right px-3 py-2 hover:bg-black/5 dark:hover:bg-white/10 rounded-xl transition-all w-full cursor-pointer active:scale-[0.98] group"
  onClick={() => {
  const words = text.split(' ');
  words.pop();
@@ -1007,8 +1007,8 @@ const workerUrl = await import('pdfjs-dist/build/pdf.worker.min.mjs?url');
  textareaRef.current?.focus();
  }}
  >
- <span className="font-bold text-[13px] text-sky-500 leading-none mb-1.5" dir="rtl">{c.cmd}</span>
- <span className="text-[11px] text-zinc-700 dark:text-zinc-400 line-clamp-1 leading-snug">{c.text}</span>
+ <span className="font-bold text-xs text-sky-500 dark:text-sky-400 leading-none mb-1 group-hover:text-blue-600 dark:group-hover:text-sky-300 transition-colors" dir="rtl">{c.cmd}</span>
+ <span className="text-[11px] text-[var(--text-muted)] line-clamp-1 leading-snug">{c.text}</span>
  </button>
  ))}
  </div>
