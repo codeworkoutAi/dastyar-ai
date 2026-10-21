@@ -47,7 +47,20 @@ export default function App() {
  const login = useAuthStore(state => state.login);
  const isAuthenticated = useAuthStore(state => state.isAuthenticated);
  const setAuthModalOpen = useAuthStore(state => state.setAuthModalOpen);
- const { isAdminOpen, setIsAdminOpen, setIsWalletOpen } = useUIStore();
+ const isAuthModalOpen = useAuthStore(state => state.isAuthModalOpen);
+ const {
+   isSettingsOpen,
+   isExportOpen,
+   isImageStudioOpen,
+   isUiGuideOpen,
+   isExploreOpen,
+   isAdminOpen,
+   isAboutOpen,
+   isContactOpen,
+   isWalletOpen,
+   setIsAdminOpen,
+   setIsWalletOpen
+ } = useUIStore();
 
  const isDarkMode = settings.appearance.theme === 'dark' || (settings.appearance.theme === 'system' && systemIsDark);
  const direction = settings.appearance.direction === 'auto' ? (settings.appearance.uiLanguage === 'fa' ? 'rtl' : 'ltr') : settings.appearance.direction;
@@ -71,9 +84,13 @@ export default function App() {
  const promoCode = urlParams.get('promo');
  if (promoCode) {
    localStorage.setItem('chatbox_promo', promoCode);
-   // Optional: Clean up URL after extracting promo code
    window.history.replaceState({}, document.title, window.location.pathname);
-  }
+ }
+
+ const resetToken = urlParams.get('reset_token');
+ if (resetToken) {
+   setAuthModalOpen(true);
+ }
 
   const paymentStatus = urlParams.get('payment');
   if (paymentStatus === 'success') {
@@ -155,19 +172,19 @@ export default function App() {
  <Route path="/dashboard" element={<UserDashboard />} />
  </Routes>
 
- {/* Global Modals */}
- <ExploreHub />
- <SettingsModal />
- <ExportModal />
- <ImageGenStudio />
- <UiGuideModal />
- <AuthModal />
- <AdminModal isOpen={isAdminOpen} onClose={() => setIsAdminOpen(false)} />
- <AboutModal />
- <ContactModal />
- <WalletModal />
- <ReloadPrompt />
- <PWAInstallBanner />
+        {/* Global Modals - Loaded on demand only when opened */}
+        {isExploreOpen && <ExploreHub />}
+        {isSettingsOpen && <SettingsModal />}
+        {isExportOpen && <ExportModal />}
+        {isImageStudioOpen && <ImageGenStudio />}
+        {isUiGuideOpen && <UiGuideModal />}
+        {isAuthModalOpen && <AuthModal />}
+        {isAdminOpen && <AdminModal isOpen={isAdminOpen} onClose={() => setIsAdminOpen(false)} />}
+        {isAboutOpen && <AboutModal />}
+        {isContactOpen && <ContactModal />}
+        {isWalletOpen && <WalletModal />}
+        <ReloadPrompt />
+        <PWAInstallBanner />
  </Suspense>
  </BrowserRouter>
  );

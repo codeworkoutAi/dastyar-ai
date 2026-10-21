@@ -502,6 +502,7 @@ export const LandingPage: React.FC = () => {
       {/* ---------------- 1. Claymorphic Floating Header ---------------- */}
       <GlobalHeader />
 
+      <main id="main-content" className="flex-1">
       {/* ---------------- 2. Hero Section (Thick 3D Claymorphism) ---------------- */}
       {dynamicVisibility.hero !== false && dynamicHero?.enabled !== false && (
       <section className="pt-12 pb-16 sm:pt-20 sm:pb-24 px-4 sm:px-6 max-w-5xl mx-auto flex flex-col items-center text-center">
@@ -840,7 +841,7 @@ export const LandingPage: React.FC = () => {
         {dynamicVisibility.professions !== false && dynamicProfessionsSettings?.enabled !== false && (
         <>
         <div className="reveal-init text-center max-w-2xl mx-auto mb-10 sm:mb-12">
-          <span className="text-xs font-bold text-[#717b91] uppercase tracking-widest block mb-1">
+          <span className="text-xs font-bold text-zinc-600 dark:text-zinc-400 uppercase tracking-widest block mb-1">
             TARGET AUDIENCE & USE CASES
           </span>
           <h2
@@ -849,7 +850,7 @@ export const LandingPage: React.FC = () => {
           >
             دستیار هوشمند؛ همراه تخصصی کدام حرفه‌هاست؟
           </h2>
-          <p className="text-xs sm:text-sm text-[#525d75] dark:text-[#9aa5bc]">
+          <p className="text-xs sm:text-sm text-zinc-700 dark:text-zinc-300">
             برای هر تخصص، یک پرامپت آماده طراحی شده است؛ کافیست کلیک کنید تا پاسخ آن را مستقیماً در چت‌باکس بسنجید.
           </p>
         </div>
@@ -883,11 +884,11 @@ export const LandingPage: React.FC = () => {
                     <span>تخصص انتخابی: {currentProfession.badge}</span>
                   </div>
 
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-3">
                     <button
                       type="button"
                       onClick={() => setActiveProfessionIdx((prev) => (prev - 1 + professionList.length) % professionList.length)}
-                      className="w-10 h-10 rounded-2xl clay-btn-thick flex items-center justify-center text-[#0f1420] dark:text-white transition-all cursor-pointer active:scale-95 "
+                      className="min-w-[44px] min-h-[44px] w-11 h-11 rounded-2xl clay-btn-thick flex items-center justify-center text-[#0f1420] dark:text-white transition-all cursor-pointer active:scale-95"
                       aria-label="تخصص قبلی"
                       title="تخصص قبلی"
                     >
@@ -896,7 +897,7 @@ export const LandingPage: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => setActiveProfessionIdx((prev) => (prev + 1) % professionList.length)}
-                      className="w-10 h-10 rounded-2xl clay-btn-thick flex items-center justify-center text-[#0f1420] dark:text-white transition-all cursor-pointer active:scale-95 "
+                      className="min-w-[44px] min-h-[44px] w-11 h-11 rounded-2xl clay-btn-thick flex items-center justify-center text-[#0f1420] dark:text-white transition-all cursor-pointer active:scale-95"
                       aria-label="تخصص بعدی"
                       title="تخصص بعدی"
                     >
@@ -909,16 +910,21 @@ export const LandingPage: React.FC = () => {
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 items-center">
                   {/* Preserved Visual Frame Image */}
                   <div className="lg:col-span-5 relative">
-                    <div className="relative aspect-[16/11] overflow-hidden rounded-[24px]  clay-card-thick p-1">
+                    <div className="relative aspect-[16/11] overflow-hidden rounded-[24px] clay-card-thick p-1">
                       <img
                         key={currentProfession.image}
-                        src={currentProfession.image}
+                        src={currentProfession.image.replace('.jpg', '.webp')}
                         alt={currentProfession.title}
+                        width={480}
+                        height={330}
                         className="w-full h-full object-cover rounded-[20px] transition-all duration-700 hover:scale-105"
                         loading="lazy"
+                        decoding="async"
                         onError={(e) => {
                           const target = e.currentTarget as HTMLImageElement;
-                          if (!target.src.includes('developer.jpg')) {
+                          if (target.src.endsWith('.webp')) {
+                            target.src = target.src.replace('.webp', '.jpg');
+                          } else if (!target.src.includes('developer.jpg')) {
                             target.src = '/images/professions/developer.jpg';
                           }
                         }}
@@ -935,7 +941,7 @@ export const LandingPage: React.FC = () => {
                       >
                         {currentProfession.title}
                       </h3>
-                      <p className="text-xs sm:text-sm text-[#525d75] dark:text-[#9aa5bc] leading-relaxed line-clamp-2 flex items-start">
+                      <p className="text-xs sm:text-sm text-zinc-700 dark:text-zinc-300 leading-relaxed line-clamp-2 flex items-start">
                         {currentProfession.desc}
                       </p>
                     </div>
@@ -1008,19 +1014,25 @@ export const LandingPage: React.FC = () => {
                       <button
                         type="button"
                         onClick={() => setActiveProfessionIdx(idx)}
-                        className={`w-full p-2 rounded-2xl transition-all duration-300 text-right cursor-pointer flex items-center gap-2.5 active:scale-95 ${
+                        className={`w-full min-h-[48px] p-2.5 sm:p-2 rounded-2xl transition-all duration-300 text-right cursor-pointer flex items-center gap-2.5 active:scale-95 ${
                           isActive
                             ? 'clay-card-elevated border-2 border-[var(--card-border)] dark:border-white/50 scale-102 '
                             : 'clay-card-thick opacity-70 hover:opacity-100'
                         }`}
                       >
                       <img
-                        src={p.image}
+                        src={p.image.replace('.jpg', '.webp')}
                         alt={p.title}
+                        width={40}
+                        height={40}
+                        loading="lazy"
+                        decoding="async"
                         className="w-10 h-10 rounded-xl object-cover shrink-0"
                         onError={(e) => {
                           const target = e.currentTarget as HTMLImageElement;
-                          if (!target.src.includes('developer.jpg')) {
+                          if (target.src.endsWith('.webp')) {
+                            target.src = target.src.replace('.webp', '.jpg');
+                          } else if (!target.src.includes('developer.jpg')) {
                             target.src = '/images/professions/developer.jpg';
                           }
                         }}
@@ -1029,7 +1041,7 @@ export const LandingPage: React.FC = () => {
                         <span className="block type-badge font-bold text-[#0f1420] dark:text-white truncate">
                           {p.badge}
                         </span>
-                        <span className="block type-badge text-[#717b91] truncate">
+                        <span className="block type-badge text-zinc-600 dark:text-zinc-400 font-medium truncate">
                           مشاهده پرامپت
                         </span>
                       </div>
@@ -1074,7 +1086,7 @@ export const LandingPage: React.FC = () => {
                     setGalleryTransition(true);
                     setGallerySlide((prev) => prev - 1);
                   }}
-                  className="p-3 rounded-2xl clay-btn-thick text-[#0f1420] dark:text-white cursor-pointer active:scale-95"
+                  className="min-w-[44px] min-h-[44px] w-11 h-11 rounded-2xl clay-btn-thick flex items-center justify-center text-[#0f1420] dark:text-white cursor-pointer active:scale-95"
                   aria-label="اسلاید قبلی"
                 >
                   <ChevronRight className="w-5 h-5" />
@@ -1082,7 +1094,7 @@ export const LandingPage: React.FC = () => {
 
                 <Link
                   to="/chat"
-                  className="inline-flex items-center justify-center gap-1.5 clay-btn-thick px-4 py-2.5 rounded-xl text-xs font-bold text-[#2563eb] dark:text-white hover:brightness-110 active:scale-95 text-center"
+                  className="inline-flex items-center justify-center gap-1.5 clay-btn-thick min-h-[44px] px-5 py-2.5 rounded-xl text-xs font-bold text-[#2563eb] dark:text-white hover:brightness-110 active:scale-95 text-center"
                 >
                   <span>ورود به استودیو</span>
                   <ArrowLeft className="w-3.5 h-3.5" />
@@ -1094,7 +1106,7 @@ export const LandingPage: React.FC = () => {
                     setGalleryTransition(true);
                     setGallerySlide((prev) => prev + 1);
                   }}
-                  className="w-10 h-10 rounded-2xl clay-btn-thick flex items-center justify-center text-[#0f1420] dark:text-white transition-all cursor-pointer active:scale-95  shrink-0"
+                  className="min-w-[44px] min-h-[44px] w-11 h-11 rounded-2xl clay-btn-thick flex items-center justify-center text-[#0f1420] dark:text-white transition-all cursor-pointer active:scale-95 shrink-0"
                   aria-label="تصویر بعدی"
                   title="تصویر بعدی"
                 >
@@ -1128,13 +1140,18 @@ export const LandingPage: React.FC = () => {
                     {/* Preserved Image with Sculpted Frame */}
                     <div className="relative aspect-[4/3] overflow-hidden m-3 rounded-2xl clay-inset-thick">
                       <img
-                        src={img.src}
+                        src={img.src.replace('.jpg', '.webp')}
                         alt={img.title}
+                        width={400}
+                        height={300}
                         className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
                         loading="lazy"
+                        decoding="async"
                         onError={(e) => {
                           const target = e.currentTarget as HTMLImageElement;
-                          if (!target.src.includes('journal-cover.jpg')) {
+                          if (target.src.endsWith('.webp')) {
+                            target.src = target.src.replace('.webp', '.jpg');
+                          } else if (!target.src.includes('journal-cover.jpg')) {
                             target.src = '/images/gallery/journal-cover.jpg';
                           }
                         }}
@@ -1527,12 +1544,23 @@ export const LandingPage: React.FC = () => {
         <section id="cta" className="py-16 sm:py-20 px-4 sm:px-6 max-w-5xl mx-auto border-t border-black/5 dark:border-white/5">
           <div className="clay-card-thick p-8 sm:p-14 rounded-3xl text-center relative overflow-hidden flex flex-col items-center border border-[var(--card-border)]  shadow-2xl">
             <div className="w-16 h-16 transition-transform hover:scale-105 flex items-center justify-center mb-6">
-              <img src="/pwa-192x192.png" alt="Logo" className="w-full h-full object-contain drop-shadow-lg" />
+              <img
+                src="/pwa-192x192.webp"
+                alt="لوگوی دستیار هوشمند"
+                width={64}
+                height={64}
+                loading="lazy"
+                decoding="async"
+                className="w-full h-full object-contain drop-shadow-lg"
+                onError={(e) => {
+                  (e.currentTarget as HTMLImageElement).src = '/pwa-192x192.png';
+                }}
+              />
             </div>
             <h2 className="text-2xl sm:text-4xl font-black text-[#0f1420] dark:text-white py-2 px-1 mb-3" style={{ fontFamily: "'Estedad', sans-serif" }}>
               {dynamicCta?.title || 'همین حالا گفتگوی هوشمند را شروع کنید'}
             </h2>
-            <p className="text-xs sm:text-sm text-[#525d75] dark:text-[#9aa5bc] max-w-xl mx-auto leading-relaxed mb-8 font-normal">
+            <p className="text-xs sm:text-sm text-zinc-700 dark:text-zinc-300 max-w-xl mx-auto leading-relaxed mb-8 font-normal">
               {dynamicCta?.desc || 'ثبت‌نام در کمتر از ۳۰ ثانیه بدون نیاز به وارد کردن کارت بانکی؛ بلافاصله وارد محیط چت شوید و قدرت مدل‌های برتر هوش مصنوعی جهان را تجربه کنید.'}
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3.5 w-full sm:w-auto">
@@ -1557,6 +1585,7 @@ export const LandingPage: React.FC = () => {
           </div>
         </section>
       )}
+      </main>
 
       <Footer />
 

@@ -199,83 +199,91 @@ export function Footer() {
  <span>نماد اعتماد الکترونیکی</span>
  </h3>
  <div className="p-3 rounded-2xl bg-white shadow-sm border border-black/5 hover:shadow-md inline-block transition-transform hover:scale-105">
- <a
- referrerPolicy="origin"
- target="_blank"
- rel="noreferrer"
- href="https://trustseal.enamad.ir/?id=7675736&Code=Gx87lRnRBjSnMfkfeXWDlWi88ZzK41Oj"
- className="inline-block"
- >
- <img
- referrerPolicy="origin"
- src="/images/enamad.png"
- alt="نماد تجارت الکترونیکی (اینماد)"
- style={{ cursor: 'pointer', width: '96px', height: 'auto' }}
- />
- </a>
- </div>
+              <a
+                referrerPolicy="origin"
+                target="_blank"
+                rel="noreferrer"
+                href="https://trustseal.enamad.ir/?id=7675736&Code=Gx87lRnRBjSnMfkfeXWDlWi88ZzK41Oj"
+                className="inline-block"
+                aria-label="نماد تجارت الکترونیکی (اینماد)"
+              >
+                <img
+                  referrerPolicy="origin"
+                  src="/images/enamad.png"
+                  alt="نماد تجارت الکترونیکی (اینماد)"
+                  width={96}
+                  height={106}
+                  loading="lazy"
+                  decoding="async"
+                  style={{ cursor: 'pointer', width: '96px', height: 'auto' }}
+                />
+              </a>
+            </div>
 
- <p className="type-badge text-[#64748b] dark:text-[#94a3b8] font-medium leading-relaxed">
- پرداخت آنلاین امن با درگاه شاپرک و زرین‌پال
- </p>
- </div>
+            <p className="type-badge text-zinc-600 dark:text-zinc-400 font-medium leading-relaxed">
+              پرداخت آنلاین امن با درگاه شاپرک و زرین‌پال
+            </p>
+          </div>
 
- </div>
- </div>
+        </div>
+      </div>
 
- {/* Bottom Bar: System Status, Copyright & Socials */}
- <div className="clay-card-thick px-5 sm:px-8 py-4 flex flex-col-reverse sm:flex-row items-center justify-between gap-4">
- {/* Copyright & Made with */}
- <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2.5 text-xs text-zinc-600 dark:text-zinc-400 dark:text-[#9aa5bc] font-medium text-center sm:text-right">
- <span>© {toPersianDigits(new Date().getFullYear().toString())}</span>
- <span>{footerData.copyrightText || 'دستیار هوشمند. تمامی حقوق محفوظ است.'}</span>
- </div>
+      {/* Bottom Bar: System Status, Copyright & Socials */}
+      <div className="clay-card-thick px-5 sm:px-8 py-4 flex flex-col-reverse sm:flex-row items-center justify-between gap-4">
+        {/* Copyright & Made with */}
+        <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2.5 text-xs text-zinc-600 dark:text-zinc-400 dark:text-[#9aa5bc] font-medium text-center sm:text-right">
+          <span>© {toPersianDigits(new Date().getFullYear().toString())}</span>
+          <span>{footerData.copyrightText || 'دستیار هوشمند. تمامی حقوق محفوظ است.'}</span>
+        </div>
 
- {/* Social Icons & Status Badge */}
- <div className="flex items-center gap-3.5">
- {/* System Status Pill */}
- <div className="clay-pill-thick px-3 py-1.5 inline-flex items-center gap-2 type-badge font-bold text-emerald-600 dark:text-emerald-400">
- <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
- <span>سیستم فعال</span>
- </div>
+        {/* Social Icons & Status Badge */}
+        <div className="flex items-center gap-3.5">
+          {/* System Status Pill */}
+          <div className="clay-pill-thick px-3 py-1.5 inline-flex items-center gap-2 type-badge font-bold text-emerald-600 dark:text-emerald-400">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span>سیستم فعال</span>
+          </div>
 
- {/* Social Buttons */}
- <div className="flex items-center gap-2">
- {footerData.telegramChannel && (
- <a
- href={
- footerData.telegramChannel.startsWith('http')
- ? footerData.telegramChannel
- : `https://t.me/${footerData.telegramChannel.replace('@', '')}`
- }
- target="_blank"
- rel="noreferrer"
- className="clay-btn-thick w-9 h-9 rounded-xl flex items-center justify-center text-sky-500 hover:text-sky-600 dark:hover:text-sky-400 hover:scale-110 active:scale-95 transition-all shadow-[0_2px_10px_rgba(14,165,233,0.2)]"
- title="کانال تلگرام"
- >
- <Send className="w-4 h-4 -rotate-12 translate-x-0.5" />
- </a>
- )}
- <a
- href="https://twitter.com"
- target="_blank"
- rel="noreferrer"
- className="clay-btn-thick w-9 h-9 rounded-xl flex items-center justify-center text-zinc-600 dark:text-zinc-400 dark:text-[#9aa5bc] hover:text-zinc-800 dark:text-zinc-100 dark:hover:text-white hover:scale-110 active:scale-95 transition-all"
- title="توییتر / X"
- >
- <Twitter className="w-4 h-4" />
- </a>
- <a
- href="https://github.com"
- target="_blank"
- rel="noreferrer"
- className="clay-btn-thick w-9 h-9 rounded-xl flex items-center justify-center text-zinc-600 dark:text-zinc-400 dark:text-[#9aa5bc] hover:text-zinc-800 dark:text-zinc-100 dark:hover:text-white hover:scale-110 active:scale-95 transition-all"
- title="گیت‌هاب"
- >
- <Github className="w-4 h-4" />
- </a>
- </div>
- </div>
+          {/* Social Buttons */}
+          <div className="flex items-center gap-2.5">
+            {footerData.telegramChannel && (
+              <a
+                href={
+                  footerData.telegramChannel.startsWith('http')
+                    ? footerData.telegramChannel
+                    : `https://t.me/${footerData.telegramChannel.replace('@', '')}`
+                }
+                target="_blank"
+                rel="noreferrer"
+                className="clay-btn-thick min-w-[44px] min-h-[44px] w-11 h-11 rounded-xl flex items-center justify-center text-sky-500 hover:text-sky-600 dark:hover:text-sky-400 hover:scale-110 active:scale-95 transition-all shadow-[0_2px_10px_rgba(14,165,233,0.2)]"
+                title="کانال تلگرام"
+                aria-label="کانال تلگرام دستیار هوشمند"
+              >
+                <Send className="w-4 h-4 -rotate-12 translate-x-0.5" />
+              </a>
+            )}
+            <a
+              href="https://twitter.com"
+              target="_blank"
+              rel="noreferrer"
+              className="clay-btn-thick min-w-[44px] min-h-[44px] w-11 h-11 rounded-xl flex items-center justify-center text-zinc-600 dark:text-zinc-400 dark:text-[#9aa5bc] hover:text-zinc-800 dark:text-zinc-100 dark:hover:text-white hover:scale-110 active:scale-95 transition-all"
+              title="توییتر / X"
+              aria-label="صفحه توییتر دستیار هوشمند"
+            >
+              <Twitter className="w-4 h-4" />
+            </a>
+            <a
+              href="https://github.com"
+              target="_blank"
+              rel="noreferrer"
+              className="clay-btn-thick min-w-[44px] min-h-[44px] w-11 h-11 rounded-xl flex items-center justify-center text-zinc-600 dark:text-zinc-400 dark:text-[#9aa5bc] hover:text-zinc-800 dark:text-zinc-100 dark:hover:text-white hover:scale-110 active:scale-95 transition-all"
+              title="گیت‌هاب"
+              aria-label="مخزن گیت‌هاب دستیار هوشمند"
+            >
+              <Github className="w-4 h-4" />
+            </a>
+          </div>
+        </div>
 
  </div>
  </div>
