@@ -48,7 +48,6 @@ import {
 import { GlobalHeader } from '../../components/GlobalHeader';
 import { Footer } from '../../components/Footer';
 import { CheckoutModal } from '../../components/CheckoutModal';
-import { MarkdownRenderer } from '../../components/MarkdownRenderer';
 import { UsageAnalyticsSection } from '../../components/UsageAnalyticsSection';
 import { toPersianDigits } from '../../lib/persianUtils';
 import { setPageSeo } from '../../lib/seo';
@@ -520,7 +519,7 @@ export const LandingPage: React.FC = () => {
 
         {/* Headline (Refined, Proportional Typography) */}
         <h1
-          className="reveal-init stagger-1 text-2xl sm:text-3xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-l from-indigo-600 to-cyan-500 dark:from-indigo-400 dark:to-cyan-400 leading-[1.3] max-w-2xl py-2 px-1 mb-2"
+          className="text-2xl sm:text-3xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-l from-indigo-600 to-cyan-500 dark:from-indigo-400 dark:to-cyan-400 leading-[1.3] max-w-2xl py-2 px-1 mb-2"
           style={{ fontFamily: "'Estedad', sans-serif" }}
         >
           {dynamicHero?.title || (
@@ -532,12 +531,12 @@ export const LandingPage: React.FC = () => {
         </h1>
 
         {/* Subtitle */}
-        <p className="reveal-init stagger-2 text-xs sm:text-sm text-[#525d75] dark:text-[#9aa5bc] max-w-xl font-normal leading-relaxed mb-8">
+        <p className="text-xs sm:text-sm text-[#525d75] dark:text-[#9aa5bc] max-w-xl font-normal leading-relaxed mb-8">
           {dynamicHero?.subtitle || 'بدون نیاز به خرید اشتراک‌های ماهانه دلاری یا دغدغه فیلترشکن؛ با پرچمداران Claude 3.5، GPT-4o و Gemini به فارسی گفتگو کنید و هزینه را به اندازه مصرف واقعی به تومان بپردازید.'}
         </p>
 
         {/* Infinite Scrolling Models Banner (Replacing Control Console) */}
-        <div className="reveal-init stagger-3 w-full max-w-5xl mx-auto mt-8 mb-12 relative">
+        <div className="w-full max-w-5xl mx-auto mt-8 mb-12 relative">
           
           <style>{`
             @keyframes marquee-rtl {
@@ -634,11 +633,12 @@ export const LandingPage: React.FC = () => {
             <div className="mt-10 relative z-10">
               <Link
                 to={dynamicHero?.bannerBtnLink || "/chat"}
+                aria-label="شروع گفتگو با دستیار هوشمند"
                 className="group relative inline-flex items-center justify-center gap-3 px-10 py-3.5 clay-btn-primary-thick font-black text-sm overflow-hidden"
                 style={{ fontFamily: "'Estedad', sans-serif" }}
               >
                 <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 pointer-events-none" />
-                <span>{dynamicHero?.bannerBtnText || 'شروع'}</span>
+                <span>{dynamicHero?.bannerBtnText || 'شروع گفتگو'}</span>
                 <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1.5 transition-transform" />
               </Link>
             </div>

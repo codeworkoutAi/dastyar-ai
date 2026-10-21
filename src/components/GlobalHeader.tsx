@@ -55,6 +55,7 @@ export const GlobalHeader: React.FC = () => {
                 <Link
                   key={link.path}
                   to={link.path}
+                  aria-label={link.name === 'چت' ? 'شروع گفتگو با دستیار هوشمند' : link.name}
                   className={`flex items-center justify-center gap-1.5 px-2 sm:px-3 py-1.5 rounded-xl transition-all ${
                     isActive 
                       ? 'clay-btn-primary text-white shadow-md' 
@@ -82,6 +83,7 @@ export const GlobalHeader: React.FC = () => {
                 onClick={() => setIsAdminOpen(true)}
                 className="h-10 w-10 clay-btn flex items-center justify-center text-rose-600 dark:text-rose-400 hover:text-rose-700 transition-all rounded-xl shrink-0"
                 title="مدیریت"
+                aria-label="پنل مدیریت"
               >
                 <Settings size={18} />
               </button>
@@ -94,6 +96,7 @@ export const GlobalHeader: React.FC = () => {
               to="/dashboard"
               className="h-9 w-9 sm:h-10 sm:w-10 clay-btn flex items-center justify-center text-zinc-700 dark:text-zinc-200 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all rounded-xl shrink-0"
               title="داشبورد کاربری"
+              aria-label="داشبورد کاربری"
             >
               <User size={18} />
             </Link>
@@ -102,6 +105,7 @@ export const GlobalHeader: React.FC = () => {
               onClick={handleLoginClick}
               className="h-9 w-9 sm:h-10 sm:w-10 clay-btn-primary flex items-center justify-center text-white transition-all rounded-xl shadow-md shrink-0"
               title="ورود / ثبت‌نام"
+              aria-label="ورود یا ثبت‌نام در دستیار هوشمند"
             >
               <LogIn size={18} />
             </button>
@@ -111,6 +115,7 @@ export const GlobalHeader: React.FC = () => {
           <button 
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             className="md:hidden h-9 w-9 clay-btn flex items-center justify-center text-zinc-700 dark:text-zinc-200 transition-all rounded-xl shrink-0 relative z-50"
+            aria-label="باز کردن منوی ناوبری"
           >
             {isMobileMenuOpen ? <X size={18} /> : <Menu size={18} />}
           </button>

@@ -105,6 +105,7 @@ export const UsageAnalyticsSection: React.FC = () => {
  <div className="pt-2">
  <Link
  to="/dashboard"
+ aria-label="ورود به داشبورد کاربری"
  className="inline-flex items-center gap-2.5 px-6 py-3.5 rounded-2xl clay-btn-primary-thick text-white font-black text-sm shadow-lg hover:shadow-cyan-500/25 active:scale-95 transition-all group cursor-pointer"
  style={{ fontFamily:"'Estedad', sans-serif" }}
  >

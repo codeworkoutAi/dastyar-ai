@@ -7,7 +7,7 @@ import { NeuralBanner } from '../../components/NeuralBanner';
 import { Footer } from '../../components/Footer';
 import { GlobalHeader } from '../../components/GlobalHeader';
 import { setPageSeo } from '../../lib/seo';
-import 'sahel-font/dist/font-face.css';
+
 
 interface NewsItem {
  id: number;

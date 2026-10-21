@@ -215,6 +215,24 @@ Sitemap: ${protocol}://${host}/sitemap.xml
 
 app.get('/sitemap.xml', sitemapHandler);
 
+app.get('/llms.txt', (req, res) => {
+  const filePath = path.join(process.cwd(), process.env.NODE_ENV === 'production' ? 'dist' : 'public', 'llms.txt');
+  if (fs.existsSync(filePath)) {
+    res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+    return res.sendFile(filePath);
+  }
+  res.status(404).type('text/plain').send('File not found');
+});
+
+app.get('/ai-catalog.json', (req, res) => {
+  const filePath = path.join(process.cwd(), process.env.NODE_ENV === 'production' ? 'dist' : 'public', 'ai-catalog.json');
+  if (fs.existsSync(filePath)) {
+    res.setHeader('Content-Type', 'application/json; charset=utf-8');
+    return res.sendFile(filePath);
+  }
+  res.status(404).json({ error: 'Catalog not found' });
+});
+
 async function start() {
   if (process.env.NODE_ENV !== 'production') {
     const { createServer: createViteServer } = await import('vite');
@@ -237,12 +255,16 @@ async function start() {
       setHeaders: (res, filePath) => {
         if (filePath.endsWith('.html') || filePath.endsWith('sw.js') || filePath.endsWith('manifest.webmanifest')) {
           res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-        } else if (filePath.match(/\\.(js|css|woff2?|png|jpe?g|gif|webp|svg)$/)) {
+        } else if (filePath.match(/\.(js|css|woff2?|png|jpe?g|gif|webp|svg)$/)) {
           res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
         }
       }
     }));
     app.get('*', (req, res) => {
+      // Do not serve HTML for missing static files (prevent MIME type errors on crawlers)
+      if (req.path.match(/\.(js|css|json|txt|xml|woff2?|png|jpe?g|gif|webp|svg|ico)$/i)) {
+        return res.status(404).type('text/plain').send('Not found');
+      }
       renderHtmlWithSeo(req, res, distPath);
     });
   }

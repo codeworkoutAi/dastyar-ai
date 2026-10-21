@@ -7,8 +7,8 @@ import { Capacitor } from '@capacitor/core';
 import { isBazaarEnvironment, doSilentBazaarLogin } from './lib/bazaarUtils';
 import { App as CapacitorApp } from '@capacitor/app';
 
-// Critical Pages (loaded immediately)
-import { ChatApp } from './pages/chat/ChatApp';
+// Lazy-loaded Pages
+const ChatApp = lazy(() => import('./pages/chat/ChatApp').then(m => ({ default: m.ChatApp })));
 
 // Lazy-loaded Pages
 const LandingPage = lazy(() => import('./pages/landing/LandingPage').then(m => ({ default: m.LandingPage })));
