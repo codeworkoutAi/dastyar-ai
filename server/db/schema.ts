@@ -400,9 +400,14 @@ export function initializeSchema() {
     seedSetting('free_daily_limit_user', '15'); // 15 free messages per 24-hour day
     seedSetting('free_cooldown_hours', '24'); // 24-hour daily quota cooldown
     seedSetting('free_daily_limit_guest', '5');
-    seedSetting('bazaarpay_destination', '');
-    seedSetting('bazaarpay_token', '');
-    seedSetting('bazaarpay_enabled', 'false');
+    seedSetting('bazaarpay_destination', 'lifeencoder_bazaar');
+    seedSetting('bazaarpay_token', '90ec06f91b84af3fd6956742ae0c30effdecd142');
+    seedSetting('bazaarpay_enabled', 'true');
+    try {
+      db.prepare("UPDATE site_settings SET value = 'lifeencoder_bazaar' WHERE key = 'bazaarpay_destination' AND (value = '' OR value IS NULL)").run();
+      db.prepare("UPDATE site_settings SET value = '90ec06f91b84af3fd6956742ae0c30effdecd142' WHERE key = 'bazaarpay_token' AND (value = '' OR value IS NULL)").run();
+      db.prepare("UPDATE site_settings SET value = 'true' WHERE key = 'bazaarpay_enabled' AND (value = 'false' OR value = '' OR value IS NULL)").run();
+    } catch {}
   } catch (err) {
     console.error('[Database] Failed to seed site settings:', err);
   }
