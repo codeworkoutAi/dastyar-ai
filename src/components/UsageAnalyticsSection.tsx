@@ -140,7 +140,7 @@ export const UsageAnalyticsSection: React.FC = () => {
  <button
  onClick={() => setPeriod('30d')}
  className={`px-3 py-1 rounded-lg font-bold transition-all cursor-pointer ${
- period === '30d' ? 'clay-btn text-blue-600 dark:text-cyan-400 shadow-xs' : 'text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200'
+ period === '30d' ? 'clay-btn text-blue-600 dark:text-cyan-400 shadow-xs' : 'text-zinc-700 hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-white'
  }`}
  >
  ۳۰ روز اخیر
@@ -148,7 +148,7 @@ export const UsageAnalyticsSection: React.FC = () => {
  <button
  onClick={() => setPeriod('7d')}
  className={`px-3 py-1 rounded-lg font-bold transition-all cursor-pointer ${
- period === '7d' ? 'clay-btn text-blue-600 dark:text-cyan-400 shadow-xs' : 'text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200'
+ period === '7d' ? 'clay-btn text-blue-600 dark:text-cyan-400 shadow-xs' : 'text-zinc-700 hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-white'
  }`}
  >
  ۷ روز اخیر

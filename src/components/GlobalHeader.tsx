@@ -35,7 +35,7 @@ export const GlobalHeader: React.FC = () => {
         
         {/* Brand / Logo (Left column, but visually Right in RTL) */}
         <div className="flex justify-start items-center">
-          <Link to="/" className="flex items-center gap-2 group shrink-0">
+          <Link to="/" aria-label="صفحه اصلی دستیار هوشمند" className="flex items-center gap-2 group shrink-0">
             <div className="w-9 h-9 sm:w-10 sm:h-10 clay-btn rounded-xl flex items-center justify-center group-hover:scale-105 transition-transform">
               <Bot className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
             </div>

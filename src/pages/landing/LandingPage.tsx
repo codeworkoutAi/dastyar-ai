@@ -634,12 +634,12 @@ export const LandingPage: React.FC = () => {
             <div className="mt-10 relative z-10">
               <Link
                 to={dynamicHero?.bannerBtnLink || "/chat"}
-                aria-label="شروع گفتگو با دستیار هوشمند"
+                aria-label="شروع رایگان گفتگو با دستیار هوشمند"
                 className="group relative inline-flex items-center justify-center gap-3 px-10 py-3.5 clay-btn-primary-thick font-black text-sm overflow-hidden"
                 style={{ fontFamily: "'Estedad', sans-serif" }}
               >
                 <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 pointer-events-none" />
-                <span>{dynamicHero?.bannerBtnText || 'شروع گفتگو'}</span>
+                <span>{dynamicHero?.bannerBtnText || 'شروع رایگان گفتگو'}</span>
                 <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1.5 transition-transform" />
               </Link>
             </div>
@@ -1019,7 +1019,7 @@ export const LandingPage: React.FC = () => {
                         }`}
                       >
                       <img
-                        src={p.image}
+                        src={p.image.replace('/images/professions/', '/images/professions/thumbs/')}
                         alt={p.title}
                         width={40}
                         height={40}
@@ -1028,8 +1028,10 @@ export const LandingPage: React.FC = () => {
                         className="w-10 h-10 rounded-xl object-cover shrink-0"
                         onError={(e) => {
                           const target = e.currentTarget as HTMLImageElement;
-                          if (!target.src.includes('developer.webp')) {
-                            target.src = '/images/professions/developer.webp';
+                          if (!target.src.includes(p.image)) {
+                            target.src = p.image;
+                          } else if (!target.src.includes('developer.webp')) {
+                            target.src = '/images/professions/thumbs/developer.webp';
                           }
                         }}
                       />
@@ -1205,13 +1207,17 @@ export const LandingPage: React.FC = () => {
                       setGalleryTransition(true);
                       setGallerySlide(baseGallery.length + dotIdx);
                     }}
-                    className={`transition-all duration-300 cursor-pointer ${
-                      isActive
-                        ? 'clay-btn-primary-thick !w-8 !h-3 !rounded-full '
-                        : 'clay-btn-thick !w-3 !h-3 !rounded-full opacity-60 hover:opacity-100'
-                    }`}
+                    className="min-w-[44px] min-h-[44px] flex items-center justify-center p-2 cursor-pointer transition-transform hover:scale-110"
                     aria-label={`رفتن به اسلاید ${dotIdx + 1}`}
-                  />
+                  >
+                    <span
+                      className={`block transition-all duration-300 ${
+                        isActive
+                          ? 'clay-btn-primary-thick !w-8 !h-3 !rounded-full'
+                          : 'clay-btn-thick !w-3 !h-3 !rounded-full opacity-60 hover:opacity-100'
+                      }`}
+                    />
+                  </button>
                 );
               })}
             </div>
@@ -1228,7 +1234,7 @@ export const LandingPage: React.FC = () => {
       {dynamicVisibility.pricing !== false && dynamicPricingHeader?.enabled !== false && (
       <section id="pricing" className="py-16 sm:py-20 px-4 sm:px-6 max-w-6xl mx-auto border-t border-black/5 dark:border-white/5">
         <div className="text-center max-w-2xl mx-auto mb-10 sm:mb-14">
-          <span className="text-xs font-bold text-[#717b91] uppercase tracking-widest block mb-1">
+          <span className="text-xs font-bold text-zinc-600 dark:text-zinc-400 uppercase tracking-widest block mb-1">
             {dynamicPricingHeader?.badge || 'PAY-AS-YOU-GO PRICING'}
           </span>
           <h2
@@ -1385,7 +1391,7 @@ export const LandingPage: React.FC = () => {
       {dynamicVisibility.faqs !== false && dynamicFaqsSettings?.enabled !== false && (
       <section id="faq" className="py-16 sm:py-20 px-4 sm:px-6 max-w-4xl mx-auto border-t border-black/5 dark:border-white/5">
         <div className="reveal-init text-center mb-10 sm:mb-14">
-          <span className="text-xs font-bold text-[#717b91] uppercase tracking-widest block mb-1">
+          <span className="text-xs font-bold text-zinc-600 dark:text-zinc-400 uppercase tracking-widest block mb-1">
             FREQUENTLY ASKED QUESTIONS
           </span>
           <h2
@@ -1405,15 +1411,15 @@ export const LandingPage: React.FC = () => {
               const isOpen = activeFaq === i;
               const isLast = i === dynamicFaqs.length - 1;
               
-              // A vibrant palette for the questions
+              // A vibrant palette for the questions with WCAG AA compliant contrast
               const palettes = [
-                { text: 'text-indigo-500 dark:text-indigo-400', iconBg: 'bg-indigo-500/10 dark:bg-indigo-400/20' },
-                { text: 'text-emerald-500 dark:text-emerald-400', iconBg: 'bg-emerald-500/10 dark:bg-emerald-400/20' },
-                { text: 'text-rose-500 dark:text-rose-400', iconBg: 'bg-rose-500/10 dark:bg-rose-400/20' },
-                { text: 'text-amber-500 dark:text-amber-400', iconBg: 'bg-amber-500/10 dark:bg-amber-400/20' },
-                { text: 'text-sky-500 dark:text-sky-400', iconBg: 'bg-sky-500/10 dark:bg-sky-400/20' },
-                { text: 'text-violet-500 dark:text-violet-400', iconBg: 'bg-violet-500/10 dark:bg-violet-400/20' },
-                { text: 'text-fuchsia-500 dark:text-fuchsia-400', iconBg: 'bg-fuchsia-500/10 dark:bg-fuchsia-400/20' },
+                { text: 'text-indigo-700 dark:text-indigo-300', iconBg: 'bg-indigo-500/10 dark:bg-indigo-400/20' },
+                { text: 'text-emerald-700 dark:text-emerald-300', iconBg: 'bg-emerald-500/10 dark:bg-emerald-400/20' },
+                { text: 'text-rose-700 dark:text-rose-300', iconBg: 'bg-rose-500/10 dark:bg-rose-400/20' },
+                { text: 'text-amber-800 dark:text-amber-300', iconBg: 'bg-amber-500/10 dark:bg-amber-400/20' },
+                { text: 'text-sky-700 dark:text-sky-300', iconBg: 'bg-sky-500/10 dark:bg-sky-400/20' },
+                { text: 'text-violet-700 dark:text-violet-300', iconBg: 'bg-violet-500/10 dark:bg-violet-400/20' },
+                { text: 'text-fuchsia-700 dark:text-fuchsia-300', iconBg: 'bg-fuchsia-500/10 dark:bg-fuchsia-400/20' },
               ];
               const theme = palettes[i % palettes.length];
 
