@@ -589,7 +589,7 @@ const MarkdownSegment: React.FC<MarkdownRendererProps> = React.memo(({
  const rtl = rawText ? isRtlText(rawText) : isOverallRtl;
  return (
  <p
- className={`!mt-0 !mb-3.5 last:!mb-0 leading-7 font-normal text-slate-800 dark:text-slate-300 ${rtl ? 'text-right' : 'text-left'}`}
+ className={`!mt-0 !mb-3.5 last:!mb-0 leading-7 font-normal text-neutral-800 dark:text-white/85 ${rtl ? 'text-right' : 'text-left'}`}
  dir={rtl ? 'rtl' : 'ltr'}
  >
  {replaceEmojisWithSolarIcons(children, 'body')}
@@ -646,7 +646,7 @@ const MarkdownSegment: React.FC<MarkdownRendererProps> = React.memo(({
 
  return (
  <code
- className="px-1 py-0.5 text-slate-800 dark:text-slate-200 text-[0.88em] font-mono inline mx-0.5 break-words align-baseline isolate font-semibold before:hidden after:hidden bg-transparent border-0"
+ className="px-1 py-0.5 text-neutral-800 dark:text-white/90 text-[0.88em] font-mono inline mx-0.5 break-words align-baseline isolate font-semibold before:hidden after:hidden bg-transparent border-0"
  dir="ltr"
  {...props}
  >
@@ -661,7 +661,7 @@ const MarkdownSegment: React.FC<MarkdownRendererProps> = React.memo(({
  const rtl = rawText ? isRtlText(rawText) : isOverallRtl;
  return (
  <h1
- className={`font-display !mt-5 !mb-2.5 text-base sm:text-lg font-bold text-slate-900 dark:text-white border-b border-zinc-200 dark:border-white/10 pb-1.5 flex items-center gap-2 ${
+ className={`font-display !mt-5 !mb-2.5 text-base sm:text-lg font-bold text-neutral-900 dark:text-white border-b border-zinc-200 dark:border-white/10 pb-1.5 flex items-center gap-2 ${
  rtl ? 'text-right' : 'text-left'
  }`}
  dir={rtl ? 'rtl' : 'ltr'}
@@ -675,7 +675,7 @@ const MarkdownSegment: React.FC<MarkdownRendererProps> = React.memo(({
  const rtl = rawText ? isRtlText(rawText) : isOverallRtl;
  return (
  <h2
- className={`font-display !mt-4.5 !mb-2 text-sm sm:text-base font-bold text-slate-900 dark:text-white border-b border-zinc-200 dark:border-white/10 pb-1 flex items-center gap-2 ${
+ className={`font-display !mt-4.5 !mb-2 text-sm sm:text-base font-bold text-neutral-900 dark:text-white border-b border-zinc-200 dark:border-white/10 pb-1 flex items-center gap-2 ${
  rtl ? 'text-right' : 'text-left'
  }`}
  dir={rtl ? 'rtl' : 'ltr'}
@@ -689,7 +689,7 @@ const MarkdownSegment: React.FC<MarkdownRendererProps> = React.memo(({
  const rtl = rawText ? isRtlText(rawText) : isOverallRtl;
  return (
  <h3
- className={`font-display !mt-4 !mb-2 text-sm sm:text-base font-bold text-slate-900 dark:text-white flex items-center gap-2 ${
+ className={`font-display !mt-4 !mb-2 text-sm sm:text-base font-bold text-neutral-900 dark:text-white flex items-center gap-2 ${
  rtl ? 'text-right' : 'text-left'
  }`}
  dir={rtl ? 'rtl' : 'ltr'}
@@ -703,7 +703,7 @@ const MarkdownSegment: React.FC<MarkdownRendererProps> = React.memo(({
  const rtl = rawText ? isRtlText(rawText) : isOverallRtl;
  return (
  <h4
- className={`font-display !mt-3.5 !mb-1.5 text-xs sm:text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2 ${
+ className={`font-display !mt-3.5 !mb-1.5 text-xs sm:text-sm font-bold text-neutral-900 dark:text-white flex items-center gap-2 ${
  rtl ? 'text-right' : 'text-left'
  }`}
  dir={rtl ? 'rtl' : 'ltr'}
@@ -778,7 +778,7 @@ const MarkdownSegment: React.FC<MarkdownRendererProps> = React.memo(({
 
     return (
       <ul
-        className={`${isTaskList ? 'list-none !pr-1 !pl-0' : 'list-disc ' + (isOverallRtl ? '!pr-6 !pl-0' : '!pl-6 !pr-0')} !my-3 space-y-2 text-inherit opacity-95 marker:text-slate-400 dark:marker:text-slate-500 ${
+        className={`${isTaskList ? 'list-none !pr-1 !pl-0' : 'list-disc ' + (isOverallRtl ? '!pr-6 !pl-0' : '!pl-6 !pr-0')} !my-3 space-y-2 text-inherit opacity-95 marker:text-neutral-400 dark:marker:text-white/40 ${
           isOverallRtl ? 'text-right' : 'text-left'
         }`}
         dir={isOverallRtl ? 'rtl' : 'ltr'}
@@ -790,7 +790,7 @@ const MarkdownSegment: React.FC<MarkdownRendererProps> = React.memo(({
  ol({ children }) {
  return (
  <ol
- className={`list-decimal !my-3 space-y-2 text-inherit opacity-95 font-normal marker:text-slate-400 dark:marker:text-slate-500 ${
+ className={`list-decimal !my-3 space-y-2 text-inherit opacity-95 font-normal marker:text-neutral-400 dark:marker:text-white/40 ${
  isOverallRtl ? '!pr-6 !pl-0 text-right' : '!pl-6 !pr-0 text-left'
  }`}
  dir={isOverallRtl ? 'rtl' : 'ltr'}
@@ -804,7 +804,7 @@ const MarkdownSegment: React.FC<MarkdownRendererProps> = React.memo(({
  const rtl = rawText ? isRtlText(rawText) : isOverallRtl;
  return (
  <li
- className={`leading-7 !my-1 !pl-0 text-slate-800 dark:text-slate-300 ${rtl ? 'text-right' : 'text-left'}`}
+ className={`leading-7 !my-1 !pl-0 text-neutral-800 dark:text-white/85 ${rtl ? 'text-right' : 'text-left'}`}
  dir={rtl ? 'rtl' : 'ltr'}
  >
  {replaceEmojisWithSolarIcons(children, 'body')}
@@ -814,7 +814,7 @@ const MarkdownSegment: React.FC<MarkdownRendererProps> = React.memo(({
 
  // Strong / Bold tags
  strong({ children }) {
- return <strong className="font-bold text-slate-900 dark:text-white font-display">{replaceEmojisWithSolarIcons(children, 'body')}</strong>;
+ return <strong className="font-bold text-neutral-900 dark:text-white font-display">{replaceEmojisWithSolarIcons(children, 'body')}</strong>;
  },
 
  // Emphasis / Italic (smaller caption & metadata formatting)

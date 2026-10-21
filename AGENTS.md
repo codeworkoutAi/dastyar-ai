@@ -29,7 +29,7 @@ The platform operates exclusively on **exactly six stable system profiles** (div
 
 - **Base/Fast Models (Lightweight & Cost-Effective, Smart Routing Defaults):**
   1. `free_default`: **دستیار چت و گفتگو** ⬅️ `role: 'default'` | مدل: `gemini-3.6-flash`
-  2. `free_coding`: **دستیار برنامه‌نویسی و کد** ⬅️ `role: 'coding'` | مدل: `gemini-2.0-pro-exp-02-05`
+  2. `free_coding`: **دستیار برنامه‌نویسی و کد** ⬅️ `role: 'coding'` | مدل: `gemini-3.6-flash`
   3. `free_vision`: **دستیار بینایی و اسناد** ⬅️ `role: 'vision'` | مدل: `gemini-3.6-flash`
 - **Pro/Advanced Models (Pay-As-You-Go / Router.cheap):**
   4. `paid_default`: **دستیار هوشمند کلود** ⬅️ `role: 'paid_default'` | مدل: `claude-sonnet-4-6`
