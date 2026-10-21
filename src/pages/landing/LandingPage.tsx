@@ -913,7 +913,7 @@ export const LandingPage: React.FC = () => {
                     <div className="relative aspect-[16/11] overflow-hidden rounded-[24px] clay-card-thick p-1">
                       <img
                         key={currentProfession.image}
-                        src={currentProfession.image.replace('.jpg', '.webp')}
+                        src={currentProfession.image}
                         alt={currentProfession.title}
                         width={480}
                         height={330}
@@ -922,10 +922,8 @@ export const LandingPage: React.FC = () => {
                         decoding="async"
                         onError={(e) => {
                           const target = e.currentTarget as HTMLImageElement;
-                          if (target.src.endsWith('.webp')) {
-                            target.src = target.src.replace('.webp', '.jpg');
-                          } else if (!target.src.includes('developer.jpg')) {
-                            target.src = '/images/professions/developer.jpg';
+                          if (!target.src.includes('developer.webp')) {
+                            target.src = '/images/professions/developer.webp';
                           }
                         }}
                       />
@@ -1021,7 +1019,7 @@ export const LandingPage: React.FC = () => {
                         }`}
                       >
                       <img
-                        src={p.image.replace('.jpg', '.webp')}
+                        src={p.image}
                         alt={p.title}
                         width={40}
                         height={40}
@@ -1030,10 +1028,8 @@ export const LandingPage: React.FC = () => {
                         className="w-10 h-10 rounded-xl object-cover shrink-0"
                         onError={(e) => {
                           const target = e.currentTarget as HTMLImageElement;
-                          if (target.src.endsWith('.webp')) {
-                            target.src = target.src.replace('.webp', '.jpg');
-                          } else if (!target.src.includes('developer.jpg')) {
-                            target.src = '/images/professions/developer.jpg';
+                          if (!target.src.includes('developer.webp')) {
+                            target.src = '/images/professions/developer.webp';
                           }
                         }}
                       />
@@ -1140,7 +1136,7 @@ export const LandingPage: React.FC = () => {
                     {/* Preserved Image with Sculpted Frame */}
                     <div className="relative aspect-[4/3] overflow-hidden m-3 rounded-2xl clay-inset-thick">
                       <img
-                        src={img.src.replace('.jpg', '.webp')}
+                        src={img.src}
                         alt={img.title}
                         width={400}
                         height={300}
@@ -1149,10 +1145,8 @@ export const LandingPage: React.FC = () => {
                         decoding="async"
                         onError={(e) => {
                           const target = e.currentTarget as HTMLImageElement;
-                          if (target.src.endsWith('.webp')) {
-                            target.src = target.src.replace('.webp', '.jpg');
-                          } else if (!target.src.includes('journal-cover.jpg')) {
-                            target.src = '/images/gallery/journal-cover.jpg';
+                          if (!target.src.includes('journal-cover.webp')) {
+                            target.src = '/images/gallery/journal-cover.webp';
                           }
                         }}
                       />

@@ -88,7 +88,7 @@ const INSPIRATION_PROMPTS: InspirationCard[] = [
  aspectRatio: '16:9',
  gradient: 'from-amber-500/20 via-orange-500/10 to-transparent',
  badge: '🔥 محبوب‌ترین',
- thumbnail: '/studio-presets/cheetah.jpg',
+ thumbnail: '/studio-presets/cheetah.webp',
  },
  {
  id: 'tehran-2150',
@@ -101,7 +101,7 @@ const INSPIRATION_PROMPTS: InspirationCard[] = [
  aspectRatio: '16:9',
  gradient: 'from-cyan-500/20 via-blue-500/10 to-transparent',
  badge: '🚀 سایبرپانک',
- thumbnail: '/studio-presets/tehran2150.jpg',
+ thumbnail: '/studio-presets/tehran2150.webp',
  },
  {
  id: 'floating-castle',
@@ -114,7 +114,7 @@ const INSPIRATION_PROMPTS: InspirationCard[] = [
  aspectRatio: '1:1',
  gradient: 'from-pink-500/20 via-purple-500/10 to-transparent',
  badge: '🌸 استودیو جیبلی',
- thumbnail: '/studio-presets/castle.jpg',
+ thumbnail: '/studio-presets/castle.webp',
  },
  {
  id: 'space-fox',
@@ -127,7 +127,7 @@ const INSPIRATION_PROMPTS: InspirationCard[] = [
  aspectRatio: '1:1',
  gradient: 'from-emerald-500/20 via-teal-500/10 to-transparent',
  badge: '🧸 سه‌بعدی بامزه',
- thumbnail: '/studio-presets/space-fox.jpg',
+ thumbnail: '/studio-presets/space-fox.webp',
  },
  {
  id: 'samurai-sketch',
@@ -140,7 +140,7 @@ const INSPIRATION_PROMPTS: InspirationCard[] = [
  aspectRatio: '9:16',
  gradient: 'from-zinc-500/20 via-zinc-700/10 to-transparent',
  badge: '✏️ سیاه‌قلم',
- thumbnail: '/studio-presets/samurai.jpg',
+ thumbnail: '/studio-presets/samurai.webp',
  },
  {
  id: 'crystal-oasis',
@@ -153,7 +153,7 @@ const INSPIRATION_PROMPTS: InspirationCard[] = [
  aspectRatio: '1:1',
  gradient: 'from-violet-500/20 via-indigo-500/10 to-transparent',
  badge: '🎨 رنگ روغن',
- thumbnail: '/studio-presets/crystal-tree.jpg',
+ thumbnail: '/studio-presets/crystal-tree.webp',
  },
 ];
 

@@ -151,7 +151,7 @@ export const landingProfessionsConfig = {
       id: 'academic',
       title: 'دانشجویان، اساتید و پژوهشگران',
       icon: 'GraduationCap',
-      image: '/images/professions/academic.jpg',
+      image: '/images/professions/academic.webp',
       badge: 'پژوهش و دانشگاه',
       desc: 'تحلیل مقالات ISI، استخراج فصول و ساختار پایان‌نامه، ترجمه تخصصی روان و رفرنس‌دهی علمی.',
       prompt: 'یک ساختار استاندارد ۵ فصلی برای پروپوزال کارشناسی ارشد با موضوع "کاربرد هوش مصنوعی در بهینه‌سازی سیستم‌های مالی" تنظیم کن و فرضیات پژوهش را بنویس.'
@@ -160,7 +160,7 @@ export const landingProfessionsConfig = {
       id: 'developer',
       title: 'برنامه‌نویسان و مهندسان نرم‌افزار',
       icon: 'Terminal',
-      image: '/images/professions/developer.jpg',
+      image: '/images/professions/developer.webp',
       badge: 'فناوری و توسعه',
       desc: 'دیباگ سریع خطاهای کدنویسی، نگارش کوئری‌های SQL و معماری پروژه‌های نرم‌افزاری با استدلال عمیق.',
       prompt: 'یک کامپوننت React با تایپ‌اسکریپت برای پیاده‌سازی Infinite Scroll بنویس که با Intersection Observer کار کند و مدیریت خطای شبکه داشته باشد.'
@@ -169,7 +169,7 @@ export const landingProfessionsConfig = {
       id: 'content',
       title: 'تولیدکنندگان محتوا و متخصصان سئو',
       icon: 'PenTool',
-      image: '/images/professions/content.jpg',
+      image: '/images/professions/content.webp',
       badge: 'تولید محتوا و سئو',
       desc: 'نگارش مقالات سئوشده ۲,۰۰۰ کلمه‌ای با لحن کاملاً فاخر و روان فارسی، سناریونویسی و ایده‌پردازی تقویم.',
       prompt: 'یک ساختار مقاله جامع ۲۰۰۰ کلمه‌ای سئوشده با تگ‌های H2 و H3 درباره "راهنمای جامع سئو معنایی (Semantic SEO) در سال ۲۰۲۶" تدوین کن.'
@@ -178,7 +178,7 @@ export const landingProfessionsConfig = {
       id: 'legal',
       title: 'وکلا، کارشناسان حقوقی و مدیران قرارداد',
       icon: 'Scale',
-      image: '/images/professions/legal.jpg',
+      image: '/images/professions/legal.webp',
       badge: 'حقوق و قراردادها',
       desc: 'تحلیل بندبه‌بند قراردادهای تجاری و پیمانکاری، کشف تعهدات و ریسک‌های پنهان، و تنظیم پیش‌نویس لوایح رسمی.',
       prompt: 'مهم‌ترین بندهای رفع تعهد و جریمه دیرکرد (Liquidated Damages) را در یک قرارداد توسعه نرم‌افزار همراه با تبصره فورس‌ماژور بنویس.'
@@ -187,7 +187,7 @@ export const landingProfessionsConfig = {
       id: 'business',
       title: 'مدیران، استارتاپ‌ها و تحلیل‌گران بازار',
       icon: 'TrendingUp',
-      image: '/images/professions/business.jpg',
+      image: '/images/professions/business.webp',
       badge: 'کسب‌وکار و استراتژی',
       desc: 'تحلیل گزارش‌های فروش و اکسل، تدوین طرح کسب‌وکار (Business Plan) و مکاتبات رسمی تجاری.',
       prompt: 'یک ایمیل رسمی و متقاعدکننده به مدیرعامل یک شرکت همکار بنویس و پیشنهاد جلسه استراتژیک برای همکاری تجاری مشترک را مطرح کن.'
@@ -196,7 +196,7 @@ export const landingProfessionsConfig = {
       id: 'medical',
       title: 'پزشکان، داروسازان و محققان سلامت',
       icon: 'Stethoscope',
-      image: '/images/professions/medical.jpg',
+      image: '/images/professions/medical.webp',
       badge: 'پزشکی و سلامت',
       desc: 'خلاصه‌سازی پژوهش‌های بالینی و ژورنال‌های معتبر، ترجمه دقیق اصطلاحات و تنظیم مطالعات موردی.',
       prompt: 'جدیدترین پروتکل‌های بالینی در مدیریت دیابت نوع ۲ بر اساس استانداردهای ADA را به صورت دسته‌بندی‌شده و خلاصه بالینی شرح بده.'
@@ -211,37 +211,37 @@ export const landingGalleryConfig = {
   enabled: true,
   images: [
     {
-      src: '/images/gallery/journal-cover.jpg',
+      src: '/images/gallery/journal-cover.webp',
       title: 'طراحی جلد ژورنال علمی',
       tag: 'انتشارات پژوهشی',
       prompt: 'Minimalist abstract scientific journal cover art, elegant synaptic neural network pathways connecting soft glowing data nodes, deep navy slate and warm gold tones, refined clean scientific illustration, calm and uncluttered'
     },
     {
-      src: '/images/gallery/tech-editorial.jpg',
+      src: '/images/gallery/tech-editorial.webp',
       title: 'تصویر شاخص وبلاگ فناوری',
       tag: 'سئو و تولید محتوا',
       prompt: 'Clean modern isometric editorial tech blog illustration, minimalist floating geometric cubes and digital paper workflow diagrams, matte titanium finish, soft diffused studio light, uncluttered, professional aesthetic'
     },
     {
-      src: '/images/gallery/legal-emblem.jpg',
+      src: '/images/gallery/legal-emblem.webp',
       title: 'تندیس مفهومی حقوق و عدالت',
       tag: 'حقوقی و سازمانی',
       prompt: 'Minimalist modern 3D sculptural emblem of justice balance scales, matte dark stone and brushed gold brass accents, clean minimalist dark studio background, elegant corporate symbol, uncluttered'
     },
     {
-      src: '/images/gallery/business-trends.jpg',
+      src: '/images/gallery/business-trends.webp',
       title: 'تصویرسازی تحلیل رشد مالی',
       tag: 'گزارش‌های شرکتی',
       prompt: 'Minimalist 3D architectural financial analytics chart, subtle glowing upward curved graph line on dark navy slate pedestal, refined glass milestone cubes, corporate growth indicator, clean studio lighting, uncluttered'
     },
     {
-      src: '/images/gallery/academic-book.jpg',
+      src: '/images/gallery/academic-book.webp',
       title: 'طراحی جلد کتاب مرجع دانشگاهی',
       tag: 'آموزش عالی',
       prompt: 'Refined modern academic textbook cover art, minimalist abstract geometric composition of intersecting arches and steps representing knowledge and education, warm ivory and rich slate blue, elegant and serene'
     },
     {
-      src: '/images/gallery/biotech-dna.jpg',
+      src: '/images/gallery/biotech-dna.webp',
       title: 'تصویرسازی زیست‌فناوری و ژنتیک',
       tag: 'پزشکی و سلامت',
       prompt: 'Clean minimalist 3D medical visualization of a glowing DNA double helix structure, floating in pristine clinical atmosphere with soft cyan and white luminous glow, ultra-clean laboratory background, uncluttered'
@@ -489,37 +489,37 @@ export function checkTokenQuota(limiter: TokenLimiter, tokensNeeded: number): bo
 // ============================================================================
 export const landingGalleryImages = [
   {
-    src: '/images/gallery/journal-cover.jpg',
+    src: '/images/gallery/journal-cover.webp',
     title: 'طراحی جلد ژورنال علمی',
     tag: 'انتشارات پژوهشی',
     prompt: 'Minimalist abstract scientific journal cover art, elegant synaptic neural network pathways connecting soft glowing data nodes, deep navy slate and warm gold tones, refined clean scientific illustration, calm and uncluttered'
   },
   {
-    src: '/images/gallery/tech-editorial.jpg',
+    src: '/images/gallery/tech-editorial.webp',
     title: 'تصویر شاخص وبلاگ فناوری',
     tag: 'سئو و تولید محتوا',
     prompt: 'Clean modern isometric editorial tech blog illustration, minimalist floating geometric cubes and digital paper workflow diagrams, matte titanium finish, soft diffused studio light, uncluttered, professional aesthetic'
   },
   {
-    src: '/images/gallery/legal-emblem.jpg',
+    src: '/images/gallery/legal-emblem.webp',
     title: 'تندیس مفهومی حقوق و عدالت',
     tag: 'حقوقی و سازمانی',
     prompt: 'Minimalist modern 3D sculptural emblem of justice balance scales, matte dark stone and brushed gold brass accents, clean minimalist dark studio background, elegant corporate symbol, uncluttered'
   },
   {
-    src: '/images/gallery/business-trends.jpg',
+    src: '/images/gallery/business-trends.webp',
     title: 'تصویرسازی تحلیل رشد مالی',
     tag: 'گزارش‌های شرکتی',
     prompt: 'Minimalist 3D architectural financial analytics chart, subtle glowing upward curved graph line on dark navy slate pedestal, refined glass milestone cubes, corporate growth indicator, clean studio lighting, uncluttered'
   },
   {
-    src: '/images/gallery/academic-book.jpg',
+    src: '/images/gallery/academic-book.webp',
     title: 'طراحی جلد کتاب مرجع دانشگاهی',
     tag: 'آموزش عالی',
     prompt: 'Refined modern academic textbook cover art, minimalist abstract geometric composition of intersecting arches and steps representing knowledge and education, warm ivory and rich slate blue, elegant and serene'
   },
   {
-    src: '/images/gallery/biotech-dna.jpg',
+    src: '/images/gallery/biotech-dna.webp',
     title: 'تصویرسازی زیست‌فناوری و ژنتیک',
     tag: 'پزشکی و سلامت',
     prompt: 'Clean minimalist 3D medical visualization of a glowing DNA double helix structure, floating in pristine clinical atmosphere with soft cyan and white luminous glow, ultra-clean laboratory background, uncluttered'
