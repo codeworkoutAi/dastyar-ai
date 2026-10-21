@@ -145,7 +145,7 @@ router.post(['/api/models/test', '/api/ping'], modelTestRateLimiter, async (req,
 
     if (provider === 'gemini') {
       let apiKey = customApiKey ? String(customApiKey).trim() : undefined;
-      const targetModel = modelName || 'gemini-3.1-flash-lite';
+      const targetModel = modelName || 'gemini-3.6-flash';
 
       // Secure Backend Injection for Default Free Models during test
       if (!apiKey) {
@@ -157,7 +157,7 @@ router.post(['/api/models/test', '/api/ping'], modelTestRateLimiter, async (req,
           const row = db.prepare('SELECT apiKey FROM default_profiles WHERE modelName = ? AND isActive = 1').get(targetModel) as any;
           if (row?.apiKey) apiKey = row.apiKey;
         }
-        if (!apiKey && (targetModel === 'gemini-3.1-flash-lite' || targetModel === 'gemini-2.0-flash-exp' || targetModel === 'gemini-2.5-flash')) {
+        if (!apiKey && (targetModel === 'gemini-3.6-flash' || targetModel === 'gemini-3.5-flash-lite' || targetModel === 'gemini-3.1-flash-lite' || targetModel === 'gemini-2.5-flash')) {
           apiKey = process.env.DEFAULT_GEMINI_KEY || process.env.GEMINI_API_KEY;
         }
       }
@@ -166,8 +166,8 @@ router.post(['/api/models/test', '/api/ping'], modelTestRateLimiter, async (req,
       
       const testCandidates = [
         targetModel,
-        'gemini-3.1-flash-lite',
-        'gemini-flash-latest',
+        'gemini-3.6-flash',
+        'gemini-3.5-flash-lite',
       ].filter((v, i, a) => a.indexOf(v) === i);
 
       let response: any = null;
@@ -248,7 +248,7 @@ router.post(['/api/models/test', '/api/ping'], modelTestRateLimiter, async (req,
               apiKey = process.env.DEFAULT_GROQ_KEY || process.env.GROQ_API_KEY || '';
             }
           } else if (bUrl.includes('generativelanguage.googleapis.com')) {
-            const allowedGeminiModels = ['gemini-3.1-flash-lite', 'gemini-1.5-flash'];
+            const allowedGeminiModels = ['gemini-3.6-flash', 'gemini-3.5-flash-lite', 'gemini-3.1-flash-lite', 'gemini-1.5-flash'];
             if (allowedGeminiModels.includes(model.toLowerCase())) {
               apiKey = process.env.DEFAULT_GEMINI_KEY || process.env.GEMINI_API_KEY || '';
             }

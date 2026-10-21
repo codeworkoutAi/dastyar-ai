@@ -29,7 +29,7 @@ const STORAGE_KEYS = {
 export const DEFAULT_SETTINGS: AppSettings = {
   providers: {
     activeProvider: 'custom',
-    gemini: { apiKey: '', modelName: 'gemini-3.1-flash-lite' },
+    gemini: { apiKey: '', modelName: 'gemini-3.6-flash' },
     openai: { apiKey: '', modelName: 'gpt-4o-mini' },
     anthropic: { apiKey: '', modelName: 'claude-3-5-sonnet' },
     custom: { 
@@ -197,8 +197,8 @@ export function loadSettings(): AppSettings {
       } catch {}
     }
 
-    // Migration: ensure clean 6-profile system architecture & purge legacy cached cards (v7 to sync ultra-economic minimax-m3 & pro claude-sonnet-4-6)
-    if (localStorage.getItem('fa_chat_profiles_clean_v7') !== 'true') {
+    // Migration: ensure clean 6-profile system architecture & purge legacy cached cards (v8 to sync gemini-3.6-flash)
+    if (localStorage.getItem('fa_chat_profiles_clean_v8') !== 'true') {
       merged.providers.custom.profiles = [];
       merged.providers.custom.activeProfileId = 'free_default';
       merged.tools.routingRoles = {
@@ -207,7 +207,7 @@ export function loadSettings(): AppSettings {
         vision: 'free_vision'
       };
       try {
-        localStorage.setItem('fa_chat_profiles_clean_v7', 'true');
+        localStorage.setItem('fa_chat_profiles_clean_v8', 'true');
       } catch {}
     }
 
@@ -294,7 +294,7 @@ export function mergeSystemProfiles(currentSettings: AppSettings, serverProfiles
   };
 }
 
-export function createNewConversation(modelName: string = 'gemini-2.5-flash'): Conversation {
+export function createNewConversation(modelName: string = 'gemini-3.6-flash'): Conversation {
   return {
     id: 'conv_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9),
     title: 'گفتگوی جدید',

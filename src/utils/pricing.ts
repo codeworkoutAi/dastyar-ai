@@ -12,6 +12,8 @@ export interface ModelPricing {
  */
 export const MODEL_PRICING_RATES: Record<string, ModelPricing> = {
   // Google Gemini Models
+  'gemini-3.6-flash': { inputPer1M: 0.10, outputPer1M: 0.40, label: 'Gemini 3.6 Flash' },
+  'gemini-3.5-flash-lite': { inputPer1M: 0.075, outputPer1M: 0.30, label: 'Gemini 3.5 Flash Lite' },
   'gemini-3.1-flash-lite': { inputPer1M: 0.075, outputPer1M: 0.30, label: 'Gemini 3.1 Flash Lite' },
   'gemini-2.5-flash': { inputPer1M: 0.075, outputPer1M: 0.30, label: 'Gemini 2.5 Flash' },
   'gemini-2.5-flash-lite': { inputPer1M: 0.075, outputPer1M: 0.30, label: 'Gemini 2.5 Flash Lite' },
@@ -98,7 +100,7 @@ export function getPricingForModel(modelName?: string): ModelPricing {
     return MODEL_PRICING_RATES['gemini-2.5-pro'];
   }
   if (normalized.includes('flash') || normalized.includes('gemini')) {
-    return MODEL_PRICING_RATES['gemini-2.5-flash'];
+    return MODEL_PRICING_RATES['gemini-3.6-flash'];
   }
 
   return DEFAULT_FALLBACK_PRICING;

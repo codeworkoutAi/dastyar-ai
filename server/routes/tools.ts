@@ -503,7 +503,7 @@ User prompt: "${prompt}"`;
     // 1. Primary: Try Gemini
     try {
       const ai = getGeminiClient(apiKey);
-      const candidateModels = ['gemini-3.6-flash', 'gemini-3.1-flash-lite'];
+      const candidateModels = ['gemini-3.6-flash', 'gemini-3.5-flash-lite'];
       for (const model of candidateModels) {
         try {
           const response = await ai.models.generateContent({

@@ -139,15 +139,15 @@ export const PERSIAN_STARTER_PROMPTS = [
 export const MODEL_PRESETS = [
   {
     provider: 'gemini_default' as const,
-    name: 'Gemini 3.7 Flash (پیش‌فرض)',
-    model: 'gemini-2.5-flash',
+    name: 'Gemini 3.6 Flash (پیش‌فرض)',
+    model: 'gemini-3.6-flash',
     baseUrl: '',
     description: 'مدل پرسرعت و هوشمند نسل جدید گوگل برای گفتگو و متون',
   },
   {
     provider: 'gemini_default' as const,
-    name: 'Gemini 3.1 Flash Lite (فوق سریع)',
-    model: 'gemini-3.1-flash-lite',
+    name: 'Gemini 3.5 Flash Lite (فوق سریع)',
+    model: 'gemini-3.5-flash-lite',
     baseUrl: '',
     description: 'مدل بسیار سبک و پرسرعت گوگل برای پاسخ‌های آنی',
   },

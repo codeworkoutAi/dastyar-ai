@@ -23,6 +23,8 @@ export const MODEL_PRICING_USD: Record<string, [number, number]> = {
   'deepseek-v3': [0.14, 0.28],
 
   // Google Gemini
+  'gemini-3.6-flash': [0.10, 0.40],
+  'gemini-3.5-flash-lite': [0.075, 0.30],
   'gemini-3.6-pro': [1.25, 5.00],
   'gemini-2.0-flash': [0.10, 0.40],
   'gemini-2.0-flash-lite': [0.075, 0.30],
@@ -62,7 +64,6 @@ export const MODEL_PRICING_USD: Record<string, [number, number]> = {
   'kimi-k2.7-code-highspeed': [1.9, 7.999999999999999],
   'mimo-v2.5-pro': [0.435, 0.87],
   'grok-4.5': [2.0, 6.0],
-  'gemini-3.6-flash': [1.5, 7.5],
   'gpt-5.6-terra': [2.0, 12.0],
   'claude-fable-5': [10.0, 50.0],
   'claude-opus-4-7': [5.0, 25.0],

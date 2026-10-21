@@ -535,7 +535,7 @@ router.post('/api/chat/stream', chatStreamLimiter, async (req, res) => {
 
     if (provider === 'gemini') {
       let userKey = apiConfig?.[provider]?.apiKey;
-      let modelName = apiConfig?.[provider]?.modelName || 'gemini-3.1-flash-lite';
+      let modelName = apiConfig?.[provider]?.modelName || 'gemini-3.6-flash';
 
       // Secure Backend Injection for Default Free Models
       if (!userKey || userKey.trim() === '') {
@@ -562,8 +562,8 @@ router.post('/api/chat/stream', chatStreamLimiter, async (req, res) => {
       let hasSentAnyChunk = false;
       const candidateModels = [
         modelName,
-        'gemini-3.1-flash-lite',
-        'gemini-flash-latest',
+        'gemini-3.6-flash',
+        'gemini-3.5-flash-lite',
       ].filter((v, i, a) => a.indexOf(v) === i);
 
       let geminiUsage: { promptTokens?: number; completionTokens?: number; totalTokens?: number; costToman?: number; balanceAfter?: number } | undefined = undefined;

@@ -14,8 +14,8 @@
   ],
   "models": [
     {
-      "id": "gemini-2.5-flash",
-      "name": "دستیار چت و گفتگو (Gemini 2.5 Flash)",
+      "id": "gemini-3.6-flash",
+      "name": "دستیار چت و گفتگو (Gemini 3.6 Flash)",
       "tier": "free",
       "role": "default"
     },
