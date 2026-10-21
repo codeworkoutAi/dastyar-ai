@@ -198,7 +198,7 @@ export function Footer() {
  <ShieldCheck className="w-4 h-4 text-emerald-500" />
  <span>نماد اعتماد الکترونیکی</span>
  </h3>
- <div className="clay-debossed-socket p-3 rounded-2xl bg-white/70 dark:clay-surface inline-block transition-transform hover:scale-105">
+ <div className="p-3 rounded-2xl bg-white shadow-sm border border-black/5 hover:shadow-md inline-block transition-transform hover:scale-105">
  <a
  referrerPolicy="origin"
  target="_blank"
@@ -208,7 +208,7 @@ export function Footer() {
  >
  <img
  referrerPolicy="origin"
- src="https://trustseal.enamad.ir/logo.aspx?id=7675736&Code=Gx87lRnRBjSnMfkfeXWDlWi88ZzK41Oj"
+ src="/images/enamad.png"
  alt="نماد تجارت الکترونیکی (اینماد)"
  style={{ cursor: 'pointer', width: '96px', height: 'auto' }}
  />
