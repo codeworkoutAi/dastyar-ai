@@ -11,11 +11,9 @@ import {
  MusicNoteLinearIcon,
  VideocameraLinearIcon,
  DocumentTextLinearIcon,
- CpuBoltLinearIcon,
- StopCircleBoldIcon
+ CpuBoltLinearIcon
 } from '@solar-icons/react';
-import { ArrowUp, X
-} from 'lucide-react';
+import { ArrowUp, X, Square } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
 import { toPersianDigits, isRtlText } from '../lib/persianUtils';
 import { estimateTokenCount } from '../lib/tokenOptimizer';
@@ -58,6 +56,7 @@ export const MessageInput: React.FC = React.memo(() => {
 
  const [searchParams, setSearchParams] = useSearchParams();
  const [text, setText] = useState('');
+ const [isMultiLine, setIsMultiLine] = useState(false);
 
  // Auto-fill prompt from URL (from Tag Archive links)
  useEffect(() => {
@@ -138,12 +137,17 @@ export const MessageInput: React.FC = React.memo(() => {
  };
  }, [isAttachmentMenuOpen]);
 
- // Auto resize textarea
+ // Auto resize textarea & calculate dynamic multi-line state
  useEffect(() => {
  if (textareaRef.current) {
  textareaRef.current.style.height = 'auto';
  const scrollHeight = textareaRef.current.scrollHeight;
- textareaRef.current.style.height = `${Math.min(scrollHeight, 180)}px`;
+ const isMobile = typeof window !== 'undefined' && window.innerWidth < 640;
+ const maxHeight = isMobile ? 100 : 140;
+ textareaRef.current.style.height = `${Math.min(scrollHeight, maxHeight)}px`;
+ setIsMultiLine(scrollHeight > 50 || text.includes('\n'));
+ } else {
+ setIsMultiLine(false);
  }
  }, [text]);
 
@@ -641,6 +645,7 @@ const workerUrl = await import('pdfjs-dist/build/pdf.worker.min.mjs?url');
  sendMessage(finalMessage, firstImageUrl, undefined, extractedFileContext || undefined);
  setText('');
  resetAttachments();
+ setIsMultiLine(false);
  if (textareaRef.current) {
  textareaRef.current.style.height = 'auto';
  }
@@ -688,14 +693,29 @@ const workerUrl = await import('pdfjs-dist/build/pdf.worker.min.mjs?url');
  }
  }
 
- // Shortcut: Ctrl+Enter or Cmd+Enter allows quick desktop send
+ // Shortcut: Ctrl+Enter or Cmd+Enter allows quick send
  if (e.ctrlKey || e.metaKey) {
  e.preventDefault();
  handleSend();
  return;
  }
 
- // Natural Enter: creates a new line smoothly without sending!
+ // On desktop / physical keyboard, when enterToSend is active (default):
+ // Enter immediately sends, and Shift+Enter creates a new line.
+ // On mobile touch devices, allow standard newline behavior.
+ const isTouchDevice = typeof window !== 'undefined' && (
+ 'ontouchstart' in window ||
+ navigator.maxTouchPoints > 0 ||
+ window.matchMedia('(pointer: coarse)').matches
+ );
+
+ if (enterToSend !== false && !isTouchDevice && !e.shiftKey && !e.nativeEvent.isComposing) {
+ e.preventDefault();
+ handleSend();
+ return;
+ }
+
+ // Shift+Enter or mobile touch: creates a new line smoothly
  }
  };
 
@@ -823,7 +843,7 @@ const workerUrl = await import('pdfjs-dist/build/pdf.worker.min.mjs?url');
  )}
 
  {/* Input Frame */}
- <div className={`relative flex items-end gap-2 sm:gap-3 clay-card !rounded-full p-2 sm:p-2.5 transition-all ${isStreaming ? 'opacity-80' : ''}`}>
+ <div className={`relative flex items-end gap-2 sm:gap-3 clay-card p-2 sm:p-2.5 transition-all duration-300 ${isMultiLine ? '!rounded-[22px]' : '!rounded-full'} ${isStreaming ? 'opacity-80' : ''}`}>
  {/* Floating Compact Image Engine Pill Bar (Monochrome Minimal Style) */}
  {showImageEngineModal && (
  <div className="absolute bottom-full right-0 left-0 mb-2 z-[70] flex items-center justify-between gap-2 px-3 py-2 rounded-2xl clay-surface backdrop-blur-xl border border-[var(--card-border)] select-none" dir="rtl"
@@ -966,7 +986,7 @@ const workerUrl = await import('pdfjs-dist/build/pdf.worker.min.mjs?url');
  }`}
  aria-label="Generate Image"
  >
- <StarsMinimalisticBoldIcon className="w-4 h-4" />
+ <StarsMinimalisticBoldIcon className="w-5 h-5" />
  </button>
  </Tooltip>
 
@@ -1022,50 +1042,52 @@ const workerUrl = await import('pdfjs-dist/build/pdf.worker.min.mjs?url');
  placeholder={isRecording ? 'در حال شنیدن صدای شما... (صحبت کنید یا برای توقف کلیک کنید)' : 'پیام خود را بنویسید...'}
  rows={1}
  disabled={isStreaming}
- className={`flex-1 w-full max-h-[150px] min-h-[40px] py-2.5 sm:py-3 px-1 sm:px-2 bg-transparent resize-none text-[length:var(--chat-font-size)] [font-family:var(--user-font-family)] text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-300 border-0 border-none outline-none ring-0 shadow-none focus:ring-0 focus:outline-none focus:border-none focus:shadow-none appearance-none overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden disabled:opacity-60 leading-relaxed ${isRecording ? 'placeholder:text-red-500 dark:placeholder:text-red-400 placeholder:animate-pulse' : ''}`}
+ className={`flex-1 w-full max-h-[100px] sm:max-h-[140px] min-h-[40px] py-2.5 sm:py-3 px-1 sm:px-2 bg-transparent resize-none text-[length:var(--chat-font-size)] [font-family:var(--user-font-family)] text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-300 border-0 border-none outline-none ring-0 shadow-none focus:ring-0 focus:outline-none focus:border-none focus:shadow-none appearance-none overflow-y-auto scrollbar-thin scrollbar-thumb-zinc-400/30 dark:scrollbar-thumb-zinc-600/30 disabled:opacity-60 leading-relaxed ${isRecording ? 'placeholder:text-red-500 dark:placeholder:text-red-400 placeholder:animate-pulse' : ''}`}
  />
 
- {/* Left actions (Clear, Mic, Cancel, Send) */}
- <div className="flex items-center gap-1 pb-0.5 sm:pb-1 pr-1 border-0 border-none outline-none">
+ {/* Left actions (Clear, Send / Stop) */}
+ <div className="flex items-center gap-1 pb-0.5 sm:pb-1 pr-1 border-0 border-none outline-none shrink-0">
  {/* Clear text button */}
  {text.trim() && !isStreaming && !isRecording && (
  <Tooltip content="پاک کردن متن">
  <button
  type="button"
- onClick={() => setText('')}
- className="w-10 h-10 hidden sm:flex items-center justify-center rounded-full text-zinc-700 dark:text-zinc-400 hover:text-zinc-700 dark:text-zinc-500 dark:hover:text-zinc-700 dark:text-zinc-300 bg-transparent border-0 outline-none transition-all hover:bg-zinc-200 dark:hover:bg-black/5 dark:hover:bg-white/5 active:scale-95 cursor-pointer"
+ onClick={() => {
+ setText('');
+ setIsMultiLine(false);
+ if (textareaRef.current) {
+ textareaRef.current.style.height = 'auto';
+ }
+ }}
+ className="w-10 h-10 flex items-center justify-center rounded-full text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white bg-transparent border-0 outline-none transition-all hover:bg-zinc-200/60 dark:hover:bg-white/10 active:scale-95 cursor-pointer shrink-0"
  aria-label="Clear input"
  >
- <RestartCircleLinearIcon className="w-4 h-4" />
+ <RestartCircleLinearIcon className="w-5 h-5" />
  </button>
  </Tooltip>
  )}
 
-
-
- {/* Cancel generation button */}
- {isStreaming && (
+ {/* Primary Action Button: Morphing Send / Stop */}
+ {isStreaming ? (
  <Tooltip content="توقف تولید پاسخ">
  <button
  type="button"
  onClick={onStopGeneration}
- className="w-10 h-10 flex items-center justify-center transition-all rounded-full text-red-500 hover:bg-red-100 dark:hover:bg-red-500/10 bg-transparent border-0 outline-none animate-pulse cursor-pointer"
+ className="relative w-10 h-10 flex items-center justify-center transition-all rounded-full clay-btn border-0 outline-none text-red-500 hover:text-red-600 hover:bg-red-500/10 active:scale-95 cursor-pointer shadow-sm group shrink-0"
  aria-label="Stop generation"
  >
- <StopCircleBoldIcon className="w-4 h-4" />
+ <span className="absolute inset-0 rounded-full bg-red-500/20 animate-ping pointer-events-none" />
+ <Square className="w-4 h-4 fill-current transition-transform group-hover:scale-110" />
  </button>
  </Tooltip>
- )}
-
- {/* Send Button */}
- {!isStreaming && (
+ ) : (
  <Tooltip content={canSend ? 'ارسال پیام' : 'متنی بنویسید یا فایلی پیوست کنید'}>
  <button
  type="button"
  id="send-message-btn"
  onClick={handleSend}
  disabled={!canSend}
- className={`w-10 h-10 flex items-center justify-center transition-all rounded-full border-0 outline-none clay-icon ${
+ className={`w-10 h-10 flex items-center justify-center transition-all rounded-full border-0 outline-none clay-icon shrink-0 ${
  canSend
  ? 'clay-btn-primary hover:scale-105 active:scale-95 cursor-pointer'
  : 'clay-surface opacity-50 cursor-not-allowed'
@@ -1075,12 +1097,6 @@ const workerUrl = await import('pdfjs-dist/build/pdf.worker.min.mjs?url');
  <ArrowUp className="w-5 h-5" />
  </button>
  </Tooltip>
- )}
- {/* Loading Indicator */}
- {isStreaming && (
- <div className="w-10 h-10 flex items-center justify-center border-0">
- <span className="w-2 h-2 rounded-full bg-black dark:bg-white animate-ping" />
- </div>
  )}
  </div>
  </div>
