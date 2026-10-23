@@ -1,6 +1,7 @@
 import Database from 'libsql';
 import path from 'path';
 import fs from 'fs';
+import dns from 'dns';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -64,7 +65,6 @@ function connect() {
   let tursoResolvable = false;
   try {
     const hostname = new URL(syncUrl).hostname;
-    const dns = require('dns');
     // lookupSync only exists on newer Node; fall back to the callback form, which is
     // fine here because connect() itself is already deferred off the startup path.
     if (typeof dns.lookupSync === 'function') {
