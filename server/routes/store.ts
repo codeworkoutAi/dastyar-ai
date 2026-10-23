@@ -673,28 +673,28 @@ router.get('/bazaarpay/callback', async (req: any, res) => {
       : '';
 
   if (!rawOrderId || !/^[a-zA-Z0-9_-]{1,64}$/.test(rawOrderId)) {
-    return res.redirect('/store?payment=failed&msg=invalid_order');
+    return res.redirect('/chat?payment=failed&msg=invalid_order');
   }
   const orderId = rawOrderId;
 
   const order = db.prepare('SELECT * FROM orders WHERE id = ?').get(orderId) as any;
   if (!order) {
-    return res.redirect('/store?payment=failed&msg=order_not_found');
+    return res.redirect('/chat?payment=failed&msg=order_not_found');
   }
 
   // Already verified and successful
   if (order.paymentStatus === 'success') {
     if (order.id.startsWith('TOP-') || order.productId === getWalletTopupProductId()) {
-      return res.redirect(`/store?tab=wallet&payment=success&orderId=${orderId}&refId=${order.refId || ''}`);
+      return res.redirect(`/chat?tab=wallet&payment=success&orderId=${orderId}&refId=${order.refId || ''}`);
     }
-    return res.redirect(`/store?payment=success&orderId=${orderId}&refId=${order.refId || ''}`);
+    return res.redirect(`/chat?payment=success&orderId=${orderId}&refId=${order.refId || ''}`);
   }
 
   const tokenToTrace = checkoutToken || order.authority;
   if (!tokenToTrace) {
     db.prepare("UPDATE orders SET paymentStatus = 'failed', paymentMethod = 'bazaarpay' WHERE id = ?").run(orderId);
     syncDatabase();
-    return res.redirect(`/store?payment=failed&orderId=${orderId}&msg=missing_token`);
+    return res.redirect(`/chat?payment=failed&orderId=${orderId}&msg=missing_token`);
   }
 
   try {
@@ -704,7 +704,7 @@ router.get('/bazaarpay/callback', async (req: any, res) => {
       db.prepare("UPDATE orders SET paymentStatus = 'failed', paymentMethod = 'bazaarpay' WHERE id = ?").run(orderId);
       syncDatabase();
       const errMsg = encodeURIComponent(traceRes.error || 'استعلام پرداخت با خطا مواجه شد');
-      return res.redirect(`/store?payment=failed&orderId=${orderId}&msg=${errMsg}`);
+      return res.redirect(`/chat?payment=failed&orderId=${orderId}&msg=${errMsg}`);
     }
 
     // Check trace status
@@ -717,7 +717,7 @@ router.get('/bazaarpay/callback', async (req: any, res) => {
           console.error('[Store] BazaarPay commit failed for order:', orderId, commitRes.error);
           db.prepare("UPDATE orders SET paymentStatus = 'failed', paymentMethod = 'bazaarpay' WHERE id = ?").run(orderId);
           syncDatabase();
-          return res.redirect(`/store?payment=failed&orderId=${orderId}&msg=commit_failed`);
+          return res.redirect(`/chat?payment=failed&orderId=${orderId}&msg=commit_failed`);
         }
       }
 
@@ -755,7 +755,7 @@ router.get('/bazaarpay/callback', async (req: any, res) => {
         // SMS notification
         notifyOrderSuccessBySms(orderId, null);
 
-        return res.redirect(`/store?tab=wallet&payment=success&orderId=${orderId}&refId=${refId}&amount=${creditAmount}`);
+        return res.redirect(`/chat?tab=wallet&payment=success&orderId=${orderId}&refId=${refId}&amount=${creditAmount}`);
       }
 
       // Digital store product
@@ -778,7 +778,7 @@ router.get('/bazaarpay/callback', async (req: any, res) => {
       } catch (tgErr) {}
 
       notifyOrderSuccessBySms(orderId, licenseId);
-      return res.redirect(`/store?payment=success&orderId=${orderId}&refId=${refId}`);
+      return res.redirect(`/chat?payment=success&orderId=${orderId}&refId=${refId}`);
 
     } else {
       // Payment failed/unpaid/cancelled
@@ -786,12 +786,12 @@ router.get('/bazaarpay/callback', async (req: any, res) => {
         .run(tokenToTrace, orderId);
       syncDatabase();
       const statusNote = traceRes.status === 'unpaid' ? 'پرداخت انجام نشد یا لغو شد' : `وضعیت: ${traceRes.status}`;
-      return res.redirect(`/?payment=failed&orderId=${orderId}&msg=${encodeURIComponent(statusNote)}`);
+      return res.redirect(`/chat?payment=failed&orderId=${orderId}&msg=${encodeURIComponent(statusNote)}`);
     }
 
   } catch (err: any) {
     console.error('[Store] Error in BazaarPay callback:', err);
-    return res.redirect(`/?payment=failed&orderId=${orderId}`);
+    return res.redirect(`/chat?payment=failed&orderId=${orderId}`);
   }
 });
 

@@ -52,6 +52,7 @@ import { UsageAnalyticsSection } from '../../components/UsageAnalyticsSection';
 import { toPersianDigits } from '../../lib/persianUtils';
 import { setPageSeo } from '../../lib/seo';
 import { useUIStore } from '../../store/uiStore';
+import { isBazaarEnvironment } from '../../lib/bazaarUtils';
 
 // Import content config
 import {
@@ -261,6 +262,7 @@ export const LandingPage: React.FC = () => {
   const [dynamicGiftCard, setDynamicGiftCard] = useState<any>(null);
   const [dynamicPlans, setDynamicPlans] = useState<any[]>([]);
   const [selectedPlanForCheckout, setSelectedPlanForCheckout] = useState<any>(null);
+  const isBazaar = isBazaarEnvironment();
 
   useEffect(() => {
     fetch('/api/landing-content')
@@ -1381,7 +1383,7 @@ export const LandingPage: React.FC = () => {
           <span className="hidden sm:inline opacity-40">•</span>
           <div className="flex items-center gap-2">
             <CreditCard className="w-4 h-4 text-[#2563eb] dark:text-[#f97316]" />
-            <span>تسویه امن با درگاه‌های رسمی بانکی شاپرک</span>
+            <span>{isBazaar ? 'تسویه امن با درگاه رسمی بازارپی (کافه‌بازار)' : 'تسویه امن با درگاه‌های رسمی بانکی شاپرک'}</span>
           </div>
         </div>
       </section>
@@ -1574,7 +1576,7 @@ export const LandingPage: React.FC = () => {
               </Link>
               {dynamicCta?.secondaryBtnText && (
                 <Link
-                  to={dynamicCta?.secondaryBtnLink || '/store'}
+                  to={dynamicCta?.secondaryBtnLink || (isBazaar ? '/chat' : '/store')}
                   className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-2xl clay-btn-thick text-[#0f1420] dark:text-[#f3f5f9] text-sm font-bold transition-all hover:scale-105 active:scale-95 cursor-pointer"
                   style={{ fontFamily: "'Estedad', sans-serif" }}
                 >
@@ -1590,7 +1592,7 @@ export const LandingPage: React.FC = () => {
       <Footer />
 
       {/* Checkout Modal for Plan Products */}
-      {selectedPlanForCheckout && (
+      {selectedPlanForCheckout && !isBazaar && (
         <CheckoutModal
           product={selectedPlanForCheckout}
           isOpen={Boolean(selectedPlanForCheckout)}

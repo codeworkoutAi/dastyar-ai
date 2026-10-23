@@ -18,8 +18,10 @@ import {
  ArrowLeft
 } from 'lucide-react';
 import { toPersianDigits } from '../lib/persianUtils';
+import { isBazaarEnvironment } from '../lib/bazaarUtils';
 
 export function Footer() {
+ const isBazaar = isBazaarEnvironment();
  const { setIsAboutOpen, setIsContactOpen, setIsSettingsOpen } = useUIStore();
 
  const [footerData, setFooterData] = useState({
@@ -129,6 +131,7 @@ export function Footer() {
  <span className="font-bold group-hover:-translate-x-1 transition-transform">مجله مقالات</span>
  </Link>
  </li>
+ {!isBazaar && (
  <li>
  <Link
  to="/store"
@@ -140,6 +143,7 @@ export function Footer() {
  <span className="font-bold group-hover:-translate-x-1 transition-transform">فروشگاه بسته</span>
  </Link>
  </li>
+ )}
  </ul>
  </div>
 
@@ -221,7 +225,7 @@ export function Footer() {
             </div>
 
             <p className="type-badge text-zinc-600 dark:text-zinc-400 font-medium leading-relaxed">
-              پرداخت آنلاین امن با درگاه شاپرک و زرین‌پال
+              {isBazaar ? 'پرداخت امن از طریق درگاه مستقیم بازارپی (کافه‌بازار)' : 'پرداخت آنلاین امن با درگاه شاپرک و زرین‌پال'}
             </p>
           </div>
 

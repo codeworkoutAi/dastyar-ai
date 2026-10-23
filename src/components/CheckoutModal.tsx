@@ -4,6 +4,7 @@ import { useAuthStore } from '../store/authStore';
 import { useSettingsStore } from '../store/settingsStore';
 import { toPersianDigits } from '../lib/persianUtils';
 import { Capacitor } from '@capacitor/core';
+import { isBazaarEnvironment } from '../lib/bazaarUtils';
 
 interface CheckoutModalProps {
  product: any;
@@ -14,6 +15,7 @@ interface CheckoutModalProps {
 export const CheckoutModal: React.FC<CheckoutModalProps> = ({ product, isOpen, onClose }) => {
  const { user, token } = useAuthStore();
  const { settings } = useSettingsStore();
+ const isBazaar = isBazaarEnvironment();
  const usePersianDigits = settings?.appearance?.persianNumerals ?? false;
  const [loading, setLoading] = useState(false);
  const [error, setError] = useState<string | null>(null);
@@ -36,7 +38,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ product, isOpen, o
  method: 'POST',
  headers: { 'Content-Type': 'application/json',
  'Authorization': `Bearer ${token}` },
- body: JSON.stringify({ productId: product.id })
+ body: JSON.stringify({ productId: product.id, gateway: isBazaar ? 'bazaarpay' : 'zarinpal' })
  });
  const data = await res.json();
  if (!res.ok) {
@@ -59,6 +61,10 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ product, isOpen, o
  };
 
  const handleManualCheckout = async () => {
+ if (isBazaar) {
+ setError('این روش پرداخت در نسخه کافه‌بازار پشتیبانی نمی‌شود.');
+ return;
+ }
  if (!trackingNumber.trim()) {
  setError('لطفاً شماره پیگیری یا ۴ رقم آخر کارت را وارد کنید.');
  return;
@@ -177,6 +183,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ product, isOpen, o
  </div>
 
  {/* Payment Method Tabs */}
+ {!isBazaar && (
  <div className="flex clay-btn-secondary p-1 rounded-xl shrink-0">
  <button onClick={() => setPaymentMethod('online')}
  className={`flex-1 py-1.5 text-xs sm:text-sm font-bold rounded-lg transition-all ${paymentMethod === 'online' ? 'clay-card shadow-sm text-blue-600 dark:text-blue-400' : 'text-zinc-500 dark:text-zinc-400'}`}
@@ -189,20 +196,25 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ product, isOpen, o
  کارت به کارت
  </button>
  </div>
+ )}
 
- {paymentMethod === 'online' && (
+ {(paymentMethod === 'online' || isBazaar) && (
  <div className="p-3 clay-surface rounded-xl border border-[var(--card-border)] flex items-center gap-2.5 text-xs text-zinc-600 dark:text-zinc-300 animate-fadeIn">
  <div className="w-8 h-8 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-600 dark:text-amber-400 font-black text-sm shrink-0">
  💳
  </div>
  <div className="flex-1">
- <span className="font-bold block text-zinc-800 dark:text-zinc-200">درگاه امن بانکی شاپرک (زرین‌پال)</span>
- <span className="type-badge text-zinc-500 dark:text-zinc-400">پرداخت آنی و امن با تمامی کارت‌های عضو شبکه شتاب</span>
+ <span className="font-bold block text-zinc-800 dark:text-zinc-200">
+ {isBazaar ? 'درگاه مستقیم بازارپی (کافه‌بازار)' : 'درگاه امن بانکی شاپرک (زرین‌پال)'}
+ </span>
+ <span className="type-badge text-zinc-500 dark:text-zinc-400">
+ {isBazaar ? 'پرداخت آنی و امن با زیرساخت بازارپی کافه‌بازار' : 'پرداخت آنی و امن با تمامی کارت‌های عضو شبکه شتاب'}
+ </span>
  </div>
  </div>
  )}
 
- {paymentMethod === 'card' && (
+ {paymentMethod === 'card' && !isBazaar && (
  <div className="flex flex-col gap-3 animate-fadeIn">
  <div className="p-3 bg-blue-50 dark:bg-blue-900/10 rounded-xl border border-blue-100 dark:border-blue-900/30 text-center flex flex-col gap-1.5">
  <span className="text-xs text-blue-800 dark:text-blue-200">لطفا مبلغ فوق را به شماره کارت زیر واریز نمایید:</span>
@@ -224,7 +236,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ product, isOpen, o
 
  {/* Sticky Modal Footer - Always 100% visible on any screen height! */}
  <div className="p-4 sm:p-5 pt-3 border-t border-[var(--card-border)] clay-surface backdrop-blur-md shrink-0 flex flex-col gap-2">
- {paymentMethod === 'online' ? (
+ {(paymentMethod === 'online' || isBazaar) ? (
  <button onClick={handleCheckout}
  disabled={loading}
  className="w-full py-3 clay-btn-primary text-sm sm:text-base font-bold rounded-xl transition-colors flex items-center justify-center gap-2 disabled:opacity-50 shadow-sm hover:shadow"
@@ -251,7 +263,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ product, isOpen, o
  </button>
  )}
  <p className="type-badge text-center text-zinc-500 dark:text-zinc-500">
- {paymentMethod === 'online' ? 'با کلیک روی دکمه بالا، به درگاه پرداخت امن منتقل خواهید شد.'
+ {(paymentMethod === 'online' || isBazaar) ? (isBazaar ? 'با کلیک روی دکمه بالا، به درگاه امن بازارپی منتقل خواهید شد.' : 'با کلیک روی دکمه بالا، به درگاه پرداخت امن منتقل خواهید شد.')
  : 'پس از ثبت، برای ارسال عکس فیش به تلگرام پشتیبانی هدایت می‌شوید.'
  }
  </p>

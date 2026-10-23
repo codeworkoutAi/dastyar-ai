@@ -16,10 +16,12 @@ import { toPersianDigits } from '../../lib/persianUtils';
 import { formatTehranDate, formatTehranDateTime, formatTehranShortDate } from '../../lib/dateUtils';
 import { MarkdownRenderer } from '../../components/MarkdownRenderer';
 import { GlobalHeader } from '../../components/GlobalHeader';
+import { isBazaarEnvironment } from '../../lib/bazaarUtils';
 
 export const UserDashboard = () => {
   const { user, token, checkAuth, logout, setWalletBalance } = useAuthStore();
   const { setIsWalletOpen } = useUIStore();
+  const isBazaar = isBazaarEnvironment();
   
   const [purchases, setPurchases] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -328,7 +330,7 @@ export const UserDashboard = () => {
               </div>
               <div>
                 <h4 className="font-black text-sm text-emerald-700 dark:text-emerald-300" style={{ fontFamily: "'Estedad', sans-serif" }}>
-                  پرداخت شما با موفقیت در شاپرک تأیید شد!
+                  {isBazaar ? 'پرداخت شما با موفقیت در بازارپی تأیید شد!' : 'پرداخت شما با موفقیت تأیید شد!'}
                 </h4>
                 <p className="text-xs text-emerald-600/90 dark:text-emerald-400/90 mt-0.5">
                   {paidAmount ? `مبلغ ${toPersianDigits(Number(paidAmount).toLocaleString('fa-IR'))} تومان به کیف پول شما اضافه شد.` : 'کیف پول شما با موفقیت شارژ شد.'}
@@ -958,9 +960,11 @@ export const UserDashboard = () => {
                       تاریخچه سفارش‌های فروشگاه
                     </h3>
                   </div>
-                  <Link to="/store" className="text-xs font-bold text-blue-600 hover:text-blue-700 dark:text-cyan-400 flex items-center gap-1">
-                    <span>مشاهده فروشگاه</span> <ChevronLeft size={14} />
-                  </Link>
+                  {!isBazaar && (
+                    <Link to="/store" className="text-xs font-bold text-blue-600 hover:text-blue-700 dark:text-cyan-400 flex items-center gap-1">
+                      <span>مشاهده فروشگاه</span> <ChevronLeft size={14} />
+                    </Link>
+                  )}
                 </div>
                 
                 <div className="flex-1 overflow-y-auto max-h-[500px] pr-2 -mr-2 space-y-3 hide-scrollbar">
@@ -997,7 +1001,7 @@ export const UserDashboard = () => {
                           {getStatusBadge(p.paymentStatus)}
                           
                           <div className="flex items-center gap-1.5">
-                            {p.paymentStatus === 'pending' && (
+                            {p.paymentStatus === 'pending' && !isBazaar && (
                               <a 
                                 href={`/api/store/mock-payment?orderId=${p.orderId}`}
                                 className="flex items-center gap-1 px-2.5 py-1.5 clay-btn-primary-thick text-white rounded-xl text-[11px] font-bold transition-all cursor-pointer hover:scale-105"

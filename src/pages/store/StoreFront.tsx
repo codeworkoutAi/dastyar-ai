@@ -215,10 +215,10 @@ return (
   <CheckCircle2 className="w-6 h-6 text-[var(--color-accent-text)]" />
   </div>
   <div className="flex-1 text-center sm:text-right">
-  <h3 className="font-bold text-[var(--color-accent-text)] dark:text-[var(--color-accent-text)] mb-1">پرداخت با موفقیت در شاپرک تأیید شد!</h3>
+  <h3 className="font-bold text-[var(--color-accent-text)] dark:text-[var(--color-accent-text)] mb-1">پرداخت با موفقیت تأیید شد!</h3>
   <p className="type-secondary text-[var(--color-accent-text)] flex flex-wrap items-center gap-x-3 gap-y-1">
   <span>شماره سفارش: <span className="font-mono font-bold">{orderId}</span></span>
-  {refId && <span>شماره تراکنش بانکی (شاپرک): <span className="font-mono font-bold">{refId}</span></span>}
+  {refId && <span>شماره تراکنش بانکی: <span className="font-mono font-bold">{refId}</span></span>}
   </p>
   </div>
   <button 
