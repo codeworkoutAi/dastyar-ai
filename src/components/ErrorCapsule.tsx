@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { AlertCircle, RotateCw, Settings, X, Coins } from 'lucide-react';
+import { AlertCircle, RotateCw, Settings, X, Coins, LogIn } from 'lucide-react';
 import { useChatStore } from '../store/chatStore';
 import { useUIStore } from '../store/uiStore';
+import { useAuthStore } from '../store/authStore';
 export const ErrorCapsule: React.FC = React.memo(() => {
   const { activeError: error, setActiveError, regenerate } = useChatStore();
   const { setIsSettingsOpen, setIsWalletOpen } = useUIStore();
@@ -87,7 +88,19 @@ export const ErrorCapsule: React.FC = React.memo(() => {
           </span>
 
           <div className="flex items-center gap-2 mr-auto">
-            {(error.insufficientBalance || error.message?.includes('کیف پول') || error.message?.includes('اعتبار')) ? (
+            {(!useAuthStore.getState().isAuthenticated || error.message?.includes('مهمان')) ? (
+              <button
+                type="button"
+                onClick={() => {
+                  onDismiss();
+                  useAuthStore.getState().setAuthModalOpen(true);
+                }}
+                className="clay-btn clay-btn-primary text-white text-xs px-3.5 py-1.5 rounded-btn flex items-center gap-1.5 font-bold cursor-pointer transition-all shadow-sm active:scale-95"
+              >
+                <LogIn className="w-3.5 h-3.5 text-white" />
+                <span>ورود و دریافت ۱۵ پیام رایگان</span>
+              </button>
+            ) : (error.insufficientBalance || error.message?.includes('کیف پول') || error.message?.includes('اعتبار')) ? (
               <button
                 type="button"
                 onClick={onOpenWallet}

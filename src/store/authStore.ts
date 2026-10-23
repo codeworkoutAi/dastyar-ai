@@ -89,6 +89,7 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   login: (user, token) => {
     localStorage.setItem('token', token);
+    localStorage.removeItem('chatbox_guest_count');
     set({ user, token, isAuthenticated: true, isAuthModalOpen: false });
     notifyAuthChange(user.id);
   },

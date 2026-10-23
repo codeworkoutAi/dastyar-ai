@@ -421,9 +421,14 @@ export const Sidebar: React.FC = React.memo(() => {
                                     <div className="w-7 h-7 rounded-full clay-btn-primary text-white flex items-center justify-center">
                                         <User className="w-3.5 h-3.5" />
                                     </div>
-                                    <span className="text-xs font-bold text-blue-700 dark:text-blue-300">
-                                        ورود / ثبت‌نام
-                                    </span>
+                                    <div className="flex flex-col text-right">
+                                        <span className="text-xs font-bold text-blue-700 dark:text-blue-300">
+                                            ورود / ثبت‌نام
+                                        </span>
+                                        <span className="type-badge text-blue-600/70 dark:text-blue-400/70 font-medium">
+                                            مهمان (۵ پیام رایگان)
+                                        </span>
+                                    </div>
                                 </div>
                             </button>
                         )}

@@ -131,11 +131,6 @@ router.post('/api/chat/stream', chatStreamLimiter, async (req, res) => {
       }
     }
 
-    if (!userId) {
-      sendChunk({ error: 'برای ارسال پیام و استفاده از چت‌باکس، لطفاً وارد حساب کاربری خود شوید.' });
-      sendChunk({ done: true });
-      return finishStream();
-    }
     let provider = apiConfig?.activeProvider || 'gemini';
     let customProfileId = apiConfig?.custom?.activeProfileId;
     let model = req.body.model || apiConfig?.[provider]?.modelName || '';
@@ -195,6 +190,16 @@ router.post('/api/chat/stream', chatStreamLimiter, async (req, res) => {
     // Always false: client keys are telemetry only, never a quota/billing bypass.
     const hasCustomUserKey = false;
 
+    // Guest Trial Policy: Allow unauthenticated guests on free models up to free_daily_limit_guest (5 messages)
+    if (!userId && !isFreeModel) {
+      sendChunk({
+        error: 'استفاده از مدل‌های پیشرفته اعتباری نیازمند ورود به حساب کاربری است. لطفاً برای دسترسی کامل وارد شوید.',
+        insufficientBalance: true,
+        done: true
+      });
+      return finishStream();
+    }
+
     let isBazaarUser = false;
     if (userId) {
        const userRow = db.prepare('SELECT email FROM users WHERE id = ?').get(userId) as any;
@@ -228,6 +233,17 @@ router.post('/api/chat/stream', chatStreamLimiter, async (req, res) => {
       }
       
       if (usage.count >= windowLimit) {
+        // For guest users, immediately prompt to sign up to unlock 15 daily messages
+        if (!userId) {
+          sendChunk({
+            error: `سهمیه تست مهمان (${windowLimit} پیام رایگان) شما به پایان رسیده است. برای ادامه گفتگو، ذخیره تاریخچه و دریافت روزانه ۱۵ پیام رایگان دائمی، به سادگی وارد حساب کاربری خود شوید.`,
+            insufficientBalance: true,
+            quotaExceeded: true,
+            done: true
+          });
+          return finishStream();
+        }
+
         // Free quota exhausted! Check if user has wallet balance to seamlessly switch to Paid card
         const userWallet = userId ? getUserWallet(userId) : null;
         if (userWallet && userWallet.walletBalance > 0) {
@@ -276,7 +292,15 @@ router.post('/api/chat/stream', chatStreamLimiter, async (req, res) => {
       }
     }
 
-    if (!isFreeModel && userId && !hasCustomUserKey) {
+    if (!isFreeModel && !hasCustomUserKey) {
+      if (!userId) {
+        sendChunk({
+          error: 'استفاده از مدل‌های پیشرفته نیازمند ورود به حساب کاربری است. لطفاً وارد شوید.',
+          insufficientBalance: true,
+          done: true
+        });
+        return finishStream();
+      }
       const userWallet = getUserWallet(userId);
       if (userWallet.walletBalance <= 0) {
         sendChunk({
