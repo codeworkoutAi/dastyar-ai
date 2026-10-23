@@ -74,6 +74,9 @@ export default defineConfig(() => {
       rollupOptions: {
         output: {
           manualChunks(id) {
+            if (id.includes('preload-helper') || id.includes('vite/')) {
+              return 'vendor-react';
+            }
             if (id.includes('node_modules')) {
               if (id.includes('react-syntax-highlighter') || id.includes('prismjs')) {
                 return 'syntax-highlighter';

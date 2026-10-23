@@ -2,15 +2,29 @@
 <html lang="fa" dir="rtl">
 
 <head>
-  <!-- Google tag (gtag.js) -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-KLCT7WN190"></script>
+  <!-- Google tag (gtag.js) - Initialized immediately, loaded on idle to eliminate TBT & render-blocking -->
   <script>
     window.dataLayer = window.dataLayer || [];
     function gtag(){dataLayer.push(arguments);}
     gtag('js', new Date());
-
     gtag('config', 'G-KLCT7WN190');
+    (function() {
+      function loadGtag() {
+        if (window.__gtagLoaded) return;
+        window.__gtagLoaded = true;
+        var s = document.createElement('script');
+        s.src = 'https://www.googletagmanager.com/gtag/js?id=G-KLCT7WN190';
+        s.async = true;
+        document.head.appendChild(s);
+      }
+      if ('requestIdleCallback' in window) {
+        requestIdleCallback(function() { setTimeout(loadGtag, 1500); });
+      } else {
+        window.addEventListener('load', function() { setTimeout(loadGtag, 2000); });
+      }
+    })();
   </script>
+  <link rel="preload" as="image" href="/pwa-192x192.png" fetchpriority="high" />
   <script>
     window.__deferredPrompt = null;
     window.addEventListener('beforeinstallprompt', function (e) {
@@ -143,7 +157,7 @@
     <div id="app-shell" style="min-height:100vh;display:flex;flex-direction:column;background:#090d16;color:#f1f5f9;font-family:'Vazirmatn', 'Vazir', Tahoma, system-ui, sans-serif;direction:rtl;">
       <header style="height:60px;display:flex;align-items:center;justify-content:space-between;padding:0 16px;border-bottom:1px solid rgba(255,255,255,0.08);">
         <div style="display:flex;align-items:center;gap:12px;">
-          <img src="/pwa-192x192.png" alt="لوگوی دستیار هوشمند" width="28" height="28" style="width:28px;height:28px;object-fit:contain;filter:drop-shadow(0 2px 8px rgba(37,99,235,0.4));" />
+          <img src="/pwa-192x192.png" alt="لوگوی دستیار هوشمند" width="28" height="28" fetchpriority="high" decoding="async" style="width:28px;height:28px;object-fit:contain;filter:drop-shadow(0 2px 8px rgba(37,99,235,0.4));" />
           <span style="font-size:15px;font-weight:700;letter-spacing:-0.2px;">دستیار هوشمند</span>
         </div>
         <div style="display:flex;gap:8px;">
@@ -152,7 +166,7 @@
       </header>
       <main style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center;">
         <div style="width:80px;height:80px;margin-bottom:24px;animation:breathing 2.5s ease-in-out infinite;">
-          <img src="/pwa-192x192.png" alt="لوگوی دستیار هوشمند" width="80" height="80" style="width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 8px 24px rgba(37,99,235,0.5));" />
+          <img src="/pwa-192x192.png" alt="لوگوی دستیار هوشمند" width="80" height="80" fetchpriority="high" decoding="async" style="width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 8px 24px rgba(37,99,235,0.5));" />
         </div>
         <h1 style="font-size:20px;font-weight:700;margin:0 0 8px 0;color:#f8fafc;">دستیار هوش مصنوعی فارسی</h1>
         <p style="font-size:13px;color:#94a3b8;margin:0 0 20px 0;max-width:320px;line-height:1.6;">در حال بارگذاری و اتصال به هوش مصنوعی...</p>

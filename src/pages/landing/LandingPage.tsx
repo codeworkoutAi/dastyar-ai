@@ -279,7 +279,12 @@ export const LandingPage: React.FC = () => {
           const list = Array.isArray(data.professions)
             ? data.professions
             : (data.professions.cards || []);
-          const activeOnes = list.filter((p: any) => p && p.enabled !== false);
+          const activeOnes = list
+            .filter((p: any) => p && p.enabled !== false)
+            .map((p: any) => ({
+              ...p,
+              image: typeof p.image === 'string' ? p.image.replace(/\.(jpg|jpeg|png)$/i, '.webp') : p.image
+            }));
           if (activeOnes.length > 0) setDynamicProfessions(activeOnes);
         }
         if (data.professionsSettings) setDynamicProfessionsSettings(data.professionsSettings);
@@ -423,78 +428,50 @@ export const LandingPage: React.FC = () => {
     setTimeout(() => setCopiedPromptIndex(null), 2500);
   };
 
-  // True Scroll-driven entrance animations observer
+  // High-performance IntersectionObserver for entrance animations (Zero forced reflows)
   useEffect(() => {
     const selector = '.reveal-init, .reveal-from-right, .reveal-from-left, .reveal-pop';
 
-    let observer: IntersectionObserver | null = null;
+    if (typeof IntersectionObserver === 'undefined') {
+      const elements = document.querySelectorAll(selector);
+      for (let i = 0; i < elements.length; i++) elements[i].classList.add('reveal-active');
+      return;
+    }
 
-    const setupObserver = () => {
-      const elements = Array.from(document.querySelectorAll(selector)) as HTMLElement[];
-      if (!elements.length) return;
-
-      const windowHeight = window.innerHeight || 800;
-
-      // Only reveal elements that are truly inside the initial visible screen (above the fold)
-      elements.forEach((el) => {
-        const rect = el.getBoundingClientRect();
-        if (rect.top < windowHeight - 40 && rect.bottom > 0) {
-          el.classList.add('reveal-active');
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (let i = 0; i < entries.length; i++) {
+          const entry = entries[i];
+          if (entry.isIntersecting) {
+            entry.target.classList.add('reveal-active');
+            observer.unobserve(entry.target);
+          }
         }
-      });
+      },
+      {
+        threshold: 0.05,
+        rootMargin: '120px 0px 40px 0px',
+      }
+    );
 
-      if (typeof IntersectionObserver !== 'undefined') {
-        observer?.disconnect();
-        observer = new IntersectionObserver(
-          (entries) => {
-            entries.forEach((entry) => {
-              if (entry.isIntersecting) {
-                entry.target.classList.add('reveal-active');
-                observer?.unobserve(entry.target);
-              }
-            });
-          },
-          {
-            threshold: 0.08,
-            rootMargin: '0px 0px -40px 0px',
-          }
-        );
-
-        elements.forEach((el) => {
-          if (!el.classList.contains('reveal-active')) {
-            observer?.observe(el);
-          }
-        });
+    const observeAll = () => {
+      const elements = document.querySelectorAll(selector);
+      for (let i = 0; i < elements.length; i++) {
+        const el = elements[i];
+        if (!el.classList.contains('reveal-active')) {
+          observer.observe(el);
+        }
       }
     };
 
-    // Run setup on mount and with short delays to catch any dynamic data rendered later
-    setupObserver();
-    const t1 = setTimeout(setupObserver, 120);
-    const t2 = setTimeout(setupObserver, 600);
-
-    // Fallback scroll listener for maximum reliability across browsers
-    const handleScroll = () => {
-      const windowHeight = window.innerHeight || 800;
-      const elements = Array.from(document.querySelectorAll(selector)) as HTMLElement[];
-      elements.forEach((el) => {
-        if (!el.classList.contains('reveal-active')) {
-          const rect = el.getBoundingClientRect();
-          if (rect.top < windowHeight - 30) {
-            el.classList.add('reveal-active');
-            observer?.unobserve(el);
-          }
-        }
-      });
-    };
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
+    observeAll();
+    const t1 = setTimeout(observeAll, 120);
+    const t2 = setTimeout(observeAll, 500);
 
     return () => {
       clearTimeout(t1);
       clearTimeout(t2);
-      observer?.disconnect();
-      window.removeEventListener('scroll', handleScroll);
+      observer.disconnect();
     };
   }, [dynamicProfessions, dynamicGallery, dynamicPlans, dynamicFaqs]);
 
@@ -915,7 +892,7 @@ export const LandingPage: React.FC = () => {
                     <div className="relative aspect-[16/11] overflow-hidden rounded-[24px] clay-card-thick p-1">
                       <img
                         key={currentProfession.image}
-                        src={currentProfession.image}
+                        src={typeof currentProfession.image === 'string' ? currentProfession.image.replace(/\.(jpg|jpeg|png)$/i, '.webp') : currentProfession.image}
                         alt={currentProfession.title}
                         width={480}
                         height={330}
@@ -1021,7 +998,7 @@ export const LandingPage: React.FC = () => {
                         }`}
                       >
                       <img
-                        src={p.image.replace('/images/professions/', '/images/professions/thumbs/')}
+                        src={(typeof p.image === 'string' ? p.image.replace(/\.(jpg|jpeg|png)$/i, '.webp') : p.image).replace('/images/professions/', '/images/professions/thumbs/')}
                         alt={p.title}
                         width={40}
                         height={40}
@@ -1413,15 +1390,15 @@ export const LandingPage: React.FC = () => {
               const isOpen = activeFaq === i;
               const isLast = i === dynamicFaqs.length - 1;
               
-              // A vibrant palette for the questions with WCAG AA compliant contrast
+              // A vibrant palette for the questions with WCAG AA compliant contrast (ratio > 5.5:1)
               const palettes = [
-                { text: 'text-indigo-700 dark:text-indigo-300', iconBg: 'bg-indigo-500/10 dark:bg-indigo-400/20' },
-                { text: 'text-emerald-700 dark:text-emerald-300', iconBg: 'bg-emerald-500/10 dark:bg-emerald-400/20' },
-                { text: 'text-rose-700 dark:text-rose-300', iconBg: 'bg-rose-500/10 dark:bg-rose-400/20' },
-                { text: 'text-amber-800 dark:text-amber-300', iconBg: 'bg-amber-500/10 dark:bg-amber-400/20' },
-                { text: 'text-sky-700 dark:text-sky-300', iconBg: 'bg-sky-500/10 dark:bg-sky-400/20' },
-                { text: 'text-violet-700 dark:text-violet-300', iconBg: 'bg-violet-500/10 dark:bg-violet-400/20' },
-                { text: 'text-fuchsia-700 dark:text-fuchsia-300', iconBg: 'bg-fuchsia-500/10 dark:bg-fuchsia-400/20' },
+                { text: 'text-indigo-800 dark:text-indigo-300', iconBg: 'bg-indigo-500/10 dark:bg-indigo-400/20' },
+                { text: 'text-emerald-800 dark:text-emerald-300', iconBg: 'bg-emerald-500/10 dark:bg-emerald-400/20' },
+                { text: 'text-rose-800 dark:text-rose-300', iconBg: 'bg-rose-500/10 dark:bg-rose-400/20' },
+                { text: 'text-amber-900 dark:text-amber-300', iconBg: 'bg-amber-500/10 dark:bg-amber-400/20' },
+                { text: 'text-sky-800 dark:text-sky-300', iconBg: 'bg-sky-500/10 dark:bg-sky-400/20' },
+                { text: 'text-violet-800 dark:text-violet-300', iconBg: 'bg-violet-500/10 dark:bg-violet-400/20' },
+                { text: 'text-fuchsia-800 dark:text-fuchsia-300', iconBg: 'bg-fuchsia-500/10 dark:bg-fuchsia-400/20' },
               ];
               const theme = palettes[i % palettes.length];
 
@@ -1432,7 +1409,7 @@ export const LandingPage: React.FC = () => {
                     className="w-full py-5 px-3 sm:px-4 text-right flex items-center justify-between gap-4 cursor-pointer group transition-all duration-300 hover:bg-black/5 dark:hover:bg-white/5 rounded-xl"
                   >
                     <span 
-                      className={`font-bold text-sm sm:text-base transition-all duration-300 ${theme.text} ${isOpen ? 'scale-[1.02] transform' : 'opacity-90 group-hover:opacity-100'}`} 
+                      className={`font-bold text-sm sm:text-base transition-all duration-300 ${theme.text} ${isOpen ? 'scale-[1.02] transform' : 'opacity-100'}`} 
                       style={{ fontFamily: "'Estedad', sans-serif" }}
                     >
                       {faq.q}

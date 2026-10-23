@@ -328,6 +328,25 @@ export function clearDesignCache() {
 // 3. READ & WRITE DATABASE HELPERS
 // ==========================================
 
+function normalizeAssetPaths(data: any): any {
+  if (!data) return data;
+  if (typeof data === 'string') {
+    return data.replace(/\/images\/professions\/([^."']+)\.(jpg|jpeg|png)/gi, '/images/professions/$1.webp')
+               .replace(/\/images\/gallery\/([^."']+)\.(jpg|jpeg|png)/gi, '/images/gallery/$1.webp');
+  }
+  if (Array.isArray(data)) {
+    return data.map(normalizeAssetPaths);
+  }
+  if (typeof data === 'object') {
+    const res: any = {};
+    for (const key of Object.keys(data)) {
+      res[key] = normalizeAssetPaths(data[key]);
+    }
+    return res;
+  }
+  return data;
+}
+
 export function getSectionData(sectionKey: string, defaultValue: any) {
   const cached = getCached(sectionKey);
   if (cached) return cached;
@@ -343,11 +362,13 @@ export function getSectionData(sectionKey: string, defaultValue: any) {
             if (!merged.title || !merged.title.trim()) merged.title = defaultValue.title;
             if (!merged.featurePill || !merged.featurePill.trim()) merged.featurePill = defaultValue.featurePill;
           }
-          setCached(sectionKey, merged);
-          return merged;
+          const normalized = normalizeAssetPaths(merged);
+          setCached(sectionKey, normalized);
+          return normalized;
         }
-        setCached(sectionKey, parsed);
-        return parsed;
+        const normalized = normalizeAssetPaths(parsed);
+        setCached(sectionKey, normalized);
+        return normalized;
       } catch (e) {
         console.warn(`[LandingService] JSON parse error for ${sectionKey}, using fallback:`, e);
       }
@@ -356,8 +377,9 @@ export function getSectionData(sectionKey: string, defaultValue: any) {
     console.error(`[LandingService] DB error reading ${sectionKey}:`, err);
   }
 
-  setCached(sectionKey, defaultValue);
-  return defaultValue;
+  const normalizedDefault = normalizeAssetPaths(defaultValue);
+  setCached(sectionKey, normalizedDefault);
+  return normalizedDefault;
 }
 
 export function saveSectionData(sectionKey: string, value: any) {
