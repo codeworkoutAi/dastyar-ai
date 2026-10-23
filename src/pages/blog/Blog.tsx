@@ -291,10 +291,14 @@ export function Blog() {
  window.open(`https://t.me/share/url?url=${url}&text=${text}`, '_blank');
  };
 
- const shareOnX = () => {
+ const sharePost = () => {
  const url = encodeURIComponent(window.location.href);
  const text = encodeURIComponent(selectedPost?.title || 'مقاله هوش مصنوعی');
- window.open(`https://twitter.com/intent/tweet?url=${url}&text=${text}`, '_blank');
+ if (navigator.share) {
+ navigator.share({ title: decodeURIComponent(text), url: decodeURIComponent(url) }).catch(() => {});
+ } else {
+ navigator.clipboard?.writeText(window.location.href);
+ }
  };
 
  return (
@@ -344,7 +348,7 @@ export function Blog() {
 <button onClick={shareOnTelegram} className="p-2 bg-[var(--color-accent-primary)]/10 text-[var(--color-accent-primary)] dark:bg-[var(--color-accent-primary)]/20 dark:text-[var(--color-accent-text)] rounded-badge hover:bg-[var(--color-accent-primary)]/20 dark:hover:bg-[var(--color-accent-primary)]/30 transition-colors">
 <Send size={16} />
 </button>
-<button onClick={shareOnX} className="p-2 clay-surface rounded-badge text-[var(--color-text-muted)] dark:text-[var(--color-text-dim)] transition-colors">
+<button onClick={sharePost} className="p-2 clay-surface rounded-badge text-[var(--color-text-muted)] dark:text-[var(--color-text-dim)] transition-colors">
 <Share2 size={16} />
 </button>
 </div>

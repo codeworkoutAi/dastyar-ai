@@ -1,4 +1,4 @@
-import { X, Send, Mail, Twitter, MessageCircle } from 'lucide-react';
+import { X, Send, Mail, MessageCircle } from 'lucide-react';
 import { useUIStore } from '../store/uiStore';
 
 export function ContactModal() {
@@ -38,8 +38,8 @@ export function ContactModal() {
  <Send className="w-5 h-5" />
  </div>
  <div>
- <h3 className="font-bold text-blue-900 dark:text-blue-100 text-sm">گروه و پشتیبانی تلگرام</h3>
- <p className="text-xs text-blue-600/70 dark:text-blue-400/70 mt-1 font-mono" dir="ltr">t.me/dastyaraigroup/1</p>
+ <h3 className="font-bold text-blue-900 dark:text-blue-100 text-sm">پشتیبانی تلگرام</h3>
+ <p className="text-xs text-blue-600/70 dark:text-blue-400/70 mt-1">پاسخگویی سریع و گروه کاربران</p>
  </div>
  </div>
  </a>
@@ -51,22 +51,8 @@ export function ContactModal() {
  <Mail className="w-5 h-5" />
  </div>
  <div>
- <h3 className="font-bold text-emerald-900 dark:text-emerald-100 text-sm">ارسال ایمیل مستقیم</h3>
+ <h3 className="font-bold text-emerald-900 dark:text-emerald-100 text-sm">ارسال ایمیل</h3>
  <p className="text-xs text-emerald-600/70 dark:text-emerald-400/70 mt-1 font-mono" dir="ltr">info@dastyarai.com</p>
- </div>
- </div>
- </a>
-
- <a href="https://twitter.com/your_id" target="_blank" rel="noopener noreferrer"
- className="flex items-center justify-between p-4 rounded-2xl clay-input hover:border-zinc-400 dark:hover:border-zinc-500 transition-all group"
- >
- <div className="flex items-center gap-4 text-right">
- <div className="w-10 h-10 rounded-full clay-btn-secondary flex items-center justify-center text-zinc-600 dark:text-zinc-400 group-hover:scale-110 transition-transform">
- <Twitter className="w-5 h-5" />
- </div>
- <div>
- <h3 className="font-bold text-zinc-900 dark:text-zinc-100 text-sm">توییتر (X)</h3>
- <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">اخبار و اطلاعیه‌ها</p>
  </div>
  </div>
  </a>

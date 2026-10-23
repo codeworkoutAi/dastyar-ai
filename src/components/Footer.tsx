@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 import { useUIStore } from '../store/uiStore';
 import {
  Send,
- Twitter,
  Github,
  Bot,
  Sliders,
@@ -266,16 +265,6 @@ export function Footer() {
                 <Send className="w-4 h-4 -rotate-12 translate-x-0.5" />
               </a>
             )}
-            <a
-              href="https://twitter.com"
-              target="_blank"
-              rel="noreferrer"
-              className="clay-btn-thick min-w-[44px] min-h-[44px] w-11 h-11 rounded-xl flex items-center justify-center text-zinc-600 dark:text-zinc-400 dark:text-[#9aa5bc] hover:text-zinc-800 dark:text-zinc-100 dark:hover:text-white hover:scale-110 active:scale-95 transition-all"
-              title="توییتر / X"
-              aria-label="صفحه توییتر دستیار هوشمند"
-            >
-              <Twitter className="w-4 h-4" />
-            </a>
             <a
               href="https://github.com"
               target="_blank"
