@@ -27,8 +27,8 @@ export function Footer() {
  const [footerData, setFooterData] = useState({
  brandTitle: 'دستیار هوشمند',
  brandDesc: 'پنجره‌ای رو به آینده. همراه هوشمند شما برای خلق، یادگیری و کشف ناشناخته‌ها در دنیای بی‌کران هوش مصنوعی.',
- supportEmail: 'support@dastyarai.com',
- telegramChannel: 'https://t.me/dastyarai',
+ supportEmail: 'info@dastyarai.com',
+ telegramChannel: 'https://t.me/dastyaraigroup/1',
  copyrightText: 'دستیار هوشمند. تمامی حقوق محفوظ است.'
  });
 

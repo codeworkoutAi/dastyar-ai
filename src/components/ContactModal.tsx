@@ -30,7 +30,7 @@ export function ContactModal() {
  </p>
 
  <div className="space-y-4">
- <a href="https://t.me/your_id" target="_blank" rel="noopener noreferrer"
+ <a href="https://t.me/dastyaraigroup/1" target="_blank" rel="noopener noreferrer"
  className="flex items-center justify-between p-4 rounded-2xl bg-blue-50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-900/30 hover:border-blue-300 dark:hover:border-blue-700 transition-all group"
  >
  <div className="flex items-center gap-4 text-right">
@@ -38,21 +38,21 @@ export function ContactModal() {
  <Send className="w-5 h-5" />
  </div>
  <div>
- <h3 className="font-bold text-blue-900 dark:text-blue-100 text-sm">پشتیبانی تلگرام</h3>
- <p className="text-xs text-blue-600/70 dark:text-blue-400/70 mt-1">پاسخگویی سریع</p>
+ <h3 className="font-bold text-blue-900 dark:text-blue-100 text-sm">گروه و پشتیبانی تلگرام</h3>
+ <p className="text-xs text-blue-600/70 dark:text-blue-400/70 mt-1 font-mono" dir="ltr">t.me/dastyaraigroup/1</p>
  </div>
  </div>
  </a>
 
- <a href="mailto:contact@example.com" className="flex items-center justify-between p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-100 dark:border-emerald-900/30 hover:border-emerald-300 dark:hover:border-emerald-700 transition-all group"
+ <a href="mailto:info@dastyarai.com" className="flex items-center justify-between p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-100 dark:border-emerald-900/30 hover:border-emerald-300 dark:hover:border-emerald-700 transition-all group"
  >
  <div className="flex items-center gap-4 text-right">
  <div className="w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-900/40 flex items-center justify-center text-emerald-600 dark:text-emerald-400 group-hover:scale-110 transition-transform">
  <Mail className="w-5 h-5" />
  </div>
  <div>
- <h3 className="font-bold text-emerald-900 dark:text-emerald-100 text-sm">ارسال ایمیل</h3>
- <p className="text-xs text-emerald-600/70 dark:text-emerald-400/70 mt-1">همکاری و پیشنهادات</p>
+ <h3 className="font-bold text-emerald-900 dark:text-emerald-100 text-sm">ارسال ایمیل مستقیم</h3>
+ <p className="text-xs text-emerald-600/70 dark:text-emerald-400/70 mt-1 font-mono" dir="ltr">info@dastyarai.com</p>
  </div>
  </div>
  </a>
