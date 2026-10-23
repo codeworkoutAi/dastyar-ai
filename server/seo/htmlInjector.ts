@@ -27,7 +27,7 @@ export function renderHtmlWithSeo(req: express.Request, res: express.Response, d
     const urlPath = req.path;
 
     let pageTitle = 'دستیار هوشمند | چت با هوش مصنوعی رایگان و پیشرفته';
-    let pageDesc = 'چت با هوش مصنوعی رایگان فارسی با مدل‌های ChatGPT، Claude و Gemini. جستجوی زنده وب، تولید تصویر و فروشگاه ابزارهای AI بدون نیاز به فیلترشکن.';
+    let pageDesc = 'چت با هوش مصنوعی رایگان فارسی با مدل‌های ChatGPT، Claude و Gemini. جستجوی زنده وب، تولید تصویر و ابزارهای تخصصی AI بدون محدودیت‌های تحریمی.';
     let pageImage = `${baseUrl}/pwa-512x512.png`;
     let pageType = 'website';
     let canonicalUrl = `${baseUrl}${urlPath}`;
@@ -256,7 +256,7 @@ export function renderHtmlWithSeo(req: express.Request, res: express.Response, d
                 name: 'آیا چت با هوش مصنوعی در دستیار هوشمند رایگان است؟',
                 acceptedAnswer: {
                   '@type': 'Answer',
-                  text: 'بله، استفاده از مدل‌های پیشرفته هوش مصنوعی در دستیار هوشمند کاملاً رایگان است و کاربران بدون نیاز به فیلترشکن یا شماره خارجی می‌توانند به گفت‌وگو بپردازند.'
+                  text: 'بله، استفاده از مدل‌های پیشرفته هوش مصنوعی در دستیار هوشمند کاملاً رایگان است و کاربران بدون محدودیت‌های تحریم یا شماره خارجی می‌توانند به گفت‌وگو بپردازند.'
                 }
               },
               {
@@ -317,7 +317,7 @@ export function renderHtmlWithSeo(req: express.Request, res: express.Response, d
           </ul>
         </nav>
         <p>${safeDesc}</p>
-        <p>دستیار هوشمند پلتفرم جامع چت هوش مصنوعی فارسی با پشتیبانی از مدل‌های Claude، ChatGPT و Gemini بدون فیلترشکن است.</p>
+        <p>دستیار هوشمند پلتفرم جامع چت هوش مصنوعی فارسی با پشتیبانی از مدل‌های Claude، ChatGPT و Gemini با اتصال مستقیم و بدون محدودیت‌های تحریمی است.</p>
       </section>`;
     } catch (dbErr) {}
 
