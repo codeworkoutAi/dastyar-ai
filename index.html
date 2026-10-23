@@ -2,6 +2,72 @@
 <html lang="fa" dir="rtl">
 
 <head>
+  <!-- Legacy & Older WebView Polyfills (Samsung A02, Android 10/11 32-bit compatibility) -->
+  <script>
+    (function() {
+      // 1. Object.hasOwn polyfill (Chrome 93+)
+      if (typeof Object.hasOwn !== 'function') {
+        Object.defineProperty(Object, 'hasOwn', {
+          value: function (object, property) {
+            if (object == null) {
+              throw new TypeError('Cannot convert undefined or null to object');
+            }
+            return Object.prototype.hasOwnProperty.call(Object(object), property);
+          },
+          configurable: true,
+          writable: true
+        });
+      }
+      // 2. Array.prototype.at polyfill (Chrome 92+)
+      if (typeof Array.prototype.at !== 'function') {
+        Object.defineProperty(Array.prototype, 'at', {
+          value: function (n) {
+            n = Math.trunc(n) || 0;
+            if (n < 0) n += this.length;
+            if (n < 0 || n >= this.length) return undefined;
+            return this[n];
+          },
+          configurable: true,
+          writable: true
+        });
+      }
+      // 3. String.prototype.at polyfill (Chrome 92+)
+      if (typeof String.prototype.at !== 'function') {
+        Object.defineProperty(String.prototype, 'at', {
+          value: function (n) {
+            n = Math.trunc(n) || 0;
+            if (n < 0) n += this.length;
+            if (n < 0 || n >= this.length) return '';
+            return this[n];
+          },
+          configurable: true,
+          writable: true
+        });
+      }
+      // 4. Promise.withResolvers polyfill (Chrome 119+)
+      if (typeof Promise.withResolvers !== 'function') {
+        Promise.withResolvers = function () {
+          var resolve, reject;
+          var promise = new Promise(function (res, rej) {
+            resolve = res;
+            reject = rej;
+          });
+          return { promise: promise, resolve: resolve, reject: reject };
+        };
+      }
+      // 5. CustomEvent constructor fallback
+      if (typeof window.CustomEvent !== 'function') {
+        function CustomEvent(event, params) {
+          params = params || { bubbles: false, cancelable: false, detail: null };
+          var evt = document.createEvent('CustomEvent');
+          evt.initCustomEvent(event, params.bubbles, params.cancelable, params.detail);
+          return evt;
+        }
+        window.CustomEvent = CustomEvent;
+      }
+    })();
+  </script>
+
   <!-- Google tag (gtag.js) - Initialized immediately, loaded on idle to eliminate TBT & render-blocking -->
   <script>
     window.dataLayer = window.dataLayer || [];

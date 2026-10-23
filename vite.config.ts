@@ -70,6 +70,7 @@ export default defineConfig(() => {
       },
     },
     build: {
+      target: ['es2018', 'chrome79', 'edge79', 'firefox78', 'safari13'],
       chunkSizeWarningLimit: 1000,
       rollupOptions: {
         output: {
