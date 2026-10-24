@@ -25,6 +25,7 @@ export interface ChatMessage {
   modelUsed?: string;
   isStreaming?: boolean;
   isImageGen?: boolean;
+  isWebSearch?: boolean;
   error?: boolean;
   errorMessage?: string;
   metrics?: MessageMetrics;

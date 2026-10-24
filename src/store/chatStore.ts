@@ -200,6 +200,9 @@ stopGeneration: () => {
       timestamp: Date.now(),
     };
 
+      const globalWebSearchOn = useSettingsStore.getState().settings.tools.webSearch;
+      const initialHasWebIntent = !isImageGen && globalWebSearchOn && (webSearch === true || (webSearch === undefined && /اخبار|خبر|قیمت|آب و هوا|آب‌وهوا|مقاله|تحقیق|درباره|سرچ|جستجو|امروز|تاریخ|جدیدترین|آپدیت|به روز|به‌روز|دسترسی به وب|دسترسی به اینترنت|وصل به اینترنت|اینترنت داری|به اینترنت وصلی|آنلاین هستی|وب رو چک کن|دسترسی داری/i.test(promptText)));
+
       const assistantMessage: ChatMessage = {
         id: assistantMessageId,
         role: 'assistant' as any,
@@ -208,6 +211,7 @@ stopGeneration: () => {
         modelUsed: isImageGen ? (imageEngine ? `image-generation: ${imageEngine}` : 'image-generation') : finalModelUsed,
         isStreaming: true,
         isImageGen,
+        isWebSearch: initialHasWebIntent,
       };
 
     // Auto-update conversation title if it's the first message
@@ -365,6 +369,21 @@ stopGeneration: () => {
       if (!globalWebSearchEnabled) {
         payloadSettings.tools.webSearch = false;
       }
+
+      // Sync isWebSearch flag on assistant message for UI web search status indicator
+      const isSearchActive = !isImageGen && !!payloadSettings.tools.webSearch;
+      set({
+        conversations: get().conversations.map((c) =>
+          c.id === targetConv!.id
+            ? {
+                ...c,
+                messages: c.messages.map((m) =>
+                  m.id === assistantMessageId ? { ...m, isWebSearch: isSearchActive } : m
+                ),
+              }
+            : c
+        ),
+      });
 
       // Apply Smart Routing
       if (smartRoutingEnabled) {

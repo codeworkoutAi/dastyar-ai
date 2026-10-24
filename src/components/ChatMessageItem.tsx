@@ -19,6 +19,7 @@ import {
   VolumeLoudLinearIcon,
   CloseOutlineIcon as X
 } from '@solar-icons/react';
+import { Globe } from 'lucide-react';
 import React, { memo } from 'react';
 import { isRtlText, toPersianDigits } from '../lib/persianUtils';
 import { ChatMessage } from '../types';
@@ -282,12 +283,35 @@ export const ChatMessageItem: React.FC<ChatMessageItemProps> = memo(({
                 </div>
               </div>
             ) : msg.isStreaming && !msg.content ? (
-              <div className="flex items-center gap-2 p-4 text-[var(--color-text-main)] dark:text-[var(--color-text-main)] animate-pulse">
-                <div className="w-2.5 h-2.5 bg-[var(--color-text-dim)] rounded-badge animate-bounce" />
-                <div className="w-2.5 h-2.5 bg-[var(--color-text-dim)] rounded-badge animate-bounce [animation-delay:0.2s]" />
-                <div className="w-2.5 h-2.5 bg-[var(--color-text-dim)] rounded-badge animate-bounce [animation-delay:0.4s]" />
-                <span className="text-xs text-[var(--color-text-muted)] dark:text-[var(--color-text-dim)] mr-2">در حال پردازش و تولید پاسخ...</span>
-              </div>
+              msg.isWebSearch ? (
+                <div className="flex flex-col gap-2 p-3.5 sm:p-4 rounded-card clay-card text-[var(--color-text-main)] my-1 max-w-md border border-subtle">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-btn clay-surface flex items-center justify-center text-[var(--color-accent-primary)] shrink-0">
+                      <Globe className="w-4 h-4 animate-spin [animation-duration:4s]" />
+                    </div>
+                    <div className="flex flex-col text-right">
+                      <span className="text-xs font-bold text-[var(--color-accent-primary)]">
+                        در حال جستجو و کاوش در وب...
+                      </span>
+                      <span className="text-[11px] text-[var(--color-text-dim)] mt-0.5">
+                        بررسی و استخراج منابع آنلاین زنده؛ ممکن است چند لحظه زمان ببرد
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1.5 mr-11">
+                    <span className="w-1.5 h-1.5 rounded-badge bg-[var(--color-accent-primary)] animate-bounce" style={{ animationDelay: '0s' }} />
+                    <span className="w-1.5 h-1.5 rounded-badge bg-[var(--color-accent-primary)] animate-bounce" style={{ animationDelay: '0.2s' }} />
+                    <span className="w-1.5 h-1.5 rounded-badge bg-[var(--color-accent-primary)] animate-bounce" style={{ animationDelay: '0.4s' }} />
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 p-4 text-[var(--color-text-main)] dark:text-[var(--color-text-main)] animate-pulse">
+                  <div className="w-2.5 h-2.5 bg-[var(--color-text-dim)] rounded-badge animate-bounce" />
+                  <div className="w-2.5 h-2.5 bg-[var(--color-text-dim)] rounded-badge animate-bounce [animation-delay:0.2s]" />
+                  <div className="w-2.5 h-2.5 bg-[var(--color-text-dim)] rounded-badge animate-bounce [animation-delay:0.4s]" />
+                  <span className="text-xs text-[var(--color-text-muted)] dark:text-[var(--color-text-dim)] mr-2">در حال پردازش و تولید پاسخ...</span>
+                </div>
+              )
             ) : (
               <>
                 {msg.imageUrl && (
