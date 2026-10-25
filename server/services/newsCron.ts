@@ -3,7 +3,7 @@ import Parser from 'rss-parser';
 import fs from 'fs';
 import path from 'path';
 import db, { syncDatabase } from '../db/database';
-import { getGeminiClient, getPollinationsImageUrl } from './utils';
+import { getGeminiClient, getPollinationsImageUrl, optimizeImageToWebpDataUrl } from './utils';
 import { bot, getTelegramBot } from '../telegram/bot';
 
 // Path for persistent news-cron log file
@@ -276,6 +276,19 @@ export async function fetchAndProcessNews() {
     } else {
       console.log(`[NewsCron] Successfully extracted original image (${imageSource}): ${imageUrl}`);
       appendCronLog('INFO', `Successfully extracted original image (${imageSource})`, { imageUrl });
+    }
+
+    // Optimize and convert image to ultra-lightweight WebP data URL for instant, VPN-free loading
+    if (imageUrl) {
+      try {
+        const webpDataUrl = await optimizeImageToWebpDataUrl(imageUrl, 800, 75);
+        if (webpDataUrl) {
+          imageUrl = webpDataUrl;
+          console.log(`[NewsCron] Converted article image to ultra-lightweight WebP data URL (${(webpDataUrl.length / 1024).toFixed(1)} KB)`);
+        }
+      } catch (optErr: any) {
+        console.warn('[NewsCron] WebP conversion failed, keeping original imageUrl:', optErr?.message || optErr);
+      }
     }
 
     // Prepare content for Gemini: use scraped full content if richer than RSS snippet

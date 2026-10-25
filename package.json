@@ -52,6 +52,7 @@
     "rehype-katex": "^7.0.1",
     "rss-parser": "^3.13.0",
     "sahel-font": "^3.4.0",
+    "sharp": "^0.35.5",
     "socks-proxy-agent": "^10.1.0",
     "telegraf": "^4.16.3",
     "zustand": "^5.0.15"

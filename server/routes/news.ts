@@ -6,6 +6,7 @@ import { requireAuth, requireAdmin } from '../middleware/auth';
 import { bot } from '../telegram/bot';
 import { clearSitemapCache } from '../seo/sitemap';
 import { sendNewsToTelegram } from '../services/newsCron';
+import { optimizeImageToWebpDataUrl } from '../services/utils';
 
 const router = express.Router();
 
@@ -97,9 +98,19 @@ router.post('/', requireAuth, requireAdmin, async (req, res) => {
       return res.status(400).json({ error: 'عنوان و متن خبر الزامی است' });
     }
 
+    let finalImage = image || null;
+    if (finalImage) {
+      try {
+        const webp = await optimizeImageToWebpDataUrl(finalImage, 800, 75);
+        if (webp) finalImage = webp;
+      } catch (e) {
+        console.warn('[News API] WebP conversion failed, saving raw image:', e);
+      }
+    }
+
     const tagsJson = Array.isArray(tags) ? JSON.stringify(tags) : (typeof tags === 'string' && tags ? tags : '[]');
     const insertStmt = db.prepare('INSERT INTO news (title, content, image, tags) VALUES (?, ?, ?, ?)');
-    const info = insertStmt.run(title, content, image || null, tagsJson);
+    const info = insertStmt.run(title, content, finalImage, tagsJson);
     const newId = Number(info.lastInsertRowid);
     syncDatabase();
     clearSitemapCache();
@@ -142,7 +153,15 @@ router.put('/:id(\\d+)', requireAuth, requireAdmin, async (req, res) => {
     }
 
     const tagsJson = Array.isArray(tags) ? JSON.stringify(tags) : (typeof tags === 'string' && tags ? tags : existing.tags || '[]');
-    const finalImage = image !== undefined ? (image || null) : existing.image;
+    let finalImage = image !== undefined ? (image || null) : existing.image;
+    if (finalImage && finalImage !== existing.image) {
+      try {
+        const webp = await optimizeImageToWebpDataUrl(finalImage, 800, 75);
+        if (webp) finalImage = webp;
+      } catch (e) {
+        console.warn('[News API] WebP conversion failed on update, saving raw image:', e);
+      }
+    }
 
     db.prepare('UPDATE news SET title = ?, content = ?, image = ?, tags = ? WHERE id = ?')
       .run(title, content, finalImage, tagsJson, id);

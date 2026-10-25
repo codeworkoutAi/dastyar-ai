@@ -639,3 +639,60 @@ export function pcmToWavBuffer(pcmBuffer: Buffer, sampleRate = 24000, numChannel
 
   return Buffer.concat([header, pcmBuffer]);
 }
+
+/**
+ * Downloads an image from URL or converts a base64 buffer,
+ * resizes to maximum width/height (default 800px), compresses with WebP (quality 75),
+ * and returns an ultra-lightweight data:image/webp;base64 string.
+ */
+export async function optimizeImageToWebpDataUrl(input: string | Buffer, maxWidth = 800, quality = 75): Promise<string | null> {
+  try {
+    const sharp = (await import('sharp')).default;
+    let imageBuffer: Buffer;
+
+    if (Buffer.isBuffer(input)) {
+      imageBuffer = input;
+    } else if (typeof input === 'string') {
+      const trimmed = input.trim();
+      if (!trimmed) return null;
+      if (trimmed.startsWith('data:image/webp;base64,')) {
+        return trimmed;
+      }
+      if (trimmed.startsWith('data:image/')) {
+        const commaIdx = trimmed.indexOf(',');
+        if (commaIdx !== -1) {
+          imageBuffer = Buffer.from(trimmed.slice(commaIdx + 1), 'base64');
+        } else {
+          return null;
+        }
+      } else if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+        const response = await fetch(trimmed, {
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+          },
+          signal: AbortSignal.timeout(15000)
+        });
+        if (!response.ok) {
+          console.warn(`[ImageOptimizer] Failed to fetch image (${response.status}): ${trimmed}`);
+          return null;
+        }
+        const arrayBuf = await response.arrayBuffer();
+        imageBuffer = Buffer.from(arrayBuf);
+      } else {
+        return null;
+      }
+    } else {
+      return null;
+    }
+
+    const webpBuffer = await sharp(imageBuffer)
+      .resize({ width: maxWidth, height: maxWidth, fit: 'inside', withoutEnlargement: true })
+      .webp({ quality, effort: 6 })
+      .toBuffer();
+
+    return `data:image/webp;base64,${webpBuffer.toString('base64')}`;
+  } catch (err: any) {
+    console.warn('[ImageOptimizer] WebP conversion failed:', err?.message || err);
+    return null;
+  }
+}
