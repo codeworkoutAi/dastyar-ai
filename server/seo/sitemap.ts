@@ -52,8 +52,13 @@ export const sitemapHandler = (req: express.Request, res: express.Response) => {
     // 1. Static Core Pages
     const staticPages = [
       { path: '/', priority: '1.0', changefreq: 'daily' },
+      { path: '/chat', priority: '0.9', changefreq: 'daily' },
       { path: '/blog', priority: '0.9', changefreq: 'daily' },
+      { path: '/blog/news', priority: '0.7', changefreq: 'daily' },
       { path: '/store', priority: '0.9', changefreq: 'daily' },
+      { path: '/about', priority: '0.8', changefreq: 'monthly' },
+      { path: '/contact', priority: '0.8', changefreq: 'monthly' },
+      { path: '/ai-assistant', priority: '0.9', changefreq: 'weekly' },
     ];
     for (const page of staticPages) {
       xml += `  <url>\n    <loc>${escapeXml(baseUrl + page.path)}</loc>\n    <changefreq>${page.changefreq}</changefreq>\n    <priority>${page.priority}</priority>\n  </url>\n`;
@@ -78,12 +83,22 @@ export const sitemapHandler = (req: express.Request, res: express.Response) => {
 
     // 3. Dynamic Blog Pages & Tags
     try {
-      const news = db.prepare('SELECT id, title, image, createdAt, updatedAt, tags FROM news ORDER BY createdAt DESC').all() as any[];
+      const news = db.prepare('SELECT id, title, image, createdAt, tags FROM news ORDER BY createdAt DESC').all() as any[];
       const allTags = new Set<string>();
 
       for (const item of news) {
-        const date = safeDate(item.updatedAt || item.createdAt);
-        xml += `  <url>\n    <loc>${escapeXml(`${baseUrl}/blog/${item.id}`)}</loc>\n    <lastmod>${date}</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>0.8</priority>\n`;
+        let isCronNews = false;
+        if (item.tags) {
+          try {
+            const parsed = JSON.parse(item.tags);
+            if (Array.isArray(parsed) && parsed.some((t: string) => typeof t === 'string' && t.toLowerCase() === 'news')) {
+              isCronNews = true;
+            }
+          } catch (e) {}
+        }
+        const itemPriority = isCronNews ? '0.4' : '0.8';
+        const date = safeDate(item.createdAt);
+        xml += `  <url>\n    <loc>${escapeXml(`${baseUrl}/blog/${item.id}`)}</loc>\n    <lastmod>${date}</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>${itemPriority}</priority>\n`;
         if (item.image && typeof item.image === 'string' && !item.image.startsWith('data:')) {
           const imgUrl = item.image.startsWith('http') ? item.image : `${baseUrl}${item.image}`;
           xml += `    <image:image>\n      <image:loc>${escapeXml(imgUrl)}</image:loc>\n      <image:title><![CDATA[${item.title || ''}]]></image:title>\n    </image:image>\n`;

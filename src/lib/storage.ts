@@ -59,13 +59,10 @@ export const DEFAULT_SETTINGS: AppSettings = {
 };
 
 export function loadConversations(): Conversation[] {
+  if (currentUserScope === 'guest') return [];
   try {
     const key = getConversationsKey();
     let raw = localStorage.getItem(key);
-    if (!raw && currentUserScope === 'guest') {
-      const legacy = localStorage.getItem('persian_ai_conversations');
-      if (legacy) raw = legacy;
-    }
     if (!raw) return [];
     return JSON.parse(raw);
   } catch {
@@ -97,6 +94,9 @@ function stripOlderImages(conversations: Conversation[]): Conversation[] {
 }
 
 export function saveConversations(conversations: Conversation[]): void {
+  // Layer Zero invariant: Guest sessions are NOT persisted to localStorage
+  if (currentUserScope === 'guest') return;
+
   const key = getConversationsKey();
   try {
     localStorage.setItem(key, JSON.stringify(conversations));
@@ -116,10 +116,12 @@ export function saveConversations(conversations: Conversation[]): void {
 }
 
 export function loadActiveConversationId(): string | null {
+  if (currentUserScope === 'guest') return null;
   return localStorage.getItem(getActiveIdKey());
 }
 
 export function saveActiveConversationId(id: string | null): void {
+  if (currentUserScope === 'guest') return;
   const key = getActiveIdKey();
   if (id) {
     localStorage.setItem(key, id);
@@ -197,8 +199,8 @@ export function loadSettings(): AppSettings {
       } catch {}
     }
 
-    // Migration: ensure clean 6-profile system architecture & purge legacy cached cards (v8 to sync gemini-3.6-flash)
-    if (localStorage.getItem('fa_chat_profiles_clean_v8') !== 'true') {
+    // Migration: ensure clean 6-profile system architecture & purge legacy cached cards (v9 to sync general profile labels)
+    if (localStorage.getItem('fa_chat_profiles_clean_v9') !== 'true') {
       merged.providers.custom.profiles = [];
       merged.providers.custom.activeProfileId = 'free_default';
       merged.tools.routingRoles = {
@@ -207,7 +209,7 @@ export function loadSettings(): AppSettings {
         vision: 'free_vision'
       };
       try {
-        localStorage.setItem('fa_chat_profiles_clean_v8', 'true');
+        localStorage.setItem('fa_chat_profiles_clean_v9', 'true');
       } catch {}
     }
 

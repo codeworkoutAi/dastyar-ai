@@ -2,6 +2,37 @@
 
 Welcome, AI Agent! If you are reading this, you are working on the **Persian AI Chatbox** project. Please read this document carefully to understand the architecture, core features, and rules of this repository before making any changes.
 
+---
+
+## ⚠️ Layer Zero — Current Strategic Phase (Updated: 2026-10-26)
+
+**This section overrides any conflicting statement below.** If you find a conflict between this section and a lower section, **this section wins**. If a lower section describes a behavior that contradicts this section, treat that section as historical context — not current instruction.
+
+### Phase Status
+We are in an SEO + CRO improvement phase. The following changes are approved and in progress:
+
+1. **Guest chat allowed** — Guests may send up to **2 free messages** without login (using `free_default` profile only). After 2 messages → `AuthModal` opens with a Persian prompt. Guest sessions are **NOT** persisted to `localStorage`. The 15-message daily quota applies **only** to logged-in users. This **supersedes** the "Mandatory Login Policy (No Guest Chat)" in §3.
+2. **Homepage title changed** to: `Dastyar AI | دستیار هوش مصنوعی فارسی — چت، کد، اسناد`. This **supersedes** the default title in §11. The old string `دستیار هوشمند | چت با هوش مصنوعی رایگان و پیشرفته` is **preserved** as the homepage `<h2>` and must not be deleted (it currently ranks #7 for a valuable query).
+3. **New pages requested** — `/about`, `/contact`, `/ai-assistant`. These are **explicitly requested** by the current phase and do **NOT** violate Rule 4.
+4. **No model names in user-facing content** — No model name (Gemini, Claude, DeepSeek, GPT, Mistral) may appear in user-facing text, meta tags, JSON-LD schema, or footer. Model names remain valid **only** in backend code, env vars, DB config, and internal admin UI.
+5. **Banned phrases in all content** — «بدون کارت بانکی» (factually false — card-to-card exists) and «بدون فیلترشکن» (not a differentiator). Neither phrase may appear in any user-facing text, meta, schema, or footer.
+
+### Non-Negotiable Invariants (never change, regardless of phase)
+These are load-bearing. Do not refactor, rename, or "improve" them without explicit written approval from the owner:
+
+- eNamad meta `60366138` and trust seal markup in `src/components/Footer.tsx`
+- `X-Accel-Buffering: no` header in SSE streaming (`server/routes/chat.ts`)
+- `PROFILES_CACHE_VERSION` and 6-profile architecture logic (`src/lib/storage.ts`)
+- `free_daily_usage`, `free_daily_limit_user='15'`, `free_cooldown_hours='24'` quota logic
+- Web search kill-switch (`settings.tools.webSearch`) in `src/store/chatStore.ts`
+- Telegram proxy skip in production (`server/telegram/bot.ts`)
+- Admin API-key masking via `sanitizeProfile()` (`server/routes/admin.ts`)
+- `saveConversations` quota handling with Base64 strip (`src/lib/storage.ts`)
+- `dateUtils.ts` as single source of truth for Tehran-formatted timestamps
+- `crypto.randomUUID()` for generated IDs (not `Date.now()`)
+
+---
+
 ## 📌 Project Overview
 Persian AI Chatbox is a highly polished, full-stack AI platform for Persian-speaking users. Beyond chat, it includes a Pay-As-You-Go wallet balance store, an AI news blog, a Telegram bot, and comprehensive admin tools. The chat UI bridges multiple model providers (Gemini, Groq, OpenAI-compatible, etc.) with real-time streaming, voice, tools, and file/image analysis — all in a strictly RTL, Persian-localized experience.
 
@@ -25,6 +56,13 @@ Persian AI Chatbox is a highly polished, full-stack AI platform for Persian-spea
 - **Features**: Persian numerals toggle (`toPersianDigits`); TTS/Speech Recognition for `fa-IR`.
 
 ### 2. Six-Card Unified Model Architecture (Single Source of Truth)
+
+> [AMENDED 2026-10-26] **Profile Labels Finalized**: The 3 paid profile labels have been renamed to general labels with no model names (Final Decision — Phase 5):
+> - `paid_default`: **دستیار چت و گفتگوی پیشرفته** (`role: 'paid_default'`, model: `claude-sonnet-4-6`)
+> - `paid_coding`: **دستیار برنامه‌نویسی پیشرفته** (`role: 'paid_coding'`, model: `deepseek-v4-pro`)
+> - `paid_vision`: **دستیار اسناد و بینایی پیشرفته** (`role: 'paid_vision'`, model: `gemini-3.8-flash`)
+> Roles, internal models, and API keys remain completely untouched. `PROFILES_CACHE_VERSION` bumped to `v9` in `src/lib/storage.ts`.
+
 The platform operates exclusively on **exactly six stable system profiles** (divided into 3 Free and 3 Paid/Credit models). User BYOK personal profiles are completely eliminated in favor of managed system stability:
 
 - **Base/Fast Models (Lightweight & Cost-Effective, Smart Routing Defaults):**
@@ -32,9 +70,9 @@ The platform operates exclusively on **exactly six stable system profiles** (div
   2. `free_coding`: **دستیار برنامه‌نویسی و کد** ⬅️ `role: 'coding'` | مدل: `gemini-3.6-flash`
   3. `free_vision`: **دستیار بینایی و اسناد** ⬅️ `role: 'vision'` | مدل: `gemini-3.6-flash`
 - **Pro/Advanced Models (Pay-As-You-Go / Router.cheap):**
-  4. `paid_default`: **دستیار هوشمند کلود** ⬅️ `role: 'paid_default'` | مدل: `claude-sonnet-4-6`
-  5. `paid_coding`: **دستیار مهندسی دیپ‌سیک** ⬅️ `role: 'paid_coding'` | مدل: `deepseek-v4-pro`
-  6. `paid_vision`: **دستیار اسناد و بینایی جمینای** ⬅️ `role: 'paid_vision'` | مدل: `gemini-3.8-flash`
+  4. `paid_default`: **دستیار چت و گفتگوی پیشرفته** ⬅️ `role: 'paid_default'` | مدل: `claude-sonnet-4-6`
+  5. `paid_coding`: **دستیار برنامه‌نویسی پیشرفته** ⬅️ `role: 'paid_coding'` | مدل: `deepseek-v4-pro`
+  6. `paid_vision`: **دستیار اسناد و بینایی پیشرفته** ⬅️ `role: 'paid_vision'` | مدل: `gemini-3.8-flash`
 
 - **Key Security & Injection**:
   - The public endpoint `GET /api/default-profiles` returns sanitized profile metadata with `apiKey: ''` masked.
@@ -43,8 +81,12 @@ The platform operates exclusively on **exactly six stable system profiles** (div
   - Client storage uses `PROFILES_CACHE_VERSION` in `src/lib/storage.ts` to clear obsolete or custom cards and maintain only the 6 standard profiles. Smart routing defaults strictly to the 3 free cards.
 
 ### 3. Usage Quotas, Fair Use & Seamless Auto-Switch
-- **Mandatory Login Policy (No Guest Chat)**:
-  - Users MUST be authenticated before starting a chat session. Guest users attempting to send messages are prompted with the authentication modal (`AuthModal.tsx`).
+
+- **Mandatory Login Policy (No Guest Chat)** — [AMENDED 2026-10-26]
+  ~~Users MUST be authenticated before starting a chat session. Guest users attempting to send messages are prompted with the authentication modal (`AuthModal.tsx`).~~
+
+  **Current behavior (superseded by Layer Zero)**: Guest users may send **2 messages** without login. After 2 messages, `AuthModal` opens with the Persian prompt. Guest sessions are NOT persisted to `localStorage`. Guests can only access `free_default` profile. The 15-message daily quota applies **only** to logged-in users. Guest rate limit enforced via `guestChatRateLimiter` in `server/middleware/rateLimiter.ts` (IP + fingerprint).
+
 - **Free Quota (15 Messages per 24-Hour Day)**:
   - Each registered user receives **15 free messages** within a rolling **24-hour cooldown window** (`windowStart` in `free_daily_usage`).
   - Configuration in `site_settings`: `free_daily_limit_user = '15'` and `free_cooldown_hours = '24'`.
@@ -92,16 +134,34 @@ The platform operates exclusively on **exactly six stable system profiles** (div
 - Public blog + tag archives (`/blog`, `/blog/:id`, `/blog/tag/:tagName`).
 - Hourly cron (`Asia/Tehran`) in `server/services/newsCron.ts`: RSS failover → Gemini rewrite/tags → DB → optional Telegram channel post.
 - Resilient feed fetch (multi-feed, timeouts, headers). Do not break Telegram fallback or schedule.
+- **[AMENDED 2026-10-26] Blog strategy direction**: The hourly cron remains active and must not be broken. However, cron output is now labeled as "news" (tag: `news` or `/blog/news`) and is intended to serve as a secondary content channel. The primary blog content channel is hand-written, deep, unique articles (2–3 per week) targeting real user queries. Do not delete or disable the cron. Do not auto-generate deep articles — the owner writes them.
 
 ### 10. Telegram Bot
 - Telegraf bot in `server/telegram/bot.ts`: catalog, checkout/receipts, support, channel membership, deep links.
-- **Proxy rule (critical)**: If `PROXY_URL` points at localhost/`127.0.0.1`/`::1` and `NODE_ENV === 'production'`, **skip the proxy and connect directly** (Render/cloud-safe). Keep the localhost proxy for local dev. Do not “fix” production by forcing a local proxy.
+- **Proxy rule (critical)**: If `PROXY_URL` points at localhost/`127.0.0.1`/`::1` and `NODE_ENV === 'production'`, **skip the proxy and connect directly** (Render/cloud-safe). Keep the localhost proxy for local dev. Do not "fix" production by forcing a local proxy.
 
 ### 11. SEO & eNamad
+
 - Dynamic `/sitemap.xml` (static routes + blog + tags + store products) and `/robots.txt` in `server/index.ts`.
 - Production SPA fallback injects title/description/OG/Twitter/JSON-LD via `renderHtmlWithSeo`. Client SPA updates use `src/lib/seo.ts` (`setPageSeo`).
-- Default page title: `دستیار هوشمند | چت با هوش مصنوعی رایگان و پیشرفته`.
+
+- **Default page title** — [AMENDED 2026-10-26]
+  - Old (superseded): `دستیار هوشمند | چت با هوش مصنوعی رایگان و پیشرفته`
+  - **New (current)**: `Dastyar AI | دستیار هوش مصنوعی فارسی — چت، کد، اسناد`
+  - **Preserve the old string** as the homepage `<h2>`. It currently ranks #7 for a valuable query and must not be deleted. Only the `<title>` tag changes.
+
 - **eNamad**: Keep `<meta name="enamad" content="60366138" />` in `index.html` and the trust seal markup in `src/components/Footer.tsx` (including `referrerpolicy="origin"`). Do not remove or casually rewrite verification assets (`60366138.txt` in root/public) unless explicitly asked.
+
+- **[AMENDED 2026-10-26] SEO Phase Pages**: The following pages are approved and requested by Layer Zero. Building them does NOT violate Rule 4:
+  - `/about` — About page (H1: «درباره Dastyar AI»)
+  - `/contact` — Contact page (H1: «تماس با Dastyar AI»)
+  - `/ai-assistant` — Informational page (H1: «دستیار هوش مصنوعی چیست؟»)
+  Each must be registered in the dynamic sitemap, in `renderHtmlWithSeo`, and in `setPageSeo`.
+
+- **[AMENDED 2026-10-26] Keyword intent split**:
+  - Homepage targets: «دستیار هوش مصنوعی فارسی»، «دستیار هوشمند» (transactional)
+  - `/ai-assistant` targets: «دستیار هوش مصنوعی چیست» (informational)
+  - These two H1s must **never** be identical or near-identical.
 
 ---
 
@@ -111,6 +171,8 @@ The platform operates exclusively on **exactly six stable system profiles** (div
 2. **Preserve the Build Script**: `server/index.ts` handles API routes, Vite middleware in dev, static + SEO injection in prod. Never break `npm run build` / `start` in `package.json`.
 3. **Never Expose API Keys**: All LLM/search/TTS/provider calls MUST route through the Express server. Never call external AI APIs directly from the React frontend.
 4. **No Unrequested Features**: Stick strictly to the user's prompt. Do not add unrequested pages, sidebars, or databases unless explicitly asked.
+
+   **Clarification [AMENDED 2026-10-26]**: Pages explicitly listed in the "Layer Zero — Current Strategic Phase" section at the top of this file ARE requested. Currently: `/about`, `/contact`, `/ai-assistant`. Do not refuse to build them citing this rule.
 5. **STRICT 3D UI DESIGN ARCHITECTURE (CLAYMORPHISM & NEUMORPHISM DUAL SUPPORT)**:
    - The platform operates with a specialized dual 3D UI design system: **Claymorphism** (`data-ui-style="clay"` / default) and **Neumorphism** (`data-ui-style="neumorphic"`).
    - **DO NOT USE FLAT/CLASSIC OR RAW GENERIC STYLES & NEVER HARDCODE AD-HOC CLASSES**: Never write raw flat Tailwind backgrounds, borders, or generic boxes that bypass the 3D design language.
@@ -176,6 +238,32 @@ The platform operates exclusively on **exactly six stable system profiles** (div
     - **سرعت رندر بالای صفحه (Above-the-Fold FCP/LCP)**: المان‌های بالادست لندینگ‌پیج (تیتر اصلی `h1`، زیرعنوان و بنر بالای صفحه) هرگز نباید کلاس‌های تاخیری انیمیشن مانند `.reveal-init` با `opacity: 0` داشته باشند. این المان‌ها باید فوراً با شفافیت ۱۰۰٪ ترسیم شوند تا شاخص‌های FCP و LCP روی گوشی موبایل دچار تاخیر نشوند.
     - **دسترس‌پذیری و کنتراست رنگ (WCAG AA 4.5:1)**: دکمه‌های اصلی حاوی متن سفید `#ffffff` باید حداقل دارای رنگ پس‌زمینه `#2563eb` یا تیره‌تر باشند تا استاندارد کنتراست رنگ رعایت شود (رنگ قدیمی `#3b82f6` نسبت ۳.۶۷:۱ داشت و مردود می‌شد). کلیه دکمه‌ها و لینک‌های نسخه موبایل که آیکون‌محور هستند باید دارای `aria-label` توصیفی باشند.
     - **حفاظت از فایل‌های استاتیک در برابر فال‌بک SPA**: درخواست‌های ربات‌ها یا مانیفست‌ها برای فایل‌های متنی/داده‌ای نظیر `/llms.txt`، `/ai-catalog.json` یا هر پسوند گم‌شده (`.json`، `.txt`، `.png`) هرگز نباید صفحه HTML برگردانند؛ بلکه باید فرمت صحیح داده یا کد وضعیت ۴۰۴ صریح داده شود.
+
+---
+
+## 🧠 Known False Assumptions (read this before every task)
+
+Agents that previously worked on this repo have made the following mistakes. Do not repeat them.
+
+| Assumption | Reality |
+|---|---|
+| "The login wall applies to all messages" | **False.** 2 free guest messages are allowed (see Layer Zero) |
+| "Model names (Gemini, Claude, DeepSeek) should appear in UI" | **False.** They stay in backend only. No model names in user-facing text, meta, schema, or footer. All 6 profiles now have clean, general labels without model names |
+| "The default title is 'دستیار هوشمند \| ...'" | **False.** It's now 'Dastyar AI \| دستیار هوش مصنوعی فارسی — چت، کد، اسناد'. The old string survives as H2 |
+| "Adding new pages violates Rule 4" | **False.** Pages in Layer Zero (`/about`, `/contact`, `/ai-assistant`) are explicitly requested |
+| "The /store should be noindexed because it's empty" | **False.** We reverted this. The store has an active wallet and is indexed |
+| "llms.txt is a strategic priority" | **False.** It's optional. Google currently ignores it for ranking |
+| "Guest sessions should be persisted" | **False.** Guest sessions are ephemeral — no localStorage |
+| "The 15-message quota applies to guests" | **False.** It applies only to logged-in users |
+| "Persian numerals are cosmetic" | **False.** `toPersianDigits` is mandatory in all user-facing numbers |
+| "I should add a dark mode toggle / sidebar / extra pages" | **False.** Not requested. Do not add |
+| "The hourly news cron should be disabled for better SEO" | **False.** Keep it running. It's a secondary content channel — do not delete or disable |
+| "I should auto-generate deep blog articles to fill the blog" | **False.** Deep articles are hand-written by the owner. Do not auto-generate |
+| "The old title string should be deleted when the new one is added" | **False.** The old string is a ranking asset (#7). Preserve as H2 |
+| "I should rename the 3 profile labels that contain model names" | **False.** Renamed in Phase 5 to general labels (دستیار چت و گفتگوی پیشرفته، etc.). Do not touch |
+| "Vazirmatn/Estedad static font packages should be added" | **False.** Only variable fonts (§25) |
+| "I should use `new Date(dbString)` for timestamps" | **False.** Use `parseDbDate` + `formatTehranDate` from `dateUtils.ts` (Rule 22) |
+| "I should use `window.confirm()` for destructive admin actions" | **False.** Server-side guards required (Rule 21) |
 
 ---
 

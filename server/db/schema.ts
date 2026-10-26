@@ -91,6 +91,21 @@ export function initializeSchema() {
         console.log('[Database] Adding isArchived column to users table...');
         db.exec("ALTER TABLE users ADD COLUMN isArchived INTEGER DEFAULT 0;");
       }
+      if (usersTableInfo.length > 0 && !usersTableInfo.some(col => col.name === 'source')) {
+        console.log('[Database] Adding source column to users table...');
+        db.exec("ALTER TABLE users ADD COLUMN source TEXT DEFAULT 'web';");
+      }
+      if (usersTableInfo.length > 0 && !usersTableInfo.some(col => col.name === 'deviceFingerprint')) {
+        console.log('[Database] Adding deviceFingerprint column to users table...');
+        db.exec("ALTER TABLE users ADD COLUMN deviceFingerprint TEXT;");
+      }
+      // Backfill existing users with correct source channel (Telegram first, then Bazaar higher priority)
+      try {
+        db.prepare("UPDATE users SET source = 'telegram' WHERE (email LIKE '%@telegram.local' OR telegramId IS NOT NULL) AND source = 'web'").run();
+        db.prepare("UPDATE users SET source = 'bazaar' WHERE email LIKE '%@bazaar.guest' AND source = 'web'").run();
+      } catch (backfillErr) {
+        console.warn('[Database] Channel backfill warning:', backfillErr);
+      }
     } catch (e) {
       console.error('[Database] Failed to add wallet columns to users:', e);
     }
@@ -111,6 +126,8 @@ export function initializeSchema() {
       resetToken TEXT,
       resetTokenExpiry DATETIME,
       role TEXT DEFAULT 'user',
+      source TEXT DEFAULT 'web',
+      deviceFingerprint TEXT,
       botState TEXT DEFAULT 'normal',
       walletBalance INTEGER DEFAULT 0,
       hasReceivedWelcomeBonus INTEGER DEFAULT 0,
@@ -322,15 +339,35 @@ export function initializeSchema() {
       // 3. Free Vision
       seedStmt.run('free_vision', 'دستیار بینایی و اسناد', 'https://generativelanguage.googleapis.com', '', 'gemini-3.6-flash', '', 'vision', 2, 1);
       
-      // 4. Paid Default (Pro smart Claude assistant)
-      seedStmt.run('paid_default', 'دستیار هوشمند کلود', 'https://router.cheap/v1', process.env.ROUTER_CHEAP_KEY || '', 'claude-sonnet-4-6', '', 'paid_default', 3, 1);
+      // 4. Paid Default (Pro general chat assistant)
+      seedStmt.run('paid_default', 'دستیار چت و گفتگوی پیشرفته', 'https://router.cheap/v1', process.env.ROUTER_CHEAP_KEY || '', 'claude-sonnet-4-6', '', 'paid_default', 3, 1);
       // 5. Paid Coding
-      seedStmt.run('paid_coding', 'دستیار مهندسی دیپ‌سیک', 'https://router.cheap/v1', process.env.ROUTER_CHEAP_KEY || '', 'deepseek-v4-pro', '', 'paid_coding', 4, 1);
+      seedStmt.run('paid_coding', 'دستیار برنامه‌نویسی پیشرفته', 'https://router.cheap/v1', process.env.ROUTER_CHEAP_KEY || '', 'deepseek-v4-pro', '', 'paid_coding', 4, 1);
       // 6. Paid Vision
-      seedStmt.run('paid_vision', 'دستیار اسناد و بینایی جمینای', 'https://router.cheap/v1', process.env.ROUTER_CHEAP_KEY || '', 'gemini-3.8-flash', '', 'paid_vision', 5, 1);
+      seedStmt.run('paid_vision', 'دستیار اسناد و بینایی پیشرفته', 'https://router.cheap/v1', process.env.ROUTER_CHEAP_KEY || '', 'gemini-3.8-flash', '', 'paid_vision', 5, 1);
     }
   } catch (seedErr) {
     console.error('[Database] Failed to seed default profiles:', seedErr);
+  }
+
+  // Migration: update paid profile labels from model names to general labels (Phase 5 - Idempotent)
+  try {
+    const updateStmt = db.prepare(`
+      UPDATE default_profiles 
+      SET name = ?, updatedAt = CURRENT_TIMESTAMP 
+      WHERE (id = ? OR role = ?) AND (name = ? OR name LIKE ?)
+    `);
+
+    // 1. paid_default
+    updateStmt.run('دستیار چت و گفتگوی پیشرفته', 'paid_default', 'paid_default', 'دستیار هوشمند کلود', '%کلود%');
+
+    // 2. paid_coding
+    updateStmt.run('دستیار برنامه‌نویسی پیشرفته', 'paid_coding', 'paid_coding', 'دستیار مهندسی دیپ‌سیک', '%دیپ%سیک%');
+
+    // 3. paid_vision
+    updateStmt.run('دستیار اسناد و بینایی پیشرفته', 'paid_vision', 'paid_vision', 'دستیار اسناد و بینایی جمینای', '%جمینای%');
+  } catch (migErr) {
+    console.error('[Database] Failed to run profile labels migration:', migErr);
   }
 
   // Create Site Settings table
@@ -339,6 +376,17 @@ export function initializeSchema() {
       key TEXT PRIMARY KEY,
       value TEXT NOT NULL,
       updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  // Create Contact Messages table
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS contact_messages (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      email TEXT NOT NULL,
+      message TEXT NOT NULL,
+      createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
     )
   `);
 
@@ -398,8 +446,14 @@ export function initializeSchema() {
     } catch {}
     seedSetting('api_dollar_rate', '200000'); // 200,000 Tomans per $1 API by default
     seedSetting('free_daily_limit_user', '15'); // 15 free messages per 24-hour day
+    seedSetting('free_daily_limit_guest', '3'); // 3 free messages trial for guest
+    seedSetting('free_daily_limit_telegram', '20'); // 20 free messages for telegram users
+    seedSetting('free_daily_limit_bazaar', '30'); // 30 free messages for Cafe Bazaar users
     seedSetting('free_cooldown_hours', '24'); // 24-hour daily quota cooldown
-    seedSetting('free_daily_limit_guest', '5');
+    try {
+      db.prepare("UPDATE site_settings SET value = '15' WHERE key = 'free_daily_limit_user' AND value != '15'").run();
+      db.prepare("UPDATE site_settings SET value = '3' WHERE key = 'free_daily_limit_guest' AND value != '3'").run();
+    } catch {}
     seedSetting('bazaarpay_destination', 'lifeencoder_bazaar');
     seedSetting('bazaarpay_token', '90ec06f91b84af3fd6956742ae0c30effdecd142');
     seedSetting('bazaarpay_enabled', 'true');
