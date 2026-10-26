@@ -58,15 +58,35 @@ export const MessageInput: React.FC = React.memo(() => {
  const [text, setText] = useState('');
  const [isMultiLine, setIsMultiLine] = useState(false);
 
- // Auto-fill prompt from URL (from Tag Archive links)
- useEffect(() => {
- const promptParam = searchParams.get('prompt');
- if (promptParam) {
- setText(promptParam);
- searchParams.delete('prompt');
- setSearchParams(searchParams, { replace: true });
- }
- }, [searchParams, setSearchParams]);
+ const lastProcessedPromptRef = useRef<string | null>(null);
+
+	// Auto-fill prompt from URL query parameter (?prompt=)
+	useEffect(() => {
+		const rawPrompt = searchParams.get('prompt');
+		if (rawPrompt === null || rawPrompt.trim() === '') {
+			lastProcessedPromptRef.current = rawPrompt;
+			return;
+		}
+		if (lastProcessedPromptRef.current === rawPrompt) return;
+		lastProcessedPromptRef.current = rawPrompt;
+
+		let decoded = rawPrompt;
+		try {
+			decoded = decodeURIComponent(rawPrompt);
+		} catch {
+			decoded = rawPrompt;
+		}
+		if (decoded.length > 0) {
+			setText(decoded);
+			setTimeout(() => {
+				if (textareaRef.current) {
+					textareaRef.current.focus();
+					textareaRef.current.style.height = 'auto';
+					textareaRef.current.style.height = Math.min(textareaRef.current.scrollHeight, 140) + 'px';
+				}
+			}, 60);
+		}
+	}, [searchParams]);
  const [attachments, setAttachments] = useState<{
  id: string; dataUrl: string; mimeType: string; name: string; size: string;
  status: 'processing' | 'ready'; progress: number;

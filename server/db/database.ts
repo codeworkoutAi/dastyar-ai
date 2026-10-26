@@ -67,8 +67,8 @@ function connect() {
     const hostname = new URL(syncUrl).hostname;
     // lookupSync only exists on newer Node; fall back to the callback form, which is
     // fine here because connect() itself is already deferred off the startup path.
-    if (typeof dns.lookupSync === 'function') {
-      dns.lookupSync(hostname);
+    if (typeof (dns as any).lookupSync === 'function') {
+      (dns as any).lookupSync(hostname);
       tursoResolvable = true;
     } else {
       dns.lookup(hostname, (err: any) => {

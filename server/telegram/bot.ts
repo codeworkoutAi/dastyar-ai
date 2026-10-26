@@ -94,7 +94,7 @@ export function startTelegramBot() {
       try {
         const existingUser = db.prepare('SELECT id FROM users WHERE telegramId = ?').get(tgId);
         if (!existingUser) {
-          db.prepare('INSERT INTO users (telegramId, name) VALUES (?, ?)').run(tgId, name);
+          db.prepare("INSERT INTO users (telegramId, name, source) VALUES (?, ?, 'telegram')").run(tgId, name);
           // Fire and forget sync
           syncDatabase();
         }
@@ -648,10 +648,10 @@ export function startTelegramBot() {
         const email = username ? `${username}@telegram.local` : `tg_${tgId}@telegram.local`;
         const defaultAvatar = `https://api.dicebear.com/7.x/bottts/svg?seed=${tgId}`;
 
-        const insertStmt = db.prepare('INSERT INTO users (telegramId, email, name, avatar, role) VALUES (?, ?, ?, ?, ?)');
+        const insertStmt = db.prepare("INSERT INTO users (telegramId, email, name, avatar, role, source) VALUES (?, ?, ?, ?, ?, 'telegram')");
         const info = insertStmt.run(tgId, email, name, defaultAvatar, role);
         syncDatabase();
-        user = { id: info.lastInsertRowid, telegramId: tgId, email, name, avatar: defaultAvatar, role };
+        user = { id: info.lastInsertRowid, telegramId: tgId, email, name, avatar: defaultAvatar, role, source: 'telegram' };
       }
 
       const jwtToken = jwt.sign(

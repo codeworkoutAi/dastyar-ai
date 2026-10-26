@@ -10,6 +10,9 @@ import { responseCache, CACHE_TTL_MS, computeCacheKey, setCachedResponse } from 
 import { hasSufficientBalance, deductChatCost, calculateModelCostUsd, getUserWallet, logFreeChatUsage, deductImageCost } from '../services/walletService';
 import jwt from 'jsonwebtoken';
 import { JWT_SECRET } from '../middleware/auth';
+import { guestChatRateLimiter } from '../middleware/rateLimiter';
+import { getQuotaLimit } from '../services/quotaService';
+import { getSiteSettingNumber } from '../services/settingsService';
 const router = express.Router();
 
 const chatStreamLimiter = rateLimit({
@@ -20,7 +23,7 @@ const chatStreamLimiter = rateLimit({
   message: { error: 'تعداد درخواست‌های گفت‌وگو بیش از حد مجاز است. لطفاً کمی بعد دوباره تلاش کنید.' }
 });
 
-router.post('/api/chat/stream', chatStreamLimiter, async (req, res) => {
+router.post('/api/chat/stream', chatStreamLimiter, guestChatRateLimiter, async (req, res) => {
   // Setup SSE headers
   res.setHeader('Content-Type', 'text/event-stream');
   res.setHeader('Cache-Control', 'no-cache, no-transform');
@@ -66,6 +69,11 @@ router.post('/api/chat/stream', chatStreamLimiter, async (req, res) => {
     usage?: { promptTokens?: number; completionTokens?: number; totalTokens?: number };
     insufficientBalance?: boolean;
     quotaExceeded?: boolean;
+    remaining?: number;
+    limit?: number;
+    channel?: string;
+    resetAt?: number;
+    cooldownHours?: number;
   }) => {
     if (isEnded || res.writableEnded || res.destroyed) return;
     try {
@@ -190,40 +198,31 @@ router.post('/api/chat/stream', chatStreamLimiter, async (req, res) => {
     // Always false: client keys are telemetry only, never a quota/billing bypass.
     const hasCustomUserKey = false;
 
-    // Guest Trial Policy: Allow unauthenticated guests on free models up to free_daily_limit_guest (5 messages)
-    if (!userId && !isFreeModel) {
-      sendChunk({
-        error: 'استفاده از مدل‌های پیشرفته اعتباری نیازمند ورود به حساب کاربری است. لطفاً برای دسترسی کامل وارد شوید.',
-        insufficientBalance: true,
-        done: true
-      });
-      return finishStream();
+    // Guest Trial Policy: Allow unauthenticated guests strictly on free_default profile up to free_daily_limit_guest (3 messages)
+    if (!userId) {
+      if (!isFreeModel || (customProfileId && customProfileId !== 'free_default')) {
+        sendChunk({
+          error: 'استفاده از مدل‌های تخصصی و پیشرفته نیازمند ورود به حساب کاربری است. لطفاً برای دسترسی کامل وارد شوید.',
+          insufficientBalance: true,
+          done: true
+        });
+        return finishStream();
+      }
     }
 
-    let isBazaarUser = false;
+    let userSource = 'web';
     if (userId) {
-       const userRow = db.prepare('SELECT email FROM users WHERE id = ?').get(userId) as any;
-       if (userRow?.email?.endsWith('@bazaar.guest')) {
-          isBazaarUser = true;
-       }
+       const userRow = db.prepare('SELECT source FROM users WHERE id = ?').get(userId) as any;
+       userSource = userRow?.source || 'web';
     }
 
     // Check 24-hour rolling window limit for Free Models
     if (isFreeModel && !hasCustomUserKey && userRole !== 'admin') {
       const now = Date.now();
-      const cooldownHours = parseInt((db.prepare("SELECT value FROM site_settings WHERE key = 'free_cooldown_hours'").get() as any)?.value || '24', 10) || 24;
+      const cooldownHours = getSiteSettingNumber('free_cooldown_hours', 24);
       const WINDOW_MS = cooldownHours * 60 * 60 * 1000;
       const identifier = userId ? `user:${userId}` : `ip:${req.ip}`;
-      
-      let limitStr = userId ? 
-        (db.prepare("SELECT value FROM site_settings WHERE key = 'free_daily_limit_user'").get() as any)?.value || '15' :
-        (db.prepare("SELECT value FROM site_settings WHERE key = 'free_daily_limit_guest'").get() as any)?.value || '5';
-      
-      if (isBazaarUser) {
-        limitStr = '30';
-      }
-      
-      const windowLimit = parseInt(limitStr, 10);
+      const windowLimit = getQuotaLimit(userId, userSource);
       
       // Get current window usage
       let usage = db.prepare("SELECT count, windowStart FROM free_daily_usage WHERE id = ? AND date = 'window'").get(identifier) as any;
@@ -239,6 +238,11 @@ router.post('/api/chat/stream', chatStreamLimiter, async (req, res) => {
             error: `سهمیه تست مهمان (${windowLimit} پیام رایگان) شما به پایان رسیده است. برای ادامه گفتگو، ذخیره تاریخچه و دریافت روزانه ۱۵ پیام رایگان دائمی، به سادگی وارد حساب کاربری خود شوید.`,
             insufficientBalance: true,
             quotaExceeded: true,
+            remaining: 0,
+            limit: windowLimit,
+            channel: 'guest',
+            resetAt: (usage.windowStart || now) + WINDOW_MS,
+            cooldownHours,
             done: true
           });
           return finishStream();
@@ -282,6 +286,11 @@ router.post('/api/chat/stream', chatStreamLimiter, async (req, res) => {
             error: `سهمیه ${windowLimit} پیام رایگان روزانه شما به پایان رسیده است. ⏱️ سهمیه بعدی شما حدود ${timeLeftStr} دیگر فعال خواهد شد. در صورت تمایل می‌توانید با شارژ کیف پول خود به هر میزان دلخواه، با مدل‌های پیشرفته اعتباری به گفتگو ادامه دهید.`,
             insufficientBalance: true,
             quotaExceeded: true,
+            remaining: 0,
+            limit: windowLimit,
+            channel: userSource,
+            resetAt: usage.windowStart + WINDOW_MS,
+            cooldownHours,
             done: true
           });
           return finishStream();
@@ -445,11 +454,16 @@ router.post('/api/chat/stream', chatStreamLimiter, async (req, res) => {
 
     // KILL-SWITCH (server-side, authoritative): no live web / tool grounding may run
     // unless the client explicitly enabled webSearch. Never trust activeTool alone.
-    const webSearchAllowed = apiConfig?.webSearch === true;
+    // Decision: Web Grounding is strictly blocked for guest trial users (Boolean(userId) required).
+    const webSearchAllowed = apiConfig?.webSearch === true && Boolean(userId);
 
     if (!isDateInquiry) {
       if (!webSearchAllowed) {
-        console.log('[Backend] Web search & tools disabled by user kill-switch.');
+        if (!userId && apiConfig?.webSearch === true) {
+          console.log('[Backend] Web search & tools blocked for unauthenticated guest trial.');
+        } else {
+          console.log('[Backend] Web search & tools disabled by user kill-switch.');
+        }
       } else {
         // All grounding layers run CONCURRENTLY and are merged afterwards.
         //

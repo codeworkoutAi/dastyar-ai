@@ -48,7 +48,8 @@ export const doSilentBazaarLogin = async (login: (user: any, token: string) => v
           email, 
           password, 
           name: 'کاربر کافه‌بازار', 
-          avatar: `https://api.dicebear.com/7.x/bottts/svg?seed=${guestId}` 
+          avatar: `https://api.dicebear.com/7.x/bottts/svg?seed=${guestId}`,
+          source: 'bazaar'
         })
       });
     }

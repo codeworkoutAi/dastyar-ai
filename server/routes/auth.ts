@@ -121,7 +121,7 @@ router.post('/otp/send', otpSendLimiter, async (req, res) => {
 // POST /api/auth/otp/verify (Verify OTP & Login/Register)
 router.post('/otp/verify', otpVerifyLimiter, async (req, res) => {
   try {
-    const { phone, code, promoCode } = req.body;
+    const { phone, code, promoCode, source, deviceFingerprint } = req.body;
     if (!phone || !code) {
       return res.status(400).json({ error: 'شماره موبایل و کد تایید الزامی است.' });
     }
@@ -161,9 +161,11 @@ router.post('/otp/verify', otpVerifyLimiter, async (req, res) => {
       const maskedPhone = `${normalizedPhone.slice(0, 4)}***${normalizedPhone.slice(-4)}`;
       const defaultName = `کاربر ${maskedPhone}`;
       const defaultAvatar = `https://api.dicebear.com/9.x/shapes/svg?seed=${normalizedPhone}`;
+      const userSource = (source && typeof source === 'string') ? source.slice(0, 32) : 'web';
+      const userFingerprint = (deviceFingerprint && typeof deviceFingerprint === 'string') ? deviceFingerprint.slice(0, 128) : null;
 
-      const insertStmt = db.prepare('INSERT INTO users (phone, name, avatar, role) VALUES (?, ?, ?, ?)');
-      const info = insertStmt.run(normalizedPhone, defaultName, defaultAvatar, role);
+      const insertStmt = db.prepare('INSERT INTO users (phone, name, avatar, role, source, deviceFingerprint) VALUES (?, ?, ?, ?, ?, ?)');
+      const info = insertStmt.run(normalizedPhone, defaultName, defaultAvatar, role, userSource, userFingerprint);
       const userId = Number(info.lastInsertRowid);
 
       const bonusResult = grantWelcomeBonusIfEligible(userId, promoCode);
@@ -219,7 +221,7 @@ router.post('/otp/verify', otpVerifyLimiter, async (req, res) => {
 // POST /api/auth/register (Email)
 router.post('/register', registerLimiter, async (req, res) => {
   try {
-    const { email, password, name, avatar, promoCode } = req.body;
+    const { email, password, name, avatar, promoCode, source, deviceFingerprint } = req.body;
 
     if (!email || !email.includes('@') || !password || password.length < 6) {
       return res.status(400).json({ error: 'ایمیل معتبر و رمز عبور (حداقل ۶ کاراکتر) الزامی است.' });
@@ -240,9 +242,13 @@ router.post('/register', registerLimiter, async (req, res) => {
 
     const randomColors = '264653,2a9d8f,e9c46a,f4a261,e76f51';
     const defaultAvatar = avatar || `https://api.dicebear.com/9.x/shapes/svg?seed=${email}`;
+    const userSource = (source && typeof source === 'string') 
+      ? source.slice(0, 32) 
+      : (email.endsWith('@bazaar.guest') ? 'bazaar' : 'web');
+    const userFingerprint = (deviceFingerprint && typeof deviceFingerprint === 'string') ? deviceFingerprint.slice(0, 128) : null;
 
-    const insertStmt = db.prepare('INSERT INTO users (email, passwordHash, name, avatar, role) VALUES (?, ?, ?, ?, ?)');
-    const info = insertStmt.run(email, passwordHash, name || '', defaultAvatar, role);
+    const insertStmt = db.prepare('INSERT INTO users (email, passwordHash, name, avatar, role, source, deviceFingerprint) VALUES (?, ?, ?, ?, ?, ?, ?)');
+    const info = insertStmt.run(email, passwordHash, name || '', defaultAvatar, role, userSource, userFingerprint);
     syncDatabase();
 
     const userId = Number(info.lastInsertRowid);
@@ -375,9 +381,9 @@ router.post('/google', googleAuthLimiter, async (req, res) => {
         const { count } = countStmt.get() as { count: number };
         const role = count === 0 ? 'admin' : 'user';
 
-        const insertUserStmt = db.prepare('INSERT INTO users (email, googleId, name, avatar, role) VALUES (?, ?, ?, ?, ?)');
-        const info = insertUserStmt.run(email, googleId, name, avatar, role);
-        user = { id: Number(info.lastInsertRowid), email, googleId, name, avatar, role };
+        const insertUserStmt = db.prepare('INSERT INTO users (email, googleId, name, avatar, role, source) VALUES (?, ?, ?, ?, ?, ?)');
+        const info = insertUserStmt.run(email, googleId, name, avatar, role, 'web');
+        user = { id: Number(info.lastInsertRowid), email, googleId, name, avatar, role, source: 'web' };
         grantWelcomeBonusIfEligible(user.id, promoCode);
       }
     }

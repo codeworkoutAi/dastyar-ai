@@ -31,6 +31,22 @@ export const aiRouteLimiter = rateLimit({
   },
 });
 
+export const guestChatRateLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 10, // Max 10 requests per IP per minute for unauthenticated guest trial
+  skip: (req) => Boolean(req.headers.authorization && req.headers.authorization.startsWith('Bearer ')),
+  standardHeaders: true,
+  legacyHeaders: false,
+  validate: {
+    xForwardedForHeader: false,
+    forwardedHeader: false,
+    default: true,
+  },
+  message: {
+    error: 'تعداد درخواست‌های گفت‌وگوی مهمان بیش از حد مجاز است. لطفاً یک دقیقه دیگر تلاش کنید یا وارد حساب خود شوید.',
+  },
+});
+
 export const adminRateLimiter = rateLimit({
   windowMs: 60 * 1000, // 1 minute
   max: 120, // Max 120 requests per IP per minute
@@ -98,6 +114,21 @@ export const googleAuthLimiter = rateLimit({
   },
   message: {
     error: 'تعداد تلاش‌های ورود با گوگل بیش از حد مجاز است. لطفاً کمی بعد دوباره تلاش کنید.',
+  },
+});
+
+export const contactRateLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 3, // Max 3 contact form submissions per IP per 15 minutes
+  standardHeaders: true,
+  legacyHeaders: false,
+  validate: {
+    xForwardedForHeader: false,
+    forwardedHeader: false,
+    default: true,
+  },
+  message: {
+    error: 'تعداد پیام‌های ارسالی بیش از حد مجاز است. لطفاً ۱۵ دقیقه دیگر دوباره تلاش کنید.',
   },
 });
 
