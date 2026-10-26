@@ -1,3 +1,4 @@
+import { ChatPromptCTA } from '../../components/ChatPromptCTA';
 import { useState, useEffect } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import { parseDbDate } from '../../lib/dateUtils';
@@ -86,7 +87,17 @@ export function Blog() {
  })));
 
  // Filter Logic
- const filteredNews = news.filter(item => {
+ 
+  const isNewsPost = (item: NewsItem) => {
+    try {
+      const parsed = JSON.parse(item.tags || '[]');
+      return Array.isArray(parsed) && parsed.some(t => typeof t === 'string' && t.toLowerCase() === 'news');
+    } catch {
+      return false;
+    }
+  };
+
+  const filteredNews = news.filter(item => {
  // Search Filter
  if (searchQuery) {
  const query = searchQuery.toLowerCase();
@@ -193,7 +204,7 @@ export function Blog() {
  const postCanonical = `${window.location.origin}/blog/${selectedPost.id}`;
 
  setPageSeo({
- title: `${selectedPost.title} | مجله هوش مصنوعی`,
+ title: `${selectedPost.title} | Dastyar AI`,
  description: cleanSnippet || 'مقاله و خبر هوش مصنوعی در دستیار هوشمند',
  canonical: postCanonical,
  ogImage: selectedPost.image,
@@ -240,7 +251,7 @@ export function Blog() {
  });
  } else {
  setPageSeo({
- title: 'مجله و اخبار هوش مصنوعی | آخرین رویدادها، تحلیل‌ها و آموزش‌ها',
+ title: 'مجله اخبار و مقالات هوش مصنوعی | Dastyar AI',
  description: 'تازه‌ترین اخبار هوش مصنوعی، بررسی مدل‌های جدید زبان طبیعی، مقالات و آموزش‌های تخصصی هوش مصنوعی به زبان فارسی.',
  canonical: `${window.location.origin}/blog`,
  ogType: 'website',
@@ -387,7 +398,9 @@ export function Blog() {
  </div>
  )}
 
- {/* CTA Banner */}
+ <ChatPromptCTA prompt={`درباره «${selectedPost.title}» بیشتر توضیح بده و نکات کلیدی آن را بگو.`} className="mt-8 mb-6" />
+
+      {/* CTA Banner */}
   <div className="mt-12 p-6 md:p-8 rounded-[32px] bg-gradient-to-br from-emerald-500/10 to-teal-500/10 border border-emerald-500/20 flex flex-col md:flex-row items-center justify-between gap-6 backdrop-blur-sm shadow-sm group">
   <div className="flex-1 w-full">
   <h3 className="type-h4 type-h4 font-bold text-zinc-900 dark:text-white mb-2">
@@ -404,7 +417,7 @@ export function Blog() {
   ].map((chip, idx) => (
     <Link 
       key={idx}
-      to={`/?prompt=${encodeURIComponent(chip + ': ' + selectedPost.title + '\nلینک خبر: ' + window.location.href)}`}
+      to={`/chat?prompt=${encodeURIComponent(chip + ': ' + selectedPost.title + '\nلینک خبر: ' + window.location.href)}`}
       className="px-4 py-2 rounded-xl type-badge font-semibold bg-white/60 dark:bg-zinc-800/60 border border-[var(--card-border)] hover:bg-emerald-50 dark:hover:bg-emerald-900/30 hover:border-emerald-500/30 text-[#525d75] dark:text-[#9aa5bc] hover:text-emerald-600 dark:hover:text-emerald-400 transition-all duration-300"
     >
       {chip}
@@ -413,7 +426,7 @@ export function Blog() {
   </div>
   </div>
   <Link 
-  to={`/?prompt=${encodeURIComponent('درباره این خبر به من اطلاعات بیشتری بده: ' + selectedPost.title + '\nلینک خبر: ' + window.location.href)}`}
+  to={`/chat?prompt=${encodeURIComponent('درباره این خبر به من اطلاعات بیشتری بده: ' + selectedPost.title + '\nلینک خبر: ' + window.location.href)}`}
   className="shrink-0 flex items-center gap-2 px-6 py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm transition-all shadow-md hover:-translate-y-0.5 w-full md:w-auto justify-center"
   >
   <MessageCircle className="w-5 h-5" />
@@ -566,168 +579,214 @@ export function Blog() {
  </div>
 
  {/* Results */}
- {displayedNews.length > 0 ? (
- <div className="space-y-12 animate-fadeIn">
- {/* Featured Post (Latest) - Only show if no search/filter to keep UI clean, or just always show first as featured */}
-<Link 
-  to={`/blog/${displayedNews[0].id}`}
-  onClick={() => {
-    setSelectedPost(displayedNews[0]);
-    navigate(`/blog/${displayedNews[0].id}`);
-  }}
-  className="group cursor-pointer clay-card-elevated rounded-[32px] overflow-hidden hover:-translate-y-1.5 transition-all duration-300 flex flex-col md:flex-row"
->
- {displayedNews[0].image ? (
- <div className="w-full md:w-1/2 aspect-square md:aspect-auto overflow-hidden relative">
- <img loading="lazy" decoding="async" src={displayedNews[0].image} 
- alt={displayedNews[0].title} 
- className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
- />
- {displayedNews[0].id === news[0]?.id && (
- <div className="absolute top-4 right-4 bg-emerald-600 text-white type-badge font-bold px-3 py-1.5 rounded-lg shadow-sm">
- جدیدترین خبر
- </div>
- )}
- </div>
- ) : (
- <div className="w-full md:w-1/2 aspect-square md:aspect-auto bg-gradient-to-br from-emerald-100 to-teal-50 dark:from-emerald-950/30 dark:to-teal-900/30 flex items-center justify-center">
- <BookOpen size={64} className="text-emerald-600/30" />
- </div>
- )}
- 
- <div className="p-6 md:p-8 w-full md:w-1/2 flex flex-col justify-center">
- <h3 className="type-h2 mb-4 clay-news-title">
-              {displayedNews[0].title}
-            </h3>
- <p className="text-[#525d75] dark:text-[#9aa5bc] mb-4 line-clamp-3 type-secondary">
- {displayedNews[0].content.replace(/[*_#`\[\]]/g, '').substring(0, 200)}...
- </p>
- <div className="flex items-center gap-4 text-zinc-400 type-meta mt-auto font-medium">
- <div className="flex items-center gap-1.5">
- <Clock size={15} />
- <span>{formatDateTime(displayedNews[0].createdAt)}</span>
- </div>
- </div>
- </div>
- </Link>
+  {displayedNews.length > 0 ? (
+    <div className="space-y-12 animate-fadeIn">
+      {(() => {
+        const guideArticles = displayedNews.filter(item => !isNewsPost(item));
+        const newsArticles = displayedNews.filter(item => isNewsPost(item));
 
- {/* Grid/List/Compact for remaining posts */}
- {displayedNews.length > 1 && (
- <div className={
- viewMode === 'grid' ?"grid grid-cols-1 md:grid-cols-2 gap-8" :"flex flex-col gap-4 md:gap-6"
- }>
- {displayedNews.slice(1).map((item) => (
-<Link 
-  key={item.id}
-  to={`/blog/${item.id}`}
-  onClick={() => {
-    setSelectedPost(item);
-    navigate(`/blog/${item.id}`);
-  }}
-  className={`group cursor-pointer clay-card-thick hover:clay-card-elevated hover:-translate-y-2 transition-all duration-300 overflow-hidden ${
-                 viewMode === 'grid' ? 'flex flex-col rounded-[28px]' : 
-                 viewMode === 'list' ? 'flex flex-col sm:flex-row rounded-[28px]' : 
-                 'flex flex-col sm:flex-row items-center p-4 md:p-5 rounded-2xl hover:-translate-y-1'
-              }`}
->
- 
- {/* Image Logic */}
- {viewMode !== 'compact' && (
- <div className={
- viewMode === 'grid' ? "aspect-[16/9] w-full overflow-hidden relative shrink-0" : "aspect-video sm:aspect-square sm:w-48 overflow-hidden relative shrink-0"
- }>
- {item.image ? (
- <img loading="lazy" decoding="async" src={item.image} 
- alt={item.title} 
- className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
- />
- ) : (
- <div className="w-full h-full bg-gradient-to-br from-emerald-100 to-teal-50 dark:from-emerald-950/30 dark:to-teal-900/30 flex items-center justify-center">
- <BookOpen size={48} className="text-emerald-600/30" />
- </div>
- )}
- </div>
- )}
- 
-              {/* Content Logic */}
+        const renderCard = (item: NewsItem) => (
+          <Link 
+            key={item.id}
+            to={`/blog/${item.id}`}
+            onClick={() => {
+              setSelectedPost(item);
+              navigate(`/blog/${item.id}`);
+            }}
+            className={`group cursor-pointer clay-card-thick hover:clay-card-elevated hover:-translate-y-2 transition-all duration-300 overflow-hidden ${
+              viewMode === 'grid' ? 'flex flex-col rounded-[28px]' : 
+              viewMode === 'list' ? 'flex flex-col sm:flex-row rounded-[28px]' : 
+              'flex flex-col sm:flex-row items-center p-4 md:p-5 rounded-2xl hover:-translate-y-1'
+            }`}
+          >
+            {viewMode !== 'compact' && (
               <div className={
-                viewMode === 'compact' ? "flex-1 flex flex-col sm:flex-row sm:items-center justify-between w-full gap-4" : "p-5 sm:p-6 flex-1 flex flex-col justify-between"
+                viewMode === 'grid' ? "aspect-[16/9] w-full overflow-hidden relative shrink-0" : "aspect-video sm:aspect-square sm:w-48 overflow-hidden relative shrink-0"
               }>
-                <div className={viewMode === 'compact' ? "flex-1" : ""}>
-                  <h3 className={`clay-news-title transition-all ${
-                    viewMode === 'compact' ? 'type-h4 mb-1' : 'type-card-title mb-2'
-                  }`} title={item.title}>
-                    {item.title}
-                  </h3>
-                  
-                  {viewMode !== 'compact' && (
-                    <p className="text-[#525d75] dark:text-[#9aa5bc] mb-3 line-clamp-3 type-secondary">
-                      {item.content.replace(/[*_#`\[\]]/g, '').substring(0, 220)}...
-                    </p>
+                {item.image ? (
+                  <img loading="lazy" decoding="async" src={item.image} 
+                    alt={item.title} 
+                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-gradient-to-br from-emerald-100 to-teal-50 dark:from-emerald-950/30 dark:to-teal-900/30 flex items-center justify-center">
+                    <BookOpen size={48} className="text-emerald-600/30" />
+                  </div>
+                )}
+              </div>
+            )}
+            
+            <div className={
+              viewMode === 'compact' ? "flex-1 flex flex-col sm:flex-row sm:items-center justify-between w-full gap-4" : "p-5 sm:p-6 flex-1 flex flex-col justify-between"
+            }>
+              <div className={viewMode === 'compact' ? "flex-1" : ""}>
+                <h3 className={`clay-news-title transition-all ${
+                  viewMode === 'compact' ? 'type-h4 mb-1' : 'type-card-title mb-2'
+                }`} title={item.title}>
+                  {item.title}
+                </h3>
+                
+                {viewMode !== 'compact' && (
+                  <p className="text-[#525d75] dark:text-[#9aa5bc] mb-3 line-clamp-3 type-secondary">
+                    {item.content.replace(/[*_#`\[\]]/g, '').substring(0, 220)}...
+                  </p>
+                )}
+              </div>
+
+              <div className={`flex items-center gap-4 text-zinc-400 font-medium type-meta ${
+                viewMode === 'compact' ? 'shrink-0' : 'mt-auto'
+              }`}>
+                <div className="flex items-center gap-1.5">
+                  <Clock size={14} />
+                  <span>{formatDateOnly(item.createdAt)}</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <BookOpen size={14} />
+                  <span>{getReadingTime(item.content)}</span>
+                </div>
+              </div>
+            </div>
+          </Link>
+        );
+
+        return (
+          <>
+            {/* بخش اول: مقالات و راهنماها */}
+            <section aria-label="مقالات و راهنماها">
+              <div className="flex items-center gap-2.5 mb-6">
+                <span className="w-2.5 h-6 bg-blue-600 rounded-full" />
+                <h2 className="text-xl sm:text-2xl font-black text-zinc-900 dark:text-white" style={{ fontFamily: "'Estedad', sans-serif" }}>
+                  مقالات و راهنماها
+                </h2>
+              </div>
+
+              {guideArticles.length > 0 ? (
+                <div className="space-y-8">
+                  {/* Featured Article */}
+                  <Link 
+                    to={`/blog/${guideArticles[0].id}`}
+                    onClick={() => {
+                      setSelectedPost(guideArticles[0]);
+                      navigate(`/blog/${guideArticles[0].id}`);
+                    }}
+                    className="group cursor-pointer clay-card-elevated rounded-[32px] overflow-hidden hover:-translate-y-1.5 transition-all duration-300 flex flex-col md:flex-row"
+                  >
+                    {guideArticles[0].image ? (
+                      <div className="w-full md:w-1/2 aspect-square md:aspect-auto overflow-hidden relative">
+                        <img loading="lazy" decoding="async" src={guideArticles[0].image} 
+                          alt={guideArticles[0].title} 
+                          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                        />
+                      </div>
+                    ) : (
+                      <div className="w-full md:w-1/2 aspect-square md:aspect-auto bg-gradient-to-br from-emerald-100 to-teal-50 dark:from-emerald-950/30 dark:to-teal-900/30 flex items-center justify-center">
+                        <BookOpen size={64} className="text-emerald-600/30" />
+                      </div>
+                    )}
+                    
+                    <div className="p-6 md:p-8 w-full md:w-1/2 flex flex-col justify-center">
+                      <h3 className="type-h2 mb-4 clay-news-title">
+                        {guideArticles[0].title}
+                      </h3>
+                      <p className="text-[#525d75] dark:text-[#9aa5bc] mb-4 line-clamp-3 type-secondary">
+                        {guideArticles[0].content.replace(/[*_#`\[\]]/g, '').substring(0, 200)}...
+                      </p>
+                      <div className="flex items-center gap-4 text-zinc-400 type-meta mt-auto font-medium">
+                        <div className="flex items-center gap-1.5">
+                          <Clock size={15} />
+                          <span>{formatDateTime(guideArticles[0].createdAt)}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </Link>
+
+                  {guideArticles.length > 1 && (
+                    <div className={viewMode === 'grid' ? "grid grid-cols-1 md:grid-cols-2 gap-8" : "flex flex-col gap-4 md:gap-6"}>
+                      {guideArticles.slice(1).map(renderCard)}
+                    </div>
                   )}
                 </div>
+              ) : (
+                <div className="clay-card p-6 rounded-2xl text-center text-[#525d75] dark:text-[#9aa5bc]">
+                  در حال حاضر مقاله‌ای در این بخش منتشر نشده است.
+                </div>
+              )}
+            </section>
 
- <div className={`flex items-center gap-4 text-zinc-400 font-medium type-meta ${
- viewMode === 'compact' ? 'shrink-0' : 'mt-auto'
- }`}>
- <div className="flex items-center gap-1.5">
- <Clock size={viewMode === 'compact' ? 14 : 14} />
- <span>{formatDateOnly(item.createdAt)}</span>
- </div>
- <div className="flex items-center gap-1.5">
- <BookOpen size={viewMode === 'compact' ? 14 : 14} />
- <span>{getReadingTime(item.content)}</span>
- </div>
- </div>
- </div>
- </Link>
- ))}
- </div>
- )}
- 
- {/* Load More Button */}
- {visibleCount < filteredNews.length ? (
- <div className="flex justify-center pt-8">
- <button
- onClick={() => setVisibleCount(prev => prev + 6)}
- className="px-8 py-3.5 clay-btn text-emerald-600 dark:text-emerald-400 font-bold rounded-2xl transition-all shadow-sm active:scale-95 flex items-center gap-2 cursor-pointer"
- >
- مشاهده مقالات بیشتر
- <ChevronDown size={18} />
- </button>
- </div>
- ) : displayedNews.length > 0 && (
- <div className="flex justify-center pt-8 pb-4">
- <p className="type-secondary text-zinc-400 dark:text-[#525d75] clay-surface px-6 py-2 rounded-full">
- شما تمام اخبار را خواندید! 🎉
- </p>
- </div>
- )}
- 
- {/* End Results */}
- </div>
- ) : (
- <div className="flex flex-col items-center justify-center h-[40vh] opacity-50 clay-surface rounded-3xl border border-[var(--card-border)] backdrop-blur-sm">
- <div className="w-20 h-20 rounded-full clay-btn-thick flex items-center justify-center mb-6">
- <Search size={32} className="text-zinc-400" />
- </div>
- <h2 className="type-h2 mb-2">نتیجه‌ای یافت نشد</h2>
- <p className="text-[#525d75]">مقاله‌ای با این مشخصات پیدا نکردیم.</p>
- <button 
- onClick={() => {
- setSearchQuery('');
- setTimeFilter('all');
- setSelectedTag(null);
- }}
- className="mt-4 px-6 py-2 clay-btn-thick hover:bg-zinc-300 dark:hover:bg-zinc-700 type-secondary font-bold rounded-xl transition-colors"
- >
- پاک کردن فیلترها
- </button>
- </div>
- )}
- </div>
- )}
- </main>
+            {/* بخش دوم: اخبار هوش مصنوعی */}
+            <section aria-label="اخبار هوش مصنوعی" className="pt-8 border-t border-[var(--border-subtle)]">
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-2.5">
+                  <span className="w-2.5 h-6 bg-emerald-600 rounded-full" />
+                  <h2 className="text-xl sm:text-2xl font-black text-zinc-900 dark:text-white" style={{ fontFamily: "'Estedad', sans-serif" }}>
+                    اخبار هوش مصنوعی
+                  </h2>
+                </div>
+                <Link
+                  to="/blog/news"
+                  className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold text-emerald-600 dark:text-emerald-400 hover:underline"
+                >
+                  <span>مشاهده همه اخبار</span>
+                  <ChevronRight className="w-4 h-4 rotate-180" />
+                </Link>
+              </div>
+
+              {newsArticles.length > 0 ? (
+                <div className={viewMode === 'grid' ? "grid grid-cols-1 md:grid-cols-2 gap-8" : "flex flex-col gap-4 md:gap-6"}>
+                  {newsArticles.map(renderCard)}
+                </div>
+              ) : (
+                <div className="clay-card p-6 rounded-2xl text-center text-[#525d75] dark:text-[#9aa5bc]">
+                  خبری با برچسب اخبار یافت نشد.
+                </div>
+              )}
+            </section>
+          </>
+        );
+      })()}
+
+      {/* Load More Button */}
+      {visibleCount < filteredNews.length ? (
+        <div className="flex justify-center pt-8">
+          <button
+            onClick={() => setVisibleCount(prev => prev + 6)}
+            className="px-8 py-3.5 clay-btn text-emerald-600 dark:text-emerald-400 font-bold rounded-2xl transition-all shadow-sm active:scale-95 flex items-center gap-2 cursor-pointer"
+          >
+            مشاهده مقالات بیشتر
+            <ChevronDown size={18} />
+          </button>
+        </div>
+      ) : displayedNews.length > 0 && (
+        <div className="flex justify-center pt-8 pb-4">
+          <p className="type-secondary text-zinc-400 dark:text-[#525d75] clay-surface px-6 py-2 rounded-full">
+            شما تمام مطالب را خواندید! 🎉
+          </p>
+        </div>
+      )}
+    </div>
+  ) : (
+    <div className="flex flex-col items-center justify-center h-[40vh] opacity-50 clay-surface rounded-3xl border border-[var(--card-border)] backdrop-blur-sm">
+      <div className="w-20 h-20 rounded-full clay-btn-thick flex items-center justify-center mb-6">
+        <Search size={32} className="text-zinc-400" />
+      </div>
+      <h2 className="type-h2 mb-2">نتیجه‌ای یافت نشد</h2>
+      <p className="text-[#525d75]">مقاله‌ای با این مشخصات پیدا نکردیم.</p>
+      <button 
+        onClick={() => {
+          setSearchQuery('');
+          setTimeFilter('all');
+          setSelectedTag(null);
+        }}
+        className="mt-4 px-6 py-2 clay-btn-thick hover:bg-zinc-300 dark:hover:bg-zinc-700 type-secondary font-bold rounded-xl transition-colors"
+      >
+        پاک کردن فیلترها
+      </button>
+    </div>
+  )}
+  {/* End Results */}
+      </div>
+    )}
+  </main>
  <Footer />
  </div>
  );

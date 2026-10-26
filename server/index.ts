@@ -142,6 +142,7 @@ import adminRouter from './routes/admin';
 import storeRouter from './routes/store';
 import newsRouter from './routes/news';
 import landingRouter from './routes/landing';
+import contactRouter from './routes/contact';
 import { initNewsCron } from './services/newsCron';
 import { startTelegramBot } from './telegram/bot';
 import { sitemapHandler } from './seo/sitemap';
@@ -163,6 +164,7 @@ app.use('/', chatRouter);
 app.use('/', toolsRouter);
 app.use('/', intentRouter);
 app.use('/api', landingRouter);
+app.use('/api', contactRouter);
 app.use('/api/auth', authRouter);
 app.use('/api/admin', adminRouter);
 app.use('/api/store', storeRouter);
@@ -243,9 +245,19 @@ async function start() {
           ignored: ['**/server/data/**', '**/*.db', '**/*.db-*', '**/*.sqlite*']
         }
       },
-      appType: 'spa',
+      appType: 'custom',
     });
     app.use(vite.middlewares);
+    app.get('*', async (req, res, next) => {
+      if (req.path.match(/\.(js|css|json|txt|xml|woff2?|png|jpe?g|gif|webp|svg|ico)$/i)) {
+        return next();
+      }
+      try {
+        await renderHtmlWithSeo(req, res, process.cwd(), vite);
+      } catch (err) {
+        next(err);
+      }
+    });
   } else {
     const distPath = path.join(process.cwd(), 'dist');
     app.use(express.static(distPath, {

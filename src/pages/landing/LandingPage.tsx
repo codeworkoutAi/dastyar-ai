@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import {
   Scale,
   Sparkles,
@@ -13,11 +13,19 @@ import {
   ArrowLeft,
   CheckCircle2,
   Zap,
-  ShieldCheck
+  ShieldCheck,
+  HelpCircle,
+  MessageSquare,
+  Wallet,
+  Send,
+  Smartphone,
+  Store,
+  Globe
 } from 'lucide-react';
 import { GlobalHeader } from '../../components/GlobalHeader';
 import { Footer } from '../../components/Footer';
 import { setPageSeo } from '../../lib/seo';
+import { toPersianDigits } from '../../lib/persianUtils';
 
 interface PromptNiche {
   id: string;
@@ -123,11 +131,68 @@ const HIGH_INTENT_NICHES: PromptNiche[] = [
   }
 ];
 
+const WHY_DASTYAR_CARDS = [
+  {
+    id: 'free-quota',
+    title: `${toPersianDigits(15)} پیام رایگان روزانه`,
+    text: 'شروع بدون پرداخت اولیه. بدون نیاز به کارت اعتباری خارجی.',
+    icon: MessageSquare,
+    color: 'text-blue-600 dark:text-blue-400',
+    iconBg: 'bg-blue-500/10 dark:bg-blue-400/15'
+  },
+  {
+    id: 'pay-as-you-go',
+    title: 'پرداخت به‌ازای مصرف',
+    text: 'کیف پول با اعتبار مادام‌العمر. بدون اشتراک اجباری، بدون هزینه پنهان.',
+    icon: Wallet,
+    color: 'text-emerald-600 dark:text-emerald-400',
+    iconBg: 'bg-emerald-500/10 dark:bg-emerald-400/15'
+  },
+  {
+    id: 'telegram-bot',
+    title: 'ربات تلگرام',
+    text: 'همین دستیار در تلگرام. دسترسی سریع بدون باز کردن مرورگر.',
+    icon: Send,
+    color: 'text-sky-600 dark:text-sky-400',
+    iconBg: 'bg-sky-500/10 dark:bg-sky-400/15'
+  },
+  {
+    id: 'pwa',
+    title: 'قابل نصب (PWA)',
+    text: 'روی گوشی نصب کنید، مثل یک اپ native. بدون نیاز به Play Store.',
+    icon: Smartphone,
+    color: 'text-violet-600 dark:text-violet-400',
+    iconBg: 'bg-violet-500/10 dark:bg-violet-400/15'
+  },
+  {
+    id: 'android-app',
+    title: 'اپ اندروید',
+    text: 'نسخه رسمی در کافه‌بازار با پرداخت بازارپی.',
+    icon: Store,
+    color: 'text-amber-600 dark:text-amber-400',
+    iconBg: 'bg-amber-500/10 dark:bg-amber-400/15'
+  },
+  {
+    id: 'web-search',
+    title: 'پاسخ با داده‌های تازه وب',
+    text: 'جستجوی زنده + دانش مدل، در یک پاسخ منسجم.',
+    icon: Globe,
+    color: 'text-cyan-600 dark:text-cyan-400',
+    iconBg: 'bg-cyan-500/10 dark:bg-cyan-400/15'
+  }
+];
+
 export const LandingPage: React.FC = () => {
+  const [searchParams] = useSearchParams();
+  const incomingPrompt = searchParams.get('prompt');
+  const chatCtaUrl = incomingPrompt && incomingPrompt.trim()
+    ? `/chat?prompt=${encodeURIComponent(incomingPrompt.trim())}`
+    : '/chat';
+
   useEffect(() => {
     const softwareSchema = {
       '@type': 'SoftwareApplication',
-      name: 'دستیار هوشمند | چت با هوش مصنوعی فارسی',
+      name: 'Dastyar AI | دستیار هوش مصنوعی فارسی',
       applicationCategory: 'UtilityApplication, BusinessApplication',
       operatingSystem: 'Web, Android, iOS, Windows, macOS',
       inLanguage: 'fa-IR',
@@ -160,7 +225,7 @@ export const LandingPage: React.FC = () => {
           name: 'آیا استفاده از دستیار هوشمند رایگان است؟',
           acceptedAnswer: {
             '@type': 'Answer',
-            text: 'بله، دستیار هوشمند روزانه سهمیه گفتگوی کاملاً رایگان برای تمام کاربران در نظر گرفته است و شروع کار نیازی به پرداخت وجه یا وارد کردن اطلاعات کارت بانکی ندارد.'
+            text: 'بله، دستیار هوشمند روزانه سهمیه گفتگوی کاملاً رایگان برای تمام کاربران در نظر گرفته است و شروع کار بدون نیاز به پرداخت اولیه است.'
           }
         },
         {
@@ -173,18 +238,18 @@ export const LandingPage: React.FC = () => {
         },
         {
           '@type': 'Question',
-          name: 'دستیار هوشمند از چه مدل‌هایی پشتیبانی می‌کند؟',
+          name: 'دستیار هوشمند از چه قابلیت‌هایی پشتیبانی می‌کند؟',
           acceptedAnswer: {
             '@type': 'Answer',
-            text: 'پلتفرم از پیشرفته‌ترین مدل‌های روز جهان از جمله Claude 3.5 Sonnet، GPT-4o، Google Gemini و DeepSeek به زبان فارسی پشتیبانی می‌نماید.'
+            text: 'پلتفرم از پیشرفته‌ترین قابلیت‌های هوش مصنوعی شامل چت فارسی، برنامه‌نویسی، تحلیل اسناد و بینایی ماشین پشتیبانی می‌نماید.'
           }
         }
       ]
     };
 
     setPageSeo({
-      title: 'دستیار هوشمند | چت هوش مصنوعی رایگان، استعلام یارانه و سهام، تنظیم لایحه و فیتنس',
-      description: 'دسترسی مستقیم و بدون تحریم به مدل‌های Claude 3.5، GPT-4o و Gemini. استعلام زنده واریز یارانه، کالابرگ و سهام عدالت، تنظیم لایحه قضایی، روتین پوست، برنامه بدنسازی و نامه‌نگاری اداری.',
+      title: 'Dastyar AI | دستیار هوش مصنوعی فارسی — چت، کد، اسناد',
+      description: 'با Dastyar AI رایگان شروع کنید: ۱۵ پیام روزانه + پرداخت به‌ازای مصرف. چت، برنامه‌نویسی، تحلیل اسناد و تصویر به فارسی. دسترسی مستقیم از ایران.',
       keywords: 'استعلام یارانه این ماه, سود سهام عدالت با کد ملی, کالابرگ الکترونیک, تنظیم لایحه با هوش مصنوعی, دادخواست حقوقی, روتین پوست و مو, برنامه بدنسازی با هوش مصنوعی, نگارش نامه اداری, چت هوش مصنوعی فارسی, هوش مصنوعی بدون تحریم, دستیار هوشمند',
       canonical: 'https://dastyarai.com/',
       schema: {
@@ -215,24 +280,32 @@ export const LandingPage: React.FC = () => {
 
           {/* Magnetic Primary Headline */}
           <h1
-            className="text-2xl sm:text-4xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-l from-indigo-600 via-blue-600 to-cyan-500 dark:from-indigo-300 dark:via-blue-300 dark:to-cyan-200 leading-[1.3] py-2 px-1 mb-4"
+            className="text-2xl sm:text-4xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-l from-indigo-600 via-blue-600 to-cyan-500 dark:from-indigo-300 dark:via-blue-300 dark:to-cyan-200 leading-[1.3] py-2 px-1 mb-2"
+            style={{ fontFamily: "'Estedad', sans-serif" }}
+          >
+            دستیار هوش مصنوعی فارسی | Dastyar AI
+          </h1>
+
+          {/* Subtitle / Preserved High-Ranking Headline as H2 */}
+          <h2
+            className="text-base sm:text-xl md:text-2xl font-bold text-[#334155] dark:text-[#cbd5e1] leading-[1.4] py-1 px-1 mb-4"
             style={{ fontFamily: "'Estedad', sans-serif" }}
           >
             دستیار هوشمند؛ هوش مصنوعی پیشرفته، بدون مرز و به زبان فارسی
-          </h1>
+          </h2>
 
           {/* Subtitle */}
           <p
             className="text-xs sm:text-sm md:text-base text-[#525d75] dark:text-[#9aa5bc] font-normal leading-relaxed mb-8 max-w-2xl mx-auto"
             style={{ fontFamily: "'Vazirmatn', sans-serif" }}
           >
-            دسترسی مستقیم، آنی و پایدار به قدرتمندترین مدل‌های جهان بدون محدودیت‌های تحریمی
+            دسترسی مستقیم، آنی و پایدار به قدرتمندترین فناوری‌های هوش مصنوعی بدون محدودیت‌های تحریمی
           </p>
 
           {/* Primary Radiant Call-to-Action (CTA) */}
           <div className="flex flex-col items-center justify-center gap-3.5">
             <Link
-              to="/chat"
+              to={chatCtaUrl}
               aria-label="شروع گفتگوی رایگان با دستیار هوشمند"
               className="group relative inline-flex items-center justify-center gap-3 px-9 py-4 clay-btn-primary-thick font-black text-sm sm:text-base text-white shadow-xl shadow-blue-500/20 hover:scale-105 active:scale-95 transition-all duration-300 cursor-pointer overflow-hidden rounded-2xl"
               style={{ fontFamily: "'Estedad', sans-serif" }}
@@ -251,7 +324,7 @@ export const LandingPage: React.FC = () => {
               <span className="opacity-30 hidden sm:inline">•</span>
               <span className="flex items-center gap-1.5">
                 <ShieldCheck className="w-4 h-4 text-blue-500 shrink-0" />
-                <span>بدون نیاز به کارت بانکی</span>
+                <span>۱۵ پیام رایگان روزانه</span>
               </span>
               <span className="opacity-30 hidden sm:inline">•</span>
               <span className="flex items-center gap-1.5">
@@ -259,10 +332,65 @@ export const LandingPage: React.FC = () => {
                 <span>پاسخ‌دهی آنی</span>
               </span>
             </div>
+
+            {/* Educational Link to /ai-assistant */}
+            <div className="pt-2 text-center">
+              <Link
+                to="/ai-assistant"
+                className="inline-flex items-center gap-1.5 text-xs text-blue-600 dark:text-blue-400 hover:underline font-bold transition-colors"
+              >
+                <HelpCircle className="w-3.5 h-3.5 shrink-0" />
+                <span>دستیار هوش مصنوعی چیست؟</span>
+              </Link>
+            </div>
           </div>
         </section>
 
-        {/* 3. 8 High-Intent Interactive Quick Starters (Option B) */}
+        {/* 3. چرا Dastyar AI؟ (6 Cards Section) */}
+        <section aria-label="چرا Dastyar AI؟" className="w-full mb-12 sm:mb-16">
+          <div className="text-center mb-6 sm:mb-8">
+            <h2
+              className="text-xl sm:text-2xl font-black text-[#0f1420] dark:text-white mb-2"
+              style={{ fontFamily: "'Estedad', sans-serif" }}
+            >
+              چرا Dastyar AI؟
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
+            {WHY_DASTYAR_CARDS.map((card) => {
+              const IconComp = card.icon;
+              return (
+                <div
+                  key={card.id}
+                  className="clay-card p-5 sm:p-6 rounded-2xl sm:rounded-3xl flex flex-col justify-between transition-all"
+                >
+                  <div className="flex items-start gap-3.5">
+                    <div className={`w-11 h-11 rounded-2xl ${card.iconBg} flex items-center justify-center shrink-0`}>
+                      <IconComp className={`w-5 h-5 ${card.color}`} />
+                    </div>
+                    <div>
+                      <h3
+                        className="text-base sm:text-lg font-bold text-[#0f1420] dark:text-white mb-1.5"
+                        style={{ fontFamily: "'Estedad', sans-serif" }}
+                      >
+                        {card.title}
+                      </h3>
+                      <p
+                        className="text-xs sm:text-sm text-[#525d75] dark:text-[#9aa5bc] leading-relaxed"
+                        style={{ fontFamily: "'Vazirmatn', sans-serif" }}
+                      >
+                        {card.text}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+
+        {/* 4. 8 High-Intent Interactive Quick Starters (Option B) */}
         <section aria-label="ابزارهای هوشمند پرکاربرد" className="w-full mb-12">
           <div className="text-center mb-6">
             <span
@@ -318,45 +446,33 @@ export const LandingPage: React.FC = () => {
           </div>
         </section>
 
-        {/* 4. Minimal Models Bar (Logos Bar) */}
-        <section aria-label="مدل‌های هوش مصنوعی پشتیبانی‌شده" className="max-w-4xl mx-auto w-full pt-4">
+        {/* 4. Minimal Capabilities Bar */}
+        <section aria-label="قابلیت‌های هوش مصنوعی" className="max-w-4xl mx-auto w-full pt-4">
           <div className="clay-card-thick p-4 sm:p-5 rounded-2xl flex flex-col md:flex-row items-center justify-between gap-4 text-center md:text-right">
             <div className="text-xs font-bold text-[#525d75] dark:text-[#9aa5bc] shrink-0" style={{ fontFamily: "'Estedad', sans-serif" }}>
-              مجهز به پیشرفته‌ترین مدل‌های هوش مصنوعی جهان:
+              مجهز به پیشرفته‌ترین فناوری‌های هوش مصنوعی:
             </div>
 
-            {/* Model Badges with sleek vector SVGs */}
+            {/* Capability Badges */}
             <div className="flex flex-wrap items-center justify-center md:justify-end gap-2.5 sm:gap-3.5">
-              {/* Claude 3.5 */}
               <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl clay-surface text-xs font-bold text-[#0f1420] dark:text-white">
-                <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4 text-[#d97757] shrink-0">
-                  <path d="M18.8 20.5H22L12 3H8.8L-0 20.5H3.2L12 4.6L18.8 20.5ZM12.2 16.5H15.4L13.8 13.3L12.2 16.5Z"/>
-                </svg>
-                <span>Claude 3.5 Sonnet</span>
+                <Sparkles className="w-4 h-4 text-blue-500 shrink-0" />
+                <span>دستیار گفتگو و نگارش</span>
               </div>
 
-              {/* GPT-4o */}
               <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl clay-surface text-xs font-bold text-[#0f1420] dark:text-white">
-                <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4 text-[#10a37f] shrink-0">
-                  <path d="M22.2819 9.8211a5.9847 5.9847 0 0 0-.5157-4.9108 6.0462 6.0462 0 0 0-6.5098-2.9A6.0651 6.0651 0 0 0 4.9807 4.1818a5.9847 5.9847 0 0 0-3.9977 2.9 6.0462 6.0462 0 0 0 .7427 7.0966 5.98 5.98 0 0 0 .511 4.9107 6.051 6.051 0 0 0 6.5146 2.9001A6.0651 6.0651 0 0 0 19.0192 19.818a5.9847 5.9847 0 0 0 3.9977-2.9 6.0462 6.0462 0 0 0-.735-7.0968zM8.7505 18.2588a4.5078 4.5078 0 0 1-2.4828-4.2238l.0047-.1165 4.5492 2.627v5.253a4.5204 4.5204 0 0 1-2.0711-3.5397zm-3.518-7.9044a4.5078 4.5078 0 0 1 1.0506-4.739 4.4962 4.4962 0 0 1 3.5332-1.2828L5.2671 6.959v5.254l-4.5492-2.6264zm10.0526-7.234a4.5078 4.5078 0 0 1 4.2238 2.4828 4.4962 4.4962 0 0 1-.225 3.7388L14.7347 6.716 10.1855 4.089v-5.253a4.5078 4.5078 0 0 1 5.1016 1.8344zm3.4897 7.9044a4.5078 4.5078 0 0 1-1.0506 4.739 4.4962 4.4962 0 0 1-3.5332 1.2828l4.5492-2.6264V9.022l4.5492 2.6264zm-10.0526 7.234a4.5078 4.5078 0 0 1-4.2238-2.4828 4.4962 4.4962 0 0 1 .225-3.7388L9.2653 17.284 13.8145 19.911v5.253a4.5078 4.5078 0 0 1-5.1016-1.8344zM16.3262 10.038l-4.269 2.4646-4.269-2.4646V5.109l4.269 2.4646 4.269-2.4646v4.929z" />
-                </svg>
-                <span>GPT-4o</span>
+                <Code2 className="w-4 h-4 text-emerald-500 shrink-0" />
+                <span>برنامه‌نویسی و کد</span>
               </div>
 
-              {/* Gemini */}
               <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl clay-surface text-xs font-bold text-[#0f1420] dark:text-white">
-                <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4 text-[#4285f4] shrink-0">
-                  <path d="M12.025 24C12.025 17.5 17.5 12.025 24 12.025C17.5 12.025 12.025 6.5 12.025 0C12.025 6.5 6.5 12.025 0 12.025C6.5 12.025 12.025 17.5 12.025 24Z"/>
-                </svg>
-                <span>Gemini 2.0</span>
+                <FileText className="w-4 h-4 text-amber-500 shrink-0" />
+                <span>تحلیل اسناد و بینایی</span>
               </div>
 
-              {/* DeepSeek */}
               <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl clay-surface text-xs font-bold text-[#0f1420] dark:text-white">
-                <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4 text-[#0066ff] shrink-0">
-                  <path d="M12 21.5c-5.238 0-9.5-4.262-9.5-9.5S6.762 2.5 12 2.5s9.5 4.262 9.5 9.5-4.262 9.5-9.5 9.5zm0-17C7.86 4.5 4.5 7.86 4.5 12s3.36 7.5 7.5 7.5 7.5-3.36 7.5-7.5-3.36-7.5-7.5-7.5zM12 17c-2.757 0-5-2.243-5-5s2.243-5 5-5 5 2.243 5 5-2.243 5-5 5z"/>
-                </svg>
-                <span>DeepSeek V3</span>
+                <Zap className="w-4 h-4 text-rose-500 shrink-0" />
+                <span>پردازش و جستجوی زنده</span>
               </div>
             </div>
           </div>

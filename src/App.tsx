@@ -17,6 +17,9 @@ const ProductDetails = lazy(() => import('./pages/store/ProductDetails').then(m 
 const UserDashboard = lazy(() => import('./pages/store/UserDashboard').then(m => ({ default: m.UserDashboard })));
 const Blog = lazy(() => import('./pages/blog/Blog').then(m => ({ default: m.Blog })));
 const TagArchive = lazy(() => import('./pages/blog/TagArchive').then(m => ({ default: m.TagArchive })));
+const AboutPage = lazy(() => import('./pages/about/AboutPage'));
+const ContactPage = lazy(() => import('./pages/contact/ContactPage'));
+const AiAssistantPage = lazy(() => import('./pages/ai-assistant/AiAssistantPage'));
 
 // Lazy-loaded Modals
 const SettingsModal = lazy(() => import('./components/SettingsModal').then(m => ({ default: m.SettingsModal })));
@@ -167,9 +170,13 @@ export default function App() {
   <Route path="/store" element={<StoreRoute />} />
   <Route path="/store/product/:id" element={<ProductDetailsRoute />} />
  <Route path="/blog" element={<Blog />} />
- <Route path="/blog/:id" element={<Blog />} />
+  <Route path="/blog/news" element={<TagArchive forcedTag="news" />} />
+  <Route path="/blog/:id" element={<Blog />} />
  <Route path="/blog/tag/:tagName" element={<TagArchive />} />
  <Route path="/dashboard" element={<UserDashboard />} />
+          <Route path="/about" element={<AboutPage />} />
+          <Route path="/contact" element={<ContactPage />} />
+          <Route path="/ai-assistant" element={<AiAssistantPage />} />
  </Routes>
 
         {/* Global Modals - Loaded on demand only when opened */}

@@ -36,18 +36,20 @@ const formatDateOnly = (dateString: string) => {
  });
 };
 
-export function TagArchive() {
- const { tagName } = useParams<{ tagName: string }>();
+export function TagArchive({ forcedTag }: { forcedTag?: string } = {}) {
+  const params = useParams<{ tagName: string }>();
+  const tagName = forcedTag || params.tagName;
  const navigate = useNavigate();
  const [news, setNews] = useState<NewsItem[]>([]);
  const [loading, setLoading] = useState(true);
 
  useEffect(() => {
  if (!tagName) return;
- const tagCanonical = `${window.location.origin}/blog/tag/${encodeURIComponent(tagName)}`;
+ const isDedicatedNews = forcedTag === 'news';
+    const tagCanonical = isDedicatedNews ? `${window.location.origin}/blog/news` : `${window.location.origin}/blog/tag/${encodeURIComponent(tagName)}`;
  setPageSeo({
- title: `مقالات برچسب ${tagName} | مجله هوش مصنوعی`,
- description: `مجموعه اخبار، مقالات و رویدادهای مرتبط با ${tagName} در مجله هوش مصنوعی دستیار هوشمند.`,
+ title: isDedicatedNews ? 'اخبار هوش مصنوعی | Dastyar AI' : `مقالات برچسب ${tagName} | Dastyar AI`,
+ description: isDedicatedNews ? 'جدیدترین اخبار، تحولات و رویدادهای روز هوش مصنوعی ایران و جهان در مجله Dastyar AI.' : `مجموعه اخبار، مقالات و رویدادهای مرتبط با ${tagName} در مجله هوش مصنوعی دستیار هوشمند.`,
  canonical: tagCanonical,
  ogType: 'website',
  schema: {
@@ -64,7 +66,7 @@ export function TagArchive() {
  itemListElement: [
  { '@type': 'ListItem', position: 1, name: 'خانه', item: `${window.location.origin}/` },
  { '@type': 'ListItem', position: 2, name: 'مجله هوش مصنوعی', item: `${window.location.origin}/blog` },
- { '@type': 'ListItem', position: 3, name: tagName, item: tagCanonical }
+ { '@type': 'ListItem', position: 3, name: isDedicatedNews ? 'اخبار هوش مصنوعی' : tagName, item: tagCanonical }
  ]
  }
  ]
@@ -83,7 +85,7 @@ export function TagArchive() {
  console.error('Failed to load news for tag', err);
  setLoading(false);
  });
- }, [tagName]);
+ }, [tagName, forcedTag]);
 
  return (
  <div className="flex flex-col min-h-screen clay-landing-bg transition-colors duration-300 font-sans">
@@ -94,10 +96,10 @@ export function TagArchive() {
  <div className="mb-12 p-6 md:p-8 rounded-3xl bg-gradient-to-br from-emerald-500/10 to-teal-500/10 border border-emerald-500/20 flex flex-col md:flex-row items-center justify-between gap-6 backdrop-blur-sm shadow-sm">
  <div className="flex-1">
  <h2 className="text-xl md:text-2xl font-bold text-zinc-900 dark:text-white mb-2 flex items-center gap-2">
- <span className="bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 px-3 py-1 rounded-xl text-sm font-mono">#{tagName}</span>
+ <span className="bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 px-3 py-1 rounded-xl text-sm font-mono">#{forcedTag === 'news' ? 'اخبار هوش مصنوعی' : `#${tagName}`}</span>
  </h2>
  <p className="text-sm md:text-base text-[#525d75] dark:text-[#9aa5bc]">
- درباره {tagName} کنجکاو هستید؟ همین حالا با هوش مصنوعی گفتگو کنید و سوالات خود را بپرسید!
+ {forcedTag === 'news' ? 'جدیدترین اخبار و رویدادهای روز هوش مصنوعی' : `درباره ${tagName} کنجکاو هستید؟ همین حالا با هوش مصنوعی گفتگو کنید و سوالات خود را بپرسید!`}
  </p>
  </div>
  <Link 
