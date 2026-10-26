@@ -153,9 +153,8 @@ export const Header: React.FC = React.memo(() => {
 
  <div className="min-w-0 flex flex-col justify-center">
  <h1 className="font-extrabold text-xs sm:text-base md:text-lg tracking-tight truncate flex items-center gap-1.5 sm:gap-2">
- <span>دستیار هوشمند</span>
- <span className="sr-only">دستیار هوشمند | چت با هوش مصنوعی رایگان و فارسی</span>
- </h1>
+	<span>چت با هوش مصنوعی فارسی</span>
+	</h1>
  <p className="type-badge opacity-70 truncate hidden sm:block">
  قدرتمند شده با زبان فارسی
  </p>

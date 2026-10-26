@@ -39,7 +39,7 @@ export function ProductDetails() {
         
         // Setup SEO dynamically
 setPageSeo({
-          title: `خرید ${found.title} | فروشگاه هوش مصنوعی`,
+          title: `خرید ${found.title} | Dastyar AI`,
           description: found.description || found.title,
           ogImage: (found.bannerImage || found.image) || undefined,
           schema: {

@@ -1,7 +1,7 @@
 {
-  "name": "دستیار هوشمند (Persian AI Chatbox)",
+  "name": "Dastyar AI",
   "url": "https://dastyarai.com",
-  "description": "پلتفرم جامع هوش مصنوعی فارسی با پشتیبانی از برترین مدل‌های زبانی، تولید تصویر، تحلیل اسناد و جستجوی زنده وب",
+  "description": "پلتفرم جامع هوش مصنوعی فارسی با پشتیبانی از چت هوشمند، تولید تصویر، تحلیل اسناد و جستجوی زنده وب",
   "version": "1.0.0",
   "language": "fa-IR",
   "capabilities": [
@@ -14,26 +14,26 @@
   ],
   "models": [
     {
-      "id": "gemini-3.6-flash",
-      "name": "دستیار چت و گفتگو (Gemini 3.6 Flash)",
+      "id": "chat-assistant",
+      "name": "دستیار چت و گفتگو",
       "tier": "free",
       "role": "default"
     },
     {
-      "id": "gemini-2.0-pro-exp-02-05",
-      "name": "دستیار برنامه‌نویسی و کد (Gemini Pro)",
+      "id": "coding-assistant",
+      "name": "دستیار برنامه‌نویسی و کد",
       "tier": "free",
       "role": "coding"
     },
     {
-      "id": "claude-sonnet-4-6",
-      "name": "دستیار هوشمند کلود (Claude Sonnet)",
+      "id": "pro-assistant",
+      "name": "دستیار هوشمند پیشرفته",
       "tier": "paid",
       "role": "paid_default"
     },
     {
-      "id": "deepseek-v4-pro",
-      "name": "دستیار مهندسی دیپ‌سیک (DeepSeek)",
+      "id": "engineering-assistant",
+      "name": "دستیار مهندسی و تحلیل عمیق",
       "tier": "paid",
       "role": "paid_coding"
     }

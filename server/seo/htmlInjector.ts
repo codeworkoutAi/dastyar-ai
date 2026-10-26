@@ -13,7 +13,7 @@ export function escapeHtml(str?: string): string {
     .replace(/'/g, '&#039;');
 }
 
-export function renderHtmlWithSeo(req: express.Request, res: express.Response, distPath: string) {
+export async function renderHtmlWithSeo(req: express.Request, res: express.Response, distPath: string, vite?: any) {
   const indexPath = path.join(distPath, 'index.html');
   if (!fs.existsSync(indexPath)) {
     return res.sendFile(indexPath);
@@ -21,13 +21,20 @@ export function renderHtmlWithSeo(req: express.Request, res: express.Response, d
 
   try {
     let html = fs.readFileSync(indexPath, 'utf-8');
+    if (vite) {
+      try {
+        html = await vite.transformIndexHtml(req.originalUrl || req.url, html);
+      } catch (viteErr) {
+        console.warn('[Server SEO] vite.transformIndexHtml error:', viteErr);
+      }
+    }
     const protocol = req.protocol === 'https' || req.headers['x-forwarded-proto'] === 'https' ? 'https' : 'http';
     const host = req.get('host');
     const baseUrl = process.env.NODE_ENV === 'production' ? (process.env.WEB_URL || 'https://dastyarai.com') : `${protocol}://${host}`;
     const urlPath = req.path;
 
-    let pageTitle = 'دستیار هوشمند | چت با هوش مصنوعی رایگان و پیشرفته';
-    let pageDesc = 'چت با هوش مصنوعی رایگان فارسی با مدل‌های ChatGPT، Claude و Gemini. جستجوی زنده وب، تولید تصویر و ابزارهای تخصصی AI بدون محدودیت‌های تحریمی.';
+    let pageTitle = 'Dastyar AI | دستیار هوش مصنوعی فارسی — چت، کد، اسناد';
+    let pageDesc = 'با Dastyar AI رایگان شروع کنید: ۱۵ پیام روزانه + پرداخت به‌ازای مصرف. چت، برنامه‌نویسی، تحلیل اسناد و تصویر به فارسی. دسترسی مستقیم از ایران.';
     let pageImage = `${baseUrl}/pwa-512x512.png`;
     let pageType = 'website';
     let canonicalUrl = `${baseUrl}${urlPath}`;
@@ -43,9 +50,9 @@ export function renderHtmlWithSeo(req: express.Request, res: express.Response, d
     if (productMatch) {
       const pId = parseInt(productMatch[1], 10);
       try {
-        const product = db.prepare("SELECT title, description, longDescription, price, stock, category, image, bannerImage, faqs FROM products WHERE id = ?").get(pId) as any;
+        const product = db.prepare("SELECT * FROM products WHERE id = ?").get(pId) as any;
         if (product) {
-          pageTitle = `خرید ${product.title} | فروشگاه هوش مصنوعی`;
+          pageTitle = `خرید ${product.title} | Dastyar AI`;
           pageDesc = product.description || product.title;
           pageType = 'product';
           pageImage = product.bannerImage || product.image || pageImage;
@@ -53,7 +60,7 @@ export function renderHtmlWithSeo(req: express.Request, res: express.Response, d
           let parsedFaqs = [];
           try { if (product.faqs) parsedFaqs = JSON.parse(product.faqs); } catch (e) {}
 
-          const isAvailable = (product.stock > 0 || product.category === 'plan' || product.category === 'package') ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock';
+          const isAvailable = (product.stock == null || product.stock > 0 || product.category === 'plan' || product.category === 'package') ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock';
           
           structuredData = {
             '@context': 'https://schema.org',
@@ -93,7 +100,7 @@ export function renderHtmlWithSeo(req: express.Request, res: express.Response, d
       const blogId = blogMatch[1];
       const post = db.prepare('SELECT * FROM news WHERE id = ?').get(blogId) as any;
       if (post) {
-        pageTitle = `${post.title} | مجله هوش مصنوعی`;
+        pageTitle = `${post.title} | Dastyar AI`;
         postContent = post.content || '';
         const rawText = postContent.replace(/[#*`_\\[\\]()\\-!>]/g, '').trim();
         pageDesc = rawText.slice(0, 160) || pageDesc;
@@ -157,10 +164,13 @@ export function renderHtmlWithSeo(req: express.Request, res: express.Response, d
       if (tagMatch) {
         const decodedTag = decodeURIComponent(tagMatch[1]);
         const safeTag = escapeHtml(decodedTag);
-        pageTitle = `اخبار و مقالات: ${safeTag} | مجله هوش مصنوعی`;
+        pageTitle = `مقالات برچسب ${safeTag} | Dastyar AI`;
         pageDesc = `جدیدترین اخبار، مقالات و آموزش‌های هوش مصنوعی مرتبط با ${safeTag} را در مجله دستیار هوشمند بخوانید.`;
+      } else if (urlPath === '/blog/news') {
+        pageTitle = 'اخبار هوش مصنوعی | Dastyar AI';
+        pageDesc = 'جدیدترین اخبار، تحولات و رویدادهای روز هوش مصنوعی ایران و جهان به زبان فارسی در مجله Dastyar AI.';
       } else if (urlPath === '/blog') {
-        pageTitle = 'مجله هوش مصنوعی | اخبار، آموزش و مقالات ChatGPT و هوش مصنوعی';
+        pageTitle = 'مجله اخبار و مقالات هوش مصنوعی | Dastyar AI';
         pageDesc = 'آخرین اخبار هوش مصنوعی، آموزش پرامپت نویسی، معرفی ابزارها و مقالات تخصصی AI به زبان فارسی در مجله دستیار هوشمند.';
       } else if (urlPath.startsWith('/store/')) {
         const storeMatch = urlPath.match(/^\/store\/(\d+)$/);
@@ -168,7 +178,7 @@ export function renderHtmlWithSeo(req: express.Request, res: express.Response, d
           const productId = storeMatch[1];
           const product = db.prepare('SELECT * FROM products WHERE id = ?').get(productId) as any;
           if (product) {
-            pageTitle = `${product.title} | خرید از فروشگاه هوش مصنوعی`;
+            pageTitle = `خرید ${product.title} | Dastyar AI`;
             const rawText = (product.description || '').replace(/[#*`_\\[\\]()\\-!>]/g, '').trim();
             pageDesc = rawText.slice(0, 160) || pageDesc;
             const prodImg = product.bannerImage || product.image;
@@ -207,9 +217,10 @@ export function renderHtmlWithSeo(req: express.Request, res: express.Response, d
               ]
             };
           }
-        } else if (urlPath === '/store') {
-          pageTitle = 'فروشگاه ابزارهای هوش مصنوعی | دستیار هوشمند';
-          pageDesc = 'فروشگاه خدمات و ابزارهای هوش مصنوعی: خرید اکانت پرمیوم ChatGPT Plus، کلیدهای API معتبر و پکیج‌های آموزشی تخصصی با پرداخت ریالی و تحویل فوری.';
+        }
+      } else if (urlPath === '/store') {
+          pageTitle = 'فروشگاه اکانت و ابزارهای هوش مصنوعی | Dastyar AI';
+          pageDesc = 'فروشگاه خدمات و ابزارهای هوش مصنوعی: ابزارهای پیشرفته، کلیدهای API معتبر و پکیج‌های آموزشی تخصصی با پرداخت ریالی و تحویل فوری.';
           
           const storeProducts = db.prepare('SELECT id, title, price FROM products ORDER BY id DESC LIMIT 12').all() as any[];
           structuredData = {
@@ -245,7 +256,57 @@ export function renderHtmlWithSeo(req: express.Request, res: express.Response, d
               }
             ]
           };
-        } else if (urlPath === '/' || urlPath === '/landing' || urlPath === '/chat') {
+        } else if (urlPath === '/chat') {
+          pageTitle = 'چت هوش مصنوعی رایگان فارسی | Dastyar AI';
+          pageDesc = 'رایگان و بدون ثبت‌نام با هوش مصنوعی فارسی چت کنید. پاسخ آنی، بدون محدودیت تحریمی، از ایران. همین حالا شروع کنید.';
+          canonicalUrl = `${baseUrl}/chat`;
+          structuredData = {
+            '@context': 'https://schema.org',
+            '@type': 'FAQPage',
+            mainEntity: [
+              {
+                '@type': 'Question',
+                name: 'آیا چت با Dastyar AI رایگان است؟',
+                acceptedAnswer: {
+                  '@type': 'Answer',
+                  text: '۱۵ پیام رایگان روزانه. برای بیشتر، پرداخت به‌ازای مصرف.'
+                }
+              },
+              {
+                '@type': 'Question',
+                name: 'آیا باید ثبت‌نام کنم؟',
+                acceptedAnswer: {
+                  '@type': 'Answer',
+                  text: 'برای ۲ پیام اول نیازی نیست. برای ادامه و ذخیره تاریخچه، ثبت‌نام با شماره موبایل.'
+                }
+              },
+              {
+                '@type': 'Question',
+                name: 'آیا پاسخ‌ها به فارسی هستند؟',
+                acceptedAnswer: {
+                  '@type': 'Answer',
+                  text: 'بله. پاسخ‌ها به فارسی روان ارائه می‌شوند.'
+                }
+              },
+              {
+                '@type': 'Question',
+                name: 'آیا از ایران قابل دسترسی است؟',
+                acceptedAnswer: {
+                  '@type': 'Answer',
+                  text: 'بله، بدون محدودیت تحریمی.'
+                }
+              },
+              {
+                '@type': 'Question',
+                name: 'آیا می‌توانم تاریخچه گفتگو را ذخیره کنم؟',
+                acceptedAnswer: {
+                  '@type': 'Answer',
+                  text: 'بله، با ورود به حساب کاربری.'
+                }
+              }
+            ]
+          };
+        } else if (urlPath === '/' || urlPath === '/landing') {
           // Home / Landing page FAQPage Schema for GEO / AI Answer Engines
           structuredData = {
             '@context': 'https://schema.org',
@@ -261,10 +322,10 @@ export function renderHtmlWithSeo(req: express.Request, res: express.Response, d
               },
               {
                 '@type': 'Question',
-                name: 'دستیار هوشمند از چه مدل‌های هوش مصنوعی پشتیبانی می‌کند؟',
+                name: 'دستیار هوشمند از چه قابلیت‌هایی پشتیبانی می‌کند؟',
                 acceptedAnswer: {
                   '@type': 'Answer',
-                  text: 'دستیار هوشمند از مدل‌های برتر دنیا نظیر ChatGPT (GPT-4o)، Claude 3.5 Sonnet، Gemini 2.0 Flash و DeepSeek پشتیبانی می‌کند و قابلیت انتخاب دستی یا مسیریابی هوشمند (Smart Routing) را دارد.'
+                  text: 'دستیار هوشمند از قابلیت‌های پیشرفته گفتگو، برنامه‌نویسی، تحلیل اسناد و بینایی به زبان فارسی پشتیبانی می‌کند و قابلیت انتخاب دستی یا مسیریابی هوشمند (Smart Routing) را دارد.'
                 }
               },
               {
@@ -272,7 +333,7 @@ export function renderHtmlWithSeo(req: express.Request, res: express.Response, d
                 name: 'آیا امکان جستجوی آنلاین در وب و ساخت عکس با هوش مصنوعی وجود دارد؟',
                 acceptedAnswer: {
                   '@type': 'Answer',
-                  text: 'بله، این پلتفرم مجهز به جستجوی زنده وب (Google Search Grounding) برای دسترسی به اخبار و داده‌های روز و استودیوی تولید تصویر با مدل‌های Flux و Stable Diffusion است.'
+                  text: 'بله، این پلتفرم مجهز به جستجوی زنده وب (Google Search Grounding) برای دسترسی به اخبار و داده‌های روز و استودیوی تولید تصویر است.'
                 }
               },
               {
@@ -280,13 +341,85 @@ export function renderHtmlWithSeo(req: express.Request, res: express.Response, d
                 name: 'فروشگاه هوش مصنوعی چه خدماتی ارائه می‌دهد؟',
                 acceptedAnswer: {
                   '@type': 'Answer',
-                  text: 'در فروشگاه دستیار هوشمند، اشتراک‌های قانونی ChatGPT Plus، کلیدهای اختصاصی API و آموزش‌های تخصصی هوش مصنوعی با امکان پرداخت ریالی و تحویل آنی عرضه می‌شوند.'
+                  text: 'در فروشگاه دستیار هوشمند، خدمات شارژ کیف پول، بسته‌های اعتباری و ابزارهای تخصصی با امکان پرداخت امن و تحویل آنی عرضه می‌شوند.'
+                }
+              }
+            ]
+          };
+        } else if (urlPath === '/about') {
+          pageTitle = 'درباره Dastyar AI | دستیار هوش مصنوعی فارسی';
+          pageDesc = 'Dastyar AI چیست، چرا ساخته شد، و چرا رایگان است. دستیار هوش مصنوعی فارسی با ۱۵ پیام رایگان روزانه و پرداخت به‌ازای مصرف.';
+          pageType = 'article';
+        } else if (urlPath === '/contact') {
+          pageTitle = 'تماس با Dastyar AI';
+          pageDesc = 'راه‌های تماس با تیم Dastyar AI — ایمیل، تلگرام، و فرم تماس.';
+          pageType = 'website';
+        } else if (urlPath === '/ai-assistant') {
+          pageTitle = 'دستیار هوش مصنوعی چیست؟ راهنمای کامل | Dastyar AI';
+          pageDesc = 'دستیار هوش مصنوعی چیست، چه کارهایی انجام می‌دهد و چطور از آن استفاده کنیم؟ راهنمای کامل + معرفی Dastyar AI.';
+          pageType = 'article';
+          structuredData = {
+            '@context': 'https://schema.org',
+            '@type': 'FAQPage',
+            mainEntity: [
+              {
+                '@type': 'Question',
+                name: 'دستیار هوش مصنوعی چیست؟',
+                acceptedAnswer: {
+                  '@type': 'Answer',
+                  text: 'برنامه‌ای است که با مدل‌های زبانی پیشرفته به سوالات شما پاسخ می‌دهد، متن می‌نویسد و در کارهای روزمره کمک می‌کند.'
+                }
+              },
+              {
+                '@type': 'Question',
+                name: 'تفاوت دستیار هوش مصنوعی با موتور جستجو چیست؟',
+                acceptedAnswer: {
+                  '@type': 'Answer',
+                  text: 'موتور جستجو لینک نشان می‌دهد، اما دستیار هوش مصنوعی پاسخ مستقیم و متناسب با موقعیت شما ارائه می‌دهد.'
+                }
+              },
+              {
+                '@type': 'Question',
+                name: 'آیا Dastyar AI رایگان است؟',
+                acceptedAnswer: {
+                  '@type': 'Answer',
+                  text: 'بله. ۱۵ پیام رایگان روزانه دارید. برای بیشتر، پرداخت به‌ازای مصرف با کیف پول.'
+                }
+              },
+              {
+                '@type': 'Question',
+                name: 'آیا Dastyar AI به فارسی پاسخ می‌دهد؟',
+                acceptedAnswer: {
+                  '@type': 'Answer',
+                  text: 'بله. تمام پاسخ‌ها به فارسی روان ارائه می‌شوند.'
+                }
+              },
+              {
+                '@type': 'Question',
+                name: 'آیا از ایران قابل دسترسی است؟',
+                acceptedAnswer: {
+                  '@type': 'Answer',
+                  text: 'بله. برای دسترسی مستقیم از ایران طراحی شده است.'
                 }
               }
             ]
           };
         }
       }
+
+    // Adapt app-shell initial H1 and H2 for SSR / View Source
+    if (urlPath === '/about') {
+      html = html.replace(/<h1[^>]*>.*?<\/h1>/, '<h1 style="font-size:20px;font-weight:700;margin:0 0 8px 0;color:#f8fafc;">درباره Dastyar AI</h1>');
+      html = html.replace(/<h2[^>]*>.*?<\/h2>/, '');
+    } else if (urlPath === '/contact') {
+      html = html.replace(/<h1[^>]*>.*?<\/h1>/, '<h1 style="font-size:20px;font-weight:700;margin:0 0 8px 0;color:#f8fafc;">تماس با Dastyar AI</h1>');
+      html = html.replace(/<h2[^>]*>.*?<\/h2>/, '');
+    } else if (urlPath === '/ai-assistant') {
+      html = html.replace(/<h1[^>]*>.*?<\/h1>/, '<h1 style="font-size:20px;font-weight:700;margin:0 0 8px 0;color:#f8fafc;">دستیار هوش مصنوعی چیست؟</h1>');
+      html = html.replace(/<h2[^>]*>.*?<\/h2>/, '');
+    } else if (urlPath === '/chat') {
+      html = html.replace(/<h1[^>]*>.*?<\/h1>/, '<h1 style="font-size:20px;font-weight:700;margin:0 0 8px 0;color:#f8fafc;">چت با هوش مصنوعی فارسی</h1>');
+      html = html.replace(/<h2[^>]*>.*?<\/h2>/, '');
     }
 
     const safeTitle = escapeHtml(pageTitle);
@@ -301,8 +434,15 @@ export function renderHtmlWithSeo(req: express.Request, res: express.Response, d
       const topProducts = db.prepare("SELECT id, title FROM products WHERE status = 'active' OR status IS NULL ORDER BY id DESC LIMIT 8").all() as any[];
       const topNews = db.prepare("SELECT id, title FROM news ORDER BY createdAt DESC LIMIT 8").all() as any[];
 
-      const productItems = topProducts.map(p => `<li><a href="${baseUrl}/store/product/${p.id}">خرید ${escapeHtml(p.title)}</a></li>`).join('');
-      const newsItems = topNews.map(n => `<li><a href="${baseUrl}/blog/${n.id}">${escapeHtml(n.title)}</a></li>`).join('');
+      const bannedRegex = /(gemini|claude|deepseek|gpt|mistral|بدون کارت بانکی|بدون فیلترشکن)/i;
+      const productItems = topProducts
+        .filter(p => !bannedRegex.test(p.title || ''))
+        .map(p => `<li><a href="${baseUrl}/store/product/${p.id}">خرید ${escapeHtml(p.title)}</a></li>`)
+        .join('');
+      const newsItems = topNews
+        .filter(n => !bannedRegex.test(n.title || ''))
+        .map(n => `<li><a href="${baseUrl}/blog/${n.id}">${escapeHtml(n.title)}</a></li>`)
+        .join('');
 
       internalNavHtml = `
       <section aria-label="پیوندهای مفید سایت" class="sr-only" style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;">
@@ -312,21 +452,67 @@ export function renderHtmlWithSeo(req: express.Request, res: express.Response, d
             <li><a href="${baseUrl}/">چت هوش مصنوعی رایگان فارسی</a></li>
             <li><a href="${baseUrl}/store">فروشگاه ابزارها و اکانت‌های هوش مصنوعی</a></li>
             <li><a href="${baseUrl}/blog">مجله آموزش و اخبار هوش مصنوعی</a></li>
+            <li><a href="${baseUrl}/about">درباره Dastyar AI</a></li>
+            <li><a href="${baseUrl}/contact">تماس با ما</a></li>
+            <li><a href="${baseUrl}/ai-assistant">دستیار هوش مصنوعی چیست؟</a></li>
+            <li><a href="${baseUrl}/blog/news">اخبار هوش مصنوعی</a></li>
             ${productItems}
             ${newsItems}
           </ul>
         </nav>
         <p>${safeDesc}</p>
-        <p>دستیار هوشمند پلتفرم جامع چت هوش مصنوعی فارسی با پشتیبانی از مدل‌های Claude، ChatGPT و Gemini با اتصال مستقیم و بدون محدودیت‌های تحریمی است.</p>
+        <p>دستیار هوشمند پلتفرم جامع چت هوش مصنوعی فارسی با پشتیبانی از هوش مصنوعی پیشرفته گفتگو، کدنویسی و تحلیل اسناد با اتصال مستقیم و پایدار از سراسر ایران است.</p>
       </section>`;
     } catch (dbErr) {}
 
-    const ssrHeading = `<h1 class="sr-only" style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;">${safeTitle}</h1>`;
+    const ssrHeading = `<div class="sr-only" style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;">${safeTitle}</div>`;
     const ssrArticle = postContent ? `<article class="sr-only" style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;">${escapeHtml(postContent)}</article>` : '';
+
+    let chatSsrContent = '';
+    if (urlPath === '/chat') {
+      chatSsrContent = `
+      <section aria-label="راهنمای چت هوش مصنوعی فارسی" class="sr-only" style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;">
+        <h2>چت هوش مصنوعی چیست؟</h2>
+        <p>چت هوش مصنوعی یک گفتگوی متنی بین شما و یک مدل زبانی پیشرفته است. شما سوال می‌پرسید، درخواست می‌کنید، یا متنی می‌فرستید؛ و هوش مصنوعی پاسخ می‌دهد. برخلاف جستجوی معمولی که فقط لینک نشان می‌دهد، چت هوش مصنوعی پاسخ مستقیم و متناسب با موقعیت شما ارائه می‌دهد.</p>
+        <p>چت هوش مصنوعی فارسی همان تجربه را به زبان فارسی فراهم می‌کند: بدون نیاز به انگلیسی، بدون ترجمه دستی، و با درک اصطلاحات و لحن رایج فارسی. Dastyar AI این تجربه را با ۱۵ پیام رایگان روزانه و پرداخت به‌ازای مصرف در اختیار شما می‌گذارد.</p>
+
+        <h2>چطور کار می‌کند؟</h2>
+        <ol>
+          <li>درخواستتان را به فارسی بنویسید — هرچه دقیق‌تر، پاسخ بهتر.</li>
+          <li>پاسخ را بخوانید — می‌توانید بپرسید «بیشتر توضیح بده».</li>
+          <li>گفتگو را ادامه دهید — هوش مصنوعی زمینه را به خاطر می‌سپارد.</li>
+          <li>نتیجه را کپی کنید — پاسخ را در کار، ایمیل، یا پروژه‌تان استفاده کنید.</li>
+        </ol>
+
+        <h2>نمونه پرامپت‌ها</h2>
+        <ul>
+          <li><a href="${baseUrl}/chat?prompt=%DB%8C%DA%A9%20%D8%A7%DB%8C%D9%85%DB%8C%D9%84%20%D8%B1%D8%B3%D9%85%DB%8C%20%D8%A8%D8%B1%D8%A7%DB%8C%20%D8%AF%D8%B1%D8%AE%D9%88%D8%A7%D8%B3%D8%AA%20%D9%85%D8%B1%D8%AE%D8%B5%DB%8C%20%D8%A8%D9%86%D9%88%DB%8C%D8%B3.">یک ایمیل رسمی برای درخواست مرخصی بنویس.</a></li>
+          <li><a href="${baseUrl}/chat?prompt=%D8%A7%DB%8C%D9%86%20%D9%BE%D8%A7%D8%B1%D8%A7%DA%AF%D8%B1%D8%A7%D9%81%20%D8%B1%D8%A7%20%D8%AE%D9%84%D8%A7%D8%B5%D9%87%20%DA%A9%D9%86%3A%20%5B%D9%85%D8%AA%D9%86%5D">این پاراگراف را خلاصه کن: [متن]</a></li>
+          <li><a href="${baseUrl}/chat?prompt=%DB%8C%DA%A9%20%D8%A8%D8%B1%D9%86%D8%A7%D9%85%D9%87%20%D8%AA%D9%85%D8%B1%DB%8C%D9%86%DB%8C%20%D9%87%D9%81%D8%AA%DA%AF%DB%8C%20%D8%A8%D8%B1%D8%A7%DB%8C%20%D9%85%D8%A8%D8%AA%D8%AF%DB%8C%E2%80%8C%D9%87%D8%A7%20%D8%A8%D8%AF%D9%87.">یک برنامه تمرینی هفتگی برای مبتدی‌ها بده.</a></li>
+          <li><a href="${baseUrl}/chat?prompt=%D8%A8%D8%B1%D8%A7%DB%8C%20%D8%B4%D8%B1%D9%88%D8%B9%20%DB%8C%DA%A9%20%DA%A9%D8%B3%D8%A8%E2%80%8C%D9%88%DA%A9%D8%A7%D8%B1%20%DA%A9%D9%88%DA%86%DA%A9%D8%8C%20%D9%BE%D9%86%D8%AC%20%D8%A7%DB%8C%D8%AF%D9%87%20%D8%A8%D8%AF%D9%87.">برای شروع یک کسب‌وکار کوچک، پنج ایده بده.</a></li>
+          <li><a href="${baseUrl}/chat?prompt=%D8%A7%DB%8C%D9%86%20%D8%AC%D9%85%D9%84%D9%87%20%D8%B1%D8%A7%20%D8%A8%D9%87%20%D8%A7%D9%86%DA%AF%D9%84%DB%8C%D8%B3%DB%8C%20%D8%B1%D9%88%D8%A7%D9%86%20%D8%AA%D8%B1%D8%AC%D9%85%D9%87%20%DA%A9%D9%86%3A%20%5B%D9%85%D8%AA%D9%86%5D">این جمله را به انگلیسی روان ترجمه کن: [متن]</a></li>
+        </ul>
+
+        <h2>سوالات متداول</h2>
+        <dl>
+          <dt>آیا چت با Dastyar AI رایگان است؟</dt>
+          <dd>۱۵ پیام رایگان روزانه. برای بیشتر، پرداخت به‌ازای مصرف.</dd>
+          <dt>آیا باید ثبت‌نام کنم؟</dt>
+          <dd>برای ۲ پیام اول نیازی نیست. برای ادامه و ذخیره تاریخچه، ثبت‌نام با شماره موبایل.</dd>
+          <dt>آیا پاسخ‌ها به فارسی هستند؟</dt>
+          <dd>بله. پاسخ‌ها به فارسی روان ارائه می‌شوند.</dd>
+          <dt>آیا از ایران قابل دسترسی است؟</dt>
+          <dd>بله، بدون محدودیت تحریمی.</dd>
+          <dt>آیا می‌توانم تاریخچه گفتگو را ذخیره کنم؟</dt>
+          <dd>بله، با ورود به حساب کاربری.</dd>
+        </dl>
+      </section>`;
+    }
 
     const ssrHtml = `<div id="ssr-content">
         ${ssrHeading}
         ${ssrArticle}
+        ${chatSsrContent}
         ${internalNavHtml}
       </div>`;
     html = html.replace('</body>', `  ${ssrHtml}\n</body>`);
@@ -363,6 +549,10 @@ export function renderHtmlWithSeo(req: express.Request, res: express.Response, d
     // Inject Dynamic JSON-LD Schema & extra meta tags
     if (extraMetaTags) {
       html = html.replace('</head>', `${extraMetaTags}\n</head>`);
+    }
+    if (urlPath === '/ai-assistant') {
+      // User prompt requirement: فقط FAQPage در این صفحه. هیچ Organization یا WebApplication تکراری در این صفحه نگذار.
+      html = html.replace(/<script\s+type="application\/ld\+json">[\s\S]*?<\/script>/i, '');
     }
     if (structuredData) {
       const schemaTag = `\n  <script type="application/ld+json" id="server-injected-schema">\n  ${JSON.stringify(structuredData, null, 2)}\n  </script>\n</head>`;

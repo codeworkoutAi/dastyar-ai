@@ -68,7 +68,7 @@ export function StoreFront() {
  const priceRials = (currentProduct.price || 0) * 10;
 
  setPageSeo({
- title: `خرید ${currentProduct.title} | فروشگاه هوش مصنوعی`,
+ title: `خرید ${currentProduct.title} | Dastyar AI`,
  description: `خرید آنلاین ${currentProduct.title} - قیمت: ${priceText}. تحویل فوری با پشتیبانی تخصصی در دستیار هوشمند.`,
  canonical: prodCanonical,
  ogImage: currentProduct.bannerImage || currentProduct.image,
@@ -111,7 +111,7 @@ export function StoreFront() {
  });
  } else {
  setPageSeo({
- title: 'فروشگاه ابزارهای هوش مصنوعی | دستیار هوشمند',
+ title: 'فروشگاه اکانت و ابزارهای هوش مصنوعی | Dastyar AI',
  description: 'فروشگاه تخصصی هوش مصنوعی: خرید اکانت‌های اختصاصی ChatGPT Plus، کلیدهای API معتبر و پکیج‌های آموزشی با پرداخت ریالی و تحویل فوری.',
  canonical: `${window.location.origin}/store`,
  ogType: 'website',

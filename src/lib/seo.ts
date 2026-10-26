@@ -23,7 +23,7 @@ export function setPageSeo({
 }: PageSeoOptions) {
   if (typeof document === 'undefined') return;
 
-  const fullTitle = title.includes('دستیار هوشمند') ? title : `${title} | دستیار هوشمند`;
+  const fullTitle = title;
   document.title = fullTitle;
 
   const setMeta = (nameOrProperty: string, content: string, isProperty = false) => {

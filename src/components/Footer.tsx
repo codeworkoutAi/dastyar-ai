@@ -157,26 +157,37 @@ export function Footer() {
  </h3>
  <ul className="space-y-2.5 text-xs sm:text-sm">
  <li>
- <button
- onClick={() => setIsAboutOpen(true)}
+ <Link
+ to="/about"
  className="group inline-flex items-center gap-2.5 text-zinc-600 dark:text-zinc-400 dark:text-[#9aa5bc] hover:text-zinc-800 dark:text-zinc-100 dark:hover:text-white transition-all cursor-pointer"
  >
  <div className="clay-debossed-socket w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
  <Info className="w-3.5 h-3.5 text-sky-600 dark:text-sky-400" />
  </div>
- <span className="font-bold group-hover:-translate-x-1 transition-transform">درباره ما</span>
- </button>
+ <span className="font-bold group-hover:-translate-x-1 transition-transform">درباره Dastyar AI</span>
+ </Link>
  </li>
  <li>
- <button
- onClick={() => setIsContactOpen(true)}
+ <Link
+ to="/contact"
  className="group inline-flex items-center gap-2.5 text-zinc-600 dark:text-zinc-400 dark:text-[#9aa5bc] hover:text-zinc-800 dark:text-zinc-100 dark:hover:text-white transition-all cursor-pointer"
  >
  <div className="clay-debossed-socket w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
  <Send className="w-3.5 h-3.5 text-violet-600 dark:text-violet-400" />
  </div>
- <span className="font-bold group-hover:-translate-x-1 transition-transform">ارتباط با ما</span>
- </button>
+ <span className="font-bold group-hover:-translate-x-1 transition-transform">تماس با ما</span>
+ </Link>
+ </li>
+ <li>
+ <Link
+ to="/ai-assistant"
+ className="group inline-flex items-center gap-2.5 text-zinc-600 dark:text-zinc-400 dark:text-[#9aa5bc] hover:text-zinc-800 dark:text-zinc-100 dark:hover:text-white transition-all cursor-pointer"
+ >
+ <div className="clay-debossed-socket w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
+ <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+ </div>
+ <span className="font-bold group-hover:-translate-x-1 transition-transform">دستیار هوش مصنوعی چیست؟</span>
+ </Link>
  </li>
  <li>
  <button
