@@ -657,12 +657,19 @@ router.post('/api/chat/stream', chatStreamLimiter, guestChatRateLimiter, async (
         while (attempts < maxAttempts) {
           attempts++;
           try {
+            const isShortPrompt = userText.trim().length < 80 && !/تحلیل|مقایسه|چرا|چطور|حل کن|استدلال|مقایسه کن|بررسی کن|توضیح بده چرا/i.test(userText);
+            const thinkingBudget = isShortPrompt ? 0 : 2048;
+            console.log(`[Thinking] short=${isShortPrompt}, thinkingBudget=${thinkingBudget}`);
+
             const streamConfig: any = {
               // No native googleSearch here — we use GoogleGroundingAgent (RAG) to support ALL providers universally
               systemInstruction: systemInstruction,
               temperature: typeof apiConfig?.temperature === 'number' ? apiConfig.temperature : 0.7,
               topP: 0.8,
               topK: 40,
+              thinkingConfig: {
+                thinkingBudget,
+              },
             };
 
             if (typeof apiConfig?.maxTokens === 'number' && apiConfig.maxTokens > 0) {
