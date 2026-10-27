@@ -24,7 +24,6 @@ import { useSettingsStore } from '../store/settingsStore';
 import { useChatStore } from '../store/chatStore';
 import { useAuthStore } from '../store/authStore';
 import { ShieldCheck } from 'lucide-react';
-import { SmartRoutingAnimation } from './ChatBox';
 import { ThemeToggle } from './ThemeToggle';
 import { UIStyleToggle } from './UIStyleToggle';
 import { ModelSelectorDropdown } from './ModelSelectorDropdown';
@@ -46,7 +45,7 @@ export const Header: React.FC = React.memo(() => {
  const { toggleSidebar, setIsSettingsOpen, setIsExportOpen, setIsAdminOpen } = useUIStore();
  const { user } = useAuthStore();
  const { settings, setSettings } = useSettingsStore();
- const { activeId, conversations, isStreaming, routingState } = useChatStore();
+  const { activeId, conversations, isStreaming } = useChatStore();
  const activeConversation = conversations.find((c) => c.id === activeId) || null;
 
  const [showMobileMenu, setShowMobileMenu] = useState(false);
@@ -130,13 +129,11 @@ export const Header: React.FC = React.memo(() => {
  return list;
  }, [settings.tools.routingRoles, settings.providers.custom.profiles]);
 
- const isAnimating = isStreaming && settings.tools.smartRouting && routingState !== 'idle';
-
  return (
  <header className="relative flex items-center justify-center z-20 shrink-0 select-none border-b border-subtle clay-header backdrop-blur-md h-16 sm:h-18">
 
- {/* -------------------- Original Header Content -------------------- */}
- <div className={`absolute inset-0 px-2.5 sm:px-4 md:px-6 flex items-center justify-between w-full h-full transition-all duration-500 ease-out ${isAnimating ? 'opacity-0 scale-95 pointer-events-none' : 'opacity-100 scale-100 pointer-events-auto'}`}>
+ {/* -------------------- Header Content -------------------- */}
+ <div className="px-2.5 sm:px-4 md:px-6 flex items-center justify-between w-full h-full">
 
  {/* 1. Right Side (Start) - Sidebar Toggle & Chat Title */}
  <div className="flex items-center gap-1.5 sm:gap-3 min-w-0 z-10 w-[45%] sm:w-1/3 justify-start">
@@ -295,12 +292,6 @@ export const Header: React.FC = React.memo(() => {
  </div>
  </div>
 
- {/* -------------------- Animation Content -------------------- */}
- <div className={`absolute inset-0 w-full h-full flex items-center justify-center px-4 transition-all duration-500 delay-100 ${isAnimating ? 'opacity-100 scale-100 pointer-events-auto' : 'opacity-0 scale-105 pointer-events-none'}`}>
- <div className="w-full h-full max-w-4xl flex items-center justify-center">
- <SmartRoutingAnimation routingState={isStreaming && routingState !== 'idle' ? routingState : null} />
- </div>
- </div>
  </header>
  );
 });

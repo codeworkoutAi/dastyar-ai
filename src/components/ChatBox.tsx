@@ -1,11 +1,7 @@
 import {
   AltArrowDownOutlineIcon as ArrowDown,
   DownloadOutlineIcon as Download,
-  CloseOutlineIcon as X,
-  Code2OutlineIcon,
-  EyeOutlineIcon as Eye,
-  DocumentTextOutlineIcon as FileText,
-  BrainOutlineIcon
+  CloseOutlineIcon as X
 } from '@solar-icons/react';
 import React, { useEffect, useRef, useState, useCallback, memo } from 'react';
 import { SpeakController, speakText } from '../lib/tts';
@@ -15,69 +11,6 @@ import { ChatMessage } from '../types';
 import { ChatMessageItem } from './ChatMessageItem';
 
 export { getModelIntro } from '../lib/modelMetadata';
-
-export const SmartRoutingAnimation: React.FC<{ routingState: 'general' | 'coding' | 'vision' | 'idle' | null }> = ({ routingState }) => {
-  const { settings } = useSettingsStore();
-  const roles = (settings.tools as any).routingRoles || {};
-  const profiles = settings.providers.custom.profiles || [];
-  const activeProv = settings.providers.activeProvider || 'gemini';
-  const defaultModelName = (settings.providers as any)[activeProv]?.modelName || 'gemini-2.5-pro';
-
-  const getModelName = (id?: string, fallback?: string) => {
-    if (!id) return fallback || defaultModelName;
-    const p = profiles.find((x: any) => x.id === id);
-    return p ? (p.modelName || p.name) : id;
-  };
-
-  const modelGeneral = getModelName(roles.default);
-  const modelCoding = getModelName(roles.coding, activeProv === 'gemini' ? 'gemini-2.5-pro' : undefined);
-  const modelVision = getModelName(roles.vision, activeProv === 'gemini' ? 'gemini-2.5-pro' : undefined);
-
-  let activeModel = modelGeneral;
-  let ActiveIcon = FileText;
-  if (routingState === 'coding') {
-    activeModel = modelCoding;
-    ActiveIcon = Code2OutlineIcon;
-  } else if (routingState === 'vision') {
-    activeModel = modelVision;
-    ActiveIcon = Eye;
-  }
-
-  // The animation will only fully light up if routingState is not null.
-  // The user requested LTR (Left-to-Right) layout for this specific component.
-  return (
-    <div className="w-full flex justify-between items-center relative fade-in-up select-none h-full max-w-xl mx-auto" dir="ltr">
-      {/* 1. Source Node (Brain) - Left Side */}
-      <div className={`w-6 h-6 sm:w-8 sm:h-8 z-20 shrink-0 flex items-center justify-center transition-all duration-500 relative ${routingState ? 'text-zinc-700 dark:text-zinc-300' : 'opacity-40 grayscale'}`}>
-        <BrainOutlineIcon className="w-full h-full" />
-      </div>
-
-      {/* Connection Line 1 (Brain to Modality) */}
-      <div className="flex-1 h-[1.5px] mx-2 sm:mx-4 relative bg-zinc-200/40 rounded-full shrink min-w-[30px] flex justify-start">
-        {routingState && (
-          <div className="h-full bg-zinc-500 dark:bg-zinc-400 rounded-full animate-fill-line-ltr w-0" />
-        )}
-      </div>
-
-      {/* 2. Modality Node (Center) */}
-      <div className={`w-6 h-6 sm:w-8 sm:h-8 z-20 shrink-0 flex items-center justify-center transition-all duration-500 delay-100 relative ${routingState ? 'scale-110 text-zinc-700 dark:text-zinc-300' : 'opacity-40 grayscale'}`}>
-        <ActiveIcon className="w-full h-full" />
-      </div>
-
-      {/* Connection Line 2 (Modality to Model) */}
-      <div className="flex-1 h-[1.5px] mx-2 sm:mx-4 relative bg-zinc-200/40 rounded-full shrink min-w-[30px] flex justify-start">
-        {routingState && (
-          <div className="h-full bg-zinc-500 dark:bg-zinc-400 rounded-full animate-fill-line-ltr w-0" style={{ animationDelay: '0.4s' }} />
-        )}
-      </div>
-
-      {/* 3. Target Model Node (Right Side) */}
-      <div className={`h-6 sm:h-8 px-2 sm:px-3 z-20 shrink-0 flex items-center justify-center transition-all duration-500 delay-300 relative ${routingState ? 'scale-105 text-zinc-700 dark:text-zinc-300' : 'opacity-40 grayscale'}`}>
-        <span className="font-extrabold text-[9px] sm:text-[10px] font-['Vazirmatn'] uppercase tracking-wider relative z-10">{activeModel}</span>
-      </div>
-    </div>
-  );
-};
 
 export const ChatBox: React.FC = memo(() => {
   const { settings, updateSettings } = useSettingsStore();
