@@ -23,6 +23,14 @@ const chatStreamLimiter = rateLimit({
   message: { error: 'تعداد درخواست‌های گفت‌وگو بیش از حد مجاز است. لطفاً کمی بعد دوباره تلاش کنید.' }
 });
 
+function isTrivialPrompt(text: string): boolean {
+  if (!text) return true;
+  const trimmed = text.trim();
+  if (trimmed.length < 5) return true;
+  const trivialRegex = /^(سلام|درود|خوبی|چطوری|چطوري|ممنون|مرسی|تشکر|خداحافظ|بای|hi|hello|thanks|thank you|bye|خوبم|عالی|باشه|اوکی|ok|okay|بله|نه|آره|na|yes|no|👍|🙏)[\s!?.،؟]*$/i;
+  return trivialRegex.test(trimmed);
+}
+
 router.post('/api/chat/stream', chatStreamLimiter, guestChatRateLimiter, async (req, res) => {
   // Setup SSE headers
   res.setHeader('Content-Type', 'text/event-stream');
@@ -472,6 +480,9 @@ router.post('/api/chat/stream', chatStreamLimiter, guestChatRateLimiter, async (
         } else {
           console.log('[Backend] Web search & tools disabled by user kill-switch.');
         }
+      } else if (isTrivialPrompt(userText)) {
+        const preview = (userText || '').trim().substring(0, 20);
+        console.log(`[Grounding] skipped: trivial prompt (length=${(userText || '').trim().length}, text="${preview}")`);
       } else {
         // All grounding layers run CONCURRENTLY and are merged afterwards.
         //
