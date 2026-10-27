@@ -1,5 +1,5 @@
 export class ToolsAgent {
-  private static readonly TIMEOUT = 10000;
+  private static readonly TIMEOUT = 2000;
 
   /**
    * NOTE: there is deliberately no `getWeather()`.
@@ -74,7 +74,7 @@ export class ToolsAgent {
         headers: {
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.81 Safari/537.36'
         },
-        signal: AbortSignal.timeout(5000)
+        signal: AbortSignal.timeout(this.TIMEOUT)
       });
 
       if (!response.ok) {

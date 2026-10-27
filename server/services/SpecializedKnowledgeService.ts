@@ -23,7 +23,7 @@ interface CacheEntry {
 }
 
 export class SpecializedKnowledgeService {
-  private static readonly TIMEOUT_MS = 3000;
+  private static readonly TIMEOUT_MS = 2000;
   private static readonly CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour
   private static readonly cache = new Map<string, CacheEntry>();
   private static readonly USER_AGENT = 'DastyarAI/1.0 (https://dastyarai.com; info@dastyarai.com)';
@@ -33,6 +33,13 @@ export class SpecializedKnowledgeService {
    * and fetches authoritative facts.
    */
   public static async resolveSpecializedKnowledge(query: string): Promise<string> {
+    const timeoutPromise = new Promise<string>((resolve) =>
+      setTimeout(() => resolve(''), this.TIMEOUT_MS)
+    );
+    return Promise.race([this.executeResolve(query), timeoutPromise]);
+  }
+
+  private static async executeResolve(query: string): Promise<string> {
     if (!query || query.trim().length < 2) return '';
 
     const normalized = query.trim();

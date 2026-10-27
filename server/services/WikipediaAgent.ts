@@ -15,7 +15,7 @@ export interface WikipediaResult {
 }
 
 export class WikipediaAgent {
-  private static readonly TIMEOUT = 6000;
+  private static readonly TIMEOUT = 2500;
   private static readonly USER_AGENT = 'DastyarAI/1.0 (https://dastyarai.com; info@dastyarai.com)';
 
   // --- Relevance guard -------------------------------------------------------
@@ -153,6 +153,13 @@ export class WikipediaAgent {
    *    and injected as "اطلاعات موثق".
    */
   public static async searchAndSummarize(query: string): Promise<WikipediaResult> {
+    const timeoutPromise = new Promise<WikipediaResult>((resolve) =>
+      setTimeout(() => resolve({ found: false }), this.TIMEOUT)
+    );
+    return Promise.race([this.executeSearchAndSummarize(query), timeoutPromise]);
+  }
+
+  private static async executeSearchAndSummarize(query: string): Promise<WikipediaResult> {
     const { term, lang } = this.extractSearchEntity(query);
     if (!term || term.length < 2) {
       return { found: false };
