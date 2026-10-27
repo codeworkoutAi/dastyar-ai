@@ -295,7 +295,7 @@ stopGeneration: () => {
         return;
       }
 
-      // 1. LLM Router Intent Detection
+      // 1. High-Speed Regex-Only Intent & Tool Detection (Unblocked Streaming)
       const globalWebSearchEnabled = useSettingsStore.getState().settings.tools.webSearch;
       const smartRoutingEnabled = useSettingsStore.getState().settings.tools.smartRouting;
       
@@ -303,54 +303,53 @@ stopGeneration: () => {
       let detectedWebSearch = false;
       let detectedTool = 'none';
 
+      // Tool Detection Heuristics (matches server/routes/intent.ts)
+      if (/دلار|ارز|سکه|طلا|یورو|تتر|درهم|پوند/i.test(promptText) && /قیمت|نرخ|چند|چنده/i.test(promptText)) {
+        detectedTool = 'currency';
+      } else if (/دیجی‌کالا|دیجی کالا|digikala\.com|dkp-/i.test(promptText)) {
+        detectedTool = 'digikala';
+      } else if (/آب و هوا|آب‌وهوا|دما|هوا/i.test(promptText)) {
+        detectedTool = 'weather';
+      }
+
+      // Smart Routing Intent Heuristics (coding / vision / general)
+      if (isImageGen || !!imageUrl || (fileContext && fileContext.includes('تصویر'))) {
+        detectedIntent = 'vision';
+      } else if (/کد|برنامه|پایتون|جاوااسکریپت|فانکشن|کلاس|دیباگ|ارور|error|bug|react|node|css|html|sql|query|typescript|python|javascript|golang|rust|php|c\+\+|algorithm|الگوریتم/i.test(promptText)) {
+        detectedIntent = 'coding';
+      } else {
+        detectedIntent = 'general';
+      }
+
       // Comprehensive Persian Web Search Triggers (Client-side Heuristics)
       const clientWebTriggers = /اخبار|خبر|قیمت|آب و هوا|آب‌وهوا|مقاله|تحقیق|درباره|سرچ|جستجو|امروز|تاریخ|جدیدترین|آپدیت|به روز|به‌روز|دسترسی به وب|دسترسی به اینترنت|وصل به اینترنت|اینترنت داری|به اینترنت وصلی|آنلاین هستی|وب رو چک کن|دسترسی داری/i;
       const hasWebIntent = clientWebTriggers.test(promptText);
 
-      // Only call router if it's not an image gen AND (webSearch is auto or smartRouting is on)
-      if (!isImageGen && (smartRoutingEnabled || (globalWebSearchEnabled && webSearch === undefined))) {
-        try {
-          const intentContextMsgs = buildOptimizedContext(
-            targetConv.messages,
-            { content: promptText, imageUrl: '', fileContext: '' },
-            { maxRecentTurns: 4 }
-          );
-          const routerRes = await fetch('/api/chat/detect-intent', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              messages: intentContextMsgs,
-              settings: payloadSettings,
-            }),
-            signal: controller.signal,
-          });
-          if (routerRes.ok) {
-            const routerData = await routerRes.json();
-            detectedIntent = routerData.intent || 'general';
-            detectedWebSearch = !!routerData.webSearch || hasWebIntent;
-            detectedTool = routerData.tool || 'none';
-          } else {
-            detectedWebSearch = hasWebIntent;
-          }
-        } catch (err) {
-          console.warn('[LLM Router] Failed to detect intent (falling back to client heuristics):', err);
-          detectedWebSearch = hasWebIntent;
-        }
-      } else if (isImageGen) {
-        detectedIntent = 'vision';
+      if (webSearch !== undefined) {
+        detectedWebSearch = webSearch;
+      } else if (globalWebSearchEnabled && (hasWebIntent || detectedTool !== 'none')) {
+        detectedWebSearch = true;
+      } else {
+        detectedWebSearch = false;
       }
 
-      if (detectedIntent === 'blocked') {
-        const rejectionMsg = '🚫 به عنوان یک دستیار تخصصی برنامه‌نویسی، من مجاز به پاسخگویی به سوالات نامرتبط یا نامناسب نیستم. لطفاً فقط در حوزه تکنولوژی و کدنویسی سوال بفرمایید.';
-        set({ conversations: get().conversations.map(c => 
-          c.id === targetConv!.id ? {
-            ...c,
-            messages: c.messages.map(m => m.id === assistantMessageId ? { ...m, content: rejectionMsg } : m)
-          } : c
-        ), isStreaming: false });
-        get().setRoutingState('general');
-        // Let the global subscriber handle saveConversations
-        return;
+      // KILL-SWITCH (Rule 7): Never allow web search if globally disabled
+      if (!globalWebSearchEnabled) {
+        detectedWebSearch = false;
+      }
+
+      console.log(`[Intent] regex-only: webSearch=${detectedWebSearch}, tool=${detectedTool}, intent=${detectedIntent}`);
+
+      // Background non-blocking telemetry / audit call (does NOT block stream or increase TTFT)
+      if (!isImageGen) {
+        fetch('/api/chat/detect-intent', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            messages: [{ role: 'user', content: promptText }],
+            settings: payloadSettings,
+          }),
+        }).catch(() => {});
       }
 
       // Apply web search & tool setting
