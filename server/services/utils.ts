@@ -1,5 +1,24 @@
 import { GoogleGenAI } from '@google/genai';
 import db from '../db/database';
+import {
+  isKeyBlacklisted,
+  blacklistKey,
+  unblacklistKey,
+  resetBlacklist,
+  cleanupExpired,
+  getKeyStats,
+  type BlacklistReason,
+} from './keyHealthService';
+
+export {
+  isKeyBlacklisted,
+  blacklistKey,
+  unblacklistKey,
+  resetBlacklist,
+  cleanupExpired,
+  getKeyStats,
+  type BlacklistReason,
+};
 
 let currentGeminiKeyIndex = 0;
 
@@ -8,12 +27,29 @@ export function getGeminiKeyFromPool(): string | null {
     const row = db.prepare("SELECT value FROM site_settings WHERE key = 'gemini_keys_pool'").get() as any;
     if (row && row.value) {
       const keys = row.value.split('\n').map((k: string) => k.trim()).filter(Boolean);
-      if (keys.length > 0) {
-        currentGeminiKeyIndex = (currentGeminiKeyIndex + 1) % keys.length;
-        return keys[currentGeminiKeyIndex];
+      const total = keys.length;
+      if (total > 0) {
+        for (let i = 0; i < total; i++) {
+          currentGeminiKeyIndex = (currentGeminiKeyIndex + 1) % total;
+          const candidate = keys[currentGeminiKeyIndex];
+          if (!isKeyBlacklisted(candidate)) {
+            const stats = getKeyStats(total);
+            if (stats.available < total * 0.5) {
+              console.warn(
+                `[KeyPool] WARNING: ${stats.blacklisted}/${stats.total} keys blacklisted. Only ${stats.available} available.`
+              );
+            }
+            return candidate;
+          }
+        }
+        console.error(`[KeyPool] All ${total} Gemini keys in pool are blacklisted!`);
+        throw new Error('در حال حاضر ظرفیت سرویس تکمیل است. لطفاً چند دقیقه دیگر تلاش کنید.');
       }
     }
-  } catch (err) {
+  } catch (err: any) {
+    if (err?.message === 'در حال حاضر ظرفیت سرویس تکمیل است. لطفاً چند دقیقه دیگر تلاش کنید.') {
+      throw err;
+    }
     console.error('Error fetching gemini keys pool:', err);
   }
   return null;
@@ -252,7 +288,14 @@ Persian description: "${trimmed}"`;
             return enhanced;
           }
         } catch (mErr: any) {
-          // try next candidate
+          const errMsg = extractCleanErrorMessage(mErr);
+          const is429 = errMsg.includes('429') || errMsg.includes('RESOURCE_EXHAUSTED') || errMsg.includes('quota');
+          const is401 = errMsg.includes('401') || errMsg.includes('Unauthorized') || errMsg.includes('Invalid API Key');
+          const is403 = errMsg.includes('403') || errMsg.includes('PERMISSION_DENIED') || errMsg.includes('API_KEY_INVALID');
+          if (apiKey && (is429 || is401 || is403)) {
+            blacklistKey(apiKey, is429 ? '429' : (is401 ? '401' : '403'));
+            break;
+          }
         }
       }
     } catch (e: any) {
@@ -441,6 +484,11 @@ export function sanitizeErrorMessage(err: any): string {
   const rawMsg = extractCleanErrorMessage(err);
   const msg = rawMsg || (typeof err === 'string' ? err : err.message || '');
   const lower = msg.toLowerCase();
+
+  // Service capacity exhausted (Key pool 429 quota)
+  if (msg.includes('ظرفیت سرویس تکمیل است')) {
+    return msg;
+  }
 
   // Location / Region Restriction & Sanctions
   if (

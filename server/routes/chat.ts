@@ -1,7 +1,7 @@
 import express from 'express';
 import rateLimit from 'express-rate-limit';
 import db from '../db/database';
-import { isSafeBaseUrl, getGeminiClient, extractCleanErrorMessage, sanitizeErrorMessage, formatContentsForGemini, sleep, getPollinationsImageUrl, translateAndEnhanceImagePrompt, normalizeBaseUrl, parseCustomHeaders, getGeminiKeyFromPool } from '../services/utils';
+import { isSafeBaseUrl, getGeminiClient, extractCleanErrorMessage, sanitizeErrorMessage, formatContentsForGemini, sleep, getPollinationsImageUrl, translateAndEnhanceImagePrompt, normalizeBaseUrl, parseCustomHeaders, getGeminiKeyFromPool, blacklistKey } from '../services/utils';
 import { GoogleGroundingAgent } from '../services/GoogleGroundingAgent';
 import { WikipediaAgent } from '../services/WikipediaAgent';
 import { ToolsAgent } from '../services/ToolsAgent';
@@ -179,17 +179,25 @@ router.post('/api/chat/stream', chatStreamLimiter, guestChatRateLimiter, async (
           isFreeModel = true;
           // Use smart routing with Gemini Keys Pool ONLY if the selected model is Gemini
           if (targetModel.toLowerCase().includes('gemini')) {
-            const poolKey = getGeminiKeyFromPool();
-            if (poolKey) {
-              targetBaseUrl = 'https://generativelanguage.googleapis.com';
-              targetApiKey = poolKey;
-              apiConfig[provider].baseUrl = targetBaseUrl;
-              apiConfig[provider].apiKey = targetApiKey;
-              // If we are overriding a custom profile to use Gemini native SDK, ensure the config is moved
-              if (provider !== 'gemini') {
-                apiConfig['gemini'] = { ...apiConfig[provider], apiKey: targetApiKey, baseUrl: targetBaseUrl };
+            try {
+              const poolKey = getGeminiKeyFromPool();
+              if (poolKey) {
+                targetBaseUrl = 'https://generativelanguage.googleapis.com';
+                targetApiKey = poolKey;
+                apiConfig[provider].baseUrl = targetBaseUrl;
+                apiConfig[provider].apiKey = targetApiKey;
+                // If we are overriding a custom profile to use Gemini native SDK, ensure the config is moved
+                if (provider !== 'gemini') {
+                  apiConfig['gemini'] = { ...apiConfig[provider], apiKey: targetApiKey, baseUrl: targetBaseUrl };
+                }
+                provider = 'gemini'; // Ensure we use the Gemini SDK flow
               }
-              provider = 'gemini'; // Ensure we use the Gemini SDK flow
+            } catch (poolErr: any) {
+              sendChunk({
+                error: poolErr?.message || 'در حال حاضر ظرفیت سرویس تکمیل است. لطفاً چند دقیقه دیگر تلاش کنید.',
+                done: true,
+              });
+              return finishStream();
             }
           }
         }
@@ -473,26 +481,45 @@ router.post('/api/chat/stream', chatStreamLimiter, guestChatRateLimiter, async (
         // lookup; and every request paid 3 serial round-trips before the main model even
         // started. Parallel execution fixes both: Grounding always runs, and total latency
         // is the slowest layer instead of the sum of all layers.
+        let googleDuration: number | 'skipped' = 'skipped';
+        let wikiDuration: number | 'skipped' = 'skipped';
+        let specializedDuration: number | 'skipped' = 'skipped';
+        let toolsDuration: number | 'skipped' = 'skipped';
+
         const tasks: Array<Promise<string>> = [];
 
         // 1. Structured tools (only when the router asked for one). These give exact,
         //    unit-labelled numbers (Toman prices, stock status) that prose search cannot.
         if (activeTool === 'currency') {
           console.log('[Backend] Executing Currency Tool...');
-          tasks.push(ToolsAgent.getCurrency());
+          const t0 = Date.now();
+          tasks.push(
+            ToolsAgent.getCurrency().finally(() => {
+              toolsDuration = Date.now() - t0;
+            })
+          );
         } else if (activeTool === 'digikala') {
           console.log('[Backend] Executing Digikala Tool...');
-          tasks.push(ToolsAgent.getDigikalaProduct(userText));
+          const t0 = Date.now();
+          tasks.push(
+            ToolsAgent.getDigikalaProduct(userText).finally(() => {
+              toolsDuration = Date.now() - t0;
+            })
+          );
         }
 
         if (userText && userText.trim().length > 1) {
           // 2. Specialized knowledge (Quran, Ganjoor poetry, cinema, sports, health, botany).
           //    Internally parallel + cached, and genuinely more precise than web search.
+          const tSpecialized = Date.now();
           tasks.push(
             SpecializedKnowledgeService.resolveSpecializedKnowledge(userText)
               .catch((skErr) => {
                 console.warn('[Backend] Specialized knowledge grounding error:', skErr);
                 return '';
+              })
+              .finally(() => {
+                specializedDuration = Date.now() - tSpecialized;
               })
           );
 
@@ -502,6 +529,7 @@ router.post('/api/chat/stream', chatStreamLimiter, guestChatRateLimiter, async (
           const hasWikiIntent = /ویکی|دانشنامه|wiki/i.test(userText);
           if (isEncyclopedic || hasWikiIntent) {
             console.log('[Backend] Query is encyclopedic/factual, fetching from Wikipedia...');
+            const tWiki = Date.now();
             tasks.push(
               WikipediaAgent.searchAndSummarize(userText)
                 .then((wikiRes) => {
@@ -513,15 +541,27 @@ router.post('/api/chat/stream', chatStreamLimiter, guestChatRateLimiter, async (
                   console.warn('[Backend] Wikipedia fetch error:', wErr);
                   return '';
                 })
+                .finally(() => {
+                  wikiDuration = Date.now() - tWiki;
+                })
             );
           }
 
           // 4. Google Search Grounding — the live layer. Always runs for real questions.
           console.log('[Backend] Executing Google Grounding Agent (Universal RAG for all providers)...');
-          tasks.push(GoogleGroundingAgent.search(userText));
+          const tGoogle = Date.now();
+          tasks.push(
+            GoogleGroundingAgent.search(userText).finally(() => {
+              googleDuration = Date.now() - tGoogle;
+            })
+          );
         }
 
         const settled = await Promise.allSettled(tasks);
+        const formatDur = (d: number | 'skipped') => (typeof d === 'number' ? `${d}ms` : 'skipped');
+        console.log(
+          `[Grounding] google: ${formatDur(googleDuration)}, wikipedia: ${formatDur(wikiDuration)}, specialized: ${formatDur(specializedDuration)}, tools: ${formatDur(toolsDuration)}`
+        );
         const contextParts = settled
           .filter((r): r is PromiseFulfilledResult<string> => r.status === 'fulfilled' && !!r.value && r.value.trim().length > 0)
           .map((r) => r.value.trim());
@@ -705,6 +745,22 @@ router.post('/api/chat/stream', chatStreamLimiter, guestChatRateLimiter, async (
           } catch (err: any) {
             lastError = err;
             const errMsg = extractCleanErrorMessage(err);
+            const is429 =
+              errMsg.includes('429') ||
+              errMsg.includes('RESOURCE_EXHAUSTED') ||
+              errMsg.includes('quota') ||
+              errMsg.includes('exceeded your request quota');
+            const is401 = errMsg.includes('401') || errMsg.includes('Unauthorized') || errMsg.includes('Invalid API Key');
+            const is403 = errMsg.includes('403') || errMsg.includes('PERMISSION_DENIED') || errMsg.includes('API_KEY_INVALID');
+
+            if (userKey && (is429 || is401 || is403)) {
+              const reason = is429 ? '429' : (is401 ? '401' : '403');
+              blacklistKey(userKey, reason);
+              const cleanSummary = errMsg.length > 80 ? errMsg.substring(0, 80) + '...' : errMsg;
+              console.warn(`Key blacklisted (${reason}) on ${candidate}: ${cleanSummary}. Skipping retries...`);
+              break;
+            }
+
             const is503 =
               errMsg.includes('503') ||
               errMsg.includes('high demand') ||

@@ -1,4 +1,4 @@
-import { getGeminiClient } from './utils';
+import { getGeminiClient, blacklistKey } from './utils';
 
 export interface GroundingSource {
   title?: string;
@@ -50,14 +50,21 @@ export class GoogleGroundingAgent {
         // an empty string, and web search silently turns off with no visible cause.
         console.warn('[GoogleGroundingAgent] GEMINI_GROUNDING_MODEL is not set — falling back to ' + model);
       }
-      const response = await ai.models.generateContent({
-        model,
-        contents: [{ role: 'user', parts: [{ text: prompt }] }],
-        config: {
-          tools: [{ googleSearch: {} }],
-          temperature: 0.1, // Lower temperature for faster, deterministic output
-        },
-      });
+      const timeoutPromise = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error('GoogleGroundingAgent timeout after 3000ms')), 3000)
+      );
+
+      const response = await Promise.race([
+        ai.models.generateContent({
+          model,
+          contents: [{ role: 'user', parts: [{ text: prompt }] }],
+          config: {
+            tools: [{ googleSearch: {} }],
+            temperature: 0.1, // Lower temperature for faster, deterministic output
+          },
+        }),
+        timeoutPromise,
+      ]);
 
       const summary = response.text || '';
       if (!summary || summary.trim().length === 0) {
@@ -141,6 +148,13 @@ export class GoogleGroundingAgent {
 
     } catch (error: any) {
       console.error('[GoogleGroundingAgent] Grounding search failed:', error?.message || error);
+      const errMsg = String(error?.message || error);
+      const is429 = errMsg.includes('429') || errMsg.includes('RESOURCE_EXHAUSTED') || errMsg.includes('quota');
+      const is401 = errMsg.includes('401') || errMsg.includes('Unauthorized') || errMsg.includes('Invalid API Key');
+      const is403 = errMsg.includes('403') || errMsg.includes('PERMISSION_DENIED') || errMsg.includes('API_KEY_INVALID');
+      if (apiKey && (is429 || is401 || is403)) {
+        blacklistKey(apiKey, is429 ? '429' : (is401 ? '401' : '403'));
+      }
       return '';
     }
   }
