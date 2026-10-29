@@ -16,6 +16,12 @@ We are in an SEO + CRO improvement phase. The following changes are approved and
 3. **New pages requested** — `/about`, `/contact`, `/ai-assistant`. These are **explicitly requested** by the current phase and do **NOT** violate Rule 4.
 4. **No model names in user-facing content** — No model name (Gemini, Claude, DeepSeek, GPT, Mistral) may appear in user-facing text, meta tags, JSON-LD schema, or footer. Model names remain valid **only** in backend code, env vars, DB config, and internal admin UI.
 5. **Banned phrases in all content** — «بدون کارت بانکی» (factually false — card-to-card exists) and «بدون فیلترشکن» (not a differentiator). Neither phrase may appear in any user-facing text, meta, schema, or footer.
+6. **Image handling (news & blog)** — همه تصاویر خبر و مقاله باید این چرخه را طی کنند:
+   - **ذخیره:** فرمت **WebP** در دیتابیس به صورت `data:image/webp;base64,...` (نه JPEG، نه PNG، نه URL منبع خارجی)
+   - **پیشفرض:** اگر خبر تصویر ندارد، از `public/default-news-cover.webp` استفاده میشود (نه `NULL`)
+   - **نمایش:** در `/blog`، `/blog/:id`، و ادمین پنل — با `<img width={800} height={450} onError={fallback} loading="lazy" />`
+   - **ارسال تلگرام:** با `sendPhoto` و **Buffer** (نه URL خارجی — چون تلگرام از IP خودش fetch میکند و ممکن است blocked باشد)
+   - **حجم:** هر تصویر WebP حداکثر **۱۰۰KB** (کیفیت ۷۵–۸۲٪، عرض ۸۰۰px)
 
 ### Non-Negotiable Invariants (never change, regardless of phase)
 These are load-bearing. Do not refactor, rename, or "improve" them without explicit written approval from the owner:
@@ -238,6 +244,11 @@ The platform operates exclusively on **exactly six stable system profiles** (div
     - **سرعت رندر بالای صفحه (Above-the-Fold FCP/LCP)**: المان‌های بالادست لندینگ‌پیج (تیتر اصلی `h1`، زیرعنوان و بنر بالای صفحه) هرگز نباید کلاس‌های تاخیری انیمیشن مانند `.reveal-init` با `opacity: 0` داشته باشند. این المان‌ها باید فوراً با شفافیت ۱۰۰٪ ترسیم شوند تا شاخص‌های FCP و LCP روی گوشی موبایل دچار تاخیر نشوند.
     - **دسترس‌پذیری و کنتراست رنگ (WCAG AA 4.5:1)**: دکمه‌های اصلی حاوی متن سفید `#ffffff` باید حداقل دارای رنگ پس‌زمینه `#2563eb` یا تیره‌تر باشند تا استاندارد کنتراست رنگ رعایت شود (رنگ قدیمی `#3b82f6` نسبت ۳.۶۷:۱ داشت و مردود می‌شد). کلیه دکمه‌ها و لینک‌های نسخه موبایل که آیکون‌محور هستند باید دارای `aria-label` توصیفی باشند.
     - **حفاظت از فایل‌های استاتیک در برابر فال‌بک SPA**: درخواست‌های ربات‌ها یا مانیفست‌ها برای فایل‌های متنی/داده‌ای نظیر `/llms.txt`، `/ai-catalog.json` یا هر پسوند گم‌شده (`.json`، `.txt`، `.png`) هرگز نباید صفحه HTML برگردانند؛ بلکه باید فرمت صحیح داده یا کد وضعیت ۴۰۴ صریح داده شود.
+26. **مدیریت و بهینه‌سازی تصاویر وبلاگ و اخبار (News & Blog Image Handling Policy)**:
+    - **فرمت ذخیره‌سازی در دیتابیس**: تصاویر اخبار باید منحصراً با فرمت فشرده **WebP** به صورت `data:image/webp;base64,...` در ستون `image` جدول `news` ذخیره شوند. هرگز آدرس URL خارجی یا فرمت‌های سنگین JPEG/PNG خام ذخیره نشود.
+    - **تصویر پیش‌فرض سیستمی**: اگر خبری بدون تصویر ثبت یا دریافت شود، هرگز نباید مقدار `NULL` یا خالی داشته باشد؛ بلکه باید بلافاصله از تصویر کاور پیش‌فرض برند در `public/default-news-cover.webp` استفاده شود.
+    - **پیشگیری از CLS و خطای لود در فرانت‌اند**: تمامی تگ‌های `<img>` در `/blog`، صفحات آرشیو، و پیش‌نمایش ادمین باید دارای ابعاد مشخص `width={800} height={450}` (نسبت استاندارد ۱۶:۹)، `loading="lazy"`، `decoding="async"` و هندلر `onError` به همراه فال‌بک امن به `/default-news-cover.webp` باشند تا شاخص CLS صفر بماند و هیچ تصویر شکسته‌ای نمایش داده نشود.
+    - **ارسال تصویر به کانال تلگرام**: در ربات تلگرام و تسک دوره‌ای `newsCron`، تصویر خبر باید به صورت `Buffer` با متد `sendPhoto` ارسال شود (نه ارسال URL خام)، تا در صورت تحریم یا فیلتر بودن دامنه توسط سرورهای تلگرام، ارسال عکس به کانال مختل نشود. در صورت نبود یا نامعتبر بودن تصویر نیز به کاور پیش‌فرض رجوع شود.
 
 ---
 
