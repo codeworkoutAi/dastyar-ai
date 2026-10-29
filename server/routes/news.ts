@@ -74,11 +74,16 @@ router.get('/tag/:tag', (req, res) => {
   }
 });
 
-// GET /api/news/:id (Public: Get single news - constrained to numeric ID)
-router.get('/:id(\\d+)', (req, res) => {
+// GET /api/news/:id (Public: Get single news - numeric ID or slug)
+router.get('/:id', (req, res) => {
   try {
     const { id } = req.params;
-    const item = db.prepare('SELECT * FROM news WHERE id = ?').get(id);
+    let item: any;
+    if (/^\d+$/.test(id)) {
+      item = db.prepare('SELECT * FROM news WHERE id = ?').get(id);
+    } else {
+      item = db.prepare('SELECT * FROM news WHERE slug = ?').get(id);
+    }
     if (!item) {
       return res.status(404).json({ error: 'خبر پیدا نشد' });
     }
@@ -88,6 +93,19 @@ router.get('/:id(\\d+)', (req, res) => {
     res.status(500).json({ error: 'خطای سرور' });
   }
 });
+
+function getDefaultNewsCoverDataUrl(): string | null {
+  try {
+    const coverPath = path.join(process.cwd(), 'public', 'default-news-cover.webp');
+    if (fs.existsSync(coverPath)) {
+      const b64 = fs.readFileSync(coverPath).toString('base64');
+      return `data:image/webp;base64,${b64}`;
+    }
+  } catch (e) {
+    console.warn('[News API] Failed to load default news cover data URL:', e);
+  }
+  return null;
+}
 
 // POST /api/news (Admin: Create news and broadcast to Telegram)
 router.post('/', requireAuth, requireAdmin, async (req, res) => {
@@ -106,6 +124,9 @@ router.post('/', requireAuth, requireAdmin, async (req, res) => {
       } catch (e) {
         console.warn('[News API] WebP conversion failed, saving raw image:', e);
       }
+    } else {
+      finalImage = getDefaultNewsCoverDataUrl();
+      console.log('[News] manual news without image, using default cover');
     }
 
     const tagsJson = Array.isArray(tags) ? JSON.stringify(tags) : (typeof tags === 'string' && tags ? tags : '[]');
@@ -123,7 +144,7 @@ router.post('/', requireAuth, requireAdmin, async (req, res) => {
           id: newId,
           title,
           content,
-          image: image || ''
+          image: finalImage || ''
         });
       } catch (tgError) {
         console.error('[News API] Telegram broadcast failed:', tgError);
@@ -141,7 +162,7 @@ router.post('/', requireAuth, requireAdmin, async (req, res) => {
 router.put('/:id(\\d+)', requireAuth, requireAdmin, async (req, res) => {
   try {
     const { id } = req.params;
-    const { title, content, image, tags, rebroadcastTelegram } = req.body;
+    const { title, content, image, tags, rebroadcastTelegram, imageManuallyCleared } = req.body;
 
     if (!title || !content) {
       return res.status(400).json({ error: 'عنوان و متن خبر الزامی است' });
@@ -154,13 +175,18 @@ router.put('/:id(\\d+)', requireAuth, requireAdmin, async (req, res) => {
 
     const tagsJson = Array.isArray(tags) ? JSON.stringify(tags) : (typeof tags === 'string' && tags ? tags : existing.tags || '[]');
     let finalImage = image !== undefined ? (image || null) : existing.image;
-    if (finalImage && finalImage !== existing.image) {
+    if (imageManuallyCleared === true) {
+      finalImage = null;
+    } else if (finalImage && finalImage !== existing.image) {
       try {
         const webp = await optimizeImageToWebpDataUrl(finalImage, 800, 75);
         if (webp) finalImage = webp;
       } catch (e) {
         console.warn('[News API] WebP conversion failed on update, saving raw image:', e);
       }
+    } else if (!finalImage) {
+      finalImage = getDefaultNewsCoverDataUrl();
+      console.log('[News] manual news without image, using default cover');
     }
 
     db.prepare('UPDATE news SET title = ?, content = ?, image = ?, tags = ? WHERE id = ?')

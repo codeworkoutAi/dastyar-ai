@@ -423,6 +423,52 @@ export async function fetchAndProcessNews() {
   }
 }
 
+export async function getDefaultNewsCoverBuffer(): Promise<Buffer> {
+  const defaultPath = path.join(process.cwd(), 'public', 'default-news-cover.webp');
+  if (fs.existsSync(defaultPath)) {
+    try {
+      const buf = fs.readFileSync(defaultPath);
+      if (buf && buf.length > 0) return buf;
+    } catch (e) {
+      console.warn('[NewsCron] Failed reading default-news-cover.webp:', e);
+    }
+  }
+
+  try {
+    const sharp = (await import('sharp')).default;
+    const svg = `<svg width="800" height="450" viewBox="0 0 800 450" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a" />
+      <stop offset="50%" stop-color="#1e1b4b" />
+      <stop offset="100%" stop-color="#090d16" />
+    </linearGradient>
+    <linearGradient id="glow" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#3b82f6" />
+      <stop offset="100%" stop-color="#8b5cf6" />
+    </linearGradient>
+  </defs>
+  <rect width="800" height="450" fill="url(#bg)" />
+  <circle cx="400" cy="180" r="72" fill="url(#glow)" opacity="0.25" />
+  <circle cx="400" cy="180" r="52" fill="url(#glow)" opacity="0.35" />
+  <path d="M375 180 L400 155 L425 180 L400 205 Z" fill="#60a5fa" />
+  <text x="400" y="285" font-family="system-ui, -apple-system, sans-serif" font-size="36" font-weight="bold" fill="#ffffff" text-anchor="middle">Dastyar AI</text>
+  <text x="400" y="325" font-family="system-ui, -apple-system, sans-serif" font-size="18" fill="#94a3b8" text-anchor="middle">دستیار هوش مصنوعی فارسی</text>
+</svg>`;
+    const buffer = await sharp(Buffer.from(svg)).webp({ quality: 80 }).toBuffer();
+    try {
+      const pubDir = path.join(process.cwd(), 'public');
+      if (fs.existsSync(pubDir)) {
+        fs.writeFileSync(defaultPath, buffer);
+      }
+    } catch {}
+    return buffer;
+  } catch (err: any) {
+    console.warn('[NewsCron] Failed to generate default cover buffer:', err?.message || err);
+    return Buffer.from('UklGRhoAAABXRUJQVlA4TA0AAAAvAAAAEAcQERGIiP4HAA==', 'base64');
+  }
+}
+
 export async function sendNewsToTelegram(
   channelId: string,
   currentBot: any,
@@ -447,6 +493,7 @@ export async function sendNewsToTelegram(
     `${safeContent}...`;
 
   const cleanImageUrl = sanitizeImageUrl(article.image);
+  let photoSent = false;
 
   if (cleanImageUrl && !cleanImageUrl.includes('undefined')) {
     // Attempt 0: Base64 Data URL
@@ -464,8 +511,9 @@ export async function sendNewsToTelegram(
               ]
             }
           });
-          console.log(`[NewsCron] News photo broadcasted via base64 data successfully (Article #${article.id}).`);
-          appendCronLog('INFO', 'News photo broadcasted via base64 data successfully', { articleId: article.id });
+          const sizeKB = Math.round(buffer.length / 1024);
+          console.log(`[Telegram] sendPhoto with buffer (size=${sizeKB}KB)`);
+          appendCronLog('INFO', `[Telegram] sendPhoto with buffer (size=${sizeKB}KB)`, { articleId: article.id });
           return true;
         }
       } catch (base64Err: any) {
@@ -475,8 +523,60 @@ export async function sendNewsToTelegram(
     }
 
     // Attempt 1: Direct photo URL
-    try {
-      await currentBot.telegram.sendPhoto(channelId, cleanImageUrl, {
+    if (!photoSent) {
+      try {
+        await currentBot.telegram.sendPhoto(channelId, cleanImageUrl, {
+          caption: messageText,
+          parse_mode: 'HTML',
+          reply_markup: {
+            inline_keyboard: [
+              [{ text: '📖 مطالعه کامل مقاله در سایت', url: articleUrl }]
+            ]
+          }
+        });
+        console.log(`[NewsCron] News photo broadcasted to Telegram successfully (Article #${article.id}).`);
+        appendCronLog('INFO', 'News photo broadcasted to Telegram successfully', { articleId: article.id });
+        return true;
+      } catch (photoErr: any) {
+        console.warn('[NewsCron] sendPhoto via URL failed, attempting buffer fallback:', photoErr?.message || photoErr);
+        appendCronLog('WARN', 'sendPhoto via URL failed, attempting buffer fallback', photoErr?.message || photoErr);
+
+        // Attempt 2: Server-side buffer download fallback
+        try {
+          const imgRes = await fetch(cleanImageUrl, {
+            headers: {
+              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+            }
+          });
+          if (imgRes.ok) {
+            const arrayBuffer = await imgRes.arrayBuffer();
+            const buffer = Buffer.from(arrayBuffer);
+            await currentBot.telegram.sendPhoto(channelId, { source: buffer }, {
+              caption: messageText,
+              parse_mode: 'HTML',
+              reply_markup: {
+                inline_keyboard: [
+                  [{ text: '📖 مطالعه کامل مقاله در سایت', url: articleUrl }]
+                ]
+              }
+            });
+            const sizeKB = Math.round(buffer.length / 1024);
+            console.log(`[Telegram] sendPhoto with buffer (size=${sizeKB}KB)`);
+            appendCronLog('INFO', `[Telegram] sendPhoto with buffer (size=${sizeKB}KB)`, { articleId: article.id });
+            return true;
+          }
+        } catch (bufErr: any) {
+          console.warn('[NewsCron] Buffer fallback also failed:', bufErr?.message || bufErr);
+        }
+      }
+    }
+  }
+
+  // If no image provided or image attempts failed, send default brand cover
+  try {
+    const defaultBuffer = await getDefaultNewsCoverBuffer();
+    if (defaultBuffer && defaultBuffer.length > 0) {
+      await currentBot.telegram.sendPhoto(channelId, { source: defaultBuffer }, {
         caption: messageText,
         parse_mode: 'HTML',
         reply_markup: {
@@ -485,55 +585,35 @@ export async function sendNewsToTelegram(
           ]
         }
       });
-      console.log(`[NewsCron] News photo broadcasted to Telegram successfully (Article #${article.id}).`);
-      appendCronLog('INFO', 'News photo broadcasted to Telegram successfully', { articleId: article.id });
+      const sizeKB = Math.round(defaultBuffer.length / 1024);
+      console.log(`[Telegram] sendPhoto with buffer (size=${sizeKB}KB)`);
+      appendCronLog('INFO', `[Telegram] sendPhoto with buffer (size=${sizeKB}KB) (default cover)`, { articleId: article.id });
       return true;
-    } catch (photoErr: any) {
-      console.warn('[NewsCron] sendPhoto via URL failed, attempting buffer fallback:', photoErr?.message || photoErr);
-      appendCronLog('WARN', 'sendPhoto via URL failed, attempting buffer fallback', photoErr?.message || photoErr);
-
-      // Attempt 2: Server-side buffer download fallback
-      try {
-        const imgRes = await fetch(cleanImageUrl, {
-          headers: {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-          }
-        });
-        if (imgRes.ok) {
-          const arrayBuffer = await imgRes.arrayBuffer();
-          const buffer = Buffer.from(arrayBuffer);
-          await currentBot.telegram.sendPhoto(channelId, { source: buffer }, {
-            caption: messageText,
-            parse_mode: 'HTML',
-            reply_markup: {
-              inline_keyboard: [
-                [{ text: '📖 مطالعه کامل مقاله در سایت', url: articleUrl }]
-              ]
-            }
-          });
-          console.log(`[NewsCron] News photo broadcasted via buffer fallback successfully (Article #${article.id}).`);
-          appendCronLog('INFO', 'News photo broadcasted via buffer fallback successfully', { articleId: article.id });
-          return true;
-        }
-      } catch (bufErr: any) {
-        console.warn('[NewsCron] Buffer fallback also failed:', bufErr?.message || bufErr);
-      }
     }
+  } catch (defaultErr: any) {
+    console.error(`[Telegram] sendPhoto failed: ${defaultErr?.message || defaultErr}, falling back to sendMessage`);
+    appendCronLog('WARN', `[Telegram] sendPhoto failed: ${defaultErr?.message || defaultErr}, falling back to sendMessage`);
   }
 
-  // Fallback to text message with link preview disabled so it never produces an ugly truncated card
-  await currentBot.telegram.sendMessage(channelId, messageText, {
-    parse_mode: 'HTML',
-    disable_web_page_preview: true,
-    reply_markup: {
-      inline_keyboard: [
-        [{ text: '📖 مطالعه کامل مقاله در سایت', url: articleUrl }]
-      ]
-    }
-  });
-  console.log(`[NewsCron] News text broadcasted to Telegram (Article #${article.id}).`);
-  appendCronLog('INFO', 'News text broadcasted to Telegram (fallback)', { articleId: article.id });
-  return true;
+  // Fallback to text message with link preview enabled so it keeps an article link preview
+  try {
+    await currentBot.telegram.sendMessage(channelId, messageText, {
+      parse_mode: 'HTML',
+      disable_web_page_preview: false,
+      reply_markup: {
+        inline_keyboard: [
+          [{ text: '📖 مطالعه کامل مقاله در سایت', url: articleUrl }]
+        ]
+      }
+    });
+    console.log(`[NewsCron] News text broadcasted to Telegram (Article #${article.id}).`);
+    appendCronLog('INFO', 'News text broadcasted to Telegram (fallback)', { articleId: article.id });
+    return true;
+  } catch (msgErr: any) {
+    console.error('[NewsCron] Telegram sendMessage fallback also failed:', msgErr);
+    appendCronLog('ERROR', 'Telegram sendMessage fallback failed', msgErr);
+    return false;
+  }
 }
 
 export async function broadcastArticleById(articleId: number) {

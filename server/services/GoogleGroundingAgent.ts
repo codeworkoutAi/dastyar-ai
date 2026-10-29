@@ -16,13 +16,13 @@ export class GoogleGroundingAgent {
   public static async search(query: string, customApiKey?: string): Promise<string> {
     if (!query || query.trim().length === 0) return '';
 
+    const apiKey = customApiKey
+      || process.env.GEMINI_SEARCH_KEY
+      || process.env.GEMINI_API_KEY
+      || process.env.DEFAULT_GEMINI_KEY;
+
     try {
       console.log(`[GoogleGroundingAgent] Searching live Google for: "${query.substring(0, 100)}"...`);
-
-      const apiKey = customApiKey
-        || process.env.GEMINI_SEARCH_KEY
-        || process.env.GEMINI_API_KEY
-        || process.env.DEFAULT_GEMINI_KEY;
 
       const ai = getGeminiClient(apiKey, true);
 
