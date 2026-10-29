@@ -125,10 +125,19 @@ export function TagArchive({ forcedTag }: { forcedTag?: string } = {}) {
  >
  {item.image ? (
  <div className="aspect-[16/9] w-full overflow-hidden relative">
- <img loading="lazy" decoding="async" src={item.image} 
- alt={item.title} 
- className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
- />
+	<img 
+	  loading="lazy" 
+	  decoding="async" 
+	  width={800}
+	  height={450}
+	  src={item.image} 
+	  alt={item.title} 
+	  onError={(e) => {
+	    e.currentTarget.src = '/default-news-cover.webp';
+	    e.currentTarget.onerror = null;
+	  }}
+	  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+	/>
  </div>
  ) : (
  <div className="aspect-[16/9] w-full bg-gradient-to-br from-emerald-100 to-teal-50 dark:from-emerald-950/30 dark:to-teal-900/30 flex items-center justify-center">

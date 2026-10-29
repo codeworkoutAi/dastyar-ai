@@ -11,12 +11,15 @@ import { setPageSeo } from '../../lib/seo';
 
 
 interface NewsItem {
- id: number;
- title: string;
- content: string;
- image?: string;
- createdAt: string;
- tags?: string;
+  id: number;
+  title: string;
+  content: string;
+  image?: string;
+  createdAt: string;
+  tags?: string;
+  slug?: string;
+  source?: string;
+  description?: string;
 }
 
 const getReadingTime = (text: string) => {
@@ -156,7 +159,7 @@ export function Blog() {
  if (Array.isArray(data)) {
  setNews(data);
  if (id) {
-  const found = data.find(item => item.id.toString() === id);
+  const found = data.find(item => item.id.toString() === id || (item.slug && item.slug === id));
   if (found) setSelectedPost(found);
   else setSelectedPost(null);
   } else {
@@ -186,10 +189,13 @@ export function Blog() {
 
  useEffect(() => {
  if (selectedPost) {
- const cleanSnippet = (selectedPost.content || '')
- .replace(/[#*`_\[\]()\-!>]/g, '')
- .slice(0, 160)
- .trim();
+ const cleanSnippet = selectedPost.description || (selectedPost.content || '')
+  .replace(/<!--[\s\S]*?-->/g, '')
+  .replace(/^>\s*/gm, '')
+  .replace(/[*_#`~\[\]()\-!>]/g, '')
+  .replace(/\s+/g, ' ')
+  .slice(0, 160)
+  .trim();
 
  let postKeywords = 'هوش مصنوعی, اخبار فناوری';
  if (selectedPost.tags) {
@@ -201,7 +207,7 @@ export function Blog() {
  } catch {}
  }
 
- const postCanonical = `${window.location.origin}/blog/${selectedPost.id}`;
+ const postCanonical = selectedPost.slug ? `${window.location.origin}/blog/${selectedPost.slug}` : `${window.location.origin}/blog/${selectedPost.id}`;
 
  setPageSeo({
  title: `${selectedPost.title} | Dastyar AI`,
@@ -227,7 +233,7 @@ export function Blog() {
  inLanguage: 'fa-IR',
  author: {
  '@type': 'Organization',
- name: 'دستیار هوشمند'
+ name: selectedPost.source === 'manual' ? 'Dastyar AI Team' : 'دستیار هوشمند'
  },
  publisher: {
  '@type': 'Organization',
@@ -326,10 +332,19 @@ export function Blog() {
  ) : selectedPost ? (
  <article className="max-w-3xl mx-auto animate-fadeIn">
 {selectedPost.image && (
-  <div className="mb-8 w-full overflow-hidden rounded-card shadow-sm border border-[var(--card-border)]  aspect-video">
-  <img loading="lazy" decoding="async" src={selectedPost.image} 
-  alt={selectedPost.title} 
-  className="w-full h-full object-cover"
+  <div className="mb-8 w-full overflow-hidden rounded-card shadow-sm border border-[var(--card-border)] aspect-video">
+  <img 
+    loading="lazy" 
+    decoding="async" 
+    width={800}
+    height={450}
+    src={selectedPost.image} 
+    alt={selectedPost.title} 
+    onError={(e) => {
+      e.currentTarget.src = '/default-news-cover.webp';
+      e.currentTarget.onerror = null;
+    }}
+    className="w-full h-full object-cover"
   />
   </div>
   )}
@@ -588,10 +603,10 @@ export function Blog() {
         const renderCard = (item: NewsItem) => (
           <Link 
             key={item.id}
-            to={`/blog/${item.id}`}
+            to={item.slug ? `/blog/${item.slug}` : `/blog/${item.id}`}
             onClick={() => {
               setSelectedPost(item);
-              navigate(`/blog/${item.id}`);
+              navigate(item.slug ? `/blog/${item.slug}` : `/blog/${item.id}`);
             }}
             className={`group cursor-pointer clay-card-thick hover:clay-card-elevated hover:-translate-y-2 transition-all duration-300 overflow-hidden ${
               viewMode === 'grid' ? 'flex flex-col rounded-[28px]' : 
@@ -604,8 +619,17 @@ export function Blog() {
                 viewMode === 'grid' ? "aspect-[16/9] w-full overflow-hidden relative shrink-0" : "aspect-video sm:aspect-square sm:w-48 overflow-hidden relative shrink-0"
               }>
                 {item.image ? (
-                  <img loading="lazy" decoding="async" src={item.image} 
+                  <img 
+                    loading="lazy" 
+                    decoding="async" 
+                    width={800}
+                    height={450}
+                    src={item.image} 
                     alt={item.title} 
+                    onError={(e) => {
+                      e.currentTarget.src = '/default-news-cover.webp';
+                      e.currentTarget.onerror = null;
+                    }}
                     className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                   />
                 ) : (
@@ -664,17 +688,26 @@ export function Blog() {
                 <div className="space-y-8">
                   {/* Featured Article */}
                   <Link 
-                    to={`/blog/${guideArticles[0].id}`}
+                    to={guideArticles[0].slug ? `/blog/${guideArticles[0].slug}` : `/blog/${guideArticles[0].id}`}
                     onClick={() => {
                       setSelectedPost(guideArticles[0]);
-                      navigate(`/blog/${guideArticles[0].id}`);
+                      navigate(guideArticles[0].slug ? `/blog/${guideArticles[0].slug}` : `/blog/${guideArticles[0].id}`);
                     }}
                     className="group cursor-pointer clay-card-elevated rounded-[32px] overflow-hidden hover:-translate-y-1.5 transition-all duration-300 flex flex-col md:flex-row"
                   >
                     {guideArticles[0].image ? (
                       <div className="w-full md:w-1/2 aspect-square md:aspect-auto overflow-hidden relative">
-                        <img loading="lazy" decoding="async" src={guideArticles[0].image} 
+                        <img 
+                          loading="lazy" 
+                          decoding="async" 
+                          width={800}
+                          height={450}
+                          src={guideArticles[0].image} 
                           alt={guideArticles[0].title} 
+                          onError={(e) => {
+                            e.currentTarget.src = '/default-news-cover.webp';
+                            e.currentTarget.onerror = null;
+                          }}
                           className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                         />
                       </div>

@@ -35,7 +35,8 @@ import {
  Activity,
  Coins,
  BarChart3,
- Palette
+ Palette,
+ ImageOff
 } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import { toEnglishDigits } from '../lib/persianUtils';
@@ -2694,7 +2695,35 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
  <Trash2 size={16} />
  </button>
  </div>
- {n.image && <img src={n.image} className="w-full h-32 object-cover" />}
+ {n.image ? (
+   <img 
+     src={n.image} 
+     alt={n.title}
+     width={200}
+     height={120}
+     loading="lazy"
+     decoding="async"
+     onError={(e) => {
+       e.currentTarget.src = '/default-news-cover.webp';
+       e.currentTarget.onerror = null;
+     }}
+     className="w-full h-32 object-cover" 
+   />
+ ) : (
+   <div className="w-full h-32 clay-surface flex flex-col items-center justify-center gap-2 p-3 text-center border-b border-[var(--card-border)]">
+     <div className="flex items-center gap-1.5 text-xs text-[var(--text-muted)] font-medium">
+       <ImageOff size={16} className="text-[var(--text-dim)]" />
+       <span>بدون تصویر</span>
+     </div>
+     <button
+       type="button"
+       onClick={() => startEditNews(n)}
+       className="clay-btn text-[11px] px-2.5 py-1 rounded-lg text-emerald-600 dark:text-emerald-400 font-bold transition-all shadow-sm"
+     >
+       افزودن تصویر
+     </button>
+   </div>
+ )}
  <div className="p-4 flex-1 flex flex-col">
  <h4 className="font-bold mb-2 line-clamp-1">{n.title}</h4>
  <p className="text-xs text-zinc-500 line-clamp-2">{n.content}</p>

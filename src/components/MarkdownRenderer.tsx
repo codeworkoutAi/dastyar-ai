@@ -828,6 +828,24 @@ const MarkdownSegment: React.FC<MarkdownRendererProps> = React.memo(({
  blockquote({ children }) {
  const rawText = extractNodeText(children);
  const rtl = rawText ? isRtlText(rawText) : isOverallRtl;
+ const isSummary = rawText.includes('خلاصه:') || rawText.startsWith('خلاصه');
+ if (isSummary) {
+   return (
+     <div
+       className="my-5 p-5 clay-card rounded-2xl border border-[var(--card-border)] bg-gradient-to-br from-emerald-500/5 to-teal-500/5 shadow-xs"
+       dir="rtl"
+     >
+       <div className="flex items-center gap-2 mb-2 text-emerald-600 dark:text-emerald-400 font-bold text-sm">
+         <span className="px-2.5 py-0.5 rounded-lg bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 text-xs font-bold">
+           خلاصه
+         </span>
+       </div>
+       <div className="text-sm md:text-base leading-relaxed text-zinc-700 dark:text-zinc-300">
+         {children}
+       </div>
+     </div>
+   );
+ }
  return (
  <blockquote
  className={`p-4 my-3 bg-black/[0.03] dark:bg-white/[0.04] border border-black/10 dark:border-white/10 rounded-2xl text-inherit opacity-95 shadow-xs transition-colors not-italic ${
@@ -870,6 +888,17 @@ const MarkdownSegment: React.FC<MarkdownRendererProps> = React.memo(({
 
  // Links
  a({ href, children }) {
+ const isChatCta = href && (href.startsWith('/chat') || href.includes('dastyarai.com/chat'));
+ if (isChatCta) {
+   return (
+     <a
+       href={href}
+       className="inline-flex items-center justify-center gap-2 px-6 py-3 my-4 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm sm:text-base shadow-md hover:-translate-y-0.5 transition-all text-center no-underline cursor-pointer"
+     >
+       <span>{children}</span>
+     </a>
+   );
+ }
  return (
  <a
  href={href}
@@ -983,6 +1012,7 @@ const CodeBlock: React.FC<CodeBlockProps> = ({ language, code }) => {
   const [copied, setCopied] = useState(false);
   const { settings, systemIsDark } = useSettingsStore();
   const isDarkMode = settings.appearance.theme === 'dark' || (settings.appearance.theme === 'system' && systemIsDark);
+  const isRtl = isRtlText(code);
 
   const syntaxTheme = useMemo(() => {
     const base = isDarkMode ? vscDarkPlus : oneLight;
@@ -1050,14 +1080,14 @@ const CodeBlock: React.FC<CodeBlockProps> = ({ language, code }) => {
  return (
     <div
       className="my-4 overflow-hidden rounded-card clay-card border border-subtle code-block-container"
-      dir="ltr"
+      dir={isRtl ? "rtl" : "ltr"}
     >
       {/* Code Header */}
       <div className="flex items-center justify-between px-4 py-2.5 border-b border-subtle select-none">
         <div className="flex items-center gap-2">
           <FileCode className="w-4 h-4 text-[var(--accent-primary)]" />
           <span className="font-mono text-xs font-bold uppercase tracking-wider text-[var(--text-main)] opacity-85">
-            {language || 'code'}
+            {language || (isRtl ? 'پرامپت' : 'code')}
           </span>
         </div>
 
@@ -1103,15 +1133,20 @@ const CodeBlock: React.FC<CodeBlockProps> = ({ language, code }) => {
             backgroundColor: 'transparent',
             fontSize: '13px',
             lineHeight: '1.7',
-            fontFamily: "var(--font-mono), 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+            direction: isRtl ? 'rtl' : 'ltr',
+            textAlign: isRtl ? 'right' : 'left',
+            fontFamily: isRtl ? "var(--font-sans), 'Vazirmatn', sans-serif" : "var(--font-mono), 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
           }}
           codeTagProps={{
+            dir: isRtl ? 'rtl' : 'ltr',
             style: {
               background: 'transparent',
               backgroundColor: 'transparent',
+              direction: isRtl ? 'rtl' : 'ltr',
+              textAlign: isRtl ? 'right' : 'left',
             },
           }}
-          showLineNumbers={code.split('\n').length > 3}
+          showLineNumbers={!isRtl && code.split('\n').length > 3}
           lineNumberStyle={{
             minWidth: '2.5em',
             paddingRight: '1em',
