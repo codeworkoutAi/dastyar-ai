@@ -83,7 +83,7 @@ export const sitemapHandler = (req: express.Request, res: express.Response) => {
 
     // 3. Dynamic Blog Pages & Tags
     try {
-      const news = db.prepare('SELECT id, title, image, createdAt, tags FROM news ORDER BY createdAt DESC').all() as any[];
+      const news = db.prepare('SELECT id, title, image, createdAt, tags, slug FROM news ORDER BY createdAt DESC').all() as any[];
       const allTags = new Set<string>();
 
       for (const item of news) {
@@ -98,7 +98,8 @@ export const sitemapHandler = (req: express.Request, res: express.Response) => {
         }
         const itemPriority = isCronNews ? '0.4' : '0.8';
         const date = safeDate(item.createdAt);
-        xml += `  <url>\n    <loc>${escapeXml(`${baseUrl}/blog/${item.id}`)}</loc>\n    <lastmod>${date}</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>${itemPriority}</priority>\n`;
+        const postPath = item.slug ? `/blog/${item.slug}` : `/blog/${item.id}`;
+        xml += `  <url>\n    <loc>${escapeXml(`${baseUrl}${postPath}`)}</loc>\n    <lastmod>${date}</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>${itemPriority}</priority>\n`;
         if (item.image && typeof item.image === 'string' && !item.image.startsWith('data:')) {
           const imgUrl = item.image.startsWith('http') ? item.image : `${baseUrl}${item.image}`;
           xml += `    <image:image>\n      <image:loc>${escapeXml(imgUrl)}</image:loc>\n      <image:title><![CDATA[${item.title || ''}]]></image:title>\n    </image:image>\n`;

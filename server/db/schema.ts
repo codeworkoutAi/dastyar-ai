@@ -1,3 +1,5 @@
+import fs from 'fs';
+import path from 'path';
 import db from './database';
 
 export function initializeSchema() {
@@ -66,6 +68,45 @@ export function initializeSchema() {
       }
     } catch (e) {
       console.error('[Database] Failed to add tags column:', e);
+    }
+
+    // Add source and slug to news
+    try {
+      const newsTableInfo = db.prepare('PRAGMA table_info(news)').all() as any[];
+      if (newsTableInfo.length > 0 && !newsTableInfo.some(col => col.name === 'source')) {
+        console.log('[Database] Adding source column to news table...');
+        db.exec("ALTER TABLE news ADD COLUMN source TEXT DEFAULT 'cron';");
+      }
+      if (newsTableInfo.length > 0 && !newsTableInfo.some(col => col.name === 'slug')) {
+        console.log('[Database] Adding slug column to news table...');
+        db.exec('ALTER TABLE news ADD COLUMN slug TEXT;');
+        db.exec('CREATE UNIQUE INDEX IF NOT EXISTS idx_news_slug ON news(slug);');
+      }
+      if (newsTableInfo.length > 0 && !newsTableInfo.some(col => col.name === 'description')) {
+        console.log('[Database] Adding description column to news table...');
+        db.exec('ALTER TABLE news ADD COLUMN description TEXT;');
+      }
+    } catch (e) {
+      console.error('[Database] Failed to add source/slug columns to news:', e);
+    }
+
+    // Backfill missing news images with default brand cover (idempotent, e.g. article #81)
+    try {
+      const emptyNews = db.prepare("SELECT id FROM news WHERE image IS NULL OR TRIM(image) = ''").all() as { id: number }[];
+      if (emptyNews.length > 0) {
+        const coverPath = path.join(process.cwd(), 'public', 'default-news-cover.webp');
+        if (fs.existsSync(coverPath)) {
+          const coverBase64 = fs.readFileSync(coverPath).toString('base64');
+          const coverDataUrl = `data:image/webp;base64,${coverBase64}`;
+          const updateStmt = db.prepare("UPDATE news SET image = ? WHERE id = ? AND (image IS NULL OR TRIM(image) = '')");
+          for (const item of emptyNews) {
+            updateStmt.run(coverDataUrl, item.id);
+            console.log(`[Database] Backfilled default news cover for Article #${item.id}`);
+          }
+        }
+      }
+    } catch (e) {
+      console.error('[Database] Failed to backfill default news cover:', e);
     }
 
     // Add botState to users for Telegram persistent state
@@ -301,6 +342,8 @@ export function initializeSchema() {
       image TEXT,
       sourceUrl TEXT,
       tags TEXT,
+      source TEXT DEFAULT 'cron',
+      slug TEXT,
       createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
     )
   `);

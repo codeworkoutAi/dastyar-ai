@@ -43,8 +43,8 @@ export async function renderHtmlWithSeo(req: express.Request, res: express.Respo
 
     let extraMetaTags = '';
 
-    // Check /blog/:id
-    const blogMatch = urlPath.match(/^\/blog\/(\d+)$/);
+    // Check /blog/:id or /blog/:slug
+    const blogMatch = urlPath.match(/^\/blog\/([a-zA-Z0-9\-_]+)$/);
     const productMatch = urlPath.match(/^\/store\/product\/(\d+)$/);
     
     if (productMatch) {
@@ -96,14 +96,35 @@ export async function renderHtmlWithSeo(req: express.Request, res: express.Respo
           }
         }
       } catch (err) {}
-    } else if (blogMatch) {
-      const blogId = blogMatch[1];
-      const post = db.prepare('SELECT * FROM news WHERE id = ?').get(blogId) as any;
+    } else if (blogMatch && blogMatch[1] !== 'news' && blogMatch[1] !== 'tag') {
+      const identifier = blogMatch[1];
+      let post: any;
+      try {
+        if (/^\d+$/.test(identifier)) {
+          post = db.prepare('SELECT * FROM news WHERE id = ?').get(identifier) as any;
+        } else {
+          post = db.prepare('SELECT * FROM news WHERE slug = ?').get(identifier) as any;
+        }
+      } catch (e) {
+        post = db.prepare('SELECT * FROM news WHERE id = ?').get(identifier) as any;
+      }
       if (post) {
+        if (post.slug) {
+          canonicalUrl = `${baseUrl}/blog/${post.slug}`;
+        }
         pageTitle = `${post.title} | Dastyar AI`;
         postContent = post.content || '';
-        const rawText = postContent.replace(/[#*`_\\[\\]()\\-!>]/g, '').trim();
-        pageDesc = rawText.slice(0, 160) || pageDesc;
+        if (post.description) {
+          pageDesc = post.description;
+        } else {
+          const rawText = postContent
+            .replace(/<!--[\s\S]*?-->/g, '')
+            .replace(/^>\s*/gm, '')
+            .replace(/[*_#`~\[\]()\-!>]/g, '')
+            .replace(/\s+/g, ' ')
+            .trim();
+          pageDesc = rawText.slice(0, 160) || pageDesc;
+        }
         if (post.image) {
           pageImage = post.image.startsWith('http') ? post.image : `${baseUrl}${post.image}`;
         }
@@ -116,7 +137,7 @@ export async function renderHtmlWithSeo(req: express.Request, res: express.Respo
           }
         } catch (e) {}
 
-        const authorName = post.author || 'دستیار هوشمند';
+        const authorName = post.author || (post.source === 'manual' ? 'Dastyar AI Team' : 'دستیار هوشمند');
         const datePublished = post.createdAt ? new Date(post.createdAt).toISOString() : new Date().toISOString();
         const dateModified = post.updatedAt ? new Date(post.updatedAt).toISOString() : datePublished;
 
