@@ -681,8 +681,9 @@ router.post('/api/chat/stream', chatStreamLimiter, guestChatRateLimiter, async (
               topK: 40,
             };
 
-            // Flash Lite models reject thinkingBudget: 0 with 400 INVALID_ARGUMENT
-            if (!isLiteModel || thinkingBudget > 0) {
+            // Only set thinkingConfig when a positive thinkingBudget is desired and the model supports it.
+            // Setting thinkingBudget: 0 or passing thinkingConfig to unsupported/lite models causes 400 INVALID_ARGUMENT.
+            if (thinkingBudget > 0 && !isLiteModel) {
               streamConfig.thinkingConfig = {
                 thinkingBudget,
               };

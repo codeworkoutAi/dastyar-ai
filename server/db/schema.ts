@@ -30,7 +30,7 @@ export function initializeSchema() {
     try {
       console.log('[Database] Migrating free profiles to Gemini Keys Pool...');
       db.prepare("UPDATE default_profiles SET baseUrl = 'https://generativelanguage.googleapis.com', modelName = 'gemini-3.6-flash', apiKey = '' WHERE id = 'free_default'").run();
-      db.prepare("UPDATE default_profiles SET baseUrl = 'https://generativelanguage.googleapis.com', modelName = 'gemini-2.0-pro-exp-02-05', apiKey = '' WHERE id = 'free_coding'").run();
+      db.prepare("UPDATE default_profiles SET baseUrl = 'https://generativelanguage.googleapis.com', modelName = 'gemini-3.6-flash', apiKey = '' WHERE id = 'free_coding'").run();
       db.prepare("UPDATE default_profiles SET baseUrl = 'https://generativelanguage.googleapis.com', modelName = 'gemini-3.6-flash', apiKey = '' WHERE id = 'free_vision'").run();
     } catch (e) {
       console.error('[Database] Failed to migrate free profiles:', e);
@@ -378,7 +378,7 @@ export function initializeSchema() {
       // 1. Free Default (Ultra-economic general chat)
       seedStmt.run('free_default', 'دستیار چت و گفتگو', 'https://generativelanguage.googleapis.com', '', 'gemini-3.6-flash', '', 'default', 0, 1);
       // 2. Free Coding
-      seedStmt.run('free_coding', 'دستیار برنامه‌نویسی و کد', 'https://generativelanguage.googleapis.com', '', 'gemini-2.0-pro-exp-02-05', '', 'coding', 1, 1);
+      seedStmt.run('free_coding', 'دستیار برنامه‌نویسی و کد', 'https://generativelanguage.googleapis.com', '', 'gemini-3.6-flash', '', 'coding', 1, 1);
       // 3. Free Vision
       seedStmt.run('free_vision', 'دستیار بینایی و اسناد', 'https://generativelanguage.googleapis.com', '', 'gemini-3.6-flash', '', 'vision', 2, 1);
       
