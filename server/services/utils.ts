@@ -616,7 +616,7 @@ export function formatContentsForGemini(messages: any[]) {
     }
 
     rawContents.push({
-      role: m.role === 'assistant' ? 'model' : 'user',
+      role: (m.role === 'assistant' || m.role === 'model') ? 'model' : 'user',
       parts,
     });
   }
@@ -637,6 +637,11 @@ export function formatContentsForGemini(messages: any[]) {
         alternatingContents.push(item);
       }
     }
+  }
+
+  // Gemini API requires requests to end with a 'user' turn (never 'model')
+  while (alternatingContents.length > 0 && alternatingContents[alternatingContents.length - 1].role === 'model') {
+    alternatingContents.pop();
   }
 
   // Fallback if empty

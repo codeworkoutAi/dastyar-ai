@@ -74,3 +74,7 @@ server/data/*.db-info
 server/data/*
 !server/data/.gitkeep
 release_apks/FaChatbox-Bazaar-v1.0.2.bin
+ 
+.antigravity/
+.agents/
+skills-lock.json

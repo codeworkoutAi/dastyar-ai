@@ -640,7 +640,7 @@ router.post('/api/chat/stream', chatStreamLimiter, guestChatRateLimiter, async (
         // Environment fallback for free Gemini models removed. Free keys must go in the DB pool.
       }
 
-      const ai = getGeminiClient(userKey, false); // Do NOT fallback to env master key for chat generation
+      let ai = getGeminiClient(userKey, false); // Do NOT fallback to env master key for chat generation
 
       // Format messages for Gemini API using robust helper on pruned history
       const formattedContents = formatContentsForGemini(prunedMessages);
@@ -672,16 +672,21 @@ router.post('/api/chat/stream', chatStreamLimiter, guestChatRateLimiter, async (
             const thinkingBudget = isShortPrompt ? 0 : 2048;
             console.log(`[Thinking] short=${isShortPrompt}, thinkingBudget=${thinkingBudget}`);
 
+            const isLiteModel = candidate.toLowerCase().includes('lite');
             const streamConfig: any = {
               // No native googleSearch here — we use GoogleGroundingAgent (RAG) to support ALL providers universally
               systemInstruction: systemInstruction,
               temperature: typeof apiConfig?.temperature === 'number' ? apiConfig.temperature : 0.7,
               topP: 0.8,
               topK: 40,
-              thinkingConfig: {
-                thinkingBudget,
-              },
             };
+
+            // Flash Lite models reject thinkingBudget: 0 with 400 INVALID_ARGUMENT
+            if (!isLiteModel || thinkingBudget > 0) {
+              streamConfig.thinkingConfig = {
+                thinkingBudget,
+              };
+            }
 
             if (typeof apiConfig?.maxTokens === 'number' && apiConfig.maxTokens > 0) {
               streamConfig.maxOutputTokens = apiConfig.maxTokens;
@@ -775,7 +780,22 @@ router.post('/api/chat/stream', chatStreamLimiter, guestChatRateLimiter, async (
               const reason = is429 ? '429' : (is401 ? '401' : '403');
               blacklistKey(userKey, reason);
               const cleanSummary = errMsg.length > 80 ? errMsg.substring(0, 80) + '...' : errMsg;
-              console.warn(`Key blacklisted (${reason}) on ${candidate}: ${cleanSummary}. Skipping retries...`);
+              console.warn(`Key blacklisted (${reason}) on ${candidate}: ${cleanSummary}.`);
+
+              // Rotate to next healthy key from the pool if available
+              try {
+                const nextKey = getGeminiKeyFromPool();
+                if (nextKey && nextKey !== userKey) {
+                  userKey = nextKey;
+                  ai = getGeminiClient(userKey, false);
+                  console.log(`[KeyPool] Rotated to fresh pool key for candidate ${candidate}. Retrying...`);
+                  if (attempts < maxAttempts) {
+                    continue; // Retry on the same candidate model with fresh key!
+                  }
+                }
+              } catch (poolErr) {
+                console.warn('[KeyPool] No more fresh keys available in pool.');
+              }
               break;
             }
 
@@ -813,6 +833,8 @@ router.post('/api/chat/stream', chatStreamLimiter, guestChatRateLimiter, async (
             frontendMsg = '⚠️ محدودیت استفاده (Quota) به پایان رسیده است. لطفا کلید API معتبر وارد کنید.';
           } else if (errMsg.includes('503')) {
             frontendMsg = '⚠️ مدل هوش مصنوعی در حال حاضر با ترافیک بالا مواجه است (۵۰۳). لطفاً چند لحظه دیگر دوباره تلاش کنید.';
+          } else if (errMsg.includes('invalid argument') || errMsg.includes('INVALID_ARGUMENT') || errMsg.includes('400')) {
+            frontendMsg = '⚠️ درخواست ارسالی توسط مدل پذیرفته نشد (کد ۴۰۰). لطفاً پیام یا تنظیمات مدل را بررسی کنید.';
           } else {
             frontendMsg = `⚠️ خطا: ${errMsg}`;
           }

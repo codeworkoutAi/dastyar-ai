@@ -307,7 +307,12 @@ export function formatPersianErrorMessage(err: unknown): string {
     return 'مدل انتخابی (یا نسخه مدل وارد شده) در سرویس‌دهنده در دسترس نیست یا نام آن تغییر کرده است. لطفاً از طریق آیکون چرخ‌دنده ⚙️ در بالای صفحه، مدل دیگری را انتخاب فرمایید.';
   }
 
-  // 7. If text is already in Persian, clean up any internal prefixes
+  // 7. Bad Request / Invalid Argument (400)
+  if (lower.includes('invalid argument') || lower.includes('invalid_argument') || lower.includes('400 bad request') || lower.includes('bad request')) {
+    return 'درخواست ارسالی توسط مدل پذیرفته نشد (کد ۴۰۰). لطفاً چند لحظه بعد دکمه «تلاش مجدد» را بزنید.';
+  }
+
+  // 8. If text is already in Persian, clean up any internal prefixes
   if (/[\u0600-\u06FF]/.test(msg)) {
     return msg.replace(/^Error:\s*/i, '').trim();
   }
