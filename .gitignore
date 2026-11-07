@@ -78,3 +78,12 @@ release_apks/FaChatbox-Bazaar-v1.0.2.bin
 .antigravity/
 .agents/
 skills-lock.json
+
+# Agent scratch & investigation logs
+craft.json
+usage.json
+feed.json
+capture/
+inbox/
+investigation.*/
+*.jsonl
