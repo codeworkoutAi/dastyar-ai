@@ -278,6 +278,18 @@ Agents that previously worked on this repo have made the following mistakes. Do 
 
 ---
 
+## 🔐 Environment Auto-Restore (Local Dev)
+
+If `.env` is missing in this workspace, restore it from the machine-level store before running the server:
+
+```bash
+cp /root/.config/dastyar/.env .env
+```
+
+The store holds the Turso URL/token and other local-only secrets. Never commit `.env`.
+
+---
+
 ## 📂 Key Paths
 ```
 server/index.ts              # Express entry, sitemap, robots, SEO HTML, Vite/prod static

@@ -7,6 +7,8 @@ import cors from 'cors';
 import crypto from 'crypto';
 
 dotenv.config();
+// Local dev fallback: fill any missing vars from the machine-level store.
+dotenv.config({ path: '/root/.config/dastyar/.env', quiet: true });
 
 // In-Memory Response Cache for normalized identical queries (TTL: 1 hour)
 

@@ -5,6 +5,8 @@ import dns from 'dns';
 import dotenv from 'dotenv';
 
 dotenv.config();
+// Local dev fallback: fill any missing vars from the machine-level store.
+dotenv.config({ path: '/root/.config/dastyar/.env', quiet: true });
 
 // Test isolation: vitest sets VITEST=true. Under test we must never touch the real
 // database — the previous behaviour read TURSO_* from .env at module load and
