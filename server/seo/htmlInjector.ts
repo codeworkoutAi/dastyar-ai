@@ -3,6 +3,64 @@ import path from 'path';
 import fs from 'fs';
 import db from '../db/database';
 
+const TEMPLATE_CACHE = new Map<string, string>();
+const INTERNAL_NAV_CACHE = new Map<string, { itemsHtml: string; expiresAt: number }>();
+const STATIC_HTML_CACHE = new Map<string, { html: string; expiresAt: number }>();
+
+const INTERNAL_NAV_TTL_MS = 5 * 60 * 1000; // 5 minutes
+const STATIC_HTML_TTL_MS = 2 * 60 * 1000;  // 2 minutes
+const STATIC_SEO_PATHS = new Set(['/', '/landing', '/chat', '/about', '/contact', '/ai-assistant']);
+
+export function invalidateSeoHtmlCache(): void {
+  TEMPLATE_CACHE.clear();
+  INTERNAL_NAV_CACHE.clear();
+  STATIC_HTML_CACHE.clear();
+}
+
+function getCachedTemplate(indexPath: string, useCache: boolean): string | null {
+  if (useCache && TEMPLATE_CACHE.has(indexPath)) {
+    return TEMPLATE_CACHE.get(indexPath)!;
+  }
+  if (!fs.existsSync(indexPath)) {
+    return null;
+  }
+  const content = fs.readFileSync(indexPath, 'utf-8');
+  if (useCache) {
+    TEMPLATE_CACHE.set(indexPath, content);
+  }
+  return content;
+}
+
+function getCachedNavItemsHtml(baseUrl: string): string {
+  const now = Date.now();
+  const cached = INTERNAL_NAV_CACHE.get(baseUrl);
+  if (cached && cached.expiresAt > now) {
+    return cached.itemsHtml;
+  }
+
+  let itemsHtml = '';
+  try {
+    const topProducts = db.prepare("SELECT id, title FROM products WHERE status = 'active' OR status IS NULL ORDER BY id DESC LIMIT 8").all() as any[];
+    const topNews = db.prepare("SELECT id, title FROM news ORDER BY createdAt DESC LIMIT 8").all() as any[];
+
+    const bannedRegex = /(gemini|claude|deepseek|gpt|mistral|بدون کارت بانکی|بدون فیلترشکن)/i;
+    const productItems = topProducts
+      .filter(p => !bannedRegex.test(p.title || ''))
+      .map(p => `<li><a href="${baseUrl}/store/product/${p.id}">خرید ${escapeHtml(p.title)}</a></li>`)
+      .join('');
+    const newsItems = topNews
+      .filter(n => !bannedRegex.test(n.title || ''))
+      .map(n => `<li><a href="${baseUrl}/blog/${n.id}">${escapeHtml(n.title)}</a></li>`)
+      .join('');
+    itemsHtml = `${productItems}${newsItems}`;
+    INTERNAL_NAV_CACHE.set(baseUrl, { itemsHtml, expiresAt: now + INTERNAL_NAV_TTL_MS });
+  } catch {
+    // Return stale cache if DB fails transiently
+    if (cached) return cached.itemsHtml;
+  }
+  return itemsHtml;
+}
+
 export function escapeHtml(str?: string): string {
   if (!str || typeof str !== 'string') return '';
   return str
@@ -15,12 +73,28 @@ export function escapeHtml(str?: string): string {
 
 export async function renderHtmlWithSeo(req: express.Request, res: express.Response, distPath: string, vite?: any) {
   const indexPath = path.join(distPath, 'index.html');
-  if (!fs.existsSync(indexPath)) {
-    return res.sendFile(indexPath);
-  }
+  const useProdCache = !vite;
 
   try {
-    let html = fs.readFileSync(indexPath, 'utf-8');
+    const protocol = req.protocol === 'https' || req.headers['x-forwarded-proto'] === 'https' ? 'https' : 'http';
+    const host = req.get('host');
+    const baseUrl = process.env.NODE_ENV === 'production' ? (process.env.WEB_URL || 'https://dastyarai.com') : `${protocol}://${host}`;
+    const urlPath = req.path;
+
+    // Fast path: serve pre-rendered SEO HTML from RAM for static public routes in production
+    if (useProdCache && STATIC_SEO_PATHS.has(urlPath)) {
+      const cacheKey = `${baseUrl}|${urlPath}`;
+      const cachedPage = STATIC_HTML_CACHE.get(cacheKey);
+      if (cachedPage && cachedPage.expiresAt > Date.now()) {
+        res.setHeader('Content-Type', 'text/html; charset=utf-8');
+        return res.send(cachedPage.html);
+      }
+    }
+
+    let html = getCachedTemplate(indexPath, useProdCache);
+    if (!html) {
+      return res.sendFile(indexPath);
+    }
     if (vite) {
       try {
         html = await vite.transformIndexHtml(req.originalUrl || req.url, html);
@@ -28,10 +102,6 @@ export async function renderHtmlWithSeo(req: express.Request, res: express.Respo
         console.warn('[Server SEO] vite.transformIndexHtml error:', viteErr);
       }
     }
-    const protocol = req.protocol === 'https' || req.headers['x-forwarded-proto'] === 'https' ? 'https' : 'http';
-    const host = req.get('host');
-    const baseUrl = process.env.NODE_ENV === 'production' ? (process.env.WEB_URL || 'https://dastyarai.com') : `${protocol}://${host}`;
-    const urlPath = req.path;
 
     let pageTitle = 'Dastyar AI | دستیار هوش مصنوعی فارسی — چت، کد، اسناد';
     let pageDesc = 'با Dastyar AI رایگان شروع کنید: چت رایگان و نامحدود با مدل‌های پایه + پرداخت به‌ازای مصرف برای مدل‌های پیشرفته. چت، برنامه‌نویسی، تحلیل اسناد و تصویر به فارسی.';
@@ -457,23 +527,9 @@ export async function renderHtmlWithSeo(req: express.Request, res: express.Respo
     const safeImage = escapeHtml(pageImage);
     const safeType = escapeHtml(pageType);
 
-    // Generate crawlable internal links and semantic outline for search engine bots
-    let internalNavHtml = '';
-    try {
-      const topProducts = db.prepare("SELECT id, title FROM products WHERE status = 'active' OR status IS NULL ORDER BY id DESC LIMIT 8").all() as any[];
-      const topNews = db.prepare("SELECT id, title FROM news ORDER BY createdAt DESC LIMIT 8").all() as any[];
-
-      const bannedRegex = /(gemini|claude|deepseek|gpt|mistral|بدون کارت بانکی|بدون فیلترشکن)/i;
-      const productItems = topProducts
-        .filter(p => !bannedRegex.test(p.title || ''))
-        .map(p => `<li><a href="${baseUrl}/store/product/${p.id}">خرید ${escapeHtml(p.title)}</a></li>`)
-        .join('');
-      const newsItems = topNews
-        .filter(n => !bannedRegex.test(n.title || ''))
-        .map(n => `<li><a href="${baseUrl}/blog/${n.id}">${escapeHtml(n.title)}</a></li>`)
-        .join('');
-
-      internalNavHtml = `
+    // Generate crawlable internal links and semantic outline for search engine bots (5-min RAM cache)
+    const dynamicNavItems = getCachedNavItemsHtml(baseUrl);
+    const internalNavHtml = `
       <section aria-label="پیوندهای مفید سایت" class="sr-only" style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;">
         <h2>دستیار هوشمند | دسترسی سریع به بخش‌های اصلی و مقالات هوش مصنوعی</h2>
         <nav aria-label="پیوندهای مفید سایت">
@@ -485,14 +541,12 @@ export async function renderHtmlWithSeo(req: express.Request, res: express.Respo
             <li><a href="${baseUrl}/contact">تماس با ما</a></li>
             <li><a href="${baseUrl}/ai-assistant">دستیار هوش مصنوعی چیست؟</a></li>
             <li><a href="${baseUrl}/blog/news">اخبار هوش مصنوعی</a></li>
-            ${productItems}
-            ${newsItems}
+            ${dynamicNavItems}
           </ul>
         </nav>
         <p>${safeDesc}</p>
         <p>دستیار هوشمند پلتفرم جامع چت هوش مصنوعی فارسی با پشتیبانی از هوش مصنوعی پیشرفته گفتگو، کدنویسی و تحلیل اسناد با اتصال مستقیم و پایدار از سراسر ایران است.</p>
       </section>`;
-    } catch (dbErr) {}
 
     const ssrHeading = `<div class="sr-only" style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;">${safeTitle}</div>`;
     const ssrArticle = postContent ? `<article class="sr-only" style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;">${escapeHtml(postContent)}</article>` : '';
@@ -595,6 +649,13 @@ export async function renderHtmlWithSeo(req: express.Request, res: express.Respo
       /(<link\s+rel="stylesheet"\s+crossorigin\s+href="\/assets\/katex-[^"]+\.css")>/gi,
       `$1 media="print" onload="this.media='all'">`
     );
+
+    if (useProdCache && STATIC_SEO_PATHS.has(urlPath)) {
+      STATIC_HTML_CACHE.set(`${baseUrl}|${urlPath}`, {
+        html,
+        expiresAt: Date.now() + STATIC_HTML_TTL_MS,
+      });
+    }
 
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
     res.send(html);
