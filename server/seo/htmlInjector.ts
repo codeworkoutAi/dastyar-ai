@@ -278,8 +278,8 @@ export async function renderHtmlWithSeo(req: express.Request, res: express.Respo
             ]
           };
         } else if (urlPath === '/chat') {
-          pageTitle = 'چت هوش مصنوعی رایگان فارسی | Dastyar AI';
-          pageDesc = 'رایگان و بدون ثبت‌نام با هوش مصنوعی فارسی چت کنید. پاسخ آنی، بدون محدودیت تحریمی، از ایران. همین حالا شروع کنید.';
+          pageTitle = 'چت با هوش مصنوعی فارسی رایگان و نامحدود | Dastyar AI';
+          pageDesc = 'سوال دارید؟ همین حالا رایگان و نامحدود با هوش مصنوعی فارسی چت کنید؛ ۱۵ پیام بدون ثبت‌نام، پاسخ آنی به فارسی روان و دسترسی مستقیم از ایران.';
           canonicalUrl = `${baseUrl}/chat`;
           structuredData = {
             '@context': 'https://schema.org',
@@ -299,6 +299,14 @@ export async function renderHtmlWithSeo(req: express.Request, res: express.Respo
                 acceptedAnswer: {
                   '@type': 'Answer',
                   text: 'برای ۱۵ پیام اول نیازی نیست. برای ادامه گفتگوی نامحدود و ذخیره تاریخچه، ثبت‌نام با شماره موبایل یا گوگل.'
+                }
+              },
+              {
+                '@type': 'Question',
+                name: 'آیا می‌توانم هر سوالی به فارسی بپرسم؟',
+                acceptedAnswer: {
+                  '@type': 'Answer',
+                  text: 'بله، هر سوالی دارید کافیست به فارسی بنویسید تا دستیار هوشمند پاسخ دقیق، مستقیم و روان به زبان فارسی ارائه دهد.'
                 }
               },
               {
@@ -439,7 +447,7 @@ export async function renderHtmlWithSeo(req: express.Request, res: express.Respo
       html = html.replace(/<h1[^>]*>.*?<\/h1>/, '<h1 style="font-size:20px;font-weight:700;margin:0 0 8px 0;color:#f8fafc;">دستیار هوش مصنوعی چیست؟</h1>');
       html = html.replace(/<h2[^>]*>.*?<\/h2>/, '');
     } else if (urlPath === '/chat') {
-      html = html.replace(/<h1[^>]*>.*?<\/h1>/, '<h1 style="font-size:20px;font-weight:700;margin:0 0 8px 0;color:#f8fafc;">چت با هوش مصنوعی فارسی</h1>');
+      html = html.replace(/<h1[^>]*>.*?<\/h1>/, '<h1 style="font-size:20px;font-weight:700;margin:0 0 8px 0;color:#f8fafc;">چت با هوش مصنوعی فارسی رایگان</h1>');
       html = html.replace(/<h2[^>]*>.*?<\/h2>/, '');
     }
 
@@ -495,7 +503,7 @@ export async function renderHtmlWithSeo(req: express.Request, res: express.Respo
       <section aria-label="راهنمای چت هوش مصنوعی فارسی" class="sr-only" style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;">
         <h2>چت هوش مصنوعی چیست؟</h2>
         <p>چت هوش مصنوعی یک گفتگوی متنی بین شما و یک مدل زبانی پیشرفته است. شما سوال می‌پرسید، درخواست می‌کنید، یا متنی می‌فرستید؛ و هوش مصنوعی پاسخ می‌دهد. برخلاف جستجوی معمولی که فقط لینک نشان می‌دهد، چت هوش مصنوعی پاسخ مستقیم و متناسب با موقعیت شما ارائه می‌دهد.</p>
-        <p>چت هوش مصنوعی فارسی همان تجربه را به زبان فارسی فراهم می‌کند: بدون نیاز به انگلیسی، بدون ترجمه دستی، و با درک اصطلاحات و لحن رایج فارسی. Dastyar AI این تجربه را با ۱۵ پیام مهمان و دسترسی رایگان و نامحدود به مدل‌های پایه پس از ورود (و پرداخت به‌ازای مصرف برای مدل‌های پیشرفته) در اختیار شما می‌گذارد.</p>
+        <p>چت با هوش مصنوعی فارسی رایگان همان تجربه گفتگوی هوشمند را به زبان فارسی روان فراهم می‌کند: بدون نیاز به انگلیسی، بدون ترجمه دستی، و با درک اصطلاحات و لحن رایج فارسی. در Dastyar AI با ۱۵ پیام مهمان بدون ثبت‌نام شروع می‌کنید و پس از ورود به چت رایگان و نامحدود با مدل‌های پایه دسترسی دارید.</p>
 
         <h2>چطور کار می‌کند؟</h2>
         <ol>
@@ -520,6 +528,8 @@ export async function renderHtmlWithSeo(req: express.Request, res: express.Respo
           <dd>بله. چت با مدل‌های پایه پس از ورود کاملاً رایگان و نامحدود است؛ برای مدل‌های پیشرفته از پرداخت به‌ازای مصرف استفاده می‌شود.</dd>
           <dt>آیا باید ثبت‌نام کنم؟</dt>
           <dd>برای ۱۵ پیام اول نیازی نیست. برای ادامه گفتگوی نامحدود و ذخیره تاریخچه، ثبت‌نام با شماره موبایل یا گوگل.</dd>
+          <dt>آیا می‌توانم هر سوالی به فارسی بپرسم؟</dt>
+          <dd>بله، هر سوالی دارید کافیست به فارسی بنویسید تا دستیار هوشمند پاسخ دقیق، مستقیم و روان به زبان فارسی ارائه دهد.</dd>
           <dt>آیا پاسخ‌ها به فارسی هستند؟</dt>
           <dd>بله. پاسخ‌ها به فارسی روان ارائه می‌شوند.</dd>
           <dt>آیا از ایران قابل دسترسی است؟</dt>

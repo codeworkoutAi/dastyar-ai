@@ -65,7 +65,11 @@ export function setPageSeo({
   }
   canonicalEl.setAttribute('href', canonical || window.location.href);
 
-  // Dynamic Structured Data (JSON-LD)
+  // Dynamic Structured Data (JSON-LD) — remove SSR copy so schema is never duplicated
+  const ssrSchemaEl = document.getElementById('server-injected-schema');
+  if (ssrSchemaEl) {
+    ssrSchemaEl.remove();
+  }
   let schemaEl = document.getElementById('page-dynamic-schema');
   if (schema) {
     if (!schemaEl) {

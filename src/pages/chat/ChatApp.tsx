@@ -65,8 +65,8 @@ export function ChatApp() {
 
  useEffect(() => {
  setPageSeo({
-      title: 'چت هوش مصنوعی رایگان فارسی | Dastyar AI',
-      description: 'رایگان و بدون ثبت‌نام با هوش مصنوعی فارسی چت کنید. پاسخ آنی، بدون محدودیت تحریمی، از ایران. همین حالا شروع کنید.',
+      title: 'چت با هوش مصنوعی فارسی رایگان و نامحدود | Dastyar AI',
+      description: 'سوال دارید؟ همین حالا رایگان و نامحدود با هوش مصنوعی فارسی چت کنید؛ ۱۵ پیام بدون ثبت‌نام، پاسخ آنی به فارسی روان و دسترسی مستقیم از ایران.',
       canonical: window.location.origin + '/chat',
       schema: {
         '@context': 'https://schema.org',
@@ -86,6 +86,14 @@ export function ChatApp() {
             acceptedAnswer: {
               '@type': 'Answer',
               text: 'برای ۱۵ پیام اول نیازی نیست. برای ادامه گفتگوی نامحدود و ذخیره تاریخچه، ثبت‌نام با شماره موبایل یا گوگل.'
+            }
+          },
+          {
+            '@type': 'Question',
+            name: 'آیا می‌توانم هر سوالی به فارسی بپرسم؟',
+            acceptedAnswer: {
+              '@type': 'Answer',
+              text: 'بله، هر سوالی دارید کافیست به فارسی بنویسید تا دستیار هوشمند پاسخ دقیق، مستقیم و روان به زبان فارسی ارائه دهد.'
             }
           },
           {
@@ -174,6 +182,17 @@ export function ChatApp() {
   {isEmpty ? (
     <div className="flex-1 w-full overflow-y-auto overflow-x-hidden flex flex-col">
       <div className="min-h-[calc(100dvh-5rem)] flex flex-col justify-center items-center px-2 sm:px-4 py-6">
+        <div className="w-full max-w-3xl text-center mb-4 px-2 space-y-1.5">
+          <h1
+            className="type-h2 font-black text-[var(--color-text-main)]"
+            style={{ fontFamily: "'Estedad', sans-serif" }}
+          >
+            چت با هوش مصنوعی فارسی رایگان
+          </h1>
+          <p className="type-secondary text-[var(--color-text-muted)]">
+            هر سوالی دارید به فارسی بپرسید — {toPersianDigits(15)} پیام بدون ورود و چت رایگان نامحدود پس از ورود
+          </p>
+        </div>
         <div className="w-full max-w-3xl">
           <MessageInput />
         </div>
