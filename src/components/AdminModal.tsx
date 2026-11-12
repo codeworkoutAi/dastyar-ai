@@ -150,7 +150,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
  const [uiStyle, setUiStyle] = useState<string>('neumorphic');
  const [siteSettingsLoading, setSiteSettingsLoading] = useState<boolean>(false);
  const [siteSettingsSaving, setSiteSettingsSaving] = useState<boolean>(false);
- const [freeDailyLimitUser, setFreeDailyLimitUser] = useState<string>('15');
+ const [freeDailyLimitGuest, setFreeDailyLimitGuest] = useState<string>('15');
  const [freeDailyImageLimit, setFreeDailyImageLimit] = useState<string>('4');
  const [geminiKeysPool, setGeminiKeysPool] = useState<string>('');
 
@@ -421,7 +421,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
  const data = await res.json();
  setNewsAutoPublish(data.news_auto_publish === 'true');
    if (data.ui_style) setUiStyle(data.ui_style);
-   if (data.free_daily_limit_user) setFreeDailyLimitUser(data.free_daily_limit_user);
+   if (data.free_daily_limit_guest) setFreeDailyLimitGuest(data.free_daily_limit_guest);
    if (data.free_daily_image_limit) setFreeDailyImageLimit(data.free_daily_image_limit);
    if (data.gemini_keys_pool) setGeminiKeysPool(data.gemini_keys_pool);
  }
@@ -1822,27 +1822,27 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
   {/* Free Quotas */}
   <div className="flex flex-col sm:flex-row justify-between gap-4 p-4 rounded-xl admin-card mt-4 mb-4">
     <div className="flex flex-col gap-1 w-full sm:w-1/2">
-      <span className="text-sm font-bold text-zinc-800 dark:text-zinc-200">سهمیه رایگان روزانه کاربران</span>
+      <span className="text-sm font-bold text-zinc-800 dark:text-zinc-200">سهمیه مهمان و تصویرساز رایگان</span>
       <span className="text-xs text-zinc-500 dark:text-zinc-400">
-        تعداد درخواست‌های رایگان متنی و تصویری که به هر کاربر در ۲۴ ساعت اختصاص می‌یابد را تنظیم کنید. پس از پایان سهمیه، هزینه از کیف پول کسر می‌شود.
+        چت متنی با مدل‌های پایه برای کاربران واردشده بدون محدودیت است. در اینجا سقف پیام مهمان (پیش از ورود) و سهمیه روزانه تصویر استودیویی را تنظیم کنید.
       </span>
     </div>
     <div className="w-full sm:w-1/2 flex flex-col gap-3">
       <div>
         <label className="block text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-1">
-          سهمیه پیام متنی (چت)
+          سهمیه پیام مهمان (پیش از ورود)
         </label>
         <div className="flex gap-2">
           <input
             type="number"
-            value={freeDailyLimitUser}
-            onChange={(e) => setFreeDailyLimitUser(e.target.value)}
+            value={freeDailyLimitGuest}
+            onChange={(e) => setFreeDailyLimitGuest(e.target.value)}
             className="w-full px-3 py-2 rounded-xl admin-input text-sm text-zinc-800 dark:text-zinc-200 focus:border-blue-500 outline-none transition-colors"
             dir="ltr"
           />
           <button
             type="button"
-            onClick={() => handleSaveSetting('free_daily_limit_user', freeDailyLimitUser)}
+            onClick={() => handleSaveSetting('free_daily_limit_guest', freeDailyLimitGuest)}
             disabled={siteSettingsSaving || siteSettingsLoading}
             className="px-4 py-2 admin-btn-primary text-white rounded-lg text-xs font-bold transition-all whitespace-nowrap"
           >

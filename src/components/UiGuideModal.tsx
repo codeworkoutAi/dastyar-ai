@@ -121,15 +121,15 @@ export const UiGuideModal: React.FC = () => {
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                   <div className="p-4 rounded-2xl clay-surface-inset border border-zinc-200 dark:border-zinc-800">
-                    <h4 className="font-bold text-emerald-600 dark:text-emerald-400 mb-2">🎁 سهمیه رایگان روزانه</h4>
+                    <h4 className="font-bold text-emerald-600 dark:text-emerald-400 mb-2">🎁 چت رایگان و نامحدود</h4>
                     <p className="text-xs opacity-90 leading-relaxed text-justify">
-                      هر کاربر پس از ورود به سیستم، <strong>۱۵ پیام رایگان</strong> در هر ۴ ساعت دریافت می‌کند. تا زمانی که این سهمیه پر نشده باشد، گفتگو با مدل‌های رایگان هیچ هزینه‌ای از کیف پول شما کسر نخواهد کرد.
+                      پیش از ورود می‌توانید تا <strong>۱۵ پیام رایگان مهمان</strong> گفتگو کنید و بلافاصله پس از ورود به حساب کاربری، دسترسی شما به هر سه مدل پایه (چت، کدنویسی و تحلیل اسناد) <strong>کاملاً رایگان و نامحدود</strong> خواهد بود.
                     </p>
                   </div>
                   <div className="p-4 rounded-2xl clay-surface-inset border border-zinc-200 dark:border-zinc-800">
-                    <h4 className="font-bold text-blue-600 dark:text-blue-400 mb-2">💳 تغییر خودکار به مدل پولی</h4>
+                    <h4 className="font-bold text-blue-600 dark:text-blue-400 mb-2">💳 مدل‌های پیشرفته اعتباری</h4>
                     <p className="text-xs opacity-90 leading-relaxed text-justify">
-                      وقتی سهمیه رایگان تمام شد، اگر کیف پول شما شارژ داشته باشد، سیستم به صورت کاملاً خودکار و بدون قطع شدن چت، پیام‌های بعدی را با مدل پولی پردازش کرده و هزینه بسیار ناچیزی کسر می‌کند. اگر شارژ نداشته باشید، زمان باقی‌مانده تا دریافت سهمیه رایگان بعدی نمایش داده می‌شود.
+                      چت با مدل‌های پایه هیچ هزینه‌ای ندارد. در صورتی که به قدرت پردازشی بالاتر برای پروژه‌های تخصصی یا تولید تصویر استودیویی نیاز داشته باشید، می‌توانید کیف پول خود را شارژ کرده و هر زمان مایل بودید مدل‌های پیشرفته را انتخاب کنید.
                     </p>
                   </div>
                 </div>

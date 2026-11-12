@@ -426,7 +426,7 @@ export const Sidebar: React.FC = React.memo(() => {
                                             ورود / ثبت‌نام
                                         </span>
                                         <span className="type-badge text-blue-600/70 dark:text-blue-400/70 font-medium">
-                                            مهمان (۵ پیام رایگان)
+                                            مهمان (۱۵ پیام رایگان)
                                         </span>
                                     </div>
                                 </div>

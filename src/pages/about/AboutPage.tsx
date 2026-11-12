@@ -10,13 +10,13 @@ export const AboutPage: React.FC = () => {
   useEffect(() => {
     setPageSeo({
       title: 'درباره Dastyar AI | دستیار هوش مصنوعی فارسی',
-      description: 'Dastyar AI چیست، چرا ساخته شد، و چرا رایگان است. دستیار هوش مصنوعی فارسی با ۱۵ پیام رایگان روزانه و پرداخت به‌ازای مصرف.',
+      description: 'Dastyar AI چیست، چرا ساخته شد، و چرا رایگان است. دستیار هوش مصنوعی فارسی با چت رایگان نامحدود روی مدل‌های پایه و پرداخت به‌ازای مصرف برای مدل‌های پیشرفته.',
       canonical: `${window.location.origin}/about`,
       schema: {
         '@context': 'https://schema.org',
         '@type': 'AboutPage',
         name: 'درباره Dastyar AI',
-        description: 'Dastyar AI چیست، چرا ساخته شد، و چرا رایگان است. دستیار هوش مصنوعی فارسی با ۱۵ پیام رایگان روزانه و پرداخت به‌ازای مصرف.',
+        description: 'Dastyar AI چیست، چرا ساخته شد، و چرا رایگان است. دستیار هوش مصنوعی فارسی با چت رایگان نامحدود روی مدل‌های پایه و پرداخت به‌ازای مصرف برای مدل‌های پیشرفته.',
         url: `${window.location.origin}/about`
       }
     });
@@ -64,10 +64,10 @@ export const AboutPage: React.FC = () => {
               <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" />
               <div>
                 <strong className="block text-sm sm:text-base text-[#0f1420] dark:text-white font-bold mb-1">
-                  {toPersianDigits(15)} پیام رایگان روزانه:
+                  چت رایگان و نامحدود:
                 </strong>
                 <p className="text-xs sm:text-sm text-[#525d75] dark:text-[#9aa5bc] leading-relaxed">
-                  بدون نیاز به پرداخت اولیه یا ثبت‌نام طولانی، می‌توانید کیفیت پاسخ‌ها را امتحان کنید.
+                  بدون نیاز به پرداخت اولیه با {toPersianDigits(15)} پیام مهمان شروع کنید و پس از ورود، نامحدود از مدل‌های پایه استفاده کنید.
                 </p>
               </div>
             </div>
@@ -133,7 +133,7 @@ export const AboutPage: React.FC = () => {
           </h2>
 
           <p className="text-sm sm:text-base text-[#525d75] dark:text-[#9aa5bc] leading-relaxed">
-            Dastyar AI یک سرویس فریمیوم است. {toPersianDigits(15)} پیام روزانه رایگان برای آشنایی و استفاده سبک در نظر گرفته شده است. برای استفاده بیشتر، کیف پول خود را شارژ می‌کنید و فقط بابت همان مصرف هزینه می‌دهید. این مدل به ما اجازه می‌دهد بدون تبلیغات مزاحم، بدون فروش داده کاربران، و بدون اجبار به اشتراک ماهانه کار کنیم.
+            Dastyar AI یک سرویس فریمیوم است. با {toPersianDigits(15)} پیام مهمان بدون ثبت‌نام آشنا می‌شوید و پس از ورود می‌توانید به‌صورت رایگان و نامحدود با مدل‌های پایه گفتگو کنید. برای استفاده از مدل‌های تخصصی و پیشرفته یا تولید تصویر استودیویی، کیف پول خود را شارژ می‌کنید و فقط بابت همان مصرف هزینه می‌دهید. این مدل به ما اجازه می‌دهد بدون تبلیغات مزاحم، بدون فروش داده کاربران، و بدون اجبار به اشتراک ماهانه کار کنیم.
           </p>
         </section>
 
@@ -155,7 +155,7 @@ export const AboutPage: React.FC = () => {
         {/* CTA Banner */}
         <section className="clay-card-thick p-8 sm:p-10 rounded-3xl text-center mb-8 bg-gradient-to-br from-blue-500/10 via-indigo-500/5 to-cyan-500/10">
           <p className="text-base sm:text-lg font-bold text-[#0f1420] dark:text-white mb-6">
-            همین حالا با {toPersianDigits(15)} پیام رایگان شروع کنید — بدون پرداخت اولیه، بدون اشتراک اجباری.
+            همین حالا رایگان شروع کنید — {toPersianDigits(15)} پیام بدون ورود و چت نامحدود پس از ورود، بدون اشتراک اجباری.
           </p>
           <Link
             to="/chat"

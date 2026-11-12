@@ -1,4 +1,6 @@
-import rateLimit from 'express-rate-limit';
+import rateLimit, { ipKeyGenerator } from 'express-rate-limit';
+import type { Request } from 'express';
+import { extractOptionalUser } from './auth';
 
 export const modelTestRateLimiter = rateLimit({
   windowMs: 5 * 60 * 1000, // 5 minutes window
@@ -31,10 +33,18 @@ export const aiRouteLimiter = rateLimit({
   },
 });
 
+const getGuestIpKey = (req: Request) => ipKeyGenerator(req.ip || '127.0.0.1');
+
+const getAuthenticatedUserKey = (req: Request) => {
+  const user = extractOptionalUser(req);
+  return user?.id ? `user:${user.id}` : getGuestIpKey(req);
+};
+
 export const guestChatRateLimiter = rateLimit({
   windowMs: 60 * 1000, // 1 minute
   max: 10, // Max 10 requests per IP per minute for unauthenticated guest trial
-  skip: (req) => Boolean(req.headers.authorization && req.headers.authorization.startsWith('Bearer ')),
+  keyGenerator: getGuestIpKey,
+  skip: (req) => Boolean(extractOptionalUser(req)?.id),
   standardHeaders: true,
   legacyHeaders: false,
   validate: {
@@ -44,6 +54,64 @@ export const guestChatRateLimiter = rateLimit({
   },
   message: {
     error: 'تعداد درخواست‌های گفت‌وگوی مهمان بیش از حد مجاز است. لطفاً یک دقیقه دیگر تلاش کنید یا وارد حساب خود شوید.',
+  },
+});
+
+export const guestChatHourLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 30, // Anti-spam: max 30 guest messages per IP per hour
+  keyGenerator: getGuestIpKey,
+  skip: (req) => Boolean(extractOptionalUser(req)?.id),
+  standardHeaders: true,
+  legacyHeaders: false,
+  validate: {
+    xForwardedForHeader: false,
+    forwardedHeader: false,
+    default: true,
+  },
+  message: {
+    error: 'برای جلوگیری از اسپم، محدودیت ساعتی مهمان پر شده است. لطفاً وارد حساب کاربری خود شوید یا کمی بعد تلاش کنید.',
+  },
+});
+
+// Keyed by verified userId (not IP) so Iranian users sharing mobile/VPN IPs never throttle each other.
+export const userChatMinuteLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 12, // Anti-spam: max 12 messages per user per minute
+  keyGenerator: getAuthenticatedUserKey,
+  skip: (req) => {
+    const user = extractOptionalUser(req);
+    return !user?.id || user.role === 'admin';
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+  validate: {
+    xForwardedForHeader: false,
+    forwardedHeader: false,
+    default: true,
+  },
+  message: {
+    error: 'سرعت ارسال پیام‌های شما بیش از حد مجاز است. لطفاً چند لحظه مکث کنید و دوباره تلاش کنید.',
+  },
+});
+
+export const userChatHourLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 80, // Anti-spam: max 80 messages per user per hour
+  keyGenerator: getAuthenticatedUserKey,
+  skip: (req) => {
+    const user = extractOptionalUser(req);
+    return !user?.id || user.role === 'admin';
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+  validate: {
+    xForwardedForHeader: false,
+    forwardedHeader: false,
+    default: true,
+  },
+  message: {
+    error: 'تعداد پیام‌های ارسالی در یک ساعت گذشته به سقف ضداسپم رسید. لطفاً کمی استراحت کنید و ساعتی دیگر ادامه دهید.',
   },
 });
 

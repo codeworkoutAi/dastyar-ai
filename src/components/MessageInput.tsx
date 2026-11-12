@@ -632,7 +632,7 @@ const workerUrl = await import('pdfjs-dist/build/pdf.worker.min.mjs?url');
  const hasContent = !!text.trim() || readyAttachments.length > 0;
  if (!hasContent || isStreaming) return;
 
-  // Guest Trial Policy: Allow 5 free messages for guests before requiring login
+  // Guest Trial Policy: Allow 15 free messages for guests before requiring login
   if (!useAuthStore.getState().isAuthenticated) {
     const rawMsg = text.trim() || 'لطفاً فایل‌های پیوست شده را بررسی کن.';
     if (rawMsg.startsWith('/image ') || rawMsg.startsWith('/تصویر ')) {
@@ -640,7 +640,7 @@ const workerUrl = await import('pdfjs-dist/build/pdf.worker.min.mjs?url');
       return;
     }
     const guestCount = parseInt(localStorage.getItem('chatbox_guest_count') || '0', 10);
-    if (guestCount >= 5) {
+    if (guestCount >= 15) {
       useAuthStore.getState().setAuthModalOpen(true);
       return;
     }

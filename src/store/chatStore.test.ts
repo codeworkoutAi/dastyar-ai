@@ -1,8 +1,11 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { useChatStore } from './chatStore';
+import { setCurrentUserScope } from '../lib/storage';
 
 describe('Chat Store', () => {
   beforeEach(() => {
+    localStorage.clear();
+    setCurrentUserScope(null);
     useChatStore.getState().clearAllConversations();
   });
 
@@ -38,5 +41,32 @@ describe('Chat Store', () => {
     
     useChatStore.getState().setIsStreaming(false);
     expect(useChatStore.getState().isStreaming).toBe(false);
+  });
+
+  it('preserves active non-empty guest conversation when logging in mid-session', () => {
+    setCurrentUserScope(null);
+    useChatStore.getState().createChat('free_default');
+    const convId = useChatStore.getState().activeId!;
+    useChatStore.getState().updateConversation(convId, (c) => ({
+      ...c,
+      messages: [
+        ...c.messages,
+        {
+          id: 'm-guest-1',
+          role: 'user',
+          content: 'سلام مهمان',
+          timestamp: Date.now(),
+        },
+      ],
+    }));
+
+    useChatStore.getState().switchUserContext(42);
+    const state = useChatStore.getState();
+    expect(state.conversations.some((c) => c.id === convId)).toBe(true);
+    expect(state.activeId).toBe(convId);
+
+    // Logging out clears user chats from memory and returns to guest scope
+    useChatStore.getState().switchUserContext(null);
+    expect(useChatStore.getState().conversations).toEqual([]);
   });
 });

@@ -4,14 +4,14 @@ Welcome, AI Agent! If you are reading this, you are working on the **Persian AI 
 
 ---
 
-## ⚠️ Layer Zero — Current Strategic Phase (Updated: 2026-10-26)
+## ⚠️ Layer Zero — Current Strategic Phase (Updated: 2026-11-12)
 
 **This section overrides any conflicting statement below.** If you find a conflict between this section and a lower section, **this section wins**. If a lower section describes a behavior that contradicts this section, treat that section as historical context — not current instruction.
 
 ### Phase Status
-We are in an SEO + CRO improvement phase. The following changes are approved and in progress:
+We are in an SEO + CRO improvement phase. The following changes are approved and implemented:
 
-1. **Guest chat allowed** — Guests may send up to **2 free messages** without login (using `free_default` profile only). After 2 messages → `AuthModal` opens with a Persian prompt. Guest sessions are **NOT** persisted to `localStorage`. The 15-message daily quota applies **only** to logged-in users. This **supersedes** the "Mandatory Login Policy (No Guest Chat)" in §3.
+1. **Unlimited Free-Model Chat + 15-Message Guest Trial** — Guests may send up to **15 free messages** without login (across all 3 free profiles: `free_default`, `free_coding`, `free_vision`). After 15 messages → `AuthModal` opens with a Persian prompt. Guest sessions are **NOT** persisted to `localStorage` while unauthenticated, though an active in-memory guest conversation is preserved when the guest logs in mid-session (`switchUserContext`). **Logged-in users have unlimited free-model chat** (no 15-message daily quota or auto-switch to paid cards). Paid profiles (`paid_*`) and studio paid image engines (`imagen-3`, `dalle-3` with `free_daily_image_limit`) still require login and wallet balance. Anti-spam protection is enforced via per-IP guest limiters (`guestChatRateLimiter`, `guestChatHourLimiter`) and per-userId authenticated limiters (`userChatMinuteLimiter`, `userChatHourLimiter`). This **supersedes** §3's old 15-message user quota and 2-message guest limit.
 2. **Homepage title changed** to: `Dastyar AI | دستیار هوش مصنوعی فارسی — چت، کد، اسناد`. This **supersedes** the default title in §11. The old string `دستیار هوشمند | چت با هوش مصنوعی رایگان و پیشرفته` is **preserved** as the homepage `<h2>` and must not be deleted (it currently ranks #7 for a valuable query).
 3. **New pages requested** — `/about`, `/contact`, `/ai-assistant`. These are **explicitly requested** by the current phase and do **NOT** violate Rule 4.
 4. **No model names in user-facing content** — No model name (Gemini, Claude, DeepSeek, GPT, Mistral) may appear in user-facing text, meta tags, JSON-LD schema, or footer. Model names remain valid **only** in backend code, env vars, DB config, and internal admin UI.
@@ -29,7 +29,7 @@ These are load-bearing. Do not refactor, rename, or "improve" them without expli
 - eNamad meta `60366138` and trust seal markup in `src/components/Footer.tsx`
 - `X-Accel-Buffering: no` header in SSE streaming (`server/routes/chat.ts`)
 - `PROFILES_CACHE_VERSION` and 6-profile architecture logic (`src/lib/storage.ts`)
-- `free_daily_usage`, `free_daily_limit_user='15'`, `free_cooldown_hours='24'` quota logic
+- `free_daily_usage`, `free_daily_limit_guest='15'`, `free_cooldown_hours='24'` guest quota & anti-spam rate limiter logic (`server/middleware/rateLimiter.ts`), plus `free_daily_image_limit` (`4` studio paid images)
 - Web search kill-switch (`settings.tools.webSearch`) in `src/store/chatStore.ts`
 - Telegram proxy skip in production (`server/telegram/bot.ts`)
 - Admin API-key masking via `sanitizeProfile()` (`server/routes/admin.ts`)
@@ -86,22 +86,14 @@ The platform operates exclusively on **exactly six stable system profiles** (div
 - **Client Cache Synchronization**:
   - Client storage uses `PROFILES_CACHE_VERSION` in `src/lib/storage.ts` to clear obsolete or custom cards and maintain only the 6 standard profiles. Smart routing defaults strictly to the 3 free cards.
 
-### 3. Usage Quotas, Fair Use & Seamless Auto-Switch
+### 3. Usage Quotas, Anti-Spam & Paid Credits [AMENDED 2026-11-12]
 
-- **Mandatory Login Policy (No Guest Chat)** — [AMENDED 2026-10-26]
-  ~~Users MUST be authenticated before starting a chat session. Guest users attempting to send messages are prompted with the authentication modal (`AuthModal.tsx`).~~
-
-  **Current behavior (superseded by Layer Zero)**: Guest users may send **2 messages** without login. After 2 messages, `AuthModal` opens with the Persian prompt. Guest sessions are NOT persisted to `localStorage`. Guests can only access `free_default` profile. The 15-message daily quota applies **only** to logged-in users. Guest rate limit enforced via `guestChatRateLimiter` in `server/middleware/rateLimiter.ts` (IP + fingerprint).
-
-- **Free Quota (15 Messages per 24-Hour Day)**:
-  - Each registered user receives **15 free messages** within a rolling **24-hour cooldown window** (`windowStart` in `free_daily_usage`).
-  - Configuration in `site_settings`: `free_daily_limit_user = '15'` and `free_cooldown_hours = '24'`.
-- **Accurate 24-Hour Cooldown Timer**:
-  - If quota is exhausted and wallet balance is empty, the server returns an exact Persian cooldown counter (`ساعت و دقیقه باقی‌مانده`) based strictly on the 24-hour window until the next refill.
-- **Seamless Auto-Switch to Credit**:
-  - When a free user exhausts their 15-message quota:
-    - **If wallet balance exists**: The stream automatically switches to the corresponding paid profile (`paid_default`, `paid_coding`, or `paid_vision`) without cutting off the user or showing an error.
-    - **If wallet balance is empty**: A courteous Persian notice is returned indicating the exact remaining cooldown time (hours/minutes of the 24-hour window) along with a direct action button to top up the wallet (`ErrorCapsule.tsx` with standard `.clay-btn`).
+- **Guest Trial & Unlimited Free-Model Chat**:
+  - Guests may send up to **15 free messages** (`free_daily_limit_guest = '15'` in `site_settings`, enforced on client in `MessageInput.tsx` and on server via `free_daily_usage` in `server/routes/chat.ts`) across all 3 free profiles (`free_default`, `free_coding`, `free_vision`).
+  - After 15 guest messages, `AuthModal` opens prompting login/registration. When a guest logs in mid-conversation, `switchUserContext` preserves their active in-memory guest conversation.
+  - **Logged-in users have unlimited free-model chat** (no daily message limit, no cooldown lock, no forced auto-switch to paid cards). Free-model token usage still logs to `wallet_transactions` (`type = 'free_usage'`, amount 0) for admin cost monitoring.
+  - **Anti-Spam Protection**: `/api/chat/stream` enforces `guestChatRateLimiter` (10/min per IP) and `guestChatHourLimiter` (30/hr per IP) for guests, and `userChatMinuteLimiter` (12/min per `userId`) and `userChatHourLimiter` (80/hr per `userId`) for authenticated non-admin users.
+  - **Paid Models & Studio Images**: Paid profiles (`paid_default`, `paid_coding`, `paid_vision`) are chosen explicitly by users and deduct from wallet balance. Studio paid image engines (`imagen-3`, `dalle-3`) retain `free_daily_image_limit` (`4`/24h) before charging wallet balance.
 
 ### 4. Explore Hub (Prompt Library Focus)
 - The **Explore Hub** (`src/pages/explore/ExploreHub.tsx`) is dedicated exclusively to **prompts, personas, and prompt discovery**.
@@ -258,14 +250,14 @@ Agents that previously worked on this repo have made the following mistakes. Do 
 
 | Assumption | Reality |
 |---|---|
-| "The login wall applies to all messages" | **False.** 2 free guest messages are allowed (see Layer Zero) |
+| "The login wall applies to all messages" | **False.** 15 free guest messages are allowed; logged-in users get unlimited free-model chat (see Layer Zero) |
 | "Model names (Gemini, Claude, DeepSeek) should appear in UI" | **False.** They stay in backend only. No model names in user-facing text, meta, schema, or footer. All 6 profiles now have clean, general labels without model names |
 | "The default title is 'دستیار هوشمند \| ...'" | **False.** It's now 'Dastyar AI \| دستیار هوش مصنوعی فارسی — چت، کد، اسناد'. The old string survives as H2 |
 | "Adding new pages violates Rule 4" | **False.** Pages in Layer Zero (`/about`, `/contact`, `/ai-assistant`) are explicitly requested |
 | "The /store should be noindexed because it's empty" | **False.** We reverted this. The store has an active wallet and is indexed |
 | "llms.txt is a strategic priority" | **False.** It's optional. Google currently ignores it for ranking |
-| "Guest sessions should be persisted" | **False.** Guest sessions are ephemeral — no localStorage |
-| "The 15-message quota applies to guests" | **False.** It applies only to logged-in users |
+| "Guest sessions should be persisted" | **False.** Guest sessions are ephemeral in localStorage while unauthenticated (migrated only upon login) |
+| "Logged-in users are limited to 15 free messages per day" | **False.** Free-model chat is unlimited after login (anti-spam rate limiters only); 15 messages is the guest pre-login trial limit |
 | "Persian numerals are cosmetic" | **False.** `toPersianDigits` is mandatory in all user-facing numbers |
 | "I should add a dark mode toggle / sidebar / extra pages" | **False.** Not requested. Do not add |
 | "The hourly news cron should be disabled for better SEO" | **False.** Keep it running. It's a secondary content channel — do not delete or disable |

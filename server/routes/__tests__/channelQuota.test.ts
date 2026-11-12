@@ -1,6 +1,9 @@
 import { describe, it, expect, beforeAll, beforeEach } from 'vitest';
+import jwt from 'jsonwebtoken';
 import db from '../../db/database';
 import { initializeSchema } from '../../db/schema';
+import { getGuestQuotaLimit, getQuotaLimit } from '../../services/quotaService';
+import { extractOptionalUser, JWT_SECRET } from '../../middleware/auth';
 import { setCurrentUserScope, getCurrentUserScope, saveConversations, loadConversations, saveActiveConversationId, loadActiveConversationId } from '../../../src/lib/storage';
 import { Conversation } from '../../../src/types';
 
@@ -13,16 +16,32 @@ describe('Channel & Guest Quota Architecture', () => {
     localStorage.clear();
   });
 
-  it('has seeded channel-specific limits in site_settings', () => {
+  it('has seeded guest trial (15), unlimited user free chat (0), and 24h cooldown in site_settings', () => {
     const guestLimit = (db.prepare("SELECT value FROM site_settings WHERE key = 'free_daily_limit_guest'").get() as any)?.value;
     const userLimit = (db.prepare("SELECT value FROM site_settings WHERE key = 'free_daily_limit_user'").get() as any)?.value;
-    const telegramLimit = (db.prepare("SELECT value FROM site_settings WHERE key = 'free_daily_limit_telegram'").get() as any)?.value;
-    const bazaarLimit = (db.prepare("SELECT value FROM site_settings WHERE key = 'free_daily_limit_bazaar'").get() as any)?.value;
+    const cooldownHours = (db.prepare("SELECT value FROM site_settings WHERE key = 'free_cooldown_hours'").get() as any)?.value;
 
-    expect(guestLimit).toBe('3');
-    expect(userLimit).toBe('15');
-    expect(telegramLimit).toBe('20');
-    expect(bazaarLimit).toBe('30');
+    expect(guestLimit).toBe('15');
+    expect(userLimit).toBe('0');
+    expect(cooldownHours).toBe('24');
+  });
+
+  it('returns 15 for guest trial and Infinity for logged-in free chat', () => {
+    expect(getGuestQuotaLimit()).toBe(15);
+    expect(getQuotaLimit(null)).toBe(15);
+    expect(getQuotaLimit(undefined)).toBe(15);
+    expect(getQuotaLimit(123, 'web')).toBe(Infinity);
+  });
+
+  it('extractOptionalUser verifies valid Bearer tokens and ignores invalid/missing ones', () => {
+    const token = jwt.sign({ id: 77, username: 'ali', role: 'user' }, JWT_SECRET);
+    const validReq = { headers: { authorization: `Bearer ${token}` } } as any;
+    const invalidReq = { headers: { authorization: 'Bearer invalid.token.here' } } as any;
+    const emptyReq = { headers: {} } as any;
+
+    expect(extractOptionalUser(validReq)).toEqual({ id: 77, username: 'ali', role: 'user' });
+    expect(extractOptionalUser(invalidReq)).toBeNull();
+    expect(extractOptionalUser(emptyReq)).toBeNull();
   });
 
   it('has source and deviceFingerprint columns in users table', () => {

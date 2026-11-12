@@ -1,5 +1,4 @@
 import express from 'express';
-import rateLimit from 'express-rate-limit';
 import db from '../db/database';
 import { isSafeBaseUrl, getGeminiClient, extractCleanErrorMessage, sanitizeErrorMessage, formatContentsForGemini, sleep, getPollinationsImageUrl, translateAndEnhanceImagePrompt, normalizeBaseUrl, parseCustomHeaders, getGeminiKeyFromPool, blacklistKey } from '../services/utils';
 import { GoogleGroundingAgent } from '../services/GoogleGroundingAgent';
@@ -8,20 +7,11 @@ import { ToolsAgent } from '../services/ToolsAgent';
 import { SpecializedKnowledgeService } from '../services/SpecializedKnowledgeService';
 import { responseCache, CACHE_TTL_MS, computeCacheKey, setCachedResponse } from '../services/CacheService';
 import { hasSufficientBalance, deductChatCost, calculateModelCostUsd, getUserWallet, logFreeChatUsage, deductImageCost } from '../services/walletService';
-import jwt from 'jsonwebtoken';
-import { JWT_SECRET } from '../middleware/auth';
-import { guestChatRateLimiter } from '../middleware/rateLimiter';
-import { getQuotaLimit } from '../services/quotaService';
+import { extractOptionalUser } from '../middleware/auth';
+import { guestChatRateLimiter, guestChatHourLimiter, userChatMinuteLimiter, userChatHourLimiter } from '../middleware/rateLimiter';
+import { getGuestQuotaLimit } from '../services/quotaService';
 import { getSiteSettingNumber } from '../services/settingsService';
 const router = express.Router();
-
-const chatStreamLimiter = rateLimit({
-  windowMs: 1 * 60 * 1000, // 1 minute
-  max: 60, // Limit each IP to 60 streaming requests per minute
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: { error: 'تعداد درخواست‌های گفت‌وگو بیش از حد مجاز است. لطفاً کمی بعد دوباره تلاش کنید.' }
-});
 
 function isTrivialPrompt(text: string): boolean {
   if (!text) return true;
@@ -31,7 +21,7 @@ function isTrivialPrompt(text: string): boolean {
   return trivialRegex.test(trimmed);
 }
 
-router.post('/api/chat/stream', chatStreamLimiter, guestChatRateLimiter, async (req, res) => {
+router.post('/api/chat/stream', guestChatRateLimiter, guestChatHourLimiter, userChatMinuteLimiter, userChatHourLimiter, async (req, res) => {
   // Setup SSE headers
   res.setHeader('Content-Type', 'text/event-stream');
   res.setHeader('Cache-Control', 'no-cache, no-transform');
@@ -132,20 +122,9 @@ router.post('/api/chat/stream', chatStreamLimiter, guestChatRateLimiter, async (
       return finishStream();
     }
 
-    // Extract authenticated user if token provided
-    let userId: number | null = null;
-    let userRole: string = 'user';
-    const authHeader = req.headers.authorization;
-    if (authHeader && authHeader.startsWith('Bearer ')) {
-      try {
-        const token = authHeader.split(' ')[1];
-        const decoded = jwt.verify(token, JWT_SECRET) as any;
-        if (decoded?.id) userId = decoded.id;
-        if (decoded?.role) userRole = decoded.role;
-      } catch (e) {
-        console.warn('[Chat] JWT verification failed:', (e as Error)?.message || e);
-      }
-    }
+    // Extract authenticated user if token provided (may already be verified by rate limiter)
+    const authUser = extractOptionalUser(req);
+    const userId: number | null = authUser?.id ?? null;
 
     let provider = apiConfig?.activeProvider || 'gemini';
     let customProfileId = apiConfig?.custom?.activeProfileId;
@@ -214,107 +193,49 @@ router.post('/api/chat/stream', chatStreamLimiter, guestChatRateLimiter, async (
     // Always false: client keys are telemetry only, never a quota/billing bypass.
     const hasCustomUserKey = false;
 
-    // Guest Trial Policy: Allow unauthenticated guests strictly on free_default profile up to free_daily_limit_guest (3 messages)
-    if (!userId) {
-      if (!isFreeModel || (customProfileId && customProfileId !== 'free_default')) {
-        sendChunk({
-          error: 'استفاده از مدل‌های تخصصی و پیشرفته نیازمند ورود به حساب کاربری است. لطفاً برای دسترسی کامل وارد شوید.',
-          insufficientBalance: true,
-          done: true
-        });
-        return finishStream();
-      }
+    // Guest Trial Policy: Allow unauthenticated guests on all 3 free profiles up to free_daily_limit_guest (default 15 messages).
+    // Paid profiles always require login and wallet balance.
+    if (!userId && !isFreeModel) {
+      sendChunk({
+        error: 'استفاده از مدل‌های پیشرفته و اعتباری نیازمند ورود به حساب کاربری است. لطفاً برای دسترسی وارد شوید.',
+        insufficientBalance: true,
+        done: true
+      });
+      return finishStream();
     }
 
-    let userSource = 'web';
-    if (userId) {
-       const userRow = db.prepare('SELECT source FROM users WHERE id = ?').get(userId) as any;
-       userSource = userRow?.source || 'web';
-    }
-
-    // Check 24-hour rolling window limit for Free Models
-    if (isFreeModel && !hasCustomUserKey && userRole !== 'admin') {
+    // Logged-in users enjoy unlimited chat on free models (protected by anti-spam rate limiters).
+    // Only unauthenticated guests are capped at free_daily_limit_guest (default 15) before prompting login.
+    if (isFreeModel && !hasCustomUserKey && !userId) {
       const now = Date.now();
       const cooldownHours = getSiteSettingNumber('free_cooldown_hours', 24);
       const WINDOW_MS = cooldownHours * 60 * 60 * 1000;
-      const identifier = userId ? `user:${userId}` : `ip:${req.ip}`;
-      const windowLimit = getQuotaLimit(userId, userSource);
-      
-      // Get current window usage
+      const identifier = `ip:${req.ip}`;
+      const windowLimit = getGuestQuotaLimit();
+
       let usage = db.prepare("SELECT count, windowStart FROM free_daily_usage WHERE id = ? AND date = 'window'").get(identifier) as any;
       if (!usage || !usage.windowStart || (now - usage.windowStart >= WINDOW_MS)) {
         db.prepare("INSERT OR REPLACE INTO free_daily_usage (id, date, count, windowStart) VALUES (?, 'window', 0, ?)").run(identifier, now);
         usage = { count: 0, windowStart: now };
       }
-      
-      if (usage.count >= windowLimit) {
-        // For guest users, immediately prompt to sign up to unlock 15 daily messages
-        if (!userId) {
-          sendChunk({
-            error: `سهمیه تست مهمان (${windowLimit} پیام رایگان) شما به پایان رسیده است. برای ادامه گفتگو، ذخیره تاریخچه و دریافت روزانه ۱۵ پیام رایگان دائمی، به سادگی وارد حساب کاربری خود شوید.`,
-            insufficientBalance: true,
-            quotaExceeded: true,
-            remaining: 0,
-            limit: windowLimit,
-            channel: 'guest',
-            resetAt: (usage.windowStart || now) + WINDOW_MS,
-            cooldownHours,
-            done: true
-          });
-          return finishStream();
-        }
 
-        // Free quota exhausted! Check if user has wallet balance to seamlessly switch to Paid card
-        const userWallet = userId ? getUserWallet(userId) : null;
-        if (userWallet && userWallet.walletBalance > 0) {
-          // Seamless auto-switch to paid card!
-          isFreeModel = false;
-          // Map free card -> matching paid card by role id ONLY.
-          // Do NOT infer from model name: free_vision (gemini/flash) would wrongly map to paid_vision.
-          let paidRoleId = 'paid_default';
-          if (customProfileId === 'free_coding') {
-            paidRoleId = 'paid_coding';
-          } else if (customProfileId === 'free_vision') {
-            paidRoleId = 'paid_vision';
-          }
-          const paidProfile = db.prepare('SELECT * FROM default_profiles WHERE id = ?').get(paidRoleId) as any;
-          if (paidProfile) {
-            customProfileId = paidProfile.id;
-            targetModel = paidProfile.modelName;
-            model = paidProfile.modelName;
-            targetBaseUrl = paidProfile.baseUrl;
-            targetApiKey = paidProfile.apiKey;
-            if (apiConfig?.custom) {
-              apiConfig.custom.baseUrl = paidProfile.baseUrl;
-              apiConfig.custom.modelName = paidProfile.modelName;
-              apiConfig.custom.apiKey = targetApiKey;
-              apiConfig.custom.id = paidProfile.id;
-            }
-          }
-        } else {
-          // Calculate remaining cooldown time
-          const msLeft = Math.max(0, (usage.windowStart + WINDOW_MS) - now);
-          const hoursLeft = Math.floor(msLeft / (60 * 60 * 1000));
-          const minsLeft = Math.max(1, Math.ceil((msLeft % (60 * 60 * 1000)) / (60 * 1000)));
-          const timeLeftStr = hoursLeft > 0 ? `${hoursLeft} ساعت و ${minsLeft} دقیقه` : `${minsLeft} دقیقه`;
-          
-          sendChunk({
-            error: `سهمیه ${windowLimit} پیام رایگان روزانه شما به پایان رسیده است. ⏱️ سهمیه بعدی شما حدود ${timeLeftStr} دیگر فعال خواهد شد. در صورت تمایل می‌توانید با شارژ کیف پول خود به هر میزان دلخواه، با مدل‌های پیشرفته اعتباری به گفتگو ادامه دهید.`,
-            insufficientBalance: true,
-            quotaExceeded: true,
-            remaining: 0,
-            limit: windowLimit,
-            channel: userSource,
-            resetAt: usage.windowStart + WINDOW_MS,
-            cooldownHours,
-            done: true
-          });
-          return finishStream();
-        }
-      } else {
-        // Increment usage immediately to prevent race conditions
-        db.prepare("UPDATE free_daily_usage SET count = count + 1 WHERE id = ? AND date = 'window'").run(identifier);
+      if (usage.count >= windowLimit) {
+        sendChunk({
+          error: `سهمیه تست مهمان (${windowLimit} پیام رایگان) شما به پایان رسیده است. برای ادامه گفتگوی رایگان و نامحدود با مدل‌های پایه و ذخیره تاریخچه، به سادگی وارد حساب کاربری خود شوید.`,
+          insufficientBalance: true,
+          quotaExceeded: true,
+          remaining: 0,
+          limit: windowLimit,
+          channel: 'guest',
+          resetAt: (usage.windowStart || now) + WINDOW_MS,
+          cooldownHours,
+          done: true
+        });
+        return finishStream();
       }
+
+      // Increment guest trial usage immediately to prevent race conditions
+      db.prepare("UPDATE free_daily_usage SET count = count + 1 WHERE id = ? AND date = 'window'").run(identifier);
     }
 
     if (!isFreeModel && !hasCustomUserKey) {

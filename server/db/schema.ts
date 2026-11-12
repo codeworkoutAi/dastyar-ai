@@ -488,14 +488,15 @@ export function initializeSchema() {
       db.prepare("UPDATE site_settings SET value = 'true' WHERE key = 'news_auto_publish'").run();
     } catch {}
     seedSetting('api_dollar_rate', '200000'); // 200,000 Tomans per $1 API by default
-    seedSetting('free_daily_limit_user', '15'); // 15 free messages per 24-hour day
-    seedSetting('free_daily_limit_guest', '3'); // 3 free messages trial for guest
+    seedSetting('free_daily_limit_user', '0'); // 0 = unlimited free-model chat for logged-in users
+    seedSetting('free_daily_limit_guest', '15'); // 15 free messages trial for guests before login
     seedSetting('free_daily_limit_telegram', '20'); // 20 free messages for telegram users
     seedSetting('free_daily_limit_bazaar', '30'); // 30 free messages for Cafe Bazaar users
-    seedSetting('free_cooldown_hours', '24'); // 24-hour daily quota cooldown
+    seedSetting('free_cooldown_hours', '24'); // 24-hour guest trial cooldown window
     try {
-      db.prepare("UPDATE site_settings SET value = '15' WHERE key = 'free_daily_limit_user' AND value != '15'").run();
-      db.prepare("UPDATE site_settings SET value = '3' WHERE key = 'free_daily_limit_guest' AND value != '3'").run();
+      // One-time migration from legacy defaults (guest 3 -> 15, user 15 -> 0/unlimited) without overwriting custom admin overrides
+      db.prepare("UPDATE site_settings SET value = '15' WHERE key = 'free_daily_limit_guest' AND value = '3'").run();
+      db.prepare("UPDATE site_settings SET value = '0' WHERE key = 'free_daily_limit_user' AND value = '15'").run();
     } catch {}
     seedSetting('bazaarpay_destination', 'lifeencoder_bazaar');
     seedSetting('bazaarpay_token', '90ec06f91b84af3fd6956742ae0c30effdecd142');

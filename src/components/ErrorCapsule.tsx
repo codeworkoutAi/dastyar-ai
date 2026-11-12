@@ -98,7 +98,7 @@ export const ErrorCapsule: React.FC = React.memo(() => {
                 className="clay-btn clay-btn-primary text-white text-xs px-3.5 py-1.5 rounded-btn flex items-center gap-1.5 font-bold cursor-pointer transition-all shadow-sm active:scale-95"
               >
                 <LogIn className="w-3.5 h-3.5 text-white" />
-                <span>ورود و دریافت ۱۵ پیام رایگان</span>
+                <span>ورود و چت رایگان نامحدود</span>
               </button>
             ) : (error.insufficientBalance || error.message?.includes('کیف پول') || error.message?.includes('اعتبار')) ? (
               <button

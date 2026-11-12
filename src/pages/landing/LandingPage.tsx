@@ -134,8 +134,8 @@ const HIGH_INTENT_NICHES: PromptNiche[] = [
 const WHY_DASTYAR_CARDS = [
   {
     id: 'free-quota',
-    title: `${toPersianDigits(15)} پیام رایگان روزانه`,
-    text: 'شروع بدون پرداخت اولیه. بدون نیاز به کارت اعتباری خارجی.',
+    title: 'چت رایگان و نامحدود',
+    text: `${toPersianDigits(15)} پیام مهمان بدون ورود و چت نامحدود با مدل‌های پایه پس از ورود.`,
     icon: MessageSquare,
     color: 'text-blue-600 dark:text-blue-400',
     iconBg: 'bg-blue-500/10 dark:bg-blue-400/15'
@@ -213,7 +213,7 @@ export const LandingPage: React.FC = () => {
         'کدنویسی، دیباگ و بهینه‌سازی برنامه‌ها',
         'ترجمه تخصصی و سلیس متون بین‌المللی',
         'دسترسی مستقیم بدون محدودیت‌های تحریم',
-        'سهمیه رایگان روزانه برای کلیه کاربران'
+        'چت رایگان و نامحدود با مدل‌های پایه برای کلیه کاربران'
       ]
     };
 
@@ -225,7 +225,7 @@ export const LandingPage: React.FC = () => {
           name: 'آیا استفاده از دستیار هوشمند رایگان است؟',
           acceptedAnswer: {
             '@type': 'Answer',
-            text: 'بله، دستیار هوشمند روزانه سهمیه گفتگوی کاملاً رایگان برای تمام کاربران در نظر گرفته است و شروع کار بدون نیاز به پرداخت اولیه است.'
+            text: 'بله، دستیار هوشمند برای شروع ۱۵ پیام مهمان بدون ثبت‌نام و پس از ورود چت کاملاً رایگان و نامحدود با مدل‌های پایه ارائه می‌دهد.'
           }
         },
         {
@@ -249,7 +249,7 @@ export const LandingPage: React.FC = () => {
 
     setPageSeo({
       title: 'Dastyar AI | دستیار هوش مصنوعی فارسی — چت، کد، اسناد',
-      description: 'با Dastyar AI رایگان شروع کنید: ۱۵ پیام روزانه + پرداخت به‌ازای مصرف. چت، برنامه‌نویسی، تحلیل اسناد و تصویر به فارسی. دسترسی مستقیم از ایران.',
+      description: 'با Dastyar AI رایگان شروع کنید: چت رایگان و نامحدود با مدل‌های پایه + پرداخت به‌ازای مصرف برای مدل‌های پیشرفته. چت، برنامه‌نویسی، تحلیل اسناد و تصویر به فارسی.',
       keywords: 'استعلام یارانه این ماه, سود سهام عدالت با کد ملی, کالابرگ الکترونیک, تنظیم لایحه با هوش مصنوعی, دادخواست حقوقی, روتین پوست و مو, برنامه بدنسازی با هوش مصنوعی, نگارش نامه اداری, چت هوش مصنوعی فارسی, هوش مصنوعی بدون تحریم, دستیار هوشمند',
       canonical: 'https://dastyarai.com/',
       schema: {
@@ -324,7 +324,7 @@ export const LandingPage: React.FC = () => {
               <span className="opacity-30 hidden sm:inline">•</span>
               <span className="flex items-center gap-1.5">
                 <ShieldCheck className="w-4 h-4 text-blue-500 shrink-0" />
-                <span>۱۵ پیام رایگان روزانه</span>
+                <span>چت رایگان و نامحدود پس از ورود</span>
               </span>
               <span className="opacity-30 hidden sm:inline">•</span>
               <span className="flex items-center gap-1.5">

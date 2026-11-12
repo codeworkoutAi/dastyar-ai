@@ -3,7 +3,7 @@ import { formatPersianErrorMessage } from '../lib/persianUtils';
 
 import { create } from 'zustand';
 import { Conversation, ChatMessage } from '../types';
-import { loadConversations, saveConversations, loadActiveConversationId, saveActiveConversationId, createNewConversation, setCurrentUserScope } from '../lib/storage';
+import { loadConversations, saveConversations, loadActiveConversationId, saveActiveConversationId, createNewConversation, setCurrentUserScope, getCurrentUserScope } from '../lib/storage';
 import { useSettingsStore } from './settingsStore';
 import { useAuthStore, onAuthChange } from './authStore';
 import { buildOptimizedContext } from '../lib/tokenOptimizer';
@@ -47,12 +47,31 @@ export const useChatStore = create<ChatState>((set, get) => ({
   routingState: 'idle',
 
   switchUserContext: (userId) => {
+    const prevScope = getCurrentUserScope();
+    const guestConvs = prevScope === 'guest' && userId != null
+      ? get().conversations.filter((c) => c.messages.length > 0)
+      : [];
+    const guestActiveId = prevScope === 'guest' && userId != null ? get().activeId : null;
+
     setCurrentUserScope(userId);
-    const convs = loadConversations();
-    const active = loadActiveConversationId();
-    const validActive = active && convs.some(c => c.id === active) ? active : (convs.length > 0 ? convs[0].id : null);
+    const savedConvs = loadConversations();
+    const existingIds = new Set(savedConvs.map((c) => c.id));
+    const mergedConvs = guestConvs.length > 0
+      ? [...guestConvs.filter((c) => !existingIds.has(c.id)), ...savedConvs]
+      : savedConvs;
+
+    if (guestConvs.length > 0) {
+      saveConversations(mergedConvs);
+    }
+
+    const active = guestActiveId || loadActiveConversationId();
+    const validActive = active && mergedConvs.some(c => c.id === active) ? active : (mergedConvs.length > 0 ? mergedConvs[0].id : null);
+    if (guestActiveId && validActive) {
+      saveActiveConversationId(validActive);
+    }
+
     set({
-      conversations: convs,
+      conversations: mergedConvs,
       activeId: validActive,
       activeError: null,
       isStreaming: false,
@@ -478,7 +497,16 @@ stopGeneration: () => {
         let serverErrorMsg = `خطای سرور (${response.status})`;
         try {
           const rawText = await response.text();
-          serverErrorMsg += `: ${rawText}`;
+          try {
+            const parsed = JSON.parse(rawText);
+            if (parsed?.error) {
+              serverErrorMsg = parsed.error;
+            } else if (rawText) {
+              serverErrorMsg += `: ${rawText}`;
+            }
+          } catch {
+            if (rawText) serverErrorMsg += `: ${rawText}`;
+          }
         } catch { }
         throw new Error(serverErrorMsg);
       }

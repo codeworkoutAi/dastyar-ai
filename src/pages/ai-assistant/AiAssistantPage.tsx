@@ -43,7 +43,7 @@ const FAQS = [
   },
   {
     q: 'آیا Dastyar AI رایگان است؟',
-    a: 'بله. ۱۵ پیام رایگان روزانه دارید. برای بیشتر، پرداخت به‌ازای مصرف با کیف پول.'
+    a: 'بله. چت با مدل‌های پایه پس از ورود کاملاً رایگان و نامحدود است (و پیش از ورود ۱۵ پیام مهمان دارید). برای مدل‌های پیشرفته از پرداخت به‌ازای مصرف با کیف پول استفاده می‌شود.'
   },
   {
     q: 'آیا Dastyar AI به فارسی پاسخ می‌دهد؟',
@@ -299,7 +299,7 @@ export const AiAssistantPage: React.FC = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
             <div className="p-3.5 rounded-xl clay-surface flex items-center gap-2.5 text-xs sm:text-sm">
               <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
-              <span><strong>{toPersianDigits(15)} پیام رایگان روزانه:</strong> شروع بدون پرداخت اولیه، بدون نیاز به ثبت‌نام طولانی.</span>
+              <span><strong>چت رایگان و نامحدود:</strong> {toPersianDigits(15)} پیام مهمان بدون ورود و دسترسی نامحدود به مدل‌های پایه پس از ورود.</span>
             </div>
 
             <div className="p-3.5 rounded-xl clay-surface flex items-center gap-2.5 text-xs sm:text-sm">
