@@ -1,4 +1,4 @@
-import { getGeminiClient, blacklistKey } from './utils';
+import { getGeminiClient, blacklistKey, getGeminiKeyFromPool } from './utils';
 
 export interface GroundingSource {
   title?: string;
@@ -16,10 +16,14 @@ export class GoogleGroundingAgent {
   public static async search(query: string, customApiKey?: string): Promise<string> {
     if (!query || query.trim().length === 0) return '';
 
-    const apiKey = customApiKey
+    let apiKey = customApiKey
       || process.env.GEMINI_SEARCH_KEY
       || process.env.GEMINI_API_KEY
       || process.env.DEFAULT_GEMINI_KEY;
+
+    if (!apiKey) {
+      apiKey = getGeminiKeyFromPool() || undefined;
+    }
 
     try {
       console.log(`[GoogleGroundingAgent] Searching live Google for: "${query.substring(0, 100)}"...`);
@@ -37,34 +41,61 @@ export class GoogleGroundingAgent {
       // worse. Search the open web and let the engine do the filtering.
       const searchQuery = query;
 
-      const prompt = `شما یک دستیار جستجوی سریع هستید.
+      let nowTehran = '';
+      try {
+        nowTehran = new Intl.DateTimeFormat('fa-IR-u-ca-persian', {
+          timeZone: 'Asia/Tehran',
+          dateStyle: 'full',
+        }).format(new Date());
+      } catch {
+        nowTehran = new Date().toISOString().split('T')[0];
+      }
+
+      const prompt = `شما یک دستیار جستجوی وب سریع هستید.
+امروز: ${nowTehran}
 موضوع جستجو: "${searchQuery}"
 
 وظیفه شما: 
-فقط در اینترنت جستجو کنید و مهم‌ترین فکت‌ها، داده‌ها، قیمت‌ها یا اخبار زنده را در قالب چند بولت‌پوینتِ بسیار کوتاه (تیتروار) لیست کنید.
-به هیچ وجه مقدمه، موخره یا پاراگراف طولانی ننویسید تا زمان پردازش حداقل شود. سرعت اولویت اول است!`;
+فقط با ابزار موتور جستجوی گوگل در اینترنت جستجو کنید و تازه‌ترین و دقیق‌ترین فکت‌ها، داده‌ها، قیمت‌ها یا اخبار زنده را در قالب چند بولت‌پوینتِ کوتاه و کلیدی لیست کنید.
+به هیچ وجه مقدمه، موخره یا پاراگراف طولانی ننویسید تا زمان پردازش حداقل شود.`;
 
-      const model = process.env.GEMINI_GROUNDING_MODEL || 'gemini-3.6-flash';
-      if (!process.env.GEMINI_GROUNDING_MODEL) {
-        // Without this warning, an invalid fallback model fails inside `catch`, returns
-        // an empty string, and web search silently turns off with no visible cause.
-        console.warn('[GoogleGroundingAgent] GEMINI_GROUNDING_MODEL is not set — falling back to ' + model);
-      }
+      const primaryModel = process.env.GEMINI_GROUNDING_MODEL || 'gemini-3.5-flash-lite';
+      const timeoutMs = parseInt(process.env.GEMINI_GROUNDING_TIMEOUT_MS || '15000', 10);
       const timeoutPromise = new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error('GoogleGroundingAgent timeout after 3000ms')), 3000)
+        setTimeout(() => reject(new Error(`GoogleGroundingAgent timeout after ${timeoutMs}ms`)), timeoutMs)
       );
 
-      const response = await Promise.race([
-        ai.models.generateContent({
-          model,
-          contents: [{ role: 'user', parts: [{ text: prompt }] }],
-          config: {
-            tools: [{ googleSearch: {} }],
-            temperature: 0.1, // Lower temperature for faster, deterministic output
-          },
-        }),
-        timeoutPromise,
-      ]);
+      let response: any = null;
+      try {
+        response = await Promise.race([
+          ai.models.generateContent({
+            model: primaryModel,
+            contents: [{ role: 'user', parts: [{ text: prompt }] }],
+            config: {
+              tools: [{ googleSearch: {} }],
+              temperature: 0.1, // Lower temperature for faster, deterministic output
+            },
+          }),
+          timeoutPromise,
+        ]);
+      } catch (primaryErr: any) {
+        if (primaryModel !== 'gemini-3.6-flash' && !String(primaryErr?.message || '').includes('timeout')) {
+          console.warn(`[GoogleGroundingAgent] Model ${primaryModel} failed, trying fallback gemini-3.6-flash:`, primaryErr?.message || primaryErr);
+          response = await Promise.race([
+            ai.models.generateContent({
+              model: 'gemini-3.6-flash',
+              contents: [{ role: 'user', parts: [{ text: prompt }] }],
+              config: {
+                tools: [{ googleSearch: {} }],
+                temperature: 0.1,
+              },
+            }),
+            timeoutPromise,
+          ]);
+        } else {
+          throw primaryErr;
+        }
+      }
 
       const summary = response.text || '';
       if (!summary || summary.trim().length === 0) {

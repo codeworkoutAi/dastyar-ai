@@ -3,7 +3,7 @@ import Parser from 'rss-parser';
 import fs from 'fs';
 import path from 'path';
 import db, { syncDatabase } from '../db/database';
-import { getGeminiClient, getPollinationsImageUrl, optimizeImageToWebpDataUrl } from './utils';
+import { getGeminiClient, getPollinationsImageUrl, optimizeImageToWebpDataUrl, getGeminiKeyFromPool } from './utils';
 import { bot, getTelegramBot } from '../telegram/bot';
 
 // Path for persistent news-cron log file
@@ -188,7 +188,7 @@ export async function fetchAndProcessNews() {
       appendCronLog('INFO', skipMsg);
       return;
     }
-    const apiKey = process.env.GEMINI_SEARCH_KEY || process.env.DEFAULT_GEMINI_KEY || process.env.GEMINI_API_KEY;
+    const apiKey = process.env.DEFAULT_GEMINI_KEY || process.env.GEMINI_API_KEY || getGeminiKeyFromPool() || '';
     const ai = getGeminiClient(apiKey, true);
 
     let targetItem: any = null;
