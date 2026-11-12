@@ -149,9 +149,9 @@ export const Header: React.FC = React.memo(() => {
  </Tooltip>
 
  <div className="min-w-0 flex flex-col justify-center">
- <h1 className="font-extrabold text-xs sm:text-base md:text-lg tracking-tight truncate flex items-center gap-1.5 sm:gap-2">
-	<span>چت با هوش مصنوعی فارسی</span>
-	</h1>
+ <div className="font-extrabold text-xs sm:text-base md:text-lg tracking-tight truncate flex items-center gap-1.5 sm:gap-2">
+	<span>Dastyarai</span>
+	</div>
  <p className="type-badge opacity-70 truncate hidden sm:block">
  قدرتمند شده با زبان فارسی
  </p>
