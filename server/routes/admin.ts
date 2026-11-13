@@ -157,7 +157,7 @@ router.post('/products', (req, res) => {
   try {
     const { 
       title, description, longDescription, faqs, price, category, image, bannerImage, baseUrl, deliveryGuide,
-      badge, features, tokenEstimate, isPopular, showOnLanding
+      badge, features, tokenEstimate, isPopular, showOnLanding, variations, deliveryTime
     } = req.body;
     
     if (!title || price === undefined || price === null || !category) {
@@ -167,8 +167,8 @@ router.post('/products', (req, res) => {
     const stmt = db.prepare(`
       INSERT INTO products (
         title, description, longDescription, faqs, price, category, image, bannerImage, baseUrl, deliveryGuide,
-        badge, features, tokenEstimate, isPopular, showOnLanding
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        badge, features, tokenEstimate, isPopular, showOnLanding, variations, deliveryTime
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
     const info = stmt.run(
       title,
@@ -185,7 +185,9 @@ router.post('/products', (req, res) => {
       features || null,
       tokenEstimate || null,
       isPopular ? 1 : 0,
-      showOnLanding === false ? 0 : 1
+      showOnLanding === false ? 0 : 1,
+      variations || null,
+      deliveryTime || '۱ تا ۲۴ ساعت کاری'
     );
     syncDatabase();
     clearSitemapCache();
@@ -204,7 +206,7 @@ router.put('/products/:id', (req, res) => {
     const { id } = req.params;
     const { 
       title, description, longDescription, faqs, price, category, image, bannerImage, baseUrl, deliveryGuide,
-      badge, features, tokenEstimate, isPopular, showOnLanding
+      badge, features, tokenEstimate, isPopular, showOnLanding, variations, deliveryTime
     } = req.body;
     
     if (!title || price === undefined || price === null || !category) {
@@ -220,7 +222,8 @@ router.put('/products/:id', (req, res) => {
       UPDATE products SET 
         title = ?, description = ?, longDescription = ?, faqs = ?, price = ?, category = ?, 
         image = ?, bannerImage = ?, baseUrl = ?, deliveryGuide = ?,
-        badge = ?, features = ?, tokenEstimate = ?, isPopular = ?, showOnLanding = ?
+        badge = ?, features = ?, tokenEstimate = ?, isPopular = ?, showOnLanding = ?,
+        variations = ?, deliveryTime = ?
       WHERE id = ?
     `);
     stmt.run(
@@ -239,6 +242,8 @@ router.put('/products/:id', (req, res) => {
       tokenEstimate || null,
       isPopular ? 1 : 0,
       showOnLanding === false ? 0 : 1,
+      variations || null,
+      deliveryTime || '۱ تا ۲۴ ساعت کاری',
       id
     );
     syncDatabase();
@@ -271,6 +276,73 @@ router.delete('/products/:id', (req, res) => {
   } catch (error) {
     console.error('[Admin API] Error deleting product:', error);
     res.status(500).json({ error: 'خطا در حذف محصول' });
+  }
+});
+
+// ==================== PRODUCT REVIEWS MODERATION ====================
+
+// GET /api/admin/reviews
+router.get('/reviews', (req, res) => {
+  try {
+    const status = req.query.status as string;
+    let query = `
+      SELECT 
+        r.id, r.productId, r.userId, r.rating, r.comment, r.status, r.reply, r.createdAt,
+        p.title as productTitle,
+        u.name as userName, u.email as userEmail
+      FROM product_reviews r
+      LEFT JOIN products p ON r.productId = p.id
+      LEFT JOIN users u ON r.userId = u.id
+    `;
+    const params: any[] = [];
+    if (status && status !== 'all') {
+      query += ` WHERE r.status = ?`;
+      params.push(status);
+    }
+    query += ` ORDER BY r.id DESC LIMIT 100`;
+
+    const reviews = db.prepare(query).all(...params);
+    res.json(reviews);
+  } catch (error) {
+    console.error('[Admin API] Error fetching reviews:', error);
+    res.status(500).json({ error: 'خطا در دریافت دیدگاه‌ها' });
+  }
+});
+
+// PUT /api/admin/reviews/:id/status
+router.put('/reviews/:id/status', (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status, reply } = req.body;
+
+    if (!['approved', 'rejected', 'pending'].includes(status)) {
+      return res.status(400).json({ error: 'وضعیت نامعتبر است' });
+    }
+
+    if (reply !== undefined) {
+      db.prepare('UPDATE product_reviews SET status = ?, reply = ? WHERE id = ?').run(status, reply || null, id);
+    } else {
+      db.prepare('UPDATE product_reviews SET status = ? WHERE id = ?').run(status, id);
+    }
+    syncDatabase();
+
+    res.json({ success: true, message: 'وضعیت دیدگاه با موفقیت بروزرسانی شد.' });
+  } catch (error) {
+    console.error('[Admin API] Error updating review status:', error);
+    res.status(500).json({ error: 'خطا در تغییر وضعیت دیدگاه' });
+  }
+});
+
+// DELETE /api/admin/reviews/:id
+router.delete('/reviews/:id', (req, res) => {
+  try {
+    const { id } = req.params;
+    db.prepare('DELETE FROM product_reviews WHERE id = ?').run(id);
+    syncDatabase();
+    res.json({ success: true, message: 'دیدگاه با موفقیت حذف شد.' });
+  } catch (error) {
+    console.error('[Admin API] Error deleting review:', error);
+    res.status(500).json({ error: 'خطا در حذف دیدگاه' });
   }
 });
 

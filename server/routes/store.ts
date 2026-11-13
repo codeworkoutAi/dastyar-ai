@@ -95,7 +95,7 @@ router.get('/products/:id', (req, res) => {
 // POST /api/store/checkout
 router.post('/checkout', checkoutLimiter, requireAuth, async (req: any, res) => {
   try {
-    const { productId } = req.body;
+    const { productId, variationId, selectedPeriod } = req.body;
     const userId = req.user.id;
 
     if (!productId) {
@@ -121,14 +121,30 @@ router.post('/checkout', checkoutLimiter, requireAuth, async (req: any, res) => 
       return res.status(400).json({ error: 'موجودی این محصول به اتمام رسیده است' });
     }
 
+    // Calculate final price and period based on variations if specified
+    let finalPrice = product.price;
+    let finalPeriod = selectedPeriod || null;
+    if (product.variations) {
+      try {
+        const parsed = JSON.parse(product.variations);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          const matched = parsed.find((v: any) => v.id === variationId || v.title === selectedPeriod);
+          if (matched && typeof matched.price === 'number') {
+            finalPrice = matched.price;
+            finalPeriod = matched.title;
+          }
+        }
+      } catch (e) {}
+    }
+
     // Create an order
     const orderId = 'ORD-' + crypto.randomUUID().split('-')[0].toUpperCase();
     const insertStmt = db.prepare(`
-      INSERT INTO orders (id, userId, productId, amount, paymentStatus, paymentMethod) 
-      VALUES (?, ?, ?, ?, 'pending', 'online')
+      INSERT INTO orders (id, userId, productId, amount, paymentStatus, paymentMethod, selectedPeriod) 
+      VALUES (?, ?, ?, ?, 'pending', 'online', ?)
     `);
     
-    insertStmt.run(orderId, userId, productId, product.price);
+    insertStmt.run(orderId, userId, productId, finalPrice, finalPeriod);
     syncDatabase();
 
     const userRow = db.prepare('SELECT email FROM users WHERE id = ?').get(userId) as any;
@@ -213,7 +229,7 @@ router.post('/wallet-topup', checkoutLimiter, requireAuth, async (req: any, res)
 // POST /api/store/checkout-manual
 router.post('/checkout-manual', checkoutLimiter, requireAuth, (req: any, res) => {
   try {
-    const { productId, trackingNumber } = req.body;
+    const { productId, trackingNumber, variationId, selectedPeriod } = req.body;
     const userId = req.user.id;
 
     if (!productId) return res.status(400).json({ error: 'شناسه محصول نامعتبر است' });
@@ -230,19 +246,33 @@ router.post('/checkout-manual', checkoutLimiter, requireAuth, (req: any, res) =>
       return res.status(400).json({ error: 'موجودی این محصول به اتمام رسیده است' });
     }
 
+    // Calculate final price and period based on variations if specified
+    let finalPrice = product.price;
+    let finalPeriod = selectedPeriod || null;
+    if (product.variations) {
+      try {
+        const parsed = JSON.parse(product.variations);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          const matched = parsed.find((v: any) => v.id === variationId || v.title === selectedPeriod);
+          if (matched && typeof matched.price === 'number') {
+            finalPrice = matched.price;
+            finalPeriod = matched.title;
+          }
+        }
+      } catch (e) {}
+    }
+
     const orderId = 'ORD-' + crypto.randomUUID().split('-')[0].toUpperCase();
     
-    // We update the insert statement to include trackingNumber and paymentMethod if they exist in schema.
-    // We already added them via migration.
     const insertStmt = db.prepare(`
-      INSERT INTO orders (id, userId, productId, amount, paymentStatus, paymentMethod, trackingNumber) 
-      VALUES (?, ?, ?, ?, 'pending', 'card', ?)
+      INSERT INTO orders (id, userId, productId, amount, paymentStatus, paymentMethod, trackingNumber, selectedPeriod) 
+      VALUES (?, ?, ?, ?, 'pending', 'card', ?, ?)
     `);
     
-    insertStmt.run(orderId, userId, productId, product.price, trackingNumber);
+    insertStmt.run(orderId, userId, productId, finalPrice, trackingNumber, finalPeriod);
     syncDatabase();
 
-    res.json({ message: 'فاکتور ایجاد شد', orderId });
+    res.json({ message: 'فاکتور ایجاد شد', orderId, amount: finalPrice });
 
   } catch (error) {
     console.error('[Store API] Manual Checkout error:', error);
@@ -878,6 +908,126 @@ router.post('/redeem', requireAuth, (req: any, res) => {
   } catch (error) {
     console.error('[Store API] Error redeeming license:', error);
     res.status(500).json({ error: 'خطای سرور در فعال‌سازی کد' });
+  }
+});
+
+// ==================== PRODUCT REVIEWS (ANTI-SPAM) ====================
+
+// GET /api/store/products/:id/reviews (Public approved reviews)
+router.get('/products/:id/reviews', (req, res) => {
+  try {
+    const { id } = req.params;
+    const reviews = db.prepare(`
+      SELECT 
+        r.id, r.rating, r.comment, r.reply, r.createdAt, r.userId,
+        u.name as userName, u.email as userEmail
+      FROM product_reviews r
+      LEFT JOIN users u ON r.userId = u.id
+      WHERE r.productId = ? AND r.status = 'approved'
+      ORDER BY r.id DESC
+      LIMIT 50
+    `).all(id) as any[];
+
+    // Check verified buyer for each review
+    const verifiedStmt = db.prepare(`
+      SELECT COUNT(*) as c FROM orders 
+      WHERE userId = ? AND productId = ? AND paymentStatus = 'success'
+    `);
+
+    const sanitized = reviews.map(r => {
+      const isVerified = (verifiedStmt.get(r.userId, id) as any)?.c > 0;
+      const displayName = r.userName?.trim() || (r.userEmail ? r.userEmail.split('@')[0] : 'کاربر دستیار');
+      return {
+        id: r.id,
+        rating: r.rating,
+        comment: r.comment,
+        reply: r.reply,
+        createdAt: r.createdAt,
+        userName: displayName,
+        isVerifiedBuyer: isVerified
+      };
+    });
+
+    res.json(sanitized);
+  } catch (error) {
+    console.error('[Store API] Error fetching product reviews:', error);
+    res.status(500).json({ error: 'خطای سرور در دریافت دیدگاه‌ها' });
+  }
+});
+
+// GET /api/store/products/:id/rating-summary
+router.get('/products/:id/rating-summary', (req, res) => {
+  try {
+    const { id } = req.params;
+    const stats = db.prepare(`
+      SELECT 
+        COUNT(*) as totalReviews,
+        AVG(rating) as averageRating
+      FROM product_reviews
+      WHERE productId = ? AND status = 'approved'
+    `).get(id) as any;
+
+    res.json({
+      totalReviews: stats?.totalReviews || 0,
+      averageRating: stats?.averageRating ? Number(Number(stats.averageRating).toFixed(1)) : 5.0
+    });
+  } catch (error) {
+    console.error('[Store API] Error fetching rating summary:', error);
+    res.status(500).json({ totalReviews: 0, averageRating: 5.0 });
+  }
+});
+
+// POST /api/store/products/:id/reviews (Auth required, anti-spam protected, pending moderation)
+router.post('/products/:id/reviews', requireAuth, (req: any, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user.id;
+    const { rating, comment } = req.body;
+
+    const numRating = Number(rating);
+    if (!numRating || numRating < 1 || numRating > 5) {
+      return res.status(400).json({ error: 'امتیاز باید عددی بین ۱ تا ۵ باشد.' });
+    }
+
+    if (!comment || typeof comment !== 'string' || comment.trim().length < 5) {
+      return res.status(400).json({ error: 'متن دیدگاه باید حداقل ۵ کاراکتر باشد.' });
+    }
+
+    if (comment.trim().length > 1000) {
+      return res.status(400).json({ error: 'متن دیدگاه نمی‌تواند بیش از ۱۰۰۰ کاراکتر باشد.' });
+    }
+
+    // Anti-spam link detector
+    const urlPattern = /(https?:\/\/[^\s]+|www\.[^\s]+|t\.me\/[^\s]+|[a-zA-Z0-9_-]+\.(com|ir|org|net|io|me))/i;
+    if (urlPattern.test(comment)) {
+      return res.status(400).json({ error: 'درج هرگونه لینک یا نشانی وبسایت و تلگرام در متن دیدگاه غیرمجاز است.' });
+    }
+
+    // Rate-limiting per user per product (1 review per 10 minutes)
+    const recent = db.prepare(`
+      SELECT id FROM product_reviews 
+      WHERE productId = ? AND userId = ? AND createdAt >= datetime('now', '-10 minutes')
+    `).get(id, userId);
+
+    if (recent) {
+      return res.status(429).json({ error: 'شما به تازگی یک دیدگاه ثبت کرده‌اید. لطفاً چند دقیقه دیگر تلاش کنید.' });
+    }
+
+    db.prepare(`
+      INSERT INTO product_reviews (productId, userId, rating, comment, status)
+      VALUES (?, ?, ?, ?, 'pending')
+    `).run(id, userId, numRating, comment.trim());
+
+    syncDatabase();
+
+    res.json({
+      success: true,
+      message: 'دیدگاه شما با موفقیت ثبت شد و پس از بررسی و تایید تیم پشتیبانی در سایت نمایش داده خواهد شد.'
+    });
+
+  } catch (error) {
+    console.error('[Store API] Error submitting product review:', error);
+    res.status(500).json({ error: 'خطای سرور در ثبت دیدگاه' });
   }
 });
 

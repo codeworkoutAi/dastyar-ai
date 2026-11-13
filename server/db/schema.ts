@@ -267,6 +267,16 @@ export function initializeSchema() {
       db.exec(`ALTER TABLE products ADD COLUMN faqs TEXT`);
       console.log('[DB Schema] Added faqs column to products table.');
     }
+    const hasVariations = tableInfo.some(col => col.name === 'variations');
+    if (!hasVariations) {
+      db.exec(`ALTER TABLE products ADD COLUMN variations TEXT`);
+      console.log('[DB Schema] Added variations column to products table.');
+    }
+    const hasDeliveryTime = tableInfo.some(col => col.name === 'deliveryTime');
+    if (!hasDeliveryTime) {
+      db.exec(`ALTER TABLE products ADD COLUMN deliveryTime TEXT DEFAULT '۱ تا ۲۴ ساعت'`);
+      console.log('[DB Schema] Added deliveryTime column to products table.');
+    }
 
   } catch (e) {
     console.error('Migration error:', e);
@@ -329,9 +339,30 @@ export function initializeSchema() {
       db.exec(`ALTER TABLE orders ADD COLUMN cardPan TEXT`);
       console.log('[DB Schema] Added cardPan column to orders table.');
     }
+    const hasSelectedPeriod = tableInfo.some(col => col.name === 'selectedPeriod');
+    if (!hasSelectedPeriod) {
+      db.exec(`ALTER TABLE orders ADD COLUMN selectedPeriod TEXT`);
+      console.log('[DB Schema] Added selectedPeriod column to orders table.');
+    }
   } catch (e) {
     console.error('Migration error (orders):', e);
   }
+
+  // Create Product Reviews table (Anti-spam, moderation queue)
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS product_reviews (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      productId INTEGER NOT NULL,
+      userId INTEGER NOT NULL,
+      rating INTEGER NOT NULL DEFAULT 5,
+      comment TEXT NOT NULL,
+      status TEXT DEFAULT 'pending', -- 'pending' | 'approved' | 'rejected'
+      reply TEXT,
+      createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (productId) REFERENCES products(id) ON DELETE CASCADE,
+      FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE
+    )
+  `);
 
   // Create News table
   db.exec(`

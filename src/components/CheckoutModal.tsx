@@ -7,94 +7,114 @@ import { Capacitor } from '@capacitor/core';
 import { isBazaarEnvironment } from '../lib/bazaarUtils';
 
 interface CheckoutModalProps {
- product: any;
- isOpen: boolean;
- onClose: () => void;
+  product: any;
+  isOpen: boolean;
+  onClose: () => void;
+  selectedVariation?: any;
 }
 
-export const CheckoutModal: React.FC<CheckoutModalProps> = ({ product, isOpen, onClose }) => {
- const { user, token } = useAuthStore();
- const { settings } = useSettingsStore();
- const isBazaar = isBazaarEnvironment();
- const usePersianDigits = settings?.appearance?.persianNumerals ?? false;
- const [loading, setLoading] = useState(false);
- const [error, setError] = useState<string | null>(null);
+export const CheckoutModal: React.FC<CheckoutModalProps> = ({ product, isOpen, onClose, selectedVariation }) => {
+  const { user, token } = useAuthStore();
+  const { settings } = useSettingsStore();
+  const isBazaar = isBazaarEnvironment();
+  const usePersianDigits = settings?.appearance?.persianNumerals ?? false;
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
- const [paymentMethod, setPaymentMethod] = useState<'online' | 'card'>('online');
- const [trackingNumber, setTrackingNumber] = useState('');
+  const [paymentMethod, setPaymentMethod] = useState<'online' | 'card'>('online');
+  const [trackingNumber, setTrackingNumber] = useState('');
 
- const formatPrice = (price: number) => {
- const formatted = (price || 0).toLocaleString();
- return usePersianDigits ? toPersianDigits(formatted) : formatted;
- };
+  const effectivePrice = selectedVariation && typeof selectedVariation.price === 'number'
+    ? selectedVariation.price 
+    : (product?.price || 0);
 
- if (!isOpen || !product) return null;
+  const formatPrice = (price: number) => {
+    const formatted = (price || 0).toLocaleString();
+    return usePersianDigits ? toPersianDigits(formatted) : formatted;
+  };
 
- const handleCheckout = async () => {
- try {
- setLoading(true);
- setError(null);
- const res = await fetch('/api/store/checkout', {
- method: 'POST',
- headers: { 'Content-Type': 'application/json',
- 'Authorization': `Bearer ${token}` },
- body: JSON.stringify({ productId: product.id, gateway: isBazaar ? 'bazaarpay' : 'zarinpal' })
- });
- const data = await res.json();
- if (!res.ok) {
- throw new Error(data.error || 'خطا در ایجاد فاکتور');
- }
+  if (!isOpen || !product) return null;
 
- // Redirect to mock payment gateway
- if (data.paymentUrl) {
-  let targetUrl = data.paymentUrl;
-  if (targetUrl.startsWith('/')) {
-   const apiBase = Capacitor.isNativePlatform() ? 'https://dastyarai.com' : window.location.origin;
-   targetUrl = apiBase + targetUrl;
-  }
-  window.location.href = targetUrl;
- }
- } catch (err: any) {
- setError(err.message);
- setLoading(false);
- }
- };
+  const handleCheckout = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const res = await fetch('/api/store/checkout', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}` 
+        },
+        body: JSON.stringify({ 
+          productId: product.id, 
+          variationId: selectedVariation?.id,
+          selectedPeriod: selectedVariation?.title,
+          gateway: isBazaar ? 'bazaarpay' : 'zarinpal' 
+        })
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'خطا در ایجاد فاکتور');
+      }
 
- const handleManualCheckout = async () => {
- if (isBazaar) {
- setError('این روش پرداخت در نسخه کافه‌بازار پشتیبانی نمی‌شود.');
- return;
- }
- if (!trackingNumber.trim()) {
- setError('لطفاً شماره پیگیری یا ۴ رقم آخر کارت را وارد کنید.');
- return;
- }
- try {
- setLoading(true);
- setError(null);
- const res = await fetch('/api/store/checkout-manual', {
- method: 'POST',
- headers: { 'Content-Type': 'application/json',
- 'Authorization': `Bearer ${token}` },
- body: JSON.stringify({ productId: product.id, trackingNumber })
- });
- const data = await res.json();
- if (!res.ok) {
- throw new Error(data.error || 'خطا در ایجاد فاکتور');
- }
+      // Redirect to mock payment gateway
+      if (data.paymentUrl) {
+        let targetUrl = data.paymentUrl;
+        if (targetUrl.startsWith('/')) {
+          const apiBase = Capacitor.isNativePlatform() ? 'https://dastyarai.com' : window.location.origin;
+          targetUrl = apiBase + targetUrl;
+        }
+        window.location.href = targetUrl;
+      }
+    } catch (err: any) {
+      setError(err.message);
+      setLoading(false);
+    }
+  };
 
- // Redirect to Telegram
- const telegramUsername = 'DastyaraiAdmin';
- const message = encodeURIComponent(`سلام، فیش واریز سفارش ${data.orderId} (مبلغ: ${product.price.toLocaleString()} تومان) را ضمیمه این پیام ارسال می‌کنم.\nشماره پیگیری/کارت: ${trackingNumber}`);
- window.open(`https://t.me/${telegramUsername}?text=${message}`, '_blank');
- onClose();
- // Optionally reload or let user go to dashboard to see pending order
- window.location.assign('/store?tab=dashboard');
- } catch (err: any) {
- setError(err.message);
- setLoading(false);
- }
- };
+  const handleManualCheckout = async () => {
+    if (isBazaar) {
+      setError('این روش پرداخت در نسخه کافه‌بازار پشتیبانی نمی‌شود.');
+      return;
+    }
+    if (!trackingNumber.trim()) {
+      setError('لطفاً شماره پیگیری یا ۴ رقم آخر کارت را وارد کنید.');
+      return;
+    }
+    try {
+      setLoading(true);
+      setError(null);
+      const res = await fetch('/api/store/checkout-manual', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}` 
+        },
+        body: JSON.stringify({ 
+          productId: product.id, 
+          variationId: selectedVariation?.id,
+          selectedPeriod: selectedVariation?.title,
+          trackingNumber 
+        })
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'خطا در ایجاد فاکتور');
+      }
+
+      // Redirect to Telegram
+      const telegramUsername = 'DastyaraiAdmin';
+      const prodName = `${product.title}${selectedVariation ? ` (${selectedVariation.title})` : ''}`;
+      const message = encodeURIComponent(`سلام، فیش واریز سفارش ${data.orderId} برای «${prodName}» (مبلغ: ${effectivePrice.toLocaleString()} تومان) را ضمیمه این پیام ارسال می‌کنم.\nشماره پیگیری/کارت: ${trackingNumber}`);
+      window.open(`https://t.me/${telegramUsername}?text=${message}`, '_blank');
+      onClose();
+      // Optionally reload or let user go to dashboard to see pending order
+      window.location.assign('/store?tab=dashboard');
+    } catch (err: any) {
+      setError(err.message);
+      setLoading(false);
+    }
+  };
 
  return (
  <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
@@ -152,10 +172,17 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ product, isOpen, o
  </div>
 
  <div className="clay-card rounded-2xl p-3.5 flex flex-col gap-2.5">
+ {selectedVariation && (
+ <div className="flex items-center justify-between text-xs sm:text-sm pb-2 border-b border-[var(--card-border)]/50">
+ <span className="text-zinc-600 dark:text-zinc-400 font-bold">دوره انتخابی:</span>
+ <span className="font-extrabold text-blue-600 dark:text-cyan-400">{selectedVariation.title}</span>
+ </div>
+ )}
+
  <div className="flex items-center justify-between text-xs sm:text-sm">
  <span className="text-zinc-600 dark:text-zinc-400">قیمت محصول</span>
  <div className="font-medium text-zinc-900 dark:text-zinc-100 flex items-center gap-1">
- <span>{formatPrice(product.price)}</span>
+ <span>{formatPrice(effectivePrice)}</span>
  <span>تومان</span>
  </div>
  </div>
@@ -176,7 +203,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ product, isOpen, o
  <div className="flex items-center justify-between">
  <span className="text-zinc-900 dark:text-zinc-100 font-bold text-xs sm:text-sm">مبلغ قابل پرداخت</span>
  <div className="text-base sm:text-lg font-bold text-blue-600 dark:text-blue-400 flex items-center gap-1 font-ui">
- <span>{formatPrice(product.price)}</span>
+ <span>{formatPrice(effectivePrice)}</span>
  <span className="text-xs font-normal text-zinc-500">تومان</span>
  </div>
  </div>
