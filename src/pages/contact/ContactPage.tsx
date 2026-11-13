@@ -118,18 +118,20 @@ export const ContactPage: React.FC = () => {
             راه‌های تماس
           </h2>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <a
-              href="mailto:support@dastyarai.com"
+              href="https://t.me/DastyaraiAdmin"
+              target="_blank"
+              rel="noopener noreferrer"
               className="p-5 rounded-2xl clay-subcard hover:scale-[1.02] transition-transform flex items-center gap-4 group"
             >
               <div className="w-12 h-12 rounded-xl clay-btn flex items-center justify-center text-blue-600 dark:text-blue-400 shrink-0">
-                <Mail className="w-6 h-6" />
+                <Send className="w-6 h-6 -rotate-12 translate-x-0.5" />
               </div>
               <div className="overflow-hidden">
-                <span className="text-xs text-[#525d75] dark:text-[#9aa5bc] block mb-0.5">پشتیبانی ایمیل</span>
+                <span className="text-xs text-[#525d75] dark:text-[#9aa5bc] block mb-0.5 font-bold">چت مستقیم با مدیریت</span>
                 <span className="font-bold text-sm sm:text-base text-[#0f1420] dark:text-white dir-ltr block truncate">
-                  support@dastyarai.com
+                  @DastyaraiAdmin
                 </span>
               </div>
             </a>
@@ -143,10 +145,25 @@ export const ContactPage: React.FC = () => {
               <div className="w-12 h-12 rounded-xl clay-btn flex items-center justify-center text-cyan-600 dark:text-cyan-400 shrink-0">
                 <MessageCircle className="w-6 h-6" />
               </div>
-              <div>
-                <span className="text-xs text-[#525d75] dark:text-[#9aa5bc] block mb-0.5">پشتیبانی سریع تلگرام</span>
-                <span className="font-bold text-sm sm:text-base text-[#0f1420] dark:text-white dir-ltr block">
+              <div className="overflow-hidden">
+                <span className="text-xs text-[#525d75] dark:text-[#9aa5bc] block mb-0.5 font-bold">ربات تیکتینگ تلگرام</span>
+                <span className="font-bold text-sm sm:text-base text-[#0f1420] dark:text-white dir-ltr block truncate">
                   @dastyarai_bot
+                </span>
+              </div>
+            </a>
+
+            <a
+              href="mailto:support@dastyarai.com"
+              className="p-5 rounded-2xl clay-subcard hover:scale-[1.02] transition-transform flex items-center gap-4 group"
+            >
+              <div className="w-12 h-12 rounded-xl clay-btn flex items-center justify-center text-emerald-600 dark:text-emerald-400 shrink-0">
+                <Mail className="w-6 h-6" />
+              </div>
+              <div className="overflow-hidden">
+                <span className="text-xs text-[#525d75] dark:text-[#9aa5bc] block mb-0.5 font-bold">پشتیبانی ایمیل</span>
+                <span className="font-bold text-sm sm:text-base text-[#0f1420] dark:text-white dir-ltr block truncate">
+                  support@dastyarai.com
                 </span>
               </div>
             </a>
