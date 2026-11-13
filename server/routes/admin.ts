@@ -1815,6 +1815,53 @@ router.post('/site-design/upload-image', (req, res) => {
   }
 });
 
+// ==========================================
+// CONTACT MESSAGES MANAGEMENT
+// ==========================================
+
+router.get('/contact-messages', (_req, res) => {
+  try {
+    const messages = db.prepare(`
+      SELECT id, name, email, message, isRead, createdAt
+      FROM contact_messages
+      ORDER BY createdAt DESC
+    `).all();
+    res.json(messages);
+  } catch (error) {
+    console.error('[Admin API] Error fetching contact messages:', error);
+    res.status(500).json({ error: 'خطا در دریافت پیام‌های تماس' });
+  }
+});
+
+router.patch('/contact-messages/:id/read', (req, res) => {
+  try {
+    const { id } = req.params;
+    const { isRead } = req.body || {};
+    const readVal = isRead === false || isRead === 0 ? 0 : 1;
+
+    db.prepare('UPDATE contact_messages SET isRead = ? WHERE id = ?').run(readVal, id);
+    syncDatabase();
+
+    res.json({ success: true, isRead: readVal });
+  } catch (error) {
+    console.error('[Admin API] Error updating contact message read status:', error);
+    res.status(500).json({ error: 'خطا در تغییر وضعیت پیام' });
+  }
+});
+
+router.delete('/contact-messages/:id', (req, res) => {
+  try {
+    const { id } = req.params;
+    db.prepare('DELETE FROM contact_messages WHERE id = ?').run(id);
+    syncDatabase();
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('[Admin API] Error deleting contact message:', error);
+    res.status(500).json({ error: 'خطا در حذف پیام' });
+  }
+});
+
 export default router;
 
 

@@ -460,9 +460,16 @@ export function initializeSchema() {
       name TEXT NOT NULL,
       email TEXT NOT NULL,
       message TEXT NOT NULL,
+      isRead INTEGER DEFAULT 0,
       createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
     )
   `);
+
+  try {
+    db.exec(`ALTER TABLE contact_messages ADD COLUMN isRead INTEGER DEFAULT 0;`);
+  } catch (_e) {
+    // Column might already exist
+  }
 
   // Create Wallet Transactions table
   db.exec(`

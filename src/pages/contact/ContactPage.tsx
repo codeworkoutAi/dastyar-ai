@@ -110,61 +110,135 @@ export const ContactPage: React.FC = () => {
 
         {/* Contact Channels */}
         <section className="clay-card p-6 sm:p-8 rounded-3xl mb-8">
-          <h2
-            className="text-lg sm:text-xl font-bold text-[#0f1420] dark:text-white mb-6 flex items-center gap-3"
-            style={{ fontFamily: "'Estedad', sans-serif" }}
-          >
-            <span className="w-2.5 h-6 bg-blue-600 rounded-full" />
-            راه‌های تماس
-          </h2>
+          <div className="flex items-center justify-between mb-6">
+            <h2
+              className="text-lg sm:text-xl font-bold text-[#0f1420] dark:text-white flex items-center gap-3"
+              style={{ fontFamily: "'Estedad', sans-serif" }}
+            >
+              <span className="w-2.5 h-6 bg-blue-600 rounded-full" />
+              راه‌های ارتباطی و پشتیبانی
+            </h2>
+            <span className="text-xs text-[#525d75] dark:text-[#9aa5bc] font-bold">
+              پاسخگویی سریع و مستقیم
+            </span>
+          </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+            {/* Direct Admin Telegram */}
             <a
               href="https://t.me/DastyaraiAdmin"
               target="_blank"
               rel="noopener noreferrer"
-              className="p-5 rounded-2xl clay-subcard hover:scale-[1.02] transition-transform flex items-center gap-4 group"
+              className="p-6 rounded-2xl clay-subcard hover:scale-[1.02] active:scale-[0.99] transition-all flex flex-col justify-between group border border-blue-500/10 hover:border-blue-500/30"
             >
-              <div className="w-12 h-12 rounded-xl clay-btn flex items-center justify-center text-blue-600 dark:text-blue-400 shrink-0">
-                <Send className="w-6 h-6 -rotate-12 translate-x-0.5" />
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <div className="w-12 h-12 rounded-2xl clay-btn flex items-center justify-center text-blue-600 dark:text-blue-400 group-hover:scale-110 transition-transform">
+                    <Send className="w-6 h-6 -rotate-12 translate-x-0.5" />
+                  </div>
+                  <span className="px-2.5 py-1 rounded-full text-[11px] font-black bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20">
+                    پشتیبانی انسانی
+                  </span>
+                </div>
+
+                <h3 className="font-bold text-base text-[#0f1420] dark:text-white mb-1">
+                  چت مستقیم با مدیریت
+                </h3>
+                <p className="text-xs text-[#525d75] dark:text-[#9aa5bc] mb-4 leading-relaxed">
+                  ارتباط مستقیم، پیگیری فیش‌های واریزی و سوالات اختصاصی
+                </p>
               </div>
-              <div className="overflow-hidden">
-                <span className="text-xs text-[#525d75] dark:text-[#9aa5bc] block mb-0.5 font-bold">چت مستقیم با مدیریت</span>
-                <span className="font-bold text-sm sm:text-base text-[#0f1420] dark:text-white dir-ltr block truncate">
-                  @DastyaraiAdmin
-                </span>
+
+              <div className="pt-2 border-t border-[var(--border-subtle)]/30">
+                <div className="flex items-center justify-between">
+                  <span
+                    dir="ltr"
+                    className="font-mono font-bold text-sm sm:text-base text-blue-600 dark:text-blue-400"
+                  >
+                    @DastyaraiAdmin
+                  </span>
+                  <span className="text-xs font-bold text-blue-600 dark:text-blue-400 group-hover:translate-x-[-4px] transition-transform flex items-center gap-1">
+                    ارسال پیام ←
+                  </span>
+                </div>
               </div>
             </a>
 
+            {/* Telegram Bot */}
             <a
-              href="https://t.me/dastyarai_bot"
+              href="https://t.me/FaChatBox_bot"
               target="_blank"
               rel="noopener noreferrer"
-              className="p-5 rounded-2xl clay-subcard hover:scale-[1.02] transition-transform flex items-center gap-4 group"
+              className="p-6 rounded-2xl clay-subcard hover:scale-[1.02] active:scale-[0.99] transition-all flex flex-col justify-between group border border-cyan-500/10 hover:border-cyan-500/30"
             >
-              <div className="w-12 h-12 rounded-xl clay-btn flex items-center justify-center text-cyan-600 dark:text-cyan-400 shrink-0">
-                <MessageCircle className="w-6 h-6" />
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <div className="w-12 h-12 rounded-2xl clay-btn flex items-center justify-center text-cyan-600 dark:text-cyan-400 group-hover:scale-110 transition-transform">
+                    <MessageCircle className="w-6 h-6" />
+                  </div>
+                  <span className="px-2.5 py-1 rounded-full text-[11px] font-black bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border border-cyan-500/20">
+                    ربات تیکتینگ
+                  </span>
+                </div>
+
+                <h3 className="font-bold text-base text-[#0f1420] dark:text-white mb-1">
+                  ربات تلگرام دستیار هوشمند
+                </h3>
+                <p className="text-xs text-[#525d75] dark:text-[#9aa5bc] mb-4 leading-relaxed">
+                  ارسال پیام به ربات، دریافت راهنمایی و تیکت ۲۴ ساعته
+                </p>
               </div>
-              <div className="overflow-hidden">
-                <span className="text-xs text-[#525d75] dark:text-[#9aa5bc] block mb-0.5 font-bold">ربات تیکتینگ تلگرام</span>
-                <span className="font-bold text-sm sm:text-base text-[#0f1420] dark:text-white dir-ltr block truncate">
-                  @dastyarai_bot
-                </span>
+
+              <div className="pt-2 border-t border-[var(--border-subtle)]/30">
+                <div className="flex items-center justify-between">
+                  <span
+                    dir="ltr"
+                    className="font-mono font-bold text-sm sm:text-base text-cyan-600 dark:text-cyan-400"
+                  >
+                    @FaChatBox_bot
+                  </span>
+                  <span className="text-xs font-bold text-cyan-600 dark:text-cyan-400 group-hover:translate-x-[-4px] transition-transform flex items-center gap-1">
+                    شروع گفتگو ←
+                  </span>
+                </div>
               </div>
             </a>
 
+            {/* Support Email */}
             <a
               href="mailto:support@dastyarai.com"
-              className="p-5 rounded-2xl clay-subcard hover:scale-[1.02] transition-transform flex items-center gap-4 group"
+              className="p-6 rounded-2xl clay-subcard hover:scale-[1.02] active:scale-[0.99] transition-all flex flex-col justify-between group border border-emerald-500/10 hover:border-emerald-500/30"
             >
-              <div className="w-12 h-12 rounded-xl clay-btn flex items-center justify-center text-emerald-600 dark:text-emerald-400 shrink-0">
-                <Mail className="w-6 h-6" />
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <div className="w-12 h-12 rounded-2xl clay-btn flex items-center justify-center text-emerald-600 dark:text-emerald-400 group-hover:scale-110 transition-transform">
+                    <Mail className="w-6 h-6" />
+                  </div>
+                  <span className="px-2.5 py-1 rounded-full text-[11px] font-black bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                    مکاتبات رسمی
+                  </span>
+                </div>
+
+                <h3 className="font-bold text-base text-[#0f1420] dark:text-white mb-1">
+                  پشتیبانی رسمی ایمیل
+                </h3>
+                <p className="text-xs text-[#525d75] dark:text-[#9aa5bc] mb-4 leading-relaxed">
+                  همکاری تجاری، گزارش باگ و پیشنهادات توسعه
+                </p>
               </div>
-              <div className="overflow-hidden">
-                <span className="text-xs text-[#525d75] dark:text-[#9aa5bc] block mb-0.5 font-bold">پشتیبانی ایمیل</span>
-                <span className="font-bold text-sm sm:text-base text-[#0f1420] dark:text-white dir-ltr block truncate">
-                  support@dastyarai.com
-                </span>
+
+              <div className="pt-2 border-t border-[var(--border-subtle)]/30">
+                <div className="flex items-center justify-between">
+                  <span
+                    dir="ltr"
+                    className="font-mono font-bold text-xs sm:text-sm text-emerald-600 dark:text-emerald-400"
+                  >
+                    support@dastyarai.com
+                  </span>
+                  <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 group-hover:translate-x-[-4px] transition-transform flex items-center gap-1">
+                    ارسال ایمیل ←
+                  </span>
+                </div>
               </div>
             </a>
           </div>

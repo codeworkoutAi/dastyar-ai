@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   X, ShoppingBag, ShoppingCart, Users, BarChart3, 
-  Coins, Newspaper, Sliders, ShieldCheck, Sparkles, AlertCircle
+  Coins, Newspaper, Sliders, ShieldCheck, Sparkles, AlertCircle, MessageSquare
 } from 'lucide-react';
 import { ShopLinearIcon, BoxLinearIcon } from '@solar-icons/react';
 import { useAuthStore } from '../store/authStore';
@@ -12,35 +12,57 @@ import { AdminNewsTab } from './admin/AdminNewsTab';
 import { AdminSettingsTab } from './admin/AdminSettingsTab';
 import { AdminFinanceTab } from './AdminFinanceTab';
 import { AdminAnalyticsTab } from './AdminAnalyticsTab';
+import { AdminMessagesTab } from './admin/AdminMessagesTab';
 
 interface AdminModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-type AdminTab = 'products' | 'orders' | 'users' | 'finance' | 'analytics' | 'news' | 'settings';
+type AdminTab = 'products' | 'orders' | 'messages' | 'users' | 'finance' | 'analytics' | 'news' | 'settings';
 
 export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
   const { user, token } = useAuthStore();
   const [activeTab, setActiveTab] = useState<AdminTab>('products');
   const [pendingOrdersCount, setPendingOrdersCount] = useState<number>(0);
+  const [unreadMessagesCount, setUnreadMessagesCount] = useState<number>(0);
 
-  // Fetch pending orders count on open
-  useEffect(() => {
-    if (isOpen && token && user?.role === 'admin') {
-      fetch('/api/admin/orders', {
-        headers: { Authorization: `Bearer ${token}` }
+  const fetchBadgeCounts = useCallback(() => {
+    if (!token || user?.role !== 'admin') return;
+
+    // Fetch pending orders
+    fetch('/api/admin/orders', {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+      .then((res) => (res.ok ? res.json() : []))
+      .then((orders: any[]) => {
+        if (Array.isArray(orders)) {
+          const pending = orders.filter((o) => o.paymentStatus === 'pending').length;
+          setPendingOrdersCount(pending);
+        }
       })
-        .then((res) => (res.ok ? res.json() : []))
-        .then((orders: any[]) => {
-          if (Array.isArray(orders)) {
-            const pending = orders.filter((o) => o.paymentStatus === 'pending').length;
-            setPendingOrdersCount(pending);
-          }
-        })
-        .catch(() => {});
+      .catch(() => {});
+
+    // Fetch unread contact messages
+    fetch('/api/admin/contact-messages', {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+      .then((res) => (res.ok ? res.json() : []))
+      .then((msgs: any[]) => {
+        if (Array.isArray(msgs)) {
+          const unread = msgs.filter((m) => m.isRead === 0).length;
+          setUnreadMessagesCount(unread);
+        }
+      })
+      .catch(() => {});
+  }, [token, user]);
+
+  // Fetch pending counts on open or tab change
+  useEffect(() => {
+    if (isOpen) {
+      fetchBadgeCounts();
     }
-  }, [isOpen, token, user, activeTab]);
+  }, [isOpen, fetchBadgeCounts, activeTab]);
 
   // Handle Escape key to close
   useEffect(() => {
@@ -62,6 +84,12 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
       label: 'سفارشات', 
       icon: <ShopLinearIcon className="w-4 h-4" />, 
       badge: pendingOrdersCount > 0 ? pendingOrdersCount : undefined 
+    },
+    { 
+      id: 'messages', 
+      label: 'پیام‌های تماس', 
+      icon: <MessageSquare size={16} />, 
+      badge: unreadMessagesCount > 0 ? unreadMessagesCount : undefined 
     },
     { id: 'users', label: 'کاربران', icon: <Users size={16} /> },
     { id: 'finance', label: 'مالی و خزانه‌داری', icon: <Coins size={16} /> },
@@ -132,6 +160,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
         <div className="flex-1 overflow-y-auto p-4 sm:p-6 custom-scrollbar bg-[var(--card-bg)]">
           {activeTab === 'products' && <AdminProductsTab />}
           {activeTab === 'orders' && <AdminOrdersTab />}
+          {activeTab === 'messages' && <AdminMessagesTab onRefreshCount={fetchBadgeCounts} />}
           {activeTab === 'users' && <AdminUsersTab />}
           {activeTab === 'finance' && <AdminFinanceTab />}
           {activeTab === 'analytics' && <AdminAnalyticsTab />}

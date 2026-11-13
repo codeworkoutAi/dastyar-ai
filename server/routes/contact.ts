@@ -1,12 +1,20 @@
 import express from 'express';
 import crypto from 'crypto';
 import nodemailer from 'nodemailer';
-import db from '../db/database';
+import db, { syncDatabase } from '../db/database';
+import { bot } from '../telegram/bot';
 import { contactRateLimiter } from '../middleware/rateLimiter';
 
 const router = express.Router();
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
 
 router.post('/contact', contactRateLimiter, async (req, res) => {
   try {
@@ -36,8 +44,31 @@ router.post('/contact', contactRateLimiter, async (req, res) => {
       INSERT INTO contact_messages (id, name, email, message, createdAt)
       VALUES (?, ?, ?, ?, ?)
     `).run(id, trimmedName, trimmedEmail, trimmedMessage, createdAt);
+    syncDatabase();
 
     console.log(`[Contact API] Received contact message ${id} from ${trimmedEmail}`);
+
+    // Forward to Telegram Admin / Group if configured
+    const adminId = process.env.TELEGRAM_ADMIN_ID;
+    if (bot && adminId) {
+      try {
+        const safeName = escapeHtml(trimmedName);
+        const safeEmail = escapeHtml(trimmedEmail);
+        const safeMsg = escapeHtml(trimmedMessage);
+        const tehranTime = new Date().toLocaleString('fa-IR', { timeZone: 'Asia/Tehran' });
+
+        const tgText = `📬 <b>پیام جدید از فرم تماس سایت Dastyar AI</b>\n\n` +
+          `👤 <b>نام فرستنده:</b> ${safeName}\n` +
+          `📧 <b>ایمیل:</b> <code>${safeEmail}</code>\n` +
+          `🕒 <b>زمان ارسال:</b> ${tehranTime}\n\n` +
+          `💬 <b>متن پیام:</b>\n${safeMsg}`;
+
+        await bot.telegram.sendMessage(adminId, tgText, { parse_mode: 'HTML' });
+        console.log(`[Contact API] Forwarded contact message ${id} to Telegram admin (${adminId})`);
+      } catch (tgErr) {
+        console.warn('[Contact API] Failed to forward message to Telegram admin:', tgErr);
+      }
+    }
 
     // If SMTP is configured, attempt sending notification email
     if (process.env.SMTP_EMAIL && process.env.SMTP_PASSWORD) {

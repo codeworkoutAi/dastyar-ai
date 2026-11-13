@@ -23,4 +23,4 @@ Dastyar AI یک سامانه هوش مصنوعی برای کاربران فار�
 
 - [گروه و پشتیبانی تلگرام](https://t.me/dastyaraigroup/1): جامعه کاربری، اطلاعیه‌ها و پشتیبانی آنلاین
 - [پشتیبانی ایمیل](mailto:info@dastyarai.com): info@dastyarai.com
-- [ربات تلگرام Dastyar AI](https://t.me/dastyarai_bot): دسترسی سریع به امکانات هوش مصنوعی از طریق پیام‌رسان تلگرام
+- [ربات تلگرام Dastyar AI](https://t.me/FaChatBox_bot): دسترسی سریع به امکانات هوش مصنوعی از طریق پیام‌رسان تلگرام

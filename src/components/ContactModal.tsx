@@ -51,7 +51,7 @@ export function ContactModal() {
 
             {/* Telegram Support Bot */}
             <a
-              href="https://t.me/dastyarai_bot"
+              href="https://t.me/FaChatBox_bot"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center justify-between p-3.5 rounded-2xl bg-cyan-50 dark:bg-cyan-900/10 border border-cyan-100 dark:border-cyan-900/30 hover:border-cyan-300 dark:hover:border-cyan-700 transition-all group"
@@ -62,7 +62,7 @@ export function ContactModal() {
                 </div>
                 <div>
                   <h3 className="font-bold text-cyan-900 dark:text-cyan-100 text-sm">ربات تیکتینگ ۲۴ ساعته</h3>
-                  <p className="text-xs text-cyan-600/70 dark:text-cyan-400/70 mt-0.5" dir="ltr">@dastyarai_bot</p>
+                  <p className="text-xs text-cyan-600/70 dark:text-cyan-400/70 mt-0.5" dir="ltr">@FaChatBox_bot</p>
                 </div>
               </div>
             </a>
