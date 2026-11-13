@@ -390,7 +390,7 @@ export const Sidebar: React.FC = React.memo(() => {
                                             const target = e.target as HTMLImageElement;
                                             target.onerror = null;
                                             const letter = user?.name?.charAt(0).toUpperCase() || (user?.phone ? user.phone.slice(-2) : user?.email?.charAt(0).toUpperCase() || 'U');
-                                            target.src = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><rect width="100" height="100" fill="%232563eb"/><text x="50%" y="54%" fill="white" font-size="45" font-weight="bold" font-family="Tahoma, sans-serif" dominant-baseline="middle" text-anchor="middle">${letter}</text></svg>`;
+                                            target.src = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><rect width="100" height="100" fill="%232563eb"/><text x="50%" y="54%" fill="white" font-size="45" font-weight="bold" font-family="Vazirmatn, sans-serif" dominant-baseline="middle" text-anchor="middle">${letter}</text></svg>`;
                                         }}
                                         className="w-8 h-8 rounded-badge bg-[var(--color-input-bg)] shadow-sm object-cover shrink-0"
                                     />
@@ -454,7 +454,7 @@ export const Sidebar: React.FC = React.memo(() => {
                 const target = e.target as HTMLImageElement;
                 target.onerror = null;
                 const letter = user?.name?.charAt(0).toUpperCase() || (user?.phone ? user.phone.slice(-2) : user?.email?.charAt(0).toUpperCase() || 'U');
-                target.src = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><rect width="100" height="100" fill="%232563eb"/><text x="50%" y="54%" fill="white" font-size="45" font-weight="bold" font-family="Tahoma, sans-serif" dominant-baseline="middle" text-anchor="middle">${letter}</text></svg>`;
+                target.src = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><rect width="100" height="100" fill="%232563eb"/><text x="50%" y="54%" fill="white" font-size="45" font-weight="bold" font-family="Vazirmatn, sans-serif" dominant-baseline="middle" text-anchor="middle">${letter}</text></svg>`;
             }}
             className="w-8 h-8 rounded-badge bg-[var(--color-input-bg)] shadow-sm object-cover shrink-0"
         />

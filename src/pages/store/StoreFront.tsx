@@ -218,7 +218,7 @@ export function StoreFront() {
                 <Sparkles size={14} />
                 <span>ویترین رسمی ابزارها و بسته‌های هوش مصنوعی</span>
               </div>
-              <h1 className="text-2xl sm:text-3xl font-black text-[var(--text-main)] tracking-tight leading-snug">
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-black text-[var(--text-main)] tracking-tight leading-snug">
                 فروشگاه ابزارهای هوش مصنوعی و بسته‌های اعتباری
               </h1>
               <p className="text-xs sm:text-sm text-[var(--text-muted)] leading-relaxed">
@@ -228,7 +228,7 @@ export function StoreFront() {
 
             {/* User Wallet Status Widget */}
             {user ? (
-              <div className="p-4 sm:p-5 rounded-2xl clay-surface shrink-0 flex flex-col gap-3 min-w-[260px] border border-[var(--card-border)]">
+              <div className="p-4 sm:p-5 rounded-2xl clay-card shrink-0 flex flex-col gap-3 min-w-[260px] border border-[var(--card-border)]">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold text-[var(--text-muted)] flex items-center gap-1.5">
                     <Wallet size={15} className="text-[var(--color-accent-primary)]" />
@@ -250,7 +250,7 @@ export function StoreFront() {
                 </button>
               </div>
             ) : (
-              <div className="p-4 sm:p-5 rounded-2xl clay-surface shrink-0 flex flex-col gap-2 min-w-[260px]">
+              <div className="p-4 sm:p-5 rounded-2xl clay-card shrink-0 flex flex-col gap-2 min-w-[260px] border border-[var(--card-border)]">
                 <span className="text-xs font-bold text-[var(--text-main)]">حساب کاربری دارید؟</span>
                 <p className="text-[11px] text-[var(--text-muted)] leading-relaxed">
                   با ورود به حساب، تاریخچه سفارشات و لایسنس‌های شما در داشبورد ذخیره می‌شود.

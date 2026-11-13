@@ -374,7 +374,7 @@ export function Blog() {
 <button onClick={shareOnTelegram} className="p-2 bg-[var(--color-accent-primary)]/10 text-[var(--color-accent-primary)] dark:bg-[var(--color-accent-primary)]/20 dark:text-[var(--color-accent-text)] rounded-badge hover:bg-[var(--color-accent-primary)]/20 dark:hover:bg-[var(--color-accent-primary)]/30 transition-colors">
 <Send size={16} />
 </button>
-<button onClick={sharePost} className="p-2 clay-surface rounded-badge text-[var(--color-text-muted)] dark:text-[var(--color-text-dim)] transition-colors">
+<button onClick={sharePost} className="p-2 clay-icon-btn rounded-badge text-[var(--color-text-muted)] dark:text-[var(--color-text-dim)] transition-colors">
 <Share2 size={16} />
 </button>
 </div>
@@ -791,14 +791,14 @@ export function Blog() {
         </div>
       ) : displayedNews.length > 0 && (
         <div className="flex justify-center pt-8 pb-4">
-          <p className="type-secondary text-zinc-400 dark:text-[#525d75] clay-surface px-6 py-2 rounded-full">
+          <p className="type-secondary text-zinc-400 dark:text-[#525d75] clay-subcard px-6 py-2 rounded-full">
             شما تمام مطالب را خواندید! 🎉
           </p>
         </div>
       )}
     </div>
   ) : (
-    <div className="flex flex-col items-center justify-center h-[40vh] opacity-50 clay-surface rounded-3xl border border-[var(--card-border)] backdrop-blur-sm">
+    <div className="flex flex-col items-center justify-center h-[40vh] opacity-70 clay-card rounded-3xl border border-[var(--card-border)] backdrop-blur-sm">
       <div className="w-20 h-20 rounded-full clay-btn-thick flex items-center justify-center mb-6">
         <Search size={32} className="text-zinc-400" />
       </div>

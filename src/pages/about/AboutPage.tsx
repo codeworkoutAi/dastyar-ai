@@ -35,7 +35,7 @@ export const AboutPage: React.FC = () => {
           </div>
 
           <h1
-            className="text-3xl sm:text-4xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-l from-indigo-600 via-blue-600 to-cyan-500 dark:from-indigo-300 dark:via-blue-300 dark:to-cyan-200 leading-[1.3] mb-4"
+            className="text-2xl sm:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-l from-indigo-600 via-blue-600 to-cyan-500 dark:from-indigo-300 dark:via-blue-300 dark:to-cyan-200 leading-snug mb-4"
             style={{ fontFamily: "'Estedad', sans-serif" }}
           >
             درباره Dastyar AI
@@ -52,7 +52,7 @@ export const AboutPage: React.FC = () => {
         {/* Section 1: Why Dastyar AI? */}
         <section className="clay-card p-6 sm:p-8 rounded-3xl mb-8">
           <h2
-            className="text-xl sm:text-2xl font-black text-[#0f1420] dark:text-white mb-6 flex items-center gap-3"
+            className="text-lg sm:text-xl font-bold text-[#0f1420] dark:text-white mb-6 flex items-center gap-3"
             style={{ fontFamily: "'Estedad', sans-serif" }}
           >
             <span className="w-2.5 h-6 bg-blue-600 rounded-full" />
@@ -60,7 +60,7 @@ export const AboutPage: React.FC = () => {
           </h2>
 
           <div className="grid grid-cols-1 gap-4">
-            <div className="p-4 rounded-2xl clay-surface flex items-start gap-3.5">
+            <div className="p-4 rounded-2xl clay-subcard flex items-start gap-3.5">
               <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" />
               <div>
                 <strong className="block text-sm sm:text-base text-[#0f1420] dark:text-white font-bold mb-1">
@@ -72,7 +72,7 @@ export const AboutPage: React.FC = () => {
               </div>
             </div>
 
-            <div className="p-4 rounded-2xl clay-surface flex items-start gap-3.5">
+            <div className="p-4 rounded-2xl clay-subcard flex items-start gap-3.5">
               <Zap className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
               <div>
                 <strong className="block text-sm sm:text-base text-[#0f1420] dark:text-white font-bold mb-1">
@@ -84,7 +84,7 @@ export const AboutPage: React.FC = () => {
               </div>
             </div>
 
-            <div className="p-4 rounded-2xl clay-surface flex items-start gap-3.5">
+            <div className="p-4 rounded-2xl clay-subcard flex items-start gap-3.5">
               <ShieldCheck className="w-5 h-5 text-blue-500 shrink-0 mt-0.5" />
               <div>
                 <strong className="block text-sm sm:text-base text-[#0f1420] dark:text-white font-bold mb-1">
@@ -96,7 +96,7 @@ export const AboutPage: React.FC = () => {
               </div>
             </div>
 
-            <div className="p-4 rounded-2xl clay-surface flex items-start gap-3.5">
+            <div className="p-4 rounded-2xl clay-subcard flex items-start gap-3.5">
               <Globe className="w-5 h-5 text-indigo-500 shrink-0 mt-0.5" />
               <div>
                 <strong className="block text-sm sm:text-base text-[#0f1420] dark:text-white font-bold mb-1">
@@ -108,7 +108,7 @@ export const AboutPage: React.FC = () => {
               </div>
             </div>
 
-            <div className="p-4 rounded-2xl clay-surface flex items-start gap-3.5">
+            <div className="p-4 rounded-2xl clay-subcard flex items-start gap-3.5">
               <Sparkles className="w-5 h-5 text-cyan-500 shrink-0 mt-0.5" />
               <div>
                 <strong className="block text-sm sm:text-base text-[#0f1420] dark:text-white font-bold mb-1">
@@ -125,7 +125,7 @@ export const AboutPage: React.FC = () => {
         {/* Section 2: Why Free? (Transparent Model) */}
         <section className="clay-card p-6 sm:p-8 rounded-3xl mb-8">
           <h2
-            className="text-xl sm:text-2xl font-black text-[#0f1420] dark:text-white mb-4 flex items-center gap-3"
+            className="text-lg sm:text-xl font-bold text-[#0f1420] dark:text-white mb-4 flex items-center gap-3"
             style={{ fontFamily: "'Estedad', sans-serif" }}
           >
             <span className="w-2.5 h-6 bg-emerald-500 rounded-full" />
@@ -140,7 +140,7 @@ export const AboutPage: React.FC = () => {
         {/* Section 3: How it works? */}
         <section className="clay-card p-6 sm:p-8 rounded-3xl mb-8">
           <h2
-            className="text-xl sm:text-2xl font-black text-[#0f1420] dark:text-white mb-4 flex items-center gap-3"
+            className="text-lg sm:text-xl font-bold text-[#0f1420] dark:text-white mb-4 flex items-center gap-3"
             style={{ fontFamily: "'Estedad', sans-serif" }}
           >
             <span className="w-2.5 h-6 bg-indigo-500 rounded-full" />

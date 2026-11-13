@@ -169,7 +169,7 @@ export const ExploreHub: React.FC = () => {
  <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/75 backdrop-blur-md animate-fadeIn">
  <div className="relative w-full clay-card max-w-4xl max-h-[90vh] flex flex-col rounded-3xl overflow-hidden text-zinc-900 dark:text-zinc-100 font-sans">
  {/* Top Header */}
- <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--card-border)] clay-surface/60">
+ <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--card-border)] bg-[var(--card-bg)]">
  <div className="flex items-center gap-3">
  <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-purple-600 to-indigo-600 flex items-center justify-center text-white shadow-md">
  <CompassOutlineIcon className="w-6 h-6" />
@@ -198,7 +198,7 @@ export const ExploreHub: React.FC = () => {
  </div>
 
  {/* Tab Navigation */}
- <div className="flex items-center gap-2 px-6 py-3 border-b border-[var(--card-border)]/60 clay-surface/30">
+ <div className="flex items-center gap-2 px-6 py-3 border-b border-[var(--card-border)]/60 bg-[var(--card-bg)]">
  
 
  <button

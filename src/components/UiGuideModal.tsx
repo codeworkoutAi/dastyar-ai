@@ -63,7 +63,7 @@ export const UiGuideModal: React.FC = () => {
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/60 backdrop-blur-md animate-fadeIn" dir="rtl">
       <div className="clay-card border-subtle w-[95vw] md:w-full max-w-5xl h-[85vh] flex flex-col rounded-3xl overflow-hidden clay-modal text-zinc-800 dark:text-zinc-200">
         {/* Modal Header */}
-        <div className="p-4 border-b border-[var(--card-border)] flex items-center justify-between clay-surface shrink-0">
+        <div className="p-4 border-b border-[var(--card-border)] flex items-center justify-between bg-[var(--card-bg)] shrink-0">
           <div className="flex items-center gap-3">
             <div className="p-2.5 rounded-2xl bg-blue-500 text-white shadow-md shrink-0">
               <BookOpen className="w-5 h-5" />
@@ -102,7 +102,7 @@ export const UiGuideModal: React.FC = () => {
 
               {/* Intro Section */}
               <section id="doc-sec-intro" className="space-y-4">
-                <h2 className="text-2xl font-black text-blue-600 dark:text-blue-400 flex items-center gap-2">
+                <h2 className="text-lg sm:text-xl font-bold text-blue-600 dark:text-blue-400 flex items-center gap-2">
                   <BookOpen className="w-6 h-6" /> معرفی پلتفرم هوش مصنوعی
                 </h2>
                 <p className="text-sm leading-relaxed opacity-90 text-justify">
@@ -112,7 +112,7 @@ export const UiGuideModal: React.FC = () => {
 
               {/* Wallet Section */}
               <section id="doc-sec-wallet" className="space-y-4">
-                <h2 className="text-2xl font-black text-emerald-600 dark:text-emerald-400 flex items-center gap-2">
+                <h2 className="text-lg sm:text-xl font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-2">
                   <Wallet className="w-6 h-6" /> کیف پول و سیستم مصرف (Pay-As-You-Go)
                 </h2>
                 <p className="text-sm leading-relaxed opacity-90 text-justify">
@@ -120,13 +120,13 @@ export const UiGuideModal: React.FC = () => {
                 </p>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                  <div className="p-4 rounded-2xl clay-surface-inset border border-zinc-200 dark:border-zinc-800">
+                  <div className="p-4 rounded-2xl clay-subcard border border-zinc-200 dark:border-zinc-800">
                     <h4 className="font-bold text-emerald-600 dark:text-emerald-400 mb-2">🎁 چت رایگان و نامحدود</h4>
                     <p className="text-xs opacity-90 leading-relaxed text-justify">
                       پیش از ورود می‌توانید تا <strong>۱۵ پیام رایگان مهمان</strong> گفتگو کنید و بلافاصله پس از ورود به حساب کاربری، دسترسی شما به هر سه مدل پایه (چت، کدنویسی و تحلیل اسناد) <strong>کاملاً رایگان و نامحدود</strong> خواهد بود.
                     </p>
                   </div>
-                  <div className="p-4 rounded-2xl clay-surface-inset border border-zinc-200 dark:border-zinc-800">
+                  <div className="p-4 rounded-2xl clay-subcard border border-zinc-200 dark:border-zinc-800">
                     <h4 className="font-bold text-blue-600 dark:text-blue-400 mb-2">💳 مدل‌های پیشرفته اعتباری</h4>
                     <p className="text-xs opacity-90 leading-relaxed text-justify">
                       چت با مدل‌های پایه هیچ هزینه‌ای ندارد. در صورتی که به قدرت پردازشی بالاتر برای پروژه‌های تخصصی یا تولید تصویر استودیویی نیاز داشته باشید، می‌توانید کیف پول خود را شارژ کرده و هر زمان مایل بودید مدل‌های پیشرفته را انتخاب کنید.
@@ -137,7 +137,7 @@ export const UiGuideModal: React.FC = () => {
 
               {/* Models Section */}
               <section id="doc-sec-models" className="space-y-4">
-                <h2 className="text-2xl font-black text-amber-600 dark:text-amber-400 flex items-center gap-2">
+                <h2 className="text-lg sm:text-xl font-bold text-amber-600 dark:text-amber-400 flex items-center gap-2">
                   <Cpu className="w-6 h-6" /> مسیریابی هوشمند و انواع مدل‌ها
                 </h2>
                 <p className="text-sm leading-relaxed opacity-90 text-justify">
@@ -161,7 +161,7 @@ export const UiGuideModal: React.FC = () => {
 
               {/* Features Section */}
               <section id="doc-sec-features" className="space-y-4">
-                <h2 className="text-2xl font-black text-purple-600 dark:text-purple-400 flex items-center gap-2">
+                <h2 className="text-lg sm:text-xl font-bold text-purple-600 dark:text-purple-400 flex items-center gap-2">
                   <Sparkles className="w-6 h-6" /> امکانات ویژه سیستم
                 </h2>
                 <div className="space-y-4">
@@ -186,7 +186,7 @@ export const UiGuideModal: React.FC = () => {
 
               {/* Explore Section */}
               <section id="doc-sec-explore" className="space-y-4">
-                <h2 className="text-2xl font-black text-blue-600 dark:text-blue-400 flex items-center gap-2">
+                <h2 className="text-lg sm:text-xl font-bold text-blue-600 dark:text-blue-400 flex items-center gap-2">
                   <Compass className="w-6 h-6" /> مرکز کشف (Explore Hub)
                 </h2>
                 <p className="text-sm leading-relaxed opacity-90 text-justify">
@@ -196,7 +196,7 @@ export const UiGuideModal: React.FC = () => {
 
               {/* Android Section */}
               <section id="doc-sec-android" className="space-y-4">
-                <h2 className="text-2xl font-black text-rose-600 dark:text-rose-400 flex items-center gap-2">
+                <h2 className="text-lg sm:text-xl font-bold text-rose-600 dark:text-rose-400 flex items-center gap-2">
                   <Cpu className="w-6 h-6" /> راهنمای نصب اپلیکیشن اندروید
                 </h2>
                 <div className="p-4 rounded-xl bg-rose-50 dark:bg-rose-900/10 border border-rose-200 dark:border-rose-900/30">

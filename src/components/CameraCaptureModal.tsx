@@ -455,7 +455,7 @@ export const CameraCaptureModal: React.FC<CameraCaptureModalProps> = ({
  )}
 
  {/* Video / Snapshot Viewport */}
- <div className="flex-1 min-h-[220px] max-h-[48dvh] sm:max-h-[52dvh] relative w-full clay-surface-inset flex items-center justify-center overflow-hidden">
+ <div className="flex-1 min-h-[220px] max-h-[48dvh] sm:max-h-[52dvh] relative w-full clay-subcard bg-black/60 flex items-center justify-center overflow-hidden">
  {isLoading && !capturedImage && !errorMessage && (
  <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-black/60 z-10">
  <RefreshCw className="w-7 h-7 text-sky-400 animate-spin" />

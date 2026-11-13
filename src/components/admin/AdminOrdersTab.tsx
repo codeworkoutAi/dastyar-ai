@@ -323,7 +323,7 @@ export const AdminOrdersTab: React.FC = () => {
 
       {/* Orders List / Table */}
       {loading ? (
-        <div className="flex flex-col items-center justify-center h-52 clay-surface rounded-2xl">
+        <div className="flex flex-col items-center justify-center h-52 clay-subcard rounded-2xl">
           <div className="w-8 h-8 border-2 border-[var(--color-accent-primary)] border-t-transparent rounded-full animate-spin mb-3" />
           <span className="text-xs text-[var(--text-muted)] font-bold">در حال دریافت لیست سفارشات...</span>
         </div>
@@ -336,7 +336,7 @@ export const AdminOrdersTab: React.FC = () => {
         <div className="overflow-x-auto rounded-2xl clay-card">
           <table className="w-full text-sm text-right">
             <thead>
-              <tr className="border-b border-[var(--card-border)] clay-surface text-xs font-black text-[var(--text-muted)]">
+              <tr className="border-b border-[var(--card-border)] bg-[var(--card-bg)] text-xs font-black text-[var(--text-muted)]">
                 <th className="px-4 py-3.5">شماره سفارش</th>
                 <th className="px-4 py-3.5">خریدار</th>
                 <th className="px-4 py-3.5">محصول / بسته</th>
@@ -525,7 +525,7 @@ export const AdminOrdersTab: React.FC = () => {
 
             <div className="space-y-4 text-xs">
               {/* Product and Amount */}
-              <div className="p-4 rounded-2xl clay-surface space-y-2">
+              <div className="p-4 rounded-2xl clay-subcard space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="text-[var(--text-muted)] font-bold">محصول:</span>
                   <span className="font-black text-[var(--text-main)]">{selectedOrder.productTitle}</span>
@@ -549,7 +549,7 @@ export const AdminOrdersTab: React.FC = () => {
               </div>
 
               {/* Customer and Verification Info */}
-              <div className="p-4 rounded-2xl clay-surface space-y-2">
+              <div className="p-4 rounded-2xl clay-subcard space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="text-[var(--text-muted)] font-bold">خریدار:</span>
                   <span className="text-[var(--text-main)] font-bold">{selectedOrder.userName || 'کاربر سایت'}</span>
@@ -581,7 +581,7 @@ export const AdminOrdersTab: React.FC = () => {
               </div>
 
               {/* License / Allocation Section */}
-              <div className="p-4 rounded-2xl clay-surface-inset space-y-3">
+              <div className="p-4 rounded-2xl clay-subcard space-y-3">
                 <div className="flex items-center justify-between">
                   <span className="font-bold text-[var(--text-main)] flex items-center gap-1.5">
                     <Key size={14} className="text-[var(--color-accent-primary)]" />

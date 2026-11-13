@@ -280,7 +280,7 @@ export const LandingPage: React.FC = () => {
 
           {/* Magnetic Primary Headline */}
           <h1
-            className="text-2xl sm:text-4xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-l from-indigo-600 via-blue-600 to-cyan-500 dark:from-indigo-300 dark:via-blue-300 dark:to-cyan-200 leading-[1.3] py-2 px-1 mb-2"
+            className="text-xl sm:text-2xl md:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-l from-indigo-600 via-blue-600 to-cyan-500 dark:from-indigo-300 dark:via-blue-300 dark:to-cyan-200 leading-snug py-1 px-1 mb-2"
             style={{ fontFamily: "'Estedad', sans-serif" }}
           >
             دستیار هوش مصنوعی فارسی | Dastyar AI
@@ -288,7 +288,7 @@ export const LandingPage: React.FC = () => {
 
           {/* Subtitle / Preserved High-Ranking Headline as H2 */}
           <h2
-            className="text-base sm:text-xl md:text-2xl font-bold text-[#334155] dark:text-[#cbd5e1] leading-[1.4] py-1 px-1 mb-4"
+            className="text-sm sm:text-base md:text-lg font-bold text-[#334155] dark:text-[#cbd5e1] leading-normal py-1 px-1 mb-4"
             style={{ fontFamily: "'Estedad', sans-serif" }}
           >
             دستیار هوشمند؛ هوش مصنوعی پیشرفته، بدون مرز و به زبان فارسی

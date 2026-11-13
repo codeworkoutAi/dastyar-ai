@@ -99,14 +99,14 @@ export const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({ produc
  <span className="w-1 h-5 bg-gradient-to-b from-emerald-500 to-teal-500 rounded-full"></span>
  توضیحات محصول
  </h3>
- <div className="clay-surface p-4 rounded-2xl border border-[var(--card-border)]  prose prose-sm dark:prose-invert max-w-none text-xs sm:text-sm text-zinc-700 dark:text-zinc-300 leading-relaxed">
+ <div className="clay-subcard p-4 rounded-2xl border border-[var(--card-border)] prose prose-sm dark:prose-invert max-w-none text-xs sm:text-sm text-zinc-700 dark:text-zinc-300 leading-relaxed">
  <MarkdownRenderer content={product.longDescription || product.description || 'توضیحاتی برای این محصول ثبت نشده است.'} />
  </div>
  </div>
 
  {/* Features */}
  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
- <div className="flex items-center gap-3 p-3 clay-surface rounded-xl border border-[var(--card-border)]">
+ <div className="flex items-center gap-3 p-3 clay-subcard rounded-xl border border-[var(--card-border)]">
  <div className="p-2 bg-emerald-100/80 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded-lg">
  <Zap className="w-4 h-4" />
  </div>
@@ -115,7 +115,7 @@ export const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({ produc
  <p className="type-badge text-zinc-500 mt-0.5">بلافاصله پس از پرداخت</p>
  </div>
  </div>
- <div className="flex items-center gap-3 p-3 clay-surface rounded-xl border border-[var(--card-border)]">
+ <div className="flex items-center gap-3 p-3 clay-subcard rounded-xl border border-[var(--card-border)]">
  <div className="p-2 bg-blue-100/80 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-lg">
  <ShieldCheck className="w-4 h-4" />
  </div>
@@ -137,7 +137,7 @@ export const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({ produc
  <div key={idx} className="border border-[var(--card-border)] rounded-xl overflow-hidden transition-all duration-300"
  >
  <button onClick={() => setOpenFaqIndex(openFaqIndex === idx ? null : idx)}
- className="w-full flex items-center justify-between p-3 sm:p-3.5 clay-surface hover:bg-black/5 dark:hover:bg-white/5 transition-colors text-right cursor-pointer"
+ className="w-full flex items-center justify-between p-3 sm:p-3.5 bg-[var(--card-bg)] hover:bg-black/5 dark:hover:bg-white/5 transition-colors text-right cursor-pointer"
  >
  <span className="text-xs sm:text-sm font-bold text-zinc-800 dark:text-zinc-200">{faq.q}</span>
  {openFaqIndex === idx ? (
@@ -159,7 +159,7 @@ export const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({ produc
  </div>
 
  {/* Footer */}
- <div className="p-4 sm:p-5 clay-surface border-t border-[var(--card-border)]  flex flex-col sm:flex-row items-center justify-between gap-3 shrink-0">
+ <div className="p-4 sm:p-5 bg-[var(--card-bg)] border-t border-[var(--card-border)] flex flex-col sm:flex-row items-center justify-between gap-3 shrink-0">
  <div className="flex flex-col w-full sm:w-auto text-center sm:text-right">
  <span className="type-badge sm:type-meta text-zinc-500 dark:text-zinc-400 mb-0.5">مبلغ قابل پرداخت:</span>
  <span className="text-lg sm:text-xl font-black text-zinc-900 dark:text-zinc-100">
@@ -168,7 +168,7 @@ export const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({ produc
  </div>
  <div className="flex items-center gap-2.5 w-full sm:w-auto">
  <button onClick={onClose}
- className="flex-1 sm:flex-none px-5 py-2.5 rounded-xl clay-surface text-zinc-700 dark:text-zinc-300 text-xs sm:text-sm font-bold border border-[var(--card-border)] hover:clay-surface dark:hover:bg-zinc-700 transition-colors"
+ className="flex-1 sm:flex-none px-5 py-2.5 rounded-xl clay-btn-secondary text-zinc-700 dark:text-zinc-300 text-xs sm:text-sm font-bold border border-[var(--card-border)] hover:clay-surface dark:hover:bg-zinc-700 transition-colors"
  >
  انصراف
  </button>

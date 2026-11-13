@@ -75,7 +75,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
       <div className="w-full max-w-6xl h-[92vh] flex flex-col clay-modal rounded-3xl overflow-hidden shadow-2xl relative border border-[var(--card-border)]">
         
         {/* Modal Header */}
-        <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-b border-[var(--card-border)] clay-surface shrink-0">
+        <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-b border-[var(--card-border)] bg-[var(--card-bg)] shrink-0">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-2xl bg-[var(--color-accent-primary)]/10 text-[var(--color-accent-primary)] flex items-center justify-center font-bold">
               <ShieldCheck className="w-5 h-5" />

@@ -383,7 +383,7 @@ export const AdminNewsTab: React.FC = () => {
 
       {/* News Cards Grid */}
       {loading ? (
-        <div className="flex flex-col items-center justify-center h-48 clay-surface rounded-2xl">
+        <div className="flex flex-col items-center justify-center h-48 clay-subcard rounded-2xl">
           <div className="w-8 h-8 border-2 border-[var(--color-accent-primary)] border-t-transparent rounded-full animate-spin mb-3" />
           <span className="text-xs text-[var(--text-muted)] font-bold">در حال بارگذاری مقالات...</span>
         </div>

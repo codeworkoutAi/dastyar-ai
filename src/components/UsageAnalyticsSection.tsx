@@ -71,7 +71,7 @@ export const UsageAnalyticsSection: React.FC = () => {
  </div>
 
  {/* Headline with Estedad */}
- <h2 className="text-2xl sm:text-4xl font-black text-zinc-900 dark:text-white leading-tight"
+ <h2 className="text-lg sm:text-2xl font-bold text-zinc-900 dark:text-white leading-snug"
  style={{ fontFamily:"'Estedad', sans-serif" }}
  >
  همیشه بدانید چه‌قدر مصرف کرده‌اید
@@ -160,7 +160,7 @@ export const UsageAnalyticsSection: React.FC = () => {
  <div className="grid grid-cols-3 gap-2.5 sm:gap-3 mb-5 relative z-10">
  {/* Stat 1: Remaining Tokens */}
  <div style={{ borderRadius: '16px' }}
- className="clay-surface-inset p-3 sm:p-3.5 flex flex-col items-center justify-center text-center border border-[var(--card-border)] "
+ className="clay-subcard p-3 sm:p-3.5 flex flex-col items-center justify-center text-center border border-[var(--card-border)] "
  >
  <div className="text-blue-600 dark:text-cyan-400 mb-1">
  <Coins size={16} />
@@ -175,7 +175,7 @@ export const UsageAnalyticsSection: React.FC = () => {
 
  {/* Stat 2: Requests */}
  <div style={{ borderRadius: '16px' }}
- className="clay-surface-inset p-3 sm:p-3.5 flex flex-col items-center justify-center text-center border border-[var(--card-border)] "
+ className="clay-subcard p-3 sm:p-3.5 flex flex-col items-center justify-center text-center border border-[var(--card-border)] "
  >
  <div className="text-purple-600 dark:text-purple-400 mb-1">
  <Activity size={16} />
@@ -190,7 +190,7 @@ export const UsageAnalyticsSection: React.FC = () => {
 
  {/* Stat 3: Cost */}
  <div style={{ borderRadius: '16px' }}
- className="clay-surface-inset p-3 sm:p-3.5 flex flex-col items-center justify-center text-center border border-[var(--card-border)] "
+ className="clay-subcard p-3 sm:p-3.5 flex flex-col items-center justify-center text-center border border-[var(--card-border)] "
  >
  <div className="text-emerald-600 dark:text-emerald-400 mb-1">
  <Receipt size={16} />
@@ -206,7 +206,7 @@ export const UsageAnalyticsSection: React.FC = () => {
 
  {/* Daily Consumption Bar Chart */}
  <div style={{ borderRadius: '18px' }}
- className="clay-surface-inset p-4 sm:p-5 mb-5 relative z-10 border border-[var(--card-border)] "
+ className="clay-subcard p-4 sm:p-5 mb-5 relative z-10 border border-[var(--card-border)] "
  >
  <div className="flex items-center justify-between mb-3 text-xs">
  <span className="font-bold text-zinc-700 dark:text-zinc-300">روند مصرف روزانه</span>

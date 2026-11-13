@@ -91,7 +91,7 @@ export const AiAssistantPage: React.FC = () => {
           </div>
 
           <h1
-            className="text-3xl sm:text-4xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-l from-indigo-600 via-blue-600 to-cyan-500 dark:from-indigo-300 dark:via-blue-300 dark:to-cyan-200 leading-[1.3] mb-5"
+            className="text-2xl sm:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-l from-indigo-600 via-blue-600 to-cyan-500 dark:from-indigo-300 dark:via-blue-300 dark:to-cyan-200 leading-snug mb-5"
             style={{ fontFamily: "'Estedad', sans-serif" }}
           >
             دستیار هوش مصنوعی چیست؟
@@ -108,7 +108,7 @@ export const AiAssistantPage: React.FC = () => {
         {/* Section 1: Definition & How it works */}
         <section className="clay-card p-6 sm:p-8 rounded-3xl mb-8">
           <h2
-            className="text-xl sm:text-2xl font-black text-[#0f1420] dark:text-white mb-4 flex items-center gap-3"
+            className="text-lg sm:text-xl font-bold text-[#0f1420] dark:text-white mb-4 flex items-center gap-3"
             style={{ fontFamily: "'Estedad', sans-serif" }}
           >
             <span className="w-2.5 h-6 bg-blue-600 rounded-full" />
@@ -128,7 +128,7 @@ export const AiAssistantPage: React.FC = () => {
         {/* Section 2: Types of AI Assistants */}
         <section className="clay-card p-6 sm:p-8 rounded-3xl mb-8">
           <h2
-            className="text-xl sm:text-2xl font-black text-[#0f1420] dark:text-white mb-6 flex items-center gap-3"
+            className="text-lg sm:text-xl font-bold text-[#0f1420] dark:text-white mb-6 flex items-center gap-3"
             style={{ fontFamily: "'Estedad', sans-serif" }}
           >
             <span className="w-2.5 h-6 bg-indigo-600 rounded-full" />
@@ -136,7 +136,7 @@ export const AiAssistantPage: React.FC = () => {
           </h2>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-            <div className="p-4 rounded-2xl clay-surface">
+            <div className="p-4 rounded-2xl clay-subcard">
               <strong className="block text-sm sm:text-base text-[#0f1420] dark:text-white font-bold mb-1">
                 دستیار عمومی:
               </strong>
@@ -145,7 +145,7 @@ export const AiAssistantPage: React.FC = () => {
               </p>
             </div>
 
-            <div className="p-4 rounded-2xl clay-surface">
+            <div className="p-4 rounded-2xl clay-subcard">
               <strong className="block text-sm sm:text-base text-[#0f1420] dark:text-white font-bold mb-1">
                 دستیار تخصصی:
               </strong>
@@ -154,7 +154,7 @@ export const AiAssistantPage: React.FC = () => {
               </p>
             </div>
 
-            <div className="p-4 rounded-2xl clay-surface">
+            <div className="p-4 rounded-2xl clay-subcard">
               <strong className="block text-sm sm:text-base text-[#0f1420] dark:text-white font-bold mb-1">
                 دستیار فارسی و دستیار غیرفارسی:
               </strong>
@@ -163,7 +163,7 @@ export const AiAssistantPage: React.FC = () => {
               </p>
             </div>
 
-            <div className="p-4 rounded-2xl clay-surface">
+            <div className="p-4 rounded-2xl clay-subcard">
               <strong className="block text-sm sm:text-base text-[#0f1420] dark:text-white font-bold mb-1">
                 دستیار متنی، صوتی و تصویری:
               </strong>
@@ -181,7 +181,7 @@ export const AiAssistantPage: React.FC = () => {
         {/* Section 3: Persian Difference */}
         <section className="clay-card p-6 sm:p-8 rounded-3xl mb-8">
           <h2
-            className="text-xl sm:text-2xl font-black text-[#0f1420] dark:text-white mb-4 flex items-center gap-3"
+            className="text-lg sm:text-xl font-bold text-[#0f1420] dark:text-white mb-4 flex items-center gap-3"
             style={{ fontFamily: "'Estedad', sans-serif" }}
           >
             <span className="w-2.5 h-6 bg-cyan-600 rounded-full" />
@@ -196,7 +196,7 @@ export const AiAssistantPage: React.FC = () => {
         {/* Section 4: What Dastyar AI Does */}
         <section className="clay-card p-6 sm:p-8 rounded-3xl mb-8">
           <h2
-            className="text-xl sm:text-2xl font-black text-[#0f1420] dark:text-white mb-6 flex items-center gap-3"
+            className="text-lg sm:text-xl font-bold text-[#0f1420] dark:text-white mb-6 flex items-center gap-3"
             style={{ fontFamily: "'Estedad', sans-serif" }}
           >
             <span className="w-2.5 h-6 bg-emerald-600 rounded-full" />
@@ -204,7 +204,7 @@ export const AiAssistantPage: React.FC = () => {
           </h2>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="p-4 rounded-2xl clay-surface flex items-start gap-3">
+            <div className="p-4 rounded-2xl clay-subcard flex items-start gap-3">
               <FileText className="w-5 h-5 text-blue-500 shrink-0 mt-0.5" />
               <div>
                 <strong className="block text-sm font-bold text-[#0f1420] dark:text-white mb-0.5">نوشتن و ویرایش:</strong>
@@ -214,7 +214,7 @@ export const AiAssistantPage: React.FC = () => {
               </div>
             </div>
 
-            <div className="p-4 rounded-2xl clay-surface flex items-start gap-3">
+            <div className="p-4 rounded-2xl clay-subcard flex items-start gap-3">
               <Globe className="w-5 h-5 text-indigo-500 shrink-0 mt-0.5" />
               <div>
                 <strong className="block text-sm font-bold text-[#0f1420] dark:text-white mb-0.5">ترجمه:</strong>
@@ -224,7 +224,7 @@ export const AiAssistantPage: React.FC = () => {
               </div>
             </div>
 
-            <div className="p-4 rounded-2xl clay-surface flex items-start gap-3">
+            <div className="p-4 rounded-2xl clay-subcard flex items-start gap-3">
               <Layers className="w-5 h-5 text-cyan-500 shrink-0 mt-0.5" />
               <div>
                 <strong className="block text-sm font-bold text-[#0f1420] dark:text-white mb-0.5">خلاصه‌سازی:</strong>
@@ -234,7 +234,7 @@ export const AiAssistantPage: React.FC = () => {
               </div>
             </div>
 
-            <div className="p-4 rounded-2xl clay-surface flex items-start gap-3">
+            <div className="p-4 rounded-2xl clay-subcard flex items-start gap-3">
               <Scale className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
               <div>
                 <strong className="block text-sm font-bold text-[#0f1420] dark:text-white mb-0.5">تنظیم لایحه:</strong>
@@ -244,7 +244,7 @@ export const AiAssistantPage: React.FC = () => {
               </div>
             </div>
 
-            <div className="p-4 rounded-2xl clay-surface flex items-start gap-3">
+            <div className="p-4 rounded-2xl clay-subcard flex items-start gap-3">
               <Landmark className="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" />
               <div>
                 <strong className="block text-sm font-bold text-[#0f1420] dark:text-white mb-0.5">استعلام یارانه و سهام:</strong>
@@ -254,7 +254,7 @@ export const AiAssistantPage: React.FC = () => {
               </div>
             </div>
 
-            <div className="p-4 rounded-2xl clay-surface flex items-start gap-3">
+            <div className="p-4 rounded-2xl clay-subcard flex items-start gap-3">
               <Dumbbell className="w-5 h-5 text-rose-500 shrink-0 mt-0.5" />
               <div>
                 <strong className="block text-sm font-bold text-[#0f1420] dark:text-white mb-0.5">دستیار فیتنس:</strong>
@@ -264,7 +264,7 @@ export const AiAssistantPage: React.FC = () => {
               </div>
             </div>
 
-            <div className="p-4 rounded-2xl clay-surface flex items-start gap-3">
+            <div className="p-4 rounded-2xl clay-subcard flex items-start gap-3">
               <GraduationCap className="w-5 h-5 text-purple-500 shrink-0 mt-0.5" />
               <div>
                 <strong className="block text-sm font-bold text-[#0f1420] dark:text-white mb-0.5">یادگیری:</strong>
@@ -274,7 +274,7 @@ export const AiAssistantPage: React.FC = () => {
               </div>
             </div>
 
-            <div className="p-4 rounded-2xl clay-surface flex items-start gap-3">
+            <div className="p-4 rounded-2xl clay-subcard flex items-start gap-3">
               <Lightbulb className="w-5 h-5 text-yellow-500 shrink-0 mt-0.5" />
               <div>
                 <strong className="block text-sm font-bold text-[#0f1420] dark:text-white mb-0.5">ایده‌پردازی:</strong>
@@ -289,7 +289,7 @@ export const AiAssistantPage: React.FC = () => {
         {/* Section 5: Why Choose Dastyar AI */}
         <section className="clay-card p-6 sm:p-8 rounded-3xl mb-8">
           <h2
-            className="text-xl sm:text-2xl font-black text-[#0f1420] dark:text-white mb-6 flex items-center gap-3"
+            className="text-lg sm:text-xl font-bold text-[#0f1420] dark:text-white mb-6 flex items-center gap-3"
             style={{ fontFamily: "'Estedad', sans-serif" }}
           >
             <span className="w-2.5 h-6 bg-rose-600 rounded-full" />
@@ -297,37 +297,37 @@ export const AiAssistantPage: React.FC = () => {
           </h2>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-            <div className="p-3.5 rounded-xl clay-surface flex items-center gap-2.5 text-xs sm:text-sm">
+            <div className="p-3.5 rounded-xl clay-subcard flex items-center gap-2.5 text-xs sm:text-sm">
               <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
               <span><strong>چت رایگان و نامحدود:</strong> {toPersianDigits(15)} پیام مهمان بدون ورود و دسترسی نامحدود به مدل‌های پایه پس از ورود.</span>
             </div>
 
-            <div className="p-3.5 rounded-xl clay-surface flex items-center gap-2.5 text-xs sm:text-sm">
+            <div className="p-3.5 rounded-xl clay-subcard flex items-center gap-2.5 text-xs sm:text-sm">
               <Zap className="w-4 h-4 text-amber-500 shrink-0" />
               <span><strong>پرداخت به‌ازای مصرف:</strong> کیف پول با اعتبار مادام‌العمر. بدون اشتراک اجباری.</span>
             </div>
 
-            <div className="p-3.5 rounded-xl clay-surface flex items-center gap-2.5 text-xs sm:text-sm">
+            <div className="p-3.5 rounded-xl clay-subcard flex items-center gap-2.5 text-xs sm:text-sm">
               <ShieldCheck className="w-4 h-4 text-blue-500 shrink-0" />
               <span><strong>دسترسی مستقیم از ایران:</strong> بدون تغییر IP، با اتصال پایدار.</span>
             </div>
 
-            <div className="p-3.5 rounded-xl clay-surface flex items-center gap-2.5 text-xs sm:text-sm">
+            <div className="p-3.5 rounded-xl clay-subcard flex items-center gap-2.5 text-xs sm:text-sm">
               <Sparkles className="w-4 h-4 text-indigo-500 shrink-0" />
               <span><strong>فارسی روان:</strong> پاسخ‌ها به فارسی طبیعی و قابل استفاده، نه ترجمه ماشینی.</span>
             </div>
 
-            <div className="p-3.5 rounded-xl clay-surface flex items-center gap-2.5 text-xs sm:text-sm">
+            <div className="p-3.5 rounded-xl clay-subcard flex items-center gap-2.5 text-xs sm:text-sm">
               <ShieldCheck className="w-4 h-4 text-cyan-500 shrink-0" />
               <span><strong>بدون محدودیت تحریمی:</strong> نیازی به کارت اعتباری خارجی یا شماره تلفن خارجی نیست.</span>
             </div>
 
-            <div className="p-3.5 rounded-xl clay-surface flex items-center gap-2.5 text-xs sm:text-sm">
+            <div className="p-3.5 rounded-xl clay-subcard flex items-center gap-2.5 text-xs sm:text-sm">
               <Wand2 className="w-4 h-4 text-purple-500 shrink-0" />
               <span><strong>ابزارهای کاربردی:</strong> چت، تنظیم لایحه، استعلام یارانه و سهام، دستیار فیتنس.</span>
             </div>
 
-            <div className="p-3.5 rounded-xl clay-surface flex items-center gap-2.5 text-xs sm:text-sm sm:col-span-2">
+            <div className="p-3.5 rounded-xl clay-subcard flex items-center gap-2.5 text-xs sm:text-sm sm:col-span-2">
               <Globe className="w-4 h-4 text-emerald-500 shrink-0" />
               <span><strong>چندکاناله:</strong> وب، PWA، ربات تلگرام، اپ اندروید کافه‌بازار.</span>
             </div>
@@ -337,7 +337,7 @@ export const AiAssistantPage: React.FC = () => {
         {/* Section 6: How to use (4 steps) */}
         <section className="clay-card p-6 sm:p-8 rounded-3xl mb-8">
           <h2
-            className="text-xl sm:text-2xl font-black text-[#0f1420] dark:text-white mb-6 flex items-center gap-3"
+            className="text-lg sm:text-xl font-bold text-[#0f1420] dark:text-white mb-6 flex items-center gap-3"
             style={{ fontFamily: "'Estedad', sans-serif" }}
           >
             <span className="w-2.5 h-6 bg-amber-500 rounded-full" />
@@ -345,7 +345,7 @@ export const AiAssistantPage: React.FC = () => {
           </h2>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="p-4 rounded-2xl clay-surface">
+            <div className="p-4 rounded-2xl clay-subcard">
               <div className="w-7 h-7 rounded-lg bg-blue-500 text-white font-bold flex items-center justify-center text-xs mb-2">
                 {toPersianDigits(1)}
               </div>
@@ -355,7 +355,7 @@ export const AiAssistantPage: React.FC = () => {
               </p>
             </div>
 
-            <div className="p-4 rounded-2xl clay-surface">
+            <div className="p-4 rounded-2xl clay-subcard">
               <div className="w-7 h-7 rounded-lg bg-indigo-500 text-white font-bold flex items-center justify-center text-xs mb-2">
                 {toPersianDigits(2)}
               </div>
@@ -365,7 +365,7 @@ export const AiAssistantPage: React.FC = () => {
               </p>
             </div>
 
-            <div className="p-4 rounded-2xl clay-surface">
+            <div className="p-4 rounded-2xl clay-subcard">
               <div className="w-7 h-7 rounded-lg bg-cyan-500 text-white font-bold flex items-center justify-center text-xs mb-2">
                 {toPersianDigits(3)}
               </div>
@@ -375,7 +375,7 @@ export const AiAssistantPage: React.FC = () => {
               </p>
             </div>
 
-            <div className="p-4 rounded-2xl clay-surface">
+            <div className="p-4 rounded-2xl clay-subcard">
               <div className="w-7 h-7 rounded-lg bg-emerald-500 text-white font-bold flex items-center justify-center text-xs mb-2">
                 {toPersianDigits(4)}
               </div>
@@ -390,7 +390,7 @@ export const AiAssistantPage: React.FC = () => {
         {/* Section 7: Sample Prompts */}
         <section className="clay-card p-6 sm:p-8 rounded-3xl mb-8">
           <h2
-            className="text-xl sm:text-2xl font-black text-[#0f1420] dark:text-white mb-6 flex items-center gap-3"
+            className="text-lg sm:text-xl font-bold text-[#0f1420] dark:text-white mb-6 flex items-center gap-3"
             style={{ fontFamily: "'Estedad', sans-serif" }}
           >
             <span className="w-2.5 h-6 bg-purple-600 rounded-full" />
@@ -402,7 +402,7 @@ export const AiAssistantPage: React.FC = () => {
               <Link
                 key={idx}
                 to={`/chat?prompt=${encodeURIComponent(promptText)}`}
-                className="p-4 rounded-2xl clay-surface hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-between gap-4 group"
+                className="p-4 rounded-2xl clay-subcard hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-between gap-4 group"
               >
                 <div className="flex items-center gap-3">
                   <Sparkles className="w-4 h-4 text-blue-500 shrink-0" />
@@ -422,7 +422,7 @@ export const AiAssistantPage: React.FC = () => {
         {/* Section 8: FAQs */}
         <section className="clay-card p-6 sm:p-8 rounded-3xl mb-8">
           <h2
-            className="text-xl sm:text-2xl font-black text-[#0f1420] dark:text-white mb-6 flex items-center gap-3"
+            className="text-lg sm:text-xl font-bold text-[#0f1420] dark:text-white mb-6 flex items-center gap-3"
             style={{ fontFamily: "'Estedad', sans-serif" }}
           >
             <span className="w-2.5 h-6 bg-teal-600 rounded-full" />
@@ -433,7 +433,7 @@ export const AiAssistantPage: React.FC = () => {
             {FAQS.map((faq, idx) => {
               const isOpen = openFaq === idx;
               return (
-                <div key={idx} className="rounded-2xl clay-surface overflow-hidden transition-all">
+                <div key={idx} className="rounded-2xl clay-subcard overflow-hidden transition-all">
                   <button
                     type="button"
                     onClick={() => setOpenFaq(isOpen ? null : idx)}

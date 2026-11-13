@@ -58,7 +58,7 @@ export const GuestLanding: React.FC = () => {
  </div>
 
  {/* Hero Title */}
- <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black text-zinc-900 dark:text-white tracking-tight mb-4 drop-shadow-sm leading-tight">
+ <h1 className="text-xl sm:text-2xl md:text-3xl font-black text-zinc-900 dark:text-white tracking-tight mb-4 drop-shadow-sm leading-snug">
  دسترسی مستقیم به برترین <br className="hidden sm:block" />
  <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-purple-600 to-emerald-500 dark:from-blue-400 dark:via-purple-400 dark:to-emerald-400">
  هوش‌های مصنوعی جهان
@@ -66,7 +66,7 @@ export const GuestLanding: React.FC = () => {
  </h1>
 
  <p className="text-sm sm:text-base md:text-lg text-zinc-600 dark:text-zinc-400 max-w-2xl font-medium leading-relaxed mb-8">
- بدون نیاز به خرید اکانت‌های دلاری گران‌قیمت یا فیلترشکن، با بهترین مدل‌های جهان گفتگو کنید و هزینه را دقیقاً به اندازه توکن مصرفی به تومان بپردازید.
+ بدون نیاز به خرید اکانت‌های دلاری گران‌قیمت، با برترین مدل‌های جهان گفتگو کنید و هزینه را دقیقاً به اندازه توکن مصرفی به تومان بپردازید.
  </p>
 
  {/* CTA Button */}

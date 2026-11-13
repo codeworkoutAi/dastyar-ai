@@ -240,7 +240,7 @@ export const AdminUsersTab: React.FC = () => {
 
       {/* Users Table */}
       {loading ? (
-        <div className="flex flex-col items-center justify-center h-52 clay-surface rounded-2xl">
+        <div className="flex flex-col items-center justify-center h-52 clay-subcard rounded-2xl">
           <div className="w-8 h-8 border-2 border-[var(--color-accent-primary)] border-t-transparent rounded-full animate-spin mb-3" />
           <span className="text-xs text-[var(--text-muted)] font-bold">در حال بارگذاری کاربران...</span>
         </div>
@@ -253,7 +253,7 @@ export const AdminUsersTab: React.FC = () => {
         <div className="overflow-x-auto rounded-2xl clay-card">
           <table className="w-full text-sm text-right">
             <thead>
-              <tr className="border-b border-[var(--card-border)] clay-surface text-xs font-black text-[var(--text-muted)]">
+              <tr className="border-b border-[var(--card-border)] bg-[var(--card-bg)] text-xs font-black text-[var(--text-muted)]">
                 <th className="px-4 py-3.5">شناسه</th>
                 <th className="px-4 py-3.5">نام / هویت</th>
                 <th className="px-4 py-3.5">اطلاعات تماس</th>
@@ -423,7 +423,7 @@ export const AdminUsersTab: React.FC = () => {
             </div>
 
             <form onSubmit={handleWalletAdjustSubmit} className="space-y-4">
-              <div className="flex gap-2 p-1 rounded-xl clay-surface">
+              <div className="flex gap-2 p-1 rounded-xl clay-subcard">
                 <button
                   type="button"
                   onClick={() => setAdjustType('credit')}

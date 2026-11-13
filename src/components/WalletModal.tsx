@@ -111,7 +111,7 @@ export const WalletModal: React.FC = () => {
  onClick={(e) => e.stopPropagation()}
  >
  {/* Header */}
- <div className="flex items-center justify-between p-5 border-b border-[var(--card-border)]  clay-surface-inset">
+ <div className="flex items-center justify-between p-5 border-b border-[var(--card-border)] bg-[var(--card-bg)]">
  <div className="flex items-center gap-3">
  <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-500">
  <Coins className="w-5 h-5" />
@@ -141,7 +141,7 @@ export const WalletModal: React.FC = () => {
  </div>
  </div>
 
- <div className="flex items-center gap-2 clay-surface backdrop-blur-md px-3.5 py-2.5 rounded-2xl border border-[var(--card-border)] text-xs">
+ <div className="flex items-center gap-2 clay-subcard backdrop-blur-md px-3.5 py-2.5 rounded-2xl border border-[var(--card-border)] text-xs">
  <Zap className="w-4 h-4 text-amber-500 shrink-0" />
  <div>
  <span className="text-zinc-500 dark:text-zinc-400 block type-badge">تخمین اعتبار باقی‌مانده:</span>
@@ -154,7 +154,7 @@ export const WalletModal: React.FC = () => {
  </div>
 
  {/* Tab Switcher */}
- <div className="flex border-b border-[var(--card-border)]  px-5 pt-3 clay-surface-inset">
+ <div className="flex border-b border-[var(--card-border)]  px-5 pt-3 bg-[var(--card-bg)]">
  <button
  onClick={() => setActiveTab('packages')}
  className={`pb-3 px-4 text-xs font-bold transition-all relative cursor-pointer ${
@@ -372,7 +372,7 @@ export const WalletModal: React.FC = () => {
  </div>
 
  <div className="text-left">
- <span className={`font-black font-mono text-sm block ${
+ <span className={`font-black text-sm block ${
  isPositive ? 'text-emerald-600 dark:text-emerald-400' : 'text-zinc-700 dark:text-zinc-300'
  }`} dir="ltr">
  {isPositive ? `+${tx.amount.toLocaleString()}` : `${tx.amount.toLocaleString()}`} تومان

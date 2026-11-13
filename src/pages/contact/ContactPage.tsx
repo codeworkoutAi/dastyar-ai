@@ -94,7 +94,7 @@ export const ContactPage: React.FC = () => {
           </div>
 
           <h1
-            className="text-3xl sm:text-4xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-l from-indigo-600 via-blue-600 to-cyan-500 dark:from-indigo-300 dark:via-blue-300 dark:to-cyan-200 leading-[1.3] mb-4"
+            className="text-2xl sm:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-l from-indigo-600 via-blue-600 to-cyan-500 dark:from-indigo-300 dark:via-blue-300 dark:to-cyan-200 leading-snug mb-4"
             style={{ fontFamily: "'Estedad', sans-serif" }}
           >
             تماس با Dastyar AI
@@ -111,7 +111,7 @@ export const ContactPage: React.FC = () => {
         {/* Contact Channels */}
         <section className="clay-card p-6 sm:p-8 rounded-3xl mb-8">
           <h2
-            className="text-xl sm:text-2xl font-black text-[#0f1420] dark:text-white mb-6 flex items-center gap-3"
+            className="text-lg sm:text-xl font-bold text-[#0f1420] dark:text-white mb-6 flex items-center gap-3"
             style={{ fontFamily: "'Estedad', sans-serif" }}
           >
             <span className="w-2.5 h-6 bg-blue-600 rounded-full" />
@@ -121,7 +121,7 @@ export const ContactPage: React.FC = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <a
               href="mailto:support@dastyarai.com"
-              className="p-5 rounded-2xl clay-surface hover:scale-[1.02] transition-transform flex items-center gap-4 group"
+              className="p-5 rounded-2xl clay-subcard hover:scale-[1.02] transition-transform flex items-center gap-4 group"
             >
               <div className="w-12 h-12 rounded-xl clay-btn flex items-center justify-center text-blue-600 dark:text-blue-400 shrink-0">
                 <Mail className="w-6 h-6" />
@@ -138,7 +138,7 @@ export const ContactPage: React.FC = () => {
               href="https://t.me/dastyarai_bot"
               target="_blank"
               rel="noopener noreferrer"
-              className="p-5 rounded-2xl clay-surface hover:scale-[1.02] transition-transform flex items-center gap-4 group"
+              className="p-5 rounded-2xl clay-subcard hover:scale-[1.02] transition-transform flex items-center gap-4 group"
             >
               <div className="w-12 h-12 rounded-xl clay-btn flex items-center justify-center text-cyan-600 dark:text-cyan-400 shrink-0">
                 <MessageCircle className="w-6 h-6" />
@@ -156,7 +156,7 @@ export const ContactPage: React.FC = () => {
         {/* Contact Form */}
         <section className="clay-card p-6 sm:p-8 rounded-3xl mb-8">
           <h2
-            className="text-xl sm:text-2xl font-black text-[#0f1420] dark:text-white mb-6 flex items-center gap-3"
+            className="text-lg sm:text-xl font-bold text-[#0f1420] dark:text-white mb-6 flex items-center gap-3"
             style={{ fontFamily: "'Estedad', sans-serif" }}
           >
             <span className="w-2.5 h-6 bg-indigo-600 rounded-full" />

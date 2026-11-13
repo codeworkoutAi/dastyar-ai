@@ -15,20 +15,20 @@ export function AboutModal() {
  <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-br from-emerald-500/20 to-teal-500/20 dark:from-emerald-500/10 dark:to-teal-500/10"></div>
  <button
  onClick={() => setIsAboutOpen(false)}
- className="absolute top-4 right-4 p-2 rounded-full clay-surface clay-icon-btn transition-colors z-10"
+ className="absolute top-4 right-4 p-2 rounded-full clay-icon-btn transition-colors z-10"
  >
  <X className="w-5 h-5 text-zinc-500" />
  </button>
 
  <div className="relative pt-12 px-8 pb-8 text-center">
- <div className="mx-auto w-20 h-20 clay-surface rounded-2xl flex items-center justify-center border border-[var(--card-border)]  mb-6 relative">
+ <div className="mx-auto w-20 h-20 clay-subcard rounded-2xl flex items-center justify-center border border-[var(--card-border)]  mb-6 relative">
  <div className="absolute inset-0 bg-emerald-500 opacity-20 blur-xl rounded-full animate-pulse"></div>
  <Bot className="w-10 h-10 text-emerald-600 relative z-10" />
  </div>
 
- <h2 className="text-2xl font-black text-zinc-900 dark:text-white mb-2">دستیار هوشمند</h2>
+ <h2 className="text-xl font-bold text-zinc-900 dark:text-white mb-2">دستیار هوشمند</h2>
  <p className="text-emerald-600 dark:text-emerald-400 text-sm font-bold mb-6 flex items-center justify-center gap-1.5">
- <Sparkles className="w-4 h-4" /> قدرت گرفته از هوش مصنوعی جمینای
+ <Sparkles className="w-4 h-4" /> قدرت گرفته از برترین مدل‌های هوش مصنوعی جهان
  </p>
 
  <p className="text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed text-justify mb-8 text-right">

@@ -528,7 +528,7 @@ export const AdminProductsTab: React.FC = () => {
                 ) : (
                   <div className="flex flex-col gap-2 max-h-[480px] overflow-y-auto custom-scrollbar pr-1">
                     {licenses.map((l: any) => (
-                      <div key={l.id} className="flex items-center justify-between p-3.5 rounded-xl clay-surface">
+                      <div key={l.id} className="flex items-center justify-between p-3.5 rounded-xl clay-subcard">
                         <div className="flex flex-col min-w-0 pr-2">
                           <span className="text-xs font-mono text-[var(--text-main)] truncate" dir="ltr">{l.key}</span>
                           <span className={`text-[10px] mt-1.5 w-max px-2.5 py-0.5 rounded-full font-bold ${
@@ -685,7 +685,7 @@ export const AdminProductsTab: React.FC = () => {
 
                   {/* Live Preview Box */}
                   {showLivePreview && (
-                    <div className="mb-8 p-5 rounded-2xl clay-surface-inset">
+                    <div className="mb-8 p-5 rounded-2xl clay-subcard">
                       <span className="text-xs font-bold text-[var(--color-accent-primary)] block mb-3">
                         🔍 پیش‌نمایش نحوه نمایش کارت در ویترین فروشگاه:
                       </span>
@@ -821,7 +821,7 @@ export const AdminProductsTab: React.FC = () => {
                     </div>
 
                     {/* Variations Manager (Multi-Period Duration & Custom Pricing) */}
-                    <div className="p-4 rounded-xl clay-surface-inset space-y-3">
+                    <div className="p-4 rounded-xl clay-subcard space-y-3">
                       <div className="flex items-center justify-between">
                         <span className="text-xs font-bold text-[var(--text-main)] flex items-center gap-1.5">
                           <Clock size={15} className="text-[var(--color-accent-primary)]" />
@@ -973,7 +973,7 @@ export const AdminProductsTab: React.FC = () => {
                     </div>
 
                     {/* Structured FAQs */}
-                    <div className="p-4 rounded-xl clay-surface-inset space-y-3">
+                    <div className="p-4 rounded-xl clay-subcard space-y-3">
                       <span className="text-xs font-bold text-[var(--text-main)] flex items-center gap-1.5">
                         <HelpCircle size={15} className="text-[var(--color-accent-primary)]" />
                         سوالات متداول خریداران (FAQ)
@@ -1338,7 +1338,7 @@ export const AdminProductsTab: React.FC = () => {
                       </div>
 
                       {/* Comment Body */}
-                      <div className="clay-surface-inset p-4 rounded-xl text-xs text-[var(--text-main)] leading-relaxed">
+                      <div className="clay-subcard p-4 rounded-xl text-xs text-[var(--text-main)] leading-relaxed">
                         {rev.comment}
                       </div>
 

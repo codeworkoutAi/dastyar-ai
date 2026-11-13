@@ -154,10 +154,10 @@ html {
     --text-base: 15px;
     --text-lg: 17px;
     --text-xl: 19px;
-    --text-2xl: 22px;
-    --text-3xl: 26px;
-    --text-4xl: 31px;
-    --text-5xl: 37px;
+    --text-2xl: 21px;
+    --text-3xl: 24px;
+    --text-4xl: 28px;
+    --text-5xl: 32px;
 
     /* Space tokens for the same scale (used with the type steps above) */
     --space-3xs: 0.25rem;
@@ -197,11 +197,11 @@ html {
       --text-sm: 14px;
       --text-base: 16px;
       --text-lg: 18px;
-      --text-xl: 20px;
-      --text-2xl: 24px;
-      --text-3xl: 30px;
-      --text-4xl: 36px;
-      --text-5xl: 48px;
+      --text-xl: 19px;
+      --text-2xl: 22px;
+      --text-3xl: 26px;
+      --text-4xl: 30px;
+      --text-5xl: 36px;
     }
   }
 
@@ -259,10 +259,31 @@ html {
     font-family: var(--user-font-family);
   }
 
-  /* Role specific utilities and elements */
+  /* Role specific utilities and elements with Persian Typography Standards */
   .font-display,
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-display);
+  }
+
+  h1 {
+    font-weight: 800;
+    line-height: var(--leading-snug);
+    letter-spacing: -0.015em;
+  }
+
+  h2 {
+    font-weight: 700;
+    line-height: var(--leading-snug);
+    letter-spacing: -0.01em;
+  }
+
+  h3, h4 {
+    font-weight: 700;
+    line-height: var(--leading-normal);
+  }
+
+  p {
+    line-height: var(--leading-relaxed);
   }
 
   .font-ui {
@@ -556,13 +577,50 @@ html {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Inner Surface (Sunken) */
+/* Inner Surface (Inputs, Sockets & Sub-Panels) */
 .clay-surface, .clay-surface-inset {
   background: var(--input-bg);
   color: var(--text-main);
   border-radius: var(--radius-input);
+  transition: all 0.25s ease;
+}
+
+/* Restrict inset shadow strictly to interactive inputs and debossed sockets (Prevents "چاله در چاله" on layout containers) */
+input.clay-surface,
+textarea.clay-surface,
+select.clay-surface,
+input.clay-surface-inset,
+textarea.clay-surface-inset,
+.clay-input,
+.clay-input-box,
+.clay-debossed-socket {
   box-shadow: var(--clay-shadow-in);
-  transition: all 0.3s ease;
+}
+
+/* Layout containers using clay-surface receive a soft clean surface tint without a sunken crater shadow */
+div.clay-surface,
+section.clay-surface,
+article.clay-surface,
+form.clay-surface,
+div.clay-surface-inset,
+form.clay-surface-inset,
+table.clay-surface {
+  box-shadow: none;
+  border: 1px solid var(--card-border);
+}
+
+/* Sub-Card / Grouped Panel (Clean, Matte, Zero Crater) */
+.clay-subcard, .clay-panel {
+  background: rgba(0, 0, 0, 0.03);
+  color: var(--text-main);
+  border-radius: var(--radius-card);
+  border: 1px solid var(--card-border);
+  box-shadow: none;
+  transition: all 0.25s ease;
+}
+.dark .clay-subcard, .dark .clay-panel, [data-theme="dark"] .clay-subcard, [data-theme="dark"] .clay-panel {
+  background: rgba(0, 0, 0, 0.22);
+  border: 1px solid rgba(255, 255, 255, 0.04);
 }
 
 /* Modals (Claymorphic 3D Elevated Dialog) */
@@ -2201,8 +2259,8 @@ html[data-ui-style="neumorphic"],
     --clay-shadow-out:       5px 5px 14px rgba(0, 0, 0, 0.55), -3px -3px 6px rgba(255, 255, 255, 0);
     --clay-shadow-out-sm:    3px 3px 8px  rgba(0, 0, 0, 0.45), -1px -1px 3px rgba(255, 255, 255, 0);
     --clay-shadow-out-hover: 8px 8px 18px rgba(0, 0, 0, 0.7), -4px -4px 8px rgba(255, 255, 255, 0);
-    --clay-shadow-in:        inset 4px 4px 8px rgba(0, 0, 0, 0.5), inset -2px -2px 4px rgba(255, 255, 255, 0);
-    --clay-shadow-in-deep:   inset 6px 6px 12px #14151e, inset -6px -6px 12px #20222a;
+    --clay-shadow-in:        inset 2.5px 2.5px 5px rgba(0, 0, 0, 0.45), inset -1px -1px 2px rgba(255, 255, 255, 0.02);
+    --clay-shadow-in-deep:   inset 4px 4px 8px rgba(0, 0, 0, 0.6), inset -1px -1px 2px rgba(255, 255, 255, 0.03);
 
     --border-subtle: transparent;
     --border-strong: transparent;
@@ -2327,15 +2385,60 @@ html.dark[data-ui-style="neumorphic"] .clay-icon {
     border: 1px solid rgba(255, 255, 255, 0.01) !important;
   }
   
-  html[data-ui-style="neumorphic"] .clay-inset-thick,
-  html[data-ui-style="neumorphic"] .dark .clay-inset-thick,
-  html.dark[data-ui-style="neumorphic"] .clay-inset-thick,
+  /* Neumorphic Strict Anti-Crater Rule (Eliminates "چاله در چاله" on layout containers) */
+  html[data-ui-style="neumorphic"] div.clay-surface,
+  html[data-ui-style="neumorphic"] div.clay-surface-inset,
+  html[data-ui-style="neumorphic"] form.clay-surface,
+  html[data-ui-style="neumorphic"] form.clay-surface-inset,
+  html[data-ui-style="neumorphic"] table.clay-surface,
+  html[data-ui-style="neumorphic"] tr.clay-surface,
+  html[data-ui-style="neumorphic"] section.clay-surface,
+  html.dark[data-ui-style="neumorphic"] div.clay-surface,
+  html.dark[data-ui-style="neumorphic"] div.clay-surface-inset,
+  html.dark[data-ui-style="neumorphic"] form.clay-surface,
+  html.dark[data-ui-style="neumorphic"] form.clay-surface-inset,
+  html.dark[data-ui-style="neumorphic"] table.clay-surface,
+  html.dark[data-ui-style="neumorphic"] tr.clay-surface,
+  html.dark[data-ui-style="neumorphic"] section.clay-surface,
+  html[data-ui-style="neumorphic"] .clay-subcard,
+  html.dark[data-ui-style="neumorphic"] .clay-subcard {
+    box-shadow: none !important;
+    background: rgba(0, 0, 0, 0.03) !important;
+    border: 1px solid rgba(0, 0, 0, 0.05) !important;
+  }
+
+  html.dark[data-ui-style="neumorphic"] div.clay-surface,
+  html.dark[data-ui-style="neumorphic"] div.clay-surface-inset,
+  html.dark[data-ui-style="neumorphic"] form.clay-surface,
+  html.dark[data-ui-style="neumorphic"] form.clay-surface-inset,
+  html.dark[data-ui-style="neumorphic"] table.clay-surface,
+  html.dark[data-ui-style="neumorphic"] tr.clay-surface,
+  html.dark[data-ui-style="neumorphic"] section.clay-surface,
+  html.dark[data-ui-style="neumorphic"] .clay-subcard {
+    background: rgba(255, 255, 255, 0.02) !important;
+    border: 1px solid rgba(255, 255, 255, 0.03) !important;
+  }
+
+  /* In Neumorphic mode, only real interactive inputs and debossed sockets receive the indented slot shadow */
+  html[data-ui-style="neumorphic"] input.clay-surface,
+  html[data-ui-style="neumorphic"] textarea.clay-surface,
+  html[data-ui-style="neumorphic"] select.clay-surface,
+  html[data-ui-style="neumorphic"] input.clay-surface-inset,
+  html[data-ui-style="neumorphic"] textarea.clay-surface-inset,
+  html[data-ui-style="neumorphic"] .clay-input,
+  html[data-ui-style="neumorphic"] .clay-input-box,
   html[data-ui-style="neumorphic"] .clay-debossed-socket,
-  html[data-ui-style="neumorphic"] .dark .clay-debossed-socket,
+  html.dark[data-ui-style="neumorphic"] input.clay-surface,
+  html.dark[data-ui-style="neumorphic"] textarea.clay-surface,
+  html.dark[data-ui-style="neumorphic"] select.clay-surface,
+  html.dark[data-ui-style="neumorphic"] input.clay-surface-inset,
+  html.dark[data-ui-style="neumorphic"] textarea.clay-surface-inset,
+  html.dark[data-ui-style="neumorphic"] .clay-input,
+  html.dark[data-ui-style="neumorphic"] .clay-input-box,
   html.dark[data-ui-style="neumorphic"] .clay-debossed-socket {
-    background: var(--input-bg);
-    box-shadow: var(--clay-shadow-in);
-    border: none;
+    box-shadow: var(--clay-shadow-in) !important;
+    background: var(--input-bg) !important;
+    border: none !important;
   }
   
   /* Hero Marquee Model Chips in Neumorphic Mode */

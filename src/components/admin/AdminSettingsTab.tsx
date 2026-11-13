@@ -448,7 +448,7 @@ export const AdminSettingsTab: React.FC = () => {
 
         {/* Profile Form */}
         {isAddingProfile && (
-          <form onSubmit={handleSaveProfile} className="p-5 rounded-2xl clay-surface-inset space-y-4 animate-fadeIn">
+          <form onSubmit={handleSaveProfile} className="p-5 rounded-2xl clay-subcard space-y-4 animate-fadeIn">
             <h5 className="font-bold text-sm text-[var(--text-main)]">
               {editingProfileId ? `ویرایش کارت مدل [${editingProfileId}]` : 'تعریف کارت مدل جدید'}
             </h5>
@@ -555,7 +555,7 @@ export const AdminSettingsTab: React.FC = () => {
         )}
 
         {/* Profiles Table */}
-        <div className="overflow-x-auto rounded-xl clay-surface-inset">
+        <div className="overflow-x-auto rounded-xl clay-subcard">
           <table className="w-full text-xs text-right">
             <thead>
               <tr className="border-b border-[var(--card-border)] clay-surface text-[11px] font-black text-[var(--text-muted)]">
@@ -651,7 +651,7 @@ export const AdminSettingsTab: React.FC = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Zarinpal Card */}
-          <div className="p-5 rounded-2xl clay-surface space-y-4">
+          <div className="p-5 rounded-2xl clay-subcard space-y-4">
             <div className="flex items-center justify-between pb-3 border-b border-[var(--card-border)]">
               <span className="font-black text-sm text-[var(--text-main)]">درگاه زرین‌پال (شاپرک)</span>
               <label className="flex items-center gap-2 cursor-pointer select-none text-xs font-bold">
@@ -729,7 +729,7 @@ export const AdminSettingsTab: React.FC = () => {
           </div>
 
           {/* BazaarPay Card */}
-          <div className="p-5 rounded-2xl clay-surface space-y-4">
+          <div className="p-5 rounded-2xl clay-subcard space-y-4">
             <div className="flex items-center justify-between pb-3 border-b border-[var(--card-border)]">
               <span className="font-black text-sm text-[var(--text-main)]">درگاه بازارپی (کافه‌بازار)</span>
               <label className="flex items-center gap-2 cursor-pointer select-none text-xs font-bold">
@@ -826,7 +826,7 @@ export const AdminSettingsTab: React.FC = () => {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {/* Selling Rate */}
-          <div className="p-4 rounded-xl clay-surface space-y-2">
+          <div className="p-4 rounded-xl clay-subcard space-y-2">
             <label className="text-xs font-bold text-[var(--text-main)]">نرخ فروش هر دلار به تومان</label>
             <input
               type="text"
@@ -845,7 +845,7 @@ export const AdminSettingsTab: React.FC = () => {
           </div>
 
           {/* Welcome Bonus */}
-          <div className="p-4 rounded-xl clay-surface space-y-2">
+          <div className="p-4 rounded-xl clay-subcard space-y-2">
             <div className="flex items-center justify-between">
               <label className="text-xs font-bold text-[var(--text-main)]">هدیه ثبت‌نام (تومان)</label>
               <input
@@ -875,7 +875,7 @@ export const AdminSettingsTab: React.FC = () => {
           </div>
 
           {/* Guest Message Quota */}
-          <div className="p-4 rounded-xl clay-surface space-y-2">
+          <div className="p-4 rounded-xl clay-subcard space-y-2">
             <label className="text-xs font-bold text-[var(--text-main)]">سهمیه پیام رایگان مهمان (پیام)</label>
             <input
               type="text"
@@ -894,7 +894,7 @@ export const AdminSettingsTab: React.FC = () => {
           </div>
 
           {/* Daily Image Quota */}
-          <div className="p-4 rounded-xl clay-surface space-y-2">
+          <div className="p-4 rounded-xl clay-subcard space-y-2">
             <label className="text-xs font-bold text-[var(--text-main)]">سقف روزانه تصاویر استودیو (تصویر)</label>
             <input
               type="text"
@@ -913,7 +913,7 @@ export const AdminSettingsTab: React.FC = () => {
           </div>
 
           {/* News Cron Auto Publish */}
-          <div className="p-4 rounded-xl clay-surface space-y-2">
+          <div className="p-4 rounded-xl clay-subcard space-y-2">
             <div className="flex items-center justify-between">
               <label className="text-xs font-bold text-[var(--text-main)]">انتشار خودکار اخبار از RSS</label>
               <input

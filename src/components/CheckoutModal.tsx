@@ -262,7 +262,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ product, isOpen, o
  </div>
 
  {/* Sticky Modal Footer - Always 100% visible on any screen height! */}
- <div className="p-4 sm:p-5 pt-3 border-t border-[var(--card-border)] clay-surface backdrop-blur-md shrink-0 flex flex-col gap-2">
+ <div className="p-4 sm:p-5 pt-3 border-t border-[var(--card-border)] bg-[var(--card-bg)] backdrop-blur-md shrink-0 flex flex-col gap-2">
  {(paymentMethod === 'online' || isBazaar) ? (
  <button onClick={handleCheckout}
  disabled={loading}

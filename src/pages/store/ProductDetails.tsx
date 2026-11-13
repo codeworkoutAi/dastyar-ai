@@ -440,7 +440,7 @@ export function ProductDetails() {
                   {parsedFaqs.map((faq: any, idx: number) => (
                     <div 
                       key={idx} 
-                      className={`clay-surface-inset rounded-xl overflow-hidden border border-[var(--card-border)] transition-all duration-300 ${activeFaq === idx ? 'border-[var(--color-accent-primary)]/30' : ''}`}
+                      className={`clay-subcard rounded-xl overflow-hidden border border-[var(--card-border)] transition-all duration-300 ${activeFaq === idx ? 'border-[var(--color-accent-primary)]/30' : ''}`}
                     >
                       <button 
                         onClick={() => setActiveFaq(activeFaq === idx ? null : idx)}
@@ -481,7 +481,7 @@ export function ProductDetails() {
               </div>
 
               {/* Review Form */}
-              <div className="clay-surface p-5 sm:p-6 rounded-2xl border border-[var(--card-border)] space-y-4">
+              <div className="clay-subcard p-5 sm:p-6 rounded-2xl border border-[var(--card-border)] space-y-4">
                 <h4 className="font-bold text-sm text-[var(--text-main)]">ثبت دیدگاه یا تجربه شما درباره این محصول</h4>
                 
                 {user ? (
@@ -552,7 +552,7 @@ export function ProductDetails() {
               <div className="space-y-4">
                 {reviews.length > 0 ? (
                   reviews.map((rev) => (
-                    <div key={rev.id} className="clay-surface p-4 sm:p-5 rounded-2xl border border-[var(--card-border)] space-y-3">
+                    <div key={rev.id} className="clay-subcard p-4 sm:p-5 rounded-2xl border border-[var(--card-border)] space-y-3">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           <div className="w-8 h-8 rounded-full bg-[var(--color-accent-primary)]/10 text-[var(--color-accent-primary)] flex items-center justify-center font-bold text-xs">
