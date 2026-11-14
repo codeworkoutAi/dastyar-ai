@@ -39,6 +39,30 @@ export function getWalletTopupProductId(): number {
   }
 }
 
+export function notifyAdminWalletTopup(orderId: string, userId: number, amount: number, method: string, refId?: string) {
+  try {
+    const adminId = process.env.TELEGRAM_ADMIN_ID;
+    if (adminId && bot) {
+      const user = db.prepare('SELECT email, phone, name FROM users WHERE id = ?').get(userId) as any;
+      const userIdentifier = user?.name || user?.phone || user?.email || `کاربر #${userId}`;
+      const amountToman = Number(amount).toLocaleString('fa-IR');
+      const msg = 
+        `💰 <b>شارژ موفق کیف پول کاربر</b>\n\n` +
+        `👤 <b>کاربر:</b> ${userIdentifier}\n` +
+        `💵 <b>مبلغ شارژ:</b> ${amountToman} تومان\n` +
+        `🔢 <b>شناسه سفارش:</b> <code>${orderId}</code>\n` +
+        `💳 <b>روش پرداخت:</b> ${method}\n` +
+        (refId ? `🧾 <b>کد رهگیری:</b> <code>${refId}</code>\n` : '') +
+        `\n✅ کیف پول کاربر به صورت آنی شارژ شد و نیاز به اقدام یا لایسنس ندارد.`;
+      bot.telegram.sendMessage(adminId, msg, { parse_mode: 'HTML' }).catch((e) => {
+        console.error('[Store] Failed to notify admin of wallet topup:', e);
+      });
+    }
+  } catch (err) {
+    console.error('[Store] notifyAdminWalletTopup error:', err);
+  }
+}
+
 const checkoutLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 20, // Limit each IP to 20 checkout requests per window
@@ -528,6 +552,7 @@ router.get('/mock-callback', async (req: any, res) => {
         db.prepare("UPDATE orders SET paymentStatus = 'success', paymentMethod = ?, refId = ? WHERE id = ?").run(payMethod, refId, orderId);
         depositWallet(order.userId, creditAmount, desc);
         syncDatabase();
+        notifyAdminWalletTopup(orderId, order.userId, creditAmount, gateway === 'bazaarpay' ? 'بازارپی' : 'درگاه پرداخت آنلاین', refId);
         if (gateway === 'bazaarpay') {
           return res.redirect(`/?payment=success&orderId=${orderId}&refId=${refId}&amount=${creditAmount}`);
         }
@@ -630,6 +655,7 @@ router.get('/zarinpal/callback', async (req, res) => {
 
         depositWallet(order.userId, creditAmount, desc);
         syncDatabase();
+        notifyAdminWalletTopup(orderId, order.userId, creditAmount, 'زرین‌پال (شاپرک)', refId);
 
         // Telegram delivery notification
         try {
@@ -767,6 +793,7 @@ router.get('/bazaarpay/callback', async (req: any, res) => {
 
         depositWallet(order.userId, creditAmount, desc);
         syncDatabase();
+        notifyAdminWalletTopup(orderId, order.userId, creditAmount, 'بازارپی', refId);
 
         // Telegram delivery notification
         try {

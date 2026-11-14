@@ -50,6 +50,22 @@ router.post('/admin/trigger', requireAuth, requireAdmin, async (req, res) => {
   }
 });
 
+// POST /api/news/admin/generate-guide (Admin: Generate AI Educational Guide)
+router.post('/admin/generate-guide', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const { topic } = req.body || {};
+    const { generateEducationalGuide } = await import('../services/guideGenerator');
+    const result = await generateEducationalGuide(topic);
+    res.json({
+      success: true,
+      guide: result
+    });
+  } catch (error: any) {
+    console.error('[News API] Error generating educational guide:', error);
+    res.status(500).json({ error: error?.message || 'خطا در تولید مقاله هوشمند' });
+  }
+});
+
 // GET /api/news (Public: List all news)
 router.get('/', (req, res) => {
   try {

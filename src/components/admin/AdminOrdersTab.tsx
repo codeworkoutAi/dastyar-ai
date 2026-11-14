@@ -31,6 +31,13 @@ interface OrderItem {
   createdAt: string;
 }
 
+const isWalletTopupOrder = (o: { id: string; productCategory?: string; productTitle?: string }) => {
+  return o.id.startsWith('TOP-') || 
+    o.productCategory === 'wallet_topup' || 
+    o.productCategory === 'plan' ||
+    Boolean(o.productTitle && o.productTitle.includes('کیف پول'));
+};
+
 export const AdminOrdersTab: React.FC = () => {
   const { token } = useAuthStore();
   const { settings } = useSettingsStore();
@@ -442,8 +449,11 @@ export const AdminOrdersTab: React.FC = () => {
                             {copiedKey === `lic-${o.id}` ? <Check size={12} className="text-emerald-500" /> : <Copy size={12} />}
                           </button>
                         </div>
-                      ) : o.productCategory === 'plan' ? (
-                        <span className="text-[10px] text-emerald-500 font-bold">شارژ مستقیم کیف‌پول</span>
+                      ) : isWalletTopupOrder(o) ? (
+                        <span className="inline-flex items-center gap-1 text-[11px] text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full whitespace-nowrap">
+                          <CheckCircle2 size={11} className="text-emerald-500" />
+                          شارژ مستقیم کیف‌پول
+                        </span>
                       ) : (
                         <span className="text-[10px] text-[var(--text-dim)]">تخصیص‌نیافته</span>
                       )}
@@ -585,11 +595,21 @@ export const AdminOrdersTab: React.FC = () => {
                 <div className="flex items-center justify-between">
                   <span className="font-bold text-[var(--text-main)] flex items-center gap-1.5">
                     <Key size={14} className="text-[var(--color-accent-primary)]" />
-                    لایسنس یا دسترسی تحویل‌شده:
+                    نوع تحویل و وضعیت لایسنس:
                   </span>
                 </div>
 
-                {selectedOrder.licenseKey ? (
+                {isWalletTopupOrder(selectedOrder) ? (
+                  <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 space-y-2">
+                    <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 font-bold text-xs sm:text-sm">
+                      <CheckCircle2 size={16} />
+                      <span>شارژ مستقیم و خودکار کیف پول (بدون نیاز به لایسنس)</span>
+                    </div>
+                    <p className="text-[11px] text-[#525d75] dark:text-[#9aa5bc] leading-relaxed">
+                      این سفارش مربوط به شارژ نقدی کیف پول حساب کاربری است. با پرداخت موفق، اعتبار مستقیماً به موجودی کیف پول کاربر اضافه شده و نیازی به صدور، تخصیص یا ارسال کلید لایسنس ندارد.
+                    </p>
+                  </div>
+                ) : selectedOrder.licenseKey ? (
                   <div className="flex items-center justify-between p-3 rounded-xl clay-card">
                     <span className="font-mono text-xs font-bold text-[var(--color-accent-primary)] select-all" dir="ltr">
                       {selectedOrder.licenseKey}

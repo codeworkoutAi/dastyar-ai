@@ -110,6 +110,11 @@ export function startTelegramBot() {
     const tgId = ctx.from.id.toString();
     const name = ctx.from.first_name || 'کاربر';
 
+    // Reset support/other interactive state on start
+    try {
+      db.prepare("UPDATE users SET botState = 'normal' WHERE telegramId = ?").run(tgId);
+    } catch (e) { }
+
     // Check if start payload is for Web Login confirmation
     const payload = (ctx as any).payload || (ctx.message && 'text' in ctx.message ? (ctx.message.text as string).split(' ')[1] : '') || '';
     if (payload && payload.startsWith('auth_')) {
@@ -322,8 +327,32 @@ export function startTelegramBot() {
     });
   });
 
+  const getMainMenuMarkup = () => ({
+    keyboard: [
+      [{ text: '🛍 محصولات هوش مصنوعی' }, { text: '💬 چت با هوش مصنوعی' }],
+      [{ text: '🌐 فروشگاه وب‌سایت' }, { text: '📰 وبلاگ و آموزش‌ها' }],
+      [{ text: '📢 عضویت در کانال ما' }, { text: '☎️ ارتباط با پشتیبانی' }]
+    ],
+    resize_keyboard: true
+  });
+
   bot.hears('💬 چت با هوش مصنوعی', (ctx) => {
-    ctx.reply('برای استفاده از چت هوشمند، باید لایسنس فعال داشته باشید. از بخش "فروشگاه" یک لایسنس تهیه کنید.');
+    const webUrl = getWebsiteUrl();
+    ctx.reply(
+      `💬 <b>چت با دستیار هوشمند Dastyar AI</b>\n\n` +
+      `شما می‌توانید در وب‌سایت به صورت مستقیم با هوش مصنوعی گفتگو کنید، برنامه‌نویسی کنید و فایل‌ها و اسناد خود را تحلیل نمایید.\n\n` +
+      `✨ <b>چت برای همه کاربران ثبت‌نامی کاملاً نامحدود و رایگان است!</b>\n` +
+      `کاربران مهمان نیز می‌توانند تا ۱۵ پیام رایگان چت کنند.\n\n` +
+      `👇 برای شروع روی دکمه زیر کلیک کنید:`,
+      {
+        parse_mode: 'HTML',
+        reply_markup: {
+          inline_keyboard: [
+            [{ text: '🚀 شروع چت هوشمند در وب‌سایت', url: `${webUrl}/chat` }]
+          ]
+        }
+      }
+    );
   });
 
   bot.hears('☎️ ارتباط با پشتیبانی', (ctx) => {
@@ -333,23 +362,24 @@ export function startTelegramBot() {
       db.prepare("UPDATE users SET botState = 'support' WHERE telegramId = ?").run(tgId);
     } catch (e) { }
     ctx.reply(
-      `${RLM}🎧 **ارتباط با پشتیبانی**\n\n` +
+      `${RLM}🎧 **ارتباط مستقیم با پشتیبانی**\n\n` +
       `${RLM}شما به بخش پشتیبانی متصل شدید. لطفاً سوال یا مشکل خود را به صورت پیام متنی، صوتی و یا تصویر ارسال کنید.\n` +
-      `${RLM}مدیریت در اسرع وقت پاسخگوی شما خواهد بود.\n\n` +
-      `${RLM}برای خروج از حالت پشتیبانی، روی دکمه زیر کلیک کنید.`,
+      `${RLM}پیام‌های ارسالی شما مستقیماً به مدیریت تحویل داده خواهد شد.\n\n` +
+      `${RLM}⚠️ **برای پایان گفتگو و بازگشت به منوی ربات، هر زمان می‌توانید روی «❌ پایان پشتیبانی» کلیک کنید.**`,
       {
         parse_mode: 'Markdown',
         reply_markup: {
           keyboard: [
             [{ text: '❌ پایان پشتیبانی' }]
           ],
-          resize_keyboard: true
+          resize_keyboard: true,
+          is_persistent: true
         }
       }
     );
   });
 
-  bot.hears('❌ پایان پشتیبانی', (ctx) => {
+  const handleExitSupport = async (ctx: any) => {
     const tgId = ctx.from?.id.toString();
     if (tgId) {
       try {
@@ -357,15 +387,26 @@ export function startTelegramBot() {
       } catch (e) { }
     }
 
-    ctx.reply('شما از حالت پشتیبانی خارج شدید. چطور می‌توانم کمکتان کنم؟', {
-      reply_markup: {
-        keyboard: [
-          [{ text: '🛍 محصولات هوش مصنوعی' }, { text: '💬 چت با هوش مصنوعی' }],
-          [{ text: '🌐 فروشگاه وب‌سایت' }, { text: '📰 وبلاگ و آموزش‌ها' }],
-          [{ text: '📢 عضویت در کانال ما' }, { text: '☎️ ارتباط با پشتیبانی' }]
-        ],
-        resize_keyboard: true
-      }
+    await ctx.reply('✅ از حالت پشتیبانی خارج شدید. چطور می‌توانم کمکتان کنم؟', {
+      reply_markup: getMainMenuMarkup()
+    });
+  };
+
+  bot.hears(['❌ پایان پشتیبانی', 'پایان پشتیبانی', 'پایان', 'خروج'], handleExitSupport);
+  bot.command(['cancel', 'end', 'exit', 'stop'], handleExitSupport);
+
+  bot.action('end_support', async (ctx) => {
+    const tgId = ctx.from?.id.toString();
+    if (tgId) {
+      try {
+        db.prepare("UPDATE users SET botState = 'normal' WHERE telegramId = ?").run(tgId);
+      } catch (e) { }
+    }
+    try {
+      await ctx.answerCbQuery('گفتگو با پشتیبانی پایان یافت.');
+    } catch (e) { }
+    await ctx.reply('✅ از حالت پشتیبانی خارج شدید و به منوی اصلی بازگشتید.', {
+      reply_markup: getMainMenuMarkup()
     });
   });
 
@@ -803,6 +844,17 @@ export function startTelegramBot() {
     } catch (e) { }
 
     if (isSupport) {
+      const textMsg = ((ctx.message as any)?.text || '').trim();
+      const exitWords = ['❌ پایان پشتیبانی', 'پایان پشتیبانی', 'پایان', 'خروج', '/cancel', '/end', '/exit', '/stop'];
+      if (exitWords.includes(textMsg)) {
+        try {
+          db.prepare("UPDATE users SET botState = 'normal' WHERE telegramId = ?").run(tgId);
+        } catch (e) { }
+        return ctx.reply('✅ از حالت پشتیبانی خارج شدید. چطور می‌توانم کمکتان کنم؟', {
+          reply_markup: getMainMenuMarkup()
+        });
+      }
+
       const ADMIN_ID = process.env.TELEGRAM_ADMIN_ID || '';
       if (!ADMIN_ID) {
         return ctx.reply('سیستم پشتیبانی در حال حاضر فعال نیست.');
@@ -815,7 +867,18 @@ export function startTelegramBot() {
         adminMessageMap.set(header.message_id, tgId);
         adminMessageMap.set(forwarded.message_id, tgId);
 
-        return ctx.reply('✅ پیام شما برای مدیریت ارسال شد. منتظر پاسخ بمانید.');
+        return ctx.reply(
+          '✅ **پیام شما برای مدیریت ارسال شد.**\n' +
+          'منتظر پاسخ مدیریت بمانید. هر زمان که مایل بودید می‌توانید با دکمه زیر به منوی اصلی بازگردید:',
+          {
+            parse_mode: 'Markdown',
+            reply_markup: {
+              inline_keyboard: [
+                [{ text: '❌ پایان پشتیبانی و بازگشت به منو', callback_data: 'end_support' }]
+              ]
+            }
+          }
+        );
       } catch (err) {
         console.error('[Telegram] Failed to forward support message:', err);
         return ctx.reply('❌ خطا در ارتباط با سیستم پشتیبانی.');
@@ -951,7 +1014,13 @@ export async function sendTelegramOrderSuccess(orderId: string, licenseId: numbe
           msg += `💡 <i>این لایسنس برای شما ثبت شده و در صورت نیاز از طریق وب‌سایت در بخش «ردیم کد» نیز قابل استفاده است.</i>`;
         }
       } else {
-        msg += `${RLM}✅ سفارش شما تایید و فعال شد.\n\n`;
+        const isTopup = orderInfo.id?.startsWith('TOP-') || orderInfo.productCategory === 'wallet_topup' || orderInfo.productCategory === 'plan';
+        if (isTopup) {
+          msg += `${RLM}💰 <b>موجودی کیف پول شما با موفقیت شارژ شد!</b>\n` +
+                 `اعتبار افزوده شده هم‌اکنون در حساب کاربری شما فعال و آماده استفاده در محیط چت است.\n\n`;
+        } else {
+          msg += `${RLM}✅ سفارش شما تایید و فعال شد.\n\n`;
+        }
         if (orderInfo.deliveryGuide) {
           msg += `${RLM}📖 <b>راهنمای تحویل:</b>\n${orderInfo.deliveryGuide}\n\n`;
         }

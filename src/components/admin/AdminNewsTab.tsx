@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Plus, Edit2, Trash2, RefreshCw, Send, AlertCircle, CheckCircle2, 
-  X, Image as ImageIcon, Sparkles, ExternalLink, Search, Clock, FileText
+  X, Image as ImageIcon, Sparkles, ExternalLink, Search, Clock, FileText, Wand2, Lightbulb
 } from 'lucide-react';
 import { AddSquareOutlineIcon, BoxLinearIcon } from '@solar-icons/react';
 import { useAuthStore } from '../../store/authStore';
@@ -36,6 +36,48 @@ export const AdminNewsTab: React.FC = () => {
   const [tags, setTags] = useState('news, ai');
   const [rebroadcastTelegram, setRebroadcastTelegram] = useState(false);
   const [saveLoading, setSaveLoading] = useState(false);
+
+  // AI Educational Guide Generator state
+  const [guideTopic, setGuideTopic] = useState('');
+  const [guideLoading, setGuideLoading] = useState(false);
+
+  const GUIDE_IDEAS = [
+    '۵ ترفند شگفت‌انگیز اکسل با هوش مصنوعی',
+    'راهنمای گام‌به‌گام نوشتن رزومه حرفه‌ای',
+    'پرامپت‌نویسی دقیق برای کارهای روزمره',
+    'یادگیری مکالمه زبان انگلیسی با هوش مصنوعی',
+    'خلاصه‌سازی اسناد و کتاب‌های طولانی',
+    'برنامه‌ریزی هفتگی و افزایش بهره‌وری فردی'
+  ];
+
+  const handleGenerateGuide = async (topicToUse?: string) => {
+    const topic = topicToUse !== undefined ? topicToUse : guideTopic;
+    try {
+      setGuideLoading(true);
+      setIsAdding(true);
+      const res = await fetch('/api/news/admin/generate-guide', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ topic: topic.trim() || undefined })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'خطا در تولید مقاله');
+      
+      const g = data.guide;
+      setTitle(g.title);
+      setContent(g.content);
+      setTags(Array.isArray(g.tags) ? g.tags.join(', ') : g.tags);
+      if (g.image) setImage(g.image);
+      showFeedback(`مقاله آموزشی «${g.title}» با موفقیت تولید و در فرم درج شد. می‌توانید بررسی و منتشر کنید.`, 'success');
+    } catch (err: any) {
+      showFeedback(err.message || 'خطا در تولید مقاله هوشمند', 'error');
+    } finally {
+      setGuideLoading(false);
+    }
+  };
 
   useEffect(() => {
     fetchNews();
@@ -221,6 +263,16 @@ export const AdminNewsTab: React.FC = () => {
 
         <div className="flex flex-wrap items-center gap-2">
           <button
+            onClick={() => handleGenerateGuide()}
+            disabled={guideLoading}
+            className="flex items-center gap-1.5 px-4 py-2.5 clay-btn font-bold text-xs rounded-xl transition-all text-purple-600 dark:text-purple-400 hover:scale-105 active:scale-95"
+            title="تولید فوری یک مقاله آموزشی و کاربردی هوش مصنوعی"
+          >
+            <Wand2 className={`w-3.5 h-3.5 ${guideLoading ? 'animate-spin' : ''}`} />
+            <span>{guideLoading ? 'در حال نگارش هوشمند...' : '✨ تولید مقاله هوشمند با AI'}</span>
+          </button>
+
+          <button
             onClick={handleTriggerCron}
             disabled={triggerLoading}
             className="flex items-center gap-1.5 px-4 py-2.5 clay-btn font-bold text-xs rounded-xl transition-all"
@@ -262,6 +314,66 @@ export const AdminNewsTab: React.FC = () => {
             <button onClick={resetForm} className="p-1.5 clay-btn rounded-lg text-[var(--text-dim)]">
               <X size={16} />
             </button>
+          </div>
+
+          {/* AI Educational Guide Generator Panel */}
+          <div className="mb-6 p-4 rounded-2xl bg-gradient-to-l from-purple-500/10 via-indigo-500/10 to-blue-500/10 border border-purple-500/20 space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Wand2 className="w-4 h-4 text-purple-500" />
+                <span className="text-xs font-black text-[var(--text-main)]">
+                  دستیار هوشمند نگارش مقالات آموزشی و ترفندهای کاربردی
+                </span>
+              </div>
+              <span className="text-[10px] font-bold text-purple-600 dark:text-purple-400 bg-purple-500/10 px-2 py-0.5 rounded-full">
+                نگارش محاوره‌ای و روان
+              </span>
+            </div>
+
+            <p className="text-[11px] text-[var(--text-muted)] leading-relaxed">
+              تولید مقالات آموزشی عمیق و خواندنی درباره نحوه استفاده از هوش مصنوعی در زندگی روزمره، مهارت‌های فردی، اکسل، رزومه و پرامپت‌های آماده:
+            </p>
+
+            <div className="flex flex-col sm:flex-row gap-2">
+              <input
+                type="text"
+                value={guideTopic}
+                onChange={(e) => setGuideTopic(e.target.value)}
+                placeholder="موضوع دلخواه خود را بنویسید (یا از پیشنهادهای زیر انتخاب کنید)..."
+                className="flex-1 px-3.5 py-2 rounded-xl clay-surface text-xs outline-none font-bold"
+              />
+              <button
+                type="button"
+                onClick={() => handleGenerateGuide()}
+                disabled={guideLoading}
+                className="flex items-center justify-center gap-1.5 px-5 py-2 clay-btn-primary rounded-xl font-bold text-xs text-white disabled:opacity-50 shrink-0"
+              >
+                <Sparkles className={`w-3.5 h-3.5 ${guideLoading ? 'animate-spin' : ''}`} />
+                <span>{guideLoading ? 'در حال تولید مقاله...' : 'تولید مقاله با AI'}</span>
+              </button>
+            </div>
+
+            {/* Quick Idea Pills */}
+            <div className="flex items-center gap-1.5 flex-wrap pt-1">
+              <span className="text-[10px] text-[var(--text-dim)] flex items-center gap-1 shrink-0">
+                <Lightbulb size={12} className="text-amber-500" />
+                ایده‌های پیشنهادی:
+              </span>
+              {GUIDE_IDEAS.map((idea) => (
+                <button
+                  key={idea}
+                  type="button"
+                  onClick={() => {
+                    setGuideTopic(idea);
+                    handleGenerateGuide(idea);
+                  }}
+                  disabled={guideLoading}
+                  className="text-[10px] px-2.5 py-1 rounded-lg clay-surface hover:text-purple-500 hover:border-purple-500/30 transition-all font-bold cursor-pointer disabled:opacity-50"
+                >
+                  {idea}
+                </button>
+              ))}
+            </div>
           </div>
 
           <form onSubmit={handleSaveArticle} className="space-y-4">

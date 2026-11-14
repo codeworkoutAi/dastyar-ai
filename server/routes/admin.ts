@@ -496,8 +496,13 @@ router.put('/orders/:id/status', (req, res) => {
     let licenseId = order.licenseId;
     let warning: string | null = null;
 
+    const isWalletTopupOrder = 
+      order.id.startsWith('TOP-') || 
+      order.productCategory === 'wallet_topup' || 
+      order.productCategory === 'plan';
+
     if (status === 'success') {
-      if (order.productCategory === 'plan') {
+      if (isWalletTopupOrder) {
         // Guard against double-crediting. depositWallet() credits the balance and
         // writes its own transaction row; the `UPDATE orders` below is a separate
         // statement. If anything failed between them, the order stayed 'pending'
@@ -507,8 +512,13 @@ router.put('/orders/:id/status', (req, res) => {
         // only the license/delivery fields may still need fixing.
         if (order.paymentStatus !== 'success') {
           const product = db.prepare('SELECT * FROM products WHERE id = ?').get(order.productId) as any;
-          const creditAmount = getPlanCreditAmount(product);
-          depositWallet(order.userId, creditAmount, `تایید سفارش ${product?.title || 'بسته تعرفه'} توسط مدیریت - سفارش ${id}`);
+          const creditAmount = order.productCategory === 'plan'
+            ? getPlanCreditAmount(product)
+            : order.amount;
+          const desc = order.productCategory === 'plan'
+            ? `تایید سفارش ${product?.title || 'بسته تعرفه'} توسط مدیریت - سفارش ${id}`
+            : `شارژ کیف پول - تایید سفارش ${id} توسط مدیریت`;
+          depositWallet(order.userId, creditAmount, desc);
         } else {
           warning = 'این سفارش قبلاً تایید شده بود؛ اعتبار کاربر دوباره واریز نشد. در صورت نیاز به بررسی، تراکنش‌های کیف پول کاربر را مشاهده کنید.';
         }
