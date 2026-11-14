@@ -1,6 +1,6 @@
 import express from 'express';
 import db from '../db/database';
-import { isSafeBaseUrl, getGeminiClient, extractCleanErrorMessage, sanitizeErrorMessage, formatContentsForGemini, sleep, getPollinationsImageUrl, translateAndEnhanceImagePrompt, normalizeBaseUrl, parseCustomHeaders, getGeminiKeyFromPool, blacklistKey } from '../services/utils';
+import { isSafeBaseUrl, getGeminiClient, extractCleanErrorMessage, sanitizeErrorMessage, formatContentsForGemini, sleep, getPollinationsImageUrl, translateAndEnhanceImagePrompt, normalizeBaseUrl, parseCustomHeaders, getGeminiKeyFromPool, blacklistKey, isKeyBlacklisted } from '../services/utils';
 import { GoogleGroundingAgent } from '../services/GoogleGroundingAgent';
 import { WikipediaAgent } from '../services/WikipediaAgent';
 import { ToolsAgent } from '../services/ToolsAgent';
@@ -170,15 +170,19 @@ router.post('/api/chat/stream', guestChatRateLimiter, guestChatHourLimiter, user
               let poolKey = getGeminiKeyFromPool([], targetModel);
               if (!poolKey) {
                 poolKey = getGeminiKeyFromPool([], 'gemini-3.5-flash-lite');
+                if (poolKey) {
+                  targetModel = 'gemini-3.5-flash-lite';
+                }
               }
               if (poolKey) {
                 targetBaseUrl = 'https://generativelanguage.googleapis.com';
                 targetApiKey = poolKey;
                 apiConfig[provider].baseUrl = targetBaseUrl;
                 apiConfig[provider].apiKey = targetApiKey;
+                apiConfig[provider].modelName = targetModel;
                 // If we are overriding a custom profile to use Gemini native SDK, ensure the config is moved
                 if (provider !== 'gemini') {
-                  apiConfig['gemini'] = { ...apiConfig[provider], apiKey: targetApiKey, baseUrl: targetBaseUrl };
+                  apiConfig['gemini'] = { ...apiConfig[provider], apiKey: targetApiKey, baseUrl: targetBaseUrl, modelName: targetModel };
                 }
                 provider = 'gemini'; // Ensure we use the Gemini SDK flow
               }
@@ -188,10 +192,12 @@ router.post('/api/chat/stream', guestChatRateLimiter, guestChatHourLimiter, user
                 if (fallbackKey) {
                   targetBaseUrl = 'https://generativelanguage.googleapis.com';
                   targetApiKey = fallbackKey;
+                  targetModel = 'gemini-3.5-flash-lite';
                   apiConfig[provider].baseUrl = targetBaseUrl;
                   apiConfig[provider].apiKey = targetApiKey;
+                  apiConfig[provider].modelName = targetModel;
                   if (provider !== 'gemini') {
-                    apiConfig['gemini'] = { ...apiConfig[provider], apiKey: targetApiKey, baseUrl: targetBaseUrl };
+                    apiConfig['gemini'] = { ...apiConfig[provider], apiKey: targetApiKey, baseUrl: targetBaseUrl, modelName: targetModel };
                   }
                   provider = 'gemini';
                 } else {
@@ -613,8 +619,9 @@ router.post('/api/chat/stream', guestChatRateLimiter, guestChatHourLimiter, user
               ai = getGeminiClient(userKey, false);
             }
           }
-        } catch {
-          // If no keys for this candidate, continue to next candidate
+        } catch (poolErr: any) {
+          lastError = poolErr;
+          // If no keys available for this candidate, try next candidate model
           continue;
         }
 

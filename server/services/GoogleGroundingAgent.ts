@@ -179,13 +179,13 @@ export class GoogleGroundingAgent {
       return formattedContext;
 
     } catch (error: any) {
-      console.error('[GoogleGroundingAgent] Grounding search failed:', error?.message || error);
+      console.warn('[GoogleGroundingAgent] Grounding search failed (falling back to model knowledge):', error?.message || error);
       const errMsg = String(error?.message || error);
-      const is429 = errMsg.includes('429') || errMsg.includes('RESOURCE_EXHAUSTED') || errMsg.includes('quota');
       const is401 = errMsg.includes('401') || errMsg.includes('Unauthorized') || errMsg.includes('Invalid API Key');
       const is403 = errMsg.includes('403') || errMsg.includes('PERMISSION_DENIED') || errMsg.includes('API_KEY_INVALID');
-      if (apiKey && (is429 || is401 || is403)) {
-        blacklistKey(apiKey, is429 ? '429' : (is401 ? '401' : '403'), undefined, is429 ? primaryModel : undefined);
+      // Grounding search quota (429) must NEVER blacklist keys for chat generation. Only blacklist invalid/revoked keys (401/403).
+      if (apiKey && (is401 || is403)) {
+        blacklistKey(apiKey, is401 ? '401' : '403');
       }
       return '';
     }
