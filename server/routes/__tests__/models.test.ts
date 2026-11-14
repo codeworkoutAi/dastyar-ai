@@ -43,7 +43,7 @@ describe('GET /api/default-profiles (public endpoint)', () => {
     expect(paidDefault).toBeDefined();
     expect(paidDefault.name).toBe('دستیار چت و گفتگوی پیشرفته');
     expect(paidDefault.role).toBe('paid_default');
-    expect(paidDefault.modelName).toBe('claude-sonnet-4-6');
+    expect(paidDefault.modelName).toBe('claude-sonnet-5');
 
     // 2. paid_coding
     const paidCoding = profiles.find((p: any) => p.id === 'paid_coding');

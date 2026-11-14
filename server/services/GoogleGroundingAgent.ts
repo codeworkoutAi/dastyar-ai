@@ -21,8 +21,10 @@ export class GoogleGroundingAgent {
       || process.env.GEMINI_API_KEY
       || process.env.DEFAULT_GEMINI_KEY;
 
+    const primaryModel = process.env.GEMINI_GROUNDING_MODEL || 'gemini-3.5-flash-lite';
+
     if (!apiKey) {
-      apiKey = getGeminiKeyFromPool() || undefined;
+      apiKey = getGeminiKeyFromPool([], primaryModel) || undefined;
     }
 
     try {
@@ -59,7 +61,6 @@ export class GoogleGroundingAgent {
 فقط با ابزار موتور جستجوی گوگل در اینترنت جستجو کنید و تازه‌ترین و دقیق‌ترین فکت‌ها، داده‌ها، قیمت‌ها یا اخبار زنده را در قالب چند بولت‌پوینتِ کوتاه و کلیدی لیست کنید.
 به هیچ وجه مقدمه، موخره یا پاراگراف طولانی ننویسید تا زمان پردازش حداقل شود.`;
 
-      const primaryModel = process.env.GEMINI_GROUNDING_MODEL || 'gemini-3.5-flash-lite';
       const timeoutMs = parseInt(process.env.GEMINI_GROUNDING_TIMEOUT_MS || '15000', 10);
       const timeoutPromise = new Promise<never>((_, reject) =>
         setTimeout(() => reject(new Error(`GoogleGroundingAgent timeout after ${timeoutMs}ms`)), timeoutMs)
@@ -184,7 +185,7 @@ export class GoogleGroundingAgent {
       const is401 = errMsg.includes('401') || errMsg.includes('Unauthorized') || errMsg.includes('Invalid API Key');
       const is403 = errMsg.includes('403') || errMsg.includes('PERMISSION_DENIED') || errMsg.includes('API_KEY_INVALID');
       if (apiKey && (is429 || is401 || is403)) {
-        blacklistKey(apiKey, is429 ? '429' : (is401 ? '401' : '403'));
+        blacklistKey(apiKey, is429 ? '429' : (is401 ? '401' : '403'), undefined, is429 ? primaryModel : undefined);
       }
       return '';
     }

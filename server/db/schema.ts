@@ -414,7 +414,7 @@ export function initializeSchema() {
       seedStmt.run('free_vision', 'دستیار بینایی و اسناد', 'https://generativelanguage.googleapis.com', '', 'gemini-3.6-flash', '', 'vision', 2, 1);
       
       // 4. Paid Default (Pro general chat assistant)
-      seedStmt.run('paid_default', 'دستیار چت و گفتگوی پیشرفته', 'https://router.cheap/v1', process.env.ROUTER_CHEAP_KEY || '', 'claude-sonnet-4-6', '', 'paid_default', 3, 1);
+      seedStmt.run('paid_default', 'دستیار چت و گفتگوی پیشرفته', 'https://router.cheap/v1', process.env.ROUTER_CHEAP_KEY || '', 'claude-sonnet-5', '', 'paid_default', 3, 1);
       // 5. Paid Coding
       seedStmt.run('paid_coding', 'دستیار برنامه‌نویسی پیشرفته', 'https://router.cheap/v1', process.env.ROUTER_CHEAP_KEY || '', 'deepseek-v4-pro', '', 'paid_coding', 4, 1);
       // 6. Paid Vision
@@ -440,6 +440,9 @@ export function initializeSchema() {
 
     // 3. paid_vision
     updateStmt.run('دستیار اسناد و بینایی پیشرفته', 'paid_vision', 'paid_vision', 'دستیار اسناد و بینایی جمینای', '%جمینای%');
+
+    // Ensure paid_default uses the stable active model on router.cheap
+    db.prepare("UPDATE default_profiles SET modelName = 'claude-sonnet-5' WHERE id = 'paid_default' AND modelName = 'claude-sonnet-4-6'").run();
   } catch (migErr) {
     console.error('[Database] Failed to run profile labels migration:', migErr);
   }

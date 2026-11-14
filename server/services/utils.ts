@@ -7,6 +7,8 @@ import {
   resetBlacklist,
   cleanupExpired,
   getKeyStats,
+  recordKeyUsage,
+  getKeyLastUsed,
   type BlacklistReason,
 } from './keyHealthService';
 
@@ -17,32 +19,41 @@ export {
   resetBlacklist,
   cleanupExpired,
   getKeyStats,
+  recordKeyUsage,
+  getKeyLastUsed,
   type BlacklistReason,
 };
 
 let currentGeminiKeyIndex = 0;
 
-export function getGeminiKeyFromPool(): string | null {
+export function getGeminiKeyFromPool(excludeKeys: string[] = [], targetModel?: string): string | null {
   try {
     const row = db.prepare("SELECT value FROM site_settings WHERE key = 'gemini_keys_pool'").get() as any;
     if (row && row.value) {
-      const keys = row.value.split('\n').map((k: string) => k.trim()).filter(Boolean);
+      const rawKeys = row.value.split('\n').map((k: string) => k.trim()).filter(Boolean);
+      // Deduplicate keys in memory
+      const keys = [...new Set(rawKeys)];
       const total = keys.length;
       if (total > 0) {
-        for (let i = 0; i < total; i++) {
-          currentGeminiKeyIndex = (currentGeminiKeyIndex + 1) % total;
-          const candidate = keys[currentGeminiKeyIndex];
-          if (!isKeyBlacklisted(candidate)) {
-            const stats = getKeyStats(total);
-            if (stats.available < total * 0.5) {
-              console.warn(
-                `[KeyPool] WARNING: ${stats.blacklisted}/${stats.total} keys blacklisted. Only ${stats.available} available.`
-              );
-            }
-            return candidate;
+        const excludedSet = new Set(excludeKeys);
+        const availableCandidates = keys.filter((k) => !isKeyBlacklisted(k, targetModel) && !excludedSet.has(k));
+
+        if (availableCandidates.length > 0) {
+          // Paced Key Balancer: Select the key used longest ago (LRU) to maximize request spacing
+          availableCandidates.sort((a, b) => getKeyLastUsed(a) - getKeyLastUsed(b));
+          const selected = availableCandidates[0];
+          recordKeyUsage(selected);
+
+          const stats = getKeyStats(total);
+          if (stats.available < total * 0.5) {
+            console.warn(
+              `[KeyPool] WARNING: ${stats.blacklisted}/${stats.total} keys blacklisted. Only ${stats.available} available.`
+            );
           }
+          return selected;
         }
-        console.error(`[KeyPool] All ${total} Gemini keys in pool are blacklisted!`);
+
+        console.error(`[KeyPool] All ${total} Gemini keys in pool are blacklisted or excluded${targetModel ? ' for ' + targetModel : ''}!`);
         throw new Error('در حال حاضر ظرفیت سرویس تکمیل است. لطفاً چند دقیقه دیگر تلاش کنید.');
       }
     }

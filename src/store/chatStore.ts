@@ -359,18 +359,6 @@ stopGeneration: () => {
 
       console.log(`[Intent] regex-only: webSearch=${detectedWebSearch}, tool=${detectedTool}, intent=${detectedIntent}`);
 
-      // Background non-blocking telemetry / audit call (does NOT block stream or increase TTFT)
-      if (!isImageGen) {
-        fetch('/api/chat/detect-intent', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            messages: [{ role: 'user', content: promptText }],
-            settings: payloadSettings,
-          }),
-        }).catch(() => {});
-      }
-
       // Apply web search & tool setting
       payloadSettings.tools = payloadSettings.tools || {};
       payloadSettings.tools.activeTool = detectedTool;

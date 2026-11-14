@@ -167,7 +167,10 @@ router.post('/api/chat/stream', guestChatRateLimiter, guestChatHourLimiter, user
           // Use smart routing with Gemini Keys Pool ONLY if the selected model is Gemini
           if (targetModel.toLowerCase().includes('gemini')) {
             try {
-              const poolKey = getGeminiKeyFromPool();
+              let poolKey = getGeminiKeyFromPool([], targetModel);
+              if (!poolKey) {
+                poolKey = getGeminiKeyFromPool([], 'gemini-3.5-flash-lite');
+              }
               if (poolKey) {
                 targetBaseUrl = 'https://generativelanguage.googleapis.com';
                 targetApiKey = poolKey;
@@ -180,11 +183,27 @@ router.post('/api/chat/stream', guestChatRateLimiter, guestChatHourLimiter, user
                 provider = 'gemini'; // Ensure we use the Gemini SDK flow
               }
             } catch (poolErr: any) {
-              sendChunk({
-                error: poolErr?.message || 'در حال حاضر ظرفیت سرویس تکمیل است. لطفاً چند دقیقه دیگر تلاش کنید.',
-                done: true,
-              });
-              return finishStream();
+              try {
+                const fallbackKey = getGeminiKeyFromPool([], 'gemini-3.5-flash-lite');
+                if (fallbackKey) {
+                  targetBaseUrl = 'https://generativelanguage.googleapis.com';
+                  targetApiKey = fallbackKey;
+                  apiConfig[provider].baseUrl = targetBaseUrl;
+                  apiConfig[provider].apiKey = targetApiKey;
+                  if (provider !== 'gemini') {
+                    apiConfig['gemini'] = { ...apiConfig[provider], apiKey: targetApiKey, baseUrl: targetBaseUrl };
+                  }
+                  provider = 'gemini';
+                } else {
+                  throw poolErr;
+                }
+              } catch (finalPoolErr: any) {
+                sendChunk({
+                  error: finalPoolErr?.message || 'در حال حاضر ظرفیت سرویس تکمیل است. لطفاً چند دقیقه دیگر تلاش کنید.',
+                  done: true,
+                });
+                return finishStream();
+              }
             }
           }
         }
@@ -579,12 +598,28 @@ router.post('/api/chat/stream', guestChatRateLimiter, guestChatHourLimiter, user
       let geminiUsage: { promptTokens?: number; completionTokens?: number; totalTokens?: number; costToman?: number; balanceAfter?: number } | undefined = undefined;
       let accumulatedGeminiText = '';
       let successfulCandidate = '';
+      const triedKeys = new Set<string>();
+      if (userKey) triedKeys.add(userKey);
 
       for (const candidate of candidateModels) {
         if (hasSentAnyChunk) break;
 
+        // Ensure we have a healthy key for this candidate model (especially on fallback)
+        try {
+          if (!userKey || isKeyBlacklisted(userKey, candidate)) {
+            const candidateKey = getGeminiKeyFromPool([], candidate);
+            if (candidateKey) {
+              userKey = candidateKey;
+              ai = getGeminiClient(userKey, false);
+            }
+          }
+        } catch {
+          // If no keys for this candidate, continue to next candidate
+          continue;
+        }
+
         let attempts = 0;
-        const maxAttempts = candidate === modelName ? 3 : 1;
+        const maxAttempts = candidate === modelName ? 5 : 3;
 
         while (attempts < maxAttempts) {
           attempts++;
@@ -689,6 +724,11 @@ router.post('/api/chat/stream', guestChatRateLimiter, guestChatHourLimiter, user
             break;
           } catch (err: any) {
             lastError = err;
+            if (hasSentAnyChunk) {
+              console.warn(`Stream aborted mid-generation on ${candidate}:`, err?.message || err);
+              break;
+            }
+
             const errMsg = extractCleanErrorMessage(err);
             const is429 =
               errMsg.includes('429') ||
@@ -696,27 +736,32 @@ router.post('/api/chat/stream', guestChatRateLimiter, guestChatHourLimiter, user
               errMsg.includes('quota') ||
               errMsg.includes('exceeded your request quota');
             const is401 = errMsg.includes('401') || errMsg.includes('Unauthorized') || errMsg.includes('Invalid API Key');
-            const is403 = errMsg.includes('403') || errMsg.includes('PERMISSION_DENIED') || errMsg.includes('API_KEY_INVALID');
+            const is403 = errMsg.includes('403') || errMsg.includes('PERMISSION_DENIED') || errMsg.includes('API_KEY_INVALID') || errMsg.includes('free tier is not available');
 
             if (userKey && (is429 || is401 || is403)) {
               const reason = is429 ? '429' : (is401 ? '401' : '403');
-              blacklistKey(userKey, reason);
+              const isDailyLimit = errMsg.includes('per day') || errMsg.includes('PerDay') || errMsg.includes('requests per day');
+              const ttl = is429 ? (isDailyLimit ? 24 * 60 * 60 * 1000 : 60 * 1000) : 24 * 60 * 60 * 1000;
+              const scopedModel = is429 ? candidate : undefined;
+              blacklistKey(userKey, reason, ttl, scopedModel);
+              triedKeys.add(userKey);
               const cleanSummary = errMsg.length > 80 ? errMsg.substring(0, 80) + '...' : errMsg;
-              console.warn(`Key blacklisted (${reason}) on ${candidate}: ${cleanSummary}.`);
+              console.warn(`Key blacklisted (${reason}${scopedModel ? `:${scopedModel}` : ''}) on ${candidate}: ${cleanSummary}.`);
 
               // Rotate to next healthy key from the pool if available
               try {
-                const nextKey = getGeminiKeyFromPool();
+                const nextKey = getGeminiKeyFromPool(Array.from(triedKeys), candidate);
                 if (nextKey && nextKey !== userKey) {
                   userKey = nextKey;
+                  triedKeys.add(userKey);
                   ai = getGeminiClient(userKey, false);
-                  console.log(`[KeyPool] Rotated to fresh pool key for candidate ${candidate}. Retrying...`);
+                  console.log(`[KeyPool] Rotated to fresh pool key for candidate ${candidate} (attempt ${attempts}/${maxAttempts}). Retrying...`);
                   if (attempts < maxAttempts) {
                     continue; // Retry on the same candidate model with fresh key!
                   }
                 }
               } catch (poolErr) {
-                console.warn('[KeyPool] No more fresh keys available in pool.');
+                console.warn(`[KeyPool] No more fresh keys available for candidate ${candidate}.`);
               }
               break;
             }
@@ -728,7 +773,7 @@ router.post('/api/chat/stream', guestChatRateLimiter, guestChatHourLimiter, user
               errMsg.includes('Service Unavailable');
 
             if (is503 && attempts < maxAttempts && !hasSentAnyChunk) {
-              const delay = attempts * 500;
+              const delay = attempts * 400;
               console.warn(
                 `Transient 503 spike on ${candidate} (attempt ${attempts}/${maxAttempts}), retrying in ${delay}ms...`
               );
@@ -1001,7 +1046,11 @@ router.post('/api/chat/stream', guestChatRateLimiter, guestChatHourLimiter, user
         if (response.status === 401) {
           cleanError = 'کلید API برای این مدل نامعتبر است یا در دیتابیس (پنل ادمین) به درستی تنظیم نشده است.';
         } else if (response.status === 402) {
-           cleanError = 'موجودی حساب API ارائه‌دهنده برای این مدل به پایان رسیده است.';
+          cleanError = 'موجودی حساب API ارائه‌دهنده برای این مدل به پایان رسیده است.';
+        } else if (response.status === 502 || response.status === 503 || errorText.includes('503') || errorText.includes('502') || errorText.includes('temporarily unavailable')) {
+          cleanError = 'سرور ارائه‌دهنده مدل در حال حاضر با ترافیک بالا مواجه است (۵۰۳). لطفاً چند لحظه دیگر دوباره تلاش کنید.';
+        } else if (errorText.includes('<!DOCTYPE') || errorText.includes('<html')) {
+          cleanError = `خطای ارتباط با سرور مدل (${response.status}). لطفاً لحظاتی دیگر تلاش کنید.`;
         }
 
         sendChunk({ error: cleanError });
