@@ -81,12 +81,20 @@ export async function renderHtmlWithSeo(req: express.Request, res: express.Respo
     const baseUrl = process.env.NODE_ENV === 'production' ? (process.env.WEB_URL || 'https://dastyarai.com') : `${protocol}://${host}`;
     const urlPath = req.path;
 
+    // Anti-cache header helper to prevent stale HTML & stuck caches on mobile / older Android WebViews
+    const setHtmlNoCacheHeaders = () => {
+      res.setHeader('Content-Type', 'text/html; charset=utf-8');
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
+    };
+
     // Fast path: serve pre-rendered SEO HTML from RAM for static public routes in production
     if (useProdCache && STATIC_SEO_PATHS.has(urlPath)) {
       const cacheKey = `${baseUrl}|${urlPath}`;
       const cachedPage = STATIC_HTML_CACHE.get(cacheKey);
       if (cachedPage && cachedPage.expiresAt > Date.now()) {
-        res.setHeader('Content-Type', 'text/html; charset=utf-8');
+        setHtmlNoCacheHeaders();
         return res.send(cachedPage.html);
       }
     }
@@ -657,10 +665,11 @@ export async function renderHtmlWithSeo(req: express.Request, res: express.Respo
       });
     }
 
-    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    setHtmlNoCacheHeaders();
     res.send(html);
   } catch (err) {
     console.error('[Server SEO] Error injecting metadata:', err);
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
     res.sendFile(path.join(distPath, 'index.html'));
   }
 }

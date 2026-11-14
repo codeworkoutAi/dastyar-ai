@@ -26,6 +26,7 @@ export function usePWAInstall() {
   const [isStandalone, setIsStandalone] = useState(false);
   const [isIOS, setIsIOS] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [isGuideOpen, setIsGuideOpen] = useState(false);
 
   useEffect(() => {
     // Check if running in standalone mode (already installed PWA)
@@ -90,7 +91,7 @@ export function usePWAInstall() {
   }, []);
 
   const install = useCallback(async (): Promise<'accepted' | 'dismissed' | 'unsupported'> => {
-    const promptEvent = deferredPrompt || window.__deferredPrompt;
+    const promptEvent = deferredPrompt || (typeof window !== 'undefined' ? window.__deferredPrompt : null);
     if (!promptEvent) {
       return 'unsupported';
     }
@@ -100,16 +101,37 @@ export function usePWAInstall() {
       if (choice.outcome === 'accepted') {
         setIsInstallable(false);
         setIsStandalone(true);
+        setDeferredPrompt(null);
+        if (typeof window !== 'undefined') window.__deferredPrompt = null;
       }
-      setDeferredPrompt(null);
-      window.__deferredPrompt = null;
       return choice.outcome;
     } catch (err) {
       console.warn('PWA install prompt failed:', err);
-      setDeferredPrompt(null);
-      window.__deferredPrompt = null;
       return 'unsupported';
     }
+  }, [deferredPrompt]);
+
+  const promptOrGuide = useCallback(async (): Promise<'accepted' | 'dismissed' | 'unsupported'> => {
+    const promptEvent = deferredPrompt || (typeof window !== 'undefined' ? window.__deferredPrompt : null);
+    if (promptEvent) {
+      try {
+        await promptEvent.prompt();
+        const choice = await promptEvent.userChoice;
+        if (choice.outcome === 'accepted') {
+          setIsInstallable(false);
+          setIsStandalone(true);
+          setDeferredPrompt(null);
+          if (typeof window !== 'undefined') window.__deferredPrompt = null;
+          return 'accepted';
+        }
+        return choice.outcome;
+      } catch (err) {
+        console.warn('Native PWA prompt failed, opening visual guide:', err);
+      }
+    }
+    // Fallback: If native prompt unavailable (iOS Safari, Firefox, or Chrome prompt not ready), show visual guide
+    setIsGuideOpen(true);
+    return 'unsupported';
   }, [deferredPrompt]);
 
   return {
@@ -118,6 +140,9 @@ export function usePWAInstall() {
     isIOS,
     isMobile,
     hasDeferredPrompt: Boolean(deferredPrompt) || Boolean(typeof window !== 'undefined' && window.__deferredPrompt),
+    isGuideOpen,
+    setIsGuideOpen,
     install,
+    promptOrGuide,
   };
 }

@@ -40,6 +40,18 @@ if (Capacitor.isNativePlatform()) {
   } as any;
 }
 
+// Automatically recover from dynamic chunk load errors (happens when a new deploy removes old hashes on older Android WebViews)
+window.addEventListener('vite:preloadError', (event) => {
+  console.warn('[Vite] Preload error detected, reloading page for fresh assets...', event);
+  // Prevent infinite reload loops with session guard
+  const lastReload = sessionStorage.getItem('last_preload_reload');
+  const now = Date.now();
+  if (!lastReload || now - Number(lastReload) > 10000) {
+    sessionStorage.setItem('last_preload_reload', String(now));
+    window.location.reload();
+  }
+});
+
 createRoot(document.getElementById('root')!).render(
  <StrictMode>
  <ErrorBoundary>

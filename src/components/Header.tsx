@@ -19,6 +19,7 @@ import {
 
 import { Tooltip } from './Tooltip';
 import { usePWAInstall } from '../lib/usePWAInstall';
+import { PWAInstallGuideModal } from './PWAInstallGuideModal';
 import { useUIStore } from '../store/uiStore';
 import { useSettingsStore } from '../store/settingsStore';
 import { useChatStore } from '../store/chatStore';
@@ -53,7 +54,7 @@ export const Header: React.FC = React.memo(() => {
  const mobileMenuRef = useRef<HTMLDivElement>(null);
  const dropdownRef = useRef<HTMLDivElement>(null);
 
- const { isInstallable, install } = usePWAInstall();
+ const { isInstallable, isStandalone, isIOS, isMobile, isGuideOpen, setIsGuideOpen, promptOrGuide } = usePWAInstall();
  const isBazaar = isBazaarEnvironment() || Capacitor.isNativePlatform();
 
  useEffect(() => {
@@ -174,10 +175,10 @@ export const Header: React.FC = React.memo(() => {
 
 
  {/* Install PWA Button */}
- {isInstallable && (
+ {!isStandalone && !isBazaar && (
  <Tooltip content="نصب برنامه (App)">
  <button
- onClick={install}
+ onClick={promptOrGuide}
  className="clay-icon-btn w-11 h-11 flex items-center justify-center text-blue-500 font-bold cursor-pointer clay-icon"
  aria-label="Install App"
  >
@@ -242,9 +243,9 @@ export const Header: React.FC = React.memo(() => {
       </div>
 
       {/* Featured Install Card (Web-only) */}
-      {!isBazaar && (
+      {!isBazaar && !isStandalone && (
         <button
-          onClick={() => { install(); setShowMobileMenu(false); }}
+          onClick={() => { promptOrGuide(); setShowMobileMenu(false); }}
           className="w-full flex items-center justify-between p-2 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/15 border border-emerald-500/20 transition-all text-right cursor-pointer mb-1.5 group active:scale-[0.98]"
         >
           <div className="flex items-center gap-2.5 min-w-0">
@@ -291,6 +292,13 @@ export const Header: React.FC = React.memo(() => {
  </div>
  </div>
  </div>
+
+ <PWAInstallGuideModal
+   isOpen={isGuideOpen}
+   onClose={() => setIsGuideOpen(false)}
+   isIOS={isIOS}
+   isMobile={isMobile}
+ />
 
  </header>
  );

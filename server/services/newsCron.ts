@@ -377,11 +377,15 @@ export async function fetchAndProcessNews() {
       return;
     }
 
-    // Save to database with ISO createdAt
+    // Ensure standard tags 'news' and 'اخبار' are always included so articles cleanly map to the AI News tab and /blog/news
+    const rawTags: string[] = Array.isArray(parsedData.tags) ? parsedData.tags : [];
+    const normalizedTags = Array.from(new Set(['news', 'اخبار', ...rawTags]));
+    const tagsJson = JSON.stringify(normalizedTags);
+
+    // Save to database with ISO createdAt and explicit 'cron' source
     const nowIso = new Date().toISOString();
-    const insertStmt = db.prepare('INSERT INTO news (title, content, image, sourceUrl, tags, createdAt) VALUES (?, ?, ?, ?, ?, ?)');
-    const tagsJson = JSON.stringify(parsedData.tags || []);
-    const info = insertStmt.run(parsedData.title, parsedData.content, imageUrl, targetItem.link, tagsJson, nowIso);
+    const insertStmt = db.prepare('INSERT INTO news (title, content, image, sourceUrl, tags, source, createdAt) VALUES (?, ?, ?, ?, ?, ?, ?)');
+    const info = insertStmt.run(parsedData.title, parsedData.content, imageUrl, targetItem.link, tagsJson, 'cron', nowIso);
 
     const savedMsg = `News saved to database with ID: ${info.lastInsertRowid} using model ${usedModel}`;
     console.log(`[NewsCron] ${savedMsg}`);

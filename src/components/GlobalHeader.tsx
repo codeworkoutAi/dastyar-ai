@@ -1,15 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Bot, Store, BookOpen, MessageSquare, LogIn, User, Settings, Menu, X } from 'lucide-react';
+import { Bot, Store, BookOpen, MessageSquare, LogIn, User, Settings, Menu, X, Smartphone } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import { ThemeToggle } from './ThemeToggle';
 import { useUIStore } from '../store/uiStore';
 import { UIStyleToggle } from './UIStyleToggle';
 import { isBazaarEnvironment } from '../lib/bazaarUtils';
+import { usePWAInstall } from '../lib/usePWAInstall';
+import { PWAInstallGuideModal } from './PWAInstallGuideModal';
 
 export const GlobalHeader: React.FC = () => {
   const { user } = useAuthStore();
   const { setIsAdminOpen } = useUIStore();
+  const { isStandalone, isIOS, isMobile, isGuideOpen, setIsGuideOpen, promptOrGuide } = usePWAInstall();
   const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -75,6 +78,16 @@ export const GlobalHeader: React.FC = () => {
           
           {/* Desktop Only Tools */}
           <div className="hidden md:flex items-center gap-2">
+            {!isStandalone && !isBazaar && (
+              <button
+                onClick={promptOrGuide}
+                className="h-10 w-10 clay-btn flex items-center justify-center text-emerald-600 dark:text-emerald-400 hover:scale-105 transition-all rounded-xl shrink-0 cursor-pointer"
+                title="نصب اپلیکیشن (PWA)"
+                aria-label="نصب اپلیکیشن"
+              >
+                <Smartphone size={18} />
+              </button>
+            )}
             <UIStyleToggle variant="clay" className="!h-10 !w-10 !rounded-xl !p-0 flex items-center justify-center shrink-0" />
             <ThemeToggle variant="clay" className="!h-10 !w-10 !rounded-xl !p-0 flex items-center justify-center shrink-0" />
             <div className="w-px h-6 bg-zinc-200 dark:bg-zinc-700 mx-1"></div>
@@ -125,6 +138,18 @@ export const GlobalHeader: React.FC = () => {
       {/* Mobile Menu Dropdown */}
       {isMobileMenuOpen && (
         <div className="md:hidden absolute top-[70px] left-4 clay-card-thick p-4 flex flex-col gap-4 min-w-[200px] animate-fade-in z-50">
+           {!isStandalone && !isBazaar && (
+             <button
+               onClick={() => { promptOrGuide(); setIsMobileMenuOpen(false); }}
+               className="w-full flex items-center justify-between p-2 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/15 border border-emerald-500/20 text-xs font-bold text-emerald-600 dark:text-emerald-400 transition-all cursor-pointer"
+             >
+               <span className="flex items-center gap-2">
+                 <Smartphone size={16} />
+                 نصب اپلیکیشن
+               </span>
+               <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/20">نصب</span>
+             </button>
+           )}
            <div className="flex items-center justify-between">
               <span className="text-sm font-bold text-[var(--text-main)]">تغییر ظاهر</span>
               <UIStyleToggle variant="clay" className="!h-9 !w-9 !rounded-xl !p-0 flex items-center justify-center" />
@@ -143,6 +168,13 @@ export const GlobalHeader: React.FC = () => {
            )}
         </div>
       )}
+
+      <PWAInstallGuideModal
+        isOpen={isGuideOpen}
+        onClose={() => setIsGuideOpen(false)}
+        isIOS={isIOS}
+        isMobile={isMobile}
+      />
     </header>
   );
 };

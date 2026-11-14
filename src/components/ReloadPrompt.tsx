@@ -10,8 +10,20 @@ export const ReloadPrompt: React.FC = () => {
     needRefresh: [needRefresh, setNeedRefresh],
     updateServiceWorker,
   } = useRegisterSW({
-    onRegistered() {
-      // SW Registered successfully
+    onRegisteredSW(swUrl, registration) {
+      if (registration) {
+        // Periodic check for SW update (every 45 minutes)
+        setInterval(() => {
+          registration.update().catch(() => {});
+        }, 45 * 60 * 1000);
+
+        // Check for updates whenever user switches back to the tab/app on mobile
+        document.addEventListener('visibilitychange', () => {
+          if (document.visibilityState === 'visible') {
+            registration.update().catch(() => {});
+          }
+        });
+      }
     },
     onRegisterError(error) {
       console.warn('SW registration error:', error);

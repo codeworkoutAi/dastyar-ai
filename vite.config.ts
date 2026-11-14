@@ -10,13 +10,16 @@ export default defineConfig(() => {
       react(),
       tailwindcss(),
       VitePWA({
-        registerType: 'prompt',
+        registerType: 'autoUpdate',
         devOptions: {
           enabled: true,
           type: 'module'
         },
-        includeAssets: ['pwa-192x192.png', 'pwa-512x512.png'],
+        includeAssets: ['pwa-192x192.png', 'pwa-512x512.png', 'favicon.png'],
         manifest: {
+          id: '/',
+          start_url: '/',
+          scope: '/',
           name: 'دستیار هوشمند فارسی',
           short_name: 'دستیار هوشمند',
           description: 'دستیار هوشمند فارسی با پشتیبانی از مدل‌های مختلف',
@@ -27,9 +30,9 @@ export default defineConfig(() => {
           display: 'standalone',
           orientation: 'portrait-primary',
           icons: [
-            { src: '/pwa-192x192.png', sizes: '192x192', type: 'image/png' },
-            { src: '/pwa-512x512.png', sizes: '512x512', type: 'image/png' },
-            { src: '/pwa-512x512.png', sizes: '512x512', type: 'image/png', purpose: 'any maskable' }
+            { src: '/pwa-192x192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
+            { src: '/pwa-512x512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
+            { src: '/pwa-512x512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' }
           ],
           categories: ['productivity', 'utilities'],
           shortcuts: [
@@ -38,21 +41,21 @@ export default defineConfig(() => {
               short_name: 'چت',
               description: 'شروع یک گفتگوی جدید با هوش مصنوعی',
               url: '/',
-              icons: [{ src: '/pwa-192x192.png', sizes: '192x192' }]
+              icons: [{ src: '/pwa-192x192.png', sizes: '192x192', type: 'image/png' }]
             },
             {
               name: 'فروشگاه',
               short_name: 'فروشگاه',
               description: 'محصولات و لایسنس‌های هوش مصنوعی',
               url: '/store',
-              icons: [{ src: '/pwa-192x192.png', sizes: '192x192' }]
+              icons: [{ src: '/pwa-192x192.png', sizes: '192x192', type: 'image/png' }]
             },
             {
               name: 'مجله هوش مصنوعی',
               short_name: 'اخبار',
               description: 'آخرین اخبار هوش مصنوعی',
               url: '/blog',
-              icons: [{ src: '/pwa-192x192.png', sizes: '192x192' }]
+              icons: [{ src: '/pwa-192x192.png', sizes: '192x192', type: 'image/png' }]
             }
           ]
         },
@@ -61,6 +64,7 @@ export default defineConfig(() => {
           navigateFallbackDenylist: [/^\/api/],
           cleanupOutdatedCaches: true,
           clientsClaim: true,
+          skipWaiting: true,
         }
       })
     ],

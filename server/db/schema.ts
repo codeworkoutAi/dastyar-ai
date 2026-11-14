@@ -594,5 +594,20 @@ export function initializeSchema() {
     )
   `);
 
+  // Migration: Ensure all cron news items have 'news' and 'اخبار' in tags
+  try {
+    const cronNews = db.prepare("SELECT id, tags FROM news WHERE source = 'cron' OR source IS NULL").all() as any[];
+    for (const item of cronNews) {
+      let tags: string[] = [];
+      try { tags = JSON.parse(item.tags || '[]'); } catch { tags = []; }
+      if (!tags.includes('news') || !tags.includes('اخبار')) {
+        const nextTags = Array.from(new Set(['news', 'اخبار', ...tags]));
+        db.prepare("UPDATE news SET tags = ?, source = 'cron' WHERE id = ?").run(JSON.stringify(nextTags), item.id);
+      }
+    }
+  } catch (migErr) {
+    console.warn('[Database] News tag migration note:', (migErr as any)?.message || migErr);
+  }
+
   console.log('[Database] SQLite schema ready.');
 }

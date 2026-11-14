@@ -43,8 +43,8 @@ router.get('/admin/cron-logs', requireAuth, requireAdmin, (req, res) => {
 router.post('/admin/trigger', requireAuth, requireAdmin, async (req, res) => {
   try {
     const { fetchAndProcessNews } = await import('../services/newsCron');
-    fetchAndProcessNews().catch(err => console.error('[News API] admin trigger error:', err));
-    res.json({ message: 'واکشی اخبار آغاز شد. نتیجه تا لحظاتی دیگر در لاگ‌ها و کانال ثبت می‌شود.' });
+    await fetchAndProcessNews();
+    res.json({ message: 'فرآیند واکشی اخبار با موفقیت اجرا شد و در وبلاگ و کانال تلگرام قرار گرفت.' });
   } catch (error: any) {
     res.status(500).json({ error: error?.message || 'خطا در اجرای واکشی' });
   }
@@ -66,7 +66,12 @@ router.get('/', (req, res) => {
 router.get('/tag/:tag', (req, res) => {
   try {
     const { tag } = req.params;
-    const news = db.prepare('SELECT * FROM news WHERE tags LIKE ? ORDER BY id DESC').all(`%"${tag}"%`);
+    let news: any[];
+    if (tag === 'news' || tag === 'اخبار') {
+      news = db.prepare("SELECT * FROM news WHERE source = 'cron' OR tags LIKE '%\"news\"%' OR tags LIKE '%\"اخبار\"%' ORDER BY id DESC").all();
+    } else {
+      news = db.prepare('SELECT * FROM news WHERE tags LIKE ? ORDER BY id DESC').all(`%"${tag}"%`);
+    }
     res.json(news);
   } catch (error) {
     console.error('[News API] Error fetching news by tag:', error);

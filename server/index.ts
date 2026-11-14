@@ -268,7 +268,9 @@ async function start() {
       immutable: true,
       setHeaders: (res, filePath) => {
         if (filePath.endsWith('.html') || filePath.endsWith('sw.js') || filePath.endsWith('manifest.webmanifest')) {
-          res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+          res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
+          res.setHeader('Pragma', 'no-cache');
+          res.setHeader('Expires', '0');
         } else if (filePath.match(/\.(js|css|woff2?|png|jpe?g|gif|webp|svg)$/)) {
           res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
         }

@@ -92,12 +92,20 @@ export function Blog() {
  // Filter Logic
  
   const isNewsPost = (item: NewsItem) => {
+    if (item.source === 'cron') return true;
     try {
       const parsed = JSON.parse(item.tags || '[]');
-      return Array.isArray(parsed) && parsed.some(t => typeof t === 'string' && t.toLowerCase() === 'news');
-    } catch {
-      return false;
-    }
+      if (Array.isArray(parsed)) {
+        if (parsed.some(t => typeof t === 'string' && (
+          t.toLowerCase() === 'news' || 
+          t.includes('اخبار') || 
+          t.includes('خبر')
+        ))) {
+          return true;
+        }
+      }
+    } catch {}
+    return !item.slug;
   };
 
   const filteredNews = news.filter(item => {
@@ -597,8 +605,8 @@ export function Blog() {
   {displayedNews.length > 0 ? (
     <div className="space-y-12 animate-fadeIn">
       {(() => {
-        const guideArticles = displayedNews.filter(item => !isNewsPost(item));
-        const newsArticles = displayedNews.filter(item => isNewsPost(item));
+        const guideArticles = filteredNews.filter(item => !isNewsPost(item));
+        const newsArticles = filteredNews.filter(item => isNewsPost(item)).slice(0, visibleCount);
 
         const renderCard = (item: NewsItem) => (
           <Link 
