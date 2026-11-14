@@ -7,6 +7,7 @@ export interface GeneratedGuide {
   summary: string;
   content: string;
   tags: string[];
+  source: string;
   image?: string;
   suggestedTopic?: string;
 }
@@ -72,7 +73,7 @@ export async function generateEducationalGuide(customTopic?: string): Promise<Ge
   "slug": "english-url-slug-seo-friendly",
   "summary": "خلاصه جذاب در یک یا دو جمله فارسی",
   "content": "متن کامل مقاله به فرمت مارک‌داون غنی همراه با پرامپت‌ها و مثال‌ها",
-  "tags": ["آموزش", "راهنما", "کاربرد هوش مصنوعی", "مهارت دیجیتال"]
+  "tags": ["مقالات آموزشی", "آموزش", "راهنما", "کاربرد هوش مصنوعی"]
 }`;
 
   let response: any = null;
@@ -113,7 +114,8 @@ export async function generateEducationalGuide(customTopic?: string): Promise<Ge
   const title = (parsed.title || chosenTopic).trim();
   const summary = (parsed.summary || '').trim();
   const content = (parsed.content || '').trim();
-  const tags = Array.isArray(parsed.tags) ? parsed.tags : ['آموزش', 'راهنما', 'کاربرد هوش مصنوعی'];
+  const rawTags = Array.isArray(parsed.tags) ? parsed.tags : ['راهنما', 'کاربرد هوش مصنوعی'];
+  const tags = Array.from(new Set(['مقالات آموزشی', 'آموزش', ...rawTags]));
   const slug = (parsed.slug || '')
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
@@ -139,6 +141,7 @@ export async function generateEducationalGuide(customTopic?: string): Promise<Ge
     summary,
     content,
     tags,
+    source: 'guide',
     image,
     suggestedTopic: chosenTopic
   };

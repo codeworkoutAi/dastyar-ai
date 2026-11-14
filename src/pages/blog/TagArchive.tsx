@@ -43,35 +43,36 @@ export function TagArchive({ forcedTag }: { forcedTag?: string } = {}) {
  const [news, setNews] = useState<NewsItem[]>([]);
  const [loading, setLoading] = useState(true);
 
- useEffect(() => {
- if (!tagName) return;
- const isDedicatedNews = forcedTag === 'news';
+  useEffect(() => {
+    if (!tagName) return;
+    const isDedicatedNews = forcedTag === 'news' || tagName === 'news' || tagName === 'اخبار';
+    const isDedicatedGuides = tagName === 'مقالات آموزشی' || tagName === 'آموزش' || tagName === 'guide';
     const tagCanonical = isDedicatedNews ? `${window.location.origin}/blog/news` : `${window.location.origin}/blog/tag/${encodeURIComponent(tagName)}`;
- setPageSeo({
- title: isDedicatedNews ? 'اخبار هوش مصنوعی | Dastyar AI' : `مقالات برچسب ${tagName} | Dastyar AI`,
- description: isDedicatedNews ? 'جدیدترین اخبار، تحولات و رویدادهای روز هوش مصنوعی ایران و جهان در مجله Dastyar AI.' : `مجموعه اخبار، مقالات و رویدادهای مرتبط با ${tagName} در مجله هوش مصنوعی دستیار هوشمند.`,
- canonical: tagCanonical,
- ogType: 'website',
- schema: {
- '@context': 'https://schema.org',
- '@graph': [
- {
- '@type': 'CollectionPage',
- name: `مقالات برچسب ${tagName}`,
- description: `مجموعه مقالات هوش مصنوعی با برچسب ${tagName}`,
- url: tagCanonical
- },
- {
- '@type': 'BreadcrumbList',
- itemListElement: [
- { '@type': 'ListItem', position: 1, name: 'خانه', item: `${window.location.origin}/` },
- { '@type': 'ListItem', position: 2, name: 'مجله هوش مصنوعی', item: `${window.location.origin}/blog` },
- { '@type': 'ListItem', position: 3, name: isDedicatedNews ? 'اخبار هوش مصنوعی' : tagName, item: tagCanonical }
- ]
- }
- ]
- }
- });
+    setPageSeo({
+      title: isDedicatedNews ? 'اخبار هوش مصنوعی | Dastyar AI' : isDedicatedGuides ? 'مقالات آموزشی هوش مصنوعی | Dastyar AI' : `مقالات برچسب ${tagName} | Dastyar AI`,
+      description: isDedicatedNews ? 'جدیدترین اخبار، تحولات و رویدادهای روز هوش مصنوعی ایران و جهان در مجله Dastyar AI.' : isDedicatedGuides ? 'مجموعه مقالات، راهنماها و ترفندهای کاربردی هوش مصنوعی برای زندگی روزمره، کار و یادگیری.' : `مجموعه اخبار، مقالات و رویدادهای مرتبط با ${tagName} در مجله هوش مصنوعی دستیار هوشمند.`,
+      canonical: tagCanonical,
+      ogType: 'website',
+      schema: {
+        '@context': 'https://schema.org',
+        '@graph': [
+          {
+            '@type': 'CollectionPage',
+            name: isDedicatedNews ? 'اخبار هوش مصنوعی' : isDedicatedGuides ? 'مقالات آموزشی هوش مصنوعی' : `مقالات برچسب ${tagName}`,
+            description: isDedicatedNews ? 'جدیدترین اخبار هوش مصنوعی' : isDedicatedGuides ? 'آموزش‌ها و راهنماهای کاربردی هوش مصنوعی' : `مجموعه مقالات هوش مصنوعی با برچسب ${tagName}`,
+            url: tagCanonical
+          },
+          {
+            '@type': 'BreadcrumbList',
+            itemListElement: [
+              { '@type': 'ListItem', position: 1, name: 'خانه', item: `${window.location.origin}/` },
+              { '@type': 'ListItem', position: 2, name: 'مجله هوش مصنوعی', item: `${window.location.origin}/blog` },
+              { '@type': 'ListItem', position: 3, name: isDedicatedNews ? 'اخبار هوش مصنوعی' : isDedicatedGuides ? 'مقالات آموزشی' : tagName, item: tagCanonical }
+            ]
+          }
+        ]
+      }
+    });
  setLoading(true);
  fetch(`/api/news/tag/${encodeURIComponent(tagName)}`)
  .then(res => res.json())
@@ -96,10 +97,12 @@ export function TagArchive({ forcedTag }: { forcedTag?: string } = {}) {
  <div className="mb-12 p-6 md:p-8 rounded-3xl bg-gradient-to-br from-emerald-500/10 to-teal-500/10 border border-emerald-500/20 flex flex-col md:flex-row items-center justify-between gap-6 backdrop-blur-sm shadow-sm">
  <div className="flex-1">
  <h2 className="text-xl md:text-2xl font-bold text-zinc-900 dark:text-white mb-2 flex items-center gap-2">
- <span className="bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 px-3 py-1 rounded-xl text-sm font-mono">#{forcedTag === 'news' ? 'اخبار هوش مصنوعی' : `#${tagName}`}</span>
+ <span className="bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 px-3 py-1 rounded-xl text-sm font-mono">
+   {forcedTag === 'news' || tagName === 'news' || tagName === 'اخبار' ? 'اخبار هوش مصنوعی' : tagName === 'مقالات آموزشی' || tagName === 'آموزش' ? '📚 مقالات آموزشی و راهنماها' : `#${tagName}`}
+ </span>
  </h2>
  <p className="text-sm md:text-base text-[#525d75] dark:text-[#9aa5bc]">
- {forcedTag === 'news' ? 'جدیدترین اخبار و رویدادهای روز هوش مصنوعی' : `درباره ${tagName} کنجکاو هستید؟ همین حالا با هوش مصنوعی گفتگو کنید و سوالات خود را بپرسید!`}
+ {forcedTag === 'news' || tagName === 'news' || tagName === 'اخبار' ? 'جدیدترین اخبار و رویدادهای روز هوش مصنوعی' : tagName === 'مقالات آموزشی' || tagName === 'آموزش' ? 'مجموعه مقالات، راهنماها و ترفندهای کاربردی استفاده از هوش مصنوعی در زندگی روزمره و کسب‌وکار' : `درباره ${tagName} کنجکاو هستید؟ همین حالا با هوش مصنوعی گفتگو کنید و سوالات خود را بپرسید!`}
  </p>
  </div>
  <Link 

@@ -78,15 +78,45 @@ router.get('/', (req, res) => {
   }
 });
 
+// Helper to normalize and ensure proper JSON tags
+function normalizeTagsArray(rawTags: any, defaultSource?: string): string[] {
+  let list: string[] = [];
+  if (Array.isArray(rawTags)) {
+    list = rawTags.map(t => String(t).trim()).filter(Boolean);
+  } else if (typeof rawTags === 'string' && rawTags.trim()) {
+    const trimmed = rawTags.trim();
+    if (trimmed.startsWith('[') && trimmed.endsWith(']')) {
+      try {
+        const arr = JSON.parse(trimmed);
+        if (Array.isArray(arr)) {
+          list = arr.map(t => String(t).trim()).filter(Boolean);
+        }
+      } catch {}
+    }
+    if (list.length === 0) {
+      list = trimmed.split(/[,،\n]+/).map(t => t.trim()).filter(Boolean);
+    }
+  }
+
+  if (defaultSource === 'guide') {
+    if (!list.includes('مقالات آموزشی')) list.unshift('مقالات آموزشی');
+    if (!list.includes('آموزش')) list.splice(1, 0, 'آموزش');
+  }
+
+  return Array.from(new Set(list));
+}
+
 // GET /api/news/tag/:tag (Public: Get news by tag)
 router.get('/tag/:tag', (req, res) => {
   try {
     const { tag } = req.params;
     let news: any[];
-    if (tag === 'news' || tag === 'اخبار') {
-      news = db.prepare("SELECT * FROM news WHERE source = 'cron' OR tags LIKE '%\"news\"%' OR tags LIKE '%\"اخبار\"%' ORDER BY id DESC").all();
+    if (tag === 'مقالات آموزشی' || tag === 'آموزش' || tag === 'guide') {
+      news = db.prepare("SELECT * FROM news WHERE source = 'guide' OR tags LIKE '%\"مقالات آموزشی\"%' OR tags LIKE '%\"آموزش\"%' OR tags LIKE '%آموزش%' ORDER BY id DESC").all();
+    } else if (tag === 'news' || tag === 'اخبار') {
+      news = db.prepare("SELECT * FROM news WHERE (source = 'cron' OR tags LIKE '%\"news\"%' OR tags LIKE '%\"اخبار\"%') AND (source != 'guide') ORDER BY id DESC").all();
     } else {
-      news = db.prepare('SELECT * FROM news WHERE tags LIKE ? ORDER BY id DESC').all(`%"${tag}"%`);
+      news = db.prepare('SELECT * FROM news WHERE tags LIKE ? OR tags LIKE ? ORDER BY id DESC').all(`%"${tag}"%`, `%${tag}%`);
     }
     res.json(news);
   } catch (error) {
@@ -131,7 +161,7 @@ function getDefaultNewsCoverDataUrl(): string | null {
 // POST /api/news (Admin: Create news and broadcast to Telegram)
 router.post('/', requireAuth, requireAdmin, async (req, res) => {
   try {
-    const { title, content, image, tags, rebroadcastTelegram } = req.body;
+    const { title, content, image, tags, slug, source, rebroadcastTelegram } = req.body;
     
     if (!title || !content) {
       return res.status(400).json({ error: 'عنوان و متن خبر الزامی است' });
@@ -150,9 +180,18 @@ router.post('/', requireAuth, requireAdmin, async (req, res) => {
       console.log('[News] manual news without image, using default cover');
     }
 
-    const tagsJson = Array.isArray(tags) ? JSON.stringify(tags) : (typeof tags === 'string' && tags ? tags : '[]');
-    const insertStmt = db.prepare('INSERT INTO news (title, content, image, tags) VALUES (?, ?, ?, ?)');
-    const info = insertStmt.run(title, content, finalImage, tagsJson);
+    const isEducational = source === 'guide' || (typeof tags === 'string' && (tags.includes('آموزش') || tags.includes('مقالات آموزشی')));
+    const postSource = isEducational ? 'guide' : (source === 'news' ? 'cron' : (source || 'manual'));
+    const finalTags = normalizeTagsArray(tags, postSource);
+    const tagsJson = JSON.stringify(finalTags);
+
+    const finalSlug = (slug || '')
+      .toLowerCase()
+      .replace(/[^a-z0-9\u0600-\u06FF]+/g, '-')
+      .replace(/^-+|-+$/g, '') || (postSource === 'guide' ? `guide-${Date.now()}` : `post-${Date.now()}`);
+
+    const insertStmt = db.prepare('INSERT INTO news (title, content, image, tags, source, slug) VALUES (?, ?, ?, ?, ?, ?)');
+    const info = insertStmt.run(title, content, finalImage, tagsJson, postSource, finalSlug);
     const newId = Number(info.lastInsertRowid);
     syncDatabase();
     clearSitemapCache();
@@ -172,10 +211,10 @@ router.post('/', requireAuth, requireAdmin, async (req, res) => {
       }
     }
 
-    res.json({ message: 'خبر با موفقیت منتشر شد', id: newId });
+    res.json({ message: 'مطلب با موفقیت منتشر شد', id: newId, slug: finalSlug, source: postSource });
   } catch (error) {
     console.error('[News API] Error creating news:', error);
-    res.status(500).json({ error: 'خطا در انتشار خبر' });
+    res.status(500).json({ error: 'خطا در انتشار مطلب' });
   }
 });
 
@@ -183,7 +222,7 @@ router.post('/', requireAuth, requireAdmin, async (req, res) => {
 router.put('/:id(\\d+)', requireAuth, requireAdmin, async (req, res) => {
   try {
     const { id } = req.params;
-    const { title, content, image, tags, rebroadcastTelegram, imageManuallyCleared } = req.body;
+    const { title, content, image, tags, slug, source, rebroadcastTelegram, imageManuallyCleared } = req.body;
 
     if (!title || !content) {
       return res.status(400).json({ error: 'عنوان و متن خبر الزامی است' });
@@ -194,7 +233,11 @@ router.put('/:id(\\d+)', requireAuth, requireAdmin, async (req, res) => {
       return res.status(404).json({ error: 'خبر پیدا نشد' });
     }
 
-    const tagsJson = Array.isArray(tags) ? JSON.stringify(tags) : (typeof tags === 'string' && tags ? tags : existing.tags || '[]');
+    const isEducational = source === 'guide' || (typeof tags === 'string' && (tags.includes('آموزش') || tags.includes('مقالات آموزشی')));
+    const postSource = isEducational ? 'guide' : (source || existing.source || 'manual');
+    const finalTags = normalizeTagsArray(tags !== undefined ? tags : existing.tags, postSource);
+    const tagsJson = JSON.stringify(finalTags);
+
     let finalImage = image !== undefined ? (image || null) : existing.image;
     if (imageManuallyCleared === true) {
       finalImage = null;
@@ -210,8 +253,10 @@ router.put('/:id(\\d+)', requireAuth, requireAdmin, async (req, res) => {
       console.log('[News] manual news without image, using default cover');
     }
 
-    db.prepare('UPDATE news SET title = ?, content = ?, image = ?, tags = ? WHERE id = ?')
-      .run(title, content, finalImage, tagsJson, id);
+    const finalSlug = (slug !== undefined ? slug : existing.slug) || (postSource === 'guide' ? `guide-${id}` : `post-${id}`);
+
+    db.prepare('UPDATE news SET title = ?, content = ?, image = ?, tags = ?, source = ?, slug = ? WHERE id = ?')
+      .run(title, content, finalImage, tagsJson, postSource, finalSlug, id);
     syncDatabase();
     clearSitemapCache();
 

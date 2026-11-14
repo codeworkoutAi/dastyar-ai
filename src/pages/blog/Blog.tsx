@@ -80,19 +80,43 @@ export function Blog() {
  }, [searchQuery, timeFilter, selectedTag]);
 
  // Extract Unique Tags
- const uniqueTags = Array.from(new Set(news.flatMap(item => {
+ const extractedTags = Array.from(new Set(news.flatMap(item => {
  try {
  const parsed = JSON.parse(item.tags || '[]');
- return Array.isArray(parsed) ? parsed : [];
- } catch {
- return [];
- }
+ if (Array.isArray(parsed)) return parsed.map(String).map(t => t.trim()).filter(Boolean);
+ } catch {}
+ return (item.tags || '').split(/[,،\n]+/).map(t => t.trim()).filter(Boolean);
  })));
+
+ const priorityTags = ['مقالات آموزشی', 'آموزش', 'راهنما', 'اخبار'];
+ const uniqueTags = Array.from(new Set([
+ ...priorityTags.filter(t => extractedTags.includes(t)),
+ ...extractedTags
+ ]));
 
  // Filter Logic
  
   const isNewsPost = (item: NewsItem) => {
+    // 1. Explicit guide / manual article source
+    if (item.source === 'guide' || item.source === 'manual') return false;
+
+    // 2. Educational / guide tags
+    const raw = (item.tags || '').toLowerCase();
+    if (
+      raw.includes('آموزش') || 
+      raw.includes('آموزشی') || 
+      raw.includes('مقالات آموزشی') || 
+      raw.includes('راهنما') || 
+      raw.includes('guide') ||
+      raw.includes('ترفند')
+    ) {
+      return false;
+    }
+
+    // 3. Cron automated news feed
     if (item.source === 'cron') return true;
+
+    // 4. News tags
     try {
       const parsed = JSON.parse(item.tags || '[]');
       if (Array.isArray(parsed)) {
@@ -105,7 +129,12 @@ export function Blog() {
         }
       }
     } catch {}
-    return !item.slug;
+
+    if (raw.includes('اخبار') || raw.includes('خبر') || raw.includes('news')) {
+      return true;
+    }
+
+    return false;
   };
 
   const filteredNews = news.filter(item => {
@@ -119,12 +148,15 @@ export function Blog() {
  
  // Tag Filter
  if (selectedTag) {
+ let itemTagsList: string[] = [];
  try {
  const parsed = JSON.parse(item.tags || '[]');
- if (!Array.isArray(parsed) || !parsed.includes(selectedTag)) return false;
- } catch {
- return false;
+ if (Array.isArray(parsed)) itemTagsList = parsed.map(String).map(t => t.trim());
+ } catch {}
+ if (itemTagsList.length === 0) {
+ itemTagsList = (item.tags || '').split(/[,،\n]+/).map(t => t.trim());
  }
+ if (!itemTagsList.includes(selectedTag)) return false;
  }
  
  // Time Filter
@@ -652,6 +684,17 @@ export function Blog() {
               viewMode === 'compact' ? "flex-1 flex flex-col sm:flex-row sm:items-center justify-between w-full gap-4" : "p-5 sm:p-6 flex-1 flex flex-col justify-between"
             }>
               <div className={viewMode === 'compact' ? "flex-1" : ""}>
+                <div className="flex items-center gap-2 mb-2">
+                  {!isNewsPost(item) ? (
+                    <span className="inline-flex items-center gap-1 text-[10px] sm:text-[11px] font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-500/10 px-2.5 py-0.5 rounded-full border border-indigo-500/20">
+                      📚 مقالات آموزشی
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 text-[10px] sm:text-[11px] font-bold text-blue-600 dark:text-blue-400 bg-blue-500/10 px-2.5 py-0.5 rounded-full border border-blue-500/20">
+                      📰 خبر هوش مصنوعی
+                    </span>
+                  )}
+                </div>
                 <h3 className={`clay-news-title transition-all ${
                   viewMode === 'compact' ? 'type-h4 mb-1' : 'type-card-title mb-2'
                 }`} title={item.title}>
@@ -726,6 +769,11 @@ export function Blog() {
                     )}
                     
                     <div className="p-6 md:p-8 w-full md:w-1/2 flex flex-col justify-center">
+                      <div className="flex items-center gap-2 mb-3">
+                        <span className="inline-flex items-center gap-1.5 text-xs font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-500/10 px-3 py-1 rounded-full border border-indigo-500/20">
+                          📚 مقاله ویژه آموزشی و راهنما
+                        </span>
+                      </div>
                       <h3 className="type-h2 mb-4 clay-news-title">
                         {guideArticles[0].title}
                       </h3>

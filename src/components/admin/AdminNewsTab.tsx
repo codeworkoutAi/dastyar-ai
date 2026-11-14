@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Plus, Edit2, Trash2, RefreshCw, Send, AlertCircle, CheckCircle2, 
-  X, Image as ImageIcon, Sparkles, ExternalLink, Search, Clock, FileText, Wand2, Lightbulb
+  X, Image as ImageIcon, Sparkles, ExternalLink, Search, Clock, FileText, Wand2, Lightbulb, BookOpen
 } from 'lucide-react';
 import { AddSquareOutlineIcon, BoxLinearIcon } from '@solar-icons/react';
 import { useAuthStore } from '../../store/authStore';
@@ -14,6 +14,8 @@ interface NewsItem {
   content: string;
   image?: string;
   tags?: string;
+  slug?: string;
+  source?: string;
   sourceUrl?: string;
   createdAt: string;
 }
@@ -30,10 +32,12 @@ export const AdminNewsTab: React.FC = () => {
   // Compose / Edit state
   const [isAdding, setIsAdding] = useState(false);
   const [editingItem, setEditingItem] = useState<NewsItem | null>(null);
+  const [postType, setPostType] = useState<'guide' | 'news'>('guide');
   const [title, setTitle] = useState('');
+  const [slug, setSlug] = useState('');
   const [content, setContent] = useState('');
   const [image, setImage] = useState('');
-  const [tags, setTags] = useState('news, ai');
+  const [tags, setTags] = useState('مقالات آموزشی, آموزش, راهنما');
   const [rebroadcastTelegram, setRebroadcastTelegram] = useState(false);
   const [saveLoading, setSaveLoading] = useState(false);
 
@@ -67,11 +71,15 @@ export const AdminNewsTab: React.FC = () => {
       if (!res.ok) throw new Error(data.error || 'خطا در تولید مقاله');
       
       const g = data.guide;
+      setPostType('guide');
       setTitle(g.title);
+      setSlug(g.slug || '');
       setContent(g.content);
-      setTags(Array.isArray(g.tags) ? g.tags.join(', ') : g.tags);
+      const generatedTags = Array.isArray(g.tags) ? g.tags : ['مقالات آموزشی', 'آموزش', 'راهنما'];
+      if (!generatedTags.includes('مقالات آموزشی')) generatedTags.unshift('مقالات آموزشی');
+      setTags(generatedTags.join(', '));
       if (g.image) setImage(g.image);
-      showFeedback(`مقاله آموزشی «${g.title}» با موفقیت تولید و در فرم درج شد. می‌توانید بررسی و منتشر کنید.`, 'success');
+      showFeedback(`مقاله آموزشی «${g.title}» با موفقیت تولید و در بخش مقالات آموزشی درج شد. می‌توانید بررسی و منتشر کنید.`, 'success');
     } catch (err: any) {
       showFeedback(err.message || 'خطا در تولید مقاله هوشمند', 'error');
     } finally {
@@ -140,9 +148,17 @@ export const AdminNewsTab: React.FC = () => {
   const handleEditClick = (item: NewsItem) => {
     setEditingItem(item);
     setTitle(item.title);
+    setSlug(item.slug || '');
     setContent(item.content);
     setImage(item.image || '');
-    setTags(item.tags || 'news, ai');
+    const isGuide = item.source === 'guide' || (item.tags && (item.tags.includes('آموزش') || item.tags.includes('مقالات آموزشی')));
+    setPostType(isGuide ? 'guide' : 'news');
+    let formattedTags = item.tags || '';
+    try {
+      const parsed = JSON.parse(formattedTags);
+      if (Array.isArray(parsed)) formattedTags = parsed.join(', ');
+    } catch {}
+    setTags(formattedTags || (isGuide ? 'مقالات آموزشی, آموزش, راهنما' : 'اخبار, هوش مصنوعی'));
     setRebroadcastTelegram(false);
     setIsAdding(true);
   };
@@ -150,10 +166,12 @@ export const AdminNewsTab: React.FC = () => {
   const resetForm = () => {
     setIsAdding(false);
     setEditingItem(null);
+    setPostType('guide');
     setTitle('');
+    setSlug('');
     setContent('');
     setImage('');
-    setTags('news, ai');
+    setTags('مقالات آموزشی, آموزش, راهنما');
     setRebroadcastTelegram(false);
   };
 
@@ -180,6 +198,8 @@ export const AdminNewsTab: React.FC = () => {
           content: content.trim(),
           image: image.trim() || undefined,
           tags: tags.trim() || undefined,
+          slug: slug.trim() || undefined,
+          source: postType === 'guide' ? 'guide' : 'news',
           rebroadcastTelegram
         })
       });
@@ -377,6 +397,45 @@ export const AdminNewsTab: React.FC = () => {
           </div>
 
           <form onSubmit={handleSaveArticle} className="space-y-4">
+            {/* Category / Section Picker */}
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-bold text-[var(--text-main)]">بخش و دسته‌بندی انتشار در وبلاگ *</label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPostType('guide');
+                    if (!tags.includes('مقالات آموزشی')) {
+                      setTags('مقالات آموزشی, آموزش, راهنما, کاربرد هوش مصنوعی');
+                    }
+                  }}
+                  className={`p-3 rounded-xl border flex items-center justify-center gap-2 text-xs font-black transition-all cursor-pointer ${
+                    postType === 'guide'
+                      ? 'clay-btn-primary text-white border-transparent shadow-md'
+                      : 'clay-surface text-[var(--text-muted)] border-transparent hover:text-[var(--text-main)]'
+                  }`}
+                >
+                  <BookOpen size={16} />
+                  <span>📚 بخش مقالات آموزشی و راهنماها</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPostType('news');
+                    setTags('اخبار, هوش مصنوعی, رویداد');
+                  }}
+                  className={`p-3 rounded-xl border flex items-center justify-center gap-2 text-xs font-black transition-all cursor-pointer ${
+                    postType === 'news'
+                      ? 'clay-btn-primary text-white border-transparent shadow-md'
+                      : 'clay-surface text-[var(--text-muted)] border-transparent hover:text-[var(--text-main)]'
+                  }`}
+                >
+                  <Sparkles size={16} />
+                  <span>📰 بخش اخبار هوش مصنوعی</span>
+                </button>
+              </div>
+            </div>
+
             <div className="flex flex-col gap-1.5">
               <label className="text-xs font-bold text-[var(--text-main)]">عنوان مقاله یا خبر *</label>
               <input
@@ -386,6 +445,18 @@ export const AdminNewsTab: React.FC = () => {
                 placeholder="عنوان جذاب برای مقاله..."
                 className="w-full px-4 py-2.5 rounded-xl clay-surface text-sm outline-none font-bold"
                 required
+              />
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-bold text-[var(--text-main)]">شناسه انگلیسی آدرس (URL Slug - اختیاری برای سئو)</label>
+              <input
+                type="text"
+                value={slug}
+                onChange={(e) => setSlug(e.target.value)}
+                placeholder="مثال: how-to-use-ai-for-excel"
+                className="w-full px-4 py-2 rounded-xl clay-surface text-xs font-mono outline-none text-left"
+                dir="ltr"
               />
             </div>
 
@@ -544,9 +615,13 @@ export const AdminNewsTab: React.FC = () => {
               <div className="p-4 flex flex-col flex-1">
                 <div className="flex items-center justify-between text-[10px] text-[var(--text-dim)] mb-2">
                   <span>{formatTehranDate(item.createdAt)}</span>
-                  {item.tags && (
-                    <span className="px-2 py-0.5 rounded-full bg-[var(--color-input-bg)] font-bold text-[var(--color-accent-primary)] truncate max-w-[120px]">
-                      {item.tags}
+                  {item.source === 'guide' || (item.tags && (item.tags.includes('آموزش') || item.tags.includes('مقالات آموزشی'))) ? (
+                    <span className="px-2 py-0.5 rounded-full bg-purple-500/10 text-purple-600 dark:text-purple-400 font-bold border border-purple-500/20">
+                      📚 مقاله آموزشی
+                    </span>
+                  ) : (
+                    <span className="px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 font-bold border border-blue-500/20">
+                      📰 خبر
                     </span>
                   )}
                 </div>
