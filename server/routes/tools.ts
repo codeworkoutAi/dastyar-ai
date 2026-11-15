@@ -636,7 +636,7 @@ router.post('/api/tts', aiRouteLimiter, async (req, res) => {
     }
 
     // Limit text for a single synthesis call to prevent burning excessive tokens
-    const textToSynthesize = cleanText.length > 800 ? cleanText.substring(0, 800) + '…' : cleanText;
+    const textToSynthesize = cleanText.length > 1000 ? cleanText.substring(0, 1000) + '…' : cleanText;
     const cacheKey = `${lang || 'auto'}:${textToSynthesize}`;
 
     if (ttsAudioCache.has(cacheKey)) {

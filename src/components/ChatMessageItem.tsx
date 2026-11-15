@@ -53,6 +53,30 @@ export interface ChatMessageItemProps {
   onChangeEditText: (text: string) => void;
 }
 
+function formatUserFacingModelLabel(rawModel?: string): string {
+  if (!rawModel) return 'دستیار هوشمند';
+  const lower = rawModel.toLowerCase();
+  if (lower.includes('(هوشمند)') || lower.includes('auto') || lower.includes('smart')) {
+    return 'دستیار هوشمند';
+  }
+  if (lower.includes('image-generation') || lower.includes('تصویر')) {
+    return 'تولید تصویر';
+  }
+  if (lower.includes('claude') || lower.includes('paid_default') || lower.includes('sonnet')) {
+    return 'دستیار گفتگوی پیشرفته';
+  }
+  if (lower.includes('deepseek') || lower.includes('paid_coding') || lower.includes('coding')) {
+    return 'دستیار برنامه‌نویسی پیشرفته';
+  }
+  if (lower.includes('vision') || lower.includes('paid_vision') || lower.includes('اسناد')) {
+    return 'دستیار اسناد و بینایی پیشرفته';
+  }
+  if (lower.includes('gemini') || lower.includes('flash') || lower.includes('free_default') || lower.includes('default')) {
+    return 'دستیار چت و گفتگو';
+  }
+  return 'دستیار هوشمند';
+}
+
 export const ChatMessageItem: React.FC<ChatMessageItemProps> = memo(({
   msg,
   isStreaming,
@@ -365,9 +389,9 @@ export const ChatMessageItem: React.FC<ChatMessageItemProps> = memo(({
           <div className={`overflow-hidden transition-all duration-300 ease-in-out ${showPerformanceMetrics ? 'max-h-12 opacity-100 mb-1' : 'max-h-0 opacity-0 mb-0'}`}>
             <div className="flex items-center gap-1.5 flex-nowrap overflow-x-auto [scrollbar-width:none] whitespace-nowrap text-[10px] sm:text-[11px] text-zinc-700 dark:text-zinc-400 pb-1">
               {msg.modelUsed && (
-                <div className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-[var(--color-accent-primary)]/10 border border-[var(--color-accent-primary)]/20 text-[var(--color-accent-text)] font-mono select-none shrink-0" title="مدل پردازش‌کننده">
+                <div className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-[var(--color-accent-primary)]/10 border border-[var(--color-accent-primary)]/20 text-[var(--color-accent-text)] select-none shrink-0" title="دستیار هوش مصنوعی">
                   <Sparkles className="w-3 h-3" />
-                  <span dir="ltr">{msg.modelUsed.replace(' (Auto)', '').split('/').pop()}</span>
+                  <span dir="rtl">{formatUserFacingModelLabel(msg.modelUsed)}</span>
                 </div>
               )}
 

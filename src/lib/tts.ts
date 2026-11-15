@@ -1,9 +1,9 @@
 // High-Quality Text-to-Speech (TTS) Engine with Persian & English Support
-// Primary Engine: Neural Voice Stream via Server Audio Engine (Google Gemini 3.1 Flash TTS Preview)
-// Playback Engine: Web Audio API (AudioContext) with HTMLAudioElement fallback
+// Primary Engine: Neural Voice Stream via Server Audio Engine (Google Gemini 3.8 Flash Lite TTS & 3.1 Flash TTS Preview)
+// Architecture: Chunked & Continuous Streaming with Background Prefetching (Gapless Web Audio API)
 // Fallback Engine: Client Web Speech API with Multi-sentence Chunking & Voice Matching
 
-function extractCleanAnswerForSpeech(rawContent: string): string {
+export function extractCleanAnswerForSpeech(rawContent: string): string {
   if (!rawContent || !rawContent.trim()) return '';
 
   let text = rawContent;
@@ -57,9 +57,55 @@ function extractCleanAnswerForSpeech(rawContent: string): string {
   return text.trim();
 }
 
-function isPersianSpeechText(text: string): boolean {
+export function isPersianSpeechText(text: string): boolean {
   const persianCharMatch = text.match(/[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]/g);
   return !!persianCharMatch && persianCharMatch.length > 0;
+}
+
+/**
+ * Splits text into natural sentence-boundary chunks of optimal size (600-800 characters)
+ * for gapless prefetching and instantaneous playback.
+ */
+export function splitTextIntoSpeechChunks(text: string, maxChunkLen = 750): string[] {
+  if (!text || text.length <= maxChunkLen) {
+    return text ? [text] : [];
+  }
+
+  // Split text by sentence punctuation (. ! ؟ ? \n)
+  const parts = text.split(/([.!?؟\n]+)/).filter(Boolean);
+
+  const chunks: string[] = [];
+  let cur = '';
+
+  for (let i = 0; i < parts.length; i++) {
+    const part = parts[i];
+    if ((cur + part).length <= maxChunkLen) {
+      cur += part;
+    } else {
+      if (cur.trim()) chunks.push(cur.trim());
+      // If a single part without punctuation exceeds maxChunkLen, split by commas/semicolons
+      if (part.length > maxChunkLen) {
+        const subParts = part.split(/([،,؛;]+)/).filter(Boolean);
+        cur = '';
+        for (const sub of subParts) {
+          if ((cur + sub).length <= maxChunkLen) {
+            cur += sub;
+          } else {
+            if (cur.trim()) chunks.push(cur.trim());
+            cur = sub;
+          }
+        }
+      } else {
+        cur = part;
+      }
+    }
+  }
+
+  if (cur.trim()) {
+    chunks.push(cur.trim());
+  }
+
+  return chunks.length > 0 ? chunks : [text.slice(0, maxChunkLen)];
 }
 
 export interface SpeakController {
@@ -72,6 +118,7 @@ let activeSourceNode: AudioBufferSourceNode | null = null;
 let activeAudioElement: HTMLAudioElement | null = null;
 let activeBlobUrl: string | null = null;
 let activeUtterances: SpeechSynthesisUtterance[] = [];
+let activeAbortController: AbortController | null = null;
 let isUserCancelled = false;
 
 function getOrCreateAudioContext(): AudioContext | null {
@@ -91,7 +138,13 @@ function getOrCreateAudioContext(): AudioContext | null {
 }
 
 function stopCurrentPlayback() {
-  // Stop Web Audio node
+  // Abort any in-flight chunk downloads
+  if (activeAbortController) {
+    activeAbortController.abort();
+    activeAbortController = null;
+  }
+
+  // Stop active Web Audio node
   if (activeSourceNode) {
     try {
       activeSourceNode.onended = null;
@@ -132,9 +185,11 @@ function stopCurrentPlayback() {
 }
 
 /**
- * High-Reliability Audio TTS:
- * First attempts server-side neural audio streaming via Web Audio API (falls back to HTML5 Audio).
- * If network, quota, or server error occurs, seamlessly falls back to client Web Speech API.
+ * Scenario 2 Engine: Chunked & Continuous Streaming Text-to-Speech
+ * - Splits any length text into natural sentence chunks (600-750 chars).
+ * - Plays Chunk 0 within ~1 second.
+ * - Concurrently prefetches Chunk N+1 in the background while Chunk N is actively playing.
+ * - Provides seamless, gapless continuous audio playback for texts of any length.
  */
 export function speakText(
   rawContent: string,
@@ -146,6 +201,9 @@ export function speakText(
   isUserCancelled = false;
   stopCurrentPlayback();
 
+  activeAbortController = new AbortController();
+  const signal = activeAbortController.signal;
+
   // Synchronously prime AudioContext during the user's click gesture (unlocks iOS/Chrome autoplay)
   const ctx = getOrCreateAudioContext();
 
@@ -156,6 +214,12 @@ export function speakText(
   }
 
   const isPersian = isPersianSpeechText(cleanText);
+  const chunks = splitTextIntoSpeechChunks(cleanText, 700);
+
+  if (chunks.length === 0) {
+    onEnd();
+    return { stop: () => {} };
+  }
 
   const controller: SpeakController = {
     stop: () => {
@@ -165,96 +229,124 @@ export function speakText(
     },
   };
 
-  // 2. Fetch server-side neural audio
-  fetch('/api/tts', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      text: cleanText,
-      lang: isPersian ? 'fa' : 'en',
-    }),
-  })
-    .then(async (res) => {
-      if (isUserCancelled) return;
-      if (!res.ok) {
-        fallbackWebSpeech(cleanText, isPersian, onStart, onEnd, onError);
+  // Helper to fetch and decode a single chunk into an AudioBuffer
+  async function fetchAndDecodeChunk(chunkText: string): Promise<AudioBuffer | null> {
+    const res = await fetch('/api/tts', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        text: chunkText,
+        lang: isPersian ? 'fa' : 'en',
+      }),
+      signal,
+    });
+
+    if (!res.ok) {
+      throw new Error(`TTS_SERVER_${res.status}`);
+    }
+
+    const arrayBuffer = await res.arrayBuffer();
+    if (signal.aborted || isUserCancelled) return null;
+
+    if (ctx) {
+      if (ctx.state === 'suspended') {
+        await ctx.resume();
+      }
+      return await ctx.decodeAudioData(arrayBuffer);
+    }
+    return null;
+  }
+
+  // Pre-fetch cache: Map of chunk index -> Promise<AudioBuffer | null>
+  const prefetchPromises = new Map<number, Promise<AudioBuffer | null>>();
+
+  function prefetchChunk(index: number) {
+    if (index >= chunks.length || prefetchPromises.has(index)) return;
+    prefetchPromises.set(
+      index,
+      fetchAndDecodeChunk(chunks[index]).catch((err) => {
+        if (!signal.aborted && !isUserCancelled) {
+          console.warn(`[TTS] Prefetch chunk ${index} failed:`, err?.message || err);
+        }
+        return null;
+      })
+    );
+  }
+
+  let currentPlayingIndex = 0;
+  let hasCalledStart = false;
+
+  async function playNextChunk() {
+    if (isUserCancelled || signal.aborted) {
+      return;
+    }
+
+    if (currentPlayingIndex >= chunks.length) {
+      // All chunks finished!
+      if (!isUserCancelled) {
+        onEnd();
+      }
+      return;
+    }
+
+    const chunkIdx = currentPlayingIndex;
+    currentPlayingIndex++;
+
+    // Ensure this chunk is fetching/fetched
+    prefetchChunk(chunkIdx);
+
+    // Immediately trigger prefetch for NEXT chunk so it downloads while current chunk is playing!
+    prefetchChunk(chunkIdx + 1);
+
+    try {
+      const audioBuffer = await prefetchPromises.get(chunkIdx)!;
+      if (isUserCancelled || signal.aborted) return;
+
+      if (!audioBuffer || !ctx) {
+        // If server failed on first chunk, try fallback Web Speech
+        if (chunkIdx === 0) {
+          fallbackWebSpeech(cleanText, isPersian, onStart, onEnd, onError);
+          return;
+        }
+        // If a subsequent chunk failed, finish cleanly
+        onEnd();
         return;
       }
 
-      const arrayBuffer = await res.arrayBuffer();
-      if (isUserCancelled) return;
-
-      // Primary Playback Engine: Web Audio API (AudioContext)
-      if (ctx) {
-        try {
-          if (ctx.state === 'suspended') {
-            await ctx.resume();
-          }
-          const audioBuffer = await ctx.decodeAudioData(arrayBuffer);
-          if (isUserCancelled) return;
-
-          const source = ctx.createBufferSource();
-          source.buffer = audioBuffer;
-          source.connect(ctx.destination);
-          activeSourceNode = source;
-
-          source.onended = () => {
-            activeSourceNode = null;
-            if (!isUserCancelled) {
-              onEnd();
-            }
-          };
-
-          source.start(0);
-          if (!isUserCancelled) {
-            onStart();
-          }
-          return;
-        } catch (webaudioErr) {
-          console.warn('[TTS] Web Audio decoding failed, attempting HTMLAudioElement fallback:', webaudioErr);
-        }
+      if (ctx.state === 'suspended') {
+        await ctx.resume();
       }
 
-      // Secondary Playback Engine: HTML5 Audio with Blob URL
-      try {
-        const blob = new Blob([arrayBuffer], { type: 'audio/wav' });
-        const blobUrl = URL.createObjectURL(blob);
-        activeBlobUrl = blobUrl;
+      const source = ctx.createBufferSource();
+      source.buffer = audioBuffer;
+      source.connect(ctx.destination);
+      activeSourceNode = source;
 
-        const audio = new Audio(blobUrl);
-        activeAudioElement = audio;
-
-        audio.onplay = () => {
-          if (!isUserCancelled) onStart();
-        };
-
-        audio.onended = () => {
-          activeAudioElement = null;
-          if (activeBlobUrl) {
-            URL.revokeObjectURL(activeBlobUrl);
-            activeBlobUrl = null;
-          }
-          if (!isUserCancelled) onEnd();
-        };
-
-        audio.onerror = () => {
-          if (!isUserCancelled) {
-            fallbackWebSpeech(cleanText, isPersian, onStart, onEnd, onError);
-          }
-        };
-
-        await audio.play();
-      } catch (playErr) {
-        if (!isUserCancelled) {
-          fallbackWebSpeech(cleanText, isPersian, onStart, onEnd, onError);
+      source.onended = () => {
+        activeSourceNode = null;
+        if (!isUserCancelled && !signal.aborted) {
+          playNextChunk();
         }
+      };
+
+      source.start(0);
+
+      if (!hasCalledStart && !isUserCancelled) {
+        hasCalledStart = true;
+        onStart();
       }
-    })
-    .catch(() => {
-      if (!isUserCancelled) {
+    } catch (playErr) {
+      if (isUserCancelled || signal.aborted) return;
+      if (chunkIdx === 0) {
         fallbackWebSpeech(cleanText, isPersian, onStart, onEnd, onError);
+      } else {
+        onEnd();
       }
-    });
+    }
+  }
+
+  // Kick off chunk 0 immediately
+  playNextChunk();
 
   return controller;
 }

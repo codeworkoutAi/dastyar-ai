@@ -617,6 +617,8 @@ router.post('/api/chat/stream', guestChatRateLimiter, guestChatHourLimiter, user
             if (candidateKey) {
               userKey = candidateKey;
               ai = getGeminiClient(userKey, false);
+            } else {
+              throw new Error('در حال حاضر ظرفیت سرویس تکمیل است. لطفاً چند دقیقه دیگر تلاش کنید.');
             }
           }
         } catch (poolErr: any) {
@@ -768,6 +770,7 @@ router.post('/api/chat/stream', guestChatRateLimiter, guestChatHourLimiter, user
                   }
                 }
               } catch (poolErr) {
+                lastError = poolErr;
                 console.warn(`[KeyPool] No more fresh keys available for candidate ${candidate}.`);
               }
               break;
@@ -801,17 +804,10 @@ router.post('/api/chat/stream', guestChatRateLimiter, guestChatHourLimiter, user
 
       if (!streamedSuccessfully) {
         if (!hasSentAnyChunk) {
-          const errMsg = lastError ? extractCleanErrorMessage(lastError) : 'مدل هوش مصنوعی در دسترس نیست';
-          let frontendMsg = '⚠️ خطا در ارتباط با مدل.';
-          if (errMsg.includes('quota') || errMsg.includes('resource_exhausted')) {
-            frontendMsg = '⚠️ محدودیت استفاده (Quota) به پایان رسیده است. لطفا کلید API معتبر وارد کنید.';
-          } else if (errMsg.includes('503')) {
-            frontendMsg = '⚠️ مدل هوش مصنوعی در حال حاضر با ترافیک بالا مواجه است (۵۰۳). لطفاً چند لحظه دیگر دوباره تلاش کنید.';
-          } else if (errMsg.includes('invalid argument') || errMsg.includes('INVALID_ARGUMENT') || errMsg.includes('400')) {
-            frontendMsg = '⚠️ درخواست ارسالی توسط مدل پذیرفته نشد (کد ۴۰۰). لطفاً پیام یا تنظیمات مدل را بررسی کنید.';
-          } else {
-            frontendMsg = `⚠️ خطا: ${errMsg}`;
-          }
+          const friendlyMsg = lastError
+            ? sanitizeErrorMessage(lastError)
+            : 'سرویس هوش مصنوعی موقتاً با حجم بالایی از درخواست‌ها مواجه است. لطفاً چند لحظه دیگر دکمه «تلاش مجدد» را بزنید.';
+          const frontendMsg = friendlyMsg.startsWith('⚠️') ? friendlyMsg : `⚠️ ${friendlyMsg}`;
           sendChunk({
             error: frontendMsg,
           });
