@@ -31,26 +31,8 @@ export const AdminFinanceTab: React.FC = () => {
  const [page, setPage] = useState(1);
  const LIMIT = 50;
 
-// Settings state
-  const [sellingRate, setSellingRate] = useState('200000');
-  const [welcomeBonus, setWelcomeBonus] = useState('50000');
-const [welcomeBonusEnabled, setWelcomeBonusEnabled] = useState(true);
-  const [freeKeyPool, setFreeKeyPool] = useState('');
-
-  // Zarinpal Gateway state
- const [zarinpalMerchantId, setZarinpalMerchantId] = useState('');
- const [zarinpalSandbox, setZarinpalSandbox] = useState(false);
- const [gatewayEnabled, setGatewayEnabled] = useState(false);
- const [testingGateway, setTestingGateway] = useState(false);
- const [gatewayTestResult, setGatewayTestResult] = useState<{ valid: boolean; message: string } | null>(null);
- const [detectedServerIp, setDetectedServerIp] = useState<string | null>(null);
-
- // BazaarPay Gateway state
- const [bazaarpayDestination, setBazaarpayDestination] = useState('');
- const [bazaarpayToken, setBazaarpayToken] = useState('');
- const [bazaarpayEnabled, setBazaarpayEnabled] = useState(false);
- const [testingBazaarPay, setTestingBazaarPay] = useState(false);
- const [bazaarPayTestResult, setBazaarPayTestResult] = useState<{ valid: boolean; message: string } | null>(null);
+ // Settings state (read-only in Finance; managed in Settings Tab)
+ const [sellingRate, setSellingRate] = useState('200000');
 
  // New purchase form
  const [isAddingPurchase, setIsAddingPurchase] = useState(false);
@@ -65,7 +47,6 @@ const [welcomeBonusEnabled, setWelcomeBonusEnabled] = useState(true);
 
  useEffect(() => {
  fetchData();
- fetchSettings();
  fetchLiveBalances();
  }, []);
 
@@ -180,133 +161,6 @@ const [welcomeBonusEnabled, setWelcomeBonusEnabled] = useState(true);
   const t = setTimeout(() => { fetchUsageSummary(usageSearch); }, 400);
   return () => clearTimeout(t);
  }, [usageSearch]);
-
- const fetchSettings = async () => {
- try {
- const [resSettings, resGateway, resBazaar] = await Promise.all([
- fetch('/api/admin/settings', { headers: { Authorization: `Bearer ${token}` } }),
- fetch('/api/admin/gateway-status', { headers: { Authorization: `Bearer ${token}` } }),
- fetch('/api/admin/bazaarpay-status', { headers: { Authorization: `Bearer ${token}` } })
- ]);
- if (resSettings.ok) {
- const settings = await resSettings.json();
- if (settings.api_dollar_rate) setSellingRate(settings.api_dollar_rate);
- if (settings.welcome_bonus_amount) setWelcomeBonus(settings.welcome_bonus_amount);
- if (settings.welcome_bonus_enabled) setWelcomeBonusEnabled(settings.welcome_bonus_enabled === 'true');
- if (settings.zarinpal_merchant_id) setZarinpalMerchantId(settings.zarinpal_merchant_id);
- if (settings.zarinpal_sandbox !== undefined) setZarinpalSandbox(settings.zarinpal_sandbox === 'true');
- if (settings.bazaarpay_destination) setBazaarpayDestination(settings.bazaarpay_destination);
- if (settings.bazaarpay_token) setBazaarpayToken(settings.bazaarpay_token);
- if (settings.bazaarpay_enabled !== undefined) setBazaarpayEnabled(settings.bazaarpay_enabled === 'true');
- }
- if (resGateway.ok) {
- const gw = await resGateway.json();
- if (gw.merchantId) setZarinpalMerchantId(gw.merchantId);
- if (gw.sandbox !== undefined) setZarinpalSandbox(gw.sandbox);
- if (gw.serverIp) setDetectedServerIp(gw.serverIp);
- setGatewayEnabled(gw.enabled);
- }
- if (resBazaar.ok) {
- const bz = await resBazaar.json();
- if (bz.destination) setBazaarpayDestination(bz.destination);
- if (bz.enabled !== undefined) setBazaarpayEnabled(bz.enabled);
- }
- } catch (err: any) {
-   // Previously an empty catch: when /api/admin/settings or /gateway-status failed,
-   // the panel silently kept its hardcoded defaults (sellingRate 200000,
-   // welcomeBonus 50000). An operator would then hit "save" and overwrite the real
-   // rate/bonus with those defaults, with no indication anything had gone wrong.
-   console.error('Failed to load finance settings:', err);
-   setFeedback({
-     type: 'error',
-     text: 'بارگذاری تنظیمات مالی ناموفق بود. لطفاً صفحه را بازخوانی کنید؛ تا آن زمان مقادیر نمایش‌داده‌شده پیش‌فرض هستند و ذخیره نکنید.'
-   });
- }
- };
-
- const handleSaveSettings = async () => {
- setActionLoading(true);
- setFeedback(null);
- try {
-  // A bare fetch() only rejects on network failure. A 400/401/403/500 from the
-  // server resolves normally, so the old Promise.all reported
-  // success even when every PUT had been rejected, leaving some keys written and
-  // others not. Each response is now checked.
-  const settingsToSave: Array<[string, string]> = [
-    ['api_dollar_rate', sellingRate],
-    ['welcome_bonus_amount', welcomeBonus],
-    ['welcome_bonus_enabled', String(welcomeBonusEnabled)],
-    ['free_key_pool', freeKeyPool],
-    ['zarinpal_merchant_id', zarinpalMerchantId.trim()],
-    ['zarinpal_sandbox', String(zarinpalSandbox)],
-    ['bazaarpay_destination', bazaarpayDestination.trim()],
-    ['bazaarpay_token', bazaarpayToken.trim()],
-    ['bazaarpay_enabled', String(bazaarpayEnabled)]
-  ];
-
-  await Promise.all(
-    settingsToSave.map(async ([key, value]) => {
-      const res = await fetch('/api/admin/settings', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
-        body: JSON.stringify({ key, value })
-      });
-      if (!res.ok) {
-        let msg = 'خطا در ذخیره تنظیم ' + key;
-        try {
-          const data = await res.json();
-          if (data?.error) msg = data.error;
-        } catch { /* response had no JSON body */ }
-        throw new Error(msg);
-      }
-    })
-  );
-
- setGatewayEnabled(zarinpalMerchantId.trim().length >= 30);
- setFeedback({ type: 'success', text: 'تنظیمات با موفقیت ذخیره شد.' });
- fetchData();
- } catch (err: any) {
- setFeedback({ type: 'error', text: err.message || 'خطا در ذخیره تنظیمات' });
- } finally {
- setActionLoading(false);
- }
- };
-
- const handleTestGateway = async () => {
- setTestingGateway(true);
- setGatewayTestResult(null);
- try {
- const res = await fetch('/api/admin/test-gateway', {
- method: 'POST',
- headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
- body: JSON.stringify({ merchantId: zarinpalMerchantId.trim(), sandbox: zarinpalSandbox })
- });
- const data = await res.json();
- setGatewayTestResult(data);
- } catch (err: any) {
- setGatewayTestResult({ valid: false, message: 'خطا در برقراری ارتباط با سرور: ' + err.message });
- } finally {
- setTestingGateway(false);
- }
- };
-
- const handleTestBazaarPay = async () => {
- setTestingBazaarPay(true);
- setBazaarPayTestResult(null);
- try {
- const res = await fetch('/api/admin/test-bazaarpay', {
- method: 'POST',
- headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
- body: JSON.stringify({ destination: bazaarpayDestination.trim(), token: bazaarpayToken.trim() })
- });
- const data = await res.json();
- setBazaarPayTestResult(data);
- } catch (err: any) {
- setBazaarPayTestResult({ valid: false, message: 'خطا در برقراری ارتباط با سرور: ' + err.message });
- } finally {
- setTestingBazaarPay(false);
- }
- };
 
  const handleAddPurchase = async (e: React.FormEvent) => {
  e.preventDefault();
@@ -512,27 +366,27 @@ const [welcomeBonusEnabled, setWelcomeBonusEnabled] = useState(true);
  </div>
  <div>
  <div className="flex items-center gap-2 flex-wrap">
- <span className="font-bold text-xs text-zinc-900 dark:text-zinc-100">
+ <span className="font-bold text-xs text-[var(--text-main)]">
  استعلام لایو موجودی کلید {liveBalances[0].providerName}:
  </span>
  <span className="text-base font-black text-emerald-600 dark:text-emerald-400 font-mono" dir="ltr">
  ${liveBalances[0].remainingUsd.toFixed(2)}
  </span>
- <span className="text-[11px] text-zinc-500 dark:text-zinc-400 font-mono">
+ <span className="text-[11px] text-[var(--text-muted)] font-mono">
  (سقف: ${liveBalances[0].hardLimitUsd} | مصرف: ${liveBalances[0].totalUsedUsd.toFixed(2)})
  </span>
  {liveBalances[0].baseTokens !== undefined && (
  <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-bold font-mono" dir="rtl">
  <span>~{liveBalances[0].baseTokens.toLocaleString('fa-IR')} توکن سهمیه</span>
  {liveBalances[0].economyTokens ? (
- <span className="text-[10px] text-zinc-500 dark:text-zinc-400 font-normal">
+ <span className="text-[10px] text-[var(--text-muted)] font-normal">
  (معادل ~{(liveBalances[0].economyTokens / 1000000).toFixed(1)}M توکن در مدل‌های اقتصادی)
  </span>
  ) : null}
  </span>
  )}
  </div>
- <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-1 leading-relaxed">
+ <p className="text-[11px] text-[var(--text-muted)] mt-1 leading-relaxed">
  این موجودی به صورت زنده و مستقیم از سرور تأمین‌کننده ({liveBalances[0].baseUrl}) با API Key استعلام شده است.
  {liveBalances[0].baseTokens ? ` (هر ۱ دلار = ۵۰۰٬۰۰۰ واحد سهمیه پایه One-API)` : ''}
  </p>
@@ -542,7 +396,7 @@ const [welcomeBonusEnabled, setWelcomeBonusEnabled] = useState(true);
  <button
  onClick={fetchLiveBalances}
  disabled={liveLoading}
- className="px-4 py-2 rounded-xl admin-btn-primary text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-sm transition-all disabled:opacity-50"
+ className="px-4 py-2 rounded-xl clay-btn-primary text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-sm transition-all disabled:opacity-50"
  >
  <RefreshCw className={`w-3.5 h-3.5 ${liveLoading ? 'animate-spin' : ''}`} />
  <span>بروزرسانی استعلام</span>
@@ -567,23 +421,23 @@ const [welcomeBonusEnabled, setWelcomeBonusEnabled] = useState(true);
  {/* KPI Cards Header */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5">
  {/* Total USD Purchased */}
- <div className="p-4 rounded-2xl admin-card flex flex-col justify-between">
+ <div className="p-4 rounded-2xl clay-card flex flex-col justify-between">
  <div>
  <div className="flex items-center justify-between mb-2">
- <span className="text-xs font-semibold text-zinc-500 dark:text-zinc-400">مخزن کلیدها (خریداری شده)</span>
+ <span className="text-xs font-semibold text-[var(--text-muted)]">مخزن کلیدها (خریداری شده)</span>
  <div className="w-8 h-8 rounded-xl bg-blue-500/10 text-blue-500 flex items-center justify-center shrink-0">
  <DollarSign className="w-4 h-4" />
  </div>
  </div>
  <div className="flex items-baseline gap-1.5 mt-1">
- <span className="text-2xl font-black text-zinc-900 dark:text-white font-mono" dir="ltr">
+ <span className="text-2xl font-black text-[var(--text-main)] font-mono" dir="ltr">
  ${(summary?.totalPurchasedUsd || 0).toFixed(2)}
  </span>
  <span className="text-xs font-medium text-zinc-400">اعتبار دلاری</span>
  </div>
  </div>
- <div className="text-[11px] font-medium text-zinc-500 dark:text-zinc-400 mt-2.5 pt-2 border-t admin-border  flex items-center justify-between">
- <span>پرداخت کل: <span className="font-bold text-zinc-700 dark:text-zinc-300">{(summary?.totalSpentToman || 0).toLocaleString('fa-IR')}</span> تومان</span>
+ <div className="text-[11px] font-medium text-[var(--text-muted)] mt-2.5 pt-2 border-t border-[var(--card-border)]  flex items-center justify-between">
+ <span>پرداخت کل: <span className="font-bold text-[var(--text-main)]">{(summary?.totalSpentToman || 0).toLocaleString('fa-IR')}</span> تومان</span>
  {!hasPurchases && (
  <button
  type="button"
@@ -600,10 +454,10 @@ const [welcomeBonusEnabled, setWelcomeBonusEnabled] = useState(true);
  </div>
 
  {/* Average Buy Rate vs Selling Rate */}
- <div className="p-4 rounded-2xl admin-card flex flex-col justify-between">
+ <div className="p-4 rounded-2xl clay-card flex flex-col justify-between">
  <div>
  <div className="flex items-center justify-between mb-2">
- <span className="text-xs font-semibold text-zinc-500 dark:text-zinc-400">نرخ خرید vs نرخ فروش</span>
+ <span className="text-xs font-semibold text-[var(--text-muted)]">نرخ خرید vs نرخ فروش</span>
  <div className="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center shrink-0">
  <TrendingUp className="w-4 h-4" />
  </div>
@@ -615,38 +469,38 @@ const [welcomeBonusEnabled, setWelcomeBonusEnabled] = useState(true);
  <span className="text-xs font-medium text-zinc-400">حاشیه سود</span>
  </div>
  </div>
- <div className="text-[11px] font-medium text-zinc-500 dark:text-zinc-400 mt-2.5 pt-2 border-t admin-border  flex justify-between items-center">
- <span>خرید: <b className="text-zinc-700 dark:text-zinc-300">{hasPurchases ? `${avgBuyRate.toLocaleString('fa-IR')} ت` : 'ثبت نشده'}</b></span>
- <span>فروش: <b className="text-zinc-700 dark:text-zinc-300">{currentSellingRateNum.toLocaleString('fa-IR')} ت</b></span>
+ <div className="text-[11px] font-medium text-[var(--text-muted)] mt-2.5 pt-2 border-t border-[var(--card-border)]  flex justify-between items-center">
+ <span>خرید: <b className="text-[var(--text-main)]">{hasPurchases ? `${avgBuyRate.toLocaleString('fa-IR')} ت` : 'ثبت نشده'}</b></span>
+ <span>فروش: <b className="text-[var(--text-main)]">{currentSellingRateNum.toLocaleString('fa-IR')} ت</b></span>
  </div>
  </div>
 
  {/* Consumed USD / Tokens */}
- <div className="p-4 rounded-2xl admin-card flex flex-col justify-between">
+ <div className="p-4 rounded-2xl clay-card flex flex-col justify-between">
  <div>
  <div className="flex items-center justify-between mb-2">
- <span className="text-xs font-semibold text-zinc-500 dark:text-zinc-400">مصرف کاربران</span>
+ <span className="text-xs font-semibold text-[var(--text-muted)]">مصرف کاربران</span>
  <div className="w-8 h-8 rounded-xl bg-purple-500/10 text-purple-500 flex items-center justify-center shrink-0">
  <Zap className="w-4 h-4" />
  </div>
  </div>
  <div className="flex items-baseline gap-1.5 mt-1">
- <span className="text-2xl font-black text-zinc-900 dark:text-white font-mono" dir="ltr">
+ <span className="text-2xl font-black text-[var(--text-main)] font-mono" dir="ltr">
  ${(summary?.totalConsumedUsd || 0).toFixed(4)}
  </span>
  <span className="text-xs font-medium text-zinc-400">دلار</span>
  </div>
  </div>
- <div className="text-[11px] font-medium text-zinc-500 dark:text-zinc-400 mt-2.5 pt-2 border-t admin-border ">
- معادل <span className="font-bold text-zinc-700 dark:text-zinc-300">{(summary?.totalTokensUsed || 0).toLocaleString('fa-IR')}</span> توکن چت
+ <div className="text-[11px] font-medium text-[var(--text-muted)] mt-2.5 pt-2 border-t border-[var(--card-border)] ">
+ معادل <span className="font-bold text-[var(--text-main)]">{(summary?.totalTokensUsed || 0).toLocaleString('fa-IR')}</span> توکن چت
  </div>
  </div>
 
  {/* Remaining Treasury USD */}
- <div className="p-4 rounded-2xl admin-card flex flex-col justify-between">
+ <div className="p-4 rounded-2xl clay-card flex flex-col justify-between">
  <div>
  <div className="flex items-center justify-between mb-2">
- <span className="text-xs font-semibold text-zinc-500 dark:text-zinc-400">مانده اعتبار در مخزن</span>
+ <span className="text-xs font-semibold text-[var(--text-muted)]">مانده اعتبار در مخزن</span>
  <div className="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center shrink-0">
  <Coins className="w-4 h-4" />
  </div>
@@ -658,16 +512,16 @@ const [welcomeBonusEnabled, setWelcomeBonusEnabled] = useState(true);
  <span className="text-xs font-medium text-zinc-400">باقی‌مانده</span>
  </div>
  </div>
- <div className="text-[11px] font-medium text-zinc-500 dark:text-zinc-400 mt-2.5 pt-2 border-t admin-border ">
- درآمد کسر شده: <span className="font-bold text-zinc-700 dark:text-zinc-300">{(summary?.totalDeductedToman || 0).toLocaleString('fa-IR')}</span> تومان
+ <div className="text-[11px] font-medium text-[var(--text-muted)] mt-2.5 pt-2 border-t border-[var(--card-border)] ">
+ درآمد کسر شده: <span className="font-bold text-[var(--text-main)]">{(summary?.totalDeductedToman || 0).toLocaleString('fa-IR')}</span> تومان
           </div>
         </div>
 
         {/* Subsidized Free Usage Monitoring */}
-        <div className="p-4 rounded-2xl admin-card flex flex-col justify-between">
+        <div className="p-4 rounded-2xl clay-card flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-semibold text-zinc-500 dark:text-zinc-400">یارانه و سهمیه رایگان</span>
+              <span className="text-xs font-semibold text-[var(--text-muted)]">یارانه و سهمیه رایگان</span>
               <div className="w-8 h-8 rounded-xl bg-rose-500/10 text-rose-500 flex items-center justify-center shrink-0">
                 <Gift className="w-4 h-4" />
               </div>
@@ -679,7 +533,7 @@ const [welcomeBonusEnabled, setWelcomeBonusEnabled] = useState(true);
               <span className="text-xs font-medium text-zinc-400">تومان یارانه</span>
             </div>
           </div>
-          <div className="text-[11px] font-medium text-zinc-500 dark:text-zinc-400 mt-2.5 pt-2 border-t admin-border flex items-center justify-between">
+          <div className="text-[11px] font-medium text-[var(--text-muted)] mt-2.5 pt-2 border-t border-[var(--card-border)] flex items-center justify-between">
             <span>{toPersianDigits(summary?.freeStats?.totalFreeMessages || 0)} پیام چت</span>
             <span>~{toPersianDigits(Math.round((summary?.freeStats?.totalFreeTokens || 0) / 1000))}K توکن</span>
           </div>
@@ -691,301 +545,27 @@ const [welcomeBonusEnabled, setWelcomeBonusEnabled] = useState(true);
     <PromoCodesManager />
   </div>
 
-  {/* Currency & Business Settings Section */}
-  <div className="p-5 rounded-2xl admin-card space-y-4">
-  <div className="flex items-center justify-between border-b admin-border  pb-3">
-  <div className="flex items-center gap-2">
-  <Receipt className="w-5 h-5 text-blue-500" />
-  <h3 className="text-sm font-bold text-zinc-900 dark:text-zinc-100">تنظیمات تبدیل ارز و تعرفه کاربران</h3>
-  </div>
- <button
- onClick={handleSaveSettings}
- disabled={actionLoading}
- className="flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow-md transition-all cursor-pointer disabled:opacity-50"
- >
- <Save className="w-4 h-4" />
- <span>ذخیره تنظیمات</span>
- </button>
- </div>
-
- <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
- {/* Selling Rate */}
- <div className="space-y-1.5 flex flex-col justify-between">
- <div>
- <label className="text-xs font-semibold text-zinc-700 dark:text-zinc-300 block mb-1.5">
- نرخ فروش هر ۱ دلار API به کاربران (تومان):
- </label>
- <div className="relative">
- <input
- type="number"
- value={sellingRate}
- onChange={(e) => setSellingRate(e.target.value)}
- placeholder="200000"
- className="w-full pl-14 pr-3.5 py-2.5 rounded-xl admin-input text-xs font-bold focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
- />
- <span className="absolute left-3.5 top-2.5 text-zinc-400 dark:text-zinc-500 text-xs font-medium select-none pointer-events-none">تومان</span>
- </div>
- </div>
- <p className="text-[11px] text-zinc-500 dark:text-zinc-400 leading-relaxed mt-1">
- سیستم هزینه توکن‌های هر پیام را با این نرخ به تومان تبدیل و کسر می‌کند.
- </p>
- </div>
-
-
-
- </div>
+  {/* Settings Info Card (Single Source of Truth: AdminSettingsTab) */}
+  <div className="p-4 rounded-2xl clay-subcard flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs mb-6">
+    <div className="flex items-center gap-2.5 text-[var(--text-main)]">
+      <Receipt className="w-4 h-4 text-[var(--color-accent-primary)] shrink-0" />
+      <span>
+        نرخ فروش دلار API، درگاه‌های بانکی (زرین‌پال و بازارپی) و سهمیه‌های مصرف در تب <strong>تنظیمات یکپارچه</strong> مدیریت می‌شوند.
+      </span>
+    </div>
+    <div className="flex items-center gap-2 font-mono text-xs shrink-0">
+      <span className="text-[var(--text-muted)]">نرخ فعال سیستم:</span>
+      <span className="font-bold text-[var(--color-accent-primary)]">{currentSellingRateNum.toLocaleString('fa-IR')} تومان</span>
+    </div>
   </div>
 
- {/* ZarinPal Payment Gateway Section */}
- <div className="p-5 rounded-2xl admin-card space-y-4">
- <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b admin-border  pb-3">
- <div className="flex items-center gap-2.5">
- <div className="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center shrink-0 font-black">
- <CreditCard className="w-4 h-4" />
- </div>
- <div>
- <div className="flex items-center gap-2">
- <h3 className="text-sm font-bold text-zinc-900 dark:text-zinc-100">درگاه پرداخت اینترنتی شاپرک (زرین‌پال)</h3>
- <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
- gatewayEnabled
- ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
- : 'admin-btn-secondary text-zinc-600 dark:text-zinc-400'
- }`}>
- {gatewayEnabled ? 'درگاه متصل و فعال' : 'غیرفعال (درگاه آزمایشی)'}
- </span>
- </div>
- <p className="text-[11px] text-zinc-500">پذیرش پرداخت‌های ریالی کاربران با تمامی کارت‌های بانکی عضو شبکه شتاب (REST API v4)</p>
- </div>
- </div>
-
- <div className="flex items-center gap-2">
- <button
- onClick={handleTestGateway}
- disabled={testingGateway || !zarinpalMerchantId.trim()}
- className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl admin-btn-secondary text-zinc-800 dark:text-zinc-200 font-bold text-xs transition-all cursor-pointer disabled:opacity-50"
- >
- {testingGateway ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ShieldCheck className="w-3.5 h-3.5 text-blue-500" />}
- <span>تست اتصال به زرین‌پال</span>
- </button>
- <button
- onClick={handleSaveSettings}
- disabled={actionLoading}
- className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow-md transition-all cursor-pointer disabled:opacity-50"
- >
- <Save className="w-3.5 h-3.5" />
- <span>ذخیره مرچنت</span>
- </button>
- </div>
- </div>
-
- {gatewayTestResult && (
- <div className={`fixed top-6 left-1/2 -translate-x-1/2 z-[9999] shadow-lg min-w-[300px] p-3 rounded-xl border text-xs flex items-center gap-2 ${
- gatewayTestResult.valid
- ? 'bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-800/40 text-emerald-700 dark:text-emerald-300'
- : 'bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-800/40 text-red-700 dark:text-red-300'
- }`}>
- {gatewayTestResult.valid ? <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" /> : <AlertCircle className="w-4 h-4 text-red-500 shrink-0" />}
- <span>{gatewayTestResult.message}</span>
- </div>
- )}
-
- {detectedServerIp && (
- <div className="p-3 rounded-xl bg-blue-50/70 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800/40 text-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
- <div className="flex items-center gap-2 text-blue-700 dark:text-blue-300">
- <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
- <span>آی‌پی عمومی این سرور برای ثبت در زرین‌پال:</span>
- <code className="font-mono font-bold bg-blue-50 dark:bg-blue-950/40 px-2 py-0.5 rounded border border-blue-200 dark:border-blue-700 text-blue-700 dark:text-blue-300 select-all" dir="ltr">
- {detectedServerIp}
- </code>
- </div>
- <button
- type="button"
- onClick={() => {
- navigator.clipboard.writeText(detectedServerIp);
- alert(`آی‌پی ${detectedServerIp} کپی شد.`);
- }}
- className="px-3 py-1 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-bold text-[11px] transition-colors cursor-pointer"
- >
- کپی این آی‌پی
- </button>
- </div>
- )}
-
- <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
- {/* Merchant ID */}
- <div className="md:col-span-2 space-y-1.5">
- <label className="text-xs font-semibold text-zinc-700 dark:text-zinc-300 block mb-1.5">
- کد مرچنت درگاه (Merchant ID):
- </label>
- <input
- type="text"
- dir="ltr"
- value={zarinpalMerchantId}
- onChange={(e) => setZarinpalMerchantId(e.target.value)}
- placeholder="مثال: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
- className="w-full px-3.5 py-2.5 rounded-xl admin-input text-xs font-mono focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
- />
- <p className="text-[11px] text-zinc-500 dark:text-zinc-400 leading-relaxed">
- شناسه ۳۶ کاراکتری اختصاصی درگاه زرین‌پال شما برای هدایت مستقیم به صفحه پرداخت شاپرک.
- </p>
- </div>
-
- {/* Sandbox Toggle */}
- <div className="space-y-1.5 flex flex-col justify-between">
- <div>
- <label className="text-xs font-semibold text-zinc-700 dark:text-zinc-300 block mb-1.5">
- محیط آزمایشی (Sandbox):
- </label>
- <div className="flex items-center gap-2 pt-2">
- <input
- type="checkbox"
- id="sandbox-toggle"
- checked={zarinpalSandbox}
- onChange={(e) => setZarinpalSandbox(e.target.checked)}
- className="w-4 h-4 rounded border-zinc-400 text-amber-600 focus:ring-amber-500 cursor-pointer"
- />
- <label htmlFor="sandbox-toggle" className="text-zinc-700 dark:text-zinc-300 text-xs font-medium cursor-pointer">
- استفاده از سرور تست زرین‌پال (Sandbox)
- </label>
- </div>
- </div>
- <p className="text-[11px] text-zinc-500 dark:text-zinc-400 leading-relaxed">
- برای درگاه واقعی متصل به حساب بانکی، این گزینه باید غیرفعال باشد.
- </p>
- </div>
- </div>
- </div>
-
- {/* BazaarPay Payment Gateway Section (Cafe Bazaar Android App) */}
- <div className="p-5 rounded-2xl admin-card space-y-4">
- <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b admin-border pb-3">
- <div className="flex items-center gap-2.5">
- <div className="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center shrink-0 font-black">
- <Smartphone className="w-4 h-4" />
- </div>
- <div>
- <div className="flex items-center gap-2">
- <h3 className="text-sm font-bold text-zinc-900 dark:text-zinc-100">درگاه پرداخت درون‌برنامه‌ای بازارپی (کافه‌بازار)</h3>
- <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
- bazaarpayEnabled && bazaarpayDestination.trim()
- ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
- : 'admin-btn-secondary text-zinc-600 dark:text-zinc-400'
- }`}>
- {bazaarpayEnabled && bazaarpayDestination.trim() ? 'درگاه بازارپی فعال' : 'غیرفعال (شبیه‌ساز تستی)'}
- </span>
- </div>
- <p className="text-[11px] text-zinc-500">پرداخت مستقیم کاربران اپلیکیشن اندروید کافه‌بازار از طریق BazaarPay (کارمزد ۱۵٪ طبق قوانین بازار)</p>
- </div>
- </div>
-
- <div className="flex items-center gap-2">
- <button
- onClick={handleTestBazaarPay}
- disabled={testingBazaarPay || !bazaarpayDestination.trim()}
- className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl admin-btn-secondary text-zinc-800 dark:text-zinc-200 font-bold text-xs transition-all cursor-pointer disabled:opacity-50"
- >
- {testingBazaarPay ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />}
- <span>تست اتصال به بازارپی</span>
- </button>
- <button
- onClick={handleSaveSettings}
- disabled={actionLoading}
- className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-md transition-all cursor-pointer disabled:opacity-50"
- >
- <Save className="w-3.5 h-3.5" />
- <span>ذخیره تنظیمات بازارپی</span>
- </button>
- </div>
- </div>
-
- {bazaarPayTestResult && (
- <div className={`fixed top-6 left-1/2 -translate-x-1/2 z-[9999] shadow-lg min-w-[300px] p-3 rounded-xl border text-xs flex items-center gap-2 ${
- bazaarPayTestResult.valid
- ? 'bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-800/40 text-emerald-700 dark:text-emerald-300'
- : 'bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-800/40 text-red-700 dark:text-red-300'
- }`}>
- {bazaarPayTestResult.valid ? <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" /> : <AlertCircle className="w-4 h-4 text-red-500 shrink-0" />}
- <span>{bazaarPayTestResult.message}</span>
- </div>
- )}
-
- <div className="p-3 rounded-xl bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/40 text-xs flex items-center gap-2 text-emerald-700 dark:text-emerald-300">
- <ShieldCheck className="w-4 h-4 shrink-0 text-emerald-600" />
- <span>
- معماری دوگانه فعال: کاربران وب‌سایت همواره به <strong>زرین‌پال</strong> هدایت می‌شوند تا کارمزد بهینه (۱٪) حفظ شود؛ و کاربران اپلیکیشن اندروید/کافه‌بازار به <strong>بازارپی</strong> هدایت می‌شوند تا تاییدیه داوران بازار تامین گردد.
- </span>
- </div>
-
- <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
- {/* Destination */}
- <div className="space-y-1.5">
- <label className="text-xs font-semibold text-zinc-700 dark:text-zinc-300 block mb-1.5">
- شناسه مقصد پذیرنده (Destination):
- </label>
- <input
- type="text"
- dir="ltr"
- value={bazaarpayDestination}
- onChange={(e) => setBazaarpayDestination(e.target.value)}
- placeholder="مثال: fa-chatbox"
- className="w-full px-3.5 py-2.5 rounded-xl admin-input text-xs font-mono focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all"
- />
- <p className="text-[11px] text-zinc-500 dark:text-zinc-400 leading-relaxed">
- شناسه اختصاصی کسب‌وکار شما در بازارپی جهت ایجاد Checkout Token.
- </p>
- </div>
-
- {/* Token */}
- <div className="space-y-1.5">
- <label className="text-xs font-semibold text-zinc-700 dark:text-zinc-300 block mb-1.5">
- توکن دسترسی بازارپی (Access Token):
- </label>
- <input
- type="password"
- dir="ltr"
- value={bazaarpayToken}
- onChange={(e) => setBazaarpayToken(e.target.value)}
- placeholder="توکن دریافتی از پنل توسعه‌دهندگان بازارپی"
- className="w-full px-3.5 py-2.5 rounded-xl admin-input text-xs font-mono focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all"
- />
- <p className="text-[11px] text-zinc-500 dark:text-zinc-400 leading-relaxed">
- توکن احراز هویت برای APIهای trace و commit.
- </p>
- </div>
-
- {/* Enabled Toggle */}
- <div className="space-y-1.5 flex flex-col justify-between">
- <div>
- <label className="text-xs font-semibold text-zinc-700 dark:text-zinc-300 block mb-1.5">
- وضعیت درگاه بازارپی:
- </label>
- <div className="flex items-center gap-2 pt-2">
- <input
- type="checkbox"
- id="bazaarpay-toggle"
- checked={bazaarpayEnabled}
- onChange={(e) => setBazaarpayEnabled(e.target.checked)}
- className="w-4 h-4 rounded border-zinc-400 text-emerald-600 focus:ring-emerald-500 cursor-pointer"
- />
- <label htmlFor="bazaarpay-toggle" className="text-zinc-700 dark:text-zinc-300 text-xs font-medium cursor-pointer">
- فعال‌سازی درگاه زنده بازارپی
- </label>
- </div>
- </div>
- <p className="text-[11px] text-zinc-500 dark:text-zinc-400 leading-relaxed">
- در صورت غیرفعال بودن یا خالی بودن اطلاعات، شبیه‌ساز امن درگاه برای محیط تست فعال خواهد بود.
- </p>
- </div>
- </div>
- </div>
-
- {/* API Purchases Management Section */}
- <div ref={purchaseSectionRef} className="p-5 rounded-2xl admin-card space-y-4">
- <div className="flex items-center justify-between border-b admin-border  pb-3">
+  {/* API Purchases Management Section */}
+ <div ref={purchaseSectionRef} className="p-5 rounded-2xl clay-card space-y-4">
+ <div className="flex items-center justify-between border-b border-[var(--card-border)]  pb-3">
  <div className="flex items-center gap-2">
  <Layers className="w-5 h-5 text-emerald-500" />
  <div>
- <h3 className="text-sm font-bold text-zinc-900 dark:text-zinc-100">فاکتورهای خرید ارز و کلیدهای API</h3>
+ <h3 className="text-sm font-bold text-[var(--text-main)]">فاکتورهای خرید ارز و کلیدهای API</h3>
  <p className="text-[11px] text-zinc-500">ثبت خریدهای مختلف شما از ری‌سلرها و محاسبه خودکار قیمت تمام‌شده</p>
  </div>
  </div>
@@ -1000,22 +580,22 @@ const [welcomeBonusEnabled, setWelcomeBonusEnabled] = useState(true);
 
  {/* Add Purchase Form */}
  {isAddingPurchase && (
- <form onSubmit={handleAddPurchase} className="p-4 rounded-2xl admin-surface space-y-3 animate-slideDown">
+ <form onSubmit={handleAddPurchase} className="p-4 rounded-2xl clay-surface space-y-3 animate-slideDown">
  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
  <div>
- <label className="font-bold text-zinc-700 dark:text-zinc-300 block mb-1">نام تأمین‌کننده / پرووایدر:</label>
+ <label className="font-bold text-[var(--text-main)] block mb-1">نام تأمین‌کننده / پرووایدر:</label>
  <input
  type="text"
  value={purchaseProvider}
  onChange={(e) => setPurchaseProvider(e.target.value)}
  placeholder="مثلاً: ری‌سلر ایرانی A، صرافی، ..."
  required
- className="w-full px-3 py-2 rounded-xl admin-input focus:border-blue-500 outline-none"
+ className="w-full px-3 py-2 rounded-xl clay-surface focus:border-blue-500 outline-none"
  />
  </div>
 
  <div>
- <label className="font-bold text-zinc-700 dark:text-zinc-300 block mb-1">مقدار دلار خریداری‌شده ($):</label>
+ <label className="font-bold text-[var(--text-main)] block mb-1">مقدار دلار خریداری‌شده ($):</label>
  <input
  type="number"
  step="0.01"
@@ -1023,19 +603,19 @@ const [welcomeBonusEnabled, setWelcomeBonusEnabled] = useState(true);
  onChange={(e) => setPurchaseAmountUsd(e.target.value)}
  placeholder="20"
  required
- className="w-full px-3 py-2 rounded-xl admin-input font-mono focus:border-blue-500 outline-none"
+ className="w-full px-3 py-2 rounded-xl clay-surface font-mono focus:border-blue-500 outline-none"
  />
  </div>
 
  <div>
- <label className="font-bold text-zinc-700 dark:text-zinc-300 block mb-1">مبلغ پرداختی شما به تومان:</label>
+ <label className="font-bold text-[var(--text-main)] block mb-1">مبلغ پرداختی شما به تومان:</label>
  <input
  type="number"
  value={purchaseCostToman}
  onChange={(e) => setPurchaseCostToman(e.target.value)}
  placeholder="1000000"
  required
- className="w-full px-3 py-2 rounded-xl admin-input font-mono focus:border-blue-500 outline-none"
+ className="w-full px-3 py-2 rounded-xl clay-surface font-mono focus:border-blue-500 outline-none"
  />
  </div>
  </div>
@@ -1051,7 +631,7 @@ const [welcomeBonusEnabled, setWelcomeBonusEnabled] = useState(true);
  <button
  type="button"
  onClick={() => setIsAddingPurchase(false)}
- className="px-3 py-1.5 rounded-xl admin-btn-secondary text-zinc-600 dark:text-zinc-400 text-xs font-bold"
+ className="px-3 py-1.5 rounded-xl clay-btn text-[var(--text-muted)] text-xs font-bold"
  >
  انصراف
  </button>
@@ -1070,7 +650,7 @@ const [welcomeBonusEnabled, setWelcomeBonusEnabled] = useState(true);
  <div className="overflow-x-auto">
  <table className="w-full text-xs text-right">
  <thead>
- <tr className="border-b admin-border  text-zinc-400">
+ <tr className="border-b border-[var(--card-border)]  text-zinc-400">
  <th className="py-2.5 px-3">تأمین‌کننده</th>
  <th className="py-2.5 px-3">مبلغ دلاری</th>
  <th className="py-2.5 px-3">پرداختی تومانی</th>
@@ -1079,11 +659,11 @@ const [welcomeBonusEnabled, setWelcomeBonusEnabled] = useState(true);
  <th className="py-2.5 px-3 text-center">عملیات</th>
  </tr>
  </thead>
- <tbody className="divide-y divide-zinc-200/60 dark:divide-zinc-800">
+ <tbody className="divide-y divide-[var(--card-border)]">
  {summary?.purchases && summary.purchases.length > 0 ? (
  summary.purchases.map((p: any) => (
- <tr key={p.id} className="hover:bg-zinc-100/50 dark:hover:bg-zinc-800/30">
- <td className="py-2.5 px-3 font-bold text-zinc-800 dark:text-zinc-200">{p.providerName}</td>
+ <tr key={p.id} className="hover:bg-[var(--color-input-bg)]/40">
+ <td className="py-2.5 px-3 font-bold text-[var(--text-main)]">{p.providerName}</td>
  <td className="py-2.5 px-3 font-mono text-blue-600 dark:text-blue-400 font-bold" dir="ltr">${p.amountUsd}</td>
  <td className="py-2.5 px-3 font-mono">{p.costToman.toLocaleString('fa-IR')} تومان</td>
  <td className="py-2.5 px-3 font-mono text-emerald-600 dark:text-emerald-400 font-bold">{p.unitRateToman.toLocaleString('fa-IR')} ت</td>
@@ -1112,11 +692,11 @@ const [welcomeBonusEnabled, setWelcomeBonusEnabled] = useState(true);
  </div>
 
  {/* Aggregated per-user consumption */}
- <div className="p-5 rounded-2xl admin-card space-y-4">
-  <div className="flex flex-col sm:flex-row items-center justify-between border-b admin-border pb-4 gap-3">
+ <div className="p-5 rounded-2xl clay-card space-y-4">
+  <div className="flex flex-col sm:flex-row items-center justify-between border-b border-[var(--card-border)] pb-4 gap-3">
    <div className="flex items-center gap-2">
     <Users className="w-5 h-5 text-blue-500" />
-    <h3 className="text-sm font-bold text-zinc-900 dark:text-zinc-100">تجمیع مصرف کاربران</h3>
+    <h3 className="text-sm font-bold text-[var(--text-main)]">تجمیع مصرف کاربران</h3>
    </div>
    <div className="flex items-center gap-2 w-full sm:w-auto">
     <input
@@ -1124,7 +704,7 @@ const [welcomeBonusEnabled, setWelcomeBonusEnabled] = useState(true);
      placeholder="جستجوی نام، موبایل یا کد کاربری (UC-10027)..."
      value={usageSearch}
      onChange={(e) => setUsageSearch(e.target.value)}
-     className="w-full sm:w-72 px-3 py-1.5 rounded-xl admin-input text-xs focus:outline-none focus:border-blue-500 transition-colors"
+     className="w-full sm:w-72 px-3 py-1.5 rounded-xl clay-surface text-xs focus:outline-none focus:border-blue-500 transition-colors"
     />
     <button
      onClick={() => fetchUsageSummary(usageSearch)}
@@ -1139,7 +719,7 @@ const [welcomeBonusEnabled, setWelcomeBonusEnabled] = useState(true);
   <div className="overflow-x-auto">
    <table className="w-full text-xs text-right">
     <thead>
-     <tr className="border-b admin-border text-zinc-500 dark:text-zinc-400">
+     <tr className="border-b border-[var(--card-border)] text-[var(--text-muted)]">
       <th className="py-3 px-3.5 font-bold">کاربر</th>
       <th className="py-3 px-3.5 font-bold">پیام</th>
       <th className="py-3 px-3.5 font-bold">توکن کل</th>
@@ -1149,26 +729,26 @@ const [welcomeBonusEnabled, setWelcomeBonusEnabled] = useState(true);
       <th className="py-3 px-3.5 font-bold">آخرین استفاده</th>
      </tr>
     </thead>
-    <tbody className="divide-y divide-zinc-200/60 dark:divide-zinc-800">
+    <tbody className="divide-y divide-[var(--card-border)]">
      {usageRows.length > 0 ? (
       usageRows.map((r: any) => (
-       <tr key={r.userId} className="hover:bg-zinc-100/50 dark:hover:bg-zinc-800/30 transition-colors">
+       <tr key={r.userId} className="hover:bg-[var(--color-input-bg)]/40 transition-colors">
         <td className="py-3 px-3.5">
          <div className="flex flex-col gap-0.5">
-          <span className="font-bold text-zinc-800 dark:text-zinc-200">
+          <span className="font-bold text-[var(--text-main)]">
            {r.userName || r.userEmail || r.userPhone || 'بدون نام'}
           </span>
           <span className="text-[11px] text-zinc-400">
-           کد کاربری: <span className="font-mono font-semibold text-zinc-600 dark:text-zinc-400">UC-{toPersianDigits(10000 + r.userId)}</span>
+           کد کاربری: <span className="font-mono font-semibold text-[var(--text-muted)]">UC-{toPersianDigits(10000 + r.userId)}</span>
           </span>
          </div>
         </td>
-        <td className="py-3 px-3.5 font-semibold text-zinc-800 dark:text-zinc-200">
+        <td className="py-3 px-3.5 font-semibold text-[var(--text-main)]">
          {toPersianDigits(r.messageCount)}
         </td>
         <td className="py-3 px-3.5">
          <div className="flex flex-col gap-0.5">
-          <span className="font-semibold text-zinc-800 dark:text-zinc-200">{toPersianDigits(r.totalTokens)}</span>
+          <span className="font-semibold text-[var(--text-main)]">{toPersianDigits(r.totalTokens)}</span>
           <span className="text-[10px] text-zinc-400">
            {toPersianDigits(r.promptTokens)} ورودی / {toPersianDigits(r.completionTokens)} خروجی
           </span>
@@ -1181,13 +761,13 @@ const [welcomeBonusEnabled, setWelcomeBonusEnabled] = useState(true);
           <span className="text-zinc-400">—</span>
          )}
         </td>
-        <td className="py-3 px-3.5 font-bold text-zinc-800 dark:text-zinc-200">
+        <td className="py-3 px-3.5 font-bold text-[var(--text-main)]">
          {toPersianDigits(r.paidToman + r.imageToman)}
         </td>
         <td className="py-3 px-3.5 font-semibold text-zinc-600 dark:text-zinc-300">
          {Number(r.costUsd || 0).toFixed(4)}
         </td>
-        <td className="py-3 px-3.5 text-zinc-500 dark:text-zinc-400">
+        <td className="py-3 px-3.5 text-[var(--text-muted)]">
          {r.lastUsedAt ? formatTehranDate(r.lastUsedAt) : '—'}
         </td>
        </tr>
@@ -1205,25 +785,25 @@ const [welcomeBonusEnabled, setWelcomeBonusEnabled] = useState(true);
  </div>
 
  {/* User Usage Logs */}
- <div className="p-5 rounded-2xl admin-card space-y-4">
- <div className="flex flex-col xl:flex-row items-start xl:items-center justify-between border-b admin-border  pb-4 gap-4">
+ <div className="p-5 rounded-2xl clay-card space-y-4">
+ <div className="flex flex-col xl:flex-row items-start xl:items-center justify-between border-b border-[var(--card-border)]  pb-4 gap-4">
  <div className="flex items-center gap-2">
  <Clock className="w-5 h-5 text-purple-500" />
- <h3 className="text-sm font-bold text-zinc-900 dark:text-zinc-100">آخرین تراکنش‌ها و مصرف توکن</h3>
+ <h3 className="text-sm font-bold text-[var(--text-main)]">آخرین تراکنش‌ها و مصرف توکن</h3>
  </div>
  <div className="flex flex-col sm:flex-row items-center gap-2 w-full xl:w-auto flex-wrap">
  <div className="relative w-full sm:w-64">
  <input type="text" placeholder="جستجوی لایو کاربر، ID یا مدل..."
  value={searchQuery}
  onChange={(e) => setSearchQuery(e.target.value)}
- className="w-full px-3 py-1.5 rounded-xl admin-input text-xs focus:outline-none focus:border-blue-500 transition-colors"
+ className="w-full px-3 py-1.5 rounded-xl clay-surface text-xs focus:outline-none focus:border-blue-500 transition-colors"
  />
  </div>
  <div className="flex w-full sm:w-auto gap-2 flex-wrap items-center">
  <select
  value={txTypeFilter}
  onChange={(e) => setTxTypeFilter(e.target.value)}
- className="h-9 px-2.5 flex-1 sm:flex-none admin-input rounded-xl text-xs font-medium text-zinc-700 dark:text-zinc-300 outline-none cursor-pointer"
+ className="h-9 px-2.5 flex-1 sm:flex-none clay-surface rounded-xl text-xs font-medium text-[var(--text-main)] outline-none cursor-pointer"
  >
  <option value="all">همه تراکنش‌ها</option>
  <option value="deposit">افزایش اعتبار (+)</option>
@@ -1235,7 +815,7 @@ const [welcomeBonusEnabled, setWelcomeBonusEnabled] = useState(true);
  <select
  value={dateFilter}
  onChange={(e) => setDateFilter(e.target.value)}
- className="h-9 px-2.5 flex-1 sm:flex-none admin-input rounded-xl text-xs font-medium text-zinc-700 dark:text-zinc-300 outline-none cursor-pointer"
+ className="h-9 px-2.5 flex-1 sm:flex-none clay-surface rounded-xl text-xs font-medium text-[var(--text-main)] outline-none cursor-pointer"
  >
  <option value="all">همه زمان‌ها</option>
  <option value="today">۲۴ ساعت گذشته</option>
@@ -1246,7 +826,7 @@ const [welcomeBonusEnabled, setWelcomeBonusEnabled] = useState(true);
  <select
  value={sortFilter}
  onChange={(e) => setSortFilter(e.target.value)}
- className="h-9 px-2.5 flex-1 sm:flex-none admin-input rounded-xl text-xs font-medium text-zinc-700 dark:text-zinc-300 outline-none cursor-pointer"
+ className="h-9 px-2.5 flex-1 sm:flex-none clay-surface rounded-xl text-xs font-medium text-[var(--text-main)] outline-none cursor-pointer"
  >
  <option value="newest">جدیدترین</option>
  <option value="oldest">قدیمی‌ترین</option>
@@ -1284,7 +864,7 @@ const [welcomeBonusEnabled, setWelcomeBonusEnabled] = useState(true);
  <div className="overflow-x-auto">
  <table className="w-full text-xs text-right">
  <thead>
- <tr className="border-b admin-border  text-zinc-500 dark:text-zinc-400">
+ <tr className="border-b border-[var(--card-border)]  text-[var(--text-muted)]">
  <th className="py-3 px-3.5 font-bold">کاربر</th>
  <th className="py-3 px-3.5 font-bold">نوع / مدل</th>
  <th className="py-3 px-3.5 font-bold">توکن مصرفی</th>
@@ -1293,31 +873,31 @@ const [welcomeBonusEnabled, setWelcomeBonusEnabled] = useState(true);
  <th className="py-3 px-3.5 font-bold">تاریخ</th>
  </tr>
  </thead>
- <tbody className="divide-y divide-zinc-200/60 dark:divide-zinc-800">
+ <tbody className="divide-y divide-[var(--card-border)]">
  {transactions && transactions.length > 0 ? (
  transactions.map((tx: any) => {
  const isPositive = tx.amount > 0;
  return (
- <tr key={tx.id} className="hover:bg-zinc-100/50 dark:hover:bg-zinc-800/30 transition-colors">
+ <tr key={tx.id} className="hover:bg-[var(--color-input-bg)]/40 transition-colors">
  <td className="py-3 px-3.5">
  <div className="flex flex-col gap-0.5">
- <span className="font-bold text-zinc-800 dark:text-zinc-200 text-xs">
+ <span className="font-bold text-[var(--text-main)] text-xs">
  {tx.userName || tx.userEmail || tx.userPhone || 'بدون نام'}
  </span>
  <span className="text-[11px] text-zinc-400 font-normal">
- کد کاربری: <span className="font-mono font-semibold text-zinc-600 dark:text-zinc-400">UC-{10000 + tx.userId}</span>
+ کد کاربری: <span className="font-mono font-semibold text-[var(--text-muted)]">UC-{10000 + tx.userId}</span>
  </span>
  </div>
  </td>
  <td className="py-3 px-3.5">
- <span className="inline-flex items-center px-2 py-0.5 rounded-md admin-btn-secondary text-zinc-700 dark:text-zinc-300 font-mono text-[11px] font-medium">
+ <span className="inline-flex items-center px-2 py-0.5 rounded-md clay-btn text-[var(--text-main)] font-mono text-[11px] font-medium">
  {tx.model || tx.description || tx.type}
  </span>
  </td>
  <td className="py-3 px-3.5">
  {tx.promptTokens + tx.completionTokens > 0 ? (
  <div className="flex items-center gap-1">
- <span className="font-semibold text-zinc-800 dark:text-zinc-200 text-xs">
+ <span className="font-semibold text-[var(--text-main)] text-xs">
  {(tx.promptTokens + tx.completionTokens).toLocaleString('fa-IR')}
  </span>
  <span className="text-[10px] text-zinc-400">توکن</span>
@@ -1329,7 +909,7 @@ const [welcomeBonusEnabled, setWelcomeBonusEnabled] = useState(true);
  <td className="py-3 px-3.5">
  <div className="flex items-center gap-1">
  <span className={`font-bold text-xs ${
- isPositive ? 'text-emerald-600 dark:text-emerald-400' : 'text-zinc-800 dark:text-zinc-200'
+ isPositive ? 'text-emerald-600 dark:text-emerald-400' : 'text-[var(--text-main)]'
  }`}>
  {isPositive ? `+${Math.abs(tx.amount).toLocaleString('fa-IR')}` : `-${Math.abs(tx.amount).toLocaleString('fa-IR')}`}
  </span>
@@ -1345,7 +925,7 @@ const [welcomeBonusEnabled, setWelcomeBonusEnabled] = useState(true);
  </div>
  </td>
  <td className="py-3 px-3.5">
- <div className="flex flex-col text-[11px] text-zinc-500 dark:text-zinc-400 leading-tight">
+ <div className="flex flex-col text-[11px] text-[var(--text-muted)] leading-tight">
  <span>{formatTehranTime(tx.createdAt)}</span>
  <span className="text-[10px] text-zinc-400 mt-0.5">{formatTehranDate(tx.createdAt)}</span>
  </div>
@@ -1365,21 +945,21 @@ const [welcomeBonusEnabled, setWelcomeBonusEnabled] = useState(true);
  </div>
 
  {/* Pagination Controls */}
- <div className="flex items-center justify-between pt-4 border-t admin-border ">
+ <div className="flex items-center justify-between pt-4 border-t border-[var(--card-border)] ">
  <button
  onClick={() => setPage(p => Math.max(1, p - 1))}
  disabled={page === 1}
- className="px-3 py-1.5 text-xs font-bold rounded-lg admin-btn-secondary text-zinc-700 dark:text-zinc-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+ className="px-3 py-1.5 text-xs font-bold rounded-lg clay-btn text-[var(--text-main)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
  >
  صفحه قبل
  </button>
- <span className="text-xs font-mono text-zinc-500 dark:text-zinc-400">
+ <span className="text-xs font-mono text-[var(--text-muted)]">
  صفحه {toPersianDigits(page)} از {toPersianDigits(Math.max(1, Math.ceil(totalCount / LIMIT)))}
  </span>
  <button
  onClick={() => setPage(p => p + 1)}
  disabled={page * LIMIT >= totalCount}
- className="px-3 py-1.5 text-xs font-bold rounded-lg admin-btn-secondary text-zinc-700 dark:text-zinc-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+ className="px-3 py-1.5 text-xs font-bold rounded-lg clay-btn text-[var(--text-main)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
  >
  صفحه بعد
  </button>

@@ -49,9 +49,12 @@ interface DonutModelItem extends ModelDistItem {
 interface AnalyticsData {
  period: string;
  days: number;
+ dollarRate?: number;
+ sellingRate?: number;
  timeline: TimelineItem[];
  modelDistribution: ModelDistItem[];
  summary: {
+ dollarRate?: number;
  totalChats: number;
  totalChatRevenueToman: number;
  totalStoreRevenueToman: number;
@@ -98,7 +101,7 @@ export const AdminAnalyticsTab: React.FC = () => {
  const summary = data?.summary;
 
  // Calculate estimated net profit in Tomans: Revenue - (Cost USD * Dollar Rate)
- const dollarRate = 200000; // standard fallback
+ const dollarRate = data?.dollarRate || data?.sellingRate || data?.summary?.dollarRate || 200000;
  const estimatedCostToman = (summary?.totalCostUsd || 0) * dollarRate;
  const estimatedNetProfitToman = Math.max(0, (summary?.totalRevenueToman || 0) - estimatedCostToman);
 
@@ -175,23 +178,23 @@ export const AdminAnalyticsTab: React.FC = () => {
  return (
  <div className="space-y-6" dir="rtl">
  {/* Header & Period Filters */}
- <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b admin-border pb-4">
+ <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-[var(--card-border)] pb-4">
  <div>
- <h2 className="text-base font-bold text-zinc-900 dark:text-white flex items-center gap-2">
- <BarChart3 className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+ <h2 className="text-base font-black text-[var(--text-main)] flex items-center gap-2">
+ <BarChart3 className="w-5 h-5 text-[var(--color-accent-primary)]" />
  <span>گزارشات تحلیلی و نمودارهای مالی</span>
  </h2>
- <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
+ <p className="text-xs text-[var(--text-muted)] mt-1">
  بررسی جامع عملکرد مالی، محبوبیت مدل‌ها، ترافیک مصرف توکن و رشد کاربران
  </p>
  </div>
 
  <div className="flex items-center gap-2">
- <div className="flex items-center p-1 rounded-xl admin-surface text-xs font-bold">
+ <div className="flex items-center p-1 rounded-xl clay-surface text-xs font-bold gap-1">
  <button
  onClick={() => setPeriod('7d')}
  className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
- period === '7d' ? 'admin-card text-blue-600 dark:text-blue-400 font-bold' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900'
+ period === '7d' ? 'clay-btn-primary font-bold shadow-sm' : 'text-[var(--text-muted)] hover:text-[var(--text-main)]'
  }`}
  >
  ۷ روز اخیر
@@ -199,7 +202,7 @@ export const AdminAnalyticsTab: React.FC = () => {
  <button
  onClick={() => setPeriod('30d')}
  className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
- period === '30d' ? 'admin-card text-blue-600 dark:text-blue-400 font-bold' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900'
+ period === '30d' ? 'clay-btn-primary font-bold shadow-sm' : 'text-[var(--text-muted)] hover:text-[var(--text-main)]'
  }`}
  >
  ۳۰ روز اخیر
@@ -207,7 +210,7 @@ export const AdminAnalyticsTab: React.FC = () => {
  <button
  onClick={() => setPeriod('1y')}
  className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
- period === '1y' ? 'admin-card text-blue-600 dark:text-blue-400 font-bold' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900'
+ period === '1y' ? 'clay-btn-primary font-bold shadow-sm' : 'text-[var(--text-muted)] hover:text-[var(--text-main)]'
  }`}
  >
  ۱ سال اخیر
@@ -217,7 +220,7 @@ export const AdminAnalyticsTab: React.FC = () => {
  <button
  onClick={fetchAnalytics}
  disabled={loading}
- className="p-2 rounded-xl admin-btn-secondary transition-colors cursor-pointer"
+ className="p-2.5 rounded-xl clay-btn transition-colors cursor-pointer text-[var(--text-main)]"
  title="بروزرسانی داده‌ها"
  >
  <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
@@ -228,33 +231,33 @@ export const AdminAnalyticsTab: React.FC = () => {
  {/* KPI Cards Header */}
  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
  {/* Total Revenue */}
- <div className="p-4 rounded-2xl admin-card flex flex-col justify-between">
+ <div className="p-5 rounded-2xl clay-card flex flex-col justify-between">
  <div>
  <div className="flex items-center justify-between mb-2">
- <span className="text-xs font-semibold text-zinc-500 dark:text-zinc-400">کل درآمد دوره</span>
- <div className="w-8 h-8 rounded-xl bg-blue-500/10 text-blue-500 flex items-center justify-center">
+ <span className="text-xs font-bold text-[var(--text-muted)]">کل درآمد دوره</span>
+ <div className="w-8 h-8 rounded-xl bg-blue-500/10 text-blue-500 flex items-center justify-center font-bold">
  <DollarSign className="w-4 h-4" />
  </div>
  </div>
  <div className="flex items-baseline gap-1 mt-1">
- <span className="text-2xl font-black text-zinc-900 dark:text-white font-mono">
+ <span className="text-2xl font-black text-[var(--text-main)] font-mono">
  {(summary?.totalRevenueToman || 0).toLocaleString('fa-IR')}
  </span>
- <span className="text-xs font-medium text-zinc-400">تومان</span>
+ <span className="text-xs font-medium text-[var(--text-dim)]">تومان</span>
  </div>
  </div>
- <div className="text-[11px] font-medium text-zinc-500 dark:text-zinc-400 mt-2.5 pt-2 border-t admin-border  flex justify-between">
+ <div className="text-[11px] font-medium text-[var(--text-muted)] mt-2.5 pt-2 border-t border-[var(--card-border)] flex justify-between">
  <span>چت: {(summary?.totalChatRevenueToman || 0).toLocaleString('fa-IR')} ت</span>
  <span>فروشگاه: {(summary?.totalStoreRevenueToman || 0).toLocaleString('fa-IR')} ت</span>
  </div>
  </div>
 
  {/* Estimated Net Profit */}
- <div className="p-4 rounded-2xl admin-card flex flex-col justify-between">
+ <div className="p-5 rounded-2xl clay-card flex flex-col justify-between">
  <div>
  <div className="flex items-center justify-between mb-2">
- <span className="text-xs font-semibold text-zinc-500 dark:text-zinc-400">سود ناخالص تخمینی</span>
- <div className="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center">
+ <span className="text-xs font-bold text-[var(--text-muted)]">سود ناخالص تخمینی</span>
+ <div className="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center font-bold">
  <TrendingUp className="w-4 h-4" />
  </div>
  </div>
@@ -262,53 +265,53 @@ export const AdminAnalyticsTab: React.FC = () => {
  <span className="text-2xl font-black text-emerald-600 dark:text-emerald-400 font-mono">
  {estimatedNetProfitToman.toLocaleString('fa-IR')}
  </span>
- <span className="text-xs font-medium text-zinc-400">تومان</span>
+ <span className="text-xs font-medium text-[var(--text-dim)]">تومان</span>
  </div>
  </div>
- <div className="text-[11px] font-medium text-zinc-500 dark:text-zinc-400 mt-2.5 pt-2 border-t admin-border ">
+ <div className="text-[11px] font-medium text-[var(--text-muted)] mt-2.5 pt-2 border-t border-[var(--card-border)]">
  هزینه دلاری API: <span className="font-mono font-bold" dir="ltr">${(summary?.totalCostUsd || 0).toFixed(4)}</span>
  </div>
  </div>
 
  {/* Total Tokens & Chats */}
- <div className="p-4 rounded-2xl admin-card flex flex-col justify-between">
+ <div className="p-5 rounded-2xl clay-card flex flex-col justify-between">
  <div>
  <div className="flex items-center justify-between mb-2">
- <span className="text-xs font-semibold text-zinc-500 dark:text-zinc-400">حجم پیام‌ها و توکن‌ها</span>
- <div className="w-8 h-8 rounded-xl bg-purple-500/10 text-purple-500 flex items-center justify-center">
+ <span className="text-xs font-bold text-[var(--text-muted)]">حجم پیام‌ها و توکن‌ها</span>
+ <div className="w-8 h-8 rounded-xl bg-purple-500/10 text-purple-500 flex items-center justify-center font-bold">
  <Zap className="w-4 h-4" />
  </div>
  </div>
  <div className="flex items-baseline gap-1 mt-1">
- <span className="text-2xl font-black text-zinc-900 dark:text-white font-mono">
+ <span className="text-2xl font-black text-[var(--text-main)] font-mono">
  {(summary?.totalTokens || 0).toLocaleString('fa-IR')}
  </span>
- <span className="text-xs font-medium text-zinc-400">توکن</span>
+ <span className="text-xs font-medium text-[var(--text-dim)]">توکن</span>
  </div>
  </div>
- <div className="text-[11px] font-medium text-zinc-500 dark:text-zinc-400 mt-2.5 pt-2 border-t admin-border ">
- تعداد کل گفت‌وگوها: <span className="font-bold text-zinc-700 dark:text-zinc-300">{(summary?.totalChats || 0).toLocaleString('fa-IR')}</span> پیام
+ <div className="text-[11px] font-medium text-[var(--text-muted)] mt-2.5 pt-2 border-t border-[var(--card-border)]">
+ تعداد کل گفت‌وگوها: <span className="font-bold text-[var(--text-main)]">{(summary?.totalChats || 0).toLocaleString('fa-IR')}</span> پیام
  </div>
  </div>
 
  {/* Users & Growth */}
- <div className="p-4 rounded-2xl admin-card flex flex-col justify-between">
+ <div className="p-5 rounded-2xl clay-card flex flex-col justify-between">
  <div>
  <div className="flex items-center justify-between mb-2">
- <span className="text-xs font-semibold text-zinc-500 dark:text-zinc-400">کاربران فعال و جدید</span>
- <div className="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center">
+ <span className="text-xs font-bold text-[var(--text-muted)]">کاربران فعال و جدید</span>
+ <div className="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center font-bold">
  <Users className="w-4 h-4" />
  </div>
  </div>
  <div className="flex items-baseline gap-1 mt-1">
- <span className="text-2xl font-black text-zinc-900 dark:text-white font-mono">
+ <span className="text-2xl font-black text-[var(--text-main)] font-mono">
  {(summary?.uniqueActiveUsers || 0).toLocaleString('fa-IR')}
  </span>
- <span className="text-xs font-medium text-zinc-400">کاربر فعال چت</span>
+ <span className="text-xs font-medium text-[var(--text-dim)]">کاربر فعال چت</span>
  </div>
  </div>
- <div className="text-[11px] font-medium text-zinc-500 dark:text-zinc-400 mt-2.5 pt-2 border-t admin-border ">
- ثبت‌نام‌های جدید دوره: <span className="font-bold text-zinc-700 dark:text-zinc-300">{(summary?.totalNewUsers || 0).toLocaleString('fa-IR')}</span> کاربر
+ <div className="text-[11px] font-medium text-[var(--text-muted)] mt-2.5 pt-2 border-t border-[var(--card-border)]">
+ ثبت‌نام‌های جدید دوره: <span className="font-bold text-[var(--text-main)]">{(summary?.totalNewUsers || 0).toLocaleString('fa-IR')}</span> کاربر
  </div>
  </div>
  </div>
@@ -316,23 +319,23 @@ export const AdminAnalyticsTab: React.FC = () => {
  {/* Main Charts Grid: Revenue Trend & Model Distribution */}
  <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
  {/* Chart 1: Revenue Area Chart (2 Cols) */}
- <div className="lg:col-span-2 p-5 rounded-2xl admin-card flex flex-col justify-between">
+ <div className="lg:col-span-2 p-5 rounded-2xl clay-card flex flex-col justify-between">
  <div>
  <div className="flex items-center justify-between mb-4">
  <div>
- <h3 className="text-xs font-bold text-zinc-900 dark:text-white flex items-center gap-1.5">
+ <h3 className="text-sm font-black text-[var(--text-main)] flex items-center gap-1.5">
  <TrendingUp className="w-4 h-4 text-emerald-500" />
  <span>روند درآمد روزانه پلتفرم (تومان)</span>
  </h3>
- <p className="text-[11px] text-zinc-400 mt-0.5">
+ <p className="text-[11px] text-[var(--text-muted)] mt-0.5">
  نمودار پیوسته درآمد ناشی از چت و فروش محصولات
  </p>
  </div>
 
  {hoveredDay && (
- <div className="px-3 py-1 rounded-xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900 text-xs flex items-center gap-2">
- <span className="text-zinc-500">{hoveredDay.date}:</span>
- <span className="font-bold text-blue-600 dark:text-blue-400 font-mono">
+ <div className="px-3 py-1 rounded-xl clay-surface border border-[var(--card-border)] text-xs flex items-center gap-2">
+ <span className="text-[var(--text-muted)]">{hoveredDay.date}:</span>
+ <span className="font-bold text-[var(--color-accent-primary)] font-mono">
  {hoveredDay.totalRevenueToman.toLocaleString('fa-IR')} تومان
  </span>
  </div>
@@ -350,9 +353,9 @@ export const AdminAnalyticsTab: React.FC = () => {
  </defs>
 
  {/* Horizontal Grid lines */}
- <line x1="20" y1="20" x2="580" y2="20" stroke="#71717a" strokeOpacity="0.15" strokeDasharray="3 3" />
- <line x1="20" y1="90" x2="580" y2="90" stroke="#71717a" strokeOpacity="0.15" strokeDasharray="3 3" />
- <line x1="20" y1="160" x2="580" y2="160" stroke="#71717a" strokeOpacity="0.2" />
+ <line x1="20" y1="20" x2="580" y2="20" stroke="currentColor" strokeOpacity="0.1" strokeDasharray="3 3" />
+ <line x1="20" y1="90" x2="580" y2="90" stroke="currentColor" strokeOpacity="0.1" strokeDasharray="3 3" />
+ <line x1="20" y1="160" x2="580" y2="160" stroke="currentColor" strokeOpacity="0.15" />
 
  {/* Area and Line */}
  {areaChartData.areaPath && (
@@ -388,7 +391,7 @@ export const AdminAnalyticsTab: React.FC = () => {
  </div>
  </div>
 
- <div className="flex justify-between items-center text-[10px] text-zinc-400 pt-2 border-t admin-border  font-mono">
+ <div className="flex justify-between items-center text-[10px] text-[var(--text-dim)] pt-2 border-t border-[var(--card-border)] font-mono">
  <span>{timeline[0]?.date || ''}</span>
  <span>بازه انتخابی: {period === '7d' ? '۷ روز' : period === '30d' ? '۳۰ روز' : 'یک سال'}</span>
  <span>{timeline[timeline.length - 1]?.date || ''}</span>
@@ -396,14 +399,14 @@ export const AdminAnalyticsTab: React.FC = () => {
  </div>
 
  {/* Chart 2: Model Distribution (Donut Chart) */}
- <div className="p-5 rounded-2xl admin-card flex flex-col justify-between">
+ <div className="p-5 rounded-2xl clay-card flex flex-col justify-between">
  <div>
  <div className="flex items-center justify-between mb-3">
- <h3 className="text-xs font-bold text-zinc-900 dark:text-white flex items-center gap-1.5">
+ <h3 className="text-sm font-black text-[var(--text-main)] flex items-center gap-1.5">
  <PieChart className="w-4 h-4 text-purple-500" />
  <span>سهم مصرف هر مدل (توکن‌ها)</span>
  </h3>
- <span className="text-[10px] text-zinc-400 font-medium">محبوب‌ترین مدل‌ها</span>
+ <span className="text-[10px] text-[var(--text-dim)] font-medium">محبوب‌ترین مدل‌ها</span>
  </div>
 
  {donutData.length > 0 ? (
@@ -415,7 +418,6 @@ export const AdminAnalyticsTab: React.FC = () => {
  const radius = 40;
  const circumference = 2 * Math.PI * radius;
  const strokeDasharray = `${(slice.percentage / 100) * circumference} ${circumference}`;
- // offset starts from accumulated percentage
  const strokeDashoffset = -((slice.startAngle / 360) * circumference);
 
  return (
@@ -437,42 +439,42 @@ export const AdminAnalyticsTab: React.FC = () => {
  })}
  </svg>
  <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
- <span className="text-xs font-bold text-zinc-800 dark:text-zinc-200">
+ <span className="text-xs font-bold text-[var(--text-main)]">
  {hoveredModel ? `${hoveredModel.percentage.toFixed(0)}%` : `${donutData.length}`}
  </span>
- <span className="text-[9px] text-zinc-400">
+ <span className="text-[9px] text-[var(--text-dim)]">
  {hoveredModel ? hoveredModel.model.split('-').slice(0, 2).join('-') : 'مدل فعال'}
  </span>
  </div>
  </div>
 
  {/* Model Legend */}
- <div className="w-full flex flex-col gap-1.5 text-xs max-h-36 overflow-y-auto pr-1">
+ <div className="w-full flex flex-col gap-1.5 text-xs max-h-36 overflow-y-auto pr-1 custom-scrollbar">
  {donutData.map((m, idx) => (
  <div
  key={idx}
  onMouseEnter={() => setHoveredModel(m)}
  onMouseLeave={() => setHoveredModel(null)}
  className={`flex items-center justify-between p-1.5 rounded-lg transition-colors cursor-pointer ${
- hoveredModel?.model === m.model ? 'bg-zinc-200/60 dark:bg-zinc-700/50' : 'hover:bg-zinc-100 dark:hover:bg-zinc-700/40 text-zinc-600 dark:text-zinc-300'
+ hoveredModel?.model === m.model ? 'clay-subcard font-bold' : 'hover:bg-[var(--color-input-bg)]/40 text-[var(--text-muted)]'
  }`}
  >
  <div className="flex items-center gap-2">
  <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: m.color }} />
- <span className="font-semibold text-zinc-700 dark:text-zinc-300 truncate max-w-[130px]" title={m.model}>
+ <span className="font-semibold text-[var(--text-main)] truncate max-w-[130px]" title={m.model}>
  {m.model}
  </span>
  </div>
  <div className="flex items-center gap-1.5 font-mono text-[11px]">
- <span className="text-zinc-500">({m.percentage.toFixed(1)}%)</span>
- <span className="font-bold text-zinc-700 dark:text-zinc-300">{m.totalTokens.toLocaleString('fa-IR')}</span>
+ <span className="text-[var(--text-dim)]">({m.percentage.toFixed(1)}%)</span>
+ <span className="font-bold text-[var(--text-main)]">{m.totalTokens.toLocaleString('fa-IR')}</span>
  </div>
  </div>
  ))}
  </div>
  </div>
  ) : (
- <div className="py-12 text-center text-xs text-zinc-400">
+ <div className="py-12 text-center text-xs text-[var(--text-dim)]">
  هنوز مصرف توکنی در این دوره ثبت نشده است.
  </div>
  )}
@@ -483,20 +485,20 @@ export const AdminAnalyticsTab: React.FC = () => {
  {/* Secondary Charts: Daily Token Volume Bar Chart & User Registrations */}
  <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
  {/* Chart 3: Token Usage Volume Bars */}
- <div className="p-5 rounded-2xl admin-card">
+ <div className="p-5 rounded-2xl clay-card">
  <div className="flex items-center justify-between mb-4">
  <div>
- <h3 className="text-xs font-bold text-zinc-900 dark:text-white flex items-center gap-1.5">
+ <h3 className="text-sm font-black text-[var(--text-main)] flex items-center gap-1.5">
  <Zap className="w-4 h-4 text-purple-500" />
  <span>حجم مصرف روزانه توکن‌ها</span>
  </h3>
- <p className="text-[11px] text-zinc-400 mt-0.5">
+ <p className="text-[11px] text-[var(--text-muted)] mt-0.5">
  ترافیک ورودی (پرامپت) و خروجی (پاسخ مدل) کاربران
  </p>
  </div>
  </div>
 
- <div className="h-44 flex items-end gap-1 pt-4 pb-1 overflow-x-auto">
+ <div className="h-44 flex items-end gap-1 pt-4 pb-1 overflow-x-auto custom-scrollbar">
  {timeline.map((item, idx) => {
  const heightPercent = maxTokens > 0 ? Math.max(4, (item.totalTokens / maxTokens) * 100) : 4;
  return (
@@ -505,16 +507,16 @@ export const AdminAnalyticsTab: React.FC = () => {
  className="flex-1 min-w-[10px] flex flex-col items-center gap-1 group relative cursor-pointer"
  >
  {/* Tooltip on hover */}
- <div className="absolute bottom-full mb-2 hidden group-hover:flex flex-col items-center bg-zinc-900 text-white text-[10px] rounded-lg p-2 z-20 whitespace-nowrap pointer-events-none">
+ <div className="absolute bottom-full mb-2 hidden group-hover:flex flex-col items-center bg-[var(--color-input-bg)] text-[var(--text-main)] border border-[var(--card-border)] shadow-lg text-[10px] rounded-xl p-2 z-20 whitespace-nowrap pointer-events-none">
  <span className="font-bold">{item.date}</span>
- <span className="text-purple-300">{item.totalTokens.toLocaleString('fa-IR')} توکن</span>
- <span className="text-zinc-400">{item.chatCount} پیام</span>
+ <span className="text-purple-400">{item.totalTokens.toLocaleString('fa-IR')} توکن</span>
+ <span className="text-[var(--text-dim)]">{item.chatCount} پیام</span>
  </div>
 
  <div
  style={{ height: `${heightPercent}%` }}
  className={`w-full rounded-t-sm transition-all duration-200 ${
- item.totalTokens > 0 ? 'bg-purple-500 group-hover:bg-purple-400 dark:bg-purple-600 dark:group-hover:bg-purple-500' : 'bg-zinc-200 dark:bg-zinc-700'
+ item.totalTokens > 0 ? 'bg-purple-500 group-hover:bg-purple-400 dark:bg-purple-600 dark:group-hover:bg-purple-500' : 'bg-[var(--card-border)]'
  }`}
  />
  </div>
@@ -522,7 +524,7 @@ export const AdminAnalyticsTab: React.FC = () => {
  })}
  </div>
 
- <div className="flex justify-between items-center text-[10px] text-zinc-400 pt-3 border-t admin-border  font-mono">
+ <div className="flex justify-between items-center text-[10px] text-[var(--text-dim)] pt-3 border-t border-[var(--card-border)] font-mono">
  <span>{timeline[0]?.date || ''}</span>
  <span>بیشترین مصرف روزانه: {maxTokens.toLocaleString('fa-IR')} توکن</span>
  <span>{timeline[timeline.length - 1]?.date || ''}</span>
@@ -530,14 +532,14 @@ export const AdminAnalyticsTab: React.FC = () => {
  </div>
 
  {/* Chart 4: User Growth / Registrations */}
- <div className="p-5 rounded-2xl admin-card">
+ <div className="p-5 rounded-2xl clay-card">
  <div className="flex items-center justify-between mb-4">
  <div>
- <h3 className="text-xs font-bold text-zinc-900 dark:text-white flex items-center gap-1.5">
+ <h3 className="text-sm font-black text-[var(--text-main)] flex items-center gap-1.5">
  <Users className="w-4 h-4 text-amber-500" />
  <span>روند ثبت‌نام کاربران جدید</span>
  </h3>
- <p className="text-[11px] text-zinc-400 mt-0.5">
+ <p className="text-[11px] text-[var(--text-muted)] mt-0.5">
  نرخ جذب کاربر و ثبت‌نام در طول بازه انتخابی
  </p>
  </div>
@@ -546,7 +548,7 @@ export const AdminAnalyticsTab: React.FC = () => {
  </div>
  </div>
 
- <div className="h-44 flex items-end gap-1 pt-4 pb-1 overflow-x-auto">
+ <div className="h-44 flex items-end gap-1 pt-4 pb-1 overflow-x-auto custom-scrollbar">
  {timeline.map((item, idx) => {
  const maxNewUsers = Math.max(...timeline.map(t => t.newUsersCount), 5);
  const heightPercent = maxNewUsers > 0 ? Math.max(4, (item.newUsersCount / maxNewUsers) * 100) : 4;
@@ -555,15 +557,15 @@ export const AdminAnalyticsTab: React.FC = () => {
  key={idx}
  className="flex-1 min-w-[10px] flex flex-col items-center gap-1 group relative cursor-pointer"
  >
- <div className="absolute bottom-full mb-2 hidden group-hover:flex flex-col items-center bg-zinc-900 text-white text-[10px] rounded-lg p-2 z-20 whitespace-nowrap pointer-events-none">
+ <div className="absolute bottom-full mb-2 hidden group-hover:flex flex-col items-center bg-[var(--color-input-bg)] text-[var(--text-main)] border border-[var(--card-border)] shadow-lg text-[10px] rounded-xl p-2 z-20 whitespace-nowrap pointer-events-none">
  <span className="font-bold">{item.date}</span>
- <span className="text-amber-300">+{item.newUsersCount} ثبت‌نام جدید</span>
+ <span className="text-amber-400">+{item.newUsersCount} ثبت‌نام جدید</span>
  </div>
 
  <div
  style={{ height: `${heightPercent}%` }}
  className={`w-full rounded-t-sm transition-all duration-200 ${
- item.newUsersCount > 0 ? 'bg-amber-500 group-hover:bg-amber-400 dark:bg-amber-600 dark:group-hover:bg-amber-500' : 'bg-zinc-200 dark:bg-zinc-700'
+ item.newUsersCount > 0 ? 'bg-amber-500 group-hover:bg-amber-400 dark:bg-amber-600 dark:group-hover:bg-amber-500' : 'bg-[var(--card-border)]'
  }`}
  />
  </div>
@@ -571,7 +573,7 @@ export const AdminAnalyticsTab: React.FC = () => {
  })}
  </div>
 
- <div className="flex justify-between items-center text-[10px] text-zinc-400 pt-3 border-t admin-border  font-mono">
+ <div className="flex justify-between items-center text-[10px] text-[var(--text-dim)] pt-3 border-t border-[var(--card-border)] font-mono">
  <span>{timeline[0]?.date || ''}</span>
  <span>رشد پیوسته جامعه کاربران</span>
  <span>{timeline[timeline.length - 1]?.date || ''}</span>

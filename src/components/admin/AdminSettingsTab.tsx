@@ -134,7 +134,10 @@ export const AdminSettingsTab: React.FC = () => {
       });
       if (res.ok) {
         const data = await res.json();
-        if (data.news_auto_publish !== undefined) setNewsAutoPublish(data.news_auto_publish === '1' || data.news_auto_publish === true);
+        if (data.news_auto_publish !== undefined) setNewsAutoPublish(data.news_auto_publish === '1' || data.news_auto_publish === true || data.news_auto_publish === 'true');
+        if (data.api_dollar_rate !== undefined) setSellingRate(String(data.api_dollar_rate));
+        if (data.welcome_bonus_amount !== undefined) setWelcomeBonus(String(data.welcome_bonus_amount));
+        if (data.welcome_bonus_enabled !== undefined) setWelcomeBonusEnabled(data.welcome_bonus_enabled === 'true' || data.welcome_bonus_enabled === '1');
         if (data.free_daily_limit_guest !== undefined) setFreeDailyLimitGuest(String(data.free_daily_limit_guest));
         if (data.free_cooldown_hours !== undefined) setFreeCooldownHours(String(data.free_cooldown_hours));
         if (data.free_daily_image_limit !== undefined) setFreeDailyImageLimit(String(data.free_daily_image_limit));
@@ -168,7 +171,8 @@ export const AdminSettingsTab: React.FC = () => {
       }
 
       if (finRes.status === 'fulfilled' && finRes.value) {
-        if (finRes.value.sellingRate) setSellingRate(String(finRes.value.sellingRate));
+        if (finRes.value.sellingRateToman) setSellingRate(String(finRes.value.sellingRateToman));
+        else if (finRes.value.sellingRate) setSellingRate(String(finRes.value.sellingRate));
         if (finRes.value.welcomeBonus) setWelcomeBonus(String(finRes.value.welcomeBonus));
         if (finRes.value.welcomeBonusEnabled !== undefined) setWelcomeBonusEnabled(Boolean(finRes.value.welcomeBonusEnabled));
         if (finRes.value.freeKeyPool) setFreeKeyPool(finRes.value.freeKeyPool);
@@ -409,6 +413,49 @@ export const AdminSettingsTab: React.FC = () => {
       });
     } finally {
       setSavingPool(null);
+    }
+  };
+
+  // Unified batch save for economic rates and site quotas
+  const handleSaveAllEconomicSettings = async () => {
+    try {
+      setSettingsSaving(true);
+      const settingsToSave: Array<[string, string]> = [
+        ['api_dollar_rate', sellingRate.trim()],
+        ['welcome_bonus_amount', welcomeBonus.trim()],
+        ['welcome_bonus_enabled', String(welcomeBonusEnabled)],
+        ['free_daily_limit_guest', freeDailyLimitGuest.trim()],
+        ['free_daily_image_limit', freeDailyImageLimit.trim()],
+        ['free_cooldown_hours', freeCooldownHours.trim()],
+        ['news_auto_publish', String(newsAutoPublish)]
+      ];
+
+      await Promise.all(
+        settingsToSave.map(async ([key, value]) => {
+          const res = await fetch('/api/admin/settings', {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`
+            },
+            body: JSON.stringify({ key, value })
+          });
+          if (!res.ok) {
+            let msg = 'خطا در ذخیره تنظیم ' + key;
+            try {
+              const data = await res.json();
+              if (data?.error) msg = data.error;
+            } catch {}
+            throw new Error(msg);
+          }
+        })
+      );
+
+      showFeedback('تمامی نرخ‌ها، سهمیه‌ها و محدودیت‌ها با موفقیت ذخیره شدند.');
+    } catch (err: any) {
+      showFeedback(err?.message || 'خطا در ذخیره تنظیمات اقتصادی', 'error');
+    } finally {
+      setSettingsSaving(false);
     }
   };
 
@@ -909,7 +956,7 @@ export const AdminSettingsTab: React.FC = () => {
                   checked={gatewayEnabled}
                   onChange={(e) => {
                     setGatewayEnabled(e.target.checked);
-                    handleSaveSetting('zarinpal_enabled', e.target.checked ? '1' : '0');
+                    handleSaveSetting('zarinpal_enabled', e.target.checked ? 'true' : 'false');
                   }}
                   className="w-4 h-4 rounded text-emerald-500"
                 />
@@ -958,8 +1005,8 @@ export const AdminSettingsTab: React.FC = () => {
                 type="button"
                 onClick={async () => {
                   await handleSaveSetting('zarinpal_merchant_id', zarinpalMerchantId.trim());
-                  await handleSaveSetting('zarinpal_sandbox', zarinpalSandbox ? '1' : '0');
-                  await handleSaveSetting('zarinpal_enabled', gatewayEnabled ? '1' : '0');
+                  await handleSaveSetting('zarinpal_sandbox', zarinpalSandbox ? 'true' : 'false');
+                  await handleSaveSetting('zarinpal_enabled', gatewayEnabled ? 'true' : 'false');
                 }}
                 disabled={settingsSaving}
                 className="px-5 py-2 clay-btn-primary text-xs font-bold rounded-xl"
@@ -987,7 +1034,7 @@ export const AdminSettingsTab: React.FC = () => {
                   checked={bazaarpayEnabled}
                   onChange={(e) => {
                     setBazaarpayEnabled(e.target.checked);
-                    handleSaveSetting('bazaarpay_enabled', e.target.checked ? '1' : '0');
+                    handleSaveSetting('bazaarpay_enabled', e.target.checked ? 'true' : 'false');
                   }}
                   className="w-4 h-4 rounded text-blue-500"
                 />
@@ -1039,7 +1086,7 @@ export const AdminSettingsTab: React.FC = () => {
                 onClick={async () => {
                   await handleSaveSetting('bazaarpay_destination', bazaarpayDestination.trim());
                   await handleSaveSetting('bazaarpay_token', bazaarpayToken.trim());
-                  await handleSaveSetting('bazaarpay_enabled', bazaarpayEnabled ? '1' : '0');
+                  await handleSaveSetting('bazaarpay_enabled', bazaarpayEnabled ? 'true' : 'false');
                 }}
                 disabled={settingsSaving}
                 className="px-5 py-2 clay-btn-primary text-xs font-bold rounded-xl"
@@ -1063,20 +1110,32 @@ export const AdminSettingsTab: React.FC = () => {
       {/* SECTION 3: Economic Rates & Site Limitations              */}
       {/* ========================================================= */}
       <div className="p-6 rounded-2xl clay-card space-y-6">
-        <div className="flex items-center gap-3 pb-4 border-b border-[var(--card-border)]">
-          <div className="w-9 h-9 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center font-bold">
-            <DollarSign className="w-5 h-5" />
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[var(--card-border)]">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center font-bold">
+              <DollarSign className="w-5 h-5" />
+            </div>
+            <div>
+              <h4 className="text-base font-black text-[var(--text-main)]">نرخ‌های مالی، هدایا و سهمیه‌های مصرف</h4>
+              <p className="text-xs text-[var(--text-muted)] mt-0.5">تنظیم ضریب تبدیل توکن، اعتبار هدیه و محدودیت‌های چت مهمان</p>
+            </div>
           </div>
-          <div>
-            <h4 className="text-base font-black text-[var(--text-main)]">نرخ‌های مالی، هدایا و سهمیه‌های مصرف</h4>
-            <p className="text-xs text-[var(--text-muted)] mt-0.5">تنظیم ضریب تبدیل توکن، اعتبار هدیه و محدودیت‌های چت مهمان</p>
-          </div>
+
+          <button
+            type="button"
+            onClick={handleSaveAllEconomicSettings}
+            disabled={settingsSaving}
+            className="self-start sm:self-auto flex items-center gap-1.5 px-4 py-2 clay-btn-primary text-xs font-bold rounded-xl shadow-sm"
+          >
+            {settingsSaving ? <RefreshCw size={13} className="animate-spin" /> : <Save size={13} />}
+            <span>ذخیره تمامی نرخ‌ها و سهمیه‌ها</span>
+          </button>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {/* Selling Rate */}
           <div className="p-4 rounded-xl clay-subcard space-y-2">
-            <label className="text-xs font-bold text-[var(--text-main)]">نرخ فروش هر دلار به تومان</label>
+            <label className="text-xs font-bold text-[var(--text-main)]">نرخ فروش هر دلار API به کاربران (تومان)</label>
             <input
               type="text"
               value={sellingRate}
@@ -1085,11 +1144,11 @@ export const AdminSettingsTab: React.FC = () => {
               dir="ltr"
             />
             <button
-              onClick={() => handleSaveSetting('selling_rate', sellingRate)}
+              onClick={() => handleSaveSetting('api_dollar_rate', sellingRate)}
               disabled={settingsSaving}
               className="w-full py-2 clay-btn-primary text-xs font-bold rounded-lg"
             >
-              ذخیره نرخ
+              ذخیره نرخ دلار
             </button>
           </div>
 
@@ -1102,7 +1161,7 @@ export const AdminSettingsTab: React.FC = () => {
                 checked={welcomeBonusEnabled}
                 onChange={(e) => {
                   setWelcomeBonusEnabled(e.target.checked);
-                  handleSaveSetting('welcome_bonus_enabled', e.target.checked ? '1' : '0');
+                  handleSaveSetting('welcome_bonus_enabled', String(e.target.checked));
                 }}
                 className="w-4 h-4 rounded text-amber-500"
               />
@@ -1115,7 +1174,7 @@ export const AdminSettingsTab: React.FC = () => {
               dir="ltr"
             />
             <button
-              onClick={() => handleSaveSetting('welcome_bonus', welcomeBonus)}
+              onClick={() => handleSaveSetting('welcome_bonus_amount', welcomeBonus)}
               disabled={settingsSaving}
               className="w-full py-2 clay-btn-primary text-xs font-bold rounded-lg"
             >
@@ -1139,6 +1198,25 @@ export const AdminSettingsTab: React.FC = () => {
               className="w-full py-2 clay-btn-primary text-xs font-bold rounded-lg"
             >
               ذخیره سهمیه مهمان
+            </button>
+          </div>
+
+          {/* Free Cooldown Hours */}
+          <div className="p-4 rounded-xl clay-subcard space-y-2">
+            <label className="text-xs font-bold text-[var(--text-main)]">دوره کول‌داون مهمان (ساعت)</label>
+            <input
+              type="text"
+              value={freeCooldownHours}
+              onChange={(e) => setFreeCooldownHours(e.target.value)}
+              className="w-full px-3 py-2 rounded-xl clay-surface text-xs font-mono font-bold"
+              dir="ltr"
+            />
+            <button
+              onClick={() => handleSaveSetting('free_cooldown_hours', freeCooldownHours)}
+              disabled={settingsSaving}
+              className="w-full py-2 clay-btn-primary text-xs font-bold rounded-lg"
+            >
+              ذخیره کول‌داون
             </button>
           </div>
 
@@ -1170,7 +1248,7 @@ export const AdminSettingsTab: React.FC = () => {
                 checked={newsAutoPublish}
                 onChange={(e) => {
                   setNewsAutoPublish(e.target.checked);
-                  handleSaveSetting('news_auto_publish', e.target.checked ? '1' : '0');
+                  handleSaveSetting('news_auto_publish', String(e.target.checked));
                 }}
                 className="w-4 h-4 rounded text-purple-500"
               />

@@ -38,7 +38,11 @@ const isWalletTopupOrder = (o: { id: string; productCategory?: string; productTi
     Boolean(o.productTitle && o.productTitle.includes('کیف پول'));
 };
 
-export const AdminOrdersTab: React.FC = () => {
+interface AdminOrdersTabProps {
+  onRefreshCount?: () => void;
+}
+
+export const AdminOrdersTab: React.FC<AdminOrdersTabProps> = ({ onRefreshCount }) => {
   const { token } = useAuthStore();
   const { settings } = useSettingsStore();
   const usePersianDigits = settings?.appearance?.persianNumerals ?? false;
@@ -105,6 +109,7 @@ export const AdminOrdersTab: React.FC = () => {
 
       // Refresh list and selected modal if open
       await fetchOrders();
+      onRefreshCount?.();
       if (selectedOrderIdRef.current === orderId) {
         const updated = await fetch(`/api/admin/orders/${orderId}`, {
           headers: { Authorization: `Bearer ${token}` }
@@ -169,6 +174,7 @@ export const AdminOrdersTab: React.FC = () => {
         setSelectedOrder(null);
       }
       await fetchOrders();
+      onRefreshCount?.();
     } catch (err: any) {
       showFeedback(err.message, 'error');
     } finally {
@@ -307,24 +313,38 @@ export const AdminOrdersTab: React.FC = () => {
           </button>
         </div>
 
-        {/* Search */}
-        <div className="relative min-w-[240px]">
-          <Search className="w-4 h-4 absolute right-3.5 top-1/2 -translate-y-1/2 text-[var(--text-dim)]" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="جستجوی شماره سفارش، خریدار، محصول..."
-            className="w-full pr-10 pl-4 py-2 rounded-xl clay-surface text-xs outline-none transition-all placeholder:text-[var(--text-dim)]"
-          />
-          {searchQuery && (
-            <button
-              onClick={() => setSearchQuery('')}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-dim)] hover:text-[var(--text-main)]"
-            >
-              <X size={14} />
-            </button>
-          )}
+        {/* Controls: Payment Method Filter + Search */}
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
+          <select
+            value={paymentMethodFilter}
+            onChange={(e) => setPaymentMethodFilter(e.target.value)}
+            className="px-3 py-2 rounded-xl clay-surface text-xs font-bold text-[var(--text-main)] outline-none cursor-pointer"
+          >
+            <option value="all">همه روش‌ها</option>
+            <option value="zarinpal">درگاه شاپرک</option>
+            <option value="bazaarpay">بازارپی</option>
+            <option value="card">کارت‌به‌کارت</option>
+          </select>
+
+          {/* Search */}
+          <div className="relative min-w-[220px]">
+            <Search className="w-4 h-4 absolute right-3.5 top-1/2 -translate-y-1/2 text-[var(--text-dim)]" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="جستجوی سفارش، خریدار، کد..."
+              className="w-full pr-10 pl-4 py-2 rounded-xl clay-surface text-xs outline-none transition-all placeholder:text-[var(--text-dim)]"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-dim)] hover:text-[var(--text-main)]"
+              >
+                <X size={14} />
+              </button>
+            )}
+          </div>
         </div>
       </div>
 

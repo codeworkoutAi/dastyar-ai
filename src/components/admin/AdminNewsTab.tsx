@@ -488,18 +488,50 @@ export const AdminNewsTab: React.FC = () => {
 
               {/* Cover Image Upload / URL */}
               <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-bold text-[var(--text-main)]">تصویر کاور (فرمت WebP حداکثر ۱۰۰KB)</label>
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold text-[var(--text-main)]">تصویر کاور (فرمت WebP حداکثر ۱۰۰KB)</label>
+                  {image && (
+                    <button
+                      type="button"
+                      onClick={() => setImage('')}
+                      className="text-[11px] font-bold text-red-500 hover:underline flex items-center gap-1 cursor-pointer"
+                    >
+                      <Trash2 size={12} />
+                      <span>حذف تصویر</span>
+                    </button>
+                  )}
+                </div>
+
                 <div className="flex items-center gap-2">
-                  <input
-                    type="text"
-                    value={image}
-                    onChange={(e) => setImage(e.target.value)}
-                    placeholder="/default-news-cover.webp یا data:image/webp;base64,..."
-                    className="flex-1 px-4 py-2.5 rounded-xl clay-surface text-xs outline-none font-mono text-left"
-                    dir="ltr"
-                  />
+                  {image ? (
+                    <img
+                      src={image}
+                      alt="پیش‌نمایش کاور"
+                      className="w-12 h-10 object-cover rounded-xl border border-[var(--card-border)] shrink-0 shadow-sm"
+                      onError={(e) => { (e.target as HTMLElement).style.display = 'none'; }}
+                    />
+                  ) : null}
+
+                  {image.startsWith('data:image/') ? (
+                    <div className="flex-1 px-4 py-2.5 rounded-xl clay-surface text-xs font-bold text-emerald-600 dark:text-emerald-400 flex items-center justify-between">
+                      <span>✓ تصویر آپلود و بهینه شد (Base64)</span>
+                      <span className="text-[10px] text-[var(--text-muted)] font-mono">
+                        ~{Math.round(image.length * 0.75 / 1024)} KB
+                      </span>
+                    </div>
+                  ) : (
+                    <input
+                      type="text"
+                      value={image}
+                      onChange={(e) => setImage(e.target.value)}
+                      placeholder="/default-news-cover.webp یا https://..."
+                      className="flex-1 px-4 py-2.5 rounded-xl clay-surface text-xs outline-none font-mono text-left"
+                      dir="ltr"
+                    />
+                  )}
+
                   <label className="px-3.5 py-2.5 clay-btn rounded-xl text-xs font-bold cursor-pointer shrink-0">
-                    <span>انتخاب فایل</span>
+                    <span>{image ? 'تغییر فایل' : 'انتخاب فایل'}</span>
                     <input type="file" accept="image/webp,image/png,image/jpeg" className="hidden" onChange={handleImageUpload} />
                   </label>
                 </div>

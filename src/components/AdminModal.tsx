@@ -57,12 +57,12 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
       .catch(() => {});
   }, [token, user]);
 
-  // Fetch pending counts on open or tab change
+  // Fetch pending counts on open
   useEffect(() => {
     if (isOpen) {
       fetchBadgeCounts();
     }
-  }, [isOpen, fetchBadgeCounts, activeTab]);
+  }, [isOpen, fetchBadgeCounts]);
 
   // Handle Escape key to close
   useEffect(() => {
@@ -159,7 +159,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
         {/* Tab Content Container */}
         <div className="flex-1 overflow-y-auto p-4 sm:p-6 custom-scrollbar bg-[var(--card-bg)]">
           {activeTab === 'products' && <AdminProductsTab />}
-          {activeTab === 'orders' && <AdminOrdersTab />}
+          {activeTab === 'orders' && <AdminOrdersTab onRefreshCount={fetchBadgeCounts} />}
           {activeTab === 'messages' && <AdminMessagesTab onRefreshCount={fetchBadgeCounts} />}
           {activeTab === 'users' && <AdminUsersTab />}
           {activeTab === 'finance' && <AdminFinanceTab />}

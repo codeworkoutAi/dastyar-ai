@@ -5,7 +5,7 @@ import { adminRateLimiter, adminReportRateLimiter, adminExternalQueryRateLimiter
 import { bot, sendTelegramOrderSuccess } from '../telegram/bot';
 import { notifyOrderSuccessBySms } from '../services/kavenegarService';
 import { clearSitemapCache } from '../seo/sitemap';
-import { getAdminFinancialSummary, addApiPurchase, depositWallet, getPlanCreditAmount } from '../services/walletService';
+import { getAdminFinancialSummary, addApiPurchase, depositWallet, getPlanCreditAmount, getApiDollarRate } from '../services/walletService';
 import { getZarinpalConfig, testZarinpalMerchant, getServerPublicIp } from '../services/zarinpalService';
 import { getBazaarPayConfig, testBazaarPayMerchant } from '../services/bazaarPayService';
 import { getFullSiteDesign, saveSectionData, resetSectionData } from '../services/landingService';
@@ -1446,13 +1446,17 @@ router.get('/analytics-summary', adminReportRateLimiter, (req, res) => {
     }
 
     const timeline = Array.from(dateMap.values());
+    const dollarRate = getApiDollarRate();
 
     res.json({
       period,
       days,
+      dollarRate,
+      sellingRate: dollarRate,
       timeline,
       modelDistribution,
       summary: {
+        dollarRate,
         totalChats: totalStats?.totalChats || 0,
         totalChatRevenueToman: totalStats?.totalChatRevenueToman || 0,
         totalStoreRevenueToman: totalStoreStats?.totalStoreRevenueToman || 0,
