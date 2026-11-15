@@ -116,10 +116,21 @@ export const ChatBox: React.FC = memo(() => {
         setSpeakingId(null);
         ttsControllerRef.current = null;
       },
-      () => {
+      (err: any) => {
         setLoadingTtsId(null);
         setSpeakingId(null);
         ttsControllerRef.current = null;
+        if (err?.message) {
+          const toast = document.createElement('div');
+          toast.className = 'fixed bottom-12 left-1/2 transform -translate-x-1/2 clay-card px-4 py-2.5 rounded-card z-[9999] text-xs text-rose-500 flex items-center gap-2 shadow-lg';
+          toast.textContent = String(err.message);
+          document.body.appendChild(toast);
+          setTimeout(() => {
+            toast.style.opacity = '0';
+            toast.style.transition = 'opacity 0.4s ease';
+            setTimeout(() => toast.remove(), 400);
+          }, 3000);
+        }
       }
     );
   }, [speakingId, loadingTtsId]);

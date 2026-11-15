@@ -1,6 +1,7 @@
 // High-Quality Text-to-Speech (TTS) Engine with Persian & English Support
-// Primary Engine: Neural Voice Stream via Server Audio Engine
-// Fallback Engine: Client Web Speech API with Multi-sentence Chunking & Chrome GC Protection
+// Primary Engine: Neural Voice Stream via Server Audio Engine (Google Gemini 3.1 Flash TTS Preview)
+// Playback Engine: Web Audio API (AudioContext) with HTMLAudioElement fallback
+// Fallback Engine: Client Web Speech API with Multi-sentence Chunking & Voice Matching
 
 function extractCleanAnswerForSpeech(rawContent: string): string {
   if (!rawContent || !rawContent.trim()) return '';
@@ -65,16 +66,75 @@ export interface SpeakController {
   stop: () => void;
 }
 
-// Global active audio & utterance tracking to prevent garbage collection and overlap
-let currentActiveAudio: HTMLAudioElement | null = null;
-let currentActiveBlobUrl: string | null = null;
+// Global active audio tracking to prevent overlapping playback and memory leaks
+let activeAudioContext: AudioContext | null = null;
+let activeSourceNode: AudioBufferSourceNode | null = null;
+let activeAudioElement: HTMLAudioElement | null = null;
+let activeBlobUrl: string | null = null;
 let activeUtterances: SpeechSynthesisUtterance[] = [];
-let isGlobalCancelled = false;
+let isUserCancelled = false;
+
+function getOrCreateAudioContext(): AudioContext | null {
+  try {
+    const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+    if (!AudioCtx) return null;
+    if (!activeAudioContext || activeAudioContext.state === 'closed') {
+      activeAudioContext = new AudioCtx();
+    }
+    if (activeAudioContext.state === 'suspended') {
+      activeAudioContext.resume().catch(() => {});
+    }
+    return activeAudioContext;
+  } catch {
+    return null;
+  }
+}
+
+function stopCurrentPlayback() {
+  // Stop Web Audio node
+  if (activeSourceNode) {
+    try {
+      activeSourceNode.onended = null;
+      activeSourceNode.stop(0);
+      activeSourceNode.disconnect();
+    } catch {}
+    activeSourceNode = null;
+  }
+
+  // Stop HTMLAudioElement
+  if (activeAudioElement) {
+    try {
+      activeAudioElement.pause();
+      activeAudioElement.currentTime = 0;
+      activeAudioElement.src = '';
+      activeAudioElement.onplay = null;
+      activeAudioElement.onended = null;
+      activeAudioElement.onerror = null;
+    } catch {}
+    activeAudioElement = null;
+  }
+
+  // Revoke Blob URL
+  if (activeBlobUrl) {
+    try {
+      URL.revokeObjectURL(activeBlobUrl);
+    } catch {}
+    activeBlobUrl = null;
+  }
+
+  // Cancel Web Speech
+  if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+    try {
+      window.speechSynthesis.cancel();
+    } catch {}
+  }
+  activeUtterances = [];
+}
 
 /**
  * High-Reliability Audio TTS:
- * First attempts server-side neural audio streaming (plays via HTML5 Audio).
- * If network, quota, or server error occurs, automatically and seamlessly falls back to client Web Speech API.
+ * First attempts server-side neural audio streaming via Web Audio API (falls back to HTML5 Audio).
+ * If network, quota, or server error occurs, seamlessly falls back to client Web Speech API.
  */
 export function speakText(
   rawContent: string,
@@ -82,9 +142,12 @@ export function speakText(
   onEnd: () => void,
   onError: (err?: unknown) => void
 ): SpeakController {
-  // 1. Clean previous playback
-  stopAllPlayback();
-  isGlobalCancelled = false;
+  // 1. Reset state and stop existing playback
+  isUserCancelled = false;
+  stopCurrentPlayback();
+
+  // Synchronously prime AudioContext during the user's click gesture (unlocks iOS/Chrome autoplay)
+  const ctx = getOrCreateAudioContext();
 
   const cleanText = extractCleanAnswerForSpeech(rawContent);
   if (!cleanText) {
@@ -96,13 +159,13 @@ export function speakText(
 
   const controller: SpeakController = {
     stop: () => {
-      isGlobalCancelled = true;
-      stopAllPlayback();
+      isUserCancelled = true;
+      stopCurrentPlayback();
       onEnd();
     },
   };
 
-  // Attempt Primary Engine: Server-side Neural Audio API
+  // 2. Fetch server-side neural audio
   fetch('/api/tts', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -112,46 +175,83 @@ export function speakText(
     }),
   })
     .then(async (res) => {
-      if (isGlobalCancelled) return;
+      if (isUserCancelled) return;
       if (!res.ok) {
-        // Status 429 or 500: gracefully delegate to browser fallback without error alert
         fallbackWebSpeech(cleanText, isPersian, onStart, onEnd, onError);
         return;
       }
-      const blob = await res.blob();
-      if (isGlobalCancelled) return;
 
-      const blobUrl = URL.createObjectURL(blob);
-      currentActiveBlobUrl = blobUrl;
+      const arrayBuffer = await res.arrayBuffer();
+      if (isUserCancelled) return;
 
-      const audio = new Audio(blobUrl);
-      currentActiveAudio = audio;
+      // Primary Playback Engine: Web Audio API (AudioContext)
+      if (ctx) {
+        try {
+          if (ctx.state === 'suspended') {
+            await ctx.resume();
+          }
+          const audioBuffer = await ctx.decodeAudioData(arrayBuffer);
+          if (isUserCancelled) return;
 
-      audio.onplay = () => {
-        if (!isGlobalCancelled) onStart();
-      };
+          const source = ctx.createBufferSource();
+          source.buffer = audioBuffer;
+          source.connect(ctx.destination);
+          activeSourceNode = source;
 
-      audio.onended = () => {
-        stopAllPlayback();
-        if (!isGlobalCancelled) onEnd();
-      };
+          source.onended = () => {
+            activeSourceNode = null;
+            if (!isUserCancelled) {
+              onEnd();
+            }
+          };
 
-      audio.onerror = () => {
-        if (!isGlobalCancelled) {
-          fallbackWebSpeech(cleanText, isPersian, onStart, onEnd, onError);
+          source.start(0);
+          if (!isUserCancelled) {
+            onStart();
+          }
+          return;
+        } catch (webaudioErr) {
+          console.warn('[TTS] Web Audio decoding failed, attempting HTMLAudioElement fallback:', webaudioErr);
         }
-      };
+      }
 
+      // Secondary Playback Engine: HTML5 Audio with Blob URL
       try {
+        const blob = new Blob([arrayBuffer], { type: 'audio/wav' });
+        const blobUrl = URL.createObjectURL(blob);
+        activeBlobUrl = blobUrl;
+
+        const audio = new Audio(blobUrl);
+        activeAudioElement = audio;
+
+        audio.onplay = () => {
+          if (!isUserCancelled) onStart();
+        };
+
+        audio.onended = () => {
+          activeAudioElement = null;
+          if (activeBlobUrl) {
+            URL.revokeObjectURL(activeBlobUrl);
+            activeBlobUrl = null;
+          }
+          if (!isUserCancelled) onEnd();
+        };
+
+        audio.onerror = () => {
+          if (!isUserCancelled) {
+            fallbackWebSpeech(cleanText, isPersian, onStart, onEnd, onError);
+          }
+        };
+
         await audio.play();
-      } catch {
-        if (!isGlobalCancelled) {
+      } catch (playErr) {
+        if (!isUserCancelled) {
           fallbackWebSpeech(cleanText, isPersian, onStart, onEnd, onError);
         }
       }
     })
     .catch(() => {
-      if (!isGlobalCancelled) {
+      if (!isUserCancelled) {
         fallbackWebSpeech(cleanText, isPersian, onStart, onEnd, onError);
       }
     });
@@ -159,50 +259,8 @@ export function speakText(
   return controller;
 }
 
-function stopAllPlayback() {
-  isGlobalCancelled = true;
-
-  // Cleanup audio element
-  if (currentActiveAudio) {
-    try {
-      currentActiveAudio.pause();
-      currentActiveAudio.currentTime = 0;
-      currentActiveAudio.src = '';
-      // Remove event listeners to prevent memory leaks
-      currentActiveAudio.onplay = null;
-      currentActiveAudio.onended = null;
-      currentActiveAudio.onerror = null;
-    } catch (e) {
-      console.warn('[TTS] Audio cleanup error:', e);
-    }
-    currentActiveAudio = null;
-  }
-
-  // Revoke blob URL to free memory
-  if (currentActiveBlobUrl) {
-    try {
-      URL.revokeObjectURL(currentActiveBlobUrl);
-    } catch (e) {
-      console.warn('[TTS] Blob URL cleanup error:', e);
-    }
-    currentActiveBlobUrl = null;
-  }
-
-  // Cancel Web Speech API
-  if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-    try {
-      window.speechSynthesis.cancel();
-    } catch (e) {
-      console.warn('[TTS] Speech synthesis cleanup error:', e);
-    }
-  }
-
-  // Clear utterances array to prevent memory leaks
-  activeUtterances = [];
-}
-
 /**
- * Fallback Web Speech API engine with sentence chunking & Chrome GC prevention
+ * Fallback Web Speech API engine with sentence chunking & voice matching
  */
 function fallbackWebSpeech(
   cleanText: string,
@@ -217,6 +275,27 @@ function fallbackWebSpeech(
   }
 
   window.speechSynthesis.cancel();
+
+  const voices = window.speechSynthesis.getVoices();
+  let selectedVoice: SpeechSynthesisVoice | null = null;
+
+  if (isPersian) {
+    selectedVoice =
+      voices.find((v) => v.lang.toLowerCase().includes('fa') || v.lang.toLowerCase().includes('prs')) ||
+      voices.find((v) => v.name.toLowerCase().includes('persian') || v.name.toLowerCase().includes('farsi') || v.name.includes('فارسی')) ||
+      null;
+
+    // If text is Persian and device has NO Persian voice installed, do not play muffled English voice
+    if (!selectedVoice && voices.length > 0) {
+      onError(new Error('سیستم شما فاقد صدای فارسی برای خواندن صوتی است.'));
+      return;
+    }
+  } else {
+    selectedVoice =
+      voices.find((v) => v.lang.startsWith('en') && (v.name.includes('Google') || v.name.includes('Natural'))) ||
+      voices.find((v) => v.lang.startsWith('en')) ||
+      null;
+  }
 
   // Split text into natural sentence chunks to prevent browser speech buffer freezing
   const sentences = cleanText
@@ -237,28 +316,12 @@ function fallbackWebSpeech(
 
   const speechChunks = chunks.length > 0 ? chunks : [cleanText.substring(0, 300)];
 
-  // Pick optimal voice
-  const voices = window.speechSynthesis.getVoices();
-  let selectedVoice: SpeechSynthesisVoice | null = null;
-
-  if (isPersian) {
-    selectedVoice =
-      voices.find((v) => v.lang.toLowerCase().includes('fa') || v.lang.toLowerCase().includes('prs')) ||
-      voices.find((v) => v.name.toLowerCase().includes('persian') || v.name.toLowerCase().includes('farsi') || v.name.includes('فارسی')) ||
-      null;
-  } else {
-    selectedVoice =
-      voices.find((v) => v.lang.startsWith('en') && (v.name.includes('Google') || v.name.includes('Natural'))) ||
-      voices.find((v) => v.lang.startsWith('en')) ||
-      null;
-  }
-
   let chunkIdx = 0;
   activeUtterances = [];
 
   const playChunk = () => {
-    if (isGlobalCancelled || chunkIdx >= speechChunks.length) {
-      if (!isGlobalCancelled) onEnd();
+    if (isUserCancelled || chunkIdx >= speechChunks.length) {
+      if (!isUserCancelled) onEnd();
       return;
     }
 
@@ -279,13 +342,13 @@ function fallbackWebSpeech(
     };
 
     utterance.onend = () => {
-      if (!isGlobalCancelled) {
+      if (!isUserCancelled) {
         playChunk();
       }
     };
 
     utterance.onerror = (e) => {
-      if (e.error === 'canceled' || isGlobalCancelled) {
+      if (e.error === 'canceled' || isUserCancelled) {
         return;
       }
       if (chunkIdx < speechChunks.length) {

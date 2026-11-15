@@ -1,7 +1,7 @@
 import express from 'express';
 import { Modality } from '@google/genai';
 import db from '../db/database';
-import { isSafeBaseUrl, getGeminiClient, sanitizeErrorMessage, getPollinationsImageUrl, translateAndEnhanceImagePrompt, generatePollinationsImage, getGeminiKeyFromPool } from '../services/utils';
+import { isSafeBaseUrl, getGeminiClient, sanitizeErrorMessage, getPollinationsImageUrl, translateAndEnhanceImagePrompt, generatePollinationsImage, getGeminiKeyFromPool, blacklistKey, extractCleanErrorMessage } from '../services/utils';
 import { aiRouteLimiter } from '../middleware/rateLimiter';
 import jwt from 'jsonwebtoken';
 import { JWT_SECRET } from '../middleware/auth';
@@ -647,50 +647,83 @@ router.post('/api/tts', aiRouteLimiter, async (req, res) => {
       return res.send(cachedWav);
     }
 
-    const ai = getGeminiClient();
-    
-    try {
-      const ttsResponse = await ai.models.generateContent({
-        model: 'gemini-3.8-flash-lite-tts',
-        contents: [{ parts: [{ text: textToSynthesize }] }],
-        config: {
-          responseModalities: [Modality.AUDIO],
-          speechConfig: {
-            voiceConfig: {
-              prebuiltVoiceConfig: { voiceName: 'Kore' },
+    const triedKeys = new Set<string>();
+    let wavBuffer: Buffer | null = null;
+    let lastTtsError: any = null;
+    const maxTtsAttempts = 4;
+    const ttsCandidateModels = ['gemini-3.8-flash-lite-tts', 'gemini-3.1-flash-tts-preview'];
+
+    for (const ttsModel of ttsCandidateModels) {
+      if (wavBuffer) break;
+
+      for (let attempt = 0; attempt < maxTtsAttempts; attempt++) {
+        let currentKey: string | null = null;
+        try {
+          currentKey = getGeminiKeyFromPool(Array.from(triedKeys), ttsModel);
+        } catch (poolErr) {
+          lastTtsError = poolErr;
+        }
+        if (!currentKey) {
+          currentKey = process.env.DEFAULT_GEMINI_KEY || process.env.GEMINI_API_KEY || null;
+        }
+        if (!currentKey || triedKeys.has(currentKey)) break;
+
+        triedKeys.add(currentKey);
+
+        try {
+          const ai = getGeminiClient(currentKey, false);
+          const ttsResponse = await ai.models.generateContent({
+            model: ttsModel,
+            contents: [{ parts: [{ text: textToSynthesize }] }],
+            config: {
+              responseModalities: [Modality.AUDIO],
+              speechConfig: {
+                voiceConfig: {
+                  prebuiltVoiceConfig: { voiceName: 'Kore' },
+                },
+              },
             },
-          },
-        },
-      });
+          });
 
-      const inline = ttsResponse.candidates?.[0]?.content?.parts?.[0]?.inlineData;
-      const rawBase64 = inline?.data;
-      if (!rawBase64) {
-        return res.status(422).json({ error: 'خروجی صوتی تولید نشد', fallback: true });
+          const rawBase64 = ttsResponse.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
+          if (rawBase64) {
+            const audioBuffer = Buffer.from(rawBase64, 'base64');
+            // Gemini 3.8 TTS returns a complete WAV file (RIFF header) for unary requests,
+            // while older models returned raw PCM that needed a WAV header. Detect and handle both.
+            const isAlreadyWav = audioBuffer.length > 4 && audioBuffer.slice(0, 4).toString('ascii') === 'RIFF';
+            wavBuffer = isAlreadyWav ? audioBuffer : pcmToWavBuffer(audioBuffer, 24000, 1, 16);
+            break;
+          }
+        } catch (apiErr: any) {
+          lastTtsError = apiErr;
+          const errMsg = extractCleanErrorMessage(apiErr);
+          const is429 = errMsg.includes('429') || errMsg.includes('RESOURCE_EXHAUSTED') || errMsg.includes('quota');
+          const is401 = errMsg.includes('401') || errMsg.includes('Unauthorized') || errMsg.includes('Invalid API Key');
+          const is403 = errMsg.includes('403') || errMsg.includes('PERMISSION_DENIED') || errMsg.includes('API_KEY_INVALID');
+          if (currentKey && (is429 || is401 || is403)) {
+            blacklistKey(currentKey, is429 ? '429' : (is401 ? '401' : '403'), is429 ? 60 * 1000 : 24 * 60 * 60 * 1000, is429 ? ttsModel : undefined);
+          }
+          console.warn(`[TTS API] Key ${currentKey.slice(0, 8)}... failed on ${ttsModel} (attempt ${attempt + 1}): ${errMsg.slice(0, 80)}`);
+        }
       }
-
-      const audioBuffer = Buffer.from(rawBase64, 'base64');
-      // Gemini 3.8 TTS returns a complete WAV file (RIFF header) for unary requests,
-      // while older models returned raw PCM that needed a WAV header. Detect and handle both
-      // so we never wrap an already-valid WAV in a second header (which corrupts the audio).
-      const isAlreadyWav = audioBuffer.length > 4 && audioBuffer.slice(0, 4).toString('ascii') === 'RIFF';
-      const wavBuffer = isAlreadyWav ? audioBuffer : pcmToWavBuffer(audioBuffer, 24000, 1, 16);
-
-      // Keep cache size bounded
-      if (ttsAudioCache.size > 50) {
-        const firstKey = ttsAudioCache.keys().next().value;
-        if (firstKey) ttsAudioCache.delete(firstKey);
-      }
-      ttsAudioCache.set(cacheKey, wavBuffer);
-
-      res.setHeader('Content-Type', 'audio/wav');
-      res.setHeader('Content-Length', wavBuffer.length);
-      res.setHeader('Cache-Control', 'public, max-age=86400');
-      return res.send(wavBuffer);
-    } catch (apiErr: any) {
-      console.warn('[TTS API] Gemini TTS API exhausted or error, delegating to browser fallback:', apiErr.message || apiErr);
-      return res.status(429).json({ error: 'محدودیت موقت مدل هوش مصنوعی', fallback: true });
     }
+
+    if (!wavBuffer) {
+      console.warn('[TTS API] All key/model attempts failed for TTS, delegating to browser fallback:', lastTtsError?.message || lastTtsError);
+      return res.status(429).json({ error: 'محدودیت موقت در پردازش صوت هوش مصنوعی', fallback: true });
+    }
+
+    // Keep cache size bounded
+    if (ttsAudioCache.size > 50) {
+      const firstKey = ttsAudioCache.keys().next().value;
+      if (firstKey) ttsAudioCache.delete(firstKey);
+    }
+    ttsAudioCache.set(cacheKey, wavBuffer);
+
+    res.setHeader('Content-Type', 'audio/wav');
+    res.setHeader('Content-Length', wavBuffer.length);
+    res.setHeader('Cache-Control', 'public, max-age=86400');
+    return res.send(wavBuffer);
   } catch (err: any) {
     console.error('[TTS API] Error generating audio:', err);
     res.status(500).json({ error: 'خطا در ساخت فایل صوتی', fallback: true });
