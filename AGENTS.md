@@ -36,6 +36,8 @@ These are load-bearing. Do not refactor, rename, or "improve" them without expli
 - `saveConversations` quota handling with Base64 strip (`src/lib/storage.ts`)
 - `dateUtils.ts` as single source of truth for Tehran-formatted timestamps
 - `crypto.randomUUID()` for generated IDs (not `Date.now()`)
+- `useChatStore.subscribe` throttled persistence (no sync `saveConversations` during streaming tokens; atomic save on `streamJustEnded`)
+- `ttsAudioCache` strict memory bounds (`MAX_TTS_CACHE_ITEMS = 10`, 10-minute TTL, LRU eviction in `server/routes/tools.ts`)
 
 ---
 
@@ -104,16 +106,17 @@ The platform operates exclusively on **exactly six stable system profiles** (div
 - **Documents & Text**: PDF (up to 10MB), text, code (`.js`, `.py`, etc.), datasets (`.csv`, `.json`). Text is extracted and injected into the prompt.
 - **UI Logic**: Non-image files use a `FileText` fallback layout — never render them as `<img>`.
 - **AI Image Generation Policy**:
-  - **In Chat (`ChatBox` / `MessageInput`)**: Strictly PAID and studio-tier using **Google Imagen 3** (`imagen-3`) and **DALL-E 3** (`dalle-3`). Low-quality free models are never used in chat. Deducts directly from user wallet balance (~6,000 to ~8,000 Tomans).
+  - **In Chat (`ChatBox` / `MessageInput`)**: Strictly PAID and studio-tier using **Google Imagen 3** (`imagen-3` / UI: «موتور فوتورئال استودیویی») and **DALL-E 3** (`dalle-3` / UI: «موتور خلاقانه و هنری»). Raw model/brand names are strictly hidden in user-facing UI per Layer Zero #4. Low-quality free models are never used in chat. Deducts directly from user wallet balance (~6,000 to ~8,000 Tomans).
   - **In Image Generation Studio (`ImageGenStudio.tsx`)**: User has full freedom — free engines (`flux`, `sana`, etc.) remain 100% free via Pollinations for test/fun, while studio engines (`imagen-3`, `dalle-3`) deduct from wallet balance using system API keys without requiring personal BYOK keys.
 
 ### 6. LocalStorage Quota Management
 - Conversation history is stored in `localStorage`.
 - **Anti-Quota Exceed System**: `src/lib/storage.ts` → `saveConversations` handles `QuotaExceededError` by stripping Base64 images from older conversations and replacing them with a Persian placeholder. **DO NOT OVERWRITE OR REMOVE THIS LOGIC.**
 
-### 7. Real-time Streaming (SSE)
+### 7. Real-time Streaming (SSE) & Main-Thread Protection
 - Chat streaming lives in `server/routes/chat.ts` (mounted from `server/index.ts`).
 - **Important Headers**: Always set `res.setHeader('X-Accel-Buffering', 'no');` so reverse proxies (Nginx, etc.) do not buffer the stream. Removing it causes `Failed to fetch` / timeouts.
+- **Main-Thread I/O Throttling (`chatStore.ts`)**: In `useChatStore.subscribe`, synchronous `saveConversations()` is bypassed during streaming (`state.isStreaming === true`) unless the number of conversations or messages changed (initial prompt addition). Upon stream completion or abort (`streamJustEnded`), a complete atomic save is executed. Action methods do not issue redundant synchronous saves, ensuring smooth 60 FPS streaming without CPU lockups.
 
 ### 8. Auth, Pay-As-You-Go Wallet & Admin
 - **Auth**: JWT, phone OTP (Kavenegar), Google OAuth, email/password, and SMTP password reset (`server/routes/auth.ts`). `AuthModal.tsx` uses standard design tokens (`clay-modal`, `clay-input`, `clay-btn-primary`) without admin classes.
@@ -160,6 +163,15 @@ The platform operates exclusively on **exactly six stable system profiles** (div
   - Homepage targets: «دستیار هوش مصنوعی فارسی»، «دستیار هوشمند» (transactional)
   - `/ai-assistant` targets: «دستیار هوش مصنوعی چیست» (informational)
   - These two H1s must **never** be identical or near-identical.
+
+### 12. Gapless Streaming TTS & Server Audio RAM Cache
+- **Client Prefetch Pipeline (`src/lib/tts.ts`)**: Implements Scenario 2 gapless chunked streaming via Web Audio API. Audio chunk N+1 is prefetched concurrently while chunk N is playing, eliminating pauses between sentences.
+- **Server Cache & Heap Protection (`server/routes/tools.ts`)**: `ttsAudioCache` is strictly bounded to `MAX_TTS_CACHE_ITEMS = 10` with a 10-minute TTL (`TTS_CACHE_TTL_MS = 600000`) and LRU eviction. Dual header handling detects both modern Gemini 3.8 Flash Lite TTS native WAV (RIFF header) and legacy PCM (wrapped via `pcmToWavBuffer`). Browser client responses carry `Cache-Control: public, max-age=86400`.
+
+### 13. Follow-up Suggestions & Decision Chips (`<suggestions>`)
+- **Format & Prompt Contract**: The backend prompts models to generate 2-3 concise follow-up action suggestions at the end of responses in `<suggestions>["گزینه اول", "گزینه دوم"]</suggestions>`.
+- **Parsing & Stripping**: `src/lib/suggestionParser.ts` cleanly extracts suggestions and strips `<suggestions>` blocks from speech synthesis (TTS) and markdown text.
+- **UI & UX Contract**: Rendered at the foot of assistant messages as 3D tactile interactive chips with a return arrow ↪ and one-click instant send. Each suggestion must be short (3 to 5 words, max ~35 chars) to prevent layout overflows on mobile and desktop.
 
 ---
 
@@ -241,6 +253,22 @@ The platform operates exclusively on **exactly six stable system profiles** (div
     - **تصویر پیش‌فرض سیستمی**: اگر خبری بدون تصویر ثبت یا دریافت شود، هرگز نباید مقدار `NULL` یا خالی داشته باشد؛ بلکه باید بلافاصله از تصویر کاور پیش‌فرض برند در `public/default-news-cover.webp` استفاده شود.
     - **پیشگیری از CLS و خطای لود در فرانت‌اند**: تمامی تگ‌های `<img>` در `/blog`، صفحات آرشیو، و پیش‌نمایش ادمین باید دارای ابعاد مشخص `width={800} height={450}` (نسبت استاندارد ۱۶:۹)، `loading="lazy"`، `decoding="async"` و هندلر `onError` به همراه فال‌بک امن به `/default-news-cover.webp` باشند تا شاخص CLS صفر بماند و هیچ تصویر شکسته‌ای نمایش داده نشود.
     - **ارسال تصویر به کانال تلگرام**: در ربات تلگرام و تسک دوره‌ای `newsCron`، تصویر خبر باید به صورت `Buffer` با متد `sendPhoto` ارسال شود (نه ارسال URL خام)، تا در صورت تحریم یا فیلتر بودن دامنه توسط سرورهای تلگرام، ارسال عکس به کانال مختل نشود. در صورت نبود یا نامعتبر بودن تصویر نیز به کاور پیش‌فرض رجوع شود.
+27. **Streaming State & LocalStorage I/O Performance (`src/store/chatStore.ts`)**:
+    - `saveConversations()` performs synchronous `JSON.stringify` and `localStorage.setItem` over the entire conversation history.
+    - Never call `saveConversations()` inside streaming loops, RAF callbacks, or on token reception.
+    - `useChatStore.subscribe` acts as the single source of truth for persistence: during `state.isStreaming === true`, token updates are skipped and saving only occurs when a conversation or message is added. When streaming completes (`streamJustEnded`), an atomic save is triggered.
+    - Never reintroduce redundant manual `saveConversations()` calls inside action methods (`createChat`, `updateConversation`, `deleteConversation`, etc.).
+28. **Server Memory & In-Memory Audio Buffer Limits (`server/routes/tools.ts`)**:
+    - In-memory buffer caches (such as `ttsAudioCache`) must never grow unbounded or hold large amounts of audio data in RAM.
+    - Strictly maintain `MAX_TTS_CACHE_ITEMS = 10` and `TTS_CACHE_TTL_MS = 10 * 60 * 1000` (10 minutes) with active LRU eviction on read and write.
+    - Rely on client HTTP caching (`Cache-Control: public, max-age=86400`) instead of storing megabytes of buffers permanently in server memory.
+29. **Follow-up Suggestions Contract (`<suggestions>`)**:
+    - When instructing models to output follow-up questions, strictly enforce JSON array syntax inside `<suggestions>` tags: `<suggestions>["عنوان اول", "عنوان دوم"]</suggestions>`.
+    - Suggestions must be concise (3 to 5 words, max 35 characters) to fit cleanly on both mobile and desktop cards without overflow.
+    - `src/lib/suggestionParser.ts` must always strip `<suggestions>` blocks from audio synthesis (TTS) and markdown text so raw JSON never leaks to the user.
+30. **JavaScript String Safety (No Pythonisms like `.strip()`)**:
+    - Do not use Python methods like `.strip()` on JavaScript strings. JavaScript uses `.trim()`.
+    - When working with AST nodes or `any`-typed data (e.g., in `MarkdownRenderer.tsx`), `tsc --noEmit` will not catch missing method errors. Always verify type safety and add unit tests (Rule 19) to prevent runtime `TypeError` crashes.
 
 ---
 
@@ -267,6 +295,10 @@ Agents that previously worked on this repo have made the following mistakes. Do 
 | "Vazirmatn/Estedad static font packages should be added" | **False.** Only variable fonts (§25) |
 | "I should use `new Date(dbString)` for timestamps" | **False.** Use `parseDbDate` + `formatTehranDate` from `dateUtils.ts` (Rule 22) |
 | "I should use `window.confirm()` for destructive admin actions" | **False.** Server-side guards required (Rule 21) |
+| "I should save conversations to localStorage on every streaming token" | **False.** Causes severe main-thread freezing; save only when stream finishes or messages are added (Rule 27) |
+| "ttsAudioCache in tools.ts can hold 50+ items indefinitely" | **False.** Capped at 10 items with 10-minute TTL and LRU eviction to protect server RAM (Rule 28) |
+| "Google Imagen 3 or DALL-E 3 brand names can be displayed in UI buttons" | **False.** Use generic Persian labels («موتور فوتورئال استودیویی» and «موتور خلاقانه و هنری») per Layer Zero #4 |
+| "JavaScript String has a .strip() method" | **False.** Python uses .strip(), JavaScript uses .trim() (Rule 30) |
 
 ---
 
