@@ -19,7 +19,7 @@ function extractCleanAnswerForSpeech(rawContent: string): string {
   text = text.replace(/`([^`]+)`/g, '$1');
 
   // 4. Clean Markdown tables: remove table delimiter rows (|---|---|) and table pipe bars
-  text = text.replace(/\|?\s*[-:]+[-| :]*\s*\|?/g, '');
+  text = text.replace(/\|?\s*[-:]{3,}[-| :]*\s*\|?/g, '');
   text = text.replace(/\|/g, '، ');
 
   // 5. Clean Markdown headers (#, ##, ###)

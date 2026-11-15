@@ -610,7 +610,7 @@ router.post('/api/tts', aiRouteLimiter, async (req, res) => {
       .replace(/\[تفکر:[\s\S]*?\]/gi, '')
       .replace(/```[\s\S]*?```/g, ' ')
       .replace(/`([^`]+)`/g, '$1')
-      .replace(/\|?\s*[-:]+[-| :]*\s*\|?/g, '')
+      .replace(/\|?\s*[-:]{3,}[-| :]*\s*\|?/g, '')
       .replace(/\|/g, '، ')
       .replace(/^#{1,6}\s+/gm, '')
       .replace(/^\s*[-*+]\s+/gm, '')
@@ -651,7 +651,7 @@ router.post('/api/tts', aiRouteLimiter, async (req, res) => {
     
     try {
       const ttsResponse = await ai.models.generateContent({
-        model: 'gemini-3.1-flash-tts-preview',
+        model: 'gemini-3.8-flash-lite-tts',
         contents: [{ parts: [{ text: textToSynthesize }] }],
         config: {
           responseModalities: [Modality.AUDIO],
@@ -663,13 +663,18 @@ router.post('/api/tts', aiRouteLimiter, async (req, res) => {
         },
       });
 
-      const rawBase64 = ttsResponse.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
+      const inline = ttsResponse.candidates?.[0]?.content?.parts?.[0]?.inlineData;
+      const rawBase64 = inline?.data;
       if (!rawBase64) {
         return res.status(422).json({ error: 'خروجی صوتی تولید نشد', fallback: true });
       }
 
-      const pcmBuffer = Buffer.from(rawBase64, 'base64');
-      const wavBuffer = pcmToWavBuffer(pcmBuffer, 24000, 1, 16);
+      const audioBuffer = Buffer.from(rawBase64, 'base64');
+      // Gemini 3.8 TTS returns a complete WAV file (RIFF header) for unary requests,
+      // while older models returned raw PCM that needed a WAV header. Detect and handle both
+      // so we never wrap an already-valid WAV in a second header (which corrupts the audio).
+      const isAlreadyWav = audioBuffer.length > 4 && audioBuffer.slice(0, 4).toString('ascii') === 'RIFF';
+      const wavBuffer = isAlreadyWav ? audioBuffer : pcmToWavBuffer(audioBuffer, 24000, 1, 16);
 
       // Keep cache size bounded
       if (ttsAudioCache.size > 50) {
