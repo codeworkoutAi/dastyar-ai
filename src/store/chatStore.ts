@@ -80,7 +80,6 @@ export const useChatStore = create<ChatState>((set, get) => ({
   },
 
   setConversations: (conversations) => {
-    saveConversations(conversations);
     set({ conversations });
   },
 
@@ -95,13 +94,11 @@ export const useChatStore = create<ChatState>((set, get) => ({
 
   addConversation: (conv) => {
     const newConvs = [conv, ...get().conversations];
-    saveConversations(newConvs);
     set({ conversations: newConvs });
   },
 
   updateConversation: (id, updater) => {
     const newConvs = get().conversations.map(c => c.id === id ? updater(c) : c);
-    saveConversations(newConvs);
     set({ conversations: newConvs });
   },
 
@@ -112,7 +109,6 @@ export const useChatStore = create<ChatState>((set, get) => ({
       set({ isStreaming: false, routingState: 'idle' });
     }
     const newConvs = get().conversations.filter(c => c.id !== id);
-    saveConversations(newConvs);
     set({ conversations: newConvs });
     if (get().activeId === id) {
       saveActiveConversationId(null);
@@ -121,14 +117,12 @@ export const useChatStore = create<ChatState>((set, get) => ({
   },
   
   clearAllConversations: () => {
-    saveConversations([]);
     set({ conversations: [], activeId: null, activeError: null });
   },
 
   createChat: (modelName) => {
     const newConv = createNewConversation(modelName);
     const newConvs = [newConv, ...get().conversations];
-    saveConversations(newConvs);
     saveActiveConversationId(newConv.id);
     set({ conversations: newConvs, activeId: newConv.id, activeError: null });
   },
@@ -144,7 +138,6 @@ export const useChatStore = create<ChatState>((set, get) => ({
     };
     newConv.messages = [welcomeMsg];
     const newConvs = [newConv, ...get().conversations];
-    saveConversations(newConvs);
     saveActiveConversationId(newConv.id);
     set({ conversations: newConvs, activeId: newConv.id, activeError: null });
   },
@@ -154,17 +147,20 @@ stopGeneration: () => {
       abortController.abort();
       abortController = null;
     }
-    set({ isStreaming: false, routingState: 'idle' });
 
-    // Turn off get().isStreaming on active message
-    if (get().activeId) {
-      set({ conversations: get().conversations.map((conv) => {
-          if (conv.id !== get().activeId) return conv;
-          const updatedMessages = conv.messages.map((m) =>
-            m.isStreaming ? { ...m, isStreaming: false } : m
-          );
-          return { ...conv, messages: updatedMessages };
-        }) });
+    // Turn off streaming and update messages atomically
+    const activeId = get().activeId;
+    if (activeId) {
+      const updatedConvs = get().conversations.map((conv) => {
+        if (conv.id !== activeId) return conv;
+        const updatedMessages = conv.messages.map((m) =>
+          m.isStreaming ? { ...m, isStreaming: false } : m
+        );
+        return { ...conv, messages: updatedMessages };
+      });
+      set({ isStreaming: false, routingState: 'idle', conversations: updatedConvs });
+    } else {
+      set({ isStreaming: false, routingState: 'idle' });
     }
   },
 
@@ -177,7 +173,6 @@ stopGeneration: () => {
     if (!targetConv) {
       targetConv = createNewConversation((useSettingsStore.getState().settings.providers[useSettingsStore.getState().settings.providers.activeProvider]?.modelName));
       set({ conversations: [targetConv] });
-    saveConversations([targetConv]);
       get().setActiveId(targetConv.id);
     }
 
@@ -786,7 +781,6 @@ stopGeneration: () => {
     ];
     
     const newConvs = get().conversations.map(c => c.id === activeId ? { ...c, messages: newMessages } : c);
-    saveConversations(newConvs);
     set({ conversations: newConvs });
   },
 
@@ -810,9 +804,39 @@ stopGeneration: () => {
   }
 }));
 
-// Global Subscriber: Automatically persist conversations to localStorage whenever they change
+// Global Subscriber: Automatically persist conversations to localStorage with zero main-thread freezing
 useChatStore.subscribe((state, prevState) => {
-  if (prevState && state.conversations !== prevState.conversations) {
+  if (!prevState) return;
+
+  const streamJustEnded = Boolean(prevState.isStreaming && !state.isStreaming);
+  const convsChanged = state.conversations !== prevState.conversations;
+
+  if (streamJustEnded) {
+    // Stream completed or was aborted -> Persist final conversation content and metrics to localStorage
+    saveConversations(state.conversations);
+    return;
+  }
+
+  if (!convsChanged) return;
+
+  if (state.isStreaming) {
+    // During streaming: do NOT save on token-by-token content updates.
+    // Only save if the number of conversations changed or new messages were added (e.g. initial user message).
+    const prevCount = prevState.conversations.length;
+    const currCount = state.conversations.length;
+    if (prevCount !== currCount) {
+      saveConversations(state.conversations);
+      return;
+    }
+
+    const prevMsgCount = prevState.conversations.reduce((sum, c) => sum + c.messages.length, 0);
+    const currMsgCount = state.conversations.reduce((sum, c) => sum + c.messages.length, 0);
+    if (prevMsgCount !== currMsgCount) {
+      saveConversations(state.conversations);
+      return;
+    }
+  } else {
+    // Idle / non-streaming state: reliably persist all conversation modifications
     saveConversations(state.conversations);
   }
 });

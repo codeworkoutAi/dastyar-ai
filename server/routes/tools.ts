@@ -568,8 +568,14 @@ User prompt: "${prompt}"`;
   }
 });
 
-// In-memory cache for synthesized audio to protect rate limits and quotas
-const ttsAudioCache = new Map<string, Buffer>();
+// In-memory bounded LRU cache for synthesized audio to protect RAM, rate limits and quotas
+interface TtsAudioCacheEntry {
+  buffer: Buffer;
+  expiresAt: number;
+}
+const MAX_TTS_CACHE_ITEMS = 10;
+const TTS_CACHE_TTL_MS = 10 * 60 * 1000; // 10 minutes in RAM
+const ttsAudioCache = new Map<string, TtsAudioCacheEntry>();
 
 // Helper to wrap raw 24kHz 16-bit mono PCM into standard WAV format
 function pcmToWavBuffer(pcmBuffer: Buffer, sampleRate = 24000, numChannels = 1, bitsPerSample = 16): Buffer {
@@ -639,12 +645,21 @@ router.post('/api/tts', aiRouteLimiter, async (req, res) => {
     const textToSynthesize = cleanText.length > 1000 ? cleanText.substring(0, 1000) + '…' : cleanText;
     const cacheKey = `${lang || 'auto'}:${textToSynthesize}`;
 
-    if (ttsAudioCache.has(cacheKey)) {
-      const cachedWav = ttsAudioCache.get(cacheKey)!;
-      res.setHeader('Content-Type', 'audio/wav');
-      res.setHeader('Content-Length', cachedWav.length);
-      res.setHeader('Cache-Control', 'public, max-age=86400');
-      return res.send(cachedWav);
+    const now = Date.now();
+    const cachedEntry = ttsAudioCache.get(cacheKey);
+    if (cachedEntry) {
+      if (cachedEntry.expiresAt > now) {
+        // LRU touch: delete and re-insert so it becomes most recent
+        ttsAudioCache.delete(cacheKey);
+        ttsAudioCache.set(cacheKey, cachedEntry);
+
+        res.setHeader('Content-Type', 'audio/wav');
+        res.setHeader('Content-Length', cachedEntry.buffer.length);
+        res.setHeader('Cache-Control', 'public, max-age=86400');
+        return res.send(cachedEntry.buffer);
+      } else {
+        ttsAudioCache.delete(cacheKey);
+      }
     }
 
     const triedKeys = new Set<string>();
@@ -713,12 +728,27 @@ router.post('/api/tts', aiRouteLimiter, async (req, res) => {
       return res.status(429).json({ error: 'محدودیت موقت در پردازش صوت هوش مصنوعی', fallback: true });
     }
 
-    // Keep cache size bounded
-    if (ttsAudioCache.size > 50) {
-      const firstKey = ttsAudioCache.keys().next().value;
-      if (firstKey) ttsAudioCache.delete(firstKey);
+    // Evict expired entries and enforce LRU bound (max 10 items) to protect server RAM
+    const writeNow = Date.now();
+    for (const [key, entry] of ttsAudioCache.entries()) {
+      if (entry.expiresAt <= writeNow) {
+        ttsAudioCache.delete(key);
+      }
     }
-    ttsAudioCache.set(cacheKey, wavBuffer);
+
+    while (ttsAudioCache.size >= MAX_TTS_CACHE_ITEMS) {
+      const oldestKey = ttsAudioCache.keys().next().value;
+      if (oldestKey) {
+        ttsAudioCache.delete(oldestKey);
+      } else {
+        break;
+      }
+    }
+
+    ttsAudioCache.set(cacheKey, {
+      buffer: wavBuffer,
+      expiresAt: writeNow + TTS_CACHE_TTL_MS,
+    });
 
     res.setHeader('Content-Type', 'audio/wav');
     res.setHeader('Content-Length', wavBuffer.length);

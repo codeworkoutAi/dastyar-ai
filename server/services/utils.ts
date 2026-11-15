@@ -32,7 +32,7 @@ export function getGeminiKeyFromPool(excludeKeys: string[] = [], targetModel?: s
     if (row && row.value) {
       const rawKeys = row.value.split('\n').map((k: string) => k.trim()).filter(Boolean);
       // Deduplicate keys in memory
-      const keys = [...new Set(rawKeys)];
+      const keys: string[] = [...new Set<string>(rawKeys)];
       const total = keys.length;
       if (total > 0) {
         const excludedSet = new Set(excludeKeys);
