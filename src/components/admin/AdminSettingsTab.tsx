@@ -63,6 +63,8 @@ export const AdminSettingsTab: React.FC = () => {
     groq?: { total: number; ready: number; cooling: number; quarantined: number };
   } | null>(null);
   const [loadingPoolStats, setLoadingPoolStats] = useState(false);
+  const [savingPool, setSavingPool] = useState<'gemini' | 'groq' | null>(null);
+  const [poolFeedback, setPoolFeedback] = useState<{ pool: 'gemini' | 'groq'; success: boolean; message: string } | null>(null);
 
   // 3. Site Limits & Quotas
   const [freeDailyLimitGuest, setFreeDailyLimitGuest] = useState('15');
@@ -358,6 +360,55 @@ export const AdminSettingsTab: React.FC = () => {
       setBazaarTestResult({ valid: false, message: err.message || 'خطا در تست بازارپی' });
     } finally {
       setTestingBazaar(false);
+    }
+  };
+
+  // Multi-Pool Save Handlers with instant visual feedback
+  const handleSaveGeminiPool = async () => {
+    try {
+      setSavingPool('gemini');
+      setPoolFeedback(null);
+      const trimmed = geminiKeysPool.trim();
+      await handleSaveSetting('gemini_keys_pool', trimmed);
+      await fetchPoolStats();
+      const count = trimmed ? trimmed.split('\n').filter(k => k.trim()).length : 0;
+      setPoolFeedback({
+        pool: 'gemini',
+        success: true,
+        message: `استخر Gemini با موفقیت در دیتابیس ذخیره و در سرور فعال شد (${count} کلید شناسایی شد).`
+      });
+    } catch (err: any) {
+      setPoolFeedback({
+        pool: 'gemini',
+        success: false,
+        message: err?.message || 'خطا در ذخیره‌سازی استخر Gemini'
+      });
+    } finally {
+      setSavingPool(null);
+    }
+  };
+
+  const handleSaveGroqPool = async () => {
+    try {
+      setSavingPool('groq');
+      setPoolFeedback(null);
+      const trimmed = groqKeysPool.trim();
+      await handleSaveSetting('groq_keys_pool', trimmed);
+      await fetchPoolStats();
+      const count = trimmed ? trimmed.split('\n').filter(k => k.trim()).length : 0;
+      setPoolFeedback({
+        pool: 'groq',
+        success: true,
+        message: `استخر Groq با موفقیت در دیتابیس ذخیره و در سرور فعال شد (${count} کلید شناسایی شد).`
+      });
+    } catch (err: any) {
+      setPoolFeedback({
+        pool: 'groq',
+        success: false,
+        message: err?.message || 'خطا در ذخیره‌سازی استخر Groq'
+      });
+    } finally {
+      setSavingPool(null);
     }
   };
 
@@ -719,7 +770,12 @@ export const AdminSettingsTab: React.FC = () => {
             </div>
 
             <div className="space-y-2">
-              <label className="text-xs font-bold text-[var(--text-main)]">کلیدهای API گوگل (هر خط یک کلید):</label>
+              <div className="flex items-center justify-between text-xs font-bold text-[var(--text-main)]">
+                <label>کلیدهای API گوگل (هر خط یک کلید):</label>
+                <span className="text-[11px] font-mono px-2 py-0.5 rounded-md bg-[var(--card-border)] text-[var(--text-muted)]">
+                  {geminiKeysPool.trim() ? `${geminiKeysPool.trim().split('\n').filter(k => k.trim()).length} کلید` : 'خالی'}
+                </span>
+              </div>
               <textarea
                 value={geminiKeysPool}
                 onChange={(e) => setGeminiKeysPool(e.target.value)}
@@ -732,15 +788,30 @@ export const AdminSettingsTab: React.FC = () => {
 
             <button
               type="button"
-              onClick={async () => {
-                await handleSaveSetting('gemini_keys_pool', geminiKeysPool.trim());
-                await fetchPoolStats();
-              }}
-              disabled={settingsSaving}
-              className="w-full py-2.5 clay-btn-primary text-xs font-bold rounded-xl"
+              onClick={handleSaveGeminiPool}
+              disabled={savingPool === 'gemini' || settingsSaving}
+              className="w-full py-2.5 clay-btn-primary text-xs font-bold rounded-xl flex items-center justify-center gap-2"
             >
-              ذخیره و بروزرسانی استخر Gemini
+              {savingPool === 'gemini' ? (
+                <>
+                  <RefreshCw size={14} className="animate-spin" />
+                  <span>در حال ذخیره و فعال‌سازی در سرور...</span>
+                </>
+              ) : (
+                <span>ذخیره و بروزرسانی استخر Gemini</span>
+              )}
             </button>
+
+            {poolFeedback?.pool === 'gemini' && (
+              <div className={`p-3 rounded-xl text-xs font-bold flex items-center gap-2 animate-fadeIn ${
+                poolFeedback.success 
+                  ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30' 
+                  : 'bg-red-500/15 text-red-600 dark:text-red-400 border border-red-500/30'
+              }`}>
+                {poolFeedback.success ? <CheckCircle2 size={16} className="shrink-0" /> : <AlertCircle size={16} className="shrink-0" />}
+                <span className="leading-relaxed">{poolFeedback.message}</span>
+              </div>
+            )}
           </div>
 
           {/* Groq Pool Card */}
@@ -767,7 +838,12 @@ export const AdminSettingsTab: React.FC = () => {
             </div>
 
             <div className="space-y-2">
-              <label className="text-xs font-bold text-[var(--text-main)]">کلیدهای API شرکت Groq (هر خط یک کلید):</label>
+              <div className="flex items-center justify-between text-xs font-bold text-[var(--text-main)]">
+                <label>کلیدهای API شرکت Groq (هر خط یک کلید):</label>
+                <span className="text-[11px] font-mono px-2 py-0.5 rounded-md bg-[var(--card-border)] text-[var(--text-muted)]">
+                  {groqKeysPool.trim() ? `${groqKeysPool.trim().split('\n').filter(k => k.trim()).length} کلید` : 'خالی'}
+                </span>
+              </div>
               <textarea
                 value={groqKeysPool}
                 onChange={(e) => setGroqKeysPool(e.target.value)}
@@ -780,15 +856,30 @@ export const AdminSettingsTab: React.FC = () => {
 
             <button
               type="button"
-              onClick={async () => {
-                await handleSaveSetting('groq_keys_pool', groqKeysPool.trim());
-                await fetchPoolStats();
-              }}
-              disabled={settingsSaving}
-              className="w-full py-2.5 clay-btn-primary text-xs font-bold rounded-xl"
+              onClick={handleSaveGroqPool}
+              disabled={savingPool === 'groq' || settingsSaving}
+              className="w-full py-2.5 clay-btn-primary text-xs font-bold rounded-xl flex items-center justify-center gap-2"
             >
-              ذخیره و بروزرسانی استخر Groq
+              {savingPool === 'groq' ? (
+                <>
+                  <RefreshCw size={14} className="animate-spin" />
+                  <span>در حال ذخیره و فعال‌سازی در سرور...</span>
+                </>
+              ) : (
+                <span>ذخیره و بروزرسانی استخر Groq</span>
+              )}
             </button>
+
+            {poolFeedback?.pool === 'groq' && (
+              <div className={`p-3 rounded-xl text-xs font-bold flex items-center gap-2 animate-fadeIn ${
+                poolFeedback.success 
+                  ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30' 
+                  : 'bg-red-500/15 text-red-600 dark:text-red-400 border border-red-500/30'
+              }`}>
+                {poolFeedback.success ? <CheckCircle2 size={16} className="shrink-0" /> : <AlertCircle size={16} className="shrink-0" />}
+                <span className="leading-relaxed">{poolFeedback.message}</span>
+              </div>
+            )}
           </div>
         </div>
       </div>
