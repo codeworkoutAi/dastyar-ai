@@ -137,7 +137,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
     const newConv = createNewConversation(modelName);
     newConv.title = 'دستیار برنامه‌نویسی';
     const welcomeMsg: ChatMessage = {
-      id: 'msg_code_' + Date.now(),
+      id: 'msg_code_' + crypto.randomUUID(),
       role: 'assistant' as any,
       content: '👨‍💻 سلام! من **دستیار تخصصی برنامه‌نویسی** شما هستم.\n\nمی‌توانید در زمینه‌های کدنویسی، دیباگ (ری‌اکت، پایتون، جاوااسکریپت، Go، C++، SQL و...) روی من حساب کنید.\n\nچه کدی رو می‌خوایم با هم بنویسیم؟',
       timestamp: Date.now(),
@@ -181,8 +181,8 @@ stopGeneration: () => {
       get().setActiveId(targetConv.id);
     }
 
-    const userMessageId = 'msg_user_' + Date.now();
-    const assistantMessageId = 'msg_ai_' + (Date.now() + 1);
+    const userMessageId = 'msg_user_' + crypto.randomUUID();
+    const assistantMessageId = 'msg_ai_' + crypto.randomUUID();
 
     const isImageGen = text.trim().startsWith('/image ');
     const promptText = isImageGen ? text.trim().replace('/image ', '') : text;
@@ -776,8 +776,8 @@ stopGeneration: () => {
     const activeConv = get().conversations.find((c) => c.id === activeId);
     if (!activeConv) return;
     
-    const userMessageId = 'msg_user_' + Date.now();
-    const assistantMessageId = 'msg_ai_' + (Date.now() + 1);
+    const userMessageId = 'msg_user_' + crypto.randomUUID();
+    const assistantMessageId = 'msg_ai_' + crypto.randomUUID();
     
     const newMessages: ChatMessage[] = [
       ...activeConv.messages,

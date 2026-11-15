@@ -58,24 +58,38 @@ export interface ChatMessageItemProps {
 function formatUserFacingModelLabel(rawModel?: string): string {
   if (!rawModel) return 'دستیار هوشمند';
   const lower = rawModel.toLowerCase();
+
+  // Smart Routing tag
   if (lower.includes('(هوشمند)') || lower.includes('auto') || lower.includes('smart')) {
     return 'دستیار هوشمند';
   }
+  // Image generation
   if (lower.includes('image-generation') || lower.includes('تصویر')) {
     return 'تولید تصویر';
   }
-  if (lower.includes('claude') || lower.includes('paid_default') || lower.includes('sonnet')) {
-    return 'دستیار گفتگوی پیشرفته';
+
+  // 1. Paid Profiles (§2)
+  if (lower.includes('paid_default') || lower.includes('claude') || lower.includes('sonnet')) {
+    return 'دستیار چت و گفتگوی پیشرفته';
   }
-  if (lower.includes('deepseek') || lower.includes('paid_coding') || lower.includes('coding')) {
+  if (lower.includes('paid_coding') || lower.includes('deepseek')) {
     return 'دستیار برنامه‌نویسی پیشرفته';
   }
-  if (lower.includes('vision') || lower.includes('paid_vision') || lower.includes('اسناد')) {
+  if (lower.includes('paid_vision') || lower.includes('gemini-3.8-flash')) {
     return 'دستیار اسناد و بینایی پیشرفته';
   }
-  if (lower.includes('gemini') || lower.includes('flash') || lower.includes('free_default') || lower.includes('default')) {
+
+  // 2. Free Profiles (§2)
+  if (lower.includes('free_coding') || lower === 'coding') {
+    return 'دستیار برنامه‌نویسی و کد';
+  }
+  if (lower.includes('free_vision') || lower === 'vision') {
+    return 'دستیار بینایی و اسناد';
+  }
+  if (lower.includes('free_default') || lower.includes('gemini') || lower.includes('flash') || lower === 'default') {
     return 'دستیار چت و گفتگو';
   }
+
   return 'دستیار هوشمند';
 }
 
@@ -438,15 +452,15 @@ export const ChatMessageItem: React.FC<ChatMessageItemProps> = memo(({
 
               <div className="flex items-center gap-1 px-2 py-0.5 rounded-md clay-surface shrink-0">
                 <span className="text-[var(--color-text-dim)] font-sans">زمان:</span>
-                <span className="font-mono text-[var(--color-text-main)] dark:text-[var(--color-text-main)]" dir="ltr">
-                  {msg.metrics?.totalTimeMs ? `${(msg.metrics.totalTimeMs / 1000).toFixed(1)}s` : '1.4s'}
+                <span className="font-mono text-[var(--color-text-main)] dark:text-[var(--color-text-main)]" dir="rtl">
+                  {toPersianDigits(msg.metrics?.totalTimeMs ? (msg.metrics.totalTimeMs / 1000).toFixed(1) : '۱.۰')} ثانیه
                 </span>
               </div>
 
               <div className="flex items-center gap-1 px-2 py-0.5 rounded-md clay-surface shrink-0">
                 <span className="text-[var(--color-text-dim)] font-sans">توکن مصرفی:</span>
                 <span className="font-mono text-[var(--color-text-main)] dark:text-[var(--color-text-main)]" dir="ltr">
-                  {toPersianDigits(msg.metrics?.exactTotalTokens || msg.metrics?.approxTokens || 340)}
+                  {toPersianDigits(msg.metrics?.exactTotalTokens || msg.metrics?.approxTokens || 0)}
                 </span>
               </div>
 
@@ -455,7 +469,7 @@ export const ChatMessageItem: React.FC<ChatMessageItemProps> = memo(({
                 <span className="font-mono text-[var(--color-accent-text)] dark:text-[var(--color-accent-text)]" dir="rtl">
                   {typeof msg.metrics?.costToman === 'number'
                     ? (msg.metrics.costToman === 0 ? 'رایگان' : `${toPersianDigits(msg.metrics.costToman.toLocaleString('fa-IR'))} تومان`)
-                    : `$${msg.metrics?.estimatedCostUSD || '0.00012'}`}
+                    : (msg.metrics?.estimatedCostUSD ? `${toPersianDigits(msg.metrics.estimatedCostUSD)} دلار` : 'رایگان')}
                 </span>
               </div>
             </div>

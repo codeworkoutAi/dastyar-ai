@@ -728,7 +728,7 @@ const MarkdownSegment: React.FC<MarkdownRendererProps> = React.memo(({
         let isPureLink = false;
         if (liNode.children && liNode.children.length === 1 && liNode.children[0].type === 'paragraph') {
           const pNode = liNode.children[0];
-          const contentNodes = pNode.children.filter((n: any) => n.type !== 'text' || n.value.strip() !== '');
+          const contentNodes = pNode.children.filter((n: any) => n.type !== 'text' || (typeof n.value === 'string' && n.value.trim() !== ''));
           if (contentNodes.length === 1 && contentNodes[0].type === 'link') {
             isPureLink = true;
             const linkNode = contentNodes[0];

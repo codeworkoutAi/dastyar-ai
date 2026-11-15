@@ -886,9 +886,9 @@ const workerUrl = await import('pdfjs-dist/build/pdf.worker.min.mjs?url');
                <button type="button"
                  onClick={() => confirmImageGen('imagen-3')}
                  className="px-3 py-1.5 rounded-xl clay-btn-primary text-xs font-medium transition-all shrink-0 active:scale-95 cursor-pointer flex items-center gap-1"
-                 title="کیفیت شاهکار فوتورئال گوگل - کسر از کیف پول (~۶,۰۰۰ تومان)"
+                 title="کیفیت شاهکار و واقع‌گرایانه - کسر از کیف پول (~۶,۰۰۰ تومان)"
                >
-                 <span>Google Imagen 3</span>
+                 <span>موتور فوتورئال استودیویی</span>
                  <span className="text-[10px] opacity-80">(۶,۰۰۰ ت)</span>
                </button>
 
@@ -896,9 +896,9 @@ const workerUrl = await import('pdfjs-dist/build/pdf.worker.min.mjs?url');
                <button type="button"
                  onClick={() => confirmImageGen('dalle-3')}
                  className="px-3 py-1.5 rounded-xl clay-surface hover:clay-btn-secondary dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 border border-[var(--card-border)] text-xs font-medium transition-all shrink-0 active:scale-95 cursor-pointer flex items-center gap-1"
-                 title="هوش درک زبان اوپن‌ای‌آی - کسر از کیف پول (~۸,۰۰۰ تومان)"
+                 title="درک دقیق زبان و جزئیات بالا - کسر از کیف پول (~۸,۰۰۰ تومان)"
                >
-                 <span>DALL-E 3</span>
+                 <span>موتور خلاقانه و هنری</span>
                  <span className="text-[10px] opacity-80">(۸,۰۰۰ ت)</span>
                </button>
 

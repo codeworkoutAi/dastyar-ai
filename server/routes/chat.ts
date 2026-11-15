@@ -1084,7 +1084,7 @@ router.post('/api/chat/stream', guestChatRateLimiter, guestChatHourLimiter, user
       let isReasoningPhase = false;
       let openaiUsage: { promptTokens?: number; completionTokens?: number; totalTokens?: number; costToman?: number; balanceAfter?: number } | undefined = undefined;
       let fullAccumulatedCustom = '';
-      let requestedModel = '';
+      let requestedModel = model;
 
       try {
         while (true) {

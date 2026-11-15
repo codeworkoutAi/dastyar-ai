@@ -298,7 +298,7 @@ export function mergeSystemProfiles(currentSettings: AppSettings, serverProfiles
 
 export function createNewConversation(modelName: string = 'gemini-3.6-flash'): Conversation {
   return {
-    id: 'conv_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9),
+    id: 'conv_' + crypto.randomUUID(),
     title: 'گفتگوی جدید',
     messages: [],
     createdAt: Date.now(),
