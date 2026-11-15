@@ -274,6 +274,9 @@ function formatInlineListsAndPrinciples(text: string, stripReasoning = false): s
  return `\n\n\`\`\`reasoning\n${content.trim()}\n\`\`\`\n\n`;
  });
 
+ // Strip <suggestions>...</suggestions> block so it renders as dedicated UI cards instead of raw text
+ tempText = tempText.replace(/<suggestions>[\s\S]*?(<\/suggestions>|$)/gi, '');
+
  // Separate code blocks to avoid formatting inside code
  const codeBlocks: string[] = [];
  tempText = tempText.replace(/```[\s\S]*?```|`[^`]+`/g, (match) => {

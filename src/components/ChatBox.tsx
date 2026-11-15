@@ -48,6 +48,11 @@ export const ChatBox: React.FC = memo(() => {
     document.body.removeChild(a);
   }, []);
 
+  const handleSelectSuggestion = useCallback((suggestionText: string) => {
+    if (!suggestionText || !suggestionText.trim()) return;
+    useChatStore.getState().sendMessage(suggestionText.trim());
+  }, []);
+
   // Scroll to bottom helper
   const scrollToBottom = useCallback((smooth = true) => {
     chatEndRef.current?.scrollIntoView({
@@ -219,6 +224,7 @@ export const ChatBox: React.FC = memo(() => {
                 onCancelEdit={handleCancelEdit}
                 onSaveEdit={handleSaveEdit}
                 onChangeEditText={handleChangeEditText}
+                onSelectSuggestion={handleSelectSuggestion}
               />
             ))}
             <div ref={chatEndRef} />

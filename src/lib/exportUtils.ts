@@ -1,5 +1,6 @@
 import { Conversation } from '../types';
 import { formatPersianDateTime } from './persianUtils';
+import { cleanSuggestionsFromText } from './suggestionParser';
 
 export function exportToJson(conversations: Conversation[]): void {
   const dataStr = JSON.stringify(conversations, null, 2);
@@ -18,7 +19,7 @@ export function exportConversationToMarkdown(conv: Conversation): void {
     const roleName = msg.role === 'user' ? '👤 کاربر' : '🤖 دستیار هوش مصنوعی';
     const timeStr = formatPersianDateTime(msg.timestamp, false);
     md += `### ${roleName} (${timeStr})\n\n`;
-    md += `${msg.content}\n\n`;
+    md += `${cleanSuggestionsFromText(msg.content)}\n\n`;
     md += `---\n\n`;
   });
 
@@ -35,7 +36,7 @@ export function exportConversationToText(conv: Conversation): void {
   conv.messages.forEach((msg) => {
     const role = msg.role === 'user' ? '[کاربر]' : '[هوش مصنوعی]';
     txt += `${role} (${formatPersianDateTime(msg.timestamp, false)}):\n`;
-    txt += `${msg.content}\n\n----------------------------------------------\n\n`;
+    txt += `${cleanSuggestionsFromText(msg.content)}\n\n----------------------------------------------\n\n`;
   });
 
   const blob = new Blob([txt], { type: 'text/plain;charset=utf-8;' });
@@ -53,7 +54,7 @@ export function printOrSavePdfTranscript(conv: Conversation): void {
             <span class="role">${isUser ? 'کاربر' : 'دستیار هوش مصنوعی'}</span>
             <span class="time">${formatPersianDateTime(msg.timestamp, false)}</span>
           </div>
-          <div class="content">${escapeHtml(msg.content).replace(/\n/g, '<br/>')}</div>
+          <div class="content">${escapeHtml(cleanSuggestionsFromText(msg.content)).replace(/\n/g, '<br/>')}</div>
         </div>
       `;
     })

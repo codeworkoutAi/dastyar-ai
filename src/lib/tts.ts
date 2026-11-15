@@ -8,10 +8,11 @@ export function extractCleanAnswerForSpeech(rawContent: string): string {
 
   let text = rawContent;
 
-  // 1. Remove reasoning / thought blocks (<think>...</think> or [تفکر: ...])
+  // 1. Remove reasoning / thought blocks (<think>...</think> or [تفکر: ...]) and suggestions
   text = text.replace(/<think>[\s\S]*?<\/think>/gi, '');
   text = text.replace(/<thought>[\s\S]*?<\/thought>/gi, '');
   text = text.replace(/\[تفکر:[\s\S]*?\]/gi, '');
+  text = text.replace(/<suggestions>[\s\S]*?(<\/suggestions>|$)/gi, '');
 
   // 2. Remove code blocks completely
   text = text.replace(/```[\s\S]*?```/g, ' ');

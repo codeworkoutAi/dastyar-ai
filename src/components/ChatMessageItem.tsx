@@ -22,6 +22,7 @@ import {
 import { Globe } from 'lucide-react';
 import React, { memo } from 'react';
 import { isRtlText, toPersianDigits } from '../lib/persianUtils';
+import { parseFollowUpSuggestions } from '../lib/suggestionParser';
 import { ChatMessage } from '../types';
 import { MarkdownRenderer } from './MarkdownRenderer';
 import { Tooltip } from './Tooltip';
@@ -51,6 +52,7 @@ export interface ChatMessageItemProps {
   onCancelEdit: () => void;
   onSaveEdit: (msgId: string, text: string) => void;
   onChangeEditText: (text: string) => void;
+  onSelectSuggestion?: (text: string) => void;
 }
 
 function formatUserFacingModelLabel(rawModel?: string): string {
@@ -102,8 +104,14 @@ export const ChatMessageItem: React.FC<ChatMessageItemProps> = memo(({
   onCancelEdit,
   onSaveEdit,
   onChangeEditText,
+  onSelectSuggestion,
 }) => {
   const isUser = msg.role === 'user';
+
+  const suggestionsData = React.useMemo(() => {
+    if (isUser || msg.error || !msg.content) return null;
+    return parseFollowUpSuggestions(msg.content);
+  }, [isUser, msg.error, msg.content]);
 
   return (
     <div
@@ -376,6 +384,39 @@ export const ChatMessageItem: React.FC<ChatMessageItemProps> = memo(({
                     stripReasoning={stripReasoning}
                   />
                 </div>
+
+                {/* Follow-up Suggestions Decision Cards (Gemini-style) */}
+                {suggestionsData && (
+                  <div className="mt-4 pt-3.5 border-t border-[var(--color-border-subtle)]/60 space-y-2.5 select-none" dir="rtl">
+                    <h5 className="text-xs sm:text-[13px] font-bold text-[var(--color-text-main)] flex items-center gap-1.5">
+                      <span className="text-[var(--color-accent-primary)] text-sm">✦</span>
+                      <span>{suggestionsData.question}</span>
+                    </h5>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 sm:gap-2.5">
+                      {suggestionsData.items.map((item, idx) => (
+                        <button
+                          key={idx}
+                          type="button"
+                          disabled={isStreaming}
+                          onClick={() => onSelectSuggestion?.(item)}
+                          className="clay-card p-3 sm:p-3.5 rounded-2xl border border-[var(--color-border-subtle)] hover:border-[var(--color-accent-primary)]/50 flex flex-col justify-between min-h-[78px] text-right cursor-pointer group transition-all duration-200 hover:-translate-y-0.5 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          <span className="text-xs sm:text-[13px] font-medium text-[var(--color-text-main)] leading-relaxed line-clamp-2">
+                            {item}
+                          </span>
+                          <div className="flex justify-end w-full mt-2 pt-0.5">
+                            <span
+                              className="text-xs text-[var(--color-text-dim)] group-hover:text-[var(--color-accent-primary)] group-hover:scale-110 transition-transform font-mono"
+                              title="ارسال فوری"
+                            >
+                              ↵
+                            </span>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </>
             )}
           </div>
