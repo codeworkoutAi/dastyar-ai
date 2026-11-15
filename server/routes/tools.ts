@@ -1,7 +1,7 @@
 import express from 'express';
 import { Modality } from '@google/genai';
 import db from '../db/database';
-import { isSafeBaseUrl, getGeminiClient, sanitizeErrorMessage, getPollinationsImageUrl, translateAndEnhanceImagePrompt, generatePollinationsImage, getGeminiKeyFromPool, blacklistKey, extractCleanErrorMessage } from '../services/utils';
+import { isSafeBaseUrl, getGeminiClient, sanitizeErrorMessage, getPollinationsImageUrl, translateAndEnhanceImagePrompt, generatePollinationsImage, getGeminiKeyFromPool, getGroqKeyFromPool, blacklistKey, extractCleanErrorMessage } from '../services/utils';
 import { aiRouteLimiter } from '../middleware/rateLimiter';
 import jwt from 'jsonwebtoken';
 import { JWT_SECRET } from '../middleware/auth';
@@ -43,9 +43,9 @@ router.post('/api/fetch-models', aiRouteLimiter, async (req, res) => {
     if (!apiKey) {
       const bUrl = baseUrl.toLowerCase();
       if (bUrl.includes('api.groq.com')) {
-        apiKey = process.env.DEFAULT_GROQ_KEY || process.env.GROQ_API_KEY || '';
+        apiKey = getGroqKeyFromPool() || process.env.DEFAULT_GROQ_KEY || process.env.GROQ_API_KEY || '';
       } else if (bUrl.includes('generativelanguage.googleapis.com')) {
-        apiKey = process.env.DEFAULT_GEMINI_KEY || process.env.GEMINI_API_KEY || '';
+        apiKey = getGeminiKeyFromPool() || process.env.DEFAULT_GEMINI_KEY || process.env.GEMINI_API_KEY || '';
       }
     }
 
@@ -523,11 +523,11 @@ User prompt: "${prompt}"`;
       console.warn('[Enhance Prompt] Gemini error, trying Groq fallback:', geminiErr?.message || geminiErr);
     }
 
-    // 2. Fallback: Try Groq (openai/gpt-oss-120b / openai/gpt-oss-20b)
+    // 2. Fallback: Try Groq
     if (!enhanced) {
-      const groqKey = process.env.DEFAULT_GROQ_KEY || process.env.GROQ_API_KEY;
+      const groqKey = getGroqKeyFromPool() || process.env.DEFAULT_GROQ_KEY || process.env.GROQ_API_KEY;
       if (groqKey) {
-        const groqModels = ['openai/gpt-oss-120b', 'openai/gpt-oss-20b', 'qwen/qwen3.6-27b'];
+        const groqModels = ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant', 'openai/gpt-oss-120b', 'qwen/qwen3.6-27b'];
         for (const model of groqModels) {
           try {
             const groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {

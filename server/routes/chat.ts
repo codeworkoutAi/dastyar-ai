@@ -1,6 +1,6 @@
 import express from 'express';
 import db from '../db/database';
-import { isSafeBaseUrl, getGeminiClient, extractCleanErrorMessage, sanitizeErrorMessage, formatContentsForGemini, sleep, getPollinationsImageUrl, translateAndEnhanceImagePrompt, normalizeBaseUrl, parseCustomHeaders, getGeminiKeyFromPool, blacklistKey, isKeyBlacklisted } from '../services/utils';
+import { isSafeBaseUrl, getGeminiClient, extractCleanErrorMessage, sanitizeErrorMessage, formatContentsForGemini, sleep, getPollinationsImageUrl, translateAndEnhanceImagePrompt, normalizeBaseUrl, parseCustomHeaders, getGeminiKeyFromPool, getGroqKeyFromPool, blacklistKey, isKeyBlacklisted, multiPoolManager } from '../services/utils';
 import { GoogleGroundingAgent } from '../services/GoogleGroundingAgent';
 import { WikipediaAgent } from '../services/WikipediaAgent';
 import { ToolsAgent } from '../services/ToolsAgent';
@@ -204,12 +204,43 @@ router.post('/api/chat/stream', guestChatRateLimiter, guestChatHourLimiter, user
                   throw poolErr;
                 }
               } catch (finalPoolErr: any) {
-                sendChunk({
-                  error: finalPoolErr?.message || 'در حال حاضر ظرفیت سرویس تکمیل است. لطفاً چند دقیقه دیگر تلاش کنید.',
-                  done: true,
-                });
-                return finishStream();
+                // Multi-Pool Cascade: If all Gemini keys are exhausted, cascade to Groq pool in 0ms!
+                const groqPoolKey = getGroqKeyFromPool();
+                if (groqPoolKey) {
+                  console.log('[MultiPoolCascade] Gemini pool exhausted. Zero-latency failover to Groq pool (llama-3.3-70b-versatile)...');
+                  targetBaseUrl = 'https://api.groq.com/openai/v1';
+                  targetApiKey = groqPoolKey;
+                  targetModel = 'llama-3.3-70b-versatile';
+                  provider = 'custom';
+                  apiConfig['custom'] = { ...apiConfig[provider], apiKey: targetApiKey, baseUrl: targetBaseUrl, modelName: targetModel };
+                } else {
+                  sendChunk({
+                    error: finalPoolErr?.message || 'در حال حاضر ظرفیت سرویس تکمیل است. لطفاً چند دقیقه دیگر تلاش کنید.',
+                    done: true,
+                  });
+                  return finishStream();
+                }
               }
+            }
+          } else if (targetBaseUrl.includes('api.groq.com') || targetModel.toLowerCase().includes('llama') || targetModel.toLowerCase().includes('groq')) {
+            // Native Groq pool support for free profiles configured with Groq
+            const groqPoolKey = getGroqKeyFromPool([], targetModel);
+            if (groqPoolKey) {
+              targetApiKey = groqPoolKey;
+              apiConfig[provider].apiKey = targetApiKey;
+              if (provider !== 'custom') {
+                apiConfig['custom'] = { ...apiConfig[provider], apiKey: targetApiKey, baseUrl: targetBaseUrl, modelName: targetModel };
+                provider = 'custom';
+              }
+            }
+          }
+        } else if (targetBaseUrl.includes('api.groq.com')) {
+          // If a custom profile points to Groq and has no key or empty key, draw from Groq pool
+          if (!targetApiKey) {
+            const groqPoolKey = getGroqKeyFromPool([], targetModel);
+            if (groqPoolKey) {
+              targetApiKey = groqPoolKey;
+              apiConfig[provider].apiKey = targetApiKey;
             }
           }
         }
@@ -735,6 +766,9 @@ router.post('/api/chat/stream', guestChatRateLimiter, guestChatHourLimiter, user
 
             streamedSuccessfully = true;
             lastError = null;
+            if (userKey) {
+              multiPoolManager.recordSuccess(userKey, 'gemini');
+            }
             // Capture the text actually streamed to the client so the billing block
             // below (which gates on accumulatedGeminiText) can account for this turn.
             // Without these assignments every Gemini turn was billed as zero usage.
@@ -809,6 +843,75 @@ router.post('/api/chat/stream', guestChatRateLimiter, guestChatHourLimiter, user
 
         if (streamedSuccessfully) {
           break;
+        }
+      }
+
+      if (!streamedSuccessfully && !hasSentAnyChunk) {
+        // Multi-Pool Cascade: In-flight failover to Groq pool if all Gemini candidates failed
+        const groqPoolKey = getGroqKeyFromPool();
+        if (groqPoolKey) {
+          console.log('[MultiPoolCascade] All Gemini candidates exhausted. Seamless in-flight failover to Groq pool (llama-3.3-70b-versatile)...');
+          try {
+            const groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${groqPoolKey}`,
+              },
+              body: JSON.stringify({
+                model: 'llama-3.3-70b-versatile',
+                messages: [
+                  { role: 'system', content: systemInstruction },
+                  ...prunedMessages.map((m: any) => ({ role: m.role, content: m.content })),
+                ],
+                temperature: 0.7,
+                stream: true,
+                max_tokens: 4096,
+              }),
+            });
+
+            if (groqRes.ok && groqRes.body) {
+              const groqReader = groqRes.body.getReader();
+              const groqDecoder = new TextDecoder('utf-8');
+              let groqBuf = '';
+              let groqFullText = '';
+
+              while (true) {
+                const { done, value } = await groqReader.read();
+                if (done) break;
+                groqBuf += groqDecoder.decode(value, { stream: true });
+                const lines = groqBuf.split('\n');
+                groqBuf = lines.pop() || '';
+
+                for (const line of lines) {
+                  const trimmed = line.trim();
+                  if (!trimmed || trimmed === 'data: [DONE]' || trimmed.startsWith(':')) continue;
+                  if (trimmed.startsWith('data: ')) {
+                    try {
+                      const parsed = JSON.parse(trimmed.slice(6));
+                      const content = parsed.choices?.[0]?.delta?.content;
+                      if (content) {
+                        groqFullText += content;
+                        sendChunk({ chunk: content });
+                        hasSentAnyChunk = true;
+                      }
+                    } catch {}
+                  }
+                }
+              }
+
+              if (groqFullText) {
+                multiPoolManager.recordSuccess(groqPoolKey, 'groq');
+                streamedSuccessfully = true;
+                accumulatedGeminiText = groqFullText;
+                successfulCandidate = 'llama-3.3-70b-versatile';
+              }
+            } else {
+              multiPoolManager.recordFailure(groqPoolKey, 'groq', '429', 60000);
+            }
+          } catch (groqErr) {
+            console.warn('[MultiPoolCascade] Groq failover error:', groqErr);
+          }
         }
       }
 
@@ -1053,6 +1156,11 @@ router.post('/api/chat/stream', guestChatRateLimiter, guestChatHourLimiter, user
           console.warn('[Chat] Failed to read response error body:', (e as Error)?.message || e);
         }
 
+        if (endpoint.includes('api.groq.com') && targetApiKey) {
+          const isDaily = errorText.includes('per day') || errorText.includes('day') || errorText.includes('TPD');
+          multiPoolManager.recordFailure(targetApiKey, 'groq', response.status === 429 ? '429' : '401', isDaily ? 24 * 3600 * 1000 : 60000, model);
+        }
+
 
 
         let cleanError = sanitizeErrorMessage(errorText || `Status ${response.status}`);
@@ -1179,6 +1287,9 @@ router.post('/api/chat/stream', guestChatRateLimiter, guestChatHourLimiter, user
 
       // Cache full response in-memory for instant recall
       if (fullAccumulatedCustom) {
+        if (endpoint.includes('api.groq.com') && targetApiKey) {
+          multiPoolManager.recordSuccess(targetApiKey, 'groq');
+        }
         setCachedResponse(cacheKey, {
           chunk: fullAccumulatedCustom,
           usage: openaiUsage,

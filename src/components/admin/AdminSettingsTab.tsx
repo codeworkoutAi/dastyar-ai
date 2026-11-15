@@ -55,6 +55,15 @@ export const AdminSettingsTab: React.FC = () => {
   const [welcomeBonusEnabled, setWelcomeBonusEnabled] = useState(true);
   const [freeKeyPool, setFreeKeyPool] = useState('');
 
+  // Multi-Pool state
+  const [geminiKeysPool, setGeminiKeysPool] = useState('');
+  const [groqKeysPool, setGroqKeysPool] = useState('');
+  const [poolStats, setPoolStats] = useState<{
+    gemini?: { total: number; ready: number; cooling: number; quarantined: number };
+    groq?: { total: number; ready: number; cooling: number; quarantined: number };
+  } | null>(null);
+  const [loadingPoolStats, setLoadingPoolStats] = useState(false);
+
   // 3. Site Limits & Quotas
   const [freeDailyLimitGuest, setFreeDailyLimitGuest] = useState('15');
   const [freeCooldownHours, setFreeCooldownHours] = useState('24');
@@ -76,9 +85,27 @@ export const AdminSettingsTab: React.FC = () => {
     await Promise.allSettled([
       fetchDefaultProfiles(),
       fetchSiteSettings(),
-      fetchGatewaysAndRates()
+      fetchGatewaysAndRates(),
+      fetchPoolStats(),
     ]);
     setLoading(false);
+  };
+
+  const fetchPoolStats = async () => {
+    try {
+      setLoadingPoolStats(true);
+      const res = await fetch('/api/admin/pools/health', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setPoolStats(data);
+      }
+    } catch (err) {
+      console.warn('Error fetching pool stats:', err);
+    } finally {
+      setLoadingPoolStats(false);
+    }
   };
 
   const fetchDefaultProfiles = async () => {
@@ -109,6 +136,8 @@ export const AdminSettingsTab: React.FC = () => {
         if (data.free_daily_limit_guest !== undefined) setFreeDailyLimitGuest(String(data.free_daily_limit_guest));
         if (data.free_cooldown_hours !== undefined) setFreeCooldownHours(String(data.free_cooldown_hours));
         if (data.free_daily_image_limit !== undefined) setFreeDailyImageLimit(String(data.free_daily_image_limit));
+        if (data.gemini_keys_pool !== undefined) setGeminiKeysPool(String(data.gemini_keys_pool));
+        if (data.groq_keys_pool !== undefined) setGroqKeysPool(String(data.groq_keys_pool));
       }
     } catch (err) {
       console.error('Error fetching site settings:', err);
@@ -636,7 +665,136 @@ export const AdminSettingsTab: React.FC = () => {
       </div>
 
       {/* ========================================================= */}
-      {/* SECTION 2: Payment Gateways (Zarinpal & BazaarPay)        */}
+      {/* SECTION 2: Multi-Pool API Key Orchestration               */}
+      {/* ========================================================= */}
+      <div className="p-6 rounded-2xl clay-card space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[var(--card-border)]">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-purple-500/10 text-purple-500 flex items-center justify-center font-bold">
+              <Key className="w-5 h-5" />
+            </div>
+            <div>
+              <h4 className="text-base font-black text-[var(--text-main)]">مدیریت استخرهای کلید هوش مصنوعی (Multi-Pool Orchestration)</h4>
+              <p className="text-xs text-[var(--text-muted)] mt-0.5">پایش سلامت زنده (Circuit Breaker)، غربالگری در لحظه صفر و سوئیچ بدون تاخیر (Zero-Lag Failover)</p>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={fetchPoolStats}
+            disabled={loadingPoolStats}
+            className="self-start sm:self-auto px-3 py-1.5 clay-btn text-xs font-bold rounded-xl flex items-center gap-1.5"
+          >
+            <RefreshCw size={13} className={loadingPoolStats ? 'animate-spin text-purple-500' : 'text-purple-500'} />
+            <span>{loadingPoolStats ? 'در حال پایش...' : 'بروزرسانی وضعیت سلامت'}</span>
+          </button>
+        </div>
+
+        <div className="p-3.5 rounded-xl bg-blue-500/5 border border-blue-500/20 text-xs text-[var(--text-main)] leading-relaxed">
+          💡 <span className="font-bold">سلف دیاگنوستیک هوشمند در حافظه (0ms):</span> قبل از ارسال چت، کلیدها در رم غربالگری می‌شوند. کلیدهای سوخته یا دارای خطای ۴۲۹ فوراً به قرنطینه منتقل شده و کاربر با هیچ تاخیری روبرو نمی‌شود. در صورت اتمام ظرفیت جیمینای، سیستم به صورت کاملاً خودکار و در لحظه به استخر فوق‌سریع Groq سوئیچ می‌کند.
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Gemini Pool Card */}
+          <div className="p-5 rounded-2xl clay-subcard space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-[var(--card-border)]">
+              <div>
+                <span className="font-black text-sm text-[var(--text-main)]">استخر کلیدهای Gemini (Google)</span>
+                <p className="text-[11px] text-[var(--text-muted)] mt-0.5">موتور اصلی چت، برنامه‌نویسی و اسناد رایگان</p>
+              </div>
+              <div className="flex items-center gap-1.5 flex-wrap justify-end">
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-zinc-500/10 text-[var(--text-muted)]">
+                  کل: {poolStats?.gemini?.total ?? 0}
+                </span>
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">
+                  آماده: {poolStats?.gemini?.ready ?? 0}
+                </span>
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/15 text-amber-600 dark:text-amber-400">
+                  خنک‌شدن: {poolStats?.gemini?.cooling ?? 0}
+                </span>
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-500/15 text-red-600 dark:text-red-400">
+                  قرنطینه: {poolStats?.gemini?.quarantined ?? 0}
+                </span>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-[var(--text-main)]">کلیدهای API گوگل (هر خط یک کلید):</label>
+              <textarea
+                value={geminiKeysPool}
+                onChange={(e) => setGeminiKeysPool(e.target.value)}
+                placeholder="AIzaSy...\nAIzaSy..."
+                rows={4}
+                dir="ltr"
+                className="w-full px-3 py-2 rounded-xl clay-surface text-xs font-mono resize-y min-h-[90px]"
+              />
+            </div>
+
+            <button
+              type="button"
+              onClick={async () => {
+                await handleSaveSetting('gemini_keys_pool', geminiKeysPool.trim());
+                await fetchPoolStats();
+              }}
+              disabled={settingsSaving}
+              className="w-full py-2.5 clay-btn-primary text-xs font-bold rounded-xl"
+            >
+              ذخیره و بروزرسانی استخر Gemini
+            </button>
+          </div>
+
+          {/* Groq Pool Card */}
+          <div className="p-5 rounded-2xl clay-subcard space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-[var(--card-border)]">
+              <div>
+                <span className="font-black text-sm text-[var(--text-main)]">استخر کلیدهای Groq (LPU)</span>
+                <p className="text-[11px] text-[var(--text-muted)] mt-0.5">استنتاج پرسرعت Llama 3.3 / فال‌بک نجات چت</p>
+              </div>
+              <div className="flex items-center gap-1.5 flex-wrap justify-end">
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-zinc-500/10 text-[var(--text-muted)]">
+                  کل: {poolStats?.groq?.total ?? 0}
+                </span>
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">
+                  آماده: {poolStats?.groq?.ready ?? 0}
+                </span>
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/15 text-amber-600 dark:text-amber-400">
+                  خنک‌شدن: {poolStats?.groq?.cooling ?? 0}
+                </span>
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-500/15 text-red-600 dark:text-red-400">
+                  قرنطینه: {poolStats?.groq?.quarantined ?? 0}
+                </span>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-[var(--text-main)]">کلیدهای API شرکت Groq (هر خط یک کلید):</label>
+              <textarea
+                value={groqKeysPool}
+                onChange={(e) => setGroqKeysPool(e.target.value)}
+                placeholder="gsk_...\ngsk_..."
+                rows={4}
+                dir="ltr"
+                className="w-full px-3 py-2 rounded-xl clay-surface text-xs font-mono resize-y min-h-[90px]"
+              />
+            </div>
+
+            <button
+              type="button"
+              onClick={async () => {
+                await handleSaveSetting('groq_keys_pool', groqKeysPool.trim());
+                await fetchPoolStats();
+              }}
+              disabled={settingsSaving}
+              className="w-full py-2.5 clay-btn-primary text-xs font-bold rounded-xl"
+            >
+              ذخیره و بروزرسانی استخر Groq
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* ========================================================= */}
+      {/* SECTION 3: Payment Gateways (Zarinpal & BazaarPay)        */}
       {/* ========================================================= */}
       <div className="p-6 rounded-2xl clay-card space-y-6">
         <div className="flex items-center gap-3 pb-4 border-b border-[var(--card-border)]">

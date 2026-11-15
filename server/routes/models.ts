@@ -1,6 +1,6 @@
 import express from 'express';
 import db from '../db/database';
-import { isSafeBaseUrl, getGeminiClient, extractCleanErrorMessage, sanitizeErrorMessage, normalizeBaseUrl, parseCustomHeaders } from '../services/utils';
+import { isSafeBaseUrl, getGeminiClient, extractCleanErrorMessage, sanitizeErrorMessage, normalizeBaseUrl, parseCustomHeaders, getGroqKeyFromPool, getGeminiKeyFromPool } from '../services/utils';
 import { modelTestRateLimiter } from '../middleware/rateLimiter';
 
 import { MODEL_PRICING_USD, getApiDollarRate } from '../services/walletService';
@@ -243,14 +243,11 @@ router.post(['/api/models/test', '/api/ping'], modelTestRateLimiter, async (req,
         if (!apiKey) {
           const bUrl = baseUrl.toLowerCase();
           if (bUrl.includes('api.groq.com')) {
-            const allowedGroqModels = ['qwen/qwen3.6-27b', 'openai/gpt-oss-120b', 'qwen/qwen3.8-27b', 'openai/gpt-oss-20b', 'allam-2-7b', 'groq/compound'];
-            if (allowedGroqModels.includes(model.toLowerCase())) {
-              apiKey = process.env.DEFAULT_GROQ_KEY || process.env.GROQ_API_KEY || '';
-            }
+            apiKey = getGroqKeyFromPool() || process.env.DEFAULT_GROQ_KEY || process.env.GROQ_API_KEY || '';
           } else if (bUrl.includes('generativelanguage.googleapis.com')) {
             const allowedGeminiModels = ['gemini-3.6-flash', 'gemini-3.5-flash-lite', 'gemini-3.1-flash-lite', 'gemini-1.5-flash'];
             if (allowedGeminiModels.includes(model.toLowerCase())) {
-              apiKey = process.env.DEFAULT_GEMINI_KEY || process.env.GEMINI_API_KEY || '';
+              apiKey = getGeminiKeyFromPool() || process.env.DEFAULT_GEMINI_KEY || process.env.GEMINI_API_KEY || '';
             }
           }
         }

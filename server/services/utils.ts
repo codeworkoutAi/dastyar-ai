@@ -24,6 +24,25 @@ export {
   type BlacklistReason,
 };
 
+import { multiPoolManager } from './multiPoolManager';
+export { multiPoolManager };
+
+export function getGroqKeyFromPool(excludeKeys: string[] = [], targetModel?: string): string | null {
+  try {
+    const key = multiPoolManager.acquireHealthyKey('groq', excludeKeys, targetModel);
+    if (key) return key;
+
+    // Fallback to process.env if not in pool and not excluded/blocked
+    const envKey = process.env.DEFAULT_GROQ_KEY || process.env.GROQ_API_KEY;
+    if (envKey && !excludeKeys.includes(envKey) && !multiPoolManager.isKeyBlocked(envKey, 'groq', targetModel)) {
+      return envKey;
+    }
+  } catch (err: any) {
+    console.warn('[KeyPool] Error acquiring Groq key from pool:', err);
+  }
+  return null;
+}
+
 let currentGeminiKeyIndex = 0;
 
 export function getGeminiKeyFromPool(excludeKeys: string[] = [], targetModel?: string): string | null {
@@ -350,8 +369,8 @@ Persian description: "${trimmed}"`;
     console.warn('[translateAndEnhanceImagePrompt] Database system profile error:', dbErr);
   }
 
-  // 3. Fallback: Try Groq from environment if configured
-  const groqKey = process.env.DEFAULT_GROQ_KEY || process.env.GROQ_API_KEY;
+  // 3. Fallback: Try Groq from pool or environment if configured
+  const groqKey = getGroqKeyFromPool() || process.env.DEFAULT_GROQ_KEY || process.env.GROQ_API_KEY;
   if (groqKey) {
     const groqModels = ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant', 'allam-2-7b'];
     for (const model of groqModels) {

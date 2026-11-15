@@ -9,6 +9,7 @@ import { getAdminFinancialSummary, addApiPurchase, depositWallet, getPlanCreditA
 import { getZarinpalConfig, testZarinpalMerchant, getServerPublicIp } from '../services/zarinpalService';
 import { getBazaarPayConfig, testBazaarPayMerchant } from '../services/bazaarPayService';
 import { getFullSiteDesign, saveSectionData, resetSectionData } from '../services/landingService';
+import { multiPoolManager } from '../services/multiPoolManager';
 import fs from 'fs';
 import path from 'path';
 
@@ -1009,11 +1010,28 @@ router.put('/settings', (req, res) => {
     db.prepare('INSERT OR REPLACE INTO site_settings (key, value, updatedAt) VALUES (?, ?, CURRENT_TIMESTAMP)').run(key, String(value));
     syncDatabase();
 
+    if (key === 'gemini_keys_pool') {
+      multiPoolManager.invalidatePool('gemini');
+    } else if (key === 'groq_keys_pool') {
+      multiPoolManager.invalidatePool('groq');
+    }
+
     const updatedRow = db.prepare('SELECT key, value FROM site_settings WHERE key = ?').get(key);
     res.json(updatedRow);
   } catch (error) {
     console.error('[Admin API] Error updating site settings:', error);
     res.status(500).json({ error: 'خطا در به‌روزرسانی تنظیمات سیستم' });
+  }
+});
+
+// GET /api/admin/pools/health
+router.get('/pools/health', (req, res) => {
+  try {
+    const stats = multiPoolManager.getAllPoolStats();
+    res.json(stats);
+  } catch (error) {
+    console.error('[Admin API] Error fetching pool health:', error);
+    res.status(500).json({ error: 'خطا در دریافت وضعیت سلامت استخرها' });
   }
 });
 
