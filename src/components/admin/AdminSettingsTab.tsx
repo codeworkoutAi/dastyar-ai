@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   Cpu, Key, RefreshCw, Plus, Edit2, Trash2, CheckCircle2, 
   AlertCircle, ShieldAlert, DollarSign, Sliders, Sparkles, 
-  CreditCard, Globe, Zap, Check, X, ShieldCheck
+  CreditCard, Globe, Zap, Check, X, ShieldCheck, Save
 } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 import { useSettingsStore } from '../../store/settingsStore';
