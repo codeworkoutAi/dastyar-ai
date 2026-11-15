@@ -2,7 +2,8 @@ import express from 'express';
 import crypto from 'crypto';
 import rateLimit from 'express-rate-limit';
 import db, { syncDatabase } from '../db/database';
-import { requireAuth } from '../middleware/auth';
+import { requireAuth, JWT_SECRET } from '../middleware/auth';
+import jwt from 'jsonwebtoken';
 import { bot } from '../telegram/bot';
 import { requestZarinpalPayment, verifyZarinpalPayment, getZarinpalConfig } from '../services/zarinpalService';
 import { 
@@ -37,6 +38,22 @@ export function getWalletTopupProductId(): number {
     console.error('[Store] getWalletTopupProductId error:', err);
     return 1;
   }
+}
+
+export function calculateWalletCredit(orderAmount: number, isWalletTopup: boolean, product: any): { creditAmount: number; bonus: number; descSuffix: string } {
+  const isPlan = product?.category === 'plan';
+  if (isPlan) {
+    return { creditAmount: getPlanCreditAmount(product), bonus: 0, descSuffix: '' };
+  }
+  if (isWalletTopup && orderAmount >= 100000) {
+    const bonus = Math.round(orderAmount * 0.20);
+    return { 
+      creditAmount: orderAmount + bonus, 
+      bonus, 
+      descSuffix: ` (شامل ۲۰٪ بونوس هدیه: ${bonus.toLocaleString('fa-IR')} تومان)` 
+    };
+  }
+  return { creditAmount: orderAmount, bonus: 0, descSuffix: '' };
 }
 
 export function notifyAdminWalletTopup(orderId: string, userId: number, amount: number, method: string, refId?: string) {
@@ -116,10 +133,63 @@ router.get('/products/:id', (req, res) => {
   }
 });
 
+// POST /api/store/validate-coupon
+router.post('/validate-coupon', requireAuth, (req: any, res) => {
+  try {
+    const { code, productId, variationId } = req.body;
+    if (!code || typeof code !== 'string') {
+      return res.status(400).json({ error: 'کد تخفیف الزامی است' });
+    }
+
+    const cleanCode = code.trim().toUpperCase();
+    const promo = db.prepare("SELECT * FROM promo_codes WHERE code = ? AND isActive = 1 AND type = 'discount_percent'").get(cleanCode) as any;
+
+    if (!promo) {
+      return res.status(404).json({ error: 'کد تخفیف نامعتبر است یا منقضی شده است' });
+    }
+
+    if (promo.maxUses > 0 && promo.currentUses >= promo.maxUses) {
+      return res.status(400).json({ error: 'ظرفیت استفاده از این کد تخفیف تکمیل شده است' });
+    }
+
+    let basePrice = 0;
+    if (productId) {
+      const product = db.prepare('SELECT price, variations FROM products WHERE id = ?').get(productId) as any;
+      if (product) {
+        basePrice = Number(product.price) || 0;
+        if (variationId && product.variations) {
+          try {
+            const parsed = JSON.parse(product.variations);
+            const match = parsed.find((v: any) => v.id === variationId);
+            if (match && typeof match.price === 'number') {
+              basePrice = match.price;
+            }
+          } catch (_) {}
+        }
+      }
+    }
+
+    const discountPercent = Math.min(100, Math.max(1, Number(promo.value) || 0));
+    const discountAmount = basePrice > 0 ? Math.round(basePrice * (discountPercent / 100)) : 0;
+    const finalPrice = Math.max(0, basePrice - discountAmount);
+
+    res.json({
+      valid: true,
+      code: promo.code,
+      discountPercent,
+      discountAmount,
+      finalPrice
+    });
+  } catch (err) {
+    console.error('[Store API] Validate coupon error:', err);
+    res.status(500).json({ error: 'خطای سرور در اعتبارسنجی کد تخفیف' });
+  }
+});
+
 // POST /api/store/checkout
 router.post('/checkout', checkoutLimiter, requireAuth, async (req: any, res) => {
   try {
-    const { productId, variationId, selectedPeriod } = req.body;
+    const { productId, variationId, selectedPeriod, couponCode } = req.body;
     const userId = req.user.id;
 
     if (!productId) {
@@ -161,6 +231,19 @@ router.post('/checkout', checkoutLimiter, requireAuth, async (req: any, res) => 
       } catch (e) {}
     }
 
+    // Apply promo code discount if provided
+    let promoIdToIncrement: number | null = null;
+    if (couponCode && typeof couponCode === 'string' && couponCode.trim()) {
+      const cleanCode = couponCode.trim().toUpperCase();
+      const promo = db.prepare("SELECT * FROM promo_codes WHERE code = ? AND isActive = 1 AND type = 'discount_percent'").get(cleanCode) as any;
+      if (promo && (promo.maxUses === 0 || promo.currentUses < promo.maxUses)) {
+        const discountPct = Math.min(100, Math.max(1, Number(promo.value) || 0));
+        const discountAmount = Math.round(finalPrice * (discountPct / 100));
+        finalPrice = Math.max(0, finalPrice - discountAmount);
+        promoIdToIncrement = promo.id;
+      }
+    }
+
     // Create an order
     const orderId = 'ORD-' + crypto.randomUUID().split('-')[0].toUpperCase();
     const insertStmt = db.prepare(`
@@ -169,6 +252,9 @@ router.post('/checkout', checkoutLimiter, requireAuth, async (req: any, res) => 
     `);
     
     insertStmt.run(orderId, userId, productId, finalPrice, finalPeriod);
+    if (promoIdToIncrement) {
+      db.prepare('UPDATE promo_codes SET currentUses = currentUses + 1 WHERE id = ?').run(promoIdToIncrement);
+    }
     syncDatabase();
 
     const userRow = db.prepare('SELECT email FROM users WHERE id = ?').get(userId) as any;
@@ -544,24 +630,28 @@ router.get('/mock-callback', async (req: any, res) => {
       const isPlan = product?.category === 'plan';
 
       if (isWalletTopup || isPlan) {
-        const creditAmount = isPlan ? getPlanCreditAmount(product) : order.amount;
+        const { creditAmount, descSuffix } = calculateWalletCredit(order.amount, isWalletTopup, product);
         const desc = isPlan 
           ? `خرید ${product?.title || 'بسته تعرفه'} - سفارش ${orderId}`
-          : `شارژ آنلاین کیف پول کاربری (${gateway === 'bazaarpay' ? 'بازارپی' : 'شاپرک'}) - سفارش ${orderId}`;
+          : `شارژ آنلاین کیف پول کاربری (${gateway === 'bazaarpay' ? 'بازارپی' : 'شاپرک'}) - سفارش ${orderId}${descSuffix}`;
 
-        db.prepare("UPDATE orders SET paymentStatus = 'success', paymentMethod = ?, refId = ? WHERE id = ?").run(payMethod, refId, orderId);
-        depositWallet(order.userId, creditAmount, desc);
-        syncDatabase();
-        notifyAdminWalletTopup(orderId, order.userId, creditAmount, gateway === 'bazaarpay' ? 'بازارپی' : 'درگاه پرداخت آنلاین', refId);
+        const updateRes = db.prepare("UPDATE orders SET paymentStatus = 'success', paymentMethod = ?, refId = ? WHERE id = ? AND paymentStatus != 'success'").run(payMethod, refId, orderId);
+        if (updateRes.changes === 1) {
+          depositWallet(order.userId, creditAmount, desc);
+          syncDatabase();
+          notifyAdminWalletTopup(orderId, order.userId, creditAmount, gateway === 'bazaarpay' ? 'بازارپی' : 'درگاه پرداخت آنلاین', refId);
+        }
         if (gateway === 'bazaarpay') {
           return res.redirect(`/?payment=success&orderId=${orderId}&refId=${refId}&amount=${creditAmount}`);
         }
-        return res.redirect(`/store?tab=wallet&payment=success&orderId=${orderId}&refId=${refId}&amount=${creditAmount}`);
+        return res.redirect(`/dashboard?tab=wallet&payment=success&orderId=${orderId}&refId=${refId}&amount=${creditAmount}`);
       }
 
       // Digital store product - update paymentStatus to success, but leave licenseId null
-      db.prepare("UPDATE orders SET paymentStatus = 'success', paymentMethod = ?, refId = ? WHERE id = ?").run(payMethod, refId, orderId);
-      syncDatabase();
+      const updateRes = db.prepare("UPDATE orders SET paymentStatus = 'success', paymentMethod = ?, refId = ? WHERE id = ? AND paymentStatus != 'success'").run(payMethod, refId, orderId);
+      if (updateRes.changes === 1) {
+        syncDatabase();
+      }
 
       // Send Telegram notification that order is pending review
       try {
@@ -645,45 +735,49 @@ router.get('/zarinpal/callback', async (req, res) => {
       const isPlan = product?.category === 'plan';
 
       if (isWalletTopup || isPlan) {
-        const creditAmount = isPlan ? getPlanCreditAmount(product) : order.amount;
+        const { creditAmount, descSuffix } = calculateWalletCredit(order.amount, isWalletTopup, product);
         const desc = isPlan 
           ? `خرید آنلاین ${product?.title || 'بسته تعرفه'} - شماره تراکنش: ${refId}`
-          : `شارژ آنلاین کیف پول از طریق زرین‌پال - شماره تراکنش: ${refId}`;
+          : `شارژ آنلاین کیف پول از طریق زرین‌پال - شماره تراکنش: ${refId}${descSuffix}`;
 
-        db.prepare("UPDATE orders SET paymentStatus = 'success', paymentMethod = 'zarinpal', authority = ?, refId = ?, cardPan = ? WHERE id = ?")
+        const updateRes = db.prepare("UPDATE orders SET paymentStatus = 'success', paymentMethod = 'zarinpal', authority = ?, refId = ?, cardPan = ? WHERE id = ? AND paymentStatus != 'success'")
           .run(authority, refId, cardPan, orderId);
 
-        depositWallet(order.userId, creditAmount, desc);
-        syncDatabase();
-        notifyAdminWalletTopup(orderId, order.userId, creditAmount, 'زرین‌پال (شاپرک)', refId);
+        if (updateRes.changes === 1) {
+          depositWallet(order.userId, creditAmount, desc);
+          syncDatabase();
+          notifyAdminWalletTopup(orderId, order.userId, creditAmount, 'زرین‌پال (شاپرک)', refId);
 
-        // Telegram delivery notification
-        try {
-          const orderUser = db.prepare('SELECT telegramId FROM users WHERE id = ?').get(order.userId) as any;
-          if (orderUser?.telegramId && bot) {
-            let msg = `✅ **پرداخت شما با موفقیت انجام شد!**\n\n` +
-                      `📦 **پلن خریداری‌شده:** ${product?.title || ''}\n` +
-                      `💰 **اعتبار شارژشده به کیف پول:** ${creditAmount.toLocaleString('fa-IR')} تومان\n` +
-                      `🔢 **شماره سفارش:** \`${orderId}\`\n` +
-                      `🧾 **کد پیگیری شاپرک:** \`${refId}\`\n\n` +
-                      `اعتبار این بسته بلافاصله به کیف پول شما اضافه شد و در محیط چت فعال است.`;
-            bot.telegram.sendMessage(orderUser.telegramId, msg, { parse_mode: 'Markdown' }).catch(() => {});
-          }
-        } catch (tgErr) {}
+          // Telegram delivery notification
+          try {
+            const orderUser = db.prepare('SELECT telegramId FROM users WHERE id = ?').get(order.userId) as any;
+            if (orderUser?.telegramId && bot) {
+              let msg = `✅ **پرداخت شما با موفقیت انجام شد!**\n\n` +
+                        `📦 **پلن خریداری‌شده:** ${product?.title || ''}\n` +
+                        `💰 **اعتبار شارژشده به کیف پول:** ${creditAmount.toLocaleString('fa-IR')} تومان\n` +
+                        `🔢 **شماره سفارش:** \`${orderId}\`\n` +
+                        `🧾 **کد پیگیری شاپرک:** \`${refId}\`\n\n` +
+                        `اعتبار این بسته بلافاصله به کیف پول شما اضافه شد و در محیط چت فعال است.`;
+              bot.telegram.sendMessage(orderUser.telegramId, msg, { parse_mode: 'Markdown' }).catch(() => {});
+            }
+          } catch (tgErr) {}
 
-        // SMS notification
-        notifyOrderSuccessBySms(orderId, null);
+          // SMS notification
+          notifyOrderSuccessBySms(orderId, null);
+        }
 
-        return res.redirect(`/store?tab=wallet&payment=success&orderId=${orderId}&refId=${refId}&amount=${creditAmount}`);
+        return res.redirect(`/dashboard?tab=wallet&payment=success&orderId=${orderId}&refId=${refId}&amount=${creditAmount}`);
       }
 
       // Digital store product
       // We do NOT auto-assign license anymore for digital products per admin's request
       let licenseId: number | null = null;
 
-      db.prepare("UPDATE orders SET paymentStatus = 'success', paymentMethod = 'zarinpal', licenseId = ?, authority = ?, refId = ?, cardPan = ? WHERE id = ?")
+      const updateRes = db.prepare("UPDATE orders SET paymentStatus = 'success', paymentMethod = 'zarinpal', licenseId = ?, authority = ?, refId = ?, cardPan = ? WHERE id = ? AND paymentStatus != 'success'")
         .run(licenseId, authority, refId, cardPan, orderId);
-      syncDatabase();
+      if (updateRes.changes === 1) {
+        syncDatabase();
+      }
 
       // Telegram delivery notification
       try {
@@ -705,7 +799,7 @@ router.get('/zarinpal/callback', async (req, res) => {
       // SMS notification
       notifyOrderSuccessBySms(orderId, licenseId);
 
-      return res.redirect(`/store?payment=success&orderId=${orderId}&refId=${refId}`);
+      return res.redirect(`/dashboard?payment=success&orderId=${orderId}&refId=${refId}`);
     } else {
       db.prepare("UPDATE orders SET paymentStatus = 'failed', paymentMethod = 'zarinpal', authority = ? WHERE id = ?")
         .run(authority, orderId);
@@ -783,43 +877,61 @@ router.get('/bazaarpay/callback', async (req: any, res) => {
       const isPlan = product?.category === 'plan';
 
       if (isWalletTopup || isPlan) {
-        const creditAmount = isPlan ? getPlanCreditAmount(product) : order.amount;
+        const { creditAmount, descSuffix } = calculateWalletCredit(order.amount, isWalletTopup, product);
         const desc = isPlan 
           ? `خرید آنلاین ${product?.title || 'بسته تعرفه'} از طریق بازارپی - شماره پیگیری: ${refId}`
-          : `شارژ آنلاین کیف پول از طریق بازارپی کافه‌بازار - شماره پیگیری: ${refId}`;
+          : `شارژ آنلاین کیف پول از طریق بازارپی کافه‌بازار - شماره پیگیری: ${refId}${descSuffix}`;
 
-        db.prepare("UPDATE orders SET paymentStatus = 'success', paymentMethod = 'bazaarpay', authority = ?, refId = ? WHERE id = ?")
+        const updateRes = db.prepare("UPDATE orders SET paymentStatus = 'success', paymentMethod = 'bazaarpay', authority = ?, refId = ? WHERE id = ? AND paymentStatus != 'success'")
           .run(tokenToTrace, refId, orderId);
 
-        depositWallet(order.userId, creditAmount, desc);
-        syncDatabase();
-        notifyAdminWalletTopup(orderId, order.userId, creditAmount, 'بازارپی', refId);
+        if (updateRes.changes === 1) {
+          depositWallet(order.userId, creditAmount, desc);
+          syncDatabase();
+          notifyAdminWalletTopup(orderId, order.userId, creditAmount, 'بازارپی', refId);
 
-        // Telegram delivery notification
+          // Telegram delivery notification
+          try {
+            const orderUser = db.prepare('SELECT telegramId FROM users WHERE id = ?').get(order.userId) as any;
+            if (orderUser?.telegramId && bot) {
+              let msg = `✅ **پرداخت از طریق بازارپی با موفقیت انجام شد!**\n\n` +
+                        `📦 **پلن/خدمت:** ${product?.title || 'شارژ کیف پول'}\n` +
+                        `💰 **اعتبار شارژشده به کیف پول:** ${creditAmount.toLocaleString('fa-IR')} تومان\n` +
+                        `🔢 **شماره سفارش:** \`${orderId}\`\n` +
+                        `🧾 **کد پیگیری بازارپی:** \`${refId}\`\n\n` +
+                        `اعتبار بلافاصله به کیف پول شما در کافه‌بازار افزوده شد.`;
+              bot.telegram.sendMessage(orderUser.telegramId, msg, { parse_mode: 'Markdown' }).catch(() => {});
+            }
+          } catch (tgErr) {}
+
+          // SMS notification
+          notifyOrderSuccessBySms(orderId, null);
+        }
+
+        // Generate auto-login JWT token for WebView session persistence
+        let authTokenParam = '';
         try {
-          const orderUser = db.prepare('SELECT telegramId FROM users WHERE id = ?').get(order.userId) as any;
-          if (orderUser?.telegramId && bot) {
-            let msg = `✅ **پرداخت از طریق بازارپی با موفقیت انجام شد!**\n\n` +
-                      `📦 **پلن/خدمت:** ${product?.title || 'شارژ کیف پول'}\n` +
-                      `💰 **اعتبار شارژشده به کیف پول:** ${creditAmount.toLocaleString('fa-IR')} تومان\n` +
-                      `🔢 **شماره سفارش:** \`${orderId}\`\n` +
-                      `🧾 **کد پیگیری بازارپی:** \`${refId}\`\n\n` +
-                      `اعتبار بلافاصله به کیف پول شما در کافه‌بازار افزوده شد.`;
-            bot.telegram.sendMessage(orderUser.telegramId, msg, { parse_mode: 'Markdown' }).catch(() => {});
+          const orderUser = db.prepare('SELECT id, email, name, role FROM users WHERE id = ?').get(order.userId) as any;
+          if (orderUser) {
+            const jwtToken = jwt.sign(
+              { id: orderUser.id, email: orderUser.email, name: orderUser.name, role: orderUser.role },
+              JWT_SECRET,
+              { expiresIn: '30d' }
+            );
+            authTokenParam = `&auth_token=${encodeURIComponent(jwtToken)}`;
           }
-        } catch (tgErr) {}
+        } catch (_) {}
 
-        // SMS notification
-        notifyOrderSuccessBySms(orderId, null);
-
-        return res.redirect(`/chat?tab=wallet&payment=success&orderId=${orderId}&refId=${refId}&amount=${creditAmount}`);
+        return res.redirect(`/chat?tab=wallet&payment=success&orderId=${orderId}&refId=${refId}&amount=${creditAmount}${authTokenParam}`);
       }
 
       // Digital store product
       let licenseId: number | null = null;
-      db.prepare("UPDATE orders SET paymentStatus = 'success', paymentMethod = 'bazaarpay', licenseId = ?, authority = ?, refId = ? WHERE id = ?")
+      const updateRes = db.prepare("UPDATE orders SET paymentStatus = 'success', paymentMethod = 'bazaarpay', licenseId = ?, authority = ?, refId = ? WHERE id = ? AND paymentStatus != 'success'")
         .run(licenseId, tokenToTrace, refId, orderId);
-      syncDatabase();
+      if (updateRes.changes === 1) {
+        syncDatabase();
+      }
 
       try {
         const orderUser = db.prepare('SELECT telegramId FROM users WHERE id = ?').get(order.userId) as any;
@@ -922,7 +1034,7 @@ router.post('/redeem', requireAuth, (req: any, res) => {
           db.prepare(`
             INSERT INTO orders (id, userId, productId, licenseId, amount, paymentStatus) 
             VALUES (?, ?, ?, ?, ?, 'success')
-          `).run(orderId, userId, license.productId, product ? product.price : 0);
+          `).run(orderId, userId, license.productId, license.id, product ? product.price : 0);
           syncDatabase();
           return res.json({ message: 'لایسنس با موفقیت فعال و در حساب شما ثبت شد' });
         } catch (err) {

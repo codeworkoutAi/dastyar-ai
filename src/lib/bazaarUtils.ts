@@ -1,5 +1,12 @@
 import { Capacitor } from '@capacitor/core';
 
+export const getApiBaseUrl = (): string => {
+  if (typeof window !== 'undefined' && Capacitor.isNativePlatform()) {
+    return 'https://dastyarai.com';
+  }
+  return '';
+};
+
 export const isBazaarEnvironment = (): boolean => {
   // 1. Build-time environment flag (e.g. VITE_BUILD_TARGET=bazaar or npm run build:bazaar)
   if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_BUILD_TARGET === 'bazaar') {
@@ -33,7 +40,8 @@ export const doSilentBazaarLogin = async (login: (user: any, token: string) => v
 
   try {
     // Try to login first (in case they already have this guest account on backend)
-    let res = await fetch('/api/auth/login', {
+    const apiBase = getApiBaseUrl();
+    let res = await fetch(`${apiBase}/api/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password })
@@ -41,7 +49,7 @@ export const doSilentBazaarLogin = async (login: (user: any, token: string) => v
     
     // If it fails, they need to register the guest account
     if (!res.ok) {
-      res = await fetch('/api/auth/register', {
+      res = await fetch(`${apiBase}/api/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 

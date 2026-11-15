@@ -4,7 +4,7 @@ import { useAuthStore } from '../store/authStore';
 import { useSettingsStore } from '../store/settingsStore';
 import { toPersianDigits } from '../lib/persianUtils';
 import { Capacitor } from '@capacitor/core';
-import { isBazaarEnvironment } from '../lib/bazaarUtils';
+import { isBazaarEnvironment, getApiBaseUrl } from '../lib/bazaarUtils';
 
 interface CheckoutModalProps {
   product: any;
@@ -24,13 +24,56 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ product, isOpen, o
   const [paymentMethod, setPaymentMethod] = useState<'online' | 'card'>('online');
   const [trackingNumber, setTrackingNumber] = useState('');
 
+  const [couponCode, setCouponCode] = useState('');
+  const [couponLoading, setCouponLoading] = useState(false);
+  const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; discountPercent: number; discountAmount: number } | null>(null);
+  const [couponError, setCouponError] = useState<string | null>(null);
+
   const effectivePrice = selectedVariation && typeof selectedVariation.price === 'number'
     ? selectedVariation.price 
     : (product?.price || 0);
 
+  const discountAmount = appliedCoupon ? appliedCoupon.discountAmount : 0;
+  const finalPrice = Math.max(0, effectivePrice - discountAmount);
+
   const formatPrice = (price: number) => {
     const formatted = (price || 0).toLocaleString();
     return usePersianDigits ? toPersianDigits(formatted) : formatted;
+  };
+
+  const handleApplyCoupon = async () => {
+    if (!couponCode.trim()) return;
+    setCouponLoading(true);
+    setCouponError(null);
+    try {
+      const apiBase = getApiBaseUrl();
+      const res = await fetch(`${apiBase}/api/store/validate-coupon`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          code: couponCode.trim(),
+          productId: product?.id,
+          variationId: selectedVariation?.id
+        })
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'کد تخفیف نامعتبر است');
+      }
+      setAppliedCoupon({
+        code: data.code,
+        discountPercent: data.discountPercent,
+        discountAmount: data.discountAmount
+      });
+    } catch (err: any) {
+      setAppliedCoupon(null);
+      setCouponError(err.message || 'خطا در اعمال تخفیف');
+    } finally {
+      setCouponLoading(false);
+    }
   };
 
   if (!isOpen || !product) return null;
@@ -39,7 +82,8 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ product, isOpen, o
     try {
       setLoading(true);
       setError(null);
-      const res = await fetch('/api/store/checkout', {
+      const apiBase = getApiBaseUrl();
+      const res = await fetch(`${apiBase}/api/store/checkout`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -49,6 +93,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ product, isOpen, o
           productId: product.id, 
           variationId: selectedVariation?.id,
           selectedPeriod: selectedVariation?.title,
+          couponCode: appliedCoupon?.code,
           gateway: isBazaar ? 'bazaarpay' : 'zarinpal' 
         })
       });
@@ -84,7 +129,8 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ product, isOpen, o
     try {
       setLoading(true);
       setError(null);
-      const res = await fetch('/api/store/checkout-manual', {
+      const apiBase = getApiBaseUrl();
+      const res = await fetch(`${apiBase}/api/store/checkout-manual`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -94,7 +140,8 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ product, isOpen, o
           productId: product.id, 
           variationId: selectedVariation?.id,
           selectedPeriod: selectedVariation?.title,
-          trackingNumber 
+          trackingNumber,
+          couponCode: appliedCoupon?.code
         })
       });
       const data = await res.json();
@@ -105,11 +152,11 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ product, isOpen, o
       // Redirect to Telegram
       const telegramUsername = 'DastyaraiAdmin';
       const prodName = `${product.title}${selectedVariation ? ` (${selectedVariation.title})` : ''}`;
-      const message = encodeURIComponent(`سلام، فیش واریز سفارش ${data.orderId} برای «${prodName}» (مبلغ: ${effectivePrice.toLocaleString()} تومان) را ضمیمه این پیام ارسال می‌کنم.\nشماره پیگیری/کارت: ${trackingNumber}`);
+      const message = encodeURIComponent(`سلام، فیش واریز سفارش ${data.orderId} برای «${prodName}» (مبلغ: ${finalPrice.toLocaleString()} تومان) را ضمیمه این پیام ارسال می‌کنم.\nشماره پیگیری/کارت: ${trackingNumber}`);
       window.open(`https://t.me/${telegramUsername}?text=${message}`, '_blank');
       onClose();
-      // Optionally reload or let user go to dashboard to see pending order
-      window.location.assign('/store?tab=dashboard');
+      // Navigate to user dashboard orders
+      window.location.assign('/dashboard');
     } catch (err: any) {
       setError(err.message);
       setLoading(false);
@@ -187,23 +234,55 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ product, isOpen, o
  </div>
  </div>
 
- <div className="flex items-center gap-2 mt-1">
- <input 
- type="text" 
- placeholder="کد تخفیف دارید؟" 
- className="flex-1 clay-input px-3 py-1.5 rounded-lg text-xs font-mono outline-none focus:border-blue-400"
- dir="ltr"
- />
- <button className="px-3 py-1.5 bg-zinc-200 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-300 rounded-lg text-xs font-bold transition-colors hover:bg-zinc-300 dark:hover:bg-zinc-600">
- اعمال
- </button>
+ <div className="flex flex-col gap-1.5 mt-1">
+   <div className="flex items-center gap-2">
+     <input 
+       type="text" 
+       placeholder="کد تخفیف دارید؟" 
+       value={couponCode}
+       onChange={(e) => setCouponCode(e.target.value)}
+       disabled={couponLoading || !!appliedCoupon}
+       className="flex-1 clay-input px-3 py-1.5 rounded-lg text-xs font-mono outline-none focus:border-blue-400 uppercase"
+       dir="ltr"
+     />
+     {appliedCoupon ? (
+       <button 
+         type="button"
+         onClick={() => {
+           setAppliedCoupon(null);
+           setCouponCode('');
+         }}
+         className="px-3 py-1.5 bg-red-100 dark:bg-red-950/40 text-red-600 dark:text-red-400 rounded-lg text-xs font-bold transition-colors hover:bg-red-200 cursor-pointer"
+       >
+         حذف
+       </button>
+     ) : (
+       <button 
+         type="button"
+         onClick={handleApplyCoupon}
+         disabled={couponLoading || !couponCode.trim()}
+         className="px-3 py-1.5 bg-zinc-200 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-300 rounded-lg text-xs font-bold transition-colors hover:bg-zinc-300 dark:hover:bg-zinc-600 disabled:opacity-50 cursor-pointer"
+       >
+         {couponLoading ? '...' : 'اعمال'}
+       </button>
+     )}
+   </div>
+   {appliedCoupon && (
+     <div className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 flex items-center justify-between px-1">
+       <span>تخفیف {appliedCoupon.discountPercent}٪ اعمال شد</span>
+       <span>-{formatPrice(appliedCoupon.discountAmount)} تومان</span>
+     </div>
+   )}
+   {couponError && (
+     <div className="text-[11px] font-bold text-red-500 px-1">{couponError}</div>
+   )}
  </div>
 
  <div className="w-full h-px clay-btn-secondary/50" />
  <div className="flex items-center justify-between">
  <span className="text-zinc-900 dark:text-zinc-100 font-bold text-xs sm:text-sm">مبلغ قابل پرداخت</span>
  <div className="text-base sm:text-lg font-bold text-blue-600 dark:text-blue-400 flex items-center gap-1 font-ui">
- <span>{formatPrice(effectivePrice)}</span>
+ <span>{formatPrice(finalPrice)}</span>
  <span className="text-xs font-normal text-zinc-500">تومان</span>
  </div>
  </div>

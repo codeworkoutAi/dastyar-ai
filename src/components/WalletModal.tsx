@@ -12,7 +12,7 @@ import { Coins, X, Sparkles, CreditCard,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Capacitor } from '@capacitor/core';
-import { isBazaarEnvironment } from '../lib/bazaarUtils';
+import { isBazaarEnvironment, getApiBaseUrl } from '../lib/bazaarUtils';
 
 export const WalletModal: React.FC = () => {
  const { isWalletOpen, setIsWalletOpen } = useUIStore();
@@ -66,7 +66,8 @@ export const WalletModal: React.FC = () => {
  setPayError(null);
  setRechargingPackId(packId || 'custom');
  try {
- const res = await fetch('/api/store/wallet-topup', {
+ const apiBase = getApiBaseUrl();
+  const res = await fetch(`${apiBase}/api/store/wallet-topup`, {
  method: 'POST',
  headers: {
  'Content-Type': 'application/json',
@@ -211,7 +212,7 @@ export const WalletModal: React.FC = () => {
  <p className="text-xs text-zinc-600 dark:text-zinc-300 leading-relaxed">
  {currentBalance < 20000 ? (
  <span>
- موجودی شما رو به اتمام است! با هر شارژ بالای ۵۰,۰۰۰ تومان، <strong className="text-amber-600 dark:text-amber-400">۲۰٪ بونوس هدیه اعتباری</strong> به کیف پول شما اضافه می‌شود.
+ با هر شارژ بالای ۱۰۰,۰۰۰ تومان، <strong className="text-amber-600 dark:text-amber-400">۲۰٪ بونوس هدیه اعتباری</strong> به کیف پول شما اضافه می‌شود.
  </span>
  ) : (
  <span>

@@ -18,7 +18,7 @@ export function StoreFront() {
   const { id } = useParams<{ id: string }>();
   const { setIsWalletOpen } = useUIStore();
   const { settings } = useSettingsStore();
-  const { user } = useAuthStore();
+  const { user, checkAuth } = useAuthStore();
   const usePersianDigits = settings?.appearance?.persianNumerals ?? false;
 
   const [products, setProducts] = useState<any[]>([]);
@@ -40,6 +40,12 @@ export function StoreFront() {
   useEffect(() => {
     fetchProducts();
   }, []);
+
+  useEffect(() => {
+    if (paymentStatus === 'success') {
+      checkAuth();
+    }
+  }, [paymentStatus]);
 
   useEffect(() => {
     setPageSeo({
@@ -519,6 +525,10 @@ export function StoreFront() {
                         type="button"
                         onClick={(e) => {
                           e.stopPropagation();
+                          if (!user) {
+                            window.dispatchEvent(new CustomEvent('open-auth-modal'));
+                            return;
+                          }
                           setSelectedProduct(p);
                         }}
                         className="py-2.5 clay-btn-primary font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 shadow-sm hover:scale-[1.02] transition-transform"

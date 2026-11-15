@@ -95,10 +95,22 @@ export default function App() {
    setAuthModalOpen(true);
  }
 
+  const authToken = urlParams.get('auth_token');
+  if (authToken) {
+    localStorage.setItem('auth_token', authToken);
+    checkAuth();
+  }
+
   const paymentStatus = urlParams.get('payment');
   if (paymentStatus === 'success') {
     checkAuth();
-    window.history.replaceState({}, document.title, window.location.pathname);
+    setTimeout(() => {
+      const nextParams = new URLSearchParams(window.location.search);
+      nextParams.delete('auth_token');
+      const newQuery = nextParams.toString();
+      const newUrl = window.location.pathname + (newQuery ? `?${newQuery}` : '');
+      window.history.replaceState({}, document.title, newUrl);
+    }, 1500);
   }
 
  // Fetch public settings (ui_style theme) and apply to <html>

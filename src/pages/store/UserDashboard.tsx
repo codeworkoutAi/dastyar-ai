@@ -1183,21 +1183,21 @@ export const UserDashboard = () => {
                             <div>
                               <div className="flex items-center gap-2">
                                 <h4 className="font-black text-sm text-zinc-900 dark:text-white" style={{ fontFamily: "'Estedad', sans-serif" }}>
-                                  {model.name}
+                                  {model.isDefaultProfile ? model.name : (model.isCoding ? 'دستیار کدنویسی و تحلیل کد' : model.isVision ? 'دستیار تحلیل اسناد و بینایی' : 'دستیار گفتگوی هوشمند')}
                                 </h4>
                                 {model.isDefaultProfile && (
                                   <span className="clay-pill-thick text-[9px] px-2 py-0.5 text-blue-600 dark:text-cyan-400 font-extrabold">
-                                    دستیار اصلی
+                                    دستیار مصوب سیستم
                                   </span>
                                 )}
                               </div>
-                              <span className="text-[11px] text-zinc-500 dark:text-zinc-400 font-mono tracking-tight" dir="ltr">
-                                {model.id}
+                              <span className="text-[11px] text-zinc-500 dark:text-zinc-400 font-medium tracking-tight" dir="rtl">
+                                {model.isDefaultProfile ? 'کارت استاندارد دستیار' : (model.isFast ? 'موتور سبک و پرسرعت' : 'موتور پیشرفته و دقیق')}
                               </span>
                             </div>
                             
                             <span className="text-[10px] font-bold px-2 py-1 rounded-lg bg-black/5 dark:bg-white/5 text-zinc-600 dark:text-zinc-300">
-                              {model.provider}
+                              {model.isFast ? 'پردازش سریع' : 'استدلال پیشرفته'}
                             </span>
                           </div>
 

@@ -202,6 +202,7 @@ export function startTelegramBot() {
       SELECT p.*, COUNT(CASE WHEN l.status = 'available' THEN 1 END) as stock
       FROM products p 
       LEFT JOIN licenses l ON p.id = l.productId
+      WHERE p.category IS NULL OR (p.category != 'wallet_topup' AND p.category != 'internal')
       GROUP BY p.id
       ORDER BY p.id DESC
     `).all() as any[];
@@ -219,11 +220,11 @@ export function startTelegramBot() {
 
       const p = products[page];
       const priceFa = Number(p.price || 0).toLocaleString('fa-IR');
-      const isOutOfStock = p.category !== 'package' && (p.stock || 0) <= 0;
-      const stockText = p.category !== 'package'
-        ? (p.stock > 0 ? `${Number(p.stock).toLocaleString('fa-IR')} عدد موجود` : 'اتمام موجودی ❌')
-        : 'نامحدود ♾';
-      const catText = p.category === 'api' ? 'کلید API' : p.category === 'account' ? 'اکانت پرمیوم' : 'پکیج آموزشی';
+      const isOutOfStock = p.category !== 'package' && p.category !== 'plan' && (p.stock || 0) <= 0;
+      const stockText = (p.category === 'package' || p.category === 'plan')
+        ? 'نامحدود (تحویل آنی) ♾'
+        : (p.stock > 0 ? `${Number(p.stock).toLocaleString('fa-IR')} عدد موجود` : 'اتمام موجودی ❌');
+      const catText = p.category === 'api' ? 'کلید API' : p.category === 'account' ? 'اکانت پرمیوم' : p.category === 'plan' ? 'بسته اعتباری هوش مصنوعی' : 'پکیج آموزشی';
 
       const caption = `${RLM}🏪 <b>ویترین فروشگاه محصولات</b>\n\n` +
         `${RLM}📦 <b>${p.title}</b>\n` +
@@ -425,12 +426,12 @@ export function startTelegramBot() {
       if (!product) return ctx.answerCbQuery('محصول پیدا نشد!');
 
       const priceFa = Number(product.price || 0).toLocaleString('fa-IR');
-      const isOutOfStock = product.category !== 'package' && (product.stock || 0) <= 0;
-      const stockText = product.category !== 'package'
-        ? (product.stock > 0 ? `${product.stock.toLocaleString('fa-IR')} عدد موجود` : 'ناموجود ❌')
-        : 'نامحدود (پکیج)';
+      const isOutOfStock = product.category !== 'package' && product.category !== 'plan' && (product.stock || 0) <= 0;
+      const stockText = (product.category === 'package' || product.category === 'plan')
+        ? 'نامحدود (تحویل آنی)'
+        : (product.stock > 0 ? `${product.stock.toLocaleString('fa-IR')} عدد موجود` : 'ناموجود ❌');
 
-      const categoryName = product.category === 'api' ? 'کلید API' : product.category === 'account' ? 'اکانت پرمیوم' : 'پکیج آموزشی';
+      const categoryName = product.category === 'api' ? 'کلید API' : product.category === 'account' ? 'اکانت پرمیوم' : product.category === 'plan' ? 'بسته اعتباری هوش مصنوعی' : 'پکیج آموزشی';
 
       const caption = `${RLM}📦 <b>${product.title}</b>\n` +
         `${RLM}🏷 <b>دسته:</b> ${categoryName}\n\n` +
@@ -498,7 +499,7 @@ export function startTelegramBot() {
       `).get(productId) as any;
 
       if (!product) return ctx.answerCbQuery('محصول پیدا نشد!');
-      if (product.category !== 'package' && product.stock <= 0) {
+      if (product.category !== 'package' && product.category !== 'plan' && product.stock <= 0) {
         return ctx.answerCbQuery('موجودی محصول به اتمام رسیده است.', { show_alert: true });
       }
 
@@ -523,6 +524,29 @@ export function startTelegramBot() {
         );
       }
 
+      // Check for variations (e.g. 1-month, 3-month)
+      let variations: any[] = [];
+      if (product.variations) {
+        try {
+          const parsed = JSON.parse(product.variations);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            variations = parsed;
+          }
+        } catch (_) {}
+      }
+
+      if (variations.length > 1) {
+        const varButtons = variations.map((v: any, idx: number) => {
+          const vPrice = Number(v.price || 0).toLocaleString('fa-IR');
+          return [Markup.button.callback(`📦 ${v.title} — ${vPrice} تومان`, `buyvar_${product.id}_${idx}`)];
+        });
+        varButtons.push([Markup.button.callback('🔙 بازگشت به محصول', `show_prod_${product.id}`)]);
+        return ctx.reply(`لطفاً دوره یا پلن مورد نظر خود را برای **${product.title}** انتخاب فرمایید:`, {
+          parse_mode: 'Markdown',
+          reply_markup: { inline_keyboard: varButtons }
+        });
+      }
+
       await createOrderAndSendInvoice(ctx, user, product);
     } catch (err) {
       console.error('[Telegram] Buy error:', err);
@@ -530,14 +554,52 @@ export function startTelegramBot() {
     }
   });
 
-  async function createOrderAndSendInvoice(ctx: any, user: any, product: any) {
+  // Handler for purchasing a specific product variation
+  bot.action(/buyvar_(\d+)_(\d+)/, async (ctx) => {
+    const productId = ctx.match[1];
+    const varIdx = parseInt(ctx.match[2], 10);
+    const tgId = ctx.from?.id.toString();
+
+    if (!tgId) return ctx.answerCbQuery('خطا در شناسایی کاربر!');
+
+    try {
+      const user = db.prepare('SELECT * FROM users WHERE telegramId = ?').get(tgId) as any;
+      if (!user) return ctx.answerCbQuery('لطفا ابتدا ربات را /start کنید.');
+
+      const product = db.prepare('SELECT * FROM products WHERE id = ?').get(productId) as any;
+      if (!product) return ctx.answerCbQuery('محصول پیدا نشد!');
+
+      let chosenPrice = product.price;
+      let chosenPeriod: string | null = null;
+
+      if (product.variations) {
+        try {
+          const parsed = JSON.parse(product.variations);
+          if (Array.isArray(parsed) && parsed[varIdx]) {
+            chosenPrice = parsed[varIdx].price;
+            chosenPeriod = parsed[varIdx].title;
+          }
+        } catch (_) {}
+      }
+
+      await createOrderAndSendInvoice(ctx, user, product, chosenPrice, chosenPeriod);
+      ctx.answerCbQuery();
+    } catch (err) {
+      console.error('[Telegram] Buy variation error:', err);
+      ctx.answerCbQuery('خطا در صدور فاکتور دوره انتخابی!');
+    }
+  });
+
+  async function createOrderAndSendInvoice(ctx: any, user: any, product: any, finalPrice?: number, selectedPeriod?: string | null) {
     // Create Order
+    const priceToCharge = typeof finalPrice === 'number' ? finalPrice : (product.price || 0);
+    const periodToSet = selectedPeriod || null;
     const orderId = 'ORD-' + crypto.randomUUID().split('-')[0].toUpperCase();
     const insertStmt = db.prepare(`
-      INSERT INTO orders (id, userId, productId, amount, paymentStatus) 
-      VALUES (?, ?, ?, ?, 'pending')
+      INSERT INTO orders (id, userId, productId, amount, paymentStatus, selectedPeriod) 
+      VALUES (?, ?, ?, ?, 'pending', ?)
     `);
-    insertStmt.run(orderId, user.id, product.id, product.price);
+    insertStmt.run(orderId, user.id, product.id, priceToCharge, periodToSet);
     syncDatabase();
 
     // Determine environment URL (Custom Domain, Render, Production, or Localhost)
@@ -549,9 +611,11 @@ export function startTelegramBot() {
       !rawUrl.includes('127.0.0.1')
     );
 
-    const priceFa = Number(product.price || 0).toLocaleString('fa-IR');
+    const priceFa = Number(priceToCharge || 0).toLocaleString('fa-IR');
+    const periodNotice = periodToSet ? `${RLM}⏱ **دوره انتخابی:** ${periodToSet}\n` : '';
     const invoiceText = `${RLM}🧾 **فاکتور خرید محصول**\n\n` +
       `${RLM}📦 **محصول:** ${product.title}\n` +
+      periodNotice +
       `${RLM}🔢 **شماره سفارش:** \`${orderId}\`\n` +
       `${RLM}💰 **مبلغ قابل پرداخت:** ${priceFa} تومان\n\n` +
       (isOnlineUrl
@@ -744,6 +808,15 @@ export function startTelegramBot() {
     if (pendingOrderId) {
       if (ctx.message.photo || ctx.message.document) {
         await deletePendingReceipt(tgId);
+
+        // Update order status and method in DB so it reflects in Admin Panel
+        try {
+          db.prepare("UPDATE orders SET paymentMethod = 'card', trackingNumber = ? WHERE id = ?")
+            .run('فیش تلگرام', pendingOrderId);
+          syncDatabase();
+        } catch (dbErr) {
+          console.error('[Telegram] Error updating order for receipt:', dbErr);
+        }
 
         if (ADMIN_ID) {
           const order = db.prepare('SELECT o.*, p.title as productTitle, p.price as productPrice FROM orders o LEFT JOIN products p ON o.productId = p.id WHERE o.id = ?').get(pendingOrderId) as any;
