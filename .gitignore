@@ -87,3 +87,5 @@ capture/
 inbox/
 investigation.*/
 *.jsonl
+
+*.zip
