@@ -11,6 +11,8 @@ import { useAuthStore } from '../store/authStore';
 import { PromoCodesManager } from './PromoCodesManager';
 import { toPersianDigits } from '../lib/persianUtils';
 import { formatTehranDate, formatTehranDateTime, formatTehranTime } from '../lib/dateUtils';
+import { AdminToast } from './admin/AdminToast';
+import { AdminConfirmModal } from './admin/AdminConfirmModal';
 
 export const AdminFinanceTab: React.FC = () => {
  const { token } = useAuthStore();
@@ -24,6 +26,8 @@ export const AdminFinanceTab: React.FC = () => {
  const [loading, setLoading] = useState(false);
  const [actionLoading, setActionLoading] = useState(false);
  const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+ const [purchaseToDelete, setPurchaseToDelete] = useState<string | null>(null);
+ const [isDeletingPurchase, setIsDeletingPurchase] = useState(false);
  const [searchQuery, setSearchQuery] = useState('');
  const [txTypeFilter, setTxTypeFilter] = useState('all');
  const [dateFilter, setDateFilter] = useState('all');
@@ -202,18 +206,31 @@ export const AdminFinanceTab: React.FC = () => {
  }
  };
 
- const handleDeletePurchase = async (id: string) => {
- if (!confirm('آیا از حذف این رکورد خرید مطمئن هستید؟')) return;
- try {
- const res = await fetch(`/api/admin/purchases/${id}`, {
- method: 'DELETE',
- headers: { Authorization: `Bearer ${token}` }
- });
- if (res.ok) {
- setFeedback({ type: 'success', text: 'رکورد با موفقیت حذف شد.' });
- fetchData();
- }
- } catch (err) {}
+ const handleDeletePurchase = (id: string) => {
+   setPurchaseToDelete(id);
+ };
+
+ const executeDeletePurchase = async () => {
+   if (!purchaseToDelete) return;
+   try {
+     setIsDeletingPurchase(true);
+     const res = await fetch(`/api/admin/purchases/${purchaseToDelete}`, {
+       method: 'DELETE',
+       headers: { Authorization: `Bearer ${token}` }
+     });
+     if (res.ok) {
+       setFeedback({ type: 'success', text: 'رکورد خرید با موفقیت حذف شد.' });
+       setPurchaseToDelete(null);
+       fetchData();
+     } else {
+       const d = await res.json().catch(() => ({}));
+       setFeedback({ type: 'error', text: d.error || 'خطا در حذف رکورد' });
+     }
+   } catch (err: any) {
+     setFeedback({ type: 'error', text: err.message || 'خطا در حذف رکورد' });
+   } finally {
+     setIsDeletingPurchase(false);
+   }
  };
 
  const currentUnitRate = (parseFloat(purchaseAmountUsd) > 0 && parseInt(purchaseCostToman, 10) > 0)
@@ -226,10 +243,10 @@ export const AdminFinanceTab: React.FC = () => {
  const profitMarginPercent = (hasPurchases && avgBuyRate > 0) ? Math.round(((currentSellingRateNum - avgBuyRate) / avgBuyRate) * 100) : 0;
 
  const exportToCSV = () => {
- if (!transactions || transactions.length === 0) {
- alert('داده‌ای برای خروجی گرفتن وجود ندارد.');
- return;
- }
+   if (!transactions || transactions.length === 0) {
+     setFeedback({ type: 'error', text: 'داده‌ای برای خروجی گرفتن وجود ندارد.' });
+     return;
+   }
 
  const headers = ['کد کاربری', 'نام کاربر', 'ایمیل/تلفن', 'مدل/بخش', 'نوع تراکنش', 'مقدار توکن', 'مبلغ (تومان)', 'مانده پس از تراکنش', 'تاریخ'];
  const rows = transactions.map((tx: any) => {
@@ -258,10 +275,10 @@ export const AdminFinanceTab: React.FC = () => {
  };
 
  const exportToPDF = () => {
- if (!transactions || transactions.length === 0) {
- alert('داده‌ای برای خروجی گرفتن وجود ندارد.');
- return;
- }
+   if (!transactions || transactions.length === 0) {
+     setFeedback({ type: 'error', text: 'داده‌ای برای خروجی گرفتن وجود ندارد.' });
+     return;
+   }
 
  const rowsHtml = transactions.map((tx: any) => {
  const isPositive = tx.amount > 0;
@@ -336,26 +353,35 @@ export const AdminFinanceTab: React.FC = () => {
  document.body.removeChild(iframe);
  }, 1000);
  }, 500);
- } else {
- document.body.removeChild(iframe);
- alert('خطا در ایجاد خروجی چاپ.');
- }
+  } else {
+    document.body.removeChild(iframe);
+    setFeedback({ type: 'error', text: 'خطا در ایجاد خروجی چاپ.' });
+  }
  };
 
  return (
  <div className="space-y-6" dir="rtl">
- {/* Feedback notice */}
- {feedback && (
- <div className={`fixed top-6 left-1/2 -translate-x-1/2 z-[9999] shadow-lg min-w-[300px] p-4 rounded-2xl flex items-center justify-between text-xs font-bold animate-fadeIn ${
- feedback.type === 'success' ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800' : 'bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-800'
- }`}>
- <div className="flex items-center gap-2">
- {feedback.type === 'success' ? <CheckCircle2 className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
- <span>{feedback.text}</span>
- </div>
- <button onClick={() => setFeedback(null)} className="text-zinc-400 hover:text-zinc-600">✕</button>
- </div>
- )}
+   {/* Toast Notification */}
+   {feedback && (
+     <AdminToast 
+       message={feedback.text} 
+       type={feedback.type} 
+       onClose={() => setFeedback(null)} 
+     />
+   )}
+
+   {/* Confirmation Modal for Purchase Deletion */}
+   <AdminConfirmModal
+     isOpen={Boolean(purchaseToDelete)}
+     title="حذف فاکتور خرید دلاری"
+     description="آیا از حذف این رکورد خرید مطمئن هستید؟ این عملیات غیرقابل بازگشت است."
+     confirmLabel="بله، حذف کن"
+     cancelLabel="انصراف"
+     isDanger={true}
+     loading={isDeletingPurchase}
+     onConfirm={executeDeletePurchase}
+     onClose={() => setPurchaseToDelete(null)}
+   />
 
  {/* Live Provider API Balances Widget */}
  {liveBalances && liveBalances.length > 0 && (

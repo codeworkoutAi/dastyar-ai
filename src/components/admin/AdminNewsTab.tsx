@@ -4,8 +4,10 @@ import {
   X, Image as ImageIcon, Sparkles, ExternalLink, Search, Clock, FileText, Wand2, Lightbulb, BookOpen
 } from 'lucide-react';
 import { AddSquareOutlineIcon, BoxLinearIcon } from '@solar-icons/react';
-import { useAuthStore } from '../../store/authStore';
 import { formatTehranDate } from '../../lib/dateUtils';
+import { adminFetch } from '../../lib/adminApi';
+import { AdminToast } from './AdminToast';
+import { AdminConfirmModal } from './AdminConfirmModal';
 
 interface NewsItem {
   id: number;
@@ -21,13 +23,15 @@ interface NewsItem {
 }
 
 export const AdminNewsTab: React.FC = () => {
-  const { token } = useAuthStore();
-
   const [news, setNews] = useState<NewsItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [triggerLoading, setTriggerLoading] = useState(false);
-  const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'warning' | 'error' } | null>(null);
+
+  // Article deletion confirmation modal
+  const [articleToDelete, setArticleToDelete] = useState<{ id: number; title: string } | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Compose / Edit state
   const [isAdding, setIsAdding] = useState(false);
@@ -54,21 +58,19 @@ export const AdminNewsTab: React.FC = () => {
     'برنامه‌ریزی هفتگی و افزایش بهره‌وری فردی'
   ];
 
+  const showToast = (message: string, type: 'success' | 'warning' | 'error' = 'success') => {
+    setToast({ message, type });
+  };
+
   const handleGenerateGuide = async (topicToUse?: string) => {
     const topic = topicToUse !== undefined ? topicToUse : guideTopic;
     try {
       setGuideLoading(true);
       setIsAdding(true);
-      const res = await fetch('/api/news/admin/generate-guide', {
+      const data = await adminFetch<any>('/api/news/admin/generate-guide', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
-        },
         body: JSON.stringify({ topic: topic.trim() || undefined })
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'خطا در تولید مقاله');
       
       const g = data.guide;
       setPostType('guide');
@@ -79,9 +81,9 @@ export const AdminNewsTab: React.FC = () => {
       if (!generatedTags.includes('مقالات آموزشی')) generatedTags.unshift('مقالات آموزشی');
       setTags(generatedTags.join(', '));
       if (g.image) setImage(g.image);
-      showFeedback(`مقاله آموزشی «${g.title}» با موفقیت تولید و در بخش مقالات آموزشی درج شد. می‌توانید بررسی و منتشر کنید.`, 'success');
+      showToast(`مقاله آموزشی «${g.title}» با موفقیت تولید و در بخش مقالات آموزشی درج شد. می‌توانید بررسی و منتشر کنید.`, 'success');
     } catch (err: any) {
-      showFeedback(err.message || 'خطا در تولید مقاله هوشمند', 'error');
+      showToast(err.message || 'خطا در تولید مقاله هوشمند', 'error');
     } finally {
       setGuideLoading(false);
     }
@@ -91,11 +93,6 @@ export const AdminNewsTab: React.FC = () => {
     fetchNews();
   }, []);
 
-  const showFeedback = (text: string, type: 'success' | 'error' = 'success') => {
-    setFeedback({ type, text });
-    setTimeout(() => setFeedback(null), 4500);
-  };
-
   const fetchNews = async () => {
     try {
       setLoading(true);
@@ -104,7 +101,7 @@ export const AdminNewsTab: React.FC = () => {
       const data = await res.json();
       setNews(data);
     } catch (err: any) {
-      showFeedback(err.message || 'خطای سرور', 'error');
+      showToast(err.message || 'خطای سرور', 'error');
     } finally {
       setLoading(false);
     }
@@ -113,17 +110,11 @@ export const AdminNewsTab: React.FC = () => {
   const handleTriggerCron = async () => {
     try {
       setTriggerLoading(true);
-      const res = await fetch('/api/news/admin/trigger', {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'خطا در اجرای فرآیند اخبار');
-
-      showFeedback('فرآیند استخراج اخبار از RSS و بازنویسی با موفقیت اجرا شد.');
+      await adminFetch('/api/news/admin/trigger', { method: 'POST' });
+      showToast('فرآیند استخراج اخبار از RSS و بازنویسی با موفقیت اجرا شد.', 'success');
       await fetchNews();
     } catch (err: any) {
-      showFeedback(err.message, 'error');
+      showToast(err.message || 'خطا در اجرای فرآیند اخبار', 'error');
     } finally {
       setTriggerLoading(false);
     }
@@ -134,7 +125,7 @@ export const AdminNewsTab: React.FC = () => {
     if (!file) return;
 
     if (file.size > 200 * 1024) {
-      showFeedback('حجم تصویر نباید بیشتر از ۲۰۰ کیلوبایت باشد. ترجیحاً از فرمت بهینه WebP استفاده کنید.', 'error');
+      showToast('حجم تصویر نباید بیشتر از ۲۰۰ کیلوبایت باشد. ترجیحاً از فرمت بهینه WebP استفاده کنید.', 'warning');
       return;
     }
 
@@ -178,7 +169,7 @@ export const AdminNewsTab: React.FC = () => {
   const handleSaveArticle = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim() || !content.trim()) {
-      showFeedback('عنوان و متن مقاله اجباری است.', 'error');
+      showToast('عنوان و متن مقاله اجباری است.', 'warning');
       return;
     }
 
@@ -187,12 +178,8 @@ export const AdminNewsTab: React.FC = () => {
       const url = editingItem ? `/api/news/${editingItem.id}` : '/api/news';
       const method = editingItem ? 'PUT' : 'POST';
 
-      const res = await fetch(url, {
+      await adminFetch(url, {
         method,
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
-        },
         body: JSON.stringify({
           title: title.trim(),
           content: content.trim(),
@@ -204,37 +191,28 @@ export const AdminNewsTab: React.FC = () => {
         })
       });
 
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'خطا در ذخیره مطلب');
-
-      showFeedback(editingItem ? 'مطلب با موفقیت ویرایش شد.' : 'مطلب جدید با موفقیت منتشر شد.');
+      showToast(editingItem ? 'مطلب با موفقیت ویرایش شد.' : 'مطلب جدید با موفقیت منتشر شد.', 'success');
       resetForm();
       fetchNews();
     } catch (err: any) {
-      showFeedback(err.message, 'error');
+      showToast(err.message || 'خطا در ذخیره مطلب', 'error');
     } finally {
       setSaveLoading(false);
     }
   };
 
-  const handleDeleteArticle = async (id: number) => {
-    if (!window.confirm('آیا از حذف این مقاله مطمئن هستید؟')) return;
-
+  const executeDeleteArticle = async () => {
+    if (!articleToDelete) return;
     try {
-      setLoading(true);
-      const res = await fetch(`/api/news/${id}`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (!res.ok) {
-        const d = await res.json();
-        throw new Error(d.error || 'خطا در حذف خبر');
-      }
-      showFeedback('مطلب با موفقیت حذف شد.');
+      setIsDeleting(true);
+      await adminFetch(`/api/news/${articleToDelete.id}`, { method: 'DELETE' });
+      showToast('مطلب با موفقیت حذف شد.', 'success');
+      setArticleToDelete(null);
       fetchNews();
     } catch (err: any) {
-      showFeedback(err.message, 'error');
-      setLoading(false);
+      showToast(err.message || 'خطا در حذف خبر', 'error');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -252,22 +230,27 @@ export const AdminNewsTab: React.FC = () => {
 
   return (
     <div className="flex flex-col gap-6 animate-fadeIn">
-      {/* Toast Feedback */}
-      {feedback && (
-        <div className={`fixed top-6 left-1/2 -translate-x-1/2 z-[9999] shadow-xl min-w-[320px] p-4 rounded-2xl flex items-center justify-between gap-3 text-xs sm:text-sm font-black animate-slideUpScale ${
-          feedback.type === 'success' 
-            ? 'bg-emerald-500/15 text-emerald-500 border border-emerald-500/30' 
-            : 'bg-red-500/15 text-red-500 border border-red-500/30'
-        }`}>
-          <div className="flex items-center gap-2">
-            {feedback.type === 'success' ? <CheckCircle2 size={18} /> : <AlertCircle size={18} />}
-            <span>{feedback.text}</span>
-          </div>
-          <button onClick={() => setFeedback(null)} className="p-1 hover:opacity-75">
-            <X size={15} />
-          </button>
-        </div>
+      {/* Toast Notification */}
+      {toast && (
+        <AdminToast 
+          message={toast.message} 
+          type={toast.type} 
+          onClose={() => setToast(null)} 
+        />
       )}
+
+      {/* Confirmation Modal for Article Deletion */}
+      <AdminConfirmModal
+        isOpen={Boolean(articleToDelete)}
+        title="حذف مقاله"
+        description={`آیا از حذف مقاله «${articleToDelete?.title}» مطمئن هستید؟ این عملیات غیرقابل بازگشت است.`}
+        confirmLabel="بله، حذف کن"
+        cancelLabel="انصراف"
+        isDanger={true}
+        loading={isDeleting}
+        onConfirm={executeDeleteArticle}
+        onClose={() => setArticleToDelete(null)}
+      />
 
       {/* Header and Actions */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -623,7 +606,7 @@ export const AdminNewsTab: React.FC = () => {
                 </button>
                 <button
                   type="button"
-                  onClick={() => handleDeleteArticle(item.id)}
+                  onClick={() => setArticleToDelete({ id: item.id, title: item.title })}
                   className="p-1.5 text-[var(--text-muted)] hover:text-red-500 rounded-lg transition-colors"
                   title="حذف مقاله"
                 >

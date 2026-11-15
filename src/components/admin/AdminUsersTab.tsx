@@ -2,13 +2,16 @@ import React, { useState, useEffect } from 'react';
 import { 
   Search, RefreshCw, User, Mail, Phone, Trash2, 
   AlertCircle, CheckCircle2, X, Wallet, Shield, ShieldAlert,
-  ArrowUpRight, ArrowDownLeft, Lock, Plus
+  ArrowUpRight, ArrowDownLeft, Lock, Plus, ChevronLeft, ChevronRight
 } from 'lucide-react';
 import { BoxLinearIcon } from '@solar-icons/react';
 import { useAuthStore } from '../../store/authStore';
 import { useSettingsStore } from '../../store/settingsStore';
 import { toPersianDigits } from '../../lib/persianUtils';
 import { formatTehranDate } from '../../lib/dateUtils';
+import { adminFetch } from '../../lib/adminApi';
+import { AdminToast } from './AdminToast';
+import { AdminConfirmModal } from './AdminConfirmModal';
 
 interface UserItem {
   id: number;
@@ -23,8 +26,10 @@ interface UserItem {
   createdAt: string;
 }
 
+const USERS_PAGE_SIZE = 25;
+
 export const AdminUsersTab: React.FC = () => {
-  const { token, user: currentUser } = useAuthStore();
+  const { user: currentUser } = useAuthStore();
   const { settings } = useSettingsStore();
   const usePersianDigits = settings?.appearance?.persianNumerals ?? false;
 
@@ -32,8 +37,17 @@ export const AdminUsersTab: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState<'all' | 'user' | 'admin'>('all');
+  const [usersPage, setUsersPage] = useState<number>(1);
 
-  const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'warning' | 'error' } | null>(null);
+
+  // Delete / Archive confirmation modal
+  const [confirmTarget, setConfirmTarget] = useState<{
+    userId: number;
+    userName: string;
+    mode: 'delete' | 'archive';
+  } | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Wallet adjustment modal
   const [adjustingUser, setAdjustingUser] = useState<UserItem | null>(null);
@@ -46,50 +60,44 @@ export const AdminUsersTab: React.FC = () => {
     fetchUsers();
   }, []);
 
-  const showFeedback = (text: string, type: 'success' | 'error' = 'success') => {
-    setFeedback({ type, text });
-    setTimeout(() => setFeedback(null), 4500);
+  // Reset pagination on filter changes
+  useEffect(() => {
+    setUsersPage(1);
+  }, [searchQuery, roleFilter]);
+
+  const showToast = (message: string, type: 'success' | 'warning' | 'error' = 'success') => {
+    setToast({ message, type });
   };
 
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      const res = await fetch('/api/admin/users', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (!res.ok) throw new Error('خطا در دریافت لیست کاربران');
-      const data = await res.json();
+      const data = await adminFetch<UserItem[]>('/api/admin/users');
       setUsers(data);
     } catch (err: any) {
-      showFeedback(err.message || 'خطای سرور در بارگذاری کاربران', 'error');
+      showToast(err.message || 'خطای سرور در بارگذاری کاربران', 'error');
     } finally {
       setLoading(false);
     }
   };
 
-  const removeUser = async (userId: number, mode: 'delete' | 'archive') => {
+  const executeRemoveUser = async () => {
+    if (!confirmTarget) return;
+    const { userId, mode } = confirmTarget;
     const isDelete = mode === 'delete';
-    const message = isDelete
-      ? 'این کاربر و تمام اطلاعات او (سفارش‌ها، تراکنش‌ها، سهمیه‌ها و گفتگوها) به طور کامل حذف خواهد شد. ادامه می‌دهید؟'
-      : 'حساب کاربر بایگانی می‌شود: دسترسی ورود بسته شده اما سوابق مالی و تراکنش‌ها حفظ می‌شود. ادامه می‌دهید؟';
-
-    if (!window.confirm(message)) return;
 
     try {
-      setLoading(true);
+      setIsDeleting(true);
       const url = isDelete ? `/api/admin/users/${userId}` : `/api/admin/users/${userId}?archive=true`;
-      const res = await fetch(url, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data.error || 'خطا در حذف/بایگانی کاربر');
+      await adminFetch(url, { method: 'DELETE' });
 
-      showFeedback(isDelete ? 'کاربر با موفقیت حذف قطعی شد.' : 'کاربر با موفقیت بایگانی شد.');
+      showToast(isDelete ? 'کاربر با موفقیت حذف قطعی شد.' : 'کاربر با موفقیت بایگانی شد.', 'success');
+      setConfirmTarget(null);
       fetchUsers();
     } catch (err: any) {
-      showFeedback(err.message, 'error');
-      setLoading(false);
+      showToast(err.message || 'خطا در عملیات کاربر', 'error');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -98,33 +106,27 @@ export const AdminUsersTab: React.FC = () => {
     if (!adjustingUser) return;
     const numAmount = parseInt(adjustAmount.replace(/\D/g, ''), 10);
     if (isNaN(numAmount) || numAmount <= 0) {
-      showFeedback('مبلغ وارد شده نامعتبر است.', 'error');
+      showToast('مبلغ وارد شده نامعتبر است.', 'warning');
       return;
     }
 
     try {
       setAdjustLoading(true);
-      const res = await fetch(`/api/admin/users/${adjustingUser.id}/wallet`, {
+      await adminFetch(`/api/admin/users/${adjustingUser.id}/wallet`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
-        },
         body: JSON.stringify({
           amount: adjustType === 'credit' ? numAmount : -numAmount,
           description: adjustReason.trim() || (adjustType === 'credit' ? 'شارژ دستی توسط مدیریت' : 'کسر دستی توسط مدیریت')
         })
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'خطا در تغییر موجودی');
 
-      showFeedback(`موجودی کاربر با موفقیت ${adjustType === 'credit' ? 'افزایش' : 'کاهش'} یافت.`);
+      showToast(`موجودی کاربر با موفقیت ${adjustType === 'credit' ? 'افزایش' : 'کاهش'} یافت.`, 'success');
       setAdjustingUser(null);
       setAdjustAmount('');
       setAdjustReason('');
       fetchUsers();
     } catch (err: any) {
-      showFeedback(err.message, 'error');
+      showToast(err.message || 'خطا در ویرایش موجودی', 'error');
     } finally {
       setAdjustLoading(false);
     }
@@ -145,24 +147,37 @@ export const AdminUsersTab: React.FC = () => {
     return true;
   });
 
+  const totalPages = Math.max(1, Math.ceil(filteredUsers.length / USERS_PAGE_SIZE));
+  const currentPage = Math.min(usersPage, totalPages);
+  const paginatedUsers = filteredUsers.slice((currentPage - 1) * USERS_PAGE_SIZE, currentPage * USERS_PAGE_SIZE);
+
   return (
     <div className="flex flex-col gap-6 animate-fadeIn">
-      {/* Toast Feedback */}
-      {feedback && (
-        <div className={`fixed top-6 left-1/2 -translate-x-1/2 z-[9999] shadow-xl min-w-[320px] p-4 rounded-2xl flex items-center justify-between gap-3 text-xs sm:text-sm font-black animate-slideUpScale ${
-          feedback.type === 'success' 
-            ? 'bg-emerald-500/15 text-emerald-500 border border-emerald-500/30' 
-            : 'bg-red-500/15 text-red-500 border border-red-500/30'
-        }`}>
-          <div className="flex items-center gap-2">
-            {feedback.type === 'success' ? <CheckCircle2 size={18} /> : <AlertCircle size={18} />}
-            <span>{feedback.text}</span>
-          </div>
-          <button onClick={() => setFeedback(null)} className="p-1 hover:opacity-75">
-            <X size={15} />
-          </button>
-        </div>
+      {/* Toast Notification */}
+      {toast && (
+        <AdminToast 
+          message={toast.message} 
+          type={toast.type} 
+          onClose={() => setToast(null)} 
+        />
       )}
+
+      {/* Confirmation Modal for Delete or Archive */}
+      <AdminConfirmModal
+        isOpen={Boolean(confirmTarget)}
+        title={confirmTarget?.mode === 'delete' ? 'حذف قطعی حساب کاربر' : 'بایگانی حساب کاربر'}
+        description={
+          confirmTarget?.mode === 'delete'
+            ? `آیا از حذف کامل حساب کاربر «${confirmTarget?.userName}» اطمینان دارید؟ تمام سفارش‌ها، تراکنش‌ها، سهمیه‌ها و پیام‌های گفتگو به طور قطعی پاک خواهند شد.`
+            : `آیا مایلید حساب کاربر «${confirmTarget?.userName}» را بایگانی کنید؟ دسترسی ورود مسدود خواهد شد اما سوابق مالی و تراکنش‌ها حفظ می‌گردند.`
+        }
+        confirmLabel={confirmTarget?.mode === 'delete' ? 'بله، حذف قطعی' : 'بایگانی حساب'}
+        cancelLabel="انصراف"
+        isDanger={confirmTarget?.mode === 'delete'}
+        loading={isDeleting}
+        onConfirm={executeRemoveUser}
+        onClose={() => setConfirmTarget(null)}
+      />
 
       {/* Header and Quick Stats */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -190,41 +205,41 @@ export const AdminUsersTab: React.FC = () => {
       {/* Filters and Search Bar */}
       <div className="p-4 rounded-2xl clay-card flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
         {/* Role Filters */}
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
           <button
             onClick={() => setRoleFilter('all')}
-            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
               roleFilter === 'all' ? 'clay-btn-primary' : 'clay-btn'
             }`}
           >
-            همه کاربران ({users.length})
+            همه کاربران ({usePersianDigits ? toPersianDigits(users.length) : users.length})
           </button>
           <button
             onClick={() => setRoleFilter('user')}
-            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
               roleFilter === 'user' ? 'clay-btn-primary' : 'clay-btn'
             }`}
           >
-            کاربران عادی ({users.filter(u => u.role === 'user').length})
+            کاربران عادی ({usePersianDigits ? toPersianDigits(users.filter(u => u.role === 'user').length) : users.filter(u => u.role === 'user').length})
           </button>
           <button
             onClick={() => setRoleFilter('admin')}
-            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
               roleFilter === 'admin' ? 'clay-btn-primary' : 'clay-btn'
             }`}
           >
-            مدیران ({users.filter(u => u.role === 'admin').length})
+            مدیران ({usePersianDigits ? toPersianDigits(users.filter(u => u.role === 'admin').length) : users.filter(u => u.role === 'admin').length})
           </button>
         </div>
 
         {/* Search */}
-        <div className="relative min-w-[260px]">
+        <div className="relative min-w-[240px]">
           <Search className="w-4 h-4 absolute right-3.5 top-1/2 -translate-y-1/2 text-[var(--text-dim)]" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="جستجو (نام، ایمیل، تلفن، شناسه، تلگرام)..."
+            placeholder="جستجو بر اساس نام، ایمیل، موبایل یا شناسه..."
             className="w-full pr-10 pl-4 py-2 rounded-xl clay-surface text-xs outline-none transition-all placeholder:text-[var(--text-dim)]"
           />
           {searchQuery && (
@@ -242,7 +257,7 @@ export const AdminUsersTab: React.FC = () => {
       {loading ? (
         <div className="flex flex-col items-center justify-center h-52 clay-subcard rounded-2xl">
           <div className="w-8 h-8 border-2 border-[var(--color-accent-primary)] border-t-transparent rounded-full animate-spin mb-3" />
-          <span className="text-xs text-[var(--text-muted)] font-bold">در حال بارگذاری کاربران...</span>
+          <span className="text-xs text-[var(--text-muted)] font-bold">در حال دریافت اطلاعات کاربران...</span>
         </div>
       ) : filteredUsers.length === 0 ? (
         <div className="flex flex-col items-center justify-center h-52 gap-3 clay-card rounded-2xl opacity-60">
@@ -250,152 +265,183 @@ export const AdminUsersTab: React.FC = () => {
           <span className="text-sm font-bold text-[var(--text-main)]">کاربری با این مشخصات یافت نشد.</span>
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-2xl clay-card">
-          <table className="w-full text-sm text-right">
-            <thead>
-              <tr className="border-b border-[var(--card-border)] bg-[var(--card-bg)] text-xs font-black text-[var(--text-muted)]">
-                <th className="px-4 py-3.5">شناسه</th>
-                <th className="px-4 py-3.5">نام / هویت</th>
-                <th className="px-4 py-3.5">اطلاعات تماس</th>
-                <th className="px-4 py-3.5">ربات تلگرام</th>
-                <th className="px-4 py-3.5">موجودی کیف پول</th>
-                <th className="px-4 py-3.5">نقش</th>
-                <th className="px-4 py-3.5">تاریخ عضویت</th>
-                <th className="px-4 py-3.5 text-center">عملیات</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[var(--card-border)]">
-              {filteredUsers.map((u) => {
-                const isMe = u.id === currentUser?.id;
-                const isAdmin = u.role === 'admin';
+        <div className="space-y-4">
+          <div className="overflow-x-auto rounded-2xl clay-card">
+            <table className="w-full text-sm text-right">
+              <thead>
+                <tr className="border-b border-[var(--card-border)] bg-[var(--card-bg)] text-xs font-black text-[var(--text-muted)]">
+                  <th className="px-4 py-3.5">کاربر</th>
+                  <th className="px-4 py-3.5">اطلاعات تماس</th>
+                  <th className="px-4 py-3.5">موجودی کیف پول</th>
+                  <th className="px-4 py-3.5">نقش</th>
+                  <th className="px-4 py-3.5">تاریخ عضویت</th>
+                  <th className="px-4 py-3.5 text-center">عملیات</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[var(--card-border)]">
+                {paginatedUsers.map((u) => {
+                  const isAdmin = u.role === 'admin';
+                  const isMe = currentUser?.id === u.id;
+                  const balance = u.walletBalance ?? 0;
 
-                return (
-                  <tr key={u.id} className="hover:bg-[var(--color-input-bg)]/50 transition-colors">
-                    {/* ID */}
-                    <td className="px-4 py-3.5">
-                      <span className="font-mono text-xs font-black text-[var(--text-dim)]">
-                        UC-{10000 + u.id}
-                      </span>
-                    </td>
-
-                    {/* Name */}
-                    <td className="px-4 py-3.5">
-                      <div className="flex items-center gap-2">
-                        <span className="font-bold text-xs text-[var(--text-main)]">{u.name || 'کاربر بدون نام'}</span>
-                        {isMe && (
-                          <span className="text-[10px] font-bold px-1.5 py-0.2 rounded-md bg-blue-500/10 text-blue-500 border border-blue-500/20">
-                            حساب شما
-                          </span>
-                        )}
-                      </div>
-                    </td>
-
-                    {/* Contact */}
-                    <td className="px-4 py-3.5">
-                      <div className="flex flex-col gap-0.5 text-xs text-[var(--text-muted)]">
-                        {u.phone && (
-                          <div className="flex items-center gap-1 font-mono text-[11px]" dir="ltr">
-                            <Phone size={12} className="text-[var(--text-dim)]" />
-                            <span>{u.phone}</span>
+                  return (
+                    <tr
+                      key={u.id}
+                      className="hover:bg-[var(--color-input-bg)]/50 transition-colors"
+                    >
+                      {/* Name / ID */}
+                      <td className="px-4 py-3.5">
+                        <div className="flex items-center gap-3">
+                          <div className={`w-9 h-9 rounded-xl flex items-center justify-center font-bold text-xs shrink-0 ${
+                            isAdmin 
+                              ? 'bg-purple-500/15 text-purple-600 border border-purple-500/20' 
+                              : 'bg-[var(--card-border)] text-[var(--text-main)]'
+                          }`}>
+                            {isAdmin ? <Shield size={16} /> : (u.name ? u.name.charAt(0) : 'U')}
                           </div>
-                        )}
-                        {u.email && (
-                          <div className="flex items-center gap-1 font-mono text-[11px]" dir="ltr">
-                            <Mail size={12} className="text-[var(--text-dim)]" />
-                            <span className="truncate max-w-[160px]">{u.email}</span>
+                          <div className="flex flex-col">
+                            <div className="flex items-center gap-2">
+                              <span className="font-bold text-xs text-[var(--text-main)]">
+                                {u.name || 'بدون نام'}
+                              </span>
+                              {isMe && (
+                                <span className="px-1.5 py-0.2 rounded text-[10px] bg-emerald-500/10 text-emerald-500 font-bold border border-emerald-500/20">
+                                  شما
+                                </span>
+                              )}
+                            </div>
+                            <span className="text-[11px] text-[var(--text-dim)] font-mono" dir="ltr">
+                              ID: #{u.id} (UC-{10000 + u.id})
+                            </span>
                           </div>
-                        )}
-                        {!u.phone && !u.email && <span className="text-[11px] text-[var(--text-dim)]">ندارد</span>}
-                      </div>
-                    </td>
+                        </div>
+                      </td>
 
-                    {/* Telegram */}
-                    <td className="px-4 py-3.5">
-                      {u.telegramId ? (
-                        <div className="flex flex-col gap-1">
-                          <span className="text-[11px] font-mono font-bold text-blue-500 bg-blue-500/10 px-2 py-0.5 rounded-md w-fit">
-                            {u.telegramId}
-                          </span>
-                          {u.botState === 'support' && (
-                            <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-full bg-amber-500/10 text-amber-500 border border-amber-500/20 w-fit">
-                              پشتیبانی
+                      {/* Contact Info */}
+                      <td className="px-4 py-3.5">
+                        <div className="flex flex-col gap-1 text-xs">
+                          {u.phone ? (
+                            <span className="flex items-center gap-1.5 text-[var(--text-main)] font-mono text-[11px]" dir="ltr">
+                              <Phone size={11} className="text-[var(--text-dim)]" />
+                              {u.phone}
+                            </span>
+                          ) : (
+                            <span className="text-[10px] text-[var(--text-dim)]">بدون شماره همراه</span>
+                          )}
+                          {u.email && (
+                            <span className="flex items-center gap-1.5 text-[var(--text-muted)] font-mono text-[11px]" dir="ltr">
+                              <Mail size={11} className="text-[var(--text-dim)]" />
+                              {u.email}
                             </span>
                           )}
                         </div>
-                      ) : (
-                        <span className="text-xs text-[var(--text-dim)]">متصل نیست</span>
-                      )}
-                    </td>
+                      </td>
 
-                    {/* Wallet Balance */}
-                    <td className="px-4 py-3.5">
-                      <div className="flex items-center gap-2">
-                        <span className="font-black text-xs text-[var(--text-main)]">
-                          {usePersianDigits ? toPersianDigits((u.walletBalance || 0).toLocaleString()) : (u.walletBalance || 0).toLocaleString()} تومان
+                      {/* Wallet Balance */}
+                      <td className="px-4 py-3.5">
+                        <div className="flex items-center gap-2">
+                          <span className="font-black text-xs text-emerald-500">
+                            {usePersianDigits ? toPersianDigits(balance.toLocaleString('fa-IR')) : balance.toLocaleString('fa-IR')}
+                          </span>
+                          <span className="text-[10px] text-[var(--text-dim)]">تومان</span>
+                          <button
+                            onClick={() => {
+                              setAdjustingUser(u);
+                              setAdjustAmount('');
+                              setAdjustReason('');
+                              setAdjustType('credit');
+                            }}
+                            className="p-1 rounded-lg clay-btn text-[var(--text-dim)] hover:text-emerald-500 hover:scale-105 transition-all"
+                            title="تعدیل یا شارژ موجودی کیف پول"
+                          >
+                            <Plus size={12} />
+                          </button>
+                        </div>
+                      </td>
+
+                      {/* Role & Status */}
+                      <td className="px-4 py-3.5">
+                        {u.isArchived ? (
+                          <span className="px-2.5 py-0.5 rounded-full text-[11px] font-black bg-zinc-500/10 text-zinc-500 border border-zinc-500/20">
+                            بایگانی‌شده
+                          </span>
+                        ) : (
+                          <span className={`px-2.5 py-0.5 rounded-full text-[11px] font-black ${
+                            isAdmin 
+                              ? 'bg-purple-500/10 text-purple-600 border border-purple-500/20' 
+                              : 'bg-zinc-500/10 text-zinc-600 dark:text-zinc-400 border border-zinc-500/20'
+                          }`}>
+                            {isAdmin ? 'مدیر سیستم' : 'کاربر عادی'}
+                          </span>
+                        )}
+                      </td>
+
+                      {/* Created Date */}
+                      <td className="px-4 py-3.5">
+                        <span className="text-[11px] text-[var(--text-muted)] whitespace-nowrap">
+                          {formatTehranDate(u.createdAt)}
                         </span>
-                        <button
-                          onClick={() => setAdjustingUser(u)}
-                          className="p-1 clay-btn rounded-md text-[var(--color-accent-primary)] hover:scale-105 transition-transform"
-                          title="تغییر موجودی کیف پول"
-                        >
-                          <Wallet size={13} />
-                        </button>
-                      </div>
-                    </td>
+                      </td>
 
-                    {/* Role */}
-                    <td className="px-4 py-3.5">
-                      {u.isArchived ? (
-                        <span className="px-2.5 py-0.5 rounded-full text-[11px] font-black bg-zinc-500/10 text-zinc-500 border border-zinc-500/20">
-                          بایگانی‌شده
-                        </span>
-                      ) : (
-                        <span className={`px-2.5 py-0.5 rounded-full text-[11px] font-black ${
-                          isAdmin 
-                            ? 'bg-purple-500/10 text-purple-600 border border-purple-500/20' 
-                            : 'bg-zinc-500/10 text-zinc-600 dark:text-zinc-400 border border-zinc-500/20'
-                        }`}>
-                          {isAdmin ? 'مدیر سیستم' : 'کاربر عادی'}
-                        </span>
-                      )}
-                    </td>
+                      {/* Actions */}
+                      <td className="px-4 py-3.5 text-center">
+                        <div className="flex items-center justify-center gap-1.5">
+                          {/* Archive mode */}
+                          <button
+                            onClick={() => setConfirmTarget({ userId: u.id, userName: u.name || `User #${u.id}`, mode: 'archive' })}
+                            disabled={isMe || isAdmin}
+                            className="p-2 clay-btn rounded-xl text-amber-500 hover:bg-amber-500/10 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                            title="بایگانی حساب (حفظ سوابق مالی)"
+                          >
+                            <BoxLinearIcon className="w-4 h-4" />
+                          </button>
 
-                    {/* Created Date */}
-                    <td className="px-4 py-3.5">
-                      <span className="text-[11px] text-[var(--text-muted)] whitespace-nowrap">
-                        {formatTehranDate(u.createdAt)}
-                      </span>
-                    </td>
+                          {/* Real Hard Delete */}
+                          <button
+                            onClick={() => setConfirmTarget({ userId: u.id, userName: u.name || `User #${u.id}`, mode: 'delete' })}
+                            disabled={isMe || isAdmin}
+                            className="p-2 clay-btn rounded-xl text-red-500 hover:bg-red-500/10 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                            title="حذف قطعی کاربر و تمام داده‌هایش"
+                          >
+                            <Trash2 size={15} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
 
-                    {/* Actions */}
-                    <td className="px-4 py-3.5 text-center">
-                      <div className="flex items-center justify-center gap-1.5">
-                        {/* Archive mode */}
-                        <button
-                          onClick={() => removeUser(u.id, 'archive')}
-                          disabled={isMe || isAdmin}
-                          className="p-2 clay-btn rounded-xl text-amber-500 hover:bg-amber-500/10 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
-                          title="بایگانی حساب (حفظ سوابق مالی)"
-                        >
-                          <BoxLinearIcon className="w-4 h-4" />
-                        </button>
+          {/* Pagination Controls */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between px-2 py-3 border-t border-subtle">
+              <span className="text-xs text-[var(--text-muted)] font-medium">
+                نمایش صفحه {usePersianDigits ? toPersianDigits(currentPage) : currentPage} از {usePersianDigits ? toPersianDigits(totalPages) : totalPages} ({usePersianDigits ? toPersianDigits(filteredUsers.length) : filteredUsers.length} کاربر)
+              </span>
 
-                        {/* Real Hard Delete */}
-                        <button
-                          onClick={() => removeUser(u.id, 'delete')}
-                          disabled={isMe || isAdmin}
-                          className="p-2 clay-btn rounded-xl text-red-500 hover:bg-red-500/10 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
-                          title="حذف قطعی کاربر و تمام داده‌هایش"
-                        >
-                          <Trash2 size={15} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setUsersPage(p => Math.max(1, p - 1))}
+                  disabled={currentPage <= 1}
+                  className="clay-btn px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1 disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                  <span>قبلی</span>
+                </button>
+
+                <button
+                  onClick={() => setUsersPage(p => Math.min(totalPages, p + 1))}
+                  disabled={currentPage >= totalPages}
+                  className="clay-btn px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1 disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  <span>بعدی</span>
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
 

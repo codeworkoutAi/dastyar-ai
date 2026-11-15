@@ -4,9 +4,11 @@ import {
   RefreshCw, MessageSquare, ExternalLink, Calendar, 
   User, AlertCircle, CheckCircle2 
 } from 'lucide-react';
-import { useAuthStore } from '../../store/authStore';
 import { parseDbDate, formatTehranDateTime } from '../../lib/dateUtils';
 import { toPersianDigits } from '../../lib/persianUtils';
+import { adminFetch } from '../../lib/adminApi';
+import { AdminToast } from './AdminToast';
+import { AdminConfirmModal } from './AdminConfirmModal';
 
 export interface ContactMessage {
   id: string;
@@ -22,33 +24,31 @@ interface AdminMessagesTabProps {
 }
 
 export const AdminMessagesTab: React.FC<AdminMessagesTabProps> = ({ onRefreshCount }) => {
-  const { token } = useAuthStore();
   const [messages, setMessages] = useState<ContactMessage[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'warning' | 'error' } | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'unread' | 'read'>('all');
   const [copiedEmail, setCopiedEmail] = useState<string | null>(null);
   const [selectedMessage, setSelectedMessage] = useState<ContactMessage | null>(null);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
+  // Confirm delete modal
+  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const showToast = (message: string, type: 'success' | 'warning' | 'error' = 'success') => {
+    setToast({ message, type });
+  };
+
   const fetchMessages = async () => {
-    if (!token) return;
     setLoading(true);
-    setError(null);
     try {
-      const res = await fetch('/api/admin/contact-messages', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (!res.ok) {
-        throw new Error('خطا در دریافت پیام‌ها از سرور');
-      }
-      const data = await res.json();
+      const data = await adminFetch<ContactMessage[]>('/api/admin/contact-messages');
       setMessages(Array.isArray(data) ? data : []);
       onRefreshCount?.();
     } catch (err: any) {
-      console.error(err);
-      setError(err.message || 'خطا در بارگذاری پیام‌ها');
+      showToast(err.message || 'خطا در بارگذاری پیام‌ها', 'error');
     } finally {
       setLoading(false);
     }
@@ -56,22 +56,16 @@ export const AdminMessagesTab: React.FC<AdminMessagesTabProps> = ({ onRefreshCou
 
   useEffect(() => {
     fetchMessages();
-  }, [token]);
+  }, []);
 
   const toggleReadStatus = async (msg: ContactMessage) => {
-    if (!token) return;
     const newStatus = msg.isRead ? 0 : 1;
     setActionLoading(msg.id);
     try {
-      const res = await fetch(`/api/admin/contact-messages/${msg.id}/read`, {
+      await adminFetch(`/api/admin/contact-messages/${msg.id}/read`, {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
-        },
         body: JSON.stringify({ isRead: newStatus })
       });
-      if (!res.ok) throw new Error('خطا در تغییر وضعیت پیام');
       setMessages((prev) =>
         prev.map((m) => (m.id === msg.id ? { ...m, isRead: newStatus } : m))
       );
@@ -79,34 +73,31 @@ export const AdminMessagesTab: React.FC<AdminMessagesTabProps> = ({ onRefreshCou
         setSelectedMessage({ ...selectedMessage, isRead: newStatus });
       }
       onRefreshCount?.();
+      showToast(newStatus === 1 ? 'پیام خوانده شد.' : 'پیام به وضعیت ناخوانده تغییر کرد.', 'success');
     } catch (err: any) {
-      alert(err.message || 'خطا در تغییر وضعیت');
+      showToast(err.message || 'خطا در تغییر وضعیت', 'error');
     } finally {
       setActionLoading(null);
     }
   };
 
-  const deleteMessage = async (id: string) => {
-    if (!token) return;
-    if (!window.confirm('آیا از حذف این پیام اطمینان دارید؟ این عملیات غیرقابل بازگشت است.')) {
-      return;
-    }
-    setActionLoading(id);
+  const executeDeleteMessage = async () => {
+    if (!deleteTargetId) return;
+    const id = deleteTargetId;
+    setIsDeleting(true);
     try {
-      const res = await fetch(`/api/admin/contact-messages/${id}`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (!res.ok) throw new Error('خطا در حذف پیام');
+      await adminFetch(`/api/admin/contact-messages/${id}`, { method: 'DELETE' });
       setMessages((prev) => prev.filter((m) => m.id !== id));
       if (selectedMessage?.id === id) {
         setSelectedMessage(null);
       }
+      setDeleteTargetId(null);
       onRefreshCount?.();
+      showToast('پیام با موفقیت حذف شد.', 'success');
     } catch (err: any) {
-      alert(err.message || 'خطا در حذف پیام');
+      showToast(err.message || 'خطا در حذف پیام', 'error');
     } finally {
-      setActionLoading(null);
+      setIsDeleting(false);
     }
   };
 
@@ -137,6 +128,28 @@ export const AdminMessagesTab: React.FC<AdminMessagesTabProps> = ({ onRefreshCou
 
   return (
     <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6" dir="rtl">
+      {/* Toast Notification */}
+      {toast && (
+        <AdminToast 
+          message={toast.message} 
+          type={toast.type} 
+          onClose={() => setToast(null)} 
+        />
+      )}
+
+      {/* Reusable Confirm Delete Modal */}
+      <AdminConfirmModal
+        isOpen={Boolean(deleteTargetId)}
+        title="حذف پیام ارتباطی"
+        description="آیا از حذف این پیام اطمینان دارید؟ این عملیات غیرقابل بازگشت است."
+        confirmLabel="بله، حذف کن"
+        cancelLabel="انصراف"
+        isDanger={true}
+        loading={isDeleting}
+        onConfirm={executeDeleteMessage}
+        onClose={() => setDeleteTargetId(null)}
+      />
+
       {/* Top Stats Banner */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="clay-card p-5 rounded-2xl flex items-center justify-between">
@@ -237,14 +250,6 @@ export const AdminMessagesTab: React.FC<AdminMessagesTabProps> = ({ onRefreshCou
         </div>
       </div>
 
-      {/* Error state */}
-      {error && (
-        <div className="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 text-xs sm:text-sm flex items-center gap-2">
-          <AlertCircle className="w-4 h-4 shrink-0" />
-          <span>{error}</span>
-        </div>
-      )}
-
       {/* Messages List / Table */}
       {loading ? (
         <div className="clay-card p-12 rounded-3xl text-center">
@@ -263,7 +268,6 @@ export const AdminMessagesTab: React.FC<AdminMessagesTabProps> = ({ onRefreshCou
         <div className="space-y-3">
           {filteredMessages.map((msg) => {
             const isUnread = msg.isRead === 0;
-            const isSelected = selectedMessage?.id === msg.id;
 
             return (
               <div
@@ -345,7 +349,7 @@ export const AdminMessagesTab: React.FC<AdminMessagesTabProps> = ({ onRefreshCou
                     </button>
 
                     <button
-                      onClick={() => deleteMessage(msg.id)}
+                      onClick={() => setDeleteTargetId(msg.id)}
                       disabled={actionLoading === msg.id}
                       className="p-2 rounded-xl clay-btn text-rose-500 hover:scale-105 transition-transform cursor-pointer"
                       title="حذف پیام"
