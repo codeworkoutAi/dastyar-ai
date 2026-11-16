@@ -1,6 +1,14 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeAll, beforeEach, afterEach, vi } from 'vitest';
 import db from '../../db/database';
+import { initializeSchema } from '../../db/schema';
 import { multiPoolManager, CircuitState } from '../multiPoolManager';
+
+// This suite reads and writes site_settings directly, so the throwaway test
+// database needs its schema. Without it every case failed with
+// "SqliteError: no such table: site_settings".
+beforeAll(() => {
+  initializeSchema();
+}, 30000);
 
 describe('MultiPoolManager – Multi-Pool Circuit Breaker & Zero-Lag Routing', () => {
   beforeEach(() => {
