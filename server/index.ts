@@ -277,9 +277,18 @@ async function start() {
         const name = path.basename(filePath);
 
         // Cloudflare only caches responses whose Vary is exactly
-        // "Accept-Encoding". Kept explicit here so no future middleware can
-        // reintroduce "Vary: Origin" and silently disable edge caching again.
-        res.setHeader('Vary', 'Accept-Encoding');
+        // "Accept-Encoding". Ensure Vary contains only Accept-Encoding
+        // (no Origin, no duplicates). res.setHeader replaces; we also guard
+        // against downstream middleware appending a second copy.
+        const existingVary = res.getHeader('Vary');
+        if (existingVary) {
+          const parts = String(existingVary).split(',').map(s => s.trim());
+          if (!parts.includes('Accept-Encoding')) {
+            res.setHeader('Vary', [...parts, 'Accept-Encoding'].join(', '));
+          }
+        } else {
+          res.setHeader('Vary', 'Accept-Encoding');
+        }
 
         const isPwaShell =
           name === 'index.html' ||
