@@ -116,7 +116,12 @@ const allowedOrigins = [
   process.env.WEB_URL,
 ].filter(Boolean) as string[];
 
-app.use(cors({
+// CORS is scoped to the API on purpose. Mounted globally, cors() adds
+// "Vary: Origin" to every response, and Cloudflare refuses to cache any
+// response whose Vary header is not exactly "Accept-Encoding" - so all
+// static assets silently bypassed edge caching. The API still needs CORS
+// (Capacitor and localhost origins); static files and HTML do not.
+app.use('/api', cors({
   origin: (origin, callback) => {
     if (!origin) return callback(null, true);
     if (allowedOrigins.includes(origin) || origin.includes('localhost')) {
@@ -264,15 +269,38 @@ async function start() {
     const distPath = path.join(process.cwd(), 'dist');
     app.use(express.static(distPath, {
       index: false,
-      maxAge: '1y',
-      immutable: true,
+      // Cache-Control is set per file below instead of a global maxAge/immutable:
+      // a blanket 1-year immutable rule also hit unhashed files (images, icons)
+      // and the PWA shell, which must stay replaceable and fresh.
       setHeaders: (res, filePath) => {
-        if (filePath.endsWith('.html') || filePath.endsWith('sw.js') || filePath.endsWith('manifest.webmanifest')) {
-          res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
+        const normalized = filePath.split(path.sep).join('/');
+        const name = path.basename(filePath);
+
+        // Cloudflare only caches responses whose Vary is exactly
+        // "Accept-Encoding". Kept explicit here so no future middleware can
+        // reintroduce "Vary: Origin" and silently disable edge caching again.
+        res.setHeader('Vary', 'Accept-Encoding');
+
+        const isPwaShell =
+          name === 'index.html' ||
+          name === 'sw.js' ||
+          name === 'registerSW.js' ||
+          name === 'manifest.json' ||
+          name === 'manifest.webmanifest';
+
+        if (isPwaShell) {
+          // Must revalidate every time, otherwise a new deploy is invisible
+          // until the old service worker / shell expires.
+          res.setHeader('Cache-Control', 'public, max-age=0, must-revalidate');
           res.setHeader('Pragma', 'no-cache');
           res.setHeader('Expires', '0');
-        } else if (filePath.match(/\.(js|css|woff2?|png|jpe?g|gif|webp|svg)$/)) {
+        } else if (normalized.includes('/assets/')) {
+          // Vite build output: content-hashed, safe to cache for a year.
           res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+        } else {
+          // Unhashed static files (images, icons, fonts). One week helps while
+          // still letting a replaced file reach users.
+          res.setHeader('Cache-Control', 'public, max-age=604800');
         }
       }
     }));
