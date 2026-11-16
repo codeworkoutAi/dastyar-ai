@@ -775,31 +775,7 @@ export const SettingsModal: React.FC = () => {
  <div className="space-y-6 animate-fadeIn">
  <h3 className="text-lg font-bold">ابزارهای جانبی</h3>
  <div className="space-y-3">
- <div className="flex items-center justify-between p-4 clay-card rounded-xl">
- <div>
- <div className="font-medium text-sm">جستجوی زنده وب (Web Search)</div>
- <div className="text-xs text-zinc-700 dark:text-zinc-400">جستجوی آنلاین برای اطلاعات به‌روز</div>
- </div>
- <ToggleSwitch
- checked={tempSettings.tools.webSearch}
- onChange={(v) => {
- setTempSettings({ ...tempSettings, tools: { ...tempSettings.tools, webSearch: v } });
- const msg = v ? 'امکان جستجو در وب روشن شد' : 'امکان جستجو در وب غیرفعال شد';
- // Show a native alert for simplicity, or we can use custom toast if preferred, but alert is robust
- // Let's use a small DOM injection for a nice toast if alert is too intrusive, but wait, a simple alert is fine.
- // Wait, alert blocks the UI. Let's just create a quick custom toast.
- const toast = document.createElement('div');
- toast.className = 'fixed bottom-10 left-1/2 transform -translate-x-1/2 clay-surface text-zinc-800 dark:text-zinc-200 border border-zinc-300  px-5 py-3 rounded-2xl z-[9999] text-sm animate-fadeIn flex items-center gap-2';
- toast.innerHTML = `<span class="${v ? 'text-emerald-400' : 'text-zinc-700 dark:text-zinc-400'}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4"></path><path d="M12 8h.01"></path></svg></span> ${msg}`;
- document.body.appendChild(toast);
- setTimeout(() => {
- toast.style.opacity = '0';
- toast.style.transition = 'opacity 0.5s ease';
- setTimeout(() => toast.remove(), 500);
- }, 2500);
- }}
- />
- </div>
+ 
  <div className="flex items-center justify-between p-4 clay-card rounded-xl">
  <div>
  <div className="font-medium text-sm flex items-center gap-2">

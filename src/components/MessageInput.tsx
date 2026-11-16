@@ -13,7 +13,7 @@ import {
  DocumentTextLinearIcon,
  CpuBoltLinearIcon
 } from '@solar-icons/react';
-import { ArrowUp, X, Square } from 'lucide-react';
+import { ArrowUp, X, Square, Brain, Globe } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
 import { toPersianDigits, isRtlText } from '../lib/persianUtils';
 import { estimateTokenCount } from '../lib/tokenOptimizer';
@@ -53,6 +53,29 @@ export const MessageInput: React.FC = React.memo(() => {
  const usePersianDigits = settings.appearance.persianNumerals;
  const onStopGeneration = stopGeneration;
  const onVideoAttached = () => setVideoNotice('Video processing is coming soon!');
+
+  const isReasoning = Boolean(settings.tools.reasoningMode);
+  const isWebSearch = Boolean(settings.tools.webSearch);
+
+  const toggleReasoning = () => {
+    useSettingsStore.getState().updateSettings(prev => ({
+      ...prev,
+      tools: {
+        ...prev.tools,
+        reasoningMode: !prev.tools.reasoningMode,
+      }
+    }));
+  };
+
+  const toggleWebSearch = () => {
+    useSettingsStore.getState().updateSettings(prev => ({
+      ...prev,
+      tools: {
+        ...prev.tools,
+        webSearch: !prev.tools.webSearch,
+      }
+    }));
+  };
 
  const [searchParams, setSearchParams] = useSearchParams();
  const [text, setText] = useState('');
@@ -859,17 +882,64 @@ const workerUrl = await import('pdfjs-dist/build/pdf.worker.min.mjs?url');
  </div>
  )}
 
- {/* Token Estimator (Moved to top-left) */}
- {(text.trim() || imagePreview || attachedFileMeta) && (
- <div className="flex justify-end w-full px-2" dir="rtl">
- <div className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md border font-mono text-[10px] select-none transition-colors ${estimatedTokens > 32000 ? 'text-red-600 dark:text-red-400 bg-red-500/10 border-red-500/20' : estimatedTokens > 8000 ? 'text-amber-600 dark:text-amber-400 bg-amber-500/10 border-amber-500/20' : 'text-zinc-700 dark:text-zinc-300 bg-zinc-200/70 dark:bg-zinc-800/70 border-zinc-300/50 dark:border-white/10'}`}
- title="تخمین توکن‌های این پیام بر اساس طول نویسه‌ها و اسناد"
- >
- <CpuBoltLinearIcon className={`w-3 h-3 shrink-0 ${estimatedTokens > 32000 ? 'text-red-500' : estimatedTokens > 8000 ? 'text-amber-500' : 'text-sky-500'}`} />
- <span>~{usePersianDigits ? toPersianDigits(estimatedTokens) : estimatedTokens} توکن تخمینی</span>
- </div>
- </div>
- )}
+ {/* Controls Toolbar: Tool Pills (Deep Thinking + Web Search) & Token Estimator */}
+      <div className="flex items-center justify-between w-full px-2 mb-1.5 gap-2 select-none" dir="rtl">
+        {/* Tool Pills */}
+        <div className="flex items-center gap-1.5 sm:gap-2">
+          {/* Deep Thinking (Reasoning) Pill */}
+          <Tooltip content={isReasoning ? 'تفکر عمیق فعال است (استدلال مرحله‌به‌مرحله قبل از پاسخ)' : 'پاسخ سریع و فوری (برای فعال‌سازی تفکر عمیق کلیک کنید)'}>
+            <button
+              type="button"
+              onClick={toggleReasoning}
+              disabled={isStreaming}
+              className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-xl text-xs font-medium transition-all cursor-pointer active:scale-95 disabled:opacity-50 ${
+                isReasoning
+                  ? 'clay-btn border border-blue-500/40 text-blue-600 dark:text-blue-400 bg-blue-500/10 dark:bg-blue-500/15 shadow-sm'
+                  : 'clay-surface border border-subtle text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-black/5 dark:hover:bg-white/5'
+              }`}
+              aria-label="تغییر وضعیت تفکر عمیق"
+            >
+              <Brain className={`w-3.5 h-3.5 shrink-0 ${isReasoning ? 'text-blue-500 dark:text-blue-400' : 'text-zinc-400 dark:text-zinc-500'}`} />
+              <span className="leading-none">{isReasoning ? 'تفکر: فعال' : 'تفکر عمیق'}</span>
+            </button>
+          </Tooltip>
+
+          {/* Web Search Pill */}
+          <Tooltip content={isWebSearch ? 'جستجوی زنده وب فعال است' : 'جستجوی زنده وب خاموش است (برای فعال‌سازی کلیک کنید)'}>
+            <button
+              type="button"
+              onClick={toggleWebSearch}
+              disabled={isStreaming}
+              className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-xl text-xs font-medium transition-all cursor-pointer active:scale-95 disabled:opacity-50 ${
+                isWebSearch
+                  ? 'clay-btn border border-emerald-500/40 text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 dark:bg-emerald-500/15 shadow-sm'
+                  : 'clay-surface border border-subtle text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-black/5 dark:hover:bg-white/5'
+              }`}
+              aria-label="تغییر وضعیت جستجوی وب"
+            >
+              <Globe className={`w-3.5 h-3.5 shrink-0 ${isWebSearch ? 'text-emerald-500 dark:text-emerald-400' : 'text-zinc-400 dark:text-zinc-500'}`} />
+              <span className="leading-none">{isWebSearch ? 'وب‌سرچ: فعال' : 'جستجوی وب'}</span>
+            </button>
+          </Tooltip>
+        </div>
+
+        {/* Token Estimator */}
+        {(text.trim() || imagePreview || attachedFileMeta) ? (
+          <div
+            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md border font-mono text-[10px] select-none transition-colors ${
+              estimatedTokens > 32000
+                ? 'text-red-600 dark:text-red-400 bg-red-500/10 border-red-500/20'
+                : estimatedTokens > 8000
+                ? 'text-amber-600 dark:text-amber-400 bg-amber-500/10 border-amber-500/20'
+                : 'text-zinc-700 dark:text-zinc-300 bg-zinc-200/70 dark:bg-zinc-800/70 border-zinc-300/50 dark:border-white/10'
+            }`}
+            title="تخمین توکن‌های این پیام بر اساس طول نویسه‌ها و اسناد"
+          >
+            <CpuBoltLinearIcon className={`w-3 h-3 shrink-0 ${estimatedTokens > 32000 ? 'text-red-500' : estimatedTokens > 8000 ? 'text-amber-500' : 'text-sky-500'}`} />
+            <span>~{usePersianDigits ? toPersianDigits(estimatedTokens) : estimatedTokens} توکن</span>
+          </div>
+        ) : null}
+      </div>
 
  {/* Input Frame */}
  <div className={`relative flex items-end gap-2 sm:gap-3 clay-card p-2 sm:p-2.5 transition-all duration-300 ${isMultiLine ? '!rounded-[22px]' : '!rounded-full'} ${isStreaming ? 'opacity-80' : ''}`}>

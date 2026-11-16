@@ -215,7 +215,7 @@ stopGeneration: () => {
     };
 
       const globalWebSearchOn = useSettingsStore.getState().settings.tools.webSearch;
-      const initialHasWebIntent = !isImageGen && globalWebSearchOn && (webSearch === true || (webSearch === undefined && /اخبار|خبر|قیمت|آب و هوا|آب‌وهوا|مقاله|تحقیق|درباره|سرچ|جستجو|امروز|تاریخ|جدیدترین|آپدیت|به روز|به‌روز|دسترسی به وب|دسترسی به اینترنت|وصل به اینترنت|اینترنت داری|به اینترنت وصلی|آنلاین هستی|وب رو چک کن|دسترسی داری/i.test(promptText)));
+      const initialHasWebIntent = !isImageGen && Boolean(webSearch !== undefined ? webSearch : globalWebSearchOn);
 
       const assistantMessage: ChatMessage = {
         id: assistantMessageId,
@@ -335,21 +335,13 @@ stopGeneration: () => {
         detectedIntent = 'general';
       }
 
-      // Comprehensive Persian Web Search Triggers (Client-side Heuristics)
-      const clientWebTriggers = /اخبار|خبر|قیمت|آب و هوا|آب‌وهوا|مقاله|تحقیق|درباره|سرچ|جستجو|امروز|تاریخ|جدیدترین|آپدیت|به روز|به‌روز|دسترسی به وب|دسترسی به اینترنت|وصل به اینترنت|اینترنت داری|به اینترنت وصلی|آنلاین هستی|وب رو چک کن|دسترسی داری/i;
-      const hasWebIntent = clientWebTriggers.test(promptText);
-
+      // Web search is directly governed by user's pill toggle (globalWebSearchEnabled):
+      // - When pill is ON, web search is active.
+      // - When pill is OFF, web search is strictly disabled (Kill-switch respected).
       if (webSearch !== undefined) {
         detectedWebSearch = webSearch;
-      } else if (globalWebSearchEnabled && (hasWebIntent || detectedTool !== 'none')) {
-        detectedWebSearch = true;
       } else {
-        detectedWebSearch = false;
-      }
-
-      // KILL-SWITCH (Rule 7): Never allow web search if globally disabled
-      if (!globalWebSearchEnabled) {
-        detectedWebSearch = false;
+        detectedWebSearch = Boolean(globalWebSearchEnabled);
       }
 
       console.log(`[Intent] regex-only: webSearch=${detectedWebSearch}, tool=${detectedTool}, intent=${detectedIntent}`);
@@ -357,19 +349,7 @@ stopGeneration: () => {
       // Apply web search & tool setting
       payloadSettings.tools = payloadSettings.tools || {};
       payloadSettings.tools.activeTool = detectedTool;
-
-      if (webSearch !== undefined) {
-        payloadSettings.tools.webSearch = webSearch;
-      } else if (globalWebSearchEnabled && (detectedWebSearch || hasWebIntent)) {
-        payloadSettings.tools.webSearch = true;
-      } else {
-        payloadSettings.tools.webSearch = false;
-      }
-
-      // KILL-SWITCH: Never allow web search if globally disabled
-      if (!globalWebSearchEnabled) {
-        payloadSettings.tools.webSearch = false;
-      }
+      payloadSettings.tools.webSearch = detectedWebSearch;
 
       // Sync isWebSearch flag on assistant message for UI web search status indicator
       const isSearchActive = !isImageGen && !!payloadSettings.tools.webSearch;

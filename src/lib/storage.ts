@@ -44,7 +44,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   persona: { systemPrompt: '', tone: 'expert', temperature: 0.7 },
   appearance: { theme: 'light', font: 'hybrid', fontSize: 14, persianNumerals: true, direction: 'rtl', uiLanguage: 'fa' },
   tools: { 
-    webSearch: true, 
+    webSearch: false, 
     enterToSend: true, 
     soundEnabled: false, 
     showPerformanceMetrics: true, 

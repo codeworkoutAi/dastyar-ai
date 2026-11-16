@@ -114,7 +114,11 @@ router.post('/api/chat/stream', guestChatRateLimiter, guestChatHourLimiter, user
       systemInstruction: settings.persona?.systemPrompt,
       temperature: settings.persona?.temperature,
       webSearch: settings.tools?.webSearch,
+      reasoningMode: settings.tools?.reasoningMode ?? false,
     } : undefined);
+    if (apiConfig && apiConfig.reasoningMode === undefined) {
+      apiConfig.reasoningMode = settings?.tools?.reasoningMode ?? false;
+    }
 
     if (!messages || !Array.isArray(messages) || messages.length === 0) {
       sendChunk({ error: 'پیامی برای ارسال یافت نشد.' });
@@ -670,15 +674,19 @@ router.post('/api/chat/stream', guestChatRateLimiter, guestChatHourLimiter, user
 
         let attempts = 0;
         const maxAttempts = candidate === modelName ? 5 : 3;
+        let disableThinkingForCandidate = false;
 
         while (attempts < maxAttempts) {
           attempts++;
           try {
+            const reasoningExplicitlyEnabled = Boolean(apiConfig?.reasoningMode);
             const isShortPrompt = userText.trim().length < 80 && !/تحلیل|مقایسه|چرا|چطور|حل کن|استدلال|مقایسه کن|بررسی کن|توضیح بده چرا/i.test(userText);
-            const thinkingBudget = isShortPrompt ? 0 : 2048;
-            console.log(`[Thinking] short=${isShortPrompt}, thinkingBudget=${thinkingBudget}`);
+            
+            // Respect user settings: only enable thinking budget if reasoningMode is ON and prompt is not trivial/short
+            const thinkingBudget = (reasoningExplicitlyEnabled && !isShortPrompt) ? 2048 : 0;
+            console.log(`[Thinking] reasoningMode=${reasoningExplicitlyEnabled}, short=${isShortPrompt}, thinkingBudget=${thinkingBudget}`);
 
-            const isLiteModel = candidate.toLowerCase().includes('lite');
+            const isLiteModel = candidate.toLowerCase().includes('lite') || candidate.toLowerCase().includes('1.5');
             const streamConfig: any = {
               // No native googleSearch here — we use GoogleGroundingAgent (RAG) to support ALL providers universally
               systemInstruction: systemInstruction,
@@ -687,9 +695,11 @@ router.post('/api/chat/stream', guestChatRateLimiter, guestChatHourLimiter, user
               topK: 40,
             };
 
-            // Only set thinkingConfig when a positive thinkingBudget is desired and the model supports it.
-            // Setting thinkingBudget: 0 or passing thinkingConfig to unsupported/lite models causes 400 INVALID_ARGUMENT.
-            if (thinkingBudget > 0 && !isLiteModel) {
+            // Lite & 1.5 models do not support thinkingConfig at all (reject with 400).
+            // For standard Gemini 2.5/3 models:
+            // - thinkingBudget: 0 explicitly turns thinking OFF and eliminates 30s latency on short greetings.
+            // - thinkingBudget: 2048 enables deep thinking only when user enabled reasoningMode.
+            if (!isLiteModel && !disableThinkingForCandidate) {
               streamConfig.thinkingConfig = {
                 thinkingBudget,
               };
@@ -832,6 +842,13 @@ router.post('/api/chat/stream', guestChatRateLimiter, guestChatHourLimiter, user
                 `Transient 503 spike on ${candidate} (attempt ${attempts}/${maxAttempts}), retrying in ${delay}ms...`
               );
               await sleep(delay);
+              continue;
+            }
+
+            // If the model rejected thinkingConfig with 400 INVALID_ARGUMENT, strip thinkingConfig and retry immediately
+            if (!disableThinkingForCandidate && (errMsg.includes('thinking') || errMsg.includes('thinkingConfig') || (errMsg.includes('400') && errMsg.includes('INVALID_ARGUMENT')))) {
+              console.warn(`[Thinking] Model ${candidate} rejected thinkingConfig (${errMsg}). Retrying without thinkingConfig...`);
+              disableThinkingForCandidate = true;
               continue;
             }
 
