@@ -5,6 +5,7 @@ import dotenv from 'dotenv';
 import helmet from 'helmet';
 import cors from 'cors';
 import crypto from 'crypto';
+import onHeaders from 'on-headers';
 
 dotenv.config();
 // Local dev fallback: fill any missing vars from the machine-level store.
@@ -133,6 +134,31 @@ app.use('/api', cors({
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
 }));
+
+// Ensure Vary header is exactly "Accept-Encoding" for cacheable responses.
+// Cloudflare refuses to cache when Vary contains anything else (e.g., Origin)
+// or has duplicates. This runs just before headers are flushed.
+app.use((req, res, next) => {
+  onHeaders(res, () => {
+    const vary = res.getHeader('Vary');
+    if (vary) {
+      const parts = String(vary).split(',').map(s => s.trim());
+      const unique = [...new Set(parts)];
+      // For non-API responses, strip Origin and keep only Accept-Encoding.
+      // For API responses, keep what CORS set (includes Origin).
+      const isApi = req.path.startsWith('/api/');
+      const filtered = isApi
+        ? unique
+        : unique.filter(p => p.toLowerCase() === 'accept-encoding');
+      if (filtered.length > 0) {
+        res.setHeader('Vary', filtered.join(', '));
+      } else {
+        res.removeHeader('Vary');
+      }
+    }
+  });
+  next();
+});
 
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
@@ -272,23 +298,10 @@ async function start() {
       // Cache-Control is set per file below instead of a global maxAge/immutable:
       // a blanket 1-year immutable rule also hit unhashed files (images, icons)
       // and the PWA shell, which must stay replaceable and fresh.
+      // Vary header is normalized by the on-headers middleware above.
       setHeaders: (res, filePath) => {
         const normalized = filePath.split(path.sep).join('/');
         const name = path.basename(filePath);
-
-        // Cloudflare only caches responses whose Vary is exactly
-        // "Accept-Encoding". Ensure Vary contains only Accept-Encoding
-        // (no Origin, no duplicates). res.setHeader replaces; we also guard
-        // against downstream middleware appending a second copy.
-        const existingVary = res.getHeader('Vary');
-        if (existingVary) {
-          const parts = String(existingVary).split(',').map(s => s.trim());
-          if (!parts.includes('Accept-Encoding')) {
-            res.setHeader('Vary', [...parts, 'Accept-Encoding'].join(', '));
-          }
-        } else {
-          res.setHeader('Vary', 'Accept-Encoding');
-        }
 
         const isPwaShell =
           name === 'index.html' ||
