@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useMemo } from 'react';
+import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import {
  PaperclipLinearIcon,
@@ -57,7 +57,7 @@ export const MessageInput: React.FC = React.memo(() => {
   const isReasoning = Boolean(settings.tools.reasoningMode);
   const isWebSearch = Boolean(settings.tools.webSearch);
 
-  const toggleReasoning = () => {
+  const toggleReasoning = useCallback(() => {
     useSettingsStore.getState().updateSettings(prev => ({
       ...prev,
       tools: {
@@ -65,9 +65,9 @@ export const MessageInput: React.FC = React.memo(() => {
         reasoningMode: !prev.tools.reasoningMode,
       }
     }));
-  };
+  }, []);
 
-  const toggleWebSearch = () => {
+  const toggleWebSearch = useCallback(() => {
     useSettingsStore.getState().updateSettings(prev => ({
       ...prev,
       tools: {
@@ -75,7 +75,7 @@ export const MessageInput: React.FC = React.memo(() => {
         webSearch: !prev.tools.webSearch,
       }
     }));
-  };
+  }, []);
 
  const [searchParams, setSearchParams] = useSearchParams();
  const [text, setText] = useState('');

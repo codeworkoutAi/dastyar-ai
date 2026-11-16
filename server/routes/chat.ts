@@ -680,11 +680,11 @@ router.post('/api/chat/stream', guestChatRateLimiter, guestChatHourLimiter, user
           attempts++;
           try {
             const reasoningExplicitlyEnabled = Boolean(apiConfig?.reasoningMode);
-            const isShortPrompt = userText.trim().length < 80 && !/تحلیل|مقایسه|چرا|چطور|حل کن|استدلال|مقایسه کن|بررسی کن|توضیح بده چرا/i.test(userText);
             
-            // Respect user settings: only enable thinking budget if reasoningMode is ON and prompt is not trivial/short
-            const thinkingBudget = (reasoningExplicitlyEnabled && !isShortPrompt) ? 2048 : 0;
-            console.log(`[Thinking] reasoningMode=${reasoningExplicitlyEnabled}, short=${isShortPrompt}, thinkingBudget=${thinkingBudget}`);
+            // Respect user settings: grant full thinking budget if reasoningMode is ON (2048 for logged-in, 1024 for guests).
+            // When reasoningMode is OFF, force thinkingBudget = 0 to eliminate hidden reasoning tokens and sub-second TTFB.
+            const thinkingBudget = reasoningExplicitlyEnabled ? (userId ? 2048 : 1024) : 0;
+            console.log(`[Thinking] reasoningMode=${reasoningExplicitlyEnabled}, userId=${userId || 'guest'}, thinkingBudget=${thinkingBudget}`);
 
             const isLiteModel = candidate.toLowerCase().includes('lite') || candidate.toLowerCase().includes('1.5');
             const streamConfig: any = {
@@ -846,7 +846,7 @@ router.post('/api/chat/stream', guestChatRateLimiter, guestChatHourLimiter, user
             }
 
             // If the model rejected thinkingConfig with 400 INVALID_ARGUMENT, strip thinkingConfig and retry immediately
-            if (!disableThinkingForCandidate && (errMsg.includes('thinking') || errMsg.includes('thinkingConfig') || (errMsg.includes('400') && errMsg.includes('INVALID_ARGUMENT')))) {
+            if (!disableThinkingForCandidate && /thinking/i.test(errMsg) && (errMsg.includes('400') || errMsg.includes('INVALID_ARGUMENT'))) {
               console.warn(`[Thinking] Model ${candidate} rejected thinkingConfig (${errMsg}). Retrying without thinkingConfig...`);
               disableThinkingForCandidate = true;
               continue;

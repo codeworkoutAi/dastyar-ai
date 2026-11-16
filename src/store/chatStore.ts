@@ -344,7 +344,7 @@ stopGeneration: () => {
         detectedWebSearch = Boolean(globalWebSearchEnabled);
       }
 
-      console.log(`[Intent] regex-only: webSearch=${detectedWebSearch}, tool=${detectedTool}, intent=${detectedIntent}`);
+      console.log(`[Intent] explicit-pill: webSearch=${detectedWebSearch}, tool=${detectedTool}, intent=${detectedIntent}`);
 
       // Apply web search & tool setting
       payloadSettings.tools = payloadSettings.tools || {};

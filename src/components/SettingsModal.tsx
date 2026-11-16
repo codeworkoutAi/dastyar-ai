@@ -500,8 +500,17 @@ export const SettingsModal: React.FC = () => {
  };
 
  const handleSave = () => {
- onSaveSettings(tempSettings);
- onClose();
+  // Preserve current webSearch state from store (controlled directly via chat pill)
+  const currentWebSearch = useSettingsStore.getState().settings.tools.webSearch;
+  const settingsToSave = {
+   ...tempSettings,
+   tools: {
+    ...tempSettings.tools,
+    webSearch: currentWebSearch,
+   },
+  };
+  onSaveSettings(settingsToSave);
+  onClose();
  };
 
 
