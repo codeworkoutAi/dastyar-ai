@@ -38,6 +38,8 @@ These are load-bearing. Do not refactor, rename, or "improve" them without expli
 - `crypto.randomUUID()` for generated IDs (not `Date.now()`)
 - `useChatStore.subscribe` throttled persistence (no sync `saveConversations` during streaming tokens; atomic save on `streamJustEnded`)
 - `ttsAudioCache` strict memory bounds (`MAX_TTS_CACHE_ITEMS = 10`, 10-minute TTL, LRU eviction in `server/routes/tools.ts`)
+- `on-headers` `Vary` normaliser and the per-file `Cache-Control` policy in `server/index.ts`, plus `cors()` mounted **only** on `/api` (rule 12 — removing or "simplifying" any of these silently disables Cloudflare caching)
+- The DNS topology in the Production Infrastructure section (apex `A` → Render, no Worker in front of the origin)
 
 ---
 
@@ -65,28 +67,19 @@ Persian AI Chatbox is a highly polished, full-stack AI platform for Persian-spea
 
 ### 2. Six-Card Unified Model Architecture (Single Source of Truth)
 
-> [AMENDED 2026-10-26] **Profile Labels Finalized**: The 3 paid profile labels have been renamed to general labels with no model names (Final Decision — Phase 5):
-> - `paid_default`: **دستیار چت و گفتگوی پیشرفته** (`role: 'paid_default'`, model: `claude-sonnet-4-6`)
-> - `paid_coding`: **دستیار برنامه‌نویسی پیشرفته** (`role: 'paid_coding'`, model: `deepseek-v4-pro`)
-> - `paid_vision`: **دستیار اسناد و بینایی پیشرفته** (`role: 'paid_vision'`, model: `gemini-3.8-flash`)
-> Roles, internal models, and API keys remain completely untouched. `PROFILES_CACHE_VERSION` bumped to `v9` in `src/lib/storage.ts`.
+The platform runs on **exactly six** system profiles — 3 free, 3 paid. User BYOK profiles are eliminated. Labels are general and carry **no model names** (Phase 5 decision); roles, internal models and keys are untouched, and `PROFILES_CACHE_VERSION` (`v9`) in `src/lib/storage.ts` keeps clients in sync.
 
-The platform operates exclusively on **exactly six stable system profiles** (divided into 3 Free and 3 Paid/Credit models). User BYOK personal profiles are completely eliminated in favor of managed system stability:
+| id | role | UI label | internal model | cost |
+|---|---|---|---|---|
+| `free_default` | `default` | دستیار چت و گفتگو | `gemini-3.6-flash` | free |
+| `free_coding` | `coding` | دستیار برنامه‌نویسی و کد | `gemini-3.6-flash` | free |
+| `free_vision` | `vision` | دستیار بینایی و اسناد | `gemini-3.6-flash` | free |
+| `paid_default` | `paid_default` | دستیار چت و گفتگوی پیشرفته | `claude-sonnet-4-6` | wallet |
+| `paid_coding` | `paid_coding` | دستیار برنامه‌نویسی پیشرفته | `deepseek-v4-pro` | wallet |
+| `paid_vision` | `paid_vision` | دستیار اسناد و بینایی پیشرفته | `gemini-3.8-flash` | wallet |
 
-- **Base/Fast Models (Lightweight & Cost-Effective, Smart Routing Defaults):**
-  1. `free_default`: **دستیار چت و گفتگو** ⬅️ `role: 'default'` | مدل: `gemini-3.6-flash`
-  2. `free_coding`: **دستیار برنامه‌نویسی و کد** ⬅️ `role: 'coding'` | مدل: `gemini-3.6-flash`
-  3. `free_vision`: **دستیار بینایی و اسناد** ⬅️ `role: 'vision'` | مدل: `gemini-3.6-flash`
-- **Pro/Advanced Models (Pay-As-You-Go / Router.cheap):**
-  4. `paid_default`: **دستیار چت و گفتگوی پیشرفته** ⬅️ `role: 'paid_default'` | مدل: `claude-sonnet-4-6`
-  5. `paid_coding`: **دستیار برنامه‌نویسی پیشرفته** ⬅️ `role: 'paid_coding'` | مدل: `deepseek-v4-pro`
-  6. `paid_vision`: **دستیار اسناد و بینایی پیشرفته** ⬅️ `role: 'paid_vision'` | مدل: `gemini-3.8-flash`
-
-- **Key Security & Injection**:
-  - The public endpoint `GET /api/default-profiles` returns sanitized profile metadata with `apiKey: ''` masked.
-  - The Express server securely injects the real provider keys on the backend during chat streaming (`/api/chat/stream`) and model connection testing (`/api/models/test`).
-- **Client Cache Synchronization**:
-  - Client storage uses `PROFILES_CACHE_VERSION` in `src/lib/storage.ts` to clear obsolete or custom cards and maintain only the 6 standard profiles. Smart routing defaults strictly to the 3 free cards.
+- **Key security**: `GET /api/default-profiles` returns sanitised metadata with `apiKey: ''`. Real provider keys are injected **only** server-side, in `/api/chat/stream` and `/api/models/test`.
+- **Smart routing** defaults strictly to the 3 free cards.
 
 ### 3. Usage Quotas, Anti-Spam & Paid Credits [AMENDED 2026-11-12]
 
@@ -102,12 +95,10 @@ The platform operates exclusively on **exactly six stable system profiles** (div
 - It does NOT serve as an alternative model picker or profile manager. Selecting a prompt injects it directly into the active chat session with the appropriate system role.
 
 ### 5. File & Image Handling
-- **Images**: Converted to Base64 and resized/compressed via Canvas (max 1200px) *before* saving to state to reduce `localStorage` pressure.
-- **Documents & Text**: PDF (up to 10MB), text, code (`.js`, `.py`, etc.), datasets (`.csv`, `.json`). Text is extracted and injected into the prompt.
-- **UI Logic**: Non-image files use a `FileText` fallback layout — never render them as `<img>`.
-- **AI Image Generation Policy**:
-  - **In Chat (`ChatBox` / `MessageInput`)**: Strictly PAID and studio-tier using **Google Imagen 3** (`imagen-3` / UI: «موتور فوتورئال استودیویی») and **DALL-E 3** (`dalle-3` / UI: «موتور خلاقانه و هنری»). Raw model/brand names are strictly hidden in user-facing UI per Layer Zero #4. Low-quality free models are never used in chat. Deducts directly from user wallet balance (~6,000 to ~8,000 Tomans).
-  - **In Image Generation Studio (`ImageGenStudio.tsx`)**: User has full freedom — free engines (`flux`, `sana`, etc.) remain 100% free via Pollinations for test/fun, while studio engines (`imagen-3`, `dalle-3`) deduct from wallet balance using system API keys without requiring personal BYOK keys.
+- **Images**: resized/compressed via Canvas (max 1200px) and Base64-encoded *before* entering state, to limit `localStorage` pressure.
+- **Documents**: PDF (≤10MB), text, code, datasets (`.csv`, `.json`); text is extracted and injected into the prompt. Non-image files always use the `FileText` layout — never render them as `<img>`.
+- **Image generation is PAID in chat**: only the studio engines (`imagen-3` → «موتور فوتورئال استودیویی», `dalle-3` → «موتور خلاقانه و هنری»), charged to the wallet (~6–8k Tomans). Brand names never appear in UI (Layer Zero #4).
+- **Image Studio** (`ImageGenStudio.tsx`) is different: free engines (`flux`, `sana`, …) run via Pollinations at no cost for experimenting, while the studio engines bill the wallet using system keys (no BYOK).
 
 ### 6. LocalStorage Quota Management
 - Conversation history is stored in `localStorage`.
@@ -115,8 +106,8 @@ The platform operates exclusively on **exactly six stable system profiles** (div
 
 ### 7. Real-time Streaming (SSE) & Main-Thread Protection
 - Chat streaming lives in `server/routes/chat.ts` (mounted from `server/index.ts`).
-- **Important Headers**: Always set `res.setHeader('X-Accel-Buffering', 'no');` so reverse proxies (Nginx, etc.) do not buffer the stream. Removing it causes `Failed to fetch` / timeouts.
-- **Main-Thread I/O Throttling (`chatStore.ts`)**: In `useChatStore.subscribe`, synchronous `saveConversations()` is bypassed during streaming (`state.isStreaming === true`) unless the number of conversations or messages changed (initial prompt addition). Upon stream completion or abort (`streamJustEnded`), a complete atomic save is executed. Action methods do not issue redundant synchronous saves, ensuring smooth 60 FPS streaming without CPU lockups.
+- **`X-Accel-Buffering: no` is mandatory** — see the Non-Negotiable Invariants list. Without it reverse proxies buffer the stream and clients see `Failed to fetch`.
+- **Main-Thread I/O Throttling (`chatStore.ts`)**: `useChatStore.subscribe` skips the synchronous `saveConversations()` while `isStreaming`, except when the conversation or message count changed; a full atomic save runs once on `streamJustEnded`. Action methods must not save on their own — see **Strict Rule 27**.
 
 ### 8. Auth, Pay-As-You-Go Wallet & Admin
 - **Auth**: JWT, phone OTP (Kavenegar), Google OAuth, email/password, and SMTP password reset (`server/routes/auth.ts`). `AuthModal.tsx` uses standard design tokens (`clay-modal`, `clay-input`, `clay-btn-primary`) without admin classes.
@@ -127,15 +118,13 @@ The platform operates exclusively on **exactly six stable system profiles** (div
 - **Free Subsidies Monitoring (`free_usage`)**:
   - All free chat turns log exact prompt/completion tokens and estimated USD cost to `wallet_transactions` (`type = 'free_usage'`, amount 0 Toman).
   - Admin Finance Tab (`AdminFinanceTab.tsx`) includes an active KPI card for **سهمیه و یارانه رایگان کاربران** calculating total subsidized messages, tokens, and Toman/USD cost to the platform.
-- **Admin**: Profile key management, promo codes, transaction audits, and system configuration (`server/routes/admin.ts`). See the **Admin Panel Security** section in the Strict Rules for the mandatory rules on API-key masking, destructive endpoints, and user deletion.
+- **Admin**: Profile key management, promo codes, transaction audits, and system configuration (`server/routes/admin.ts`). The mandatory rules on API-key masking, destructive endpoints and user deletion live in **Strict Rule 21** — read them there.
 - **Turso note**: `db.transaction()` is not supported in embedded-replica mode — avoid transactions or guard them.
-- **Admin user deletion is a REAL hard delete** (the admin's workflow is creating throwaway test accounts, signing in, then removing them). `DELETE /api/admin/users/:id` removes the user row *and* its dependent rows: `orders`, `wallet_transactions`, `conversations`, `free_daily_usage` (`id = 'user:<id>'`), `free_image_usage`. Do **not** "improve" this into a soft delete/archive — that was tried and reverted. `?archive=true` is available only for the rare case where the financial history must be preserved.
 
 ### 9. Blog / AI News
 - Public blog + tag archives (`/blog`, `/blog/:id`, `/blog/tag/:tagName`).
-- Hourly cron (`Asia/Tehran`) in `server/services/newsCron.ts`: RSS failover → Gemini rewrite/tags → DB → optional Telegram channel post.
-- Resilient feed fetch (multi-feed, timeouts, headers). Do not break Telegram fallback or schedule.
-- **[AMENDED 2026-10-26] Blog strategy direction**: The hourly cron remains active and must not be broken. However, cron output is now labeled as "news" (tag: `news` or `/blog/news`) and is intended to serve as a secondary content channel. The primary blog content channel is hand-written, deep, unique articles (2–3 per week) targeting real user queries. Do not delete or disable the cron. Do not auto-generate deep articles — the owner writes them.
+- **Hourly cron** (`Asia/Tehran`, `server/services/newsCron.ts`): RSS failover → rewrite/tags → DB → optional Telegram post. Resilient fetch (multi-feed, timeouts, headers). Do not break the schedule or the Telegram fallback.
+- **Strategy**: cron output is labeled "news" (`/blog/news`) and is a *secondary* channel. The primary channel is hand-written deep articles (2–3/week). Do not disable the cron, and do not auto-generate the deep articles — the owner writes them.
 
 ### 10. Telegram Bot
 - Telegraf bot in `server/telegram/bot.ts`: catalog, checkout/receipts, support, channel membership, deep links.
@@ -144,34 +133,23 @@ The platform operates exclusively on **exactly six stable system profiles** (div
 ### 11. SEO & eNamad
 
 - Dynamic `/sitemap.xml` (static routes + blog + tags + store products) and `/robots.txt` in `server/index.ts`.
-- Production SPA fallback injects title/description/OG/Twitter/JSON-LD via `renderHtmlWithSeo`. Client SPA updates use `src/lib/seo.ts` (`setPageSeo`).
+- Production SPA fallback injects title/description/OG/Twitter/JSON-LD via `renderHtmlWithSeo`; client navigation uses `setPageSeo` from `src/lib/seo.ts`.
 
-- **Default page title** — [AMENDED 2026-10-26]
-  - Old (superseded): `دستیار هوشمند | چت با هوش مصنوعی رایگان و پیشرفته`
-  - **New (current)**: `Dastyar AI | دستیار هوش مصنوعی فارسی — چت، کد، اسناد`
-  - **Preserve the old string** as the homepage `<h2>`. It currently ranks #7 for a valuable query and must not be deleted. Only the `<title>` tag changes.
+- **Title**: current `<title>` is `Dastyar AI | دستیار هوش مصنوعی فارسی — چت، کد، اسناد`. The old string `دستیار هوشمند | چت با هوش مصنوعی رایگان و پیشرفته` **must survive as the homepage `<h2>`** — it ranks #7 for a valuable query. Only the `<title>` changes.
 
-- **eNamad**: Keep `<meta name="enamad" content="60366138" />` in `index.html` and the trust seal markup in `src/components/Footer.tsx` (including `referrerpolicy="origin"`). Do not remove or casually rewrite verification assets (`60366138.txt` in root/public) unless explicitly asked.
+- **eNamad**: keep `<meta name="enamad" content="60366138" />`, the trust-seal markup in `src/components/Footer.tsx` (with `referrerpolicy="origin"`), and `60366138.txt` untouched unless explicitly asked.
 
-- **[AMENDED 2026-10-26] SEO Phase Pages**: The following pages are approved and requested by Layer Zero. Building them does NOT violate Rule 4:
-  - `/about` — About page (H1: «درباره Dastyar AI»)
-  - `/contact` — Contact page (H1: «تماس با Dastyar AI»)
-  - `/ai-assistant` — Informational page (H1: «دستیار هوش مصنوعی چیست؟»)
-  Each must be registered in the dynamic sitemap, in `renderHtmlWithSeo`, and in `setPageSeo`.
+- **SEO pages** (`/about`, `/contact`, `/ai-assistant`) are approved by Layer Zero. H1s: «درباره Dastyar AI»، «تماس با Dastyar AI»، «دستیار هوش مصنوعی چیست؟». Each must appear in the sitemap, in `renderHtmlWithSeo`, and in `setPageSeo`.
 
-- **[AMENDED 2026-10-26] Keyword intent split**:
-  - Homepage targets: «دستیار هوش مصنوعی فارسی»، «دستیار هوشمند» (transactional)
-  - `/ai-assistant` targets: «دستیار هوش مصنوعی چیست» (informational)
-  - These two H1s must **never** be identical or near-identical.
+- **Keyword intent**: the homepage targets «دستیار هوش مصنوعی فارسی» / «دستیار هوشمند» (transactional); `/ai-assistant` targets «دستیار هوش مصنوعی چیست» (informational). The two H1s must never be identical or near-identical.
 
-### 12. Gapless Streaming TTS & Server Audio RAM Cache
-- **Client Prefetch Pipeline (`src/lib/tts.ts`)**: Implements Scenario 2 gapless chunked streaming via Web Audio API. Audio chunk N+1 is prefetched concurrently while chunk N is playing, eliminating pauses between sentences.
-- **Server Cache & Heap Protection (`server/routes/tools.ts`)**: `ttsAudioCache` is strictly bounded to `MAX_TTS_CACHE_ITEMS = 10` with a 10-minute TTL (`TTS_CACHE_TTL_MS = 600000`) and LRU eviction. Dual header handling detects both modern Gemini 3.8 Flash Lite TTS native WAV (RIFF header) and legacy PCM (wrapped via `pcmToWavBuffer`). Browser client responses carry `Cache-Control: public, max-age=86400`.
+### 12. Gapless Streaming TTS
+- **Client (`src/lib/tts.ts`)**: chunked Web Audio playback; chunk N+1 is prefetched while chunk N plays, so there is no gap between sentences.
+- **Server (`server/routes/tools.ts`)**: `ttsAudioCache` bounds, TTL and the dual WAV/PCM handling are specified in **Strict Rule 28** — read it there rather than duplicating it here.
 
 ### 13. Follow-up Suggestions & Decision Chips (`<suggestions>`)
-- **Format & Prompt Contract**: The backend prompts models to generate 2-3 concise follow-up action suggestions at the end of responses in `<suggestions>["گزینه اول", "گزینه دوم"]</suggestions>`.
-- **Parsing & Stripping**: `src/lib/suggestionParser.ts` cleanly extracts suggestions and strips `<suggestions>` blocks from speech synthesis (TTS) and markdown text.
-- **UI & UX Contract**: Rendered at the foot of assistant messages as 3D tactile interactive chips with a return arrow ↪ and one-click instant send. Each suggestion must be short (3 to 5 words, max ~35 chars) to prevent layout overflows on mobile and desktop.
+- The format contract, length limits and the stripping rule in `src/lib/suggestionParser.ts` are specified in **Strict Rule 29**.
+- UI: rendered at the foot of assistant messages as tactile chips with a ↪ arrow and one-click send.
 
 ---
 
@@ -203,8 +181,14 @@ The platform operates exclusively on **exactly six stable system profiles** (div
 10. **Turso / SQLite Safety**: Prefer sync-friendly patterns; avoid unsupported transactions; do not delete self-healing replica / orphan `chatbox.db-info` cleanup logic without cause.
 11. **eNamad & SEO**: Do not strip enamad meta/seal, sitemap image tags, or server-side meta injection unless the user asks.
 12. **PWA `/api`**: Keep API routes out of the service worker cache.
+    - **[AMENDED 2026-11-16] Cloudflare edge caching — `Vary` must be exactly `Accept-Encoding`.** Cloudflare silently refuses to cache any response whose `Vary` header holds more than one value or *any* value other than `Accept-Encoding`. The site spent days effectively uncached for three stacked reasons, all of which were fixed together and must not regress:
+      - A **global** `cors()` added `Vary: Origin` to every response including static files. `cors()` is now mounted **only** on `/api`. Never re-mount it globally.
+      - `express.static(...).setHeaders` sets headers, but the internal `send` module appends `Vary: Accept-Encoding` **after** that callback — so writing `Vary` inside `setHeaders` alone produced a duplicated `Accept-Encoding, Accept-Encoding`. The authoritative normaliser is an `on-headers` middleware registered *before* the static handler, which runs just before headers flush: non-API requests keep only `Accept-Encoding`, API requests keep CORS `Origin` (needed by Capacitor/localhost).
+      - `Cache-Control` is now per-file, not a blanket `maxAge`: `/assets/**` → `public, max-age=31536000, immutable`; the PWA shell (`index.html`, `sw.js`, `registerSW.js`, `manifest*.json`) → `public, max-age=0, must-revalidate` so a deploy is visible immediately; everything else (images, icons, fonts) → `public, max-age=604800`.
+    - **Do not judge caching by `cf-cache-status` from a server/datacenter client.** Requests from a datacenter IP (CI, sandbox, `curl` on a VPS) keep returning `DYNAMIC` even when the config is correct, because Cloudflare scores them differently. Use the GraphQL `httpRequests1hGroups { sum { requests cachedRequests } }` query against the zone instead — real-user traffic does cache. The legacy Zone Analytics REST dashboard API is sunset (`code 1015`).
+    - **One leftover Workers route is enough to disable caching for the whole hostname.** A route object with `script: null` still makes Cloudflare treat the response as Worker-generated (`cf-cache-status: DYNAMIC`, uncacheable). After detaching a Worker from a domain, verify `GET /zones/:id/workers/routes` is actually empty, not just that the Worker's domains list is empty.
 13. **Env awareness**: `server/.env.example` may lag real usage. Important vars include `DEFAULT_GEMINI_KEY` / `GEMINI_API_KEY`, `DEFAULT_GROQ_KEY`, `TURSO_*`, `JWT_SECRET`, `TELEGRAM_*`, `PROXY_URL`, `KAVENEGAR_API_KEY`, `SMTP_*`, `WEBSITE_URL`/`WEB_URL`/`APP_URL`, `NODE_ENV`, `PORT`. Also `ALLOW_ADMIN_DB_RESET=true`, which is the only way to re-enable `POST /api/admin/reset-database` in production (see rule 21).
-14. **Frontend Monitoring**: Always use the `chrome-devtools-mcp` to monitor console errors and network requests directly when making frontend changes to ensure no hidden client-side errors exist.
+14. **Frontend Monitoring**: When making frontend changes, verify them in a real browser and watch for console errors and failing network requests — a change that type-checks and builds can still throw at runtime. `chrome-devtools-mcp` is **not** configured in this repository (it was referenced here historically); use whatever browser tooling is actually available in the session, and say so if none is. Never claim a UI change was visually verified when it was not. For the chat and TTS flows specifically, remember the server-side `/api/tts` path and the Web Audio playback in `src/lib/tts.ts` can only be confirmed by actually producing sound.
 15. **Web Grounding Architecture (single live layer)**: The product goal is one thing: let the main model answer from *fresh* web data plus its own knowledge, in one coherent answer. Everything in the retrieval pipeline exists to serve that and nothing more. `server/routes/chat.ts` runs the grounding layers **concurrently** via `Promise.allSettled` and merges the non-empty results:
     - `GoogleGroundingAgent` → the live layer. **No `site:` operator and no allowlist**: Gemini Search Grounding already ranks by relevance, and restricting domains made recall worse. Sources are taken from `groundingSupports` (the spans the engine actually grounded in), not from every returned chunk, and each one carries its supporting snippet. If `groundingSupports` is absent, fall back to all sources rather than dropping every citation.
     - `WikipediaAgent` → free, fast, and the best source for definitional/biographical questions. Guarded by `isTitleRelevant()` (see rule 16).
@@ -214,8 +198,14 @@ The platform operates exclusively on **exactly six stable system profiles** (div
     - Never reintroduce an `else if` chain here. It previously meant a routed tool silently skipped Google Grounding, so the answer was built from stale scraped data with no live lookup.
 16. **Wikipedia Relevance Guard**: `searchTitle` used to return `pages[0]` blindly, so "قیمت ارز چنده" was answered with the article "ارز" and injected as «اطلاعات موثق». `searchTitles()` now returns several candidates, each filtered by `isTitleRelevant()`, which requires `min(2, termWords.length)` shared content words after Persian folding (`ي/ی`, `ك/ک`, alef variants, ZWNJ) with stopwords removed. One shared word is **not** enough for a multi-word query. When the guard rejects everything, Wikipedia returns nothing and Grounding carries the answer — that is the intended, safe fallback.
 17. **Citation Prompt Discipline**: the `webSearchWrapper` `<instructions>` block is intentionally short (~3 sentences). It previously held 12 numbered rules (~2500 chars) that were patch-work for a bug whose real cause was the allowlist. A long rules block *degrades* model adherence instead of improving it. If citation quality regresses, fix the source injection — do not grow the prompt. Keep these: cite only sources whose evidence is in the context, inline or as a `**منابع:**` line, one entry per outlet, and never invent an unrelated or fabricated link.
-18. **Citation Root Cause (historical, do not reintroduce)**: the "irrelevant source" bug was **not** primarily a prompting failure. `GoogleGroundingAgent` used to flatten every category of `server/allowed_domains.json` into one OR-joined `site:` filter, so a foreign-policy question was *forced* to retrieve pages from `tgju.org` (gold/currency) and `coingecko.com`; those pages were injected as `📌 منابع:` and the model faithfully cited the only sources it was given. The allowlist and `searchRelevance.ts` have been deleted. A hand-rolled lexical source filter was tried first and abandoned: it dropped semantically relevant articles that shared no vocabulary with the query (e.g. a Reuters piece titled "واکنش آمریکا به توافق هسته‌ای" for "سیاست خارجی ایران"). `groundingSupports` replaced it because it is the engine's own relevance signal, not a guess.
+18. **Citation Root Cause (historical, do not reintroduce)**: the "irrelevant source" bug was **not** primarily a prompting failure. `GoogleGroundingAgent` used to flatten every category of `server/allowed_domains.json` into one OR-joined `site:` filter, so a foreign-policy question was *forced* to retrieve pages from `tgju.org` and `coingecko.com`; those were injected as `📌 منابع:` and the model faithfully cited the only sources it was given. Both the allowlist and `searchRelevance.ts` are deleted. A hand-rolled lexical filter was tried and abandoned — it dropped semantically relevant articles sharing no vocabulary with the query (e.g. a Reuters piece titled "واکنش آمریکا به توافق هسته‌ای" for "سیاست خارجی ایران"). `groundingSupports` replaced it because it is the engine's own relevance signal, not a guess.
 19. **Runtime Tests Required for Renderer/Util Logic**: `tsc --noEmit` and `vite build` do **not** catch logic bugs in string/regex utilities — a `/g`-flagged regex used with `String.match` returns no capture groups and type-checks fine. The project has vitest (`npm test`, see `src/lib/storage.test.ts` and `src/store/chatStore.test.ts`); add real test files there for new helpers, or exercise them with a throwaway `npx tsx` script (delete it afterwards). Cover the positive case, the negative case, and empty input. Note `vitest.config.ts` pins `include` to `src/**` and `server/**` and excludes `.kilo/**`, because a stale worktree copy was running its own tests against the live database.
+    - **[AMENDED 2026-11-16] A server test that touches the DB must create the schema itself.** `server/db/database.ts` deliberately points tests at a throwaway SQLite file (`server/data/.test-tmp`) and never syncs Turso, but it does **not** create tables. Any suite that reads or writes a table directly must import `initializeSchema` and call it in `beforeAll`, exactly as `routes/__tests__/models.test.ts` and `routes/__tests__/channelQuota.test.ts` do:
+      ```ts
+      import { initializeSchema } from '../../db/schema';
+      beforeAll(() => { initializeSchema(); }, 30000);
+      ```
+      Without it every case dies with `SqliteError: no such table: site_settings` — that was the entire cause of the `multiPoolManager.test.ts` failures, not a bug in the circuit-breaker logic. The whole suite (`npm test`) is expected to be **63 passing**; a differing count means something regressed.
 20. **Type Scale (non-chat UI)**: `--chat-font-size` is driven by the user slider and is deliberately scoped to the chat only (`MarkdownRenderer`, `.markdown-body`, `MessageInput`, `ChatBox`). Everything else uses the fixed scale in `src/index.css` so a text-size preference can never break the blog, store or landing layout.
     - Tokens `--text-2xs` … `--text-5xl` form a modular scale (ratio 1.200) with a mobile default and a `min-width: 769px` override that steps up only the upper half — enlarging 11px meta text on desktop makes dense UI look loose.
     - Use the semantic classes instead of `text-[13px]`: `type-display`, `type-h1`, `type-h2`, `type-h3`, `type-h4`, `type-body`, `type-secondary`, `type-meta`, `type-badge`, `type-card-title`. Ad-hoc `text-[Npx]` values had drifted into 9/9.5/10/10.5/11/12.5/13 across 31 files; do not add new ones.
@@ -299,6 +289,12 @@ Agents that previously worked on this repo have made the following mistakes. Do 
 | "ttsAudioCache in tools.ts can hold 50+ items indefinitely" | **False.** Capped at 10 items with 10-minute TTL and LRU eviction to protect server RAM (Rule 28) |
 | "Google Imagen 3 or DALL-E 3 brand names can be displayed in UI buttons" | **False.** Use generic Persian labels («موتور فوتورئال استودیویی» and «موتور خلاقانه و هنری») per Layer Zero #4 |
 | "JavaScript String has a .strip() method" | **False.** Python uses .strip(), JavaScript uses .trim() (Rule 30) |
+| "The site being unreachable without a VPN is an app or code problem" | **False.** It was a missing IPv4 `A` record plus a leftover Worker route. Check DNS and Cloudflare first — see the Production Infrastructure section |
+| "`cf-cache-status: DYNAMIC` from my `curl`/script means caching is broken" | **False.** Datacenter IPs are scored differently; query GraphQL `httpRequests1hGroups` instead (Rule 12) |
+| "Setting `Vary` inside `express.static`'s `setHeaders` is enough" | **False.** `send` appends its own `Vary: Accept-Encoding` afterwards, producing a duplicate that disables Cloudflare caching. The `on-headers` normaliser is what actually works (Rule 12) |
+| "`cors()` can be mounted globally, it's harmless" | **False.** It stamps `Vary: Origin` on static assets and silently kills edge caching (Rule 12) |
+| "The failing `multiPoolManager` tests mean the circuit breaker is broken" | **False.** The test DB had no schema; `initializeSchema()` in `beforeAll` fixes it (Rule 19) |
+| "`chrome-devtools-mcp` is available for frontend monitoring" | **False.** It is not configured in this repo; Rule 14 explains what to do instead |
 
 ---
 
@@ -311,6 +307,32 @@ cp /root/.config/dastyar/.env .env
 ```
 
 The store holds the Turso URL/token and other local-only secrets. Never commit `.env`.
+
+---
+
+## 🌐 Production Infrastructure (Cloudflare + Render)
+
+> **[ADDED 2026-11-16]** The site was unreachable without a VPN for an extended period. The cause was **never** the application: the apex domain had no IPv4 `A` record at all (only an `AAAA` pointing at `100::`, owned by a Cloudflare Worker), so IPv4-only clients — most Iranian mobile networks — could not resolve it. A second, independent fault then kept the edge cache disabled even after DNS was fixed.
+
+**Current topology — do not reintroduce a Worker in front of the app:**
+
+| Record | Type | Target | Proxy |
+|---|---|---|---|
+| `@` | `A` | `216.24.57.1` (Render) | proxied |
+| `www` | `CNAME` | `fa-chatbox.onrender.com` | proxied |
+
+- Cloudflare zone `dastyarai.com`, id `21b35f9bb32cda96c04ad09239b6131b`, account `3b8f32a7735333d8271183a986b9b8af`, **Free plan**.
+- Cloudflare settings that were deliberately tuned (all reversible): `ssl: strict`, `min_tls_version: 1.2`, `rocket_loader: off`, `browser_cache_ttl: 0`, `email_obfuscation: off`, HSTS `max-age=31536000; includeSubDomains`, `0-RTT: off`.
+- **Deliberately left alone, by explicit owner instruction — do not "optimise" these:** `security_level` (`medium`) and Bot Fight Mode. Raising `security_level` increases the odds an ordinary Iranian visitor sees the Cloudflare interstitial, and that challenge page loads from a different hostname that is sometimes blocked in Iran — so the user gets a blank screen instead of the site. The site's real traffic is low enough that this buys nothing.
+- **`0-RTT` is off on purpose.** Its early data can be replayed, and this app's sensitive routes (`/api/chat`, wallet top-up, auth) are `POST`. The speed gain was imperceptible; the replay risk was not.
+- **Render dashboard (`dashboard.render.com`) is not reachable from Iran without a VPN.** This is a known, unsolved limitation for the owner, separate from the app.
+- The Cloudflare API token used during this work had `DNS:Edit` + `Workers Scripts:Read` but **no Worker delete permission** (`403` on delete). Tokens are short-lived and are not stored in the repo.
+
+**Verification checklist after any DNS/infra change** — test both families, and remember `curl` may crash in some sandboxes (use Node `fetch`):
+- `A` and `AAAA` both resolve, and `/`, `/api/health`, `/blog`, `/ai-assistant` all return `200` over IPv4 *and* IPv6.
+- `www` returns `301` to the apex.
+- `GET /zones/:id/workers/routes` is empty — a single leftover route silently disables caching for the whole hostname (rule 12).
+- Static assets come back with `vary: Accept-Encoding` and the `Cache-Control` values from rule 12.
 
 ---
 
