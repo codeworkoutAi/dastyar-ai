@@ -66,17 +66,17 @@ export function StoreFront() {
   useEffect(() => {
     const isRoot = window.location.pathname === '/';
     setPageSeo({
-      title: 'Dastyar AI | دستیار هوش مصنوعی فارسی — چت، کد، اسناد',
-      description: 'فروشگاه تخصصی ابزارهای هوش مصنوعی: خرید اکانت‌های اختصاصی، کلیدهای API، شارژ کیف پول و دستیار هوشمند با تحویل سریع و گارانتی.',
+      title: 'Dastyar AI | فروشگاه تخصصی ابزارها و اکانت‌های هوش مصنوعی',
+      description: 'فروشگاه تخصصی هوش مصنوعی Dastyar AI: خرید اکانت قانونی و اختصاصی، شارژ کیف پول، کلیدهای API و پکیج‌های آموزشی با تحویل سریع، ضمانت کامل و مشاور هوشمند خرید.',
       canonical: isRoot ? `${window.location.origin}/` : `${window.location.origin}/store`,
       ogType: 'website',
       schema: {
         '@context': 'https://schema.org',
         '@graph': [
           {
-            '@type': 'Store',
-            name: 'فروشگاه هوش مصنوعی دستیار هوشمند',
-            description: 'فروشگاه تخصصی هوش مصنوعی: خرید بسته‌های اعتباری، اکانت‌های اختصاصی، کلیدهای API و پکیج‌های آموزشی با تحویل آنی.',
+            '@type': 'OnlineStore',
+            name: 'فروشگاه تخصصی هوش مصنوعی Dastyar AI',
+            description: 'فروشگاه تخصصی هوش مصنوعی: خرید بسته‌های اعتباری، اکانت‌های اختصاصی، کلیدهای API و پکیج‌های آموزشی با تحویل سریع و ضمانت کامل.',
             url: isRoot ? `${window.location.origin}/` : `${window.location.origin}/store`,
             image: `${window.location.origin}/pwa-512x512.png`,
             hasOfferCatalog: {

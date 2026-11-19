@@ -111,8 +111,8 @@ export async function renderHtmlWithSeo(req: express.Request, res: express.Respo
       }
     }
 
-    let pageTitle = 'Dastyar AI | دستیار هوش مصنوعی فارسی — چت، کد، اسناد';
-    let pageDesc = 'با Dastyar AI رایگان شروع کنید: چت رایگان و نامحدود با مدل‌های پایه + پرداخت به‌ازای مصرف برای مدل‌های پیشرفته. چت، برنامه‌نویسی، تحلیل اسناد و تصویر به فارسی.';
+    let pageTitle = 'Dastyar AI | فروشگاه تخصصی ابزارها و اکانت‌های هوش مصنوعی';
+    let pageDesc = 'فروشگاه تخصصی هوش مصنوعی Dastyar AI: خرید اکانت قانونی و اختصاصی، شارژ کیف پول، کلیدهای API و پکیج‌های آموزشی با تحویل سریع، ضمانت کامل و مشاور هوشمند خرید.';
     let pageImage = `${baseUrl}/pwa-512x512.png`;
     let pageType = 'website';
     let canonicalUrl = `${baseUrl}${urlPath}`;
@@ -414,21 +414,28 @@ export async function renderHtmlWithSeo(req: express.Request, res: express.Respo
             ]
           };
         } else if (urlPath === '/' || urlPath === '/landing') {
-          // Home / Landing page Store + FAQPage Schema for GEO & AI Answer Engines
+          pageTitle = 'Dastyar AI | فروشگاه تخصصی ابزارها و اکانت‌های هوش مصنوعی';
+          pageDesc = 'فروشگاه تخصصی هوش مصنوعی Dastyar AI: خرید اکانت قانونی و اختصاصی، شارژ کیف پول، کلیدهای API و پکیج‌های آموزشی با تحویل سریع، ضمانت کامل و مشاور هوشمند خرید.';
+
+          // Home / Landing page OnlineStore + FAQPage Schema for GEO & AI Answer Engines
           let topStoreProducts: any[] = [];
           try {
-            topStoreProducts = db.prepare('SELECT id, title, price FROM products WHERE status = "active" OR status IS NULL ORDER BY id DESC LIMIT 8').all() as any[];
+            topStoreProducts = db.prepare('SELECT id, title, price FROM products WHERE status = "active" OR status IS NULL ORDER BY id DESC LIMIT 12').all() as any[];
           } catch (_) {}
 
           structuredData = {
             '@context': 'https://schema.org',
             '@graph': [
               {
-                '@type': 'Store',
-                name: 'فروشگاه هوش مصنوعی دستیار هوشمند | Dastyar AI',
-                description: 'فروشگاه تخصصی ابزارها و اکانت‌های هوش مصنوعی: خرید اکانت‌های اختصاصی، کلیدهای API و خدمات آنلاین هوش مصنوعی با تحویل سریع و گارانتی.',
+                '@type': 'OnlineStore',
+                '@id': `${baseUrl}/#store`,
+                name: 'فروشگاه تخصصی ابزارها و اکانت‌های هوش مصنوعی | Dastyar AI',
+                alternateName: ['Dastyar AI Store', 'فروشگاه دستیار هوشمند'],
+                description: pageDesc,
                 url: `${baseUrl}/`,
                 image: `${baseUrl}/pwa-512x512.png`,
+                currenciesAccepted: 'IRR',
+                paymentAccepted: 'کارت‌های عضو شتاب، درگاه بانکی شاپرک',
                 hasOfferCatalog: {
                   '@type': 'OfferCatalog',
                   name: 'اکانت‌ها و ابزارهای هوش مصنوعی',
@@ -440,8 +447,21 @@ export async function renderHtmlWithSeo(req: express.Request, res: express.Respo
                       url: `${baseUrl}/store/product/${p.id}`
                     },
                     price: (p.price || 0) * 10,
-                    priceCurrency: 'IRR'
+                    priceCurrency: 'IRR',
+                    availability: 'https://schema.org/InStock',
+                    itemCondition: 'https://schema.org/NewCondition'
                   }))
+                }
+              },
+              {
+                '@type': 'WebSite',
+                '@id': `${baseUrl}/#website`,
+                url: `${baseUrl}/`,
+                name: 'Dastyar AI',
+                potentialAction: {
+                  '@type': 'SearchAction',
+                  target: `${baseUrl}/store?search={search_term_string}`,
+                  'query-input': 'required name=search_term_string'
                 }
               },
               {
@@ -452,15 +472,7 @@ export async function renderHtmlWithSeo(req: express.Request, res: express.Respo
                     name: 'فروشگاه هوش مصنوعی Dastyar AI چه خدماتی ارائه می‌دهد؟',
                     acceptedAnswer: {
                       '@type': 'Answer',
-                      text: 'در فروشگاه دستیار هوشمند، اکانت‌های قانونی و اشتراکی هوش مصنوعی، کلیدهای API، شارژ کیف پول و ابزارهای تخصصی با امکان پرداخت امن و تحویل سریع عرضه می‌شوند.'
-                    }
-                  },
-                  {
-                    '@type': 'Question',
-                    name: 'آیا چت با هوش مصنوعی در دستیار هوشمند رایگان است؟',
-                    acceptedAnswer: {
-                      '@type': 'Answer',
-                      text: 'بله، استفاده از مدل‌های هوش مصنوعی پایه در بخش چت برای تمامی کاربران رایگان است.'
+                      text: 'در فروشگاه Dastyar AI، اکانت‌های قانونی و اختصاصی هوش مصنوعی، کلیدهای API، شارژ کیف پول و خدمات تخصصی با پرداخت امن و تحویل سریع عرضه می‌شوند.'
                     }
                   },
                   {
@@ -468,7 +480,15 @@ export async function renderHtmlWithSeo(req: express.Request, res: express.Respo
                     name: 'نحوه تحویل اکانت‌ها و لایسنس‌ها در فروشگاه چگونه است؟',
                     acceptedAnswer: {
                       '@type': 'Answer',
-                      text: 'اکانت‌ها به دو صورت تحویل آنی خودکار از انبار لایسنس و تحویل سریع توسط پشتیبان در بازه ۱ تا ۲۴ ساعت کاری با ضمانت کامل تعویض و گارانتی تحویل داده می‌شوند.'
+                      text: 'اکانت‌ها به صورت فعال‌سازی اختصاصی با تحویل ۱ تا ۲۴ ساعت کاری با ضمانت کامل تعویض و گارانتی تحویل داده می‌شوند.'
+                    }
+                  },
+                  {
+                    '@type': 'Question',
+                    name: 'آیا برای خرید به راهنمایی نیاز دارم؟',
+                    acceptedAnswer: {
+                      '@type': 'Answer',
+                      text: 'بله، مشاور هوشمند آنلاین در تمام صفحات سایت در دسترس شماست تا بر اساس نوع کار شما (برنامه‌نویسی، تولید محتوا، ترید و گرافیک) بهترین اکانت را پیشنهاد دهد.'
                     }
                   }
                 ]
@@ -546,9 +566,8 @@ export async function renderHtmlWithSeo(req: express.Request, res: express.Respo
     } else if (urlPath === '/ai-assistant') {
       html = html.replace(/<h1[^>]*>.*?<\/h1>/, '<h1 style="font-size:20px;font-weight:700;margin:0 0 8px 0;color:#f8fafc;">دستیار هوش مصنوعی چیست؟</h1>');
       html = html.replace(/<h2[^>]*>.*?<\/h2>/, '');
-    } else if (urlPath === '/chat') {
-      html = html.replace(/<h1[^>]*>.*?<\/h1>/, '<h1 style="font-size:20px;font-weight:700;margin:0 0 8px 0;color:#f8fafc;">چت با هوش مصنوعی فارسی رایگان</h1>');
-      html = html.replace(/<h2[^>]*>.*?<\/h2>/, '');
+    } else if (urlPath === '/' || urlPath === '/store') {
+      html = html.replace(/<h1[^>]*>.*?<\/h1>/, '<h1 style="font-size:20px;font-weight:700;margin:0 0 8px 0;color:#f8fafc;">فروشگاه تخصصی ابزارها و اکانت‌های هوش مصنوعی</h1>');
     }
 
     const safeTitle = escapeHtml(pageTitle);
@@ -561,11 +580,11 @@ export async function renderHtmlWithSeo(req: express.Request, res: express.Respo
     const dynamicNavItems = getCachedNavItemsHtml(baseUrl);
     const internalNavHtml = `
       <section aria-label="پیوندهای مفید سایت" class="sr-only" style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;">
-        <h2>دستیار هوشمند | دسترسی سریع به بخش‌های اصلی و مقالات هوش مصنوعی</h2>
+        <h2>دستیار هوشمند | چت با هوش مصنوعی رایگان و پیشرفته</h2>
         <nav aria-label="پیوندهای مفید سایت">
           <ul>
-            <li><a href="${baseUrl}/">چت هوش مصنوعی رایگان فارسی</a></li>
-            <li><a href="${baseUrl}/store">فروشگاه ابزارها و اکانت‌های هوش مصنوعی</a></li>
+            <li><a href="${baseUrl}/">فروشگاه تخصصی ابزارها و اکانت‌های هوش مصنوعی</a></li>
+            <li><a href="${baseUrl}/store">کاتالوگ اکانت‌ها و کلیدهای API</a></li>
             <li><a href="${baseUrl}/blog">مجله آموزش و اخبار هوش مصنوعی</a></li>
             <li><a href="${baseUrl}/about">درباره Dastyar AI</a></li>
             <li><a href="${baseUrl}/contact">تماس با ما</a></li>
@@ -575,7 +594,7 @@ export async function renderHtmlWithSeo(req: express.Request, res: express.Respo
           </ul>
         </nav>
         <p>${safeDesc}</p>
-        <p>دستیار هوشمند پلتفرم جامع چت هوش مصنوعی فارسی با پشتیبانی از هوش مصنوعی پیشرفته گفتگو، کدنویسی و تحلیل اسناد با اتصال مستقیم و پایدار از سراسر ایران است.</p>
+        <p>فروشگاه هوش مصنوعی Dastyar AI مرجع تخصصی خرید اشتراک قانونی ابزارهای هوش مصنوعی، کلیدهای API و خدمات آنلاین هوش مصنوعی با تحویل سریع، ضمانت معتبر و مشاور هوشمند است.</p>
       </section>`;
 
     const ssrHeading = `<div class="sr-only" style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;">${safeTitle}</div>`;

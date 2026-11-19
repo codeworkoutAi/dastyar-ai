@@ -52,10 +52,9 @@ export const sitemapHandler = (req: express.Request, res: express.Response) => {
     // 1. Static Core Pages
     const staticPages = [
       { path: '/', priority: '1.0', changefreq: 'daily' },
-      { path: '/chat', priority: '0.9', changefreq: 'daily' },
+      { path: '/store', priority: '1.0', changefreq: 'daily' },
       { path: '/blog', priority: '0.9', changefreq: 'daily' },
       { path: '/blog/news', priority: '0.7', changefreq: 'daily' },
-      { path: '/store', priority: '0.9', changefreq: 'daily' },
       { path: '/about', priority: '0.8', changefreq: 'monthly' },
       { path: '/contact', priority: '0.8', changefreq: 'monthly' },
       { path: '/ai-assistant', priority: '0.9', changefreq: 'weekly' },
