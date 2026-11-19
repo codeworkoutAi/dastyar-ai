@@ -4,7 +4,6 @@ import { Link, useParams, useNavigate } from 'react-router-dom';
 import { parseDbDate } from '../../lib/dateUtils';
 import { Home, BookOpen, Clock, ChevronRight, Share2, Send, PenTool, MessageCircle, Search, CalendarDays, Hash, ChevronDown, Check, LayoutGrid, List, AlignJustify, LayoutDashboard } from 'lucide-react';
 import { MarkdownRenderer } from '../../components/MarkdownRenderer';
-import { NeuralBanner } from '../../components/NeuralBanner';
 import { Footer } from '../../components/Footer';
 import { GlobalHeader } from '../../components/GlobalHeader';
 import { setPageSeo } from '../../lib/seo';
@@ -363,7 +362,6 @@ export function Blog() {
  <GlobalHeader />
 
  <main className="flex-1 container mx-auto px-4 py-8 lg:py-12 max-w-5xl">
- {!selectedPost && <NeuralBanner />}
  
  {loading ? (
  <div className="flex items-center justify-center h-64">
@@ -470,23 +468,33 @@ export function Blog() {
     'تحلیل این خبر به زبان ساده',
     'آینده این فناوری چیه؟'
   ].map((chip, idx) => (
-    <Link 
+    <button 
       key={idx}
-      to={`/chat?prompt=${encodeURIComponent(chip + ': ' + selectedPost.title + '\nلینک خبر: ' + window.location.href)}`}
-      className="px-4 py-2 rounded-xl type-badge font-semibold bg-white/60 dark:bg-zinc-800/60 border border-[var(--card-border)] hover:bg-emerald-50 dark:hover:bg-emerald-900/30 hover:border-emerald-500/30 text-[#525d75] dark:text-[#9aa5bc] hover:text-emerald-600 dark:hover:text-emerald-400 transition-all duration-300"
+      type="button"
+      onClick={() => {
+        window.dispatchEvent(new CustomEvent('open-advisor-widget', {
+          detail: { prompt: `${chip}: ${selectedPost.title}\nلینک مقاله: ${window.location.href}` }
+        }));
+      }}
+      className="px-4 py-2 rounded-xl type-badge font-semibold bg-white/60 dark:bg-zinc-800/60 border border-[var(--card-border)] hover:bg-emerald-50 dark:hover:bg-emerald-900/30 hover:border-emerald-500/30 text-[#525d75] dark:text-[#9aa5bc] hover:text-emerald-600 dark:hover:text-emerald-400 transition-all duration-300 cursor-pointer"
     >
       {chip}
-    </Link>
+    </button>
   ))}
   </div>
   </div>
-  <Link 
-  to={`/chat?prompt=${encodeURIComponent('درباره این خبر به من اطلاعات بیشتری بده: ' + selectedPost.title + '\nلینک خبر: ' + window.location.href)}`}
-  className="shrink-0 flex items-center gap-2 px-6 py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm transition-all shadow-md hover:-translate-y-0.5 w-full md:w-auto justify-center"
+  <button 
+    type="button"
+    onClick={() => {
+      window.dispatchEvent(new CustomEvent('open-advisor-widget', {
+        detail: { prompt: `درباره این خبر به من اطلاعات بیشتری بده: ${selectedPost.title}\nلینک مقاله: ${window.location.href}` }
+      }));
+    }}
+    className="shrink-0 flex items-center gap-2 px-6 py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm transition-all shadow-md hover:-translate-y-0.5 w-full md:w-auto justify-center cursor-pointer"
   >
-  <MessageCircle className="w-5 h-5" />
-  شروع گفتگو
-  </Link>
+    <MessageCircle className="w-5 h-5" />
+    گفتگو با مشاور هوشمند
+  </button>
   </div>
   </article>
  ) : (

@@ -401,7 +401,7 @@ export const AiAssistantPage: React.FC = () => {
             {PROMPT_EXAMPLES.map((promptText, idx) => (
               <Link
                 key={idx}
-                to={`/chat?prompt=${encodeURIComponent(promptText)}`}
+                to={`/?advisor=open&prompt=${encodeURIComponent(promptText)}`}
                 className="p-4 rounded-2xl clay-subcard hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-between gap-4 group"
               >
                 <div className="flex items-center gap-3">
@@ -411,7 +411,7 @@ export const AiAssistantPage: React.FC = () => {
                   </span>
                 </div>
                 <div className="flex items-center gap-1.5 text-xs text-blue-600 dark:text-blue-400 font-bold shrink-0">
-                  <span>امتحان در چت</span>
+                  <span>امتحان با مشاور هوشمند</span>
                   <ArrowLeft className="w-3.5 h-3.5 group-hover:-translate-x-1 transition-transform" />
                 </div>
               </Link>
@@ -463,11 +463,11 @@ export const AiAssistantPage: React.FC = () => {
             همین حالا Dastyar AI را امتحان کنید.
           </p>
           <Link
-            to="/chat"
+            to="/?advisor=open"
             className="inline-flex items-center gap-3 px-8 py-3.5 clay-btn-primary font-bold text-white rounded-2xl shadow-lg hover:scale-105 transition-all"
             style={{ fontFamily: "'Estedad', sans-serif" }}
           >
-            <span>چت با هوش مصنوعی فارسی رایگان</span>
+            <span>گفتگو با مشاور هوشمند خرید</span>
             <ArrowLeft className="w-4 h-4" />
           </Link>
         </section>

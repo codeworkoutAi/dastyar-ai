@@ -1,7 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { 
   Sparkles, X, Send, Bot, User, ShoppingBag, 
-  ChevronLeft, MessageSquare, ShieldCheck, Zap, RefreshCw, ArrowLeft
+  ChevronLeft, MessageSquare, ShieldCheck, Zap, RefreshCw, ArrowLeft,
+  Maximize2, Minimize2
 } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { toPersianDigits } from '../../lib/persianUtils';
@@ -55,6 +56,23 @@ export const ShoppingAdvisorWidget: React.FC<ShoppingAdvisorWidgetProps> = ({
   const activeProductId = currentProductId || routeProductId;
 
   const [isOpen, setIsOpen] = useState(defaultOpen);
+  const [isExpanded, setIsExpanded] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem('shopping_advisor_expanded') === 'true';
+    } catch {
+      return false;
+    }
+  });
+
+  const toggleExpanded = () => {
+    setIsExpanded(prev => {
+      const next = !prev;
+      try {
+        localStorage.setItem('shopping_advisor_expanded', String(next));
+      } catch {}
+      return next;
+    });
+  };
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
@@ -84,25 +102,6 @@ export const ShoppingAdvisorWidget: React.FC<ShoppingAdvisorWidgetProps> = ({
       inputRef.current?.focus();
     }
   }, [isOpen, isEmbedded]);
-
-  // Global event listener to open advisor widget from anywhere in the app
-  useEffect(() => {
-    const handleOpen = () => setIsOpen(true);
-    window.addEventListener('open-advisor-widget', handleOpen);
-    return () => window.removeEventListener('open-advisor-widget', handleOpen);
-  }, []);
-
-  // Listen for ?advisor=open or ?prompt= in URL
-  useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    if (params.get('advisor') === 'open') {
-      setIsOpen(true);
-      params.delete('advisor');
-      const newQuery = params.toString();
-      const newUrl = location.pathname + (newQuery ? `?${newQuery}` : '');
-      window.history.replaceState({}, document.title, newUrl);
-    }
-  }, [location.search, location.pathname]);
 
   const handleSendMessage = async (textToSend?: string) => {
     const text = (textToSend || input).trim();
@@ -157,6 +156,35 @@ export const ShoppingAdvisorWidget: React.FC<ShoppingAdvisorWidgetProps> = ({
     }
   };
 
+  // Global event listener to open advisor widget from anywhere in the app
+  useEffect(() => {
+    const handleOpen = (e?: any) => {
+      setIsOpen(true);
+      if (e?.detail?.prompt) {
+        handleSendMessage(e.detail.prompt);
+      }
+    };
+    window.addEventListener('open-advisor-widget', handleOpen);
+    return () => window.removeEventListener('open-advisor-widget', handleOpen);
+  }, [activeProductId]);
+
+  // Listen for ?advisor=open or ?prompt= in URL
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (params.get('advisor') === 'open') {
+      setIsOpen(true);
+      const incomingPrompt = params.get('prompt');
+      params.delete('advisor');
+      if (incomingPrompt) {
+        params.delete('prompt');
+        handleSendMessage(incomingPrompt);
+      }
+      const newQuery = params.toString();
+      const newUrl = location.pathname + (newQuery ? `?${newQuery}` : '');
+      window.history.replaceState({}, document.title, newUrl);
+    }
+  }, [location.search, location.pathname, activeProductId]);
+
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -206,61 +234,80 @@ export const ShoppingAdvisorWidget: React.FC<ShoppingAdvisorWidgetProps> = ({
           </div>
         </div>
         {!isEmbedded && (
-          <button
-            onClick={() => setIsOpen(false)}
-            className="w-8 h-8 rounded-full clay-icon-btn flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text-main)]"
-            aria-label="بستن پنجره مشاور"
-          >
-            <X size={16} />
-          </button>
+          <div className="flex items-center gap-1.5">
+            <button
+              onClick={toggleExpanded}
+              className="w-8 h-8 rounded-full clay-icon-btn flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text-main)] transition-colors hidden sm:flex cursor-pointer"
+              title={isExpanded ? 'کوچک‌نمایی پنجره' : 'بزرگ‌نمایی پنجره'}
+              aria-label={isExpanded ? 'کوچک‌نمایی' : 'بزرگ‌نمایی'}
+            >
+              {isExpanded ? <Minimize2 size={15} /> : <Maximize2 size={15} />}
+            </button>
+            <button
+              onClick={() => setIsOpen(false)}
+              className="w-8 h-8 rounded-full clay-icon-btn flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text-main)] transition-colors cursor-pointer"
+              title="بستن پنجره مشاور"
+              aria-label="بستن پنجره مشاور"
+            >
+              <X size={16} />
+            </button>
+          </div>
         )}
       </div>
 
       {/* Message List */}
-      <div className="flex-1 overflow-y-auto p-3.5 sm:p-4 space-y-3.5 custom-scrollbar">
+      <div className="flex-1 overflow-y-auto p-3.5 sm:p-5 space-y-4 custom-scrollbar">
         {messages.map((m) => (
           <div
             key={m.id}
             className={`flex flex-col ${m.role === 'user' ? 'items-end' : 'items-start'}`}
           >
-            <div className="flex items-start gap-2 max-w-[92%] sm:max-w-[85%]">
+            <div className={`flex items-start gap-2.5 ${m.role === 'user' ? 'max-w-[85%]' : 'w-full'} min-w-0`}>
               {m.role === 'assistant' && (
-                <div className="w-6 h-6 rounded-full bg-indigo-500/15 text-indigo-500 flex items-center justify-center shrink-0 mt-1">
-                  <Bot size={13} />
+                <div className="w-7 h-7 rounded-full bg-indigo-500/15 text-indigo-500 flex items-center justify-center shrink-0 mt-1 shadow-xs">
+                  <Bot size={14} />
                 </div>
               )}
               <div
-                className={`p-3 rounded-2xl text-xs sm:text-sm leading-relaxed ${
+                className={`p-3.5 sm:p-4 rounded-2xl text-xs sm:text-sm leading-7 min-w-0 break-words [overflow-wrap:anywhere] ${
                   m.role === 'user'
                     ? 'clay-btn-primary text-white rounded-br-xs font-medium'
-                    : 'clay-surface border border-[var(--card-border)] rounded-bl-xs text-[var(--text-main)] shadow-xs'
+                    : 'flex-1 clay-surface border border-[var(--card-border)] rounded-bl-xs text-[var(--text-main)] shadow-xs'
                 }`}
               >
                 <p className="whitespace-pre-wrap">{m.content}</p>
 
                 {/* Recommended Products Inside Bot Bubble */}
                 {m.products && m.products.length > 0 && (
-                  <div className="mt-3 pt-2.5 border-t border-[var(--card-border)]/50 space-y-2">
+                  <div className="mt-3.5 pt-3 border-t border-[var(--card-border)]/60 space-y-2.5">
                     <span className="text-[11px] font-black text-indigo-600 dark:text-indigo-400 block">
                       پیشنهاد متناسب با نیاز شما:
                     </span>
                     {m.products.map(prod => (
                       <div
                         key={prod.id}
-                        className="p-2.5 rounded-xl clay-card border border-[var(--card-border)] flex items-center justify-between gap-3 hover:scale-[1.01] transition-transform"
+                        className="p-3 rounded-xl clay-card border border-[var(--card-border)] flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 hover:scale-[1.01] transition-transform"
                       >
                         <div className="min-w-0">
-                          <h4 className="font-bold text-xs truncate text-[var(--text-main)]">{prod.title}</h4>
-                          <span className="text-[11px] font-black text-[var(--color-accent-primary)] block mt-0.5">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <h4 className="font-bold text-xs text-[var(--text-main)]">{prod.title}</h4>
+                            {prod.badge && (
+                              <span className="text-[9px] px-1.5 py-0.5 rounded-md bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 font-bold">
+                                {prod.badge}
+                              </span>
+                            )}
+                          </div>
+                          <span className="text-xs font-black text-[var(--color-accent-primary)] block mt-1 font-mono">
                             {usePersianDigits ? toPersianDigits(prod.price.toLocaleString('fa-IR')) : prod.price.toLocaleString('fa-IR')} تومان
                           </span>
                         </div>
                         <button
                           onClick={() => handleProductClick(prod)}
-                          className="px-3 py-1.5 clay-btn-primary font-bold text-[11px] rounded-lg shrink-0 flex items-center gap-1 shadow-xs cursor-pointer"
+                          className="px-3.5 py-1.5 clay-btn-primary font-bold text-xs rounded-xl shrink-0 flex items-center justify-center gap-1.5 shadow-xs cursor-pointer hover:scale-105 transition-all w-full sm:w-auto"
                         >
-                          <ShoppingBag size={12} />
+                          <ShoppingBag size={13} />
                           <span>مشاهده و خرید</span>
+                          <ArrowLeft size={13} />
                         </button>
                       </div>
                     ))}
@@ -363,7 +410,13 @@ export const ShoppingAdvisorWidget: React.FC<ShoppingAdvisorWidgetProps> = ({
 
       {/* Floating Drawer / Card */}
       {isOpen && (
-        <div className="fixed bottom-4 left-4 z-50 w-[calc(100vw-2rem)] sm:w-[390px] h-[560px] max-h-[85vh] clay-modal rounded-3xl overflow-hidden shadow-2xl border border-[var(--card-border)] animate-slideUpScale flex flex-col">
+        <div 
+          className={`fixed bottom-3 left-3 sm:bottom-5 sm:left-5 z-50 w-[calc(100vw-24px)] sm:w-[460px] ${
+            isExpanded ? 'sm:!w-[680px]' : ''
+          } h-[85dvh] sm:h-[600px] ${
+            isExpanded ? 'sm:!h-[680px]' : ''
+          } max-h-[88vh] clay-modal rounded-3xl overflow-hidden shadow-2xl border border-[var(--card-border)] animate-slideUpScale flex flex-col transition-all duration-300 ease-in-out`}
+        >
           {chatContent}
         </div>
       )}

@@ -158,11 +158,11 @@ export const AboutPage: React.FC = () => {
             همین حالا رایگان شروع کنید — {toPersianDigits(15)} پیام بدون ورود و چت نامحدود پس از ورود، بدون اشتراک اجباری.
           </p>
           <Link
-            to="/chat"
+            to="/?advisor=open"
             className="inline-flex items-center gap-3 px-8 py-3.5 clay-btn-primary font-bold text-white rounded-2xl shadow-lg hover:scale-105 transition-all"
             style={{ fontFamily: "'Estedad', sans-serif" }}
           >
-            <span>شروع گفتگوی رایگان</span>
+            <span>شروع گفتگو با مشاور هوشمند</span>
             <ArrowLeft className="w-4 h-4" />
           </Link>
         </section>

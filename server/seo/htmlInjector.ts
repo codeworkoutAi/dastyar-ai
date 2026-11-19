@@ -9,7 +9,7 @@ const STATIC_HTML_CACHE = new Map<string, { html: string; expiresAt: number }>()
 
 const INTERNAL_NAV_TTL_MS = 5 * 60 * 1000; // 5 minutes
 const STATIC_HTML_TTL_MS = 2 * 60 * 1000;  // 2 minutes
-const STATIC_SEO_PATHS = new Set(['/', '/landing', '/chat', '/about', '/contact', '/ai-assistant']);
+const STATIC_SEO_PATHS = new Set(['/', '/landing', '/about', '/contact', '/ai-assistant']);
 
 export function invalidateSeoHtmlCache(): void {
   TEMPLATE_CACHE.clear();

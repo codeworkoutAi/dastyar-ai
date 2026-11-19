@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import { parseDbDate } from '../../lib/dateUtils';
 import { Home, BookOpen, Clock, ChevronRight, Hash, MessageCircle, LayoutDashboard } from 'lucide-react';
-import { NeuralBanner } from '../../components/NeuralBanner';
 import { Footer } from '../../components/Footer';
 import { GlobalHeader } from '../../components/GlobalHeader';
 import { setPageSeo } from '../../lib/seo';
