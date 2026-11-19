@@ -261,7 +261,7 @@ export function StoreFront() {
                     داشبورد
                   </Link>
                 </div>
-                <div className="text-xl font-black text-[var(--text-main)]">
+                <div className="text-xl font-black text-[var(--text-main)] font-price">
                   {usePersianDigits ? toPersianDigits((user.walletBalance || 0).toLocaleString()) : (user.walletBalance || 0).toLocaleString()} <span className="text-xs font-normal text-[var(--text-muted)]">تومان</span>
                 </div>
                 <button
@@ -526,7 +526,7 @@ export function StoreFront() {
                     <div className="mt-auto pt-4 border-t border-[var(--card-border)] flex items-center justify-between mb-4">
                       <div className="flex flex-col">
                         <span className="text-[10px] text-[var(--text-dim)] font-bold">مبلغ قابل پرداخت:</span>
-                        <span className="text-base font-black text-[var(--color-accent-primary)]">
+                        <span className="text-base font-black text-[var(--color-accent-primary)] font-price">
                           {formattedPrice}
                         </span>
                       </div>

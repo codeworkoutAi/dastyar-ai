@@ -344,7 +344,7 @@ export function ProductDetails() {
 
               <div className="text-center pb-5 border-b border-[var(--card-border)] relative z-10">
                 <span className="text-xs font-bold text-[var(--color-text-muted)] block mb-2">مبلغ قابل پرداخت:</span>
-                <div className="text-3xl font-black text-[var(--color-accent-primary)] drop-shadow-md flex items-center justify-center gap-2">
+                <div className="text-3xl font-black text-[var(--color-accent-primary)] drop-shadow-md flex items-center justify-center gap-2 font-price">
                   {usePersianDigits ? toPersianDigits(priceText) : priceText}
                 </div>
               </div>
@@ -368,7 +368,7 @@ export function ProductDetails() {
                         }`}
                       >
                         <span className="text-xs font-bold">{v.title}</span>
-                        <span className="text-xs font-black">
+                        <span className="text-xs font-black font-price">
                           {usePersianDigits ? toPersianDigits(v.price.toLocaleString('fa-IR')) : v.price.toLocaleString('fa-IR')} ت
                         </span>
                       </button>

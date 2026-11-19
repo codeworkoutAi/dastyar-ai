@@ -134,10 +134,15 @@ export const ShoppingAdvisorWidget: React.FC<ShoppingAdvisorWidgetProps> = ({
         throw new Error(data.error || 'خطا در ارتباط با مشاور هوشمند');
       }
 
+      const botContent = (data.reply || 'راهنمایی لازم ارائه شد.')
+        .replace(/\*\*([^*]+)\*\*/g, '($1)')
+        .replace(/(^|[^\*])\*([^\*]+)\*([^\*]|$)/g, '$1($2)$3')
+        .replace(/\*\*/g, '');
+
       const botMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: data.reply || 'راهنمایی لازم ارائه شد.',
+        content: botContent,
         products: data.products && data.products.length > 0 ? data.products : undefined
       };
 
@@ -275,7 +280,9 @@ export const ShoppingAdvisorWidget: React.FC<ShoppingAdvisorWidgetProps> = ({
                     : 'flex-1 clay-surface border border-[var(--card-border)] rounded-br-xs text-[var(--text-main)] shadow-xs'
                 }`}
               >
-                <p className="whitespace-pre-wrap">{m.content}</p>
+                <p className="whitespace-pre-wrap">
+                  {m.content.replace(/\*\*([^*]+)\*\*/g, '($1)').replace(/\*\*/g, '')}
+                </p>
 
                 {/* Recommended Products Inside Bot Bubble */}
                 {m.products && m.products.length > 0 && (
@@ -297,7 +304,7 @@ export const ShoppingAdvisorWidget: React.FC<ShoppingAdvisorWidgetProps> = ({
                               </span>
                             )}
                           </div>
-                          <span className="text-xs font-black text-[var(--color-accent-primary)] block mt-1 font-mono">
+                          <span className="text-xs font-black text-[var(--color-accent-primary)] block mt-1 font-price">
                             {usePersianDigits ? toPersianDigits(prod.price.toLocaleString('fa-IR')) : prod.price.toLocaleString('fa-IR')} تومان
                           </span>
                         </div>

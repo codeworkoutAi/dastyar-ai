@@ -300,6 +300,15 @@ html {
     font-family: var(--font-chat);
   }
 
+  /* Currency and Price Display Typography - Strictly Vazirmatn */
+  .font-price,
+  .price-value,
+  .price-display,
+  .price-tag {
+    font-family: 'Vazirmatn Variable', 'Vazirmatn', -apple-system, BlinkMacSystemFont, sans-serif !important;
+    font-feature-settings: "ss01" on;
+  }
+
   /* KaTeX Math RTL isolation & scroll safety */
   .katex {
     direction: ltr !important;

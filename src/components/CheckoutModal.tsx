@@ -228,7 +228,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ product, isOpen, o
 
  <div className="flex items-center justify-between text-xs sm:text-sm">
  <span className="text-zinc-600 dark:text-zinc-400">قیمت محصول</span>
- <div className="font-medium text-zinc-900 dark:text-zinc-100 flex items-center gap-1">
+ <div className="font-medium text-zinc-900 dark:text-zinc-100 flex items-center gap-1 font-price">
  <span>{formatPrice(effectivePrice)}</span>
  <span>تومان</span>
  </div>
@@ -281,7 +281,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ product, isOpen, o
  <div className="w-full h-px clay-btn-secondary/50" />
  <div className="flex items-center justify-between">
  <span className="text-zinc-900 dark:text-zinc-100 font-bold text-xs sm:text-sm">مبلغ قابل پرداخت</span>
- <div className="text-base sm:text-lg font-bold text-blue-600 dark:text-blue-400 flex items-center gap-1 font-ui">
+ <div className="text-base sm:text-lg font-bold text-blue-600 dark:text-blue-400 flex items-center gap-1 font-price">
  <span>{formatPrice(finalPrice)}</span>
  <span className="text-xs font-normal text-zinc-500">تومان</span>
  </div>
