@@ -192,9 +192,9 @@ router.post('/advisor', advisorLimiter, async (req, res) => {
 
     const cleanMsg = message.trim().slice(0, 500);
 
-    // Fetch active products
+    // Fetch active products safely
     const products = db.prepare(`
-      SELECT id, title, category, price, variations, description, features, deliveryTime, deliveryType, badge
+      SELECT id, title, category, price, variations, description, features, deliveryTime, badge
       FROM products
       WHERE status = 'active' OR status IS NULL
     `).all() as any[];
@@ -228,45 +228,55 @@ ${catalogSummary}
 ${currentContext}
 
 قوانین و دستورالعمل‌های شما:
-۱. فقط به سوالات مرتبط با اکانت‌های هوش مصنوعی، تفاوت پلن‌ها (مثلاً ChatGPT Plus در برابر Claude یا Leonardo)، قیمت‌ها، نحوه تحویل و گارانتی پاسخ دهید.
-۲. اگر کاربر سوال عمومی، حل مسئله، شعر یا برنامه‌نویسی پرسید، با لحنی صمیمی و محترمانه بفرمایید که شما مشاور خرید ابزارهای هوش مصنوعی هستید و بپرسید آیا برای انتخاب ابزار یا اکانت مناسبش کمکی می‌خواهد.
-۳. در هر پاسخی که محصول خاصی از فروشگاه ما را پیشنهاد می‌دهید، حتماً تگ شناسه آن محصول را با فرمت [RECOMMEND:ID] (مثلاً [RECOMMEND:29]) در انتهای پاسخ خود درج کنید تا کارت خرید آن محصول به صورت خودکار به کاربر نشان داده شود.
-۴. لحن شما صمیمی، مطمئن، شفاف و کوتاه باشد. از پاسخ‌های طولانی و خسته‌کننده پرهیز کنید.`;
+۱. به سوال کاربر با توجه به کاتالوگ فروشگاه پاسخ دهید. پاسخ‌های تکراری یا شعاری ندهید.
+۲. اگر کاربر درباره برنامه‌نویسی، طراحی تصویر، ترید، قیمت یا نحوه تحویل سوال کرد، پاسخ دقیق و کاربردی بدهید.
+۳. در هر پاسخی که محصول خاصی از فروشگاه ما را پیشنهاد می‌دهید، حتماً تگ شناسه آن محصول را با فرمت [RECOMMEND:ID] (مثلاً [RECOMMEND:${products[0]?.id || 1}]) در متن پاسخ خود درج کنید تا کارت خرید آن محصول به صورت خودکار به کاربر نشان داده شود.
+۴. لحن شما صمیمی، مطمئن، شفاف و کوتاه باشد (حداکثر ۲ تا ۴ پاراگراف).`;
 
     let reply = '';
-    const poolKey = getGeminiKeyFromPool([], 'gemini-3.6-flash') || getGeminiKeyFromPool([], 'gemini-3.5-flash-lite');
-    
-    if (poolKey) {
-      try {
-        const ai = getGeminiClient(poolKey, false);
-        const contents: any[] = [];
-        if (Array.isArray(history)) {
-          for (const h of history.slice(-6)) {
-            if (h.role === 'user') contents.push({ role: 'user', parts: [{ text: h.content }] });
-            else if (h.role === 'assistant') contents.push({ role: 'model', parts: [{ text: h.content }] });
-          }
-        }
-        contents.push({ role: 'user', parts: [{ text: cleanMsg }] });
 
-        const result = await ai.models.generateContent({
-          model: 'gemini-3.6-flash',
-          contents,
-          config: {
-            systemInstruction,
-            temperature: 0.7,
-            maxOutputTokens: 600
+    // 1. Try Gemini Pool with candidate models
+    const geminiCandidates = ['gemini-3.6-flash', 'gemini-3.5-flash-lite', 'gemini-2.5-flash'];
+    for (const cand of geminiCandidates) {
+      if (reply) break;
+      try {
+        let poolKey: string | null = null;
+        try {
+          poolKey = getGeminiKeyFromPool([], cand);
+        } catch (_) {}
+
+        if (poolKey) {
+          const ai = getGeminiClient(poolKey, false);
+          const contents: any[] = [];
+          if (Array.isArray(history)) {
+            for (const h of history.slice(-6)) {
+              if (h.role === 'user') contents.push({ role: 'user', parts: [{ text: h.content }] });
+              else if (h.role === 'assistant') contents.push({ role: 'model', parts: [{ text: h.content }] });
+            }
           }
-        });
-        reply = result.text?.trim() || '';
+          contents.push({ role: 'user', parts: [{ text: cleanMsg }] });
+
+          const result = await ai.models.generateContent({
+            model: cand,
+            contents,
+            config: {
+              systemInstruction,
+              temperature: 0.7,
+              maxOutputTokens: 600
+            }
+          });
+          reply = result.text?.trim() || '';
+        }
       } catch (geminiErr: any) {
-        console.warn('[Advisor] Gemini pool error, trying Groq fallback:', geminiErr?.message || geminiErr);
+        console.warn(`[Advisor] Gemini ${cand} failed:`, geminiErr?.message || geminiErr);
       }
     }
 
+    // 2. Try Groq Pool if Gemini was not available
     if (!reply) {
-      const groqKey = getGroqKeyFromPool([]);
-      if (groqKey) {
-        try {
+      try {
+        const groqKey = getGroqKeyFromPool([]);
+        if (groqKey) {
           const messages = [
             { role: 'system', content: systemInstruction },
             ...(Array.isArray(history) ? history.slice(-6).map((h: any) => ({ role: h.role === 'assistant' ? 'assistant' : 'user', content: h.content })) : []),
@@ -289,14 +299,46 @@ ${currentContext}
             const groqData = await groqRes.json();
             reply = groqData.choices?.[0]?.message?.content?.trim() || '';
           }
-        } catch (groqErr) {
-          console.error('[Advisor] Groq fallback error:', groqErr);
         }
+      } catch (groqErr) {
+        console.warn('[Advisor] Groq fallback failed:', groqErr);
       }
     }
 
+    // 3. Dynamic grounded smart fallback if all LLM network requests failed
     if (!reply) {
-      reply = 'سلام! برای انتخاب بهترین اکانت هوش مصنوعی (برنامه‌نویسی، تولید محتوا، ترید یا گرافیک)، می‌توانید اکانت‌های برتر فروشگاه مانند ChatGPT Plus و Claude Pro را در صفحه فروشگاه مشاهده کنید یا سوال دقیق‌تری بپرسید تا راهنمایی‌تان کنم.';
+      const q = cleanMsg.toLowerCase();
+      const findProd = (kw: string) => products.find(p => p.title.toLowerCase().includes(kw.toLowerCase()));
+
+      if (/برنامه|کد|پایتون|جاوا|فرانت|react|python|code|developer/i.test(q)) {
+        const claude = findProd('Claude') || findProd('کلود');
+        const gpt = findProd('ChatGPT') || findProd('چت‌جی‌پی‌تی');
+        const recTags = [claude?.id, gpt?.id].filter(Boolean).map(id => `[RECOMMEND:${id}]`).join(' ');
+        reply = `برای برنامه‌نویسی و توسعه نرم‌افزار، اکانت‌های **Claude Pro** (بهترین گزینه برای درک کدهای طولانی، ریفکتور و معماری) و **ChatGPT Plus** (با دسترسی به تحلیل داده‌ها و کدنویسی پیشرفته) بیشترین بازدهی را دارند. هر دو سرویس به صورت کاملاً قانونی فعال‌سازی می‌شوند و در تمام طول دوره اشتراک ضمانت دارند.\n\n${recTags}`;
+      } else if (/عکس|تصویر|طراحی|گرافیک|بنر|لوگو|میدجورنی|image|art|photo/i.test(q)) {
+        const mid = findProd('Midjourney') || findProd('میدجورنی') || findProd('Leonardo');
+        const gpt = findProd('ChatGPT');
+        const recTags = [mid?.id, gpt?.id].filter(Boolean).map(id => `[RECOMMEND:${id}]`).join(' ');
+        reply = `برای طراحی گرافیک و تولید تصاویر خلاقانه، سرویس **Midjourney** باکیفیت‌ترین خروجی فوتورئال و هنری را ارائه می‌دهد. همچنین اکانت **ChatGPT Plus** دارای مولد تصویر DALL-E 3 بوده و برای بنرهای تبلیغاتی و ایده‌پردازی گرافیکی عالی است.\n\n${recTags}`;
+      } else if (/قیمت|هزینه|چنده|تومان|ارزان|تخفیف/i.test(q)) {
+        const priceList = products.slice(0, 4).map(p => `• **${p.title}**: از ${Number(p.price).toLocaleString('fa-IR')} تومان`).join('\n');
+        const recTags = products.slice(0, 2).map(p => `[RECOMMEND:${p.id}]`).join(' ');
+        reply = `قیمت محبوب‌ترین اکانت‌های هوش مصنوعی ما به شرح زیر است:\n\n${priceList}\n\nتمامی پرداخت‌ها از طریق درگاه امن بانکی شاپرک انجام می‌شود و اکانت‌ها تضمین اصالت دارند.\n\n${recTags}`;
+      } else if (/تحویل|گارانتی|ضمانت|اعتماد|چقدر طول|ساعت|زمان/i.test(q)) {
+        reply = `کلیه اکانت‌های فروشگاه قانونی بوده و مشخصات فعال‌سازی بین **۱ تا ۲۴ ساعت** پس از ثبت سفارش ارسال می‌گردد. همچنین تمام اکانت‌ها تا آخرین روز اشتراک دارای **ضمانت و پشتیبانی تعویض** می‌باشند.`;
+      } else if (/اختصاصی|اشتراکی|تفاوت/i.test(q)) {
+        reply = `در فروشگاه ما، اکانت‌ها به صورت **اختصاصی روی ایمیل شما** فعال می‌شوند. مزیت اکانت اختصاصی این است که سابقه چت‌های شما کاملاً محرمانه است، هیچ محدودیتی از طرف کاربران دیگر روی مصرف شما اعمال نمی‌شود و قطعی نخواهید داشت.`;
+      } else if (currentProductId) {
+        const cur = products.find(p => p.id === Number(currentProductId));
+        if (cur) {
+          reply = `درباره اکانت «**${cur.title}**»: این سرویس با قیمت پایه ${Number(cur.price).toLocaleString('fa-IR')} تومان و تحویل ${cur.deliveryTime || '۱ تا ۲۴ ساعت'} ارائه می‌شود. در صورت تمایل می‌توانید با زدن دکمه خرید سریع در همین صفحه سفارش خود را نهایی کنید. [RECOMMEND:${cur.id}]`;
+        }
+      }
+
+      if (!reply) {
+        const recTags = products.slice(0, 2).map(p => `[RECOMMEND:${p.id}]`).join(' ');
+        reply = `سلام! 👋 من مشاور هوشمند فروشگاه Dastyar AI هستم. برای اینکه دقیق‌ترین ابزار یا اکانت را به شما پیشنهاد دهم، بفرمایید برای چه کاری (برنامه‌نویسی، تولید محتوا، ترید یا کارهای گرافیکی) نیاز به هوش مصنوعی دارید؟\n\n${recTags}`;
+      }
     }
 
     // Parse recommended products

@@ -58,6 +58,11 @@ export const ShoppingAdvisorWidget: React.FC<ShoppingAdvisorWidgetProps> = ({
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const messagesRef = useRef<Message[]>(messages);
+
+  useEffect(() => {
+    messagesRef.current = messages;
+  }, [messages]);
 
   useEffect(() => {
     if (isOpen || isEmbedded) {
@@ -86,7 +91,7 @@ export const ShoppingAdvisorWidget: React.FC<ShoppingAdvisorWidgetProps> = ({
     setLoading(true);
 
     try {
-      const history = messages.slice(-5).map(m => ({ role: m.role, content: m.content }));
+      const history = messagesRef.current.slice(-6).map(m => ({ role: m.role, content: m.content }));
       const res = await fetch('/api/store/advisor', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
