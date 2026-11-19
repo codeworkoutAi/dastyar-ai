@@ -8,10 +8,7 @@ import { isBazaarEnvironment, doSilentBazaarLogin } from './lib/bazaarUtils';
 import { App as CapacitorApp } from '@capacitor/app';
 
 // Lazy-loaded Pages
-const ChatApp = lazy(() => import('./pages/chat/ChatApp').then(m => ({ default: m.ChatApp })));
 const SalesAdvisorPage = lazy(() => import('./pages/store/SalesAdvisorPage').then(m => ({ default: m.SalesAdvisorPage })));
-
-// Lazy-loaded Pages
 const LandingPage = lazy(() => import('./pages/landing/LandingPage').then(m => ({ default: m.LandingPage })));
 const StoreFront = lazy(() => import('./pages/store/StoreFront').then(m => ({ default: m.StoreFront })));
 const ProductDetails = lazy(() => import('./pages/store/ProductDetails').then(m => ({ default: m.ProductDetails })));
@@ -24,10 +21,6 @@ const AiAssistantPage = lazy(() => import('./pages/ai-assistant/AiAssistantPage'
 
 // Lazy-loaded Modals
 const SettingsModal = lazy(() => import('./components/SettingsModal').then(m => ({ default: m.SettingsModal })));
-const ExportModal = lazy(() => import('./components/ExportModal').then(m => ({ default: m.ExportModal })));
-const ImageGenStudio = lazy(() => import('./components/ImageGenStudio').then(m => ({ default: m.ImageGenStudio })));
-const UiGuideModal = lazy(() => import('./components/UiGuideModal').then(m => ({ default: m.UiGuideModal })));
-const ExploreHub = lazy(() => import('./components/ExploreHub').then(m => ({ default: m.ExploreHub })));
 const ReloadPrompt = lazy(() => import('./components/ReloadPrompt').then(m => ({ default: m.ReloadPrompt })));
 const PWAInstallBanner = lazy(() => import('./components/PWAInstallBanner').then(m => ({ default: m.PWAInstallBanner })));
 const AuthModal = lazy(() => import('./components/AuthModal'));
@@ -54,10 +47,6 @@ export default function App() {
  const isAuthModalOpen = useAuthStore(state => state.isAuthModalOpen);
  const {
    isSettingsOpen,
-   isExportOpen,
-   isImageStudioOpen,
-   isUiGuideOpen,
-   isExploreOpen,
    isAdminOpen,
    isAboutOpen,
    isContactOpen,
@@ -191,11 +180,7 @@ export default function App() {
  </Routes>
 
         {/* Global Modals - Loaded on demand only when opened */}
-        {isExploreOpen && <ExploreHub />}
         {isSettingsOpen && <SettingsModal />}
-        {isExportOpen && <ExportModal />}
-        {isImageStudioOpen && <ImageGenStudio />}
-        {isUiGuideOpen && <UiGuideModal />}
         {isAuthModalOpen && <AuthModal />}
         {isAdminOpen && <AdminModal isOpen={isAdminOpen} onClose={() => setIsAdminOpen(false)} />}
         {isAboutOpen && <AboutModal />}

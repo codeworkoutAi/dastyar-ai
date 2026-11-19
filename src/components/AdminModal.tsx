@@ -148,7 +148,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
     },
     { id: 'users', label: 'کاربران', icon: <Users size={16} /> },
     { id: 'finance', label: 'مالی و خزانه‌داری', icon: <Coins size={16} /> },
-    { id: 'analytics', label: 'آنالیتیکس و مدل‌ها', icon: <BarChart3 size={16} /> },
+    { id: 'analytics', label: 'آمار و گزارشات', icon: <BarChart3 size={16} /> },
     { id: 'news', label: 'مجله و اخبار', icon: <Newspaper size={16} /> },
     { id: 'settings', label: 'تنظیمات سیستم', icon: <Sliders size={16} /> },
   ];

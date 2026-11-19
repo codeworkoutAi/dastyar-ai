@@ -1,15 +1,13 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useAuthStore } from '../../store/authStore';
 import { useUIStore } from '../../store/uiStore';
-import { useChatStore } from '../../store/chatStore';
-import { useSettingsStore } from '../../store/settingsStore';
 import { 
   ShoppingBag, User as UserIcon, LifeBuoy, 
   Key, Package, CheckCircle2, XCircle, Clock, Save, Lock, LogOut,
   Receipt, Printer, ArrowRight, Home, ExternalLink, ShieldCheck, ChevronLeft, ChevronRight,
   Wallet, Zap, Coins, Cpu, MessageSquare, Plus, ArrowUpRight, ArrowDownLeft,
   Filter, Sparkles, RefreshCw, BarChart2, Gift, CreditCard,
-  Search, Code, Eye, Copy
+  Search, Code, Eye, Copy, Store
 } from 'lucide-react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { toPersianDigits } from '../../lib/persianUtils';
@@ -27,24 +25,16 @@ export const UserDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  // Wallet & Usage Stats
+  // Wallet State
   const [walletData, setWalletData] = useState<{
     walletBalance: number;
     hasReceivedWelcomeBonus: boolean;
     sellingRate: number;
-    stats: {
-      totalTokens: number;
-      promptTokens: number;
-      completionTokens: number;
-      totalSpentToman: number;
-      totalMessages: number;
-      modelBreakdown: { model: string; messageCount: number; tokens: number; costToman: number }[];
-    };
     transactions: any[];
   } | null>(null);
   const [walletLoading, setWalletLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState<'wallet' | 'pricing' | 'orders' | 'redeem'>('wallet');
-  const [txFilter, setTxFilter] = useState<'all' | 'chat' | 'deposits'>('all');
+  const [activeTab, setActiveTab] = useState<'orders' | 'wallet' | 'redeem'>('orders');
+  const [txFilter, setTxFilter] = useState<'all' | 'deposits' | 'purchases'>('all');
 
   const [searchParams, setSearchParams] = useSearchParams();
   const paymentStatus = searchParams.get('payment');
@@ -52,71 +42,9 @@ export const UserDashboard = () => {
   const paidRefId = searchParams.get('refId');
   const paidAmount = searchParams.get('amount');
 
-  // Live Models Pricing & Tariffs State
-  const [pricingData, setPricingData] = useState<{ sellingRate: number; models: any[] } | null>(null);
-  const [pricingLoading, setPricingLoading] = useState(false);
-  const [pricingSearch, setPricingSearch] = useState('');
-  const [pricingFilter, setPricingFilter] = useState<'all' | 'system' | 'fast' | 'coding' | 'vision'>('all');
-
-  const { createChat } = useChatStore();
-  const { updateSettings } = useSettingsStore();
-
   const navigate = useNavigate();
 
-  const fetchPricing = async () => {
-    setPricingLoading(true);
-    try {
-      const res = await fetch('/api/models-pricing');
-      if (res.ok) {
-        const data = await res.json();
-        setPricingData(data);
-      }
-    } catch (err) {
-      console.error('Error fetching models pricing:', err);
-    } finally {
-      setPricingLoading(false);
-    }
-  };
 
-  const handleStartChatWithModel = (model: any) => {
-    if (model.profileId) {
-      updateSettings(prev => ({
-        ...prev,
-        providers: {
-          ...prev.providers,
-          custom: {
-            ...prev.providers.custom,
-            activeProfileId: model.profileId,
-          }
-        }
-      }));
-    }
-    createChat(model.name || model.id);
-    navigate('/chat');
-  };
-
-  const filteredPricingModels = useMemo(() => {
-    if (!pricingData?.models) return [];
-    return pricingData.models.filter(m => {
-      if (pricingFilter === 'system' && !m.isDefaultProfile) return false;
-      if (pricingFilter === 'fast' && !m.isFast) return false;
-      if (pricingFilter === 'coding' && !m.isCoding) return false;
-      if (pricingFilter === 'vision' && !m.isVision) return false;
-
-      if (pricingSearch.trim()) {
-        const q = pricingSearch.trim().toLowerCase();
-        const matchId = (m.id || '').toLowerCase().includes(q);
-        const matchName = (m.name || '').toLowerCase().includes(q);
-        const matchProvider = (m.provider || '').toLowerCase().includes(q);
-        return matchId || matchName || matchProvider;
-      }
-      return true;
-    });
-  }, [pricingData, pricingFilter, pricingSearch]);
-
-  useEffect(() => {
-    fetchPricing();
-  }, []);
 
   useEffect(() => {
     if (paymentStatus === 'success') {
@@ -402,15 +330,23 @@ export const UserDashboard = () => {
           <div className="flex items-center gap-3 shrink-0 pt-1 md:pt-0">
             <Link
               to="/chat"
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl clay-btn-primary-thick text-white text-xs font-black shadow-md shadow-blue-600/25 transition-all cursor-pointer active:scale-95"
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl clay-btn-thick text-[var(--text-main)] text-xs font-black transition-all cursor-pointer active:scale-95"
               style={{ fontFamily: "'Estedad', sans-serif" }}
             >
-              <MessageSquare size={15} />
-              <span>ورود به چت‌باکس</span>
+              <Sparkles size={15} className="text-amber-500" />
+              <span>مشاور هوشمند</span>
+            </Link>
+            <Link
+              to="/"
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl clay-btn-primary-thick text-white text-xs font-black shadow-md shadow-blue-600/25 transition-all cursor-pointer active:scale-95"
+              style={{ fontFamily: "'Estedad', sans-serif" }}
+            >
+              <Store size={15} />
+              <span>فروشگاه</span>
             </Link>
             <button
               onClick={() => setIsWalletOpen(true)}
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl clay-btn-emerald-thick text-white text-xs font-black shadow-md shadow-emerald-600/25 transition-all cursor-pointer active:scale-95"
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl clay-btn-emerald-thick text-white text-xs font-black shadow-md shadow-emerald-600/25 transition-all cursor-pointer active:scale-95"
               style={{ fontFamily: "'Estedad', sans-serif" }}
             >
               <Plus size={15} />
@@ -419,7 +355,7 @@ export const UserDashboard = () => {
           </div>
         </div>
 
-        {/* Row 2: 4 Key Metric Cards (Full 3D Claymorphic Overhaul) */}
+        {/* Row 2: 4 Key Store Metric Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           
           {/* Card 1: Wallet Balance (Emerald / Teal) */}
@@ -446,85 +382,85 @@ export const UserDashboard = () => {
               <span className="text-xs font-bold text-zinc-500 dark:text-zinc-400">تومان</span>
             </div>
             <div className="text-[11px] flex items-center justify-between pt-2.5 border-t border-black/5 dark:border-white/5 mt-2">
-              <span className="text-[#525d75] dark:text-[#9aa5bc]">مدل پرداختی:</span>
-              <span className="font-bold text-emerald-600 dark:text-emerald-400">Pay-As-You-Go</span>
+              <span className="text-[#525d75] dark:text-[#9aa5bc]">وضعیت اعتبار:</span>
+              <span className="font-bold text-emerald-600 dark:text-emerald-400">فعال (بدون انقضا)</span>
             </div>
           </div>
 
-          {/* Card 2: Total Tokens (Blue / Cyan) */}
-          <div className="p-5 md:p-6 rounded-3xl clay-card-thick border border-[var(--card-border)]  shadow-lg flex flex-col justify-between transition-all hover:scale-[1.01]">
+          {/* Card 2: Total Orders */}
+          <div className="p-5 md:p-6 rounded-3xl clay-card-thick border border-[var(--card-border)] shadow-lg flex flex-col justify-between transition-all hover:scale-[1.01]">
             <div className="flex items-center justify-between mb-3">
               <span className="text-xs font-extrabold text-blue-600 dark:text-cyan-400 flex items-center gap-2">
                 <div className="w-7 h-7 rounded-xl clay-btn-thick flex items-center justify-center text-blue-600 dark:text-cyan-400">
-                  <Zap size={15} />
+                  <Package size={15} />
                 </div>
-                <span>کل توکن‌های مصرفی</span>
+                <span>کل سفارش‌ها</span>
               </span>
               <span className="clay-pill-thick text-[10px] px-2.5 py-0.5 text-blue-600 dark:text-cyan-400 font-bold">
-                تجمعی
+                فروشگاه
               </span>
             </div>
             <div className="flex items-baseline gap-1.5 my-2">
               <span className="text-2xl lg:text-3xl font-black text-blue-600 dark:text-cyan-400 tracking-tight" style={{ fontFamily: "'Estedad', sans-serif" }}>
-                {toPersianDigits((walletData?.stats?.totalTokens || 0).toLocaleString('fa-IR'))}
+                {toPersianDigits(purchases.length)}
               </span>
-              <span className="text-xs font-bold text-zinc-500 dark:text-zinc-400">توکن</span>
+              <span className="text-xs font-bold text-zinc-500 dark:text-zinc-400">سفارش</span>
             </div>
             <div className="text-[11px] flex items-center justify-between pt-2.5 border-t border-black/5 dark:border-white/5 mt-2 text-[#525d75] dark:text-[#9aa5bc]">
-              <span>ورودی: {toPersianDigits((walletData?.stats?.promptTokens || 0).toLocaleString('fa-IR'))}</span>
-              <span>خروجی: {toPersianDigits((walletData?.stats?.completionTokens || 0).toLocaleString('fa-IR'))}</span>
+              <span>مجموع خرید:</span>
+              <span className="font-bold text-blue-600 dark:text-cyan-400">
+                {toPersianDigits(purchases.reduce((acc, p) => acc + (p.paymentStatus === 'success' ? (p.amount || 0) : 0), 0).toLocaleString('fa-IR'))} ت
+              </span>
             </div>
           </div>
 
-          {/* Card 3: Total Spent (Purple / Indigo) */}
-          <div className="p-5 md:p-6 rounded-3xl clay-card-thick border border-[var(--card-border)]  shadow-lg flex flex-col justify-between transition-all hover:scale-[1.01]">
+          {/* Card 3: Delivered Orders */}
+          <div className="p-5 md:p-6 rounded-3xl clay-card-thick border border-[var(--card-border)] shadow-lg flex flex-col justify-between transition-all hover:scale-[1.01]">
             <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-extrabold text-purple-600 dark:text-purple-400 flex items-center gap-2">
-                <div className="w-7 h-7 rounded-xl clay-btn-thick flex items-center justify-center text-purple-600 dark:text-purple-400">
-                  <Coins size={15} />
+              <span className="text-xs font-extrabold text-teal-600 dark:text-teal-400 flex items-center gap-2">
+                <div className="w-7 h-7 rounded-xl clay-btn-thick flex items-center justify-center text-teal-600 dark:text-teal-400">
+                  <CheckCircle2 size={15} />
                 </div>
-                <span>کل هزینه کسر شده</span>
+                <span>اکانت‌های تحویل‌شده</span>
               </span>
-              <span className="clay-pill-thick text-[10px] px-2.5 py-0.5 text-purple-600 dark:text-purple-400 font-bold">
-                چت AI
+              <span className="clay-pill-thick text-[10px] px-2.5 py-0.5 text-teal-600 dark:text-teal-400 font-bold">
+                فعال
               </span>
             </div>
             <div className="flex items-baseline gap-1.5 my-2">
-              <span className="text-2xl lg:text-3xl font-black text-purple-600 dark:text-purple-400 tracking-tight" style={{ fontFamily: "'Estedad', sans-serif" }}>
-                {toPersianDigits((walletData?.stats?.totalSpentToman || 0).toLocaleString('fa-IR'))}
+              <span className="text-2xl lg:text-3xl font-black text-teal-600 dark:text-teal-400 tracking-tight" style={{ fontFamily: "'Estedad', sans-serif" }}>
+                {toPersianDigits(purchases.filter(p => p.licenseKey || p.fulfillmentStatus === 'delivered').length)}
               </span>
-              <span className="text-xs font-bold text-zinc-500 dark:text-zinc-400">تومان</span>
+              <span className="text-xs font-bold text-zinc-500 dark:text-zinc-400">لایسنس</span>
             </div>
             <div className="text-[11px] flex items-center justify-between pt-2.5 border-t border-black/5 dark:border-white/5 mt-2 text-[#525d75] dark:text-[#9aa5bc]">
-              <span>میانگین هر پیام:</span>
-              <span className="font-bold text-purple-600 dark:text-purple-400">
-                {walletData?.stats?.totalMessages ? toPersianDigits(Math.round((walletData.stats.totalSpentToman / walletData.stats.totalMessages)).toLocaleString('fa-IR')) : '۰'} ت
-              </span>
+              <span>پشتیبانی و گارانتی:</span>
+              <span className="font-bold text-teal-600 dark:text-teal-400">۱۰۰٪ فعال</span>
             </div>
           </div>
 
-          {/* Card 4: Total Messages (Amber / Orange) */}
-          <div className="p-5 md:p-6 rounded-3xl clay-card-thick border border-[var(--card-border)]  shadow-lg flex flex-col justify-between transition-all hover:scale-[1.01]">
+          {/* Card 4: Preparing Orders */}
+          <div className="p-5 md:p-6 rounded-3xl clay-card-thick border border-[var(--card-border)] shadow-lg flex flex-col justify-between transition-all hover:scale-[1.01]">
             <div className="flex items-center justify-between mb-3">
               <span className="text-xs font-extrabold text-amber-600 dark:text-amber-400 flex items-center gap-2">
                 <div className="w-7 h-7 rounded-xl clay-btn-thick flex items-center justify-center text-amber-600 dark:text-amber-400">
-                  <MessageSquare size={15} />
+                  <Clock size={15} />
                 </div>
-                <span>گفتگوهای انجام‌شده</span>
+                <span>در حال آماده‌سازی</span>
               </span>
               <span className="clay-pill-thick text-[10px] px-2.5 py-0.5 text-amber-600 dark:text-amber-400 font-bold">
-                پیام‌ها
+                پیگیری
               </span>
             </div>
             <div className="flex items-baseline gap-1.5 my-2">
               <span className="text-2xl lg:text-3xl font-black text-amber-600 dark:text-amber-400 tracking-tight" style={{ fontFamily: "'Estedad', sans-serif" }}>
-                {toPersianDigits((walletData?.stats?.totalMessages || 0).toLocaleString('fa-IR'))}
+                {toPersianDigits(purchases.filter(p => p.paymentStatus === 'success' && !p.licenseKey && p.fulfillmentStatus !== 'delivered').length)}
               </span>
-              <span className="text-xs font-bold text-zinc-500 dark:text-zinc-400">پیام</span>
+              <span className="text-xs font-bold text-zinc-500 dark:text-zinc-400">سفارش</span>
             </div>
             <div className="text-[11px] flex items-center justify-between pt-2.5 border-t border-black/5 dark:border-white/5 mt-2 text-[#525d75] dark:text-[#9aa5bc]">
-              <span>سفارش‌های فروشگاه:</span>
-              <span className="font-bold text-zinc-800 dark:text-zinc-200">{toPersianDigits(purchases.length)} مورد</span>
+              <span>زمان میانگین تحویل:</span>
+              <span className="font-bold text-zinc-800 dark:text-zinc-200">۱ تا ۲۴ ساعت</span>
             </div>
           </div>
 
@@ -690,32 +626,6 @@ export const UserDashboard = () => {
             <div className="flex items-center gap-2 p-1.5 rounded-2xl clay-inset-thick border border-black/5 dark:border-white/5 overflow-x-auto">
               <button
                 type="button"
-                onClick={() => setActiveTab('wallet')}
-                className={`flex-1 py-2.5 px-3 rounded-xl text-xs font-extrabold flex items-center justify-center gap-1.5 transition-all cursor-pointer whitespace-nowrap ${
-                  activeTab === 'wallet'
-                    ? 'clay-btn-thick text-blue-600 dark:text-cyan-400 shadow-sm'
-                    : 'text-[#525d75] dark:text-[#9aa5bc] hover:text-zinc-900 dark:hover:text-zinc-200'
-                }`}
-              >
-                <Zap size={15} className={activeTab === 'wallet' ? 'text-blue-500 dark:text-cyan-400' : ''} />
-                <span>مصرف توکن و کیف پول</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => { setActiveTab('pricing'); if (!pricingData) fetchPricing(); }}
-                className={`flex-1 py-2.5 px-3 rounded-xl text-xs font-extrabold flex items-center justify-center gap-1.5 transition-all cursor-pointer whitespace-nowrap ${
-                  activeTab === 'pricing'
-                    ? 'clay-btn-thick text-blue-600 dark:text-cyan-400 shadow-sm'
-                    : 'text-[#525d75] dark:text-[#9aa5bc] hover:text-zinc-900 dark:hover:text-zinc-200'
-                }`}
-              >
-                <Sparkles size={15} className={activeTab === 'pricing' ? 'text-blue-500 dark:text-cyan-400' : ''} />
-                <span>تعرفه و قیمت مدل‌ها</span>
-              </button>
-
-              <button
-                type="button"
                 onClick={() => setActiveTab('orders')}
                 className={`flex-1 py-2.5 px-3 rounded-xl text-xs font-extrabold flex items-center justify-center gap-1.5 transition-all cursor-pointer whitespace-nowrap ${
                   activeTab === 'orders'
@@ -724,7 +634,20 @@ export const UserDashboard = () => {
                 }`}
               >
                 <Package size={15} className={activeTab === 'orders' ? 'text-blue-500 dark:text-cyan-400' : ''} />
-                <span>سفارش‌ها ({toPersianDigits(purchases.length)})</span>
+                <span>سفارش‌ها و لایسنس‌ها ({toPersianDigits(purchases.length)})</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveTab('wallet')}
+                className={`flex-1 py-2.5 px-3 rounded-xl text-xs font-extrabold flex items-center justify-center gap-1.5 transition-all cursor-pointer whitespace-nowrap ${
+                  activeTab === 'wallet'
+                    ? 'clay-btn-thick text-blue-600 dark:text-cyan-400 shadow-sm'
+                    : 'text-[#525d75] dark:text-[#9aa5bc] hover:text-zinc-900 dark:hover:text-zinc-200'
+                }`}
+              >
+                <Wallet size={15} className={activeTab === 'wallet' ? 'text-blue-500 dark:text-cyan-400' : ''} />
+                <span>کیف پول و تراکنش‌ها</span>
               </button>
 
               <button
@@ -736,81 +659,107 @@ export const UserDashboard = () => {
                     : 'text-[#525d75] dark:text-[#9aa5bc] hover:text-zinc-900 dark:hover:text-zinc-200'
                 }`}
               >
-                <Key size={15} className={activeTab === 'redeem' ? 'text-blue-500 dark:text-cyan-400' : ''} />
-                <span>فعال‌سازی کد</span>
+                <Gift size={15} className={activeTab === 'redeem' ? 'text-blue-500 dark:text-cyan-400' : ''} />
+                <span>کارت هدیه و فعال‌سازی کد</span>
               </button>
             </div>
 
-            {/* TAB 1: Token Usage & Wallet Transactions */}
+            {/* TAB 1: Store Orders History (Default & Primary Focus) */}
+            {activeTab === 'orders' && (
+              <div className="p-5 md:p-6 rounded-3xl clay-card-thick border border-[var(--card-border)] shadow-lg flex-1 flex flex-col min-h-[400px]">
+                <div className="flex items-center justify-between mb-4 pb-3 border-b border-black/5 dark:border-white/5">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-7 h-7 rounded-xl clay-btn-thick flex items-center justify-center text-zinc-600 dark:text-zinc-300">
+                      <Package size={15} />
+                    </div>
+                    <h3 className="font-black text-sm dark:text-white" style={{ fontFamily: "'Estedad', sans-serif" }}>
+                      سفارش‌های فعال و لایسنس‌های من
+                    </h3>
+                  </div>
+                  {!isBazaar && (
+                    <Link to="/store" className="text-xs font-bold text-blue-600 hover:text-blue-700 dark:text-cyan-400 flex items-center gap-1">
+                      <span>مشاهده فروشگاه</span> <ChevronLeft size={14} />
+                    </Link>
+                  )}
+                </div>
+                
+                <div className="flex-1 overflow-y-auto max-h-[500px] pr-2 -mr-2 space-y-3 hide-scrollbar">
+                  {loading ? (
+                    <div className="flex justify-center p-8"><div className="w-8 h-8 border-2 border-[var(--card-border)] border-t-blue-600 rounded-full animate-spin"></div></div>
+                  ) : purchases.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-10 text-center">
+                      <div className="w-14 h-14 clay-btn-thick rounded-2xl flex items-center justify-center mb-3 shadow-xs text-zinc-500">
+                        <ShoppingBag size={20} />
+                      </div>
+                      <p className="text-xs font-bold dark:text-white mb-1">هنوز سفارشی ثبت نشده است</p>
+                      <p className="text-[11px] text-[#525d75] dark:text-[#9aa5bc] mb-4">می‌توانید اکانت‌های مورد نیاز خود را از فروشگاه خریداری کنید.</p>
+                      <Link
+                        to="/store"
+                        className="px-5 py-2.5 rounded-2xl clay-btn-primary-thick text-white text-xs font-black shadow-md shadow-blue-500/20"
+                        style={{ fontFamily: "'Estedad', sans-serif" }}
+                      >
+                        ورود به فروشگاه
+                      </Link>
+                    </div>
+                  ) : (
+                    purchases.map(p => (
+                      <div key={p.orderId} className="p-4 rounded-2xl clay-inset-thick flex flex-col sm:flex-row sm:items-center justify-between gap-3 transition-all hover:border-zinc-300 dark:hover:border-zinc-700">
+                        <div className="flex items-center gap-3">
+                          {p.image ? (
+                            <img src={p.image} className="w-10 h-10 rounded-xl object-cover shadow-xs shrink-0" alt="order" />
+                          ) : (
+                            <div className="w-10 h-10 rounded-xl clay-btn-thick flex items-center justify-center shrink-0 text-zinc-500"><Package size={18}/></div>
+                          )}
+                          <div>
+                            <h4 className="font-bold text-xs dark:text-white mb-1">{p.title}</h4>
+                            <div className="text-[11px] text-zinc-500 dark:text-zinc-400 flex items-center gap-2">
+                              <span dir="ltr">{formatTehranDate(p.orderDate)}</span>
+                              <span>•</span>
+                              <span className="font-bold text-zinc-700 dark:text-zinc-300">{p.amount.toLocaleString('fa-IR')} تومان</span>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-center gap-2 sm:flex-col sm:items-end justify-between border-t border-black/5 dark:border-white/5 sm:border-0 pt-2 sm:pt-0">
+                          {getStatusBadge(p.paymentStatus, p.licenseKey, p.fulfillmentStatus)}
+                          
+                          <div className="flex items-center gap-1.5">
+                            {p.paymentStatus === 'pending' && !isBazaar && (
+                              <a 
+                                href={`/api/store/mock-payment?orderId=${p.orderId}`}
+                                className="flex items-center gap-1 px-2.5 py-1.5 clay-btn-primary-thick text-white rounded-xl text-[11px] font-bold transition-all cursor-pointer hover:scale-105"
+                              >
+                                <CreditCard size={12} /> پرداخت آنلاین
+                              </a>
+                            )}
+                            <button 
+                              onClick={() => setSelectedInvoice(p)}
+                              className="flex items-center gap-1.5 px-3 py-1.5 clay-btn-thick rounded-xl text-[11px] font-bold transition-all cursor-pointer hover:scale-105"
+                            >
+                              <Receipt size={12} /> فاکتور
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* TAB 2: Wallet Transactions */}
             {activeTab === 'wallet' && (
               <div className="flex flex-col gap-6">
                 
-                {/* Model Breakdown Card (Claymorphic) */}
-                {walletData?.stats?.modelBreakdown && walletData.stats.modelBreakdown.length > 0 && (
-                  <div className="p-5 md:p-6 rounded-3xl clay-card-thick border border-[var(--card-border)]  shadow-lg">
-                    <div className="flex items-center justify-between mb-4 pb-3 border-b border-black/5 dark:border-white/5">
-                      <div className="flex items-center gap-2.5">
-                        <div className="w-7 h-7 rounded-xl clay-btn-thick flex items-center justify-center text-indigo-500">
-                          <BarChart2 size={15} />
-                        </div>
-                        <h3 className="font-black text-sm dark:text-white" style={{ fontFamily: "'Estedad', sans-serif" }}>
-                          تفکیک مصرف بر اساس مدل‌های هوش مصنوعی
-                        </h3>
-                      </div>
-                      <span className="text-xs font-bold text-zinc-500 dark:text-zinc-400">
-                        {toPersianDigits(walletData.stats.modelBreakdown.length)} مدل فعال
-                      </span>
-                    </div>
-
-                    <div className="space-y-4">
-                      {walletData.stats.modelBreakdown.map((mb, idx) => {
-                        const pct = walletData.stats.totalTokens > 0 
-                          ? Math.round((mb.tokens / walletData.stats.totalTokens) * 100) 
-                          : 0;
-                        const colors = [
-                          'from-blue-500 to-indigo-600',
-                          'from-purple-500 to-pink-600',
-                          'from-emerald-500 to-teal-600',
-                          'from-amber-500 to-orange-600'
-                        ];
-                        const barColor = colors[idx % colors.length];
-
-                        return (
-                          <div key={mb.model} className="space-y-1.5">
-                            <div className="flex items-center justify-between text-xs">
-                              <span className="font-bold dir-ltr text-zinc-800 dark:text-zinc-200">{mb.model}</span>
-                              <div className="flex items-center gap-2.5 text-xs text-zinc-500 dark:text-zinc-400">
-                                <span>{toPersianDigits(mb.messageCount)} پیام</span>
-                                <span>•</span>
-                                <span>{toPersianDigits(mb.tokens.toLocaleString('fa-IR'))} توکن</span>
-                                <span>•</span>
-                                <span className="font-bold text-emerald-600 dark:text-emerald-400">
-                                  {toPersianDigits(mb.costToman.toLocaleString('fa-IR'))} تومان
-                                </span>
-                              </div>
-                            </div>
-                            <div className="w-full h-2.5 rounded-full clay-inset-thick overflow-hidden p-0.5">
-                              <div 
-                                className={`h-full rounded-full bg-gradient-to-r ${barColor} transition-all duration-500 shadow-xs`}
-                                style={{ width: `${Math.max(4, pct)}%` }}
-                              />
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-
-                {/* Transactions Table Section (Claymorphic) */}
-                <div className="p-5 md:p-6 rounded-3xl clay-card-thick border border-[var(--card-border)]  shadow-lg flex flex-col min-h-[420px]">
+                {/* Transactions Table Section */}
+                <div className="p-5 md:p-6 rounded-3xl clay-card-thick border border-[var(--card-border)] shadow-lg flex flex-col min-h-[420px]">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 pb-3 border-b border-black/5 dark:border-white/5">
                     <div className="flex items-center gap-2.5">
                       <div className="w-7 h-7 rounded-xl clay-btn-thick flex items-center justify-center text-zinc-600 dark:text-zinc-300">
                         <Clock size={15} />
                       </div>
                       <h3 className="font-black text-sm dark:text-white" style={{ fontFamily: "'Estedad', sans-serif" }}>
-                        ریز تراکنش‌ها و تاریخچه مصرف
+                        تاریخچه تراکنش‌های کیف پول
                       </h3>
                     </div>
 
@@ -829,17 +778,6 @@ export const UserDashboard = () => {
                       </button>
                       <button
                         type="button"
-                        onClick={() => setTxFilter('chat')}
-                        className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                          txFilter === 'chat'
-                            ? 'clay-btn-thick text-blue-600 dark:text-cyan-400 shadow-xs'
-                            : 'text-[#525d75] hover:text-zinc-800 dark:hover:text-zinc-200'
-                        }`}
-                      >
-                        مصرف چت
-                      </button>
-                      <button
-                        type="button"
                         onClick={() => setTxFilter('deposits')}
                         className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                           txFilter === 'deposits'
@@ -847,7 +785,18 @@ export const UserDashboard = () => {
                             : 'text-[#525d75] hover:text-zinc-800 dark:hover:text-zinc-200'
                         }`}
                       >
-                        واریزی و هدیه
+                        شارژ و واریزی
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setTxFilter('purchases')}
+                        className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                          txFilter === 'purchases'
+                            ? 'clay-btn-thick text-blue-600 dark:text-cyan-400 shadow-xs'
+                            : 'text-[#525d75] hover:text-zinc-800 dark:hover:text-zinc-200'
+                        }`}
+                      >
+                        خریدها
                       </button>
                     </div>
                   </div>
@@ -859,30 +808,30 @@ export const UserDashboard = () => {
                       </div>
                     ) : !walletData?.transactions || walletData.transactions.length === 0 ? (
                       <div className="flex flex-col items-center justify-center py-12 text-center">
-                        <div className="w-14 h-14 clay-btn-thick text-blue-500 rounded-2xl flex items-center justify-center mb-3 shadow-xs">
-                          <Zap size={24} />
+                        <div className="w-14 h-14 clay-btn-thick text-emerald-500 rounded-2xl flex items-center justify-center mb-3 shadow-xs">
+                          <Wallet size={24} />
                         </div>
                         <h4 className="font-bold text-sm mb-1 dark:text-white">هنوز تراکنشی ثبت نشده است</h4>
                         <p className="text-xs text-[#525d75] dark:text-[#9aa5bc] max-w-sm mb-4 leading-relaxed">
-                          با اعتبار اولیهٔ خود، اولین گفتگوی هوشمند را با مدل‌های پیشرفته آغاز کنید.
+                          می‌توانید موجودی کیف پول خود را برای خرید سریع‌تر اکانت‌ها شارژ نمایید.
                         </p>
-                        <Link
-                          to="/chat"
+                        <button
+                          onClick={() => setIsWalletOpen(true)}
                           className="px-5 py-2.5 rounded-2xl clay-btn-primary-thick text-white font-black text-xs shadow-md shadow-blue-600/20 transition-all cursor-pointer"
                           style={{ fontFamily: "'Estedad', sans-serif" }}
                         >
-                          شروع گفتگو در چت‌باکس
-                        </Link>
+                          شارژ کیف پول
+                        </button>
                       </div>
                     ) : (
                       walletData.transactions
                         .filter(tx => {
-                          if (txFilter === 'chat') return tx.type === 'chat_usage';
-                          if (txFilter === 'deposits') return tx.type !== 'chat_usage';
+                          if (txFilter === 'deposits') return tx.type === 'deposit' || tx.type === 'welcome_bonus';
+                          if (txFilter === 'purchases') return tx.type === 'store_purchase' || tx.type === 'chat_usage';
                           return true;
                         })
                         .map(tx => {
-                          const isChat = tx.type === 'chat_usage';
+                          const isPurchase = tx.type === 'store_purchase' || tx.type === 'chat_usage';
                           const isBonus = tx.type === 'welcome_bonus';
 
                           return (
@@ -893,38 +842,23 @@ export const UserDashboard = () => {
                               <div className="flex items-center gap-3">
                                 <div
                                   className={`w-10 h-10 rounded-2xl clay-btn-thick flex items-center justify-center shrink-0 ${
-                                    isChat
+                                    isPurchase
                                       ? 'text-blue-600 dark:text-cyan-400'
                                       : isBonus
                                       ? 'text-emerald-600 dark:text-emerald-400'
                                       : 'text-teal-600 dark:text-teal-400'
                                   }`}
                                 >
-                                  {isChat ? <Cpu size={18} /> : isBonus ? <Gift size={18} /> : <ArrowDownLeft size={18} />}
+                                  {isPurchase ? <ShoppingBag size={18} /> : isBonus ? <Gift size={18} /> : <ArrowDownLeft size={18} />}
                                 </div>
                                 <div>
-                                  <div className="flex items-center gap-2">
-                                    <h4 className="font-bold text-xs dark:text-white">
-                                      {isChat ? `پردازش هوش مصنوعی (${tx.model || 'عمومی'})` : tx.description || 'تراکنش کیف پول'}
-                                    </h4>
-                                    {isChat && tx.model && (
-                                      <span className="text-[10px] px-2 py-0.5 rounded-md clay-pill-thick font-sans dir-ltr text-zinc-500">
-                                        {tx.model}
-                                      </span>
-                                    )}
-                                  </div>
+                                  <h4 className="font-bold text-xs dark:text-white">
+                                    {tx.description || (isPurchase ? 'پرداخت سفارش فروشگاه' : 'تراکنش کیف پول')}
+                                  </h4>
                                   <div className="text-[11px] text-zinc-500 dark:text-zinc-400 flex items-center gap-2 mt-1">
                                     <span dir="ltr">
                                       {formatTehranDateTime(tx.createdAt)}
                                     </span>
-                                    {isChat && (
-                                      <>
-                                        <span>•</span>
-                                        <span>
-                                          {toPersianDigits((tx.promptTokens || 0) + (tx.completionTokens || 0))} توکن
-                                        </span>
-                                      </>
-                                    )}
                                   </div>
                                 </div>
                               </div>
@@ -932,12 +866,12 @@ export const UserDashboard = () => {
                               <div className="flex items-center gap-3 sm:flex-col sm:items-end justify-between border-t border-black/5 dark:border-white/5 sm:border-0 pt-2 sm:pt-0">
                                 <span
                                   className={`text-xs font-black ${
-                                    isChat
+                                    isPurchase
                                       ? 'text-red-600 dark:text-red-400'
                                       : 'text-emerald-600 dark:text-emerald-400'
                                   }`}
                                 >
-                                  {isChat ? '-' : '+'}
+                                  {isPurchase ? '-' : '+'}
                                   {toPersianDigits(Math.abs(tx.amount).toLocaleString('fa-IR'))} تومان
                                 </span>
                                 <span className="text-[10px] text-zinc-500 dark:text-zinc-400 font-medium">
@@ -1067,207 +1001,6 @@ export const UserDashboard = () => {
                   <div className={`mt-4 px-3.5 py-2.5 rounded-2xl text-xs font-bold flex items-center gap-2 ${redeemMessage.type === 'success' ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25' : 'bg-red-500/15 text-red-600 dark:text-red-400 border border-red-500/25'}`}>
                     {redeemMessage.type === 'success' ? <CheckCircle2 size={14}/> : <XCircle size={14}/>}
                     <span>{redeemMessage.text}</span>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* TAB 4: Models Pricing & Live Tariffs */}
-            {activeTab === 'pricing' && (
-              <div className="flex flex-col gap-6">
-                {/* Header Banner: Real-Time Dollar Rate & Pay-As-You-Go Explanation */}
-                <div className="p-5 md:p-6 rounded-3xl clay-card-thick border border-[var(--card-border)] shadow-lg relative overflow-hidden flex flex-col gap-4">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <div>
-                      <h3 className="font-black text-base dark:text-white flex items-center gap-2 mb-1" style={{ fontFamily: "'Estedad', sans-serif" }}>
-                        <Sparkles size={18} className="text-blue-500 dark:text-cyan-400" />
-                        <span>تعرفه و قیمت مدل‌های هوش مصنوعی</span>
-                      </h3>
-                      <p className="text-xs text-[#525d75] dark:text-[#9aa5bc] leading-relaxed">
-                        محاسبه بر مبنای دقیق توکن‌های مصرفی (Pay-As-You-Go) و بدون تاریخ انقضای موجودی. هزینه هر پیام به‌صورت میانگین تنها ۲۰ تا ۱۰۰ تومان است.
-                      </p>
-                    </div>
-
-                    <button
-                      onClick={() => setIsWalletOpen(true)}
-                      className="px-4 py-2.5 clay-btn-primary-thick text-white rounded-2xl text-xs font-black flex items-center justify-center gap-2 shrink-0 shadow-md shadow-blue-500/20 active:scale-95 transition-all cursor-pointer"
-                      style={{ fontFamily: "'Estedad', sans-serif" }}
-                    >
-                      <Plus size={15} />
-                      <span>افزایش موجودی</span>
-                    </button>
-                  </div>
-
-                  {/* Live Exchange Rate Capsule */}
-                  <div className="p-3.5 rounded-2xl bg-black/[0.02] dark:bg-white/[0.03] border border-black/5 dark:border-white/5 flex flex-wrap items-center justify-between gap-3 text-xs">
-                    <div className="flex items-center gap-2 font-bold text-zinc-700 dark:text-zinc-300">
-                      <Coins size={16} className="text-amber-500" />
-                      <span>نرخ تبدیل دلار پایه به تومان:</span>
-                      <span className="text-blue-600 dark:text-cyan-400 font-black text-sm" style={{ fontFamily: "'Estedad', sans-serif" }}>
-                        {toPersianDigits((pricingData?.sellingRate || 150000).toLocaleString('fa-IR'))} تومان
-                      </span>
-                    </div>
-
-                    <div className="flex items-center gap-2 text-[11px] text-[#525d75] dark:text-[#9aa5bc]">
-                      <Clock size={13} className="text-emerald-500" />
-                      <span>بروزرسانی زنده بر اساس نرخ سیستم</span>
-                      <button
-                        onClick={fetchPricing}
-                        disabled={pricingLoading}
-                        className="p-1.5 clay-btn-thick rounded-lg hover:scale-105 active:scale-95 text-blue-500 transition-all cursor-pointer"
-                        title="تازه سازی قیمت‌ها"
-                      >
-                        <RefreshCw size={12} className={pricingLoading ? 'animate-spin' : ''} />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Filters & Search Bar */}
-                <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
-                  {/* Category Pills */}
-                  <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 text-xs">
-                    {[
-                      { key: 'all', label: 'همه مدل‌ها' },
-                      { key: 'system', label: '⭐ دستیاران سامانه' },
-                      { key: 'fast', label: '⚡ سریع و اقتصادی' },
-                      { key: 'coding', label: '💻 کدنویسی' },
-                      { key: 'vision', label: '👁️ اسناد و بینایی' }
-                    ].map(tab => (
-                      <button
-                        key={tab.key}
-                        onClick={() => setPricingFilter(tab.key as any)}
-                        className={`px-3 py-1.5 rounded-xl font-bold transition-all whitespace-nowrap cursor-pointer text-xs ${
-                          pricingFilter === tab.key
-                            ? 'clay-btn-thick text-blue-600 dark:text-cyan-400 font-black shadow-xs'
-                            : 'text-[#525d75] dark:text-[#9aa5bc] hover:text-zinc-900 dark:hover:text-white'
-                        }`}
-                      >
-                        {tab.label}
-                      </button>
-                    ))}
-                  </div>
-
-                  {/* Search Input */}
-                  <div className="relative min-w-[200px]">
-                    <Search size={14} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-400" />
-                    <input
-                      type="text"
-                      placeholder="جستجوی مدل یا سازنده..."
-                      value={pricingSearch}
-                      onChange={e => setPricingSearch(e.target.value)}
-                      className="w-full pl-3 pr-9 py-2 rounded-xl bg-black/[0.02] dark:bg-white/[0.03] border border-black/5 dark:border-white/5 outline-none text-xs focus:border-blue-500/30 transition-all"
-                    />
-                    {pricingSearch && (
-                      <button
-                        onClick={() => setPricingSearch('')}
-                        className="absolute left-2.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 text-xs cursor-pointer"
-                      >
-                        ✕
-                      </button>
-                    )}
-                  </div>
-                </div>
-
-                {/* Models Grid */}
-                {pricingLoading && !pricingData ? (
-                  <div className="p-12 rounded-3xl clay-card-thick text-center">
-                    <RefreshCw size={28} className="animate-spin text-blue-500 mx-auto mb-3" />
-                    <span className="text-xs font-bold text-[#525d75] dark:text-[#9aa5bc]">در حال دریافت جدیدترین تعرفه مدل‌ها...</span>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {filteredPricingModels.map((model) => (
-                      <div
-                        key={model.id}
-                        className="p-5 rounded-3xl clay-card-thick border border-[var(--card-border)] shadow-md flex flex-col justify-between gap-4 transition-all hover:scale-[1.01]"
-                      >
-                        {/* Top: Header & Badges */}
-                        <div>
-                          <div className="flex items-start justify-between gap-2 mb-2">
-                            <div>
-                              <div className="flex items-center gap-2">
-                                <h4 className="font-black text-sm text-zinc-900 dark:text-white" style={{ fontFamily: "'Estedad', sans-serif" }}>
-                                  {model.isDefaultProfile ? model.name : (model.isCoding ? 'دستیار کدنویسی و تحلیل کد' : model.isVision ? 'دستیار تحلیل اسناد و بینایی' : 'دستیار گفتگوی هوشمند')}
-                                </h4>
-                                {model.isDefaultProfile && (
-                                  <span className="clay-pill-thick text-[9px] px-2 py-0.5 text-blue-600 dark:text-cyan-400 font-extrabold">
-                                    دستیار مصوب سیستم
-                                  </span>
-                                )}
-                              </div>
-                              <span className="text-[11px] text-zinc-500 dark:text-zinc-400 font-medium tracking-tight" dir="rtl">
-                                {model.isDefaultProfile ? 'کارت استاندارد دستیار' : (model.isFast ? 'موتور سبک و پرسرعت' : 'موتور پیشرفته و دقیق')}
-                              </span>
-                            </div>
-                            
-                            <span className="text-[10px] font-bold px-2 py-1 rounded-lg bg-black/5 dark:bg-white/5 text-zinc-600 dark:text-zinc-300">
-                              {model.isFast ? 'پردازش سریع' : 'استدلال پیشرفته'}
-                            </span>
-                          </div>
-
-                          {/* Capability Tags */}
-                          <div className="flex flex-wrap gap-1.5 my-2.5">
-                            {model.isFast && (
-                              <span className="text-[10px] px-2 py-0.5 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-1">
-                                <Zap size={10} /> سریع و کم‌مصرف
-                              </span>
-                            )}
-                            {model.isCoding && (
-                              <span className="text-[10px] px-2 py-0.5 rounded-lg bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 font-bold flex items-center gap-1">
-                                <Code size={10} /> مهندسی کد
-                              </span>
-                            )}
-                            {model.isVision && (
-                              <span className="text-[10px] px-2 py-0.5 rounded-lg bg-purple-500/10 text-purple-600 dark:text-purple-400 font-bold flex items-center gap-1">
-                                <Eye size={10} /> بینایی و اسناد
-                              </span>
-                            )}
-                          </div>
-                        </div>
-
-                        {/* Middle: Flat Pricing Breakdown (No sunken inset) */}
-                        <div className="p-3.5 rounded-2xl bg-black/[0.025] dark:bg-white/[0.035] border border-black/5 dark:border-white/5 flex flex-col gap-2">
-                          <div className="flex items-center justify-between pb-2 border-b border-black/5 dark:border-white/5">
-                            <span className="text-[11px] font-bold text-zinc-600 dark:text-zinc-300">
-                              تخمین میانگین هر پیام:
-                            </span>
-                            <span className="text-xs font-black text-emerald-600 dark:text-emerald-400" style={{ fontFamily: "'Estedad', sans-serif" }}>
-                              ~{toPersianDigits(model.estimatedMsgCostToman.toLocaleString('fa-IR'))} تومان
-                            </span>
-                          </div>
-
-                          <div className="grid grid-cols-2 gap-2 text-[10px]">
-                            <div>
-                              <span className="text-[#525d75] dark:text-[#9aa5bc] block">ورودی (۱M توکن):</span>
-                              <span className="font-extrabold text-zinc-800 dark:text-zinc-200">
-                                {toPersianDigits(model.promptPriceToman.toLocaleString('fa-IR'))} ت
-                              </span>
-                              <span className="text-zinc-400 text-[9px] mr-1" dir="ltr">(${model.promptPriceUsd})</span>
-                            </div>
-
-                            <div>
-                              <span className="text-[#525d75] dark:text-[#9aa5bc] block">خروجی (۱M توکن):</span>
-                              <span className="font-extrabold text-zinc-800 dark:text-zinc-200">
-                                {toPersianDigits(model.completionPriceToman.toLocaleString('fa-IR'))} ت
-                              </span>
-                              <span className="text-zinc-400 text-[9px] mr-1" dir="ltr">(${model.completionPriceUsd})</span>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Bottom: Action Button */}
-                        <button
-                          type="button"
-                          onClick={() => handleStartChatWithModel(model)}
-                          className="w-full py-2.5 px-4 clay-btn-thick text-blue-600 dark:text-cyan-400 font-bold rounded-2xl text-xs flex items-center justify-center gap-2 transition-all hover:scale-[1.02] active:scale-98 cursor-pointer"
-                          style={{ fontFamily: "'Estedad', sans-serif" }}
-                        >
-                          <MessageSquare size={13} />
-                          <span>شروع گفتگو با این مدل</span>
-                        </button>
-                      </div>
-                    ))}
                   </div>
                 )}
               </div>

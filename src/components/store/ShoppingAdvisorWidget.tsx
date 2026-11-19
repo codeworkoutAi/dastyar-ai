@@ -144,6 +144,19 @@ export const ShoppingAdvisorWidget: React.FC<ShoppingAdvisorWidgetProps> = ({
     }
   };
 
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const promptParam = params.get('prompt');
+    if (promptParam && promptParam.trim()) {
+      if (!isOpen && !isEmbedded) setIsOpen(true);
+      handleSendMessage(promptParam.trim());
+      params.delete('prompt');
+      const newQuery = params.toString();
+      const newUrl = window.location.pathname + (newQuery ? `?${newQuery}` : '');
+      window.history.replaceState({}, document.title, newUrl);
+    }
+  }, []);
+
   // Chat Body Content
   const chatContent = (
     <div className="flex flex-col h-full overflow-hidden bg-[var(--card-bg)] text-[var(--text-main)]">
