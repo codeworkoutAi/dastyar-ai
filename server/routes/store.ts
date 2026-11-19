@@ -80,6 +80,91 @@ export function notifyAdminWalletTopup(orderId: string, userId: number, amount: 
   }
 }
 
+export function fulfillDigitalOrder(
+  orderId: string, 
+  order: any, 
+  product: any, 
+  paymentMethod: string, 
+  authority?: string, 
+  refId?: string, 
+  cardPan?: string
+) {
+  let licenseId: number | null = null;
+  let fulfillmentStatus = 'preparing';
+  let deliveredLicenseKey = '';
+
+  try {
+    const availableLicense = db.prepare(
+      "SELECT id, key FROM licenses WHERE productId = ? AND status = 'available' ORDER BY id ASC LIMIT 1"
+    ).get(order.productId) as any;
+
+    if (availableLicense) {
+      licenseId = availableLicense.id;
+      deliveredLicenseKey = availableLicense.key;
+      fulfillmentStatus = 'delivered';
+      db.prepare("UPDATE licenses SET status = 'sold' WHERE id = ?").run(availableLicense.id);
+    }
+  } catch (e) {
+    console.error('[Store] Error checking license in fulfillDigitalOrder:', e);
+  }
+
+  const updateRes = db.prepare(
+    "UPDATE orders SET paymentStatus = 'success', paymentMethod = ?, licenseId = ?, fulfillmentStatus = ?, authority = ?, refId = ?, cardPan = ? WHERE id = ? AND paymentStatus != 'success'"
+  ).run(paymentMethod, licenseId, fulfillmentStatus, authority || null, refId || null, cardPan || null, orderId);
+
+  if (updateRes.changes === 1) {
+    syncDatabase();
+
+    // Notify Admin on Telegram
+    try {
+      const adminId = process.env.TELEGRAM_ADMIN_ID;
+      if (adminId && bot) {
+        const user = db.prepare('SELECT email, phone, name FROM users WHERE id = ?').get(order.userId) as any;
+        const userIdentifier = user?.name || user?.phone || user?.email || `کاربر #${order.userId}`;
+        const isAutoDelivered = Boolean(licenseId);
+        const adminMsg = 
+          `🛍️ <b>سفارش جدید پرداخت شد</b>\n\n` +
+          `📦 <b>محصول:</b> ${product?.title || ''}\n` +
+          `👤 <b>خریدار:</b> ${userIdentifier}\n` +
+          `💰 <b>مبلغ:</b> ${Number(order.amount).toLocaleString('fa-IR')} تومان\n` +
+          `🔢 <b>شماره سفارش:</b> <code>${orderId}</code>\n` +
+          `💳 <b>روش پرداخت:</b> ${paymentMethod}\n` +
+          (refId ? `🧾 <b>کد رهگیری:</b> <code>${refId}</code>\n` : '') +
+          (order.selectedPeriod ? `⏳ <b>پلن/دوره:</b> ${order.selectedPeriod}\n` : '') +
+          (isAutoDelivered 
+            ? `\n⚡ <b>تحویل آنی انجام شد:</b> لایسنس به صورت خودکار به کاربر تحویل گردید.` 
+            : `\n⚠️ <b>نیازمند اقدام ادمین:</b> لطفاً در پنل ادمین برای این سفارش لایسنس/اکانت ثبت کنید.`);
+        bot.telegram.sendMessage(adminId, adminMsg, { parse_mode: 'HTML' }).catch(() => {});
+      }
+    } catch (e) {}
+
+    // Telegram delivery notification to buyer
+    try {
+      const orderUser = db.prepare('SELECT telegramId FROM users WHERE id = ?').get(order.userId) as any;
+      if (orderUser?.telegramId && bot) {
+        let msg = `✅ **سفارش شما با موفقیت ثبت و پرداخت شد!**\n\n` +
+                  `📦 **محصول:** ${product?.title || ''}\n` +
+                  `🔢 **شماره سفارش:** \`${orderId}\`\n` +
+                  (refId ? `🧾 **کد پیگیری:** \`${refId}\`\n` : '') +
+                  `💰 **مبلغ پرداخت شده:** ${Number(order.amount).toLocaleString('fa-IR')} تومان\n\n`;
+        if (deliveredLicenseKey) {
+          msg += `⚡ **اطلاعات اکانت / لایسنس شما:**\n\`${deliveredLicenseKey}\`\n\nاین اطلاعات در پنل کاربری شما در سایت نیز ثبت شد.`;
+        } else {
+          msg += `⏳ سفارش شما در حال آماده‌سازی است و ظرف ۱ تا ۲۴ ساعت آینده مشخصات اکانت در داشبورد کاربری شما قرار می‌گیرد.`;
+        }
+        bot.telegram.sendMessage(orderUser.telegramId, msg, { parse_mode: 'Markdown' }).catch(() => {});
+      }
+    } catch (tgErr) {
+      console.error('[Store] Telegram buyer notify error:', tgErr);
+    }
+
+    // SMS notification
+    notifyOrderSuccessBySms(orderId, licenseId);
+  }
+
+  return { licenseId, fulfillmentStatus, deliveredLicenseKey };
+}
+
 const checkoutLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 20, // Limit each IP to 20 checkout requests per window
@@ -211,8 +296,12 @@ router.post('/checkout', checkoutLimiter, requireAuth, async (req: any, res) => 
       return res.status(404).json({ error: 'محصول پیدا نشد' });
     }
 
-    if (product.category !== 'package' && product.category !== 'plan' && product.stock <= 0) {
-      return res.status(400).json({ error: 'موجودی این محصول به اتمام رسیده است' });
+    if (product.status === 'out_of_stock' || product.status === 'inactive') {
+      return res.status(400).json({ error: 'این محصول در حال حاضر غیرفعال یا ناموجود است' });
+    }
+
+    if (product.deliveryType === 'instant' && product.stock <= 0) {
+      return res.status(400).json({ error: 'موجودی لایسنس آنی این محصول به اتمام رسیده است' });
     }
 
     // Calculate final price and period based on variations if specified
@@ -352,8 +441,11 @@ router.post('/checkout-manual', checkoutLimiter, requireAuth, (req: any, res) =>
     `).get(productId) as any;
 
     if (!product) return res.status(404).json({ error: 'محصول پیدا نشد' });
-    if (product.category !== 'package' && product.category !== 'plan' && product.stock <= 0) {
-      return res.status(400).json({ error: 'موجودی این محصول به اتمام رسیده است' });
+    if (product.status === 'out_of_stock' || product.status === 'inactive') {
+      return res.status(400).json({ error: 'این محصول در حال حاضر غیرفعال یا ناموجود است' });
+    }
+    if (product.deliveryType === 'instant' && product.stock <= 0) {
+      return res.status(400).json({ error: 'موجودی لایسنس آنی این محصول به اتمام رسیده است' });
     }
 
     // Calculate final price and period based on variations if specified
@@ -647,29 +739,9 @@ router.get('/mock-callback', async (req: any, res) => {
         return res.redirect(`/dashboard?tab=wallet&payment=success&orderId=${orderId}&refId=${refId}&amount=${creditAmount}`);
       }
 
-      // Digital store product - update paymentStatus to success, but leave licenseId null
-      const updateRes = db.prepare("UPDATE orders SET paymentStatus = 'success', paymentMethod = ?, refId = ? WHERE id = ? AND paymentStatus != 'success'").run(payMethod, refId, orderId);
-      if (updateRes.changes === 1) {
-        syncDatabase();
-      }
-
-      // Send Telegram notification that order is pending review
-      try {
-        const orderUser = db.prepare('SELECT telegramId FROM users WHERE id = ?').get(order.userId) as any;
-        if (orderUser?.telegramId && bot) {
-          let tgNotice = `⏳ **سفارش شما با موفقیت ثبت شد و در انتظار تایید مدیریت است.**\n\n` +
-                         `📦 **محصول:** ${product?.title || ''}\n` +
-                         `🔢 **شماره سفارش:** \`${orderId}\`\n\n` +
-                         `پس از بررسی و تایید توسط پشتیبانی، لایسنس شما از همین طریق ارسال خواهد شد.`;
-          bot.telegram.sendMessage(orderUser.telegramId, tgNotice, { parse_mode: 'Markdown' }).catch((e) => {
-            console.error('[Store] Failed to send Telegram pending notification:', e);
-          });
-        }
-      } catch (tgErr) {
-        console.error('[Store] Telegram notify error:', tgErr);
-      }
-
-      res.redirect('/store?payment=success&orderId=' + orderId);
+      // Digital store product
+      fulfillDigitalOrder(orderId, order, product, payMethod, undefined, refId);
+      res.redirect('/dashboard?payment=success&orderId=' + orderId);
     } catch (err) {
       console.error(err);
       if (gateway === 'bazaarpay') {
@@ -770,35 +842,7 @@ router.get('/zarinpal/callback', async (req, res) => {
       }
 
       // Digital store product
-      // We do NOT auto-assign license anymore for digital products per admin's request
-      let licenseId: number | null = null;
-
-      const updateRes = db.prepare("UPDATE orders SET paymentStatus = 'success', paymentMethod = 'zarinpal', licenseId = ?, authority = ?, refId = ?, cardPan = ? WHERE id = ? AND paymentStatus != 'success'")
-        .run(licenseId, authority, refId, cardPan, orderId);
-      if (updateRes.changes === 1) {
-        syncDatabase();
-      }
-
-      // Telegram delivery notification
-      try {
-        const orderUser = db.prepare('SELECT telegramId FROM users WHERE id = ?').get(order.userId) as any;
-        if (orderUser?.telegramId && bot) {
-          let msg = `✅ **سفارش شما با موفقیت ثبت شد!**\n\n` +
-                    `📦 **محصول:** ${product?.title || ''}\n` +
-                    `🔢 **شماره سفارش:** \`${orderId}\`\n` +
-                    `🧾 **کد پیگیری شاپرک:** \`${refId}\`\n` +
-                    `💰 **مبلغ پرداخت شده:** ${order.amount.toLocaleString('fa-IR')} تومان\n\n` +
-                    `⏳ سفارش شما در انتظار تایید مدیریت می‌باشد و به زودی پردازش خواهد شد. پس از تخصیص لایسنس، رسید نهایی برای شما ارسال می‌گردد.`;
-          
-          bot.telegram.sendMessage(orderUser.telegramId, msg, { parse_mode: 'Markdown' }).catch(() => {});
-        }
-      } catch (tgErr) {
-        console.error('[Store] Telegram notify error:', tgErr);
-      }
-
-      // SMS notification
-      notifyOrderSuccessBySms(orderId, licenseId);
-
+      fulfillDigitalOrder(orderId, order, product, 'zarinpal', authority, refId, cardPan);
       return res.redirect(`/dashboard?payment=success&orderId=${orderId}&refId=${refId}`);
     } else {
       db.prepare("UPDATE orders SET paymentStatus = 'failed', paymentMethod = 'zarinpal', authority = ? WHERE id = ?")
@@ -926,27 +970,7 @@ router.get('/bazaarpay/callback', async (req: any, res) => {
       }
 
       // Digital store product
-      let licenseId: number | null = null;
-      const updateRes = db.prepare("UPDATE orders SET paymentStatus = 'success', paymentMethod = 'bazaarpay', licenseId = ?, authority = ?, refId = ? WHERE id = ? AND paymentStatus != 'success'")
-        .run(licenseId, tokenToTrace, refId, orderId);
-      if (updateRes.changes === 1) {
-        syncDatabase();
-      }
-
-      try {
-        const orderUser = db.prepare('SELECT telegramId FROM users WHERE id = ?').get(order.userId) as any;
-        if (orderUser?.telegramId && bot) {
-          let msg = `✅ **سفارش بازارپی شما با موفقیت ثبت شد!**\n\n` +
-                    `📦 **محصول:** ${product?.title || ''}\n` +
-                    `🔢 **شماره سفارش:** \`${orderId}\`\n` +
-                    `🧾 **کد پیگیری بازارپی:** \`${refId}\`\n` +
-                    `💰 **مبلغ پرداخت شده:** ${order.amount.toLocaleString('fa-IR')} تومان\n\n` +
-                    `⏳ سفارش شما در انتظار تایید مدیریت است.`;
-          bot.telegram.sendMessage(orderUser.telegramId, msg, { parse_mode: 'Markdown' }).catch(() => {});
-        }
-      } catch (tgErr) {}
-
-      notifyOrderSuccessBySms(orderId, licenseId);
+      fulfillDigitalOrder(orderId, order, product, 'bazaarpay', tokenToTrace, refId);
       return res.redirect(`/chat?payment=success&orderId=${orderId}&refId=${refId}`);
 
     } else {
@@ -973,6 +997,10 @@ router.get('/purchases', requireAuth, (req: any, res) => {
         o.id as orderId,
         o.amount,
         o.paymentStatus,
+        o.paymentMethod,
+        o.fulfillmentStatus,
+        o.selectedPeriod,
+        o.refId,
         o.trackingNumber,
         o.createdAt as orderDate,
         p.id as productId,
@@ -981,6 +1009,7 @@ router.get('/purchases', requireAuth, (req: any, res) => {
         p.image,
         p.description,
         p.deliveryGuide,
+        p.deliveryTime,
         l.key as licenseKey
       FROM orders o
       JOIN products p ON o.productId = p.id

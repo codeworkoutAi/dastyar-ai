@@ -414,42 +414,64 @@ export async function renderHtmlWithSeo(req: express.Request, res: express.Respo
             ]
           };
         } else if (urlPath === '/' || urlPath === '/landing') {
-          // Home / Landing page FAQPage Schema for GEO / AI Answer Engines
+          // Home / Landing page Store + FAQPage Schema for GEO & AI Answer Engines
+          let topStoreProducts: any[] = [];
+          try {
+            topStoreProducts = db.prepare('SELECT id, title, price FROM products WHERE status = "active" OR status IS NULL ORDER BY id DESC LIMIT 8').all() as any[];
+          } catch (_) {}
+
           structuredData = {
             '@context': 'https://schema.org',
-            '@type': 'FAQPage',
-            mainEntity: [
+            '@graph': [
               {
-                '@type': 'Question',
-                name: 'آیا چت با هوش مصنوعی در دستیار هوشمند رایگان است؟',
-                acceptedAnswer: {
-                  '@type': 'Answer',
-                  text: 'بله، استفاده از مدل‌های پیشرفته هوش مصنوعی در دستیار هوشمند کاملاً رایگان است و کاربران بدون محدودیت‌های تحریم یا شماره خارجی می‌توانند به گفت‌وگو بپردازند.'
+                '@type': 'Store',
+                name: 'فروشگاه هوش مصنوعی دستیار هوشمند | Dastyar AI',
+                description: 'فروشگاه تخصصی ابزارها و اکانت‌های هوش مصنوعی: خرید اکانت‌های اختصاصی، کلیدهای API و خدمات آنلاین هوش مصنوعی با تحویل سریع و گارانتی.',
+                url: `${baseUrl}/`,
+                image: `${baseUrl}/pwa-512x512.png`,
+                hasOfferCatalog: {
+                  '@type': 'OfferCatalog',
+                  name: 'اکانت‌ها و ابزارهای هوش مصنوعی',
+                  itemListElement: topStoreProducts.map((p) => ({
+                    '@type': 'Offer',
+                    itemOffered: {
+                      '@type': 'Product',
+                      name: p.title,
+                      url: `${baseUrl}/store/product/${p.id}`
+                    },
+                    price: (p.price || 0) * 10,
+                    priceCurrency: 'IRR'
+                  }))
                 }
               },
               {
-                '@type': 'Question',
-                name: 'دستیار هوشمند از چه قابلیت‌هایی پشتیبانی می‌کند؟',
-                acceptedAnswer: {
-                  '@type': 'Answer',
-                  text: 'دستیار هوشمند از قابلیت‌های پیشرفته گفتگو، برنامه‌نویسی، تحلیل اسناد و بینایی به زبان فارسی پشتیبانی می‌کند و قابلیت انتخاب دستی یا مسیریابی هوشمند (Smart Routing) را دارد.'
-                }
-              },
-              {
-                '@type': 'Question',
-                name: 'آیا امکان جستجوی آنلاین در وب و ساخت عکس با هوش مصنوعی وجود دارد؟',
-                acceptedAnswer: {
-                  '@type': 'Answer',
-                  text: 'بله، این پلتفرم مجهز به جستجوی زنده وب (Google Search Grounding) برای دسترسی به اخبار و داده‌های روز و استودیوی تولید تصویر است.'
-                }
-              },
-              {
-                '@type': 'Question',
-                name: 'فروشگاه هوش مصنوعی چه خدماتی ارائه می‌دهد؟',
-                acceptedAnswer: {
-                  '@type': 'Answer',
-                  text: 'در فروشگاه دستیار هوشمند، خدمات شارژ کیف پول، بسته‌های اعتباری و ابزارهای تخصصی با امکان پرداخت امن و تحویل آنی عرضه می‌شوند.'
-                }
+                '@type': 'FAQPage',
+                mainEntity: [
+                  {
+                    '@type': 'Question',
+                    name: 'فروشگاه هوش مصنوعی Dastyar AI چه خدماتی ارائه می‌دهد؟',
+                    acceptedAnswer: {
+                      '@type': 'Answer',
+                      text: 'در فروشگاه دستیار هوشمند، اکانت‌های قانونی و اشتراکی هوش مصنوعی، کلیدهای API، شارژ کیف پول و ابزارهای تخصصی با امکان پرداخت امن و تحویل سریع عرضه می‌شوند.'
+                    }
+                  },
+                  {
+                    '@type': 'Question',
+                    name: 'آیا چت با هوش مصنوعی در دستیار هوشمند رایگان است؟',
+                    acceptedAnswer: {
+                      '@type': 'Answer',
+                      text: 'بله، استفاده از مدل‌های هوش مصنوعی پایه در بخش چت برای تمامی کاربران رایگان است.'
+                    }
+                  },
+                  {
+                    '@type': 'Question',
+                    name: 'نحوه تحویل اکانت‌ها و لایسنس‌ها در فروشگاه چگونه است؟',
+                    acceptedAnswer: {
+                      '@type': 'Answer',
+                      text: 'اکانت‌ها به دو صورت تحویل آنی خودکار از انبار لایسنس و تحویل سریع توسط پشتیبان در بازه ۱ تا ۲۴ ساعت کاری با ضمانت کامل تعویض و گارانتی تحویل داده می‌شوند.'
+                    }
+                  }
+                ]
               }
             ]
           };

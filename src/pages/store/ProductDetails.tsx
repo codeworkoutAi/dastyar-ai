@@ -43,6 +43,25 @@ export function ProductDetails() {
     fetchReviews();
   }, [id]);
 
+  useEffect(() => {
+    if (user && product) {
+      const saved = sessionStorage.getItem('pending_checkout');
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          if (String(parsed.productId) === String(product.id)) {
+            sessionStorage.removeItem('pending_checkout');
+            if (parsed.variationId && variations.length > 0) {
+              const matched = variations.find((v: any) => v.id === parsed.variationId);
+              if (matched) setSelectedVariation(matched);
+            }
+            setIsCheckoutOpen(true);
+          }
+        } catch (e) {}
+      }
+    }
+  }, [user, product, variations]);
+
   const fetchProduct = async () => {
     try {
       setLoading(true);
@@ -64,31 +83,63 @@ export function ProductDetails() {
           } catch (e) {}
         }
         
-        // Setup SEO dynamically
+        // Setup SEO & GEO Schema dynamically
+        let faqItems: any[] = [];
+        try {
+          if (found.faqs) {
+            faqItems = typeof found.faqs === 'string' ? JSON.parse(found.faqs) : found.faqs;
+          }
+        } catch (_) {}
+
+        const faqSchema = Array.isArray(faqItems) && faqItems.length > 0 ? {
+          '@type': 'FAQPage',
+          mainEntity: faqItems.map((f: any) => ({
+            '@type': 'Question',
+            name: f.q,
+            acceptedAnswer: {
+              '@type': 'Answer',
+              text: f.a
+            }
+          }))
+        } : null;
+
+        const productSchema: any = {
+          '@type': 'Product',
+          name: found.title,
+          description: found.description || found.title,
+          image: (found.bannerImage || found.image) || `${window.location.origin}/pwa-512x512.png`,
+          sku: `AI-PROD-${found.id}`,
+          brand: {
+            '@type': 'Brand',
+            name: 'دستیار هوشمند'
+          },
+          offers: {
+            '@type': 'Offer',
+            url: `${window.location.origin}/store/product/${found.id}`,
+            price: (found.price || 0) * 10,
+            priceCurrency: 'IRR',
+            availability: found.status === 'out_of_stock' ? 'https://schema.org/OutOfStock' : 'https://schema.org/InStock',
+            priceValidUntil: '2028-12-31'
+          }
+        };
+
         setPageSeo({
-          title: `خرید ${found.title} | Dastyar AI`,
+          title: `خرید ${found.title} با تحویل فوری | Dastyar AI`,
           description: found.description || found.title,
           ogImage: (found.bannerImage || found.image) || undefined,
           schema: {
             '@context': 'https://schema.org',
-            '@type': 'Product',
-            name: found.title,
-            sku: `AI-PROD-${found.id}`,
-            brand: {
-              '@type': 'Brand',
-              name: 'فروشگاه هوش مصنوعی'
-            },
-            offers: {
-              '@type': 'Offer',
-              itemOffered: {
-                '@type': 'Product',
-                name: found.title,
-                url: `${window.location.origin}/store/product/${found.id}`
-              },
-              price: (found.price || 0) * 10,
-              priceCurrency: 'IRR',
-              availability: (found.stock > 0 || found.category === 'plan' || found.category === 'package') ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock'
-            }
+            '@graph': [
+              productSchema,
+              ...(faqSchema ? [faqSchema] : []),
+              {
+                '@type': 'BreadcrumbList',
+                itemListElement: [
+                  { '@type': 'ListItem', position: 1, name: 'فروشگاه', item: `${window.location.origin}/` },
+                  { '@type': 'ListItem', position: 2, name: found.title, item: `${window.location.origin}/store/product/${found.id}` }
+                ]
+              }
+            ]
           }
         });
       } else {
@@ -191,6 +242,11 @@ export function ProductDetails() {
 
   const handleBuyClick = () => {
     if (!user) {
+      sessionStorage.setItem('pending_checkout', JSON.stringify({
+        productId: product.id,
+        variationId: selectedVariation?.id,
+        selectedPeriod: selectedVariation?.title
+      }));
       window.dispatchEvent(new CustomEvent('open-auth-modal'));
     } else {
       setIsCheckoutOpen(true);
@@ -331,8 +387,10 @@ export function ProductDetails() {
 
                 <div className="flex items-center justify-between text-xs font-bold p-3 bg-[var(--color-input-bg)] rounded-xl border border-[var(--card-border)]">
                   <span className="text-[var(--color-text-muted)]">وضعیت موجودی:</span>
-                  <span className={product.stock > 0 || product.category === 'plan' || product.category === 'package' ? 'text-emerald-500' : 'text-red-500'}>
-                    {product.stock > 0 || product.category === 'plan' || product.category === 'package' ? 'موجود و آماده فعال‌سازی' : 'ناموجود'}
+                  <span className={product.status === 'out_of_stock' ? 'text-red-500' : 'text-emerald-500'}>
+                    {product.status === 'out_of_stock' 
+                      ? 'ناموجود' 
+                      : (product.stock > 0 ? 'موجود (تحویل آنی)' : 'موجود و آماده فعال‌سازی')}
                   </span>
                 </div>
                 
@@ -346,12 +404,12 @@ export function ProductDetails() {
 
               <button 
                 onClick={handleBuyClick}
-                disabled={product.category !== 'package' && product.category !== 'plan' && product.stock <= 0}
-                className="w-full clay-btn-primary py-4 text-base shadow-xl disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                disabled={product.status === 'out_of_stock' || (product.deliveryType === 'instant' && product.stock <= 0)}
+                className="w-full clay-btn-primary py-4 text-base shadow-xl disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer font-black"
               >
-                {product.category !== 'package' && product.category !== 'plan' && product.stock <= 0 
+                {product.status === 'out_of_stock' || (product.deliveryType === 'instant' && product.stock <= 0)
                   ? 'ناموجود' 
-                  : 'تایید و شروع خرید'}
+                  : (product.stock > 0 ? 'خرید آنلاین و تحویل آنی' : 'خرید آنلاین و ثبت سفارش')}
               </button>
 
               {/* Direct Telegram Support Button */}

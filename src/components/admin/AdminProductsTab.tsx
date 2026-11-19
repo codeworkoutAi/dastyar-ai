@@ -38,6 +38,7 @@ interface ProductFormData {
   baseUrl: string;
   deliveryGuide: string;
   deliveryTime: string;
+  deliveryType: 'hybrid' | 'instant' | 'manual';
   badge: string;
   features: string;
   tokenEstimate: string;
@@ -58,6 +59,7 @@ const INITIAL_FORM_DATA: ProductFormData = {
   baseUrl: '',
   deliveryGuide: '',
   deliveryTime: '۱ تا ۲۴ ساعت کاری',
+  deliveryType: 'hybrid',
   badge: '',
   features: '',
   tokenEstimate: '',
@@ -174,7 +176,8 @@ export const AdminProductsTab: React.FC = () => {
       bannerImage: product.banner_image || '',
       baseUrl: product.base_url || '',
       deliveryGuide: product.delivery_guide || '',
-      deliveryTime: product.delivery_time || '۱ تا ۲۴ ساعت کاری',
+      deliveryTime: product.delivery_time || product.deliveryTime || '۱ تا ۲۴ ساعت کاری',
+      deliveryType: (product.delivery_type || product.deliveryType || 'hybrid') as any,
       badge: product.badge || '',
       features: parsedFeatures,
       tokenEstimate: product.token_estimate || '',
@@ -459,7 +462,7 @@ export const AdminProductsTab: React.FC = () => {
                 </div>
 
                 {/* Price and Delivery */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                   <div className="space-y-1.5">
                     <label className="text-xs font-semibold text-[var(--text-muted)]">قیمت پایه (تومان) *</label>
                     <input
@@ -470,6 +473,19 @@ export const AdminProductsTab: React.FC = () => {
                       placeholder="مثال: ۱۲۰۰۰۰۰"
                       className="clay-input w-full px-3.5 py-2.5 rounded-xl text-sm"
                     />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-[var(--text-muted)]">نوع و متد تحویل</label>
+                    <select
+                      value={formData.deliveryType}
+                      onChange={e => updateFormField('deliveryType', e.target.value as any)}
+                      className="clay-input w-full px-3.5 py-2.5 rounded-xl text-sm"
+                    >
+                      <option value="hybrid">ترکیبی (آنی در صورت موجودی، وگرنه دستی)</option>
+                      <option value="instant">تحویل ۱۰۰٪ آنی (الزام وجود لایسنس)</option>
+                      <option value="manual">تحویل دستی توسط پشتیبانی</option>
+                    </select>
                   </div>
 
                   <div className="space-y-1.5">

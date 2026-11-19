@@ -27,8 +27,8 @@ export const GlobalHeader: React.FC = () => {
   const isBazaar = isBazaarEnvironment() || Boolean(user?.email?.endsWith('@bazaar.guest'));
 
   const navLinks = [
-    { name: 'چت', path: '/chat', icon: MessageSquare },
-    ...(!isBazaar ? [{ name: 'فروشگاه', path: '/store', icon: Store }] : []),
+    ...(!isBazaar ? [{ name: 'فروشگاه', path: '/', icon: Store }] : []),
+    { name: 'چت و دستیار', path: '/chat', icon: MessageSquare },
     { name: 'وبلاگ', path: '/blog', icon: BookOpen },
   ];
 
@@ -52,7 +52,9 @@ export const GlobalHeader: React.FC = () => {
         <div className="flex justify-center items-center">
           <nav className="flex items-center gap-1 sm:gap-2 md:gap-2.5 bg-black/5 dark:bg-white/5 p-1 sm:p-1.5 md:p-2 rounded-2xl md:rounded-2xl shrink-0 border border-black/5 dark:border-white/5 shadow-xs">
             {navLinks.map((link) => {
-              const isActive = location.pathname.startsWith(link.path);
+              const isActive = link.path === '/' 
+                ? (location.pathname === '/' || location.pathname.startsWith('/store'))
+                : location.pathname.startsWith(link.path);
               const Icon = link.icon;
               return (
                 <Link

@@ -273,10 +273,15 @@ export const UserDashboard = () => {
     }
   };
 
-  const getStatusBadge = (status: string) => {
+  const getStatusBadge = (status: string, licenseKey?: string, fulfillmentStatus?: string) => {
+    if (status === 'success') {
+      if (licenseKey || fulfillmentStatus === 'delivered') {
+        return <span className="px-2.5 py-1 rounded-xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 text-xs font-bold flex items-center gap-1.5"><CheckCircle2 size={14}/> تحویل شده</span>;
+      }
+      return <span className="px-2.5 py-1 rounded-xl bg-blue-500/15 text-blue-600 dark:text-blue-400 border border-blue-500/20 text-xs font-bold flex items-center gap-1.5"><Clock size={14}/> در حال آماده‌سازی اکانت</span>;
+    }
     switch (status) {
-      case 'success': return <span className="px-2.5 py-1 rounded-xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 text-xs font-bold flex items-center gap-1.5"><CheckCircle2 size={14}/> تکمیل شده</span>;
-      case 'pending': return <span className="px-2.5 py-1 rounded-xl bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/20 text-xs font-bold flex items-center gap-1.5"><Clock size={14}/> در انتظار بررسی</span>;
+      case 'pending': return <span className="px-2.5 py-1 rounded-xl bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/20 text-xs font-bold flex items-center gap-1.5"><Clock size={14}/> در انتظار پرداخت</span>;
       case 'failed': return <span className="px-2.5 py-1 rounded-xl bg-red-500/15 text-red-600 dark:text-red-400 border border-red-500/20 text-xs font-bold flex items-center gap-1.5"><XCircle size={14}/> لغو شده</span>;
       default: return <span className="px-2.5 py-1 rounded-xl clay-btn-thick text-[#525d75] dark:text-[#9aa5bc] text-xs font-bold">{status}</span>;
     }
@@ -998,7 +1003,7 @@ export const UserDashboard = () => {
                         </div>
                         
                         <div className="flex items-center gap-2 sm:flex-col sm:items-end justify-between border-t border-black/5 dark:border-white/5 sm:border-0 pt-2 sm:pt-0">
-                          {getStatusBadge(p.paymentStatus)}
+                          {getStatusBadge(p.paymentStatus, p.licenseKey, p.fulfillmentStatus)}
                           
                           <div className="flex items-center gap-1.5">
                             {p.paymentStatus === 'pending' && !isBazaar && (
@@ -1324,8 +1329,19 @@ export const UserDashboard = () => {
                 </div>
                 <div className="flex justify-between items-center text-xs p-3 clay-inset-thick rounded-xl">
                   <span className="font-semibold text-[#525d75] dark:text-[#9aa5bc]">وضعیت پرداخت:</span>
-                  {getStatusBadge(selectedInvoice.paymentStatus)}
+                  {getStatusBadge(selectedInvoice.paymentStatus, selectedInvoice.licenseKey, selectedInvoice.fulfillmentStatus)}
                 </div>
+                {!selectedInvoice.licenseKey && selectedInvoice.paymentStatus === 'success' && (
+                  <div className="flex flex-col gap-2 p-3 bg-blue-500/10 rounded-2xl border border-blue-500/20 mt-4 text-xs font-semibold text-blue-800 dark:text-blue-300">
+                    <span className="font-bold flex items-center gap-1.5 text-blue-600 dark:text-cyan-400">
+                      <Clock size={15} />
+                      سفارش شما در حال آماده‌سازی و تحویل است
+                    </span>
+                    <p className="text-[11px] leading-relaxed text-[var(--text-muted)]">
+                      مشخصات اکانت یا لایسنس شما توسط پشتیبانی در حال آماده‌سازی است و به زودی در همین بخش و از طریق تلگرام و پیامک تحویل خواهد شد.
+                    </p>
+                  </div>
+                )}
                 {selectedInvoice.licenseKey && selectedInvoice.paymentStatus === 'success' && (
                   <div className="flex flex-col gap-2 p-3 bg-blue-500/10 rounded-2xl border border-blue-500/20 mt-4">
                     <span className="text-xs font-bold text-blue-600 dark:text-cyan-400">{selectedInvoice.licenseKey.startsWith('http') ? 'لینک فعال‌سازی اختصاصی شما:' : 'کد لایسنس اختصاصی شما:'}

@@ -166,9 +166,7 @@ export default function App() {
   }
 
  function HomeRoute() {
- const isAuthenticated = useAuthStore(state => state.isAuthenticated);
- const isNative = Capacitor.isNativePlatform();
- return (isAuthenticated || isNative) ? <ChatApp /> : <LandingPage />;
+   return isBazaarEnvironment() ? <ChatApp /> : <StoreFront />;
  }
 
  return (

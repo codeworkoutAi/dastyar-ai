@@ -158,7 +158,7 @@ router.post('/products', (req, res) => {
   try {
     const { 
       title, description, longDescription, faqs, price, category, image, bannerImage, baseUrl, deliveryGuide,
-      badge, features, tokenEstimate, isPopular, showOnLanding, variations, deliveryTime
+      badge, features, tokenEstimate, isPopular, showOnLanding, variations, deliveryTime, deliveryType
     } = req.body;
     
     if (!title || price === undefined || price === null || !category) {
@@ -168,8 +168,8 @@ router.post('/products', (req, res) => {
     const stmt = db.prepare(`
       INSERT INTO products (
         title, description, longDescription, faqs, price, category, image, bannerImage, baseUrl, deliveryGuide,
-        badge, features, tokenEstimate, isPopular, showOnLanding, variations, deliveryTime
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        badge, features, tokenEstimate, isPopular, showOnLanding, variations, deliveryTime, deliveryType
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
     const info = stmt.run(
       title,
@@ -188,7 +188,8 @@ router.post('/products', (req, res) => {
       isPopular ? 1 : 0,
       showOnLanding === false ? 0 : 1,
       variations || null,
-      deliveryTime || '۱ تا ۲۴ ساعت کاری'
+      deliveryTime || '۱ تا ۲۴ ساعت کاری',
+      deliveryType || 'hybrid'
     );
     syncDatabase();
     clearSitemapCache();
@@ -207,7 +208,7 @@ router.put('/products/:id', (req, res) => {
     const { id } = req.params;
     const { 
       title, description, longDescription, faqs, price, category, image, bannerImage, baseUrl, deliveryGuide,
-      badge, features, tokenEstimate, isPopular, showOnLanding, variations, deliveryTime
+      badge, features, tokenEstimate, isPopular, showOnLanding, variations, deliveryTime, deliveryType
     } = req.body;
     
     if (!title || price === undefined || price === null || !category) {
@@ -224,7 +225,7 @@ router.put('/products/:id', (req, res) => {
         title = ?, description = ?, longDescription = ?, faqs = ?, price = ?, category = ?, 
         image = ?, bannerImage = ?, baseUrl = ?, deliveryGuide = ?,
         badge = ?, features = ?, tokenEstimate = ?, isPopular = ?, showOnLanding = ?,
-        variations = ?, deliveryTime = ?
+        variations = ?, deliveryTime = ?, deliveryType = ?
       WHERE id = ?
     `);
     stmt.run(
@@ -245,6 +246,7 @@ router.put('/products/:id', (req, res) => {
       showOnLanding === false ? 0 : 1,
       variations || null,
       deliveryTime || '۱ تا ۲۴ ساعت کاری',
+      deliveryType || 'hybrid',
       id
     );
     syncDatabase();
@@ -629,8 +631,8 @@ router.post('/orders/:id/assign-license', (req, res) => {
       db.prepare('UPDATE licenses SET status = ? WHERE id = ?').run('sold', providedLicenseId);
     }
 
-    db.prepare('UPDATE orders SET paymentStatus = ?, licenseId = ? WHERE id = ?')
-      .run('success', finalLicenseId, id);
+    db.prepare("UPDATE orders SET paymentStatus = 'success', licenseId = ?, fulfillmentStatus = 'delivered' WHERE id = ?")
+      .run(finalLicenseId, id);
 
     syncDatabase();
 

@@ -3,7 +3,7 @@ import { Link, useSearchParams, useNavigate, useParams } from 'react-router-dom'
 import { 
   Store, CheckCircle2, XCircle, BookOpen, Package, Zap, Sparkles, 
   ChevronLeft, Search, X, ShieldCheck, CreditCard, Send, ShoppingBag, 
-  ArrowUpDown, Wallet, Plus, Info
+  ArrowUpDown, Wallet, Plus, Info, Bot, MessageSquare
 } from 'lucide-react';
 import { CheckoutModal } from '../../components/CheckoutModal';
 import { Footer } from '../../components/Footer';
@@ -48,10 +48,27 @@ export function StoreFront() {
   }, [paymentStatus]);
 
   useEffect(() => {
+    if (user && products.length > 0) {
+      const saved = sessionStorage.getItem('pending_checkout');
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          const found = products.find(p => String(p.id) === String(parsed.productId));
+          if (found) {
+            sessionStorage.removeItem('pending_checkout');
+            setSelectedProduct(found);
+          }
+        } catch (e) {}
+      }
+    }
+  }, [user, products]);
+
+  useEffect(() => {
+    const isRoot = window.location.pathname === '/';
     setPageSeo({
-      title: 'فروشگاه ابزارهای هوش مصنوعی و بسته‌های اعتباری | Dastyar AI',
-      description: 'فروشگاه تخصصی هوش مصنوعی: خرید بسته‌های اعتباری، اکانت‌های اختصاصی، کلیدهای API و پکیج‌های آموزشی با تحویل آنی و پشتیبانی کامل.',
-      canonical: `${window.location.origin}/store`,
+      title: 'Dastyar AI | دستیار هوش مصنوعی فارسی — چت، کد، اسناد',
+      description: 'فروشگاه تخصصی ابزارهای هوش مصنوعی: خرید اکانت‌های اختصاصی، کلیدهای API، شارژ کیف پول و دستیار هوشمند با تحویل سریع و گارانتی.',
+      canonical: isRoot ? `${window.location.origin}/` : `${window.location.origin}/store`,
       ogType: 'website',
       schema: {
         '@context': 'https://schema.org',
@@ -60,7 +77,7 @@ export function StoreFront() {
             '@type': 'Store',
             name: 'فروشگاه هوش مصنوعی دستیار هوشمند',
             description: 'فروشگاه تخصصی هوش مصنوعی: خرید بسته‌های اعتباری، اکانت‌های اختصاصی، کلیدهای API و پکیج‌های آموزشی با تحویل آنی.',
-            url: `${window.location.origin}/store`,
+            url: isRoot ? `${window.location.origin}/` : `${window.location.origin}/store`,
             image: `${window.location.origin}/pwa-512x512.png`,
             hasOfferCatalog: {
               '@type': 'OfferCatalog',
@@ -526,6 +543,9 @@ export function StoreFront() {
                         onClick={(e) => {
                           e.stopPropagation();
                           if (!user) {
+                            sessionStorage.setItem('pending_checkout', JSON.stringify({
+                              productId: p.id
+                            }));
                             window.dispatchEvent(new CustomEvent('open-auth-modal'));
                             return;
                           }
@@ -552,6 +572,31 @@ export function StoreFront() {
             })}
           </div>
         )}
+
+        {/* Complementary AI Chat Section - Non-Negotiable Invariant for SEO Rank #7 */}
+        <div className="mt-12 p-6 sm:p-8 clay-card-thick rounded-3xl relative overflow-hidden">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+            <div className="space-y-3 max-w-2xl text-center md:text-right">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 text-xs font-bold border border-indigo-500/20">
+                <Bot size={14} />
+                <span>ابزار جانبی و تست آنلاین</span>
+              </div>
+              <h2 className="text-xl sm:text-2xl font-black text-[var(--text-main)] leading-snug">
+                دستیار هوشمند | چت با هوش مصنوعی رایگان و پیشرفته
+              </h2>
+              <p className="text-xs sm:text-sm text-[var(--text-muted)] leading-relaxed">
+                همراه با فروشگاه ابزارها، دستیار هوشمند آماده پاسخ‌گویی به سوالات، مشاوره خرید و تست رایگان امکانات است.
+              </p>
+            </div>
+            <Link
+              to="/chat"
+              className="px-6 py-3.5 clay-btn-primary font-black text-xs sm:text-sm rounded-2xl flex items-center justify-center gap-2 shadow-lg hover:scale-105 transition-all shrink-0 w-full md:w-auto text-center"
+            >
+              <MessageSquare size={18} />
+              <span>ورود به چت هوش مصنوعی</span>
+            </Link>
+          </div>
+        </div>
 
         {/* Cross-linking Educational Banner to Blog */}
         <div className="mt-12 p-6 sm:p-8 clay-card-thick rounded-3xl flex flex-col sm:flex-row items-center justify-between gap-6">

@@ -277,6 +277,11 @@ export function initializeSchema() {
       db.exec(`ALTER TABLE products ADD COLUMN deliveryTime TEXT DEFAULT '۱ تا ۲۴ ساعت'`);
       console.log('[DB Schema] Added deliveryTime column to products table.');
     }
+    const hasDeliveryType = tableInfo.some(col => col.name === 'deliveryType');
+    if (!hasDeliveryType) {
+      db.exec(`ALTER TABLE products ADD COLUMN deliveryType TEXT DEFAULT 'hybrid'`);
+      console.log('[DB Schema] Added deliveryType column to products table.');
+    }
 
   } catch (e) {
     console.error('Migration error:', e);
@@ -343,6 +348,11 @@ export function initializeSchema() {
     if (!hasSelectedPeriod) {
       db.exec(`ALTER TABLE orders ADD COLUMN selectedPeriod TEXT`);
       console.log('[DB Schema] Added selectedPeriod column to orders table.');
+    }
+    const hasFulfillmentStatus = tableInfo.some(col => col.name === 'fulfillmentStatus');
+    if (!hasFulfillmentStatus) {
+      db.exec(`ALTER TABLE orders ADD COLUMN fulfillmentStatus TEXT DEFAULT 'pending'`);
+      console.log('[DB Schema] Added fulfillmentStatus column to orders table.');
     }
   } catch (e) {
     console.error('Migration error (orders):', e);
