@@ -271,8 +271,8 @@ export const ShoppingAdvisorWidget: React.FC<ShoppingAdvisorWidgetProps> = ({
               <div
                 className={`p-3.5 sm:p-4 rounded-2xl text-xs sm:text-sm leading-7 min-w-0 break-words [overflow-wrap:anywhere] ${
                   m.role === 'user'
-                    ? 'clay-btn-primary text-white rounded-br-xs font-medium'
-                    : 'flex-1 clay-surface border border-[var(--card-border)] rounded-bl-xs text-[var(--text-main)] shadow-xs'
+                    ? 'bg-[var(--bubble-user-bg)] text-[var(--text-main)] border border-[var(--border-strong)] rounded-bl-xs font-medium shadow-xs'
+                    : 'flex-1 clay-surface border border-[var(--card-border)] rounded-br-xs text-[var(--text-main)] shadow-xs'
                 }`}
               >
                 <p className="whitespace-pre-wrap">{m.content}</p>
