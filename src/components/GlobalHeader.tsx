@@ -28,7 +28,6 @@ export const GlobalHeader: React.FC = () => {
 
   const navLinks = [
     ...(!isBazaar ? [{ name: 'فروشگاه', path: '/', icon: Store }] : []),
-    { name: 'چت و دستیار', path: '/chat', icon: MessageSquare },
     { name: 'وبلاگ', path: '/blog', icon: BookOpen },
   ];
 
@@ -72,6 +71,16 @@ export const GlobalHeader: React.FC = () => {
                 </Link>
               );
             })}
+
+            {/* Quick Trigger Button for AI Shopping Advisor */}
+            <button
+              onClick={() => window.dispatchEvent(new CustomEvent('open-advisor-widget'))}
+              className="flex items-center justify-center gap-1.5 md:gap-2 px-2.5 sm:px-3.5 md:px-4 py-1.5 md:py-2.5 rounded-xl md:rounded-xl transition-all duration-200 select-none text-indigo-600 dark:text-indigo-400 hover:bg-indigo-500/10 font-bold hover:scale-[1.03] active:scale-95 cursor-pointer"
+              title="گفتگو با مشاور هوشمند خرید"
+            >
+              <Bot className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-indigo-600 dark:text-indigo-400 shrink-0" />
+              <span className="text-xs md:text-sm font-bold md:font-black hidden sm:block whitespace-nowrap">مشاور خرید</span>
+            </button>
           </nav>
         </div>
 

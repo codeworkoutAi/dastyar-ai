@@ -360,7 +360,7 @@ export const AdminSettingsTab: React.FC = () => {
               <CheckCircle2 size={13} />
               <span>وضعیت: فعال و آنلاین</span>
             </span>
-            <a href="/chat" target="_blank" rel="noreferrer" className="clay-btn px-3 py-1.5 rounded-xl text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:scale-105 transition-all">
+            <a href="/?advisor=open" target="_blank" rel="noreferrer" className="clay-btn px-3 py-1.5 rounded-xl text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:scale-105 transition-all">
               تست مشاور خرید ↗
             </a>
           </div>

@@ -3,7 +3,7 @@ import {
   Sparkles, X, Send, Bot, User, ShoppingBag, 
   ChevronLeft, MessageSquare, ShieldCheck, Zap, RefreshCw, ArrowLeft
 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { toPersianDigits } from '../../lib/persianUtils';
 import { useSettingsStore } from '../../store/settingsStore';
 
@@ -42,8 +42,17 @@ export const ShoppingAdvisorWidget: React.FC<ShoppingAdvisorWidgetProps> = ({
   onSelectProduct
 }) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { settings } = useSettingsStore();
   const usePersianDigits = settings?.appearance?.persianNumerals ?? false;
+
+  // Auto-detect product ID from URL if user is viewing a product page
+  const routeProductId = React.useMemo(() => {
+    const match = location.pathname.match(/\/store\/product\/(\d+)/);
+    return match ? parseInt(match[1], 10) : undefined;
+  }, [location.pathname]);
+
+  const activeProductId = currentProductId || routeProductId;
 
   const [isOpen, setIsOpen] = useState(defaultOpen);
   const [input, setInput] = useState('');
@@ -76,6 +85,25 @@ export const ShoppingAdvisorWidget: React.FC<ShoppingAdvisorWidgetProps> = ({
     }
   }, [isOpen, isEmbedded]);
 
+  // Global event listener to open advisor widget from anywhere in the app
+  useEffect(() => {
+    const handleOpen = () => setIsOpen(true);
+    window.addEventListener('open-advisor-widget', handleOpen);
+    return () => window.removeEventListener('open-advisor-widget', handleOpen);
+  }, []);
+
+  // Listen for ?advisor=open or ?prompt= in URL
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (params.get('advisor') === 'open') {
+      setIsOpen(true);
+      params.delete('advisor');
+      const newQuery = params.toString();
+      const newUrl = location.pathname + (newQuery ? `?${newQuery}` : '');
+      window.history.replaceState({}, document.title, newUrl);
+    }
+  }, [location.search, location.pathname]);
+
   const handleSendMessage = async (textToSend?: string) => {
     const text = (textToSend || input).trim();
     if (!text || loading) return;
@@ -98,7 +126,7 @@ export const ShoppingAdvisorWidget: React.FC<ShoppingAdvisorWidgetProps> = ({
         body: JSON.stringify({
           message: text,
           history,
-          currentProductId
+          currentProductId: activeProductId
         })
       });
 
@@ -316,10 +344,10 @@ export const ShoppingAdvisorWidget: React.FC<ShoppingAdvisorWidgetProps> = ({
     <>
       {/* Floating Trigger Button */}
       {!isOpen && (
-        <div className="fixed bottom-5 left-5 z-40 animate-slideUpScale">
+        <div className="fixed bottom-5 left-4 sm:left-5 z-50 animate-slideUpScale">
           <button
             onClick={() => setIsOpen(true)}
-            className="px-4 py-3 rounded-2xl clay-btn-primary flex items-center gap-2.5 text-white font-bold text-xs sm:text-sm shadow-2xl hover:scale-105 transition-all cursor-pointer group"
+            className="px-3.5 py-2.5 sm:px-4 sm:py-3 rounded-2xl clay-btn-primary flex items-center gap-2 sm:gap-2.5 text-white font-bold text-xs sm:text-sm shadow-2xl hover:scale-105 transition-all cursor-pointer group"
             title="مشاوره رایگان خرید اکانت"
           >
             <div className="w-7 h-7 rounded-xl bg-white/20 flex items-center justify-center shrink-0">

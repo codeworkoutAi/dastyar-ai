@@ -8,7 +8,6 @@ import {
 import { CheckoutModal } from '../../components/CheckoutModal';
 import { Footer } from '../../components/Footer';
 import { GlobalHeader } from '../../components/GlobalHeader';
-import { ShoppingAdvisorWidget } from '../../components/store/ShoppingAdvisorWidget';
 import { useAuthStore } from '../../store/authStore';
 import { useUIStore } from '../../store/uiStore';
 import { useSettingsStore } from '../../store/settingsStore';
@@ -589,13 +588,13 @@ export function StoreFront() {
                 همراه با فروشگاه ابزارها، دستیار هوشمند آماده پاسخ‌گویی به سوالات، مشاوره خرید و تست رایگان امکانات است.
               </p>
             </div>
-            <Link
-              to="/chat"
-              className="px-6 py-3.5 clay-btn-primary font-black text-xs sm:text-sm rounded-2xl flex items-center justify-center gap-2 shadow-lg hover:scale-105 transition-all shrink-0 w-full md:w-auto text-center"
+            <button
+              onClick={() => window.dispatchEvent(new CustomEvent('open-advisor-widget'))}
+              className="px-6 py-3.5 clay-btn-primary font-black text-xs sm:text-sm rounded-2xl flex items-center justify-center gap-2 shadow-lg hover:scale-105 transition-all shrink-0 w-full md:w-auto text-center cursor-pointer"
             >
-              <MessageSquare size={18} />
-              <span>ورود به چت هوش مصنوعی</span>
-            </Link>
+              <Sparkles size={18} className="text-yellow-300" />
+              <span>مشاوره رایگان خرید اکانت</span>
+            </button>
           </div>
         </div>
 
@@ -622,9 +621,6 @@ export function StoreFront() {
       </main>
 
       <Footer />
-
-      {/* Floating Shopping Advisor */}
-      <ShoppingAdvisorWidget />
 
       {/* Checkout Modal */}
       <CheckoutModal

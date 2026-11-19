@@ -328,14 +328,14 @@ export const UserDashboard = () => {
             </p>
           </div>
           <div className="flex items-center gap-3 shrink-0 pt-1 md:pt-0">
-            <Link
-              to="/chat"
+            <button
+              onClick={() => window.dispatchEvent(new CustomEvent('open-advisor-widget'))}
               className="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl clay-btn-thick text-[var(--text-main)] text-xs font-black transition-all cursor-pointer active:scale-95"
               style={{ fontFamily: "'Estedad', sans-serif" }}
             >
               <Sparkles size={15} className="text-amber-500" />
               <span>مشاور هوشمند</span>
-            </Link>
+            </button>
             <Link
               to="/"
               className="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl clay-btn-primary-thick text-white text-xs font-black shadow-md shadow-blue-600/25 transition-all cursor-pointer active:scale-95"

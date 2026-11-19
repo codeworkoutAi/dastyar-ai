@@ -109,15 +109,15 @@ export function Footer() {
  </h3>
  <ul className="space-y-2.5 text-xs sm:text-sm">
  <li>
- <Link
- to="/chat"
- className="group inline-flex items-center gap-2.5 text-zinc-600 dark:text-zinc-400 dark:text-[#9aa5bc] hover:text-zinc-800 dark:text-zinc-100 dark:hover:text-white transition-all"
+ <button
+ onClick={() => window.dispatchEvent(new CustomEvent('open-advisor-widget'))}
+ className="group inline-flex items-center gap-2.5 text-zinc-600 dark:text-zinc-400 dark:text-[#9aa5bc] hover:text-zinc-800 dark:text-zinc-100 dark:hover:text-white transition-all cursor-pointer"
  >
  <div className="clay-debossed-socket w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
  <MessageSquare className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
  </div>
- <span className="font-bold group-hover:-translate-x-1 transition-transform">چت هوشمند</span>
- </Link>
+ <span className="font-bold group-hover:-translate-x-1 transition-transform">مشاور هوشمند</span>
+ </button>
  </li>
  <li>
  <Link
