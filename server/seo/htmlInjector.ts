@@ -356,8 +356,8 @@ export async function renderHtmlWithSeo(req: express.Request, res: express.Respo
             ]
           };
         } else if (urlPath === '/chat') {
-          pageTitle = 'چت با هوش مصنوعی فارسی رایگان و نامحدود | Dastyar AI';
-          pageDesc = 'سوال دارید؟ همین حالا رایگان و نامحدود با هوش مصنوعی فارسی چت کنید؛ ۱۵ پیام بدون ثبت‌نام، پاسخ آنی به فارسی روان و دسترسی مستقیم از ایران.';
+          pageTitle = 'مشاور هوشمند و چت با هوش مصنوعی فارسی رایگان | Dastyar AI';
+          pageDesc = 'راهنمای هوشمند و رایگان برای انتخاب و خرید بهترین اکانت‌های هوش مصنوعی، پاسخ آنی به سوالات و مشاوره آنلاین تخصصی به زبان فارسی.';
           canonicalUrl = `${baseUrl}/chat`;
           structuredData = {
             '@context': 'https://schema.org',

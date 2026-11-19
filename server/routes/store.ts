@@ -14,6 +14,7 @@ import {
 } from '../services/bazaarPayService';
 import { depositWallet, getPlanCreditAmount } from '../services/walletService';
 import { notifyOrderSuccessBySms } from '../services/kavenegarService';
+import { getGeminiClient, getGeminiKeyFromPool, getGroqKeyFromPool } from '../services/utils';
 
 const router = express.Router();
 
@@ -171,6 +172,163 @@ const checkoutLimiter = rateLimit({
   message: { error: 'تعداد درخواست‌های پرداخت بیش از حد مجاز است. لطفاً ۱۵ دقیقه دیگر دوباره تلاش کنید.' },
   standardHeaders: true,
   legacyHeaders: false,
+});
+
+const advisorLimiter = rateLimit({
+  windowMs: 10 * 60 * 1000, // 10 minutes
+  max: 30, // 30 messages per 10 mins per IP
+  message: { error: 'تعداد درخواست‌های شما به مشاور هوشمند بیش از حد مجاز است. لطفاً چند دقیقه دیگر امتحان کنید.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// POST /api/store/advisor (Lightweight Shopping Advisor for customers)
+router.post('/advisor', advisorLimiter, async (req, res) => {
+  try {
+    const { message, history, currentProductId } = req.body;
+    if (!message || typeof message !== 'string' || !message.trim()) {
+      return res.status(400).json({ error: 'متن پیام الزامی است.' });
+    }
+
+    const cleanMsg = message.trim().slice(0, 500);
+
+    // Fetch active products
+    const products = db.prepare(`
+      SELECT id, title, category, price, variations, description, features, deliveryTime, deliveryType, badge
+      FROM products
+      WHERE status = 'active' OR status IS NULL
+    `).all() as any[];
+
+    const catalogSummary = products.map(p => {
+      let vars = '';
+      try {
+        if (p.variations) {
+          const parsed = typeof p.variations === 'string' ? JSON.parse(p.variations) : p.variations;
+          if (Array.isArray(parsed)) {
+            vars = parsed.map((v: any) => `${v.title}: ${Number(v.price).toLocaleString('fa-IR')} تومان`).join(' | ');
+          }
+        }
+      } catch (_) {}
+      return `- [ID: ${p.id}] «${p.title}» (دسته: ${p.category}) - قیمت پایه: ${Number(p.price).toLocaleString('fa-IR')} تومان ${vars ? `[پلن‌ها: ${vars}]` : ''} - زمان تحویل: ${p.deliveryTime || '۱ تا ۲۴ ساعت'} - ویژگی‌ها: ${(p.features || p.description || '').replace(/\n/g, ' ')}`;
+    }).join('\n');
+
+    let currentContext = '';
+    if (currentProductId) {
+      const cur = products.find(p => p.id === Number(currentProductId));
+      if (cur) {
+        currentContext = `\nتوجه: کاربر هم‌اکنون در صفحه محصول «${cur.title}» با شناسه ${cur.id} حضور دارد.`;
+      }
+    }
+
+    const systemInstruction = `شما «مشاور هوشمند و تخصصی فروشگاه Dastyar AI» هستید.
+وظیفه شما راهنمایی خریداران، پاسخ به سوالات قبل از خرید و پیشنهاد بهترین اکانت یا ابزار هوش مصنوعی متناسب با نیاز کاربر است.
+
+کاتالوگ محصولات فعال فروشگاه ما:
+${catalogSummary}
+${currentContext}
+
+قوانین و دستورالعمل‌های شما:
+۱. فقط به سوالات مرتبط با اکانت‌های هوش مصنوعی، تفاوت پلن‌ها (مثلاً ChatGPT Plus در برابر Claude یا Leonardo)، قیمت‌ها، نحوه تحویل و گارانتی پاسخ دهید.
+۲. اگر کاربر سوال عمومی، حل مسئله، شعر یا برنامه‌نویسی پرسید، با لحنی صمیمی و محترمانه بفرمایید که شما مشاور خرید ابزارهای هوش مصنوعی هستید و بپرسید آیا برای انتخاب ابزار یا اکانت مناسبش کمکی می‌خواهد.
+۳. در هر پاسخی که محصول خاصی از فروشگاه ما را پیشنهاد می‌دهید، حتماً تگ شناسه آن محصول را با فرمت [RECOMMEND:ID] (مثلاً [RECOMMEND:29]) در انتهای پاسخ خود درج کنید تا کارت خرید آن محصول به صورت خودکار به کاربر نشان داده شود.
+۴. لحن شما صمیمی، مطمئن، شفاف و کوتاه باشد. از پاسخ‌های طولانی و خسته‌کننده پرهیز کنید.`;
+
+    let reply = '';
+    const poolKey = getGeminiKeyFromPool([], 'gemini-3.6-flash') || getGeminiKeyFromPool([], 'gemini-3.5-flash-lite');
+    
+    if (poolKey) {
+      try {
+        const ai = getGeminiClient(poolKey, false);
+        const contents: any[] = [];
+        if (Array.isArray(history)) {
+          for (const h of history.slice(-6)) {
+            if (h.role === 'user') contents.push({ role: 'user', parts: [{ text: h.content }] });
+            else if (h.role === 'assistant') contents.push({ role: 'model', parts: [{ text: h.content }] });
+          }
+        }
+        contents.push({ role: 'user', parts: [{ text: cleanMsg }] });
+
+        const result = await ai.models.generateContent({
+          model: 'gemini-3.6-flash',
+          contents,
+          config: {
+            systemInstruction,
+            temperature: 0.7,
+            maxOutputTokens: 600
+          }
+        });
+        reply = result.text?.trim() || '';
+      } catch (geminiErr: any) {
+        console.warn('[Advisor] Gemini pool error, trying Groq fallback:', geminiErr?.message || geminiErr);
+      }
+    }
+
+    if (!reply) {
+      const groqKey = getGroqKeyFromPool([]);
+      if (groqKey) {
+        try {
+          const messages = [
+            { role: 'system', content: systemInstruction },
+            ...(Array.isArray(history) ? history.slice(-6).map((h: any) => ({ role: h.role === 'assistant' ? 'assistant' : 'user', content: h.content })) : []),
+            { role: 'user', content: cleanMsg }
+          ];
+          const groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${groqKey}`
+            },
+            body: JSON.stringify({
+              model: 'llama-3.3-70b-versatile',
+              messages,
+              max_tokens: 600,
+              temperature: 0.7
+            })
+          });
+          if (groqRes.ok) {
+            const groqData = await groqRes.json();
+            reply = groqData.choices?.[0]?.message?.content?.trim() || '';
+          }
+        } catch (groqErr) {
+          console.error('[Advisor] Groq fallback error:', groqErr);
+        }
+      }
+    }
+
+    if (!reply) {
+      reply = 'سلام! برای انتخاب بهترین اکانت هوش مصنوعی (برنامه‌نویسی، تولید محتوا، ترید یا گرافیک)، می‌توانید اکانت‌های برتر فروشگاه مانند ChatGPT Plus و Claude Pro را در صفحه فروشگاه مشاهده کنید یا سوال دقیق‌تری بپرسید تا راهنمایی‌تان کنم.';
+    }
+
+    // Parse recommended products
+    const recommendedProductIds: number[] = [];
+    const cleanReply = reply.replace(/\[(?:RECOMMEND|PRODUCT):(\d+)\]/gi, (_, id) => {
+      const parsedId = Number(id);
+      if (!recommendedProductIds.includes(parsedId)) {
+        recommendedProductIds.push(parsedId);
+      }
+      return '';
+    }).trim();
+
+    const recommendedProducts = products
+      .filter(p => recommendedProductIds.includes(p.id))
+      .map(p => ({
+        id: p.id,
+        title: p.title,
+        price: p.price,
+        badge: p.badge,
+        category: p.category,
+        deliveryTime: p.deliveryTime
+      }));
+
+    res.json({
+      reply: cleanReply,
+      products: recommendedProducts
+    });
+
+  } catch (error: any) {
+    console.error('[Advisor API Error]:', error);
+    res.status(500).json({ error: 'خطایی در برقراری ارتباط با مشاور هوشمند رخ داد.' });
+  }
 });
 
 // GET /api/store/products

@@ -9,6 +9,7 @@ import { App as CapacitorApp } from '@capacitor/app';
 
 // Lazy-loaded Pages
 const ChatApp = lazy(() => import('./pages/chat/ChatApp').then(m => ({ default: m.ChatApp })));
+const SalesAdvisorPage = lazy(() => import('./pages/store/SalesAdvisorPage').then(m => ({ default: m.SalesAdvisorPage })));
 
 // Lazy-loaded Pages
 const LandingPage = lazy(() => import('./pages/landing/LandingPage').then(m => ({ default: m.LandingPage })));
@@ -166,7 +167,7 @@ export default function App() {
   }
 
  function HomeRoute() {
-   return isBazaarEnvironment() ? <ChatApp /> : <StoreFront />;
+   return isBazaarEnvironment() ? <SalesAdvisorPage /> : <StoreFront />;
  }
 
  return (
@@ -176,7 +177,7 @@ export default function App() {
  <Routes>
  <Route path="/" element={<HomeRoute />} />
  <Route path="/landing" element={<LandingPage />} />
- <Route path="/chat" element={<ChatApp />} />
+ <Route path="/chat" element={<SalesAdvisorPage />} />
   <Route path="/store" element={<StoreRoute />} />
   <Route path="/store/product/:id" element={<ProductDetailsRoute />} />
  <Route path="/blog" element={<Blog />} />

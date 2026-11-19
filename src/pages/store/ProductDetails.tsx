@@ -12,6 +12,7 @@ import { CheckoutModal } from '../../components/CheckoutModal';
 import { useAuthStore } from '../../store/authStore';
 import { Footer } from '../../components/Footer';
 import { GlobalHeader } from '../../components/GlobalHeader';
+import { ShoppingAdvisorWidget } from '../../components/store/ShoppingAdvisorWidget';
 
 export function ProductDetails() {
   const { id } = useParams<{ id: string }>();
@@ -672,6 +673,9 @@ export function ProductDetails() {
           product={product} 
           selectedVariation={selectedVariation}
         />
+
+        {/* Floating Shopping Advisor Contextual to this Product */}
+        <ShoppingAdvisorWidget currentProductId={product?.id} />
         
         <div className="mt-12">
           <Footer />

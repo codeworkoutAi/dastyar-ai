@@ -8,6 +8,7 @@ import {
 import { CheckoutModal } from '../../components/CheckoutModal';
 import { Footer } from '../../components/Footer';
 import { GlobalHeader } from '../../components/GlobalHeader';
+import { ShoppingAdvisorWidget } from '../../components/store/ShoppingAdvisorWidget';
 import { useAuthStore } from '../../store/authStore';
 import { useUIStore } from '../../store/uiStore';
 import { useSettingsStore } from '../../store/settingsStore';
@@ -621,6 +622,9 @@ export function StoreFront() {
       </main>
 
       <Footer />
+
+      {/* Floating Shopping Advisor */}
+      <ShoppingAdvisorWidget />
 
       {/* Checkout Modal */}
       <CheckoutModal
