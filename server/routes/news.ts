@@ -53,9 +53,9 @@ router.post('/admin/trigger', requireAuth, requireAdmin, async (req, res) => {
 // POST /api/news/admin/generate-guide (Admin: Generate AI Educational Guide)
 router.post('/admin/generate-guide', requireAuth, requireAdmin, async (req, res) => {
   try {
-    const { topic } = req.body || {};
+    const { topic, template } = req.body || {};
     const { generateEducationalGuide } = await import('../services/guideGenerator');
-    const result = await generateEducationalGuide(topic);
+    const result = await generateEducationalGuide(topic, template);
     res.json({
       success: true,
       guide: result

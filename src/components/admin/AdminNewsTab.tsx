@@ -47,29 +47,60 @@ export const AdminNewsTab: React.FC = () => {
 
   // AI Educational Guide Generator state
   const [guideTopic, setGuideTopic] = useState('');
+  const [guideTemplate, setGuideTemplate] = useState<'all' | 'workflow' | 'deep_dive' | 'industry' | 'mistakes'>('all');
   const [guideLoading, setGuideLoading] = useState(false);
 
-  const GUIDE_IDEAS = [
-    '۵ ترفند شگفت‌انگیز اکسل با هوش مصنوعی',
-    'راهنمای گام‌به‌گام نوشتن رزومه حرفه‌ای',
-    'پرامپت‌نویسی دقیق برای کارهای روزمره',
-    'یادگیری مکالمه زبان انگلیسی با هوش مصنوعی',
-    'خلاصه‌سازی اسناد و کتاب‌های طولانی',
-    'برنامه‌ریزی هفتگی و افزایش بهره‌وری فردی'
+  const GUIDE_TEMPLATES = [
+    { id: 'all' as const, label: '🎲 همه الگوها (انتخاب هوشمند)' },
+    { id: 'workflow' as const, label: '🛠️ راهنما و ترفندهای عملی' },
+    { id: 'deep_dive' as const, label: '🔍 کالبدشکافی عمیق و مفاهیم' },
+    { id: 'industry' as const, label: '🏢 کاربرد در صنایع و مشاغل' },
+    { id: 'mistakes' as const, label: '⚠️ اشتباهات رایج و جعبه‌ابزار' },
+  ];
+
+  const GUIDE_IDEAS: { topic: string; template: 'workflow' | 'deep_dive' | 'industry' | 'mistakes'; label: string }[] = [
+    // Workflows
+    { topic: 'مهندسی پرامپت پیشرفته: چگونه خروجی‌های دقیق، عمیق و بدون توهم دریافت کنیم؟', template: 'workflow', label: 'پرامپت پیشرفته' },
+    { topic: '۵ ترفند شگفت‌انگیز اکسل و تحلیل داده‌های مالی به کمک هوش مصنوعی', template: 'workflow', label: 'اکسل و داده' },
+    { topic: 'راهنمای گام‌به‌گام بهینه‌سازی رزومه و نگارش انگیزش‌نامه بین‌المللی با AI', template: 'workflow', label: 'رزومه و استخدام' },
+    { topic: 'تکنیک‌های تسریع کدنویسی، دیباگ و مستندسازی با دستیارهای هوشمند کد', template: 'workflow', label: 'کدنویسی و دیباگ' },
+    { topic: 'تولید پادکست و محتوای صوتی باکیفیت به کمک ترکیب ابزارهای AI', template: 'workflow', label: 'پادکست و صوت' },
+
+    // Deep Dives
+    { topic: 'ایجنت‌های خودکار هوش مصنوعی (AI Agents) دقیقاً چه تفاوتی با چت‌بات‌ها دارند؟', template: 'deep_dive', label: 'ایجنت‌های AI' },
+    { topic: 'آیا هوش مصنوعی واقعاً مفاهیم را درک می‌کند یا فقط احتمال واژه‌ها را حدس می‌زند؟', template: 'deep_dive', label: 'درک هوش مصنوعی' },
+    { topic: 'هوش جامع مصنوعی (AGI) چیست و جهان چه زمانی به مرز آن می‌رسد؟', template: 'deep_dive', label: 'افق AGI' },
+    { topic: 'مدل‌های استدلالی عمیق (Reasoning Models) چگونه تفکر گام‌به‌گام انجام می‌دهند؟', template: 'deep_dive', label: 'مدل‌های استدلالی' },
+    { topic: 'امنیت داده، حریم خصوصی و کپی‌رایت در عصر هوش مصنوعی', template: 'deep_dive', label: 'امنیت و اخلاق' },
+
+    // Industry
+    { topic: 'انقلاب هوش مصنوعی در پزشکی: از تشخیص زودهنگام بیماری‌ها تا کشف دارو', template: 'industry', label: 'پزشکی و سلامت' },
+    { topic: 'تحول طراحی معماری، رندرینگ و مدل‌سازی سه‌بعدی به کمک هوش مصنوعی مولد', template: 'industry', label: 'معماری و دیزاین' },
+    { topic: 'چگونه هوش مصنوعی فرآیندهای مالی، مدیریت ریسک و ترید را متحول کرده است؟', template: 'industry', label: 'ترید و بازارهای مالی' },
+    { topic: 'آینده بازار کار و مهارت‌های ضروری که بقای شما را در عصر AI تضمین می‌کنند', template: 'industry', label: 'بازار کار و مهارت‌ها' },
+
+    // Mistakes & Toolkits
+    { topic: '۵ اشتباه متداول که باعث می‌شود خروجی‌های هوش مصنوعی سطحی و نامعتبر به نظر برسند', template: 'mistakes', label: '۵ اشتباه مهلک' },
+    { topic: 'جعبه ابزار ضروری هوش مصنوعی برای تولیدکنندگان محتوا و گرافیست‌ها', template: 'mistakes', label: 'جعبه ابزار محتوا' },
+    { topic: 'چگونه کارهای تکراری اداری و مدیریت ایمیل‌ها را با ابزارهای هوشمند خودکار کنیم؟', template: 'mistakes', label: 'اتوماسیون اداری' },
   ];
 
   const showToast = (message: string, type: 'success' | 'warning' | 'error' = 'success') => {
     setToast({ message, type });
   };
 
-  const handleGenerateGuide = async (topicToUse?: string) => {
+  const handleGenerateGuide = async (topicToUse?: string, templateToUse?: string) => {
     const topic = topicToUse !== undefined ? topicToUse : guideTopic;
+    const template = templateToUse || (guideTemplate === 'all' ? undefined : guideTemplate);
     try {
       setGuideLoading(true);
       setIsAdding(true);
       const data = await adminFetch<any>('/api/news/admin/generate-guide', {
         method: 'POST',
-        body: JSON.stringify({ topic: topic.trim() || undefined })
+        body: JSON.stringify({ 
+          topic: topic.trim() || undefined,
+          template
+        })
       });
       
       const g = data.guide;
@@ -81,7 +112,7 @@ export const AdminNewsTab: React.FC = () => {
       if (!generatedTags.includes('مقالات آموزشی')) generatedTags.unshift('مقالات آموزشی');
       setTags(generatedTags.join(', '));
       if (g.image) setImage(g.image);
-      showToast(`مقاله آموزشی «${g.title}» با موفقیت تولید و در بخش مقالات آموزشی درج شد. می‌توانید بررسی و منتشر کنید.`, 'success');
+      showToast(`مقاله تخصصی «${g.title}» با موفقیت تولید و در فرم درج شد. می‌توانید بررسی و منتشر کنید.`, 'success');
     } catch (err: any) {
       showToast(err.message || 'خطا در تولید مقاله هوشمند', 'error');
     } finally {
@@ -319,61 +350,84 @@ export const AdminNewsTab: React.FC = () => {
             </button>
           </div>
 
-          {/* AI Educational Guide Generator Panel */}
-          <div className="mb-6 p-4 rounded-2xl bg-gradient-to-l from-purple-500/10 via-indigo-500/10 to-blue-500/10 border border-purple-500/20 space-y-3">
+          {/* AI Educational Guide Generator Panel (General Authority & Deep Articles) */}
+          <div className="mb-6 p-4.5 rounded-2xl bg-gradient-to-l from-purple-500/10 via-indigo-500/10 to-blue-500/10 border border-purple-500/20 space-y-3.5">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Wand2 className="w-4 h-4 text-purple-500" />
                 <span className="text-xs font-black text-[var(--text-main)]">
-                  دستیار هوشمند نگارش مقالات آموزشی و ترفندهای کاربردی
+                  سامانه هوشمند تولید مقالات جامع و مرجع هوش مصنوعی
                 </span>
               </div>
-              <span className="text-[10px] font-bold text-purple-600 dark:text-purple-400 bg-purple-500/10 px-2 py-0.5 rounded-full">
-                نگارش محاوره‌ای و روان
+              <span className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-500/10 px-2.5 py-0.5 rounded-full border border-indigo-500/20">
+                مرجع علمی و کاربردی (بدون تبلیغات)
               </span>
             </div>
 
             <p className="text-[11px] text-[var(--text-muted)] leading-relaxed">
-              تولید مقالات آموزشی عمیق و خواندنی درباره نحوه استفاده از هوش مصنوعی در زندگی روزمره، مهارت‌های فردی، اکسل، رزومه و پرامپت‌های آماده:
+              تولید خودکار مقالات فوق‌العاده عمیق، روان و معتبر در حوزه ترفندهای عملی، کالبدشکافی مفاهیم نوین، هوش مصنوعی در صنایع و تحلیل اشتباهات رایج:
             </p>
 
-            <div className="flex flex-col sm:flex-row gap-2">
+            {/* Template Selector Pills */}
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <span className="text-[10px] text-[var(--text-dim)] font-bold shrink-0">الگوی نگارش:</span>
+              {GUIDE_TEMPLATES.map((tmpl) => (
+                <button
+                  key={tmpl.id}
+                  type="button"
+                  onClick={() => setGuideTemplate(tmpl.id)}
+                  className={`text-[10px] px-2.5 py-1 rounded-lg font-bold transition-all cursor-pointer ${
+                    guideTemplate === tmpl.id
+                      ? 'clay-btn-primary text-white shadow-xs scale-[1.02]'
+                      : 'clay-surface text-[var(--text-muted)] hover:text-[var(--text-main)]'
+                  }`}
+                >
+                  {tmpl.label}
+                </button>
+              ))}
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-2 pt-1">
               <input
                 type="text"
                 value={guideTopic}
                 onChange={(e) => setGuideTopic(e.target.value)}
-                placeholder="موضوع دلخواه خود را بنویسید (یا از پیشنهادهای زیر انتخاب کنید)..."
-                className="flex-1 px-3.5 py-2 rounded-xl clay-surface text-xs outline-none font-bold"
+                placeholder="موضوع اختصاصی خود را بنویسید (یا از پیشنهادهای زیر کلیک کنید)..."
+                className="flex-1 px-3.5 py-2.5 rounded-xl clay-surface text-xs outline-none font-bold"
               />
               <button
                 type="button"
                 onClick={() => handleGenerateGuide()}
                 disabled={guideLoading}
-                className="flex items-center justify-center gap-1.5 px-5 py-2 clay-btn-primary rounded-xl font-bold text-xs text-white disabled:opacity-50 shrink-0"
+                className="flex items-center justify-center gap-1.5 px-5 py-2.5 clay-btn-primary rounded-xl font-bold text-xs text-white disabled:opacity-50 shrink-0 cursor-pointer shadow-sm"
               >
                 <Sparkles className={`w-3.5 h-3.5 ${guideLoading ? 'animate-spin' : ''}`} />
-                <span>{guideLoading ? 'در حال تولید مقاله...' : 'تولید مقاله با AI'}</span>
+                <span>{guideLoading ? 'در حال نگارش و تولید مقاله...' : 'تولید مقاله با AI'}</span>
               </button>
             </div>
 
-            {/* Quick Idea Pills */}
+            {/* Quick Idea Pills filtered by selected template */}
             <div className="flex items-center gap-1.5 flex-wrap pt-1">
-              <span className="text-[10px] text-[var(--text-dim)] flex items-center gap-1 shrink-0">
+              <span className="text-[10px] text-[var(--text-dim)] flex items-center gap-1 shrink-0 font-bold">
                 <Lightbulb size={12} className="text-amber-500" />
-                ایده‌های پیشنهادی:
+                موضوعات پیشنهادی:
               </span>
-              {GUIDE_IDEAS.map((idea) => (
+              {(guideTemplate === 'all' 
+                ? GUIDE_IDEAS 
+                : GUIDE_IDEAS.filter(i => i.template === guideTemplate)
+              ).map((idea) => (
                 <button
-                  key={idea}
+                  key={idea.topic}
                   type="button"
                   onClick={() => {
-                    setGuideTopic(idea);
-                    handleGenerateGuide(idea);
+                    setGuideTopic(idea.topic);
+                    handleGenerateGuide(idea.topic, idea.template);
                   }}
                   disabled={guideLoading}
-                  className="text-[10px] px-2.5 py-1 rounded-lg clay-surface hover:text-purple-500 hover:border-purple-500/30 transition-all font-bold cursor-pointer disabled:opacity-50"
+                  className="text-[10px] px-2.5 py-1 rounded-lg clay-surface hover:text-purple-600 dark:hover:text-purple-400 hover:border-purple-500/30 transition-all font-bold cursor-pointer disabled:opacity-50 flex items-center gap-1"
+                  title={idea.topic}
                 >
-                  {idea}
+                  <span>{idea.label}</span>
                 </button>
               ))}
             </div>
