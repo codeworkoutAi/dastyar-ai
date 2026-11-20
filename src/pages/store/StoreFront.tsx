@@ -4,7 +4,7 @@ import {
   Store, CheckCircle2, XCircle, BookOpen, Package, Zap, Sparkles, 
   ChevronLeft, Search, X, ShieldCheck, CreditCard, Send, ShoppingBag, 
   ArrowUpDown, Wallet, Plus, Info, Bot, MessageSquare, Clock,
-  LayoutGrid, List, Layers, Key, ChevronRight, Palette, Code, Flame
+  LayoutGrid, List, Layers, Key, ChevronRight
 } from 'lucide-react';
 import { CheckoutModal } from '../../components/CheckoutModal';
 import { Footer } from '../../components/Footer';
@@ -40,13 +40,13 @@ export function StoreFront() {
   const [touchStartX, setTouchStartX] = useState<number | null>(null);
   const [touchEndX, setTouchEndX] = useState<number | null>(null);
 
-  const nextSlide = () => setCurrentSlide((prev) => (prev + 1) % 4);
-  const prevSlide = () => setCurrentSlide((prev) => (prev - 1 + 4) % 4);
+  const nextSlide = () => setCurrentSlide((prev) => (prev + 1) % 3);
+  const prevSlide = () => setCurrentSlide((prev) => (prev - 1 + 3) % 3);
 
   useEffect(() => {
     if (isCarouselPaused) return;
     const timer = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % 4);
+      setCurrentSlide((prev) => (prev + 1) % 3);
     }, 6000);
     return () => clearInterval(timer);
   }, [isCarouselPaused]);
@@ -227,120 +227,34 @@ export function StoreFront() {
     return result;
   }, [products, selectedCategory, searchQuery, sortBy, onlyInstant]);
 
-  const heroSlides = [
+  const heroBanners = [
     {
-      id: 'flagship',
-      badge: 'مرجع رسمی و قانونی اشتراک‌های هوش مصنوعی',
-      badgeColor: 'text-indigo-700 dark:text-indigo-300 border-indigo-300/40 dark:border-indigo-700/50',
-      titleHighlight: 'خرید قانونی و مطمئن',
-      titleRest: ' اشتراک ابزارهای برتر هوش مصنوعی',
-      titleGradient: 'from-indigo-600 via-purple-600 to-sky-600 dark:from-indigo-300 dark:via-purple-200 dark:to-cyan-300',
-      description: 'فعال‌سازی ۱۰۰٪ قانونی و اختصاصی روی ایمیل شخصی با تحویل فوری، گارانتی تعویض تا پایان اشتراک و پرداخت امن شتاب.',
-      primaryBtnText: 'مشاوره هوشمند انتخاب اکانت',
-      primaryBtnAction: () => window.dispatchEvent(new CustomEvent('open-advisor-widget')),
-      primaryBtnIcon: Bot,
-      secondaryBtnText: 'مشاهده محصولات و پلن‌ها',
-      secondaryBtnAction: () => document.getElementById('products-catalog')?.scrollIntoView({ behavior: 'smooth' }),
-      cardBadge: 'VIP Pass • اکانت قانونی',
-      cardTitle: 'اکانت‌های اختصاصی پرمیوم',
-      cardSubtitle: 'فعال‌سازی قانونی روی ایمیل شخصی شما',
-      features: [
-        'گارانتی کامل تعویض',
-        'پشتیبانی ۲۴ ساعته',
-        'پرداخت مستقیم شتاب',
-        'بدون قطعی و بن‌شدن'
-      ],
-      tag: '100% Guaranteed',
-      tagText: 'تایید هویت و اصالت لایسنس‌ها',
-      bgGradients: 'from-indigo-50/90 via-purple-50/40 to-sky-50/50 dark:from-slate-900/95 dark:via-indigo-950/40 dark:to-zinc-950 border-indigo-200/80 dark:border-indigo-500/25'
+      id: 'accounts',
+      image: '/images/banners/banner-accounts.webp',
+      badge: '✨ اکانت‌های قانونی پرمیوم',
+      title: 'خرید قانونی و مطمئن اشتراک ابزارهای برتر هوش مصنوعی',
+      subtitle: 'فعال‌سازی ۱۰۰٪ اختصاصی روی ایمیل شخصی شما با تحویل فوری و گارانتی تعویض',
+      ctaText: 'مشاهده و خرید اکانت‌ها',
+      category: 'account' as const,
     },
     {
       id: 'creative',
-      badge: 'استودیو هوش مصنوعی خلق تصویر و ویدیو',
-      badgeColor: 'text-purple-700 dark:text-purple-300 border-purple-300/40 dark:border-purple-700/50',
-      titleHighlight: 'خلق ایده‌ها در چند ثانیه؛',
-      titleRest: ' استودیوهای حرفه‌ای تصویر و ویدیو',
-      titleGradient: 'from-purple-600 via-pink-600 to-rose-500 dark:from-purple-300 dark:via-pink-200 dark:to-rose-300',
-      description: 'اکانت‌های اختصاصی پرمیوم با بالاترین سهمیه خلق اثر، دسترسی نامحدود به موتورهای استودیویی و گارانتی کارکرد.',
-      primaryBtnText: 'مشاهده ابزارهای خلاقیت و تصویر',
-      primaryBtnAction: () => {
-        setSelectedCategory('account');
-        document.getElementById('products-catalog')?.scrollIntoView({ behavior: 'smooth' });
-      },
-      primaryBtnIcon: Palette,
-      secondaryBtnText: 'مشاوره انتخاب ابزار طراحی',
-      secondaryBtnAction: () => window.dispatchEvent(new CustomEvent('open-advisor-widget', { detail: { prompt: 'برای تولید تصویر و طراحی گرافیک چه اکانتی مناسب‌تر است؟' } })),
-      cardBadge: 'Creative Pass • رندر نامحدود',
-      cardTitle: 'ابزارهای تخصصی هنر و تصویر',
-      cardSubtitle: 'بالاترین کیفیت خروجی و جنریت سریع',
-      features: [
-        'سهمیه کامل جنریت',
-        'کیفیت Ultra-HD و 4K',
-        'بدون صف و تاخیر',
-        'پشتیبانی تخصصی طراحی'
-      ],
-      tag: 'Studio Grade',
-      tagText: 'موتورهای فوتورئال و خلاقانه استودیویی',
-      bgGradients: 'from-purple-50/90 via-pink-50/40 to-indigo-50/50 dark:from-zinc-950 dark:via-purple-950/50 dark:to-slate-900 border-purple-200/80 dark:border-purple-500/25'
+      image: '/images/banners/banner-creative.webp',
+      badge: '🎨 ابزارهای خلاقیت و طراحی',
+      title: 'استودیوهای حرفه‌ای خلق تصویر و ویدیو',
+      subtitle: 'دسترسی نامحدود به برترین موتورهای هوش مصنوعی با بالاترین سهمیه رندر',
+      ctaText: 'مشاهده پلن‌های استودیویی',
+      category: 'account' as const,
     },
     {
-      id: 'developers',
-      badge: 'ویژه توسعه‌دهندگان، برنامه‌نویسان و پژوهشگران',
-      badgeColor: 'text-cyan-700 dark:text-cyan-300 border-cyan-300/40 dark:border-cyan-700/50',
-      titleHighlight: 'سرعت کدنویسی را ۳ برابر کنید؛',
-      titleRest: ' با کردیت و لایسنس ادیتورها',
-      titleGradient: 'from-cyan-600 via-teal-600 to-blue-600 dark:from-cyan-300 dark:via-teal-200 dark:to-sky-300',
-      description: 'کردیت‌های رسمی با دسترسی مستقیم، بدون محدودیت توکن و قابل اتصال به VS Code و محیط‌های توسعه نرم‌افزار.',
-      primaryBtnText: 'مشاهده کلیدهای API و پلن‌ها',
-      primaryBtnAction: () => {
-        setSelectedCategory('api');
-        document.getElementById('products-catalog')?.scrollIntoView({ behavior: 'smooth' });
-      },
-      primaryBtnIcon: Code,
-      secondaryBtnText: 'مشاوره فنی و اتصال به ادیتور',
-      secondaryBtnAction: () => window.dispatchEvent(new CustomEvent('open-advisor-widget', { detail: { prompt: 'برای برنامه‌نویسی و اتصال به ادیتور چه اکانتی مناسب است؟' } })),
-      cardBadge: 'Dev License • اتصال مستقیم',
-      cardTitle: 'کردیت‌ها و کلیدهای توسعه',
-      cardSubtitle: 'پایداری بالا و پینگ عالی برای کدنویسی',
-      features: [
-        'اتصال مستقیم به ادیتور',
-        'کردیت رسمی و قانونی',
-        'بدون قطعی سرور',
-        'فعال‌سازی سریع روی حساب'
-      ],
-      tag: 'API & Editor Ready',
-      tagText: 'سازگار با تمام محیط‌های توسعه و ترمینال',
-      bgGradients: 'from-cyan-50/90 via-teal-50/40 to-blue-50/50 dark:from-slate-950 dark:via-cyan-950/40 dark:to-zinc-950 border-cyan-200/80 dark:border-cyan-500/25'
+      id: 'developer',
+      image: '/images/banners/banner-developer.webp',
+      badge: '⚡ ویژه توسعه‌دهندگان و برنامه‌نویسان',
+      title: 'کلیدهای API و کردیت‌های پرسرعت کدنویسی',
+      subtitle: 'اتصال مستقیم به VS Code و محیط‌های توسعه با پینگ عالی و بدون قطعی',
+      ctaText: 'مشاهده کلیدهای API',
+      category: 'api' as const,
     },
-    {
-      id: 'festival',
-      badge: 'تحویل فوری و تضمین ۱۰۰٪ اصالت سفارش',
-      badgeColor: 'text-amber-700 dark:text-amber-300 border-amber-300/40 dark:border-amber-700/50',
-      titleHighlight: 'بسته‌های جامع و تخفیف‌های ویژه؛',
-      titleRest: ' با تحویل آنی و تضمینی',
-      titleGradient: 'from-amber-600 via-orange-600 to-rose-600 dark:from-amber-300 dark:via-orange-200 dark:to-rose-300',
-      description: 'تمامی سرویس‌ها با گارانتی تعویض تا روز آخر دوره، پشتیبانی دائم تلگرام و پرداخت امن شاپرک یا کارت‌به‌کارت.',
-      primaryBtnText: 'مشاهده تخفیف‌ها و آفرها',
-      primaryBtnAction: () => {
-        setSelectedCategory('all');
-        document.getElementById('products-catalog')?.scrollIntoView({ behavior: 'smooth' });
-      },
-      primaryBtnIcon: Flame,
-      secondaryBtnText: 'پشتیبانی و راهنمایی تلگرام',
-      secondaryBtnAction: () => window.open('https://t.me/dastyar_support', '_blank'),
-      cardBadge: 'Gold Warranty • گارانتی تعویض',
-      cardTitle: 'ضمانت اصالت و عملکرد ۱۰۰٪',
-      cardSubtitle: 'پشتیبانی بی‌وقفه تا آخرین روز اشتراک',
-      features: [
-        'تحویل فوری زیر ۲۴ ساعت',
-        'ضمانت تعویض تا روز آخر',
-        'پشتیبانی تلگرام و پیامک',
-        'درگاه شاپرک و کارت‌به‌کارت'
-      ],
-      tag: 'Instant Fulfillment',
-      tagText: 'فعال‌سازی اختصاصی بدون واسطه و سریع',
-      bgGradients: 'from-amber-50/90 via-orange-50/40 to-rose-50/50 dark:from-zinc-950 dark:via-rose-950/40 dark:to-amber-950/30 border-amber-200/80 dark:border-amber-500/25'
-    }
   ];
 
   return (
@@ -392,212 +306,167 @@ export function StoreFront() {
           </div>
         )}
 
-        {/* Dynamic Architectural Hero Carousel Section (Hardware-Accelerated 60fps, Zero Heavy Blur) */}
+        {/* Dedicated Hero Carousel Banner Box (Frame Only, Fixed Height, Zero-Jump) */}
         <div 
-          className="mb-10 clay-card-thick rounded-3xl relative overflow-hidden shadow-xl border border-indigo-200/80 dark:border-indigo-500/25 border-t border-t-white/80 dark:border-t-white/15 transition-all duration-500"
+          className="relative w-full h-[230px] sm:h-[290px] md:h-[350px] lg:h-[390px] rounded-2xl md:rounded-3xl overflow-hidden shadow-xl border border-[var(--card-border)] clay-card select-none group"
           onMouseEnter={() => setIsCarouselPaused(true)}
           onMouseLeave={() => setIsCarouselPaused(false)}
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
         >
-          {/* Slides Track Container */}
-          <div className="relative w-full overflow-hidden min-h-[460px] sm:min-h-[400px] lg:min-h-[360px] p-6 sm:p-10 flex items-center">
-            {heroSlides.map((slide, idx) => {
-              const isActive = idx === currentSlide;
-              const PrimaryIcon = slide.primaryBtnIcon;
-              
-              return (
-                <div
-                  key={slide.id}
-                  className={`w-full transition-all duration-500 ease-out transform ${
-                    isActive
-                      ? 'opacity-100 translate-x-0 relative z-10'
-                      : 'opacity-0 pointer-events-none absolute inset-0 p-6 sm:p-10 flex items-center ' +
-                        (idx < currentSlide ? 'translate-x-full' : '-translate-x-full')
-                  }`}
-                >
-                  <div className="w-full flex flex-col lg:flex-row items-center justify-between gap-8 lg:gap-10">
-                    {/* Right: Text & Actions */}
-                    <div className="space-y-4 max-w-2xl text-center lg:text-right">
-                      <div className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full clay-surface text-xs font-black shadow-xs border ${slide.badgeColor}`}>
-                        <Sparkles size={14} className="text-amber-500" />
-                        <span>{slide.badge}</span>
-                      </div>
-                      
-                      <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-[2.5rem] font-black tracking-tight leading-tight md:leading-[1.25]">
-                        <span className={`bg-gradient-to-l ${slide.titleGradient} bg-clip-text text-transparent`}>
-                          {slide.titleHighlight}
-                        </span>
-                        <br className="hidden sm:inline" />
-                        <span className="text-zinc-900 dark:text-zinc-100">{slide.titleRest}</span>
-                      </h1>
-                      
-                      <p className="text-xs sm:text-sm md:text-base text-zinc-600 dark:text-zinc-400 leading-relaxed max-w-xl mx-auto lg:mx-0">
-                        {slide.description}
-                      </p>
+          {/* Banner Slides */}
+          {heroBanners.map((banner, idx) => {
+            const isCurrent = idx === currentSlide;
+            return (
+              <div
+                key={banner.id}
+                onClick={() => {
+                  setSelectedCategory(banner.category);
+                  document.getElementById('products-catalog')?.scrollIntoView({ behavior: 'smooth' });
+                }}
+                className={`absolute inset-0 w-full h-full transition-all duration-700 ease-in-out cursor-pointer ${
+                  isCurrent
+                    ? 'opacity-100 z-10 scale-100 pointer-events-auto'
+                    : 'opacity-0 z-0 scale-[1.03] pointer-events-none'
+                }`}
+              >
+                {/* Background Banner Image */}
+                <img
+                  src={banner.image}
+                  alt={banner.title}
+                  className="w-full h-full object-cover select-none pointer-events-none"
+                  loading="eager"
+                  draggable={false}
+                />
 
-                      {/* Action Buttons */}
-                      <div className="flex flex-wrap items-center justify-center lg:justify-start gap-3 pt-2">
-                        <button
-                          type="button"
-                          onClick={slide.primaryBtnAction}
-                          className="px-6 py-3.5 clay-btn-primary font-black text-xs sm:text-sm rounded-2xl flex items-center justify-center gap-2 shadow-md hover:scale-[1.02] transition-transform cursor-pointer"
-                        >
-                          <PrimaryIcon size={18} className="text-yellow-300" />
-                          <span>{slide.primaryBtnText}</span>
-                        </button>
+                {/* Dark Vignette & Gradient for RTL Persian readability */}
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-black/40 to-black/85 dark:to-zinc-950/90" />
 
-                        <button
-                          type="button"
-                          onClick={slide.secondaryBtnAction}
-                          className="px-6 py-3.5 clay-btn font-bold text-xs sm:text-sm rounded-2xl flex items-center justify-center gap-2 text-[var(--text-main)] hover:text-indigo-600 dark:hover:text-indigo-400 transition-all cursor-pointer"
-                        >
-                          <ShoppingBag size={17} />
-                          <span>{slide.secondaryBtnText}</span>
-                        </button>
-                      </div>
-                    </div>
+                {/* Content Overlay */}
+                <div className="absolute inset-0 flex flex-col justify-center px-6 sm:px-10 md:px-14 lg:px-16 max-w-2xl text-right z-10">
+                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/15 dark:bg-black/30 backdrop-blur-md text-white text-[11px] sm:text-xs font-black w-fit mb-2 sm:mb-3 border border-white/20 shadow-xs">
+                    <span>{banner.badge}</span>
+                  </div>
 
-                    {/* Left: Product Visual Card */}
-                    <div className="w-full lg:w-[400px] shrink-0">
-                      <div className="flex flex-col gap-3">
-                        <div className="clay-card rounded-2xl p-5 border border-indigo-200/80 dark:border-indigo-700/50 shadow-xl relative overflow-hidden bg-white/95 dark:bg-zinc-900/95 border-t border-t-white/90 dark:border-t-white/20">
-                          <div className="flex items-center justify-between pb-3 mb-3.5 border-b border-black/5 dark:border-white/10">
-                            <div className="flex items-center gap-2">
-                              <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
-                              <span className="text-[11px] font-black text-emerald-600 dark:text-emerald-400">
-                                تحویل فوری و تضمینی
-                              </span>
-                            </div>
-                            <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full clay-surface text-[var(--text-main)] border border-[var(--card-border)]">
-                              {slide.cardBadge}
-                            </span>
-                          </div>
+                  <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-black text-white leading-tight mb-2 sm:mb-3 drop-shadow-sm">
+                    {banner.title}
+                  </h2>
 
-                          <div className="space-y-3">
-                            <div className="flex items-center justify-between">
-                              <div>
-                                <h4 className="text-sm font-black text-zinc-900 dark:text-white">
-                                  {slide.cardTitle}
-                                </h4>
-                                <span className="text-[11px] text-zinc-500 dark:text-zinc-400">
-                                  {slide.cardSubtitle}
-                                </span>
-                              </div>
-                              <div className="w-9 h-9 rounded-xl clay-btn-thick flex items-center justify-center text-indigo-600 dark:text-indigo-400 shadow-xs">
-                                <Sparkles size={18} />
-                              </div>
-                            </div>
+                  <p className="text-xs sm:text-sm md:text-base text-zinc-200 line-clamp-2 mb-4 sm:mb-5 max-w-xl font-medium leading-relaxed drop-shadow-xs">
+                    {banner.subtitle}
+                  </p>
 
-                            <div className="grid grid-cols-2 gap-2 pt-1 text-[11px]">
-                              {slide.features.map((feat, fIdx) => (
-                                <div key={fIdx} className="p-2 rounded-xl clay-surface flex items-center gap-1.5 text-zinc-700 dark:text-zinc-300">
-                                  <CheckCircle2 size={13} className="text-emerald-500 shrink-0" />
-                                  <span className="truncate">{feat}</span>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Sub Showcase Strip */}
-                        <div className="px-4 py-2.5 rounded-xl clay-subcard border border-indigo-200/50 dark:border-indigo-800/40 flex items-center justify-between text-xs text-zinc-600 dark:text-zinc-300">
-                          <span className="font-bold flex items-center gap-1.5">
-                            <ShieldCheck size={14} className="text-sky-500" />
-                            <span>{slide.tagText}</span>
-                          </span>
-                          <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-extrabold" dir="ltr">
-                            {slide.tag}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
+                  <div className="flex items-center gap-3">
+                    <span className="px-5 py-2.5 rounded-xl bg-white text-zinc-950 font-black text-xs sm:text-sm flex items-center gap-2 shadow-lg hover:bg-zinc-100 transition-colors">
+                      <ShoppingBag size={16} />
+                      <span>{banner.ctaText}</span>
+                    </span>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        window.dispatchEvent(new CustomEvent('open-advisor-widget'));
+                      }}
+                      className="px-4 py-2.5 rounded-xl bg-white/15 hover:bg-white/25 backdrop-blur-md text-white font-bold text-xs sm:text-sm flex items-center gap-2 border border-white/25 transition-colors"
+                    >
+                      <Bot size={16} className="text-yellow-300" />
+                      <span className="hidden sm:inline">مشاوره هوشمند</span>
+                    </button>
                   </div>
                 </div>
-              );
-            })}
-          </div>
+              </div>
+            );
+          })}
 
-          {/* Navigation Controls: Left / Right Arrows */}
+          {/* Navigation Controls: Left / Right Arrows (Strictly Inside Carousel Frame) */}
           <button
             type="button"
-            onClick={prevSlide}
-            className="absolute right-3 top-1/2 -translate-y-1/2 z-20 w-9 h-9 rounded-full clay-btn flex items-center justify-center text-[var(--text-main)] hover:text-indigo-600 dark:hover:text-indigo-400 opacity-80 hover:opacity-100 transition-opacity cursor-pointer shadow-md"
+            onClick={(e) => {
+              e.stopPropagation();
+              prevSlide();
+            }}
+            className="absolute right-3 md:right-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-black/40 hover:bg-black/65 backdrop-blur-md border border-white/20 text-white flex items-center justify-center transition-all cursor-pointer shadow-lg opacity-80 group-hover:opacity-100"
             title="بنر قبلی"
           >
-            <ChevronRight size={18} />
+            <ChevronRight size={20} />
           </button>
 
           <button
             type="button"
-            onClick={nextSlide}
-            className="absolute left-3 top-1/2 -translate-y-1/2 z-20 w-9 h-9 rounded-full clay-btn flex items-center justify-center text-[var(--text-main)] hover:text-indigo-600 dark:hover:text-indigo-400 opacity-80 hover:opacity-100 transition-opacity cursor-pointer shadow-md"
+            onClick={(e) => {
+              e.stopPropagation();
+              nextSlide();
+            }}
+            className="absolute left-3 md:left-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-black/40 hover:bg-black/65 backdrop-blur-md border border-white/20 text-white flex items-center justify-center transition-all cursor-pointer shadow-lg opacity-80 group-hover:opacity-100"
             title="بنر بعدی"
           >
-            <ChevronLeft size={18} />
+            <ChevronLeft size={20} />
           </button>
 
-          {/* Progress Pill Indicators */}
-          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2 px-3 py-1.5 rounded-full clay-surface/80 backdrop-blur-md border border-[var(--card-border)]">
-            {heroSlides.map((_, dotIdx) => {
+          {/* Progress Pill Indicators (Strictly Inside Carousel Frame at bottom) */}
+          <div className="absolute bottom-3 md:bottom-4 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/40 backdrop-blur-md border border-white/15">
+            {heroBanners.map((_, dotIdx) => {
               const isDotActive = dotIdx === currentSlide;
               return (
                 <button
                   key={dotIdx}
                   type="button"
-                  onClick={() => setCurrentSlide(dotIdx)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setCurrentSlide(dotIdx);
+                  }}
                   className={`transition-all duration-300 rounded-full cursor-pointer ${
                     isDotActive
-                      ? 'w-7 h-2 bg-indigo-600 dark:bg-indigo-400 shadow-xs'
-                      : 'w-2 h-2 bg-black/25 dark:bg-white/25 hover:bg-black/50 dark:hover:bg-white/50'
+                      ? 'w-7 h-2 bg-white shadow-xs'
+                      : 'w-2 h-2 bg-white/40 hover:bg-white/70'
                   }`}
                   title={`اسلاید ${dotIdx + 1}`}
                 />
               );
             })}
           </div>
+        </div>
 
-          {/* 4 Trust & Value Props Badges with Vibrant Color Identities */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mt-8 pt-8 border-t border-black/5 dark:border-white/10">
-            <div className="flex items-center gap-3 p-3.5 rounded-2xl clay-subcard border border-emerald-500/30 bg-emerald-50/70 dark:bg-emerald-950/30 hover:scale-[1.01] transition-transform">
-              <div className="w-10 h-10 rounded-xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 shadow-xs">
-                <Zap size={19} />
-              </div>
-              <div className="flex flex-col">
-                <span className="text-xs font-black text-zinc-900 dark:text-white">تحویل ۱ تا ۲۴ ساعت</span>
-                <span className="text-[10px] text-emerald-700 dark:text-emerald-300 font-semibold">فعال‌سازی قانونی و اختصاصی</span>
-              </div>
+        {/* 4 Trust & Value Props Badges - Permanently Fixed Outside & Below Carousel */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mt-5 mb-10">
+          <div className="flex items-center gap-3 p-3.5 rounded-2xl clay-subcard border border-emerald-500/30 bg-emerald-50/70 dark:bg-emerald-950/30 hover:scale-[1.01] transition-transform">
+            <div className="w-10 h-10 rounded-xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 shadow-xs">
+              <Zap size={19} />
             </div>
-
-            <div className="flex items-center gap-3 p-3.5 rounded-2xl clay-subcard border border-sky-500/30 bg-sky-50/70 dark:bg-sky-950/30 hover:scale-[1.01] transition-transform">
-              <div className="w-10 h-10 rounded-xl bg-sky-500/15 text-sky-600 dark:text-sky-400 flex items-center justify-center shrink-0 shadow-xs">
-                <ShieldCheck size={19} />
-              </div>
-              <div className="flex flex-col">
-                <span className="text-xs font-black text-zinc-900 dark:text-white">ضمانت اصالت و عملکرد</span>
-                <span className="text-[10px] text-sky-700 dark:text-sky-300 font-semibold">گارانتی تعویض تا پایان دوره</span>
-              </div>
+            <div className="flex flex-col">
+              <span className="text-xs font-black text-zinc-900 dark:text-white">تحویل ۱ تا ۲۴ ساعت</span>
+              <span className="text-[10px] text-emerald-700 dark:text-emerald-300 font-semibold">فعال‌سازی قانونی و اختصاصی</span>
             </div>
+          </div>
 
-            <div className="flex items-center gap-3 p-3.5 rounded-2xl clay-subcard border border-purple-500/30 bg-purple-50/70 dark:bg-purple-950/30 hover:scale-[1.01] transition-transform">
-              <div className="w-10 h-10 rounded-xl bg-purple-500/15 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0 shadow-xs">
-                <CreditCard size={19} />
-              </div>
-              <div className="flex flex-col">
-                <span className="text-xs font-black text-zinc-900 dark:text-white">پرداخت امن بانکی</span>
-                <span className="text-[10px] text-purple-700 dark:text-purple-300 font-semibold">درگاه شاپرک و کارت‌به‌کارت</span>
-              </div>
+          <div className="flex items-center gap-3 p-3.5 rounded-2xl clay-subcard border border-sky-500/30 bg-sky-50/70 dark:bg-sky-950/30 hover:scale-[1.01] transition-transform">
+            <div className="w-10 h-10 rounded-xl bg-sky-500/15 text-sky-600 dark:text-sky-400 flex items-center justify-center shrink-0 shadow-xs">
+              <ShieldCheck size={19} />
             </div>
+            <div className="flex flex-col">
+              <span className="text-xs font-black text-zinc-900 dark:text-white">ضمانت اصالت و عملکرد</span>
+              <span className="text-[10px] text-sky-700 dark:text-sky-300 font-semibold">گارانتی تعویض تا پایان دوره</span>
+            </div>
+          </div>
 
-            <div className="flex items-center gap-3 p-3.5 rounded-2xl clay-subcard border border-amber-500/30 bg-amber-50/70 dark:bg-amber-950/30 hover:scale-[1.01] transition-transform">
-              <div className="w-10 h-10 rounded-xl bg-amber-500/15 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 shadow-xs">
-                <Send size={19} />
-              </div>
-              <div className="flex flex-col">
-                <span className="text-xs font-black text-zinc-900 dark:text-white">پشتیبانی تلگرام</span>
-                <span className="text-[10px] text-amber-700 dark:text-amber-300 font-semibold">راهنمایی و پیگیری ۲۴/۷</span>
-              </div>
+          <div className="flex items-center gap-3 p-3.5 rounded-2xl clay-subcard border border-purple-500/30 bg-purple-50/70 dark:bg-purple-950/30 hover:scale-[1.01] transition-transform">
+            <div className="w-10 h-10 rounded-xl bg-purple-500/15 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0 shadow-xs">
+              <CreditCard size={19} />
+            </div>
+            <div className="flex flex-col">
+              <span className="text-xs font-black text-zinc-900 dark:text-white">پرداخت امن بانکی</span>
+              <span className="text-[10px] text-purple-700 dark:text-purple-300 font-semibold">درگاه شاپرک و کارت‌به‌کارت</span>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3 p-3.5 rounded-2xl clay-subcard border border-amber-500/30 bg-amber-50/70 dark:bg-amber-950/30 hover:scale-[1.01] transition-transform">
+            <div className="w-10 h-10 rounded-xl bg-amber-500/15 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 shadow-xs">
+              <Send size={19} />
+            </div>
+            <div className="flex flex-col">
+              <span className="text-xs font-black text-zinc-900 dark:text-white">پشتیبانی تلگرام</span>
+              <span className="text-[10px] text-amber-700 dark:text-amber-300 font-semibold">راهنمایی و پیگیری ۲۴/۷</span>
             </div>
           </div>
         </div>
