@@ -261,7 +261,7 @@ export function StoreFront() {
     <div className="flex flex-col min-h-screen clay-landing-bg transition-colors duration-300">
       <GlobalHeader />
 
-      <main className="flex-1 container mx-auto px-4 py-8 max-w-7xl">
+      <main className="flex-1 container mx-auto px-4 py-6 sm:py-8 max-w-[1400px]">
         {/* Payment Result Banners */}
         {paymentStatus === 'success' && (
           <div className="mb-8 p-5 clay-card-thick !border-emerald-500/50 flex flex-col sm:flex-row items-center gap-4 animate-slideUpScale">
@@ -471,16 +471,9 @@ export function StoreFront() {
           </div>
         </div>
 
-        {/* Catalog Section Header with Invariant SEO Rank #7 H2 */}
-        <div id="products-catalog" className="mb-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
-          <h2 className="text-sm sm:text-base font-black text-[var(--text-main)] flex items-center gap-2">
-            <Sparkles size={16} className="text-indigo-600 dark:text-indigo-400" />
-            <span>دستیار هوشمند | چت با هوش مصنوعی رایگان و پیشرفته</span>
-          </h2>
-          <span className="text-[11px] text-[var(--text-muted)] font-medium">
-            تضمین اصالت • تحویل قانونی روی ایمیل
-          </span>
-        </div>
+        {/* Spacing preserved + Invariant SEO Rank #7 H2 for crawlers (sr-only) */}
+        <div id="products-catalog" className="h-4 sm:h-5" aria-hidden="true" />
+        <h2 className="sr-only">دستیار هوشمند | چت با هوش مصنوعی رایگان و پیشرفته</h2>
 
         {/* Tier 1: Category Navigation Tabs (Pills with generous breathing room & 1-click select) */}
         <div className="mb-4 flex items-center gap-2 sm:gap-3 overflow-x-auto no-scrollbar pb-1">
@@ -747,7 +740,7 @@ export function StoreFront() {
             })}
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-4 gap-4 sm:gap-4.5 xl:gap-5">
             {processedProducts.map((p) => {
               let hasVariations = false;
               let minPrice = p.price;
@@ -768,12 +761,12 @@ export function StoreFront() {
               return (
                 <div
                   key={p.id}
-                  className="group flex flex-col clay-card-thick rounded-3xl overflow-hidden transition-all hover:-translate-y-1 relative"
+                  className="group flex flex-col clay-card-thick rounded-2xl overflow-hidden transition-all hover:-translate-y-1 relative"
                 >
                   {/* Image / Header Banner */}
                   <div 
                     onClick={() => navigate(`/store/product/${p.id}`)}
-                    className="w-full aspect-video relative flex-shrink-0 overflow-hidden border-b border-[var(--card-border)] bg-[var(--card-bg)] cursor-pointer"
+                    className="w-full aspect-[16/10] relative flex-shrink-0 overflow-hidden border-b border-[var(--card-border)] bg-[var(--card-bg)] cursor-pointer"
                   >
                     {p.bannerImage || p.image ? (
                       <>
@@ -790,59 +783,59 @@ export function StoreFront() {
                           }}
                         />
                         <div style={{ display: 'none' }} className="w-full h-full flex flex-col items-center justify-center text-[var(--color-accent-primary)] gap-2 bg-gradient-to-br from-[var(--color-accent-primary)]/15 to-transparent">
-                          <Sparkles className="w-12 h-12 opacity-40" />
+                          <Sparkles className="w-10 h-10 opacity-40" />
                           <span className="text-xs font-bold opacity-60">Dastyar AI</span>
                         </div>
                       </>
                     ) : (
                       <div className="w-full h-full flex flex-col items-center justify-center text-[var(--color-accent-primary)] gap-2 bg-gradient-to-br from-[var(--color-accent-primary)]/15 to-transparent">
-                        <Sparkles className="w-12 h-12 opacity-40" />
+                        <Sparkles className="w-10 h-10 opacity-40" />
                         <span className="text-xs font-bold opacity-60">Dastyar AI</span>
                       </div>
                     )}
 
                     {/* Category Label */}
-                    <span className="absolute top-3.5 right-3.5 text-[11px] font-bold px-3 py-1 rounded-full bg-[var(--color-input-bg)]/85 text-[var(--text-main)] backdrop-blur-md border border-[var(--card-border)] shadow-sm">
+                    <span className="absolute top-2.5 right-2.5 text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-[var(--color-input-bg)]/85 text-[var(--text-main)] backdrop-blur-md border border-[var(--card-border)] shadow-xs">
                       {p.category === 'plan' ? 'پلن تعرفه' : p.category === 'api' ? 'کلید API' : p.category === 'account' ? 'اکانت پرمیوم' : 'پکیج دانلودی'}
                     </span>
 
                     {/* Popular / Special Badge */}
                     {p.badge && (
-                      <span className="absolute top-3.5 left-3.5 text-[11px] font-black px-3 py-1 bg-[var(--color-accent-primary)] text-white rounded-full shadow-md">
+                      <span className="absolute top-2.5 left-2.5 text-[10px] font-black px-2.5 py-0.5 bg-[var(--color-accent-primary)] text-white rounded-full shadow-xs">
                         {p.badge}
                       </span>
                     )}
                   </div>
 
                   {/* Body Content */}
-                  <div className="flex flex-col flex-1 p-5">
+                  <div className="flex flex-col flex-1 p-3.5 sm:p-4">
                     <h3
                       onClick={() => navigate(`/store/product/${p.id}`)}
-                      className={`text-base font-black mb-2 leading-snug line-clamp-2 cursor-pointer ${getProductTitleStyle(p.title, p.category)}`}
+                      className={`text-xs sm:text-sm font-black mb-1.5 leading-snug line-clamp-2 cursor-pointer ${getProductTitleStyle(p.title, p.category)}`}
                       title={p.title}
                     >
                       {usePersianDigits ? toPersianDigits(p.title) : p.title}
                     </h3>
 
                     {p.tokenEstimate && (
-                      <div className="flex items-center gap-1.5 text-xs font-bold text-[var(--color-accent-primary)] mb-3">
-                        <Zap size={14} className="shrink-0" />
+                      <div className="flex items-center gap-1 text-[11px] font-bold text-[var(--color-accent-primary)] mb-2">
+                        <Zap size={13} className="shrink-0" />
                         <span>{usePersianDigits ? toPersianDigits(p.tokenEstimate) : p.tokenEstimate}</span>
                       </div>
                     )}
 
                     {p.description && (
-                      <p className="text-xs text-[var(--text-muted)] line-clamp-2 mb-4 leading-relaxed">
+                      <p className="text-[11px] text-[var(--text-muted)] line-clamp-2 mb-2.5 leading-relaxed">
                         {p.description}
                       </p>
                     )}
 
-                    {/* Features list */}
+                    {/* Features list (Top 2 Compact) */}
                     {p.features && (
-                      <div className="mb-4 space-y-1.5 pt-3 border-t border-[var(--card-border)]">
-                        {p.features.split('\n').filter(Boolean).slice(0, 3).map((feat: string, idx: number) => (
-                          <div key={idx} className="flex items-center gap-2 text-xs text-[var(--text-main)]">
-                            <CheckCircle2 size={13} className="text-emerald-500 shrink-0" />
+                      <div className="mb-3 space-y-1 pt-2 border-t border-[var(--card-border)]">
+                        {p.features.split('\n').filter(Boolean).slice(0, 2).map((feat: string, idx: number) => (
+                          <div key={idx} className="flex items-center gap-1.5 text-[11px] text-[var(--text-main)]">
+                            <CheckCircle2 size={12} className="text-emerald-500 shrink-0" />
                             <span className="truncate">{usePersianDigits ? toPersianDigits(feat.trim()) : feat.trim()}</span>
                           </div>
                         ))}
@@ -850,21 +843,21 @@ export function StoreFront() {
                     )}
 
                     {/* Price and Stock Box */}
-                    <div className="mt-auto pt-4 border-t border-[var(--card-border)] flex items-center justify-between mb-4">
+                    <div className="mt-auto pt-2.5 border-t border-[var(--card-border)] flex items-center justify-between mb-3">
                       <div className="flex flex-col">
-                        <span className="text-[10px] text-[var(--text-dim)] font-bold">مبلغ قابل پرداخت:</span>
-                        <span className="text-base font-black text-[var(--color-accent-primary)] font-price">
+                        <span className="text-[9px] text-[var(--text-dim)] font-bold">مبلغ قابل پرداخت:</span>
+                        <span className="text-xs sm:text-sm font-black text-[var(--color-accent-primary)] font-price">
                           {formattedPrice}
                         </span>
                       </div>
 
-                      <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
                         {p.deliveryTime || (p.category === 'plan' ? 'شارژ خودکار' : p.category === 'package' ? 'دانلود آنی' : '۱ تا ۲۴ ساعت')}
                       </span>
                     </div>
 
                     {/* Dual Action CTA Buttons */}
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-2 gap-1.5">
                       <button
                         type="button"
                         onClick={(e) => {
@@ -878,19 +871,19 @@ export function StoreFront() {
                           }
                           setSelectedProduct(p);
                         }}
-                        className="py-2.5 clay-btn-primary font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 shadow-sm hover:scale-[1.02] transition-transform"
+                        className="py-2 px-2 clay-btn-primary font-bold text-[11px] rounded-xl flex items-center justify-center gap-1 shadow-xs hover:scale-[1.02] transition-transform cursor-pointer"
                       >
-                        <ShoppingBag size={14} />
+                        <ShoppingBag size={13} />
                         <span>خرید سریع</span>
                       </button>
 
                       <button
                         type="button"
                         onClick={() => navigate(`/store/product/${p.id}`)}
-                        className="py-2.5 clay-btn font-bold text-xs rounded-xl flex items-center justify-center gap-1 text-[var(--text-main)] hover:text-[var(--color-accent-primary)]"
+                        className="py-2 px-2 clay-btn font-bold text-[11px] rounded-xl flex items-center justify-center gap-0.5 text-[var(--text-main)] hover:text-[var(--color-accent-primary)] cursor-pointer"
                       >
                         <span>جزئیات</span>
-                        <ChevronLeft size={14} />
+                        <ChevronLeft size={13} />
                       </button>
                     </div>
                   </div>

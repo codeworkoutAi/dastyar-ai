@@ -35,26 +35,26 @@ const GrokBotFace: React.FC<{ isHovered: boolean; isBlinking: boolean; isLoading
   isLoading
 }) => {
   return (
-    <div className="relative w-8 h-8 flex items-center justify-center">
+    <div className="relative w-8 h-8 flex items-center justify-center pointer-events-none">
       {/* Eye Left */}
       <div 
-        className={`w-2 h-4 rounded-full bg-cyan-300 dark:bg-cyan-400 shadow-[0_0_8px_rgba(56,189,248,0.8)] transition-all duration-200 transform ${
+        className={`w-2.5 h-4.5 rounded-full bg-cyan-400 shadow-[0_0_10px_rgba(34,211,238,0.9),0_0_18px_rgba(6,182,212,0.6)] transition-all duration-200 transform ${
           isBlinking ? 'scale-y-[0.1]' : isHovered ? 'scale-y-75 -rotate-12 -translate-y-0.5' : 'scale-y-100'
         } ${isLoading ? 'animate-pulse' : ''}`}
-        style={{ marginRight: '7px' }}
+        style={{ marginRight: '6px' }}
       />
       
       {/* Eye Right */}
       <div 
-        className={`w-2 h-4 rounded-full bg-cyan-300 dark:bg-cyan-400 shadow-[0_0_8px_rgba(56,189,248,0.8)] transition-all duration-200 transform ${
+        className={`w-2.5 h-4.5 rounded-full bg-cyan-400 shadow-[0_0_10px_rgba(34,211,238,0.9),0_0_18px_rgba(6,182,212,0.6)] transition-all duration-200 transform ${
           isBlinking ? 'scale-y-[0.1]' : isHovered ? 'scale-y-75 rotate-12 -translate-y-0.5' : 'scale-y-100'
         } ${isLoading ? 'animate-pulse' : ''}`}
-        style={{ marginLeft: '7px' }}
+        style={{ marginLeft: '6px' }}
       />
 
       {/* Happy Smile when hovered */}
       {isHovered && (
-        <div className="absolute bottom-0.5 w-3.5 h-1.5 border-b-2 border-cyan-300 dark:border-cyan-400 rounded-full animate-fade-in shadow-[0_0_6px_rgba(56,189,248,0.8)]" />
+        <div className="absolute bottom-0 w-3.5 h-1.5 border-b-2 border-cyan-400 rounded-full animate-fade-in shadow-[0_0_8px_rgba(34,211,238,0.9)]" />
       )}
     </div>
   );
@@ -311,7 +311,7 @@ export const ShoppingAdvisorWidget: React.FC<ShoppingAdvisorWidgetProps> = ({
       {/* Header */}
       <div className="p-3.5 sm:p-4 border-b border-[var(--card-border)] bg-[var(--card-bg)]/80 backdrop-blur-md flex items-center justify-between shrink-0">
         <div className="flex items-center gap-2.5">
-          <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-indigo-900 via-indigo-700 to-purple-600 dark:from-zinc-950 dark:via-indigo-950 dark:to-purple-900 flex items-center justify-center shrink-0 border border-indigo-300/40 shadow-xs">
+          <div className="w-10 h-10 !rounded-full rounded-full aspect-square bg-gradient-to-tr from-slate-950 via-indigo-950 to-slate-900 flex items-center justify-center shrink-0 border border-indigo-400/40 shadow-xs">
             <GrokBotFace isHovered={false} isBlinking={isBlinking} isLoading={loading} />
           </div>
           <div>
@@ -549,22 +549,23 @@ export const ShoppingAdvisorWidget: React.FC<ShoppingAdvisorWidgetProps> = ({
           {/* Grok-Bot Main Orb Trigger */}
           <div className="relative animate-grok-float">
             {/* Outer Pulsing Halo Ring */}
-            <div className="absolute -inset-1.5 rounded-full border-2 border-indigo-500/30 dark:border-indigo-400/25 animate-grok-ring pointer-events-none" />
+            <div className="absolute -inset-1.5 !rounded-full rounded-full border-2 border-indigo-500/40 dark:border-indigo-400/30 animate-grok-ring pointer-events-none" />
 
             {/* Glowing Online Status Beacon */}
-            <div className="absolute -top-1 -right-1 z-20 w-4 h-4 rounded-full bg-emerald-500 border-2 border-white dark:border-zinc-950 shadow-md flex items-center justify-center">
+            <div className="absolute -top-0.5 -right-0.5 z-20 w-4 h-4 !rounded-full rounded-full bg-emerald-500 border-2 border-white dark:border-zinc-950 shadow-md flex items-center justify-center">
               <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
             </div>
 
-            {/* Main Interactive Bot Button */}
+            {/* Main Interactive Bot Button - Guaranteed 100% Circular & High Contrast */}
             <button
               type="button"
               onClick={() => setIsOpen(true)}
-              className="w-14 h-14 sm:w-16 sm:h-16 rounded-full clay-card-thick bg-gradient-to-tr from-indigo-900 via-indigo-700 to-purple-600 dark:from-zinc-950 dark:via-indigo-950 dark:to-purple-900 border-2 border-indigo-300/50 dark:border-indigo-400/30 shadow-[0_10px_35px_rgba(99,102,241,0.4)] hover:shadow-[0_12px_45px_rgba(99,102,241,0.6)] flex items-center justify-center cursor-pointer relative overflow-hidden transition-all duration-300 transform hover:scale-105 active:scale-95 group"
+              className="w-14 h-14 sm:w-16 sm:h-16 !rounded-full rounded-full aspect-square bg-gradient-to-tr from-slate-950 via-indigo-950 to-slate-900 border-2 border-indigo-400/60 dark:border-indigo-400/40 shadow-[0_10px_30px_rgba(79,70,229,0.45)] hover:shadow-[0_12px_40px_rgba(99,102,241,0.7)] flex items-center justify-center cursor-pointer relative overflow-hidden transition-all duration-300 transform hover:scale-110 active:scale-95 group z-10"
               title="گفتگو با مشاور هوشمند خرید"
             >
               {/* Internal Glass Highlight */}
-              <div className="absolute inset-0 bg-gradient-to-b from-white/20 to-transparent pointer-events-none rounded-full" />
+              <div className="absolute inset-x-0 top-0 h-1/2 bg-gradient-to-b from-white/25 to-transparent pointer-events-none rounded-t-full" />
+              <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-indigo-500/20 to-transparent pointer-events-none rounded-b-full" />
 
               {/* GrokBot Interactive Cyber Face */}
               <GrokBotFace 
