@@ -2,7 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { 
   Key, Trash2, Edit2, Plus, ArrowRight, CheckCircle2, 
   HelpCircle, Eye, RefreshCw, AlertCircle, Sparkles, Zap,
-  Clock, ShieldCheck, Star, MessageSquare, Check, X, Filter, Search
+  Clock, ShieldCheck, Star, MessageSquare, Check, X, Filter, Search,
+  Upload, Image as ImageIcon
 } from 'lucide-react';
 import { AddSquareOutlineIcon, BoxLinearIcon } from '@solar-icons/react';
 import { useAuthStore } from '../../store/authStore';
@@ -107,6 +108,48 @@ export const AdminProductsTab: React.FC = () => {
 
   const updateFormField = <K extends keyof ProductFormData>(key: K, value: ProductFormData[K]) => {
     setFormData(prev => ({ ...prev, [key]: value }));
+  };
+
+  const handleImageFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 2 * 1024 * 1024) {
+      setToast({ message: 'حجم تصویر نباید بیشتر از ۲ مگابایت باشد.', type: 'warning' });
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const MAX_WIDTH = 1200;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > MAX_WIDTH) {
+          height = Math.round((height * MAX_WIDTH) / width);
+          width = MAX_WIDTH;
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.drawImage(img, 0, 0, width, height);
+          const webpData = canvas.toDataURL('image/webp', 0.85);
+          setFormData(prev => ({
+            ...prev,
+            image: webpData,
+            bannerImage: prev.bannerImage || webpData
+          }));
+          setToast({ message: 'تصویر با موفقیت فشرده و به WebP تبدیل شد.', type: 'success' });
+        }
+      };
+      img.src = event.target?.result as string;
+    };
+    reader.readAsDataURL(file);
   };
 
   useEffect(() => {
@@ -549,27 +592,65 @@ export const AdminProductsTab: React.FC = () => {
                 </div>
 
                 {/* Images and URLs */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-[var(--text-muted)]">آدرس تصویر محصول (URL)</label>
-                    <input
-                      type="text"
-                      value={formData.image}
-                      onChange={e => updateFormField('image', e.target.value)}
-                      placeholder="https://example.com/image.webp"
-                      className="clay-input w-full px-3.5 py-2.5 rounded-xl text-sm"
-                    />
+                <div className="space-y-3 p-4 rounded-xl clay-subcard">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-[var(--text-main)] flex items-center gap-1.5">
+                      <ImageIcon className="w-4 h-4 text-emerald-500" />
+                      تصویر و کاور محصول
+                    </span>
+                    <label className="clay-btn-primary px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-xs">
+                      <Upload className="w-3.5 h-3.5" />
+                      <span>انتخاب و آپلود تصویر (WebP / PNG / JPG)</span>
+                      <input 
+                        type="file" 
+                        accept="image/webp,image/png,image/jpeg,image/avif" 
+                        className="hidden" 
+                        onChange={handleImageFileChange} 
+                      />
+                    </label>
                   </div>
 
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-[var(--text-muted)]">آدرس بنر یا کاور عریض (اختیاری)</label>
-                    <input
-                      type="text"
-                      value={formData.bannerImage}
-                      onChange={e => updateFormField('bannerImage', e.target.value)}
-                      placeholder="https://example.com/banner.webp"
-                      className="clay-input w-full px-3.5 py-2.5 rounded-xl text-sm"
-                    />
+                  {/* Image Preview Box if image exists */}
+                  {(formData.image || formData.bannerImage) && (
+                    <div className="relative w-full h-44 rounded-xl overflow-hidden border border-subtle bg-black/5 dark:bg-white/5 flex items-center justify-center group">
+                      <img
+                        src={formData.image || formData.bannerImage}
+                        alt="پیش‌نمایش تصویر محصول"
+                        className="w-full h-full object-cover"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setFormData(prev => ({ ...prev, image: '', bannerImage: '' }))}
+                        className="absolute top-2 left-2 p-1.5 rounded-lg bg-red-600/90 text-white hover:bg-red-700 transition-colors shadow-sm cursor-pointer"
+                        title="حذف تصویر"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  )}
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-semibold text-[var(--text-muted)]">آدرس تصویر محصول (URL یا Base64)</label>
+                      <input
+                        type="text"
+                        value={formData.image}
+                        onChange={e => updateFormField('image', e.target.value)}
+                        placeholder="data:image/webp;base64,... یا https://..."
+                        className="clay-input w-full px-3.5 py-2.5 rounded-xl text-xs font-mono"
+                      />
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-semibold text-[var(--text-muted)]">آدرس بنر یا کاور عریض (اختیاری)</label>
+                      <input
+                        type="text"
+                        value={formData.bannerImage}
+                        onChange={e => updateFormField('bannerImage', e.target.value)}
+                        placeholder="data:image/webp;base64,... یا https://..."
+                        className="clay-input w-full px-3.5 py-2.5 rounded-xl text-xs font-mono"
+                      />
+                    </div>
                   </div>
                 </div>
 
@@ -802,6 +883,37 @@ export const AdminProductsTab: React.FC = () => {
                     className="clay-card rounded-2xl p-5 flex flex-col justify-between space-y-4 hover:border-emerald-500/30 transition-all group"
                   >
                     <div className="space-y-3">
+                      {/* Product Thumbnail in Admin Card */}
+                      <div className="w-full h-36 rounded-xl overflow-hidden relative bg-black/5 dark:bg-white/5 border border-subtle flex items-center justify-center">
+                        {product.image || product.bannerImage ? (
+                          <img 
+                            src={product.image || product.bannerImage} 
+                            alt={product.title}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                            loading="lazy"
+                            onError={(e) => {
+                              const target = e.currentTarget;
+                              target.style.display = 'none';
+                              if (target.nextElementSibling) {
+                                (target.nextElementSibling as HTMLElement).style.display = 'flex';
+                              }
+                            }}
+                          />
+                        ) : null}
+                        <div 
+                          style={{ display: product.image || product.bannerImage ? 'none' : 'flex' }}
+                          className="w-full h-full flex flex-col items-center justify-center text-[var(--text-muted)] gap-1.5"
+                        >
+                          <BoxLinearIcon className="w-8 h-8 opacity-40" />
+                          <span className="text-[10px] font-medium">بدون تصویر</span>
+                        </div>
+                        {product.badge && (
+                          <span className="absolute top-2 left-2 text-[10px] px-2 py-0.5 rounded-full bg-emerald-500 text-white font-bold shadow-xs">
+                            {product.badge}
+                          </span>
+                        )}
+                      </div>
+
                       {/* Card Header & Badge */}
                       <div className="flex items-start justify-between gap-2">
                         <div className="space-y-1">

@@ -233,66 +233,49 @@ export function StoreFront() {
           </div>
         )}
 
-        {/* Hero Banner Section */}
-        <div className="mb-8 p-6 sm:p-8 clay-card-thick rounded-3xl relative overflow-hidden">
-          <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-            <div className="space-y-3 max-w-2xl">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[var(--color-accent-primary)]/10 text-[var(--color-accent-primary)] text-xs font-bold border border-[var(--color-accent-primary)]/20">
-                <Sparkles size={14} />
-                <span>ویترین رسمی ابزارها و بسته‌های هوش مصنوعی</span>
-              </div>
-              <h1 className="text-xl sm:text-2xl md:text-3xl font-black text-[var(--text-main)] tracking-tight leading-snug">
-                فروشگاه ابزارهای هوش مصنوعی و بسته‌های اعتباری
-              </h1>
-              <p className="text-xs sm:text-sm text-[var(--text-muted)] leading-relaxed">
-                خرید مستقیم شارژ چت‌باکس با تحویل آنی، اکانت‌های اختصاصی پرمیوم، توکن‌های توسعه‌دهندگان و پکیج‌های آموزشی جامع.
-              </p>
+        {/* Modern Minimalist Hero Section */}
+        <div className="mb-10 p-6 sm:p-10 clay-card-thick rounded-3xl relative overflow-hidden bg-gradient-to-br from-[var(--color-accent-primary)]/5 via-transparent to-indigo-500/5">
+          <div className="relative z-10 flex flex-col items-center text-center max-w-3xl mx-auto space-y-4">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full clay-surface text-[var(--color-accent-primary)] text-xs font-black shadow-xs">
+              <Sparkles size={14} className="text-amber-400" />
+              <span>مرجع تخصصی اشتراک و اکانت‌های قانونی هوش مصنوعی</span>
             </div>
+            
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-[var(--text-main)] tracking-tight leading-snug">
+              خرید قانونی و مطمئن اشتراک ابزارهای هوش مصنوعی
+            </h1>
+            
+            <p className="text-xs sm:text-sm md:text-base text-[var(--text-muted)] leading-relaxed max-w-2xl">
+              فعال‌سازی ۱۰۰٪ اختصاصی روی ایمیل شما با تحویل فوری، گارانتی کامل تا آخرین روز اشتراک و پرداخت امن بانکی.
+            </p>
 
-            {/* User Wallet Status Widget */}
-            {user ? (
-              <div className="p-4 sm:p-5 rounded-2xl clay-card shrink-0 flex flex-col gap-3 min-w-[260px] border border-[var(--card-border)]">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-[var(--text-muted)] flex items-center gap-1.5">
-                    <Wallet size={15} className="text-[var(--color-accent-primary)]" />
-                    موجودی کیف پول شما:
-                  </span>
-                  <Link to="/dashboard" className="text-[11px] font-bold text-[var(--color-accent-primary)] hover:underline">
-                    داشبورد
-                  </Link>
-                </div>
-                <div className="text-xl font-black text-[var(--text-main)] font-price">
-                  {usePersianDigits ? toPersianDigits((user.walletBalance || 0).toLocaleString()) : (user.walletBalance || 0).toLocaleString()} <span className="text-xs font-normal text-[var(--text-muted)]">تومان</span>
-                </div>
-                <button
-                  onClick={() => setIsWalletOpen(true)}
-                  className="w-full py-2 clay-btn-primary font-bold text-xs rounded-xl flex items-center justify-center gap-1.5"
-                >
-                  <Plus size={14} />
-                  <span>شارژ سریع کیف پول</span>
-                </button>
-              </div>
-            ) : (
-              <div className="p-4 sm:p-5 rounded-2xl clay-card shrink-0 flex flex-col gap-2 min-w-[260px] border border-[var(--card-border)]">
-                <span className="text-xs font-bold text-[var(--text-main)]">حساب کاربری دارید؟</span>
-                <p className="text-[11px] text-[var(--text-muted)] leading-relaxed">
-                  با ورود به حساب، تاریخچه سفارشات و لایسنس‌های شما در داشبورد ذخیره می‌شود.
-                </p>
-                <button
-                  onClick={() => window.dispatchEvent(new CustomEvent('open-auth-modal'))}
-                  className="mt-1 py-2 clay-btn font-bold text-xs rounded-xl text-[var(--color-accent-primary)]"
-                >
-                  ورود یا ثبت‌نام
-                </button>
-              </div>
-            )}
+            {/* Quick Action CTAs */}
+            <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => window.dispatchEvent(new CustomEvent('open-advisor-widget'))}
+                className="px-6 py-3.5 clay-btn-primary font-black text-xs sm:text-sm rounded-2xl flex items-center justify-center gap-2 shadow-lg hover:scale-105 transition-all cursor-pointer"
+              >
+                <Bot size={18} className="text-yellow-300" />
+                <span>مشاوره هوشمند انتخاب اکانت</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => document.getElementById('products-catalog')?.scrollIntoView({ behavior: 'smooth' })}
+                className="px-6 py-3.5 clay-btn font-bold text-xs sm:text-sm rounded-2xl flex items-center justify-center gap-2 text-[var(--text-main)] hover:text-[var(--color-accent-primary)] transition-all cursor-pointer"
+              >
+                <ShoppingBag size={17} />
+                <span>مشاهده محصولات و پلن‌ها</span>
+              </button>
+            </div>
           </div>
 
           {/* 4 Trust & Value Props Badges */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mt-6 pt-6 border-t border-[var(--card-border)]">
-            <div className="flex items-center gap-2.5 p-2 rounded-xl">
-              <div className="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-500 flex items-center justify-center shrink-0">
-                <Zap size={16} />
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mt-8 pt-8 border-t border-[var(--card-border)]">
+            <div className="flex items-center gap-3 p-3 rounded-2xl clay-subcard">
+              <div className="w-9 h-9 rounded-xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center shrink-0">
+                <Zap size={18} />
               </div>
               <div className="flex flex-col">
                 <span className="text-xs font-black text-[var(--text-main)]">تحویل ۱ تا ۲۴ ساعت</span>
@@ -300,19 +283,19 @@ export function StoreFront() {
               </div>
             </div>
 
-            <div className="flex items-center gap-2.5 p-2 rounded-xl">
-              <div className="w-8 h-8 rounded-lg bg-blue-500/10 text-blue-500 flex items-center justify-center shrink-0">
-                <ShieldCheck size={16} />
+            <div className="flex items-center gap-3 p-3 rounded-2xl clay-subcard">
+              <div className="w-9 h-9 rounded-xl bg-blue-500/10 text-blue-500 flex items-center justify-center shrink-0">
+                <ShieldCheck size={18} />
               </div>
               <div className="flex flex-col">
                 <span className="text-xs font-black text-[var(--text-main)]">ضمانت اصالت و عملکرد</span>
-                <span className="text-[10px] text-[var(--text-dim)]">گارانتی کامل اشتراک‌ها</span>
+                <span className="text-[10px] text-[var(--text-dim)]">گارانتی تعویض تا پایان دوره</span>
               </div>
             </div>
 
-            <div className="flex items-center gap-2.5 p-2 rounded-xl">
-              <div className="w-8 h-8 rounded-lg bg-purple-500/10 text-purple-500 flex items-center justify-center shrink-0">
-                <CreditCard size={16} />
+            <div className="flex items-center gap-3 p-3 rounded-2xl clay-subcard">
+              <div className="w-9 h-9 rounded-xl bg-purple-500/10 text-purple-500 flex items-center justify-center shrink-0">
+                <CreditCard size={18} />
               </div>
               <div className="flex flex-col">
                 <span className="text-xs font-black text-[var(--text-main)]">پرداخت امن بانکی</span>
@@ -320,16 +303,27 @@ export function StoreFront() {
               </div>
             </div>
 
-            <div className="flex items-center gap-2.5 p-2 rounded-xl">
-              <div className="w-8 h-8 rounded-lg bg-amber-500/10 text-amber-500 flex items-center justify-center shrink-0">
-                <Send size={16} />
+            <div className="flex items-center gap-3 p-3 rounded-2xl clay-subcard">
+              <div className="w-9 h-9 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center shrink-0">
+                <Send size={18} />
               </div>
               <div className="flex flex-col">
                 <span className="text-xs font-black text-[var(--text-main)]">پشتیبانی تلگرام</span>
-                <span className="text-[10px] text-[var(--text-dim)]">راهنمایی تخصصی فعال‌سازی</span>
+                <span className="text-[10px] text-[var(--text-dim)]">راهنمایی و پیگیری سفارشات</span>
               </div>
             </div>
           </div>
+        </div>
+
+        {/* Catalog Section Header with Invariant SEO Rank #7 H2 */}
+        <div id="products-catalog" className="mb-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+          <h2 className="text-sm sm:text-base font-black text-[var(--text-main)] flex items-center gap-2">
+            <Sparkles size={16} className="text-[var(--color-accent-primary)]" />
+            <span>دستیار هوشمند | چت با هوش مصنوعی رایگان و پیشرفته</span>
+          </h2>
+          <span className="text-[11px] text-[var(--text-muted)] font-medium">
+            تضمین اصالت • تحویل قانونی روی ایمیل
+          </span>
         </div>
 
         {/* Filter Controls & Search */}
@@ -573,51 +567,6 @@ export function StoreFront() {
           </div>
         )}
 
-        {/* Complementary AI Chat Section - Non-Negotiable Invariant for SEO Rank #7 */}
-        <div className="mt-12 p-6 sm:p-8 clay-card-thick rounded-3xl relative overflow-hidden">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-            <div className="space-y-3 max-w-2xl text-center md:text-right">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 text-xs font-bold border border-indigo-500/20">
-                <Bot size={14} />
-                <span>ابزار جانبی و تست آنلاین</span>
-              </div>
-              <h2 className="text-xl sm:text-2xl font-black text-[var(--text-main)] leading-snug">
-                دستیار هوشمند | چت با هوش مصنوعی رایگان و پیشرفته
-              </h2>
-              <p className="text-xs sm:text-sm text-[var(--text-muted)] leading-relaxed">
-                همراه با فروشگاه ابزارها، دستیار هوشمند آماده پاسخ‌گویی به سوالات، مشاوره خرید و تست رایگان امکانات است.
-              </p>
-            </div>
-            <button
-              onClick={() => window.dispatchEvent(new CustomEvent('open-advisor-widget'))}
-              className="px-6 py-3.5 clay-btn-primary font-black text-xs sm:text-sm rounded-2xl flex items-center justify-center gap-2 shadow-lg hover:scale-105 transition-all shrink-0 w-full md:w-auto text-center cursor-pointer"
-            >
-              <Sparkles size={18} className="text-yellow-300" />
-              <span>مشاوره رایگان خرید اکانت</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Cross-linking Educational Banner to Blog */}
-        <div className="mt-12 p-6 sm:p-8 clay-card-thick rounded-3xl flex flex-col sm:flex-row items-center justify-between gap-6">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-2xl bg-[var(--color-accent-primary)]/10 text-[var(--color-accent-primary)] flex items-center justify-center shrink-0">
-              <BookOpen className="w-6 h-6" />
-            </div>
-            <div>
-              <h3 className="font-black text-base text-[var(--text-main)] mb-1">راهنمای استفاده و آموزش ابزارها</h3>
-              <p className="text-xs text-[var(--text-muted)] leading-relaxed">
-                نحوه اتصال کلیدهای API به ادیتورها، مهندسی پرامپت و ترفندهای هوش مصنوعی را در مجله ما بخوانید.
-              </p>
-            </div>
-          </div>
-          <Link
-            to="/blog"
-            className="px-6 py-3 clay-btn-primary font-bold text-xs rounded-xl shrink-0 w-full sm:w-auto text-center"
-          >
-            مشاهده آموزش‌های مجله
-          </Link>
-        </div>
       </main>
 
       <Footer />

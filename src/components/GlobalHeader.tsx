@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Bot, Store, BookOpen, MessageSquare, LogIn, User, Settings, Menu, X, Smartphone } from 'lucide-react';
+import { Bot, Store, BookOpen, MessageSquare, LogIn, User, Settings, Menu, X, Smartphone, Wallet } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import { ThemeToggle } from './ThemeToggle';
 import { useUIStore } from '../store/uiStore';
+import { useSettingsStore } from '../store/settingsStore';
+import { toPersianDigits } from '../lib/persianUtils';
 import { UIStyleToggle } from './UIStyleToggle';
 import { isBazaarEnvironment } from '../lib/bazaarUtils';
 import { usePWAInstall } from '../lib/usePWAInstall';
@@ -11,7 +13,9 @@ import { PWAInstallGuideModal } from './PWAInstallGuideModal';
 
 export const GlobalHeader: React.FC = () => {
   const { user } = useAuthStore();
-  const { setIsAdminOpen } = useUIStore();
+  const { setIsAdminOpen, setIsWalletOpen } = useUIStore();
+  const { settings } = useSettingsStore();
+  const usePersianDigits = settings?.appearance?.persianNumerals ?? false;
   const { isStandalone, isIOS, isMobile, isGuideOpen, setIsGuideOpen, promptOrGuide } = usePWAInstall();
   const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -114,16 +118,32 @@ export const GlobalHeader: React.FC = () => {
             )}
           </div>
 
-          {/* User / Login Button (Always Visible) */}
+          {/* User Wallet Chip & Dashboard / Login Buttons (Always Visible) */}
           {user ? (
-            <Link
-              to="/dashboard"
-              className="h-9 w-9 sm:h-10 sm:w-10 md:h-11 md:w-11 clay-btn flex items-center justify-center text-zinc-700 dark:text-zinc-200 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all rounded-xl md:rounded-2xl shrink-0"
-              title="داشبورد کاربری"
-              aria-label="داشبورد کاربری"
-            >
-              <User size={19} />
-            </Link>
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              <button
+                type="button"
+                onClick={() => setIsWalletOpen(true)}
+                className="h-9 sm:h-10 md:h-11 px-2.5 sm:px-3 clay-btn rounded-xl md:rounded-2xl flex items-center gap-1.5 text-xs font-bold text-[var(--text-main)] hover:text-indigo-600 dark:hover:text-indigo-400 transition-all cursor-pointer shadow-xs select-none"
+                title="مشاهده موجودی و افزایش اعتبار کیف پول"
+                aria-label="کیف پول"
+              >
+                <Wallet size={15} className="text-amber-500 shrink-0" />
+                <span className="font-price font-black text-xs sm:text-sm">
+                  {usePersianDigits ? toPersianDigits((user.walletBalance || 0).toLocaleString()) : (user.walletBalance || 0).toLocaleString()}
+                </span>
+                <span className="text-[10px] text-[var(--text-muted)] font-normal hidden sm:inline">تومان</span>
+              </button>
+
+              <Link
+                to="/dashboard"
+                className="h-9 w-9 sm:h-10 sm:w-10 md:h-11 md:w-11 clay-btn flex items-center justify-center text-zinc-700 dark:text-zinc-200 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all rounded-xl md:rounded-2xl shrink-0"
+                title="داشبورد کاربری"
+                aria-label="داشبورد کاربری"
+              >
+                <User size={19} />
+              </Link>
+            </div>
           ) : (
             <button
               onClick={handleLoginClick}
@@ -148,7 +168,24 @@ export const GlobalHeader: React.FC = () => {
 
       {/* Mobile Menu Dropdown */}
       {isMobileMenuOpen && (
-        <div className="md:hidden absolute top-[70px] left-4 clay-card-thick p-4 flex flex-col gap-4 min-w-[200px] animate-fade-in z-50">
+        <div className="md:hidden absolute top-[70px] left-4 clay-card-thick p-4 flex flex-col gap-4 min-w-[220px] animate-fade-in z-50">
+           {user && (
+             <button
+               onClick={() => {
+                 setIsMobileMenuOpen(false);
+                 setIsWalletOpen(true);
+               }}
+               className="w-full flex items-center justify-between p-2.5 rounded-xl clay-surface text-xs font-bold"
+             >
+               <span className="flex items-center gap-1.5 text-[var(--text-muted)]">
+                 <Wallet size={15} className="text-amber-500" />
+                 <span>کیف پول:</span>
+               </span>
+               <span className="font-price font-black text-[var(--text-main)]">
+                 {usePersianDigits ? toPersianDigits((user.walletBalance || 0).toLocaleString()) : (user.walletBalance || 0).toLocaleString()} تومان
+               </span>
+             </button>
+           )}
            {!isStandalone && !isBazaar && (
              <button
                onClick={() => { promptOrGuide(); setIsMobileMenuOpen(false); }}

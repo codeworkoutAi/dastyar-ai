@@ -372,10 +372,12 @@ export const AdminFinanceTab: React.FC = () => {
                 onChange={(e) => setTxTypeFilter(e.target.value)}
                 className="h-9 px-2.5 flex-1 sm:flex-none clay-surface rounded-xl text-xs font-medium text-[var(--text-main)] outline-none cursor-pointer"
               >
-                <option value="all">همه تراکنش‌ها</option>
-                <option value="deposit">افزایش اعتبار (+)</option>
-                <option value="deduct">کسر از حساب (-)</option>
+                <option value="all">تراکنش‌های مالی (شارژ و خرید)</option>
+                <option value="deposit">افزایش اعتبار / شارژ (+)</option>
+                <option value="deduct">کسر از حساب / خرید (-)</option>
                 <option value="bonus">بونوس و هدیه</option>
+                <option value="free_usage">لاگ سهمیه رایگان چت (قدیمی)</option>
+                <option value="all_with_system">همه رکوردها (با لاگ سیستم)</option>
               </select>
 
               <select
@@ -464,7 +466,7 @@ export const AdminFinanceTab: React.FC = () => {
                       </td>
                       <td className="py-3 px-3.5">
                         <div className="flex items-center gap-1">
-                          <span className={`font-bold text-xs ${
+                          <span className={`font-bold text-xs font-price ${
                             isPositive ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'
                           }`}>
                             {isPositive ? `+${Math.abs(tx.amount).toLocaleString('fa-IR')}` : `-${Math.abs(tx.amount).toLocaleString('fa-IR')}`}
@@ -474,7 +476,7 @@ export const AdminFinanceTab: React.FC = () => {
                       </td>
                       <td className="py-3 px-3.5">
                         <div className="flex items-center gap-1">
-                          <span className="font-semibold text-zinc-600 dark:text-zinc-300 text-xs">
+                          <span className="font-semibold text-zinc-600 dark:text-zinc-300 text-xs font-price">
                             {tx.balanceAfter != null ? tx.balanceAfter.toLocaleString('fa-IR') : '—'}
                           </span>
                           <span className="text-[10px] text-zinc-400">تومان</span>

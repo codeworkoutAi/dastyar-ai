@@ -1559,13 +1559,18 @@ router.get('/wallet-transactions', (req, res) => {
     if (typeFilter === 'deposit') {
       query += ` AND wt.amount > 0`;
     } else if (typeFilter === 'deduct') {
-      // Include free_usage: those rows have amount = 0, so a plain amount < 0 test
-      // silently dropped every subsidised message from the "consumption" filter.
-      query += ` AND (wt.amount < 0 OR wt.type = 'free_usage')`;
+      query += ` AND wt.amount < 0 AND wt.type != 'free_usage'`;
+    } else if (typeFilter === 'bonus') {
+      query += ` AND wt.type = 'bonus'`;
     } else if (typeFilter === 'free_usage') {
       query += ` AND wt.type = 'free_usage'`;
     } else if (typeFilter === 'image_usage') {
       query += ` AND wt.type = 'image_usage'`;
+    } else if (typeFilter === 'all_with_system') {
+      // Include all records including system free_usage logs
+    } else {
+      // Default in store mode: exclude zero-Toman free_usage telemetry logs
+      query += ` AND wt.type != 'free_usage'`;
     }
 
     if (dateFilter === 'today') {
@@ -1588,10 +1593,8 @@ router.get('/wallet-transactions', (req, res) => {
 
     const offset = parseInt(req.query.offset as string, 10) || 0;
 
-    // Total count for real pagination. Computed with the same WHERE clauses but
-    // without LIMIT/OFFSET, so the UI can show "page X of Y" and stop guessing
-    // from transactions.length < LIMIT (which breaks on exact multiples of LIMIT).
-    const countQuery = query.replace(/ ORDER BY [\s\S]*$/, '') + ` ORDER BY wt.id ASC LIMIT 1 OFFSET 999999999`;
+    // Total count for real pagination.
+    const countQuery = query.replace(/SELECT[\s\S]*?FROM/, 'SELECT COUNT(*) as c FROM').replace(/ ORDER BY [\s\S]*$/, '');
     const countParams = [...params];
     const total = Number((db.prepare(countQuery).get(...countParams) as any)?.c) || 0;
 
