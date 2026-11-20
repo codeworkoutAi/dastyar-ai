@@ -740,7 +740,7 @@ export function StoreFront() {
             })}
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-4 gap-4 sm:gap-4.5 xl:gap-5">
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-4 gap-3 sm:gap-4.5 xl:gap-5">
             {processedProducts.map((p) => {
               let hasVariations = false;
               let minPrice = p.price;
@@ -759,15 +759,13 @@ export function StoreFront() {
                 : 'رایگان';
 
               return (
-                <div
+                <Link
                   key={p.id}
-                  className="group flex flex-col clay-card-thick rounded-2xl overflow-hidden transition-all hover:-translate-y-1 relative"
+                  to={`/store/product/${p.id}`}
+                  className="group flex flex-col clay-card-thick rounded-2xl overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-xl relative block border border-[var(--card-border)] bg-[var(--card-bg)]"
                 >
                   {/* Image / Header Banner */}
-                  <div 
-                    onClick={() => navigate(`/store/product/${p.id}`)}
-                    className="w-full aspect-[16/10] relative flex-shrink-0 overflow-hidden border-b border-[var(--card-border)] bg-[var(--card-bg)] cursor-pointer"
-                  >
+                  <div className="w-full aspect-[16/10] relative flex-shrink-0 overflow-hidden border-b border-[var(--card-border)] bg-[var(--card-bg)]">
                     {p.bannerImage || p.image ? (
                       <>
                         <img
@@ -795,99 +793,50 @@ export function StoreFront() {
                     )}
 
                     {/* Category Label */}
-                    <span className="absolute top-2.5 right-2.5 text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-[var(--color-input-bg)]/85 text-[var(--text-main)] backdrop-blur-md border border-[var(--card-border)] shadow-xs">
+                    <span className="absolute top-2.5 right-2.5 text-[10px] font-bold px-2 py-0.5 rounded-full bg-[var(--color-input-bg)]/85 text-[var(--text-main)] backdrop-blur-md border border-[var(--card-border)] shadow-xs">
                       {p.category === 'plan' ? 'پلن تعرفه' : p.category === 'api' ? 'کلید API' : p.category === 'account' ? 'اکانت پرمیوم' : 'پکیج دانلودی'}
                     </span>
 
                     {/* Popular / Special Badge */}
                     {p.badge && (
-                      <span className="absolute top-2.5 left-2.5 text-[10px] font-black px-2.5 py-0.5 bg-[var(--color-accent-primary)] text-white rounded-full shadow-xs">
+                      <span className="absolute top-2.5 left-2.5 text-[10px] font-black px-2 py-0.5 bg-[var(--color-accent-primary)] text-white rounded-full shadow-xs">
                         {p.badge}
                       </span>
                     )}
+
+                    {/* Subtle Hover Action Overlay */}
+                    <div className="absolute inset-0 bg-black/25 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center pointer-events-none">
+                      <span className="px-3 py-1.5 rounded-xl bg-white/95 dark:bg-zinc-900/95 text-zinc-900 dark:text-zinc-100 text-xs font-bold shadow-lg flex items-center gap-1.5 transform translate-y-1 group-hover:translate-y-0 transition-transform duration-300">
+                        <span>مشاهده و سفارش</span>
+                        <ChevronLeft size={13} className="text-indigo-600 dark:text-indigo-400" />
+                      </span>
+                    </div>
                   </div>
 
-                  {/* Body Content */}
-                  <div className="flex flex-col flex-1 p-3.5 sm:p-4">
+                  {/* Body Content (Ultra-Compact & High Contrast) */}
+                  <div className="p-3 sm:p-3.5 flex flex-col flex-1 justify-between gap-2.5">
                     <h3
-                      onClick={() => navigate(`/store/product/${p.id}`)}
-                      className={`text-xs sm:text-sm font-black mb-1.5 leading-snug line-clamp-2 cursor-pointer ${getProductTitleStyle(p.title, p.category)}`}
+                      className={`text-xs sm:text-sm font-black leading-snug line-clamp-1 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors ${getProductTitleStyle(p.title, p.category)}`}
                       title={p.title}
                     >
                       {usePersianDigits ? toPersianDigits(p.title) : p.title}
                     </h3>
 
-                    {p.tokenEstimate && (
-                      <div className="flex items-center gap-1 text-[11px] font-bold text-[var(--color-accent-primary)] mb-2">
-                        <Zap size={13} className="shrink-0" />
-                        <span>{usePersianDigits ? toPersianDigits(p.tokenEstimate) : p.tokenEstimate}</span>
-                      </div>
-                    )}
-
-                    {p.description && (
-                      <p className="text-[11px] text-[var(--text-muted)] line-clamp-2 mb-2.5 leading-relaxed">
-                        {p.description}
-                      </p>
-                    )}
-
-                    {/* Features list (Top 2 Compact) */}
-                    {p.features && (
-                      <div className="mb-3 space-y-1 pt-2 border-t border-[var(--card-border)]">
-                        {p.features.split('\n').filter(Boolean).slice(0, 2).map((feat: string, idx: number) => (
-                          <div key={idx} className="flex items-center gap-1.5 text-[11px] text-[var(--text-main)]">
-                            <CheckCircle2 size={12} className="text-emerald-500 shrink-0" />
-                            <span className="truncate">{usePersianDigits ? toPersianDigits(feat.trim()) : feat.trim()}</span>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-
                     {/* Price and Stock Box */}
-                    <div className="mt-auto pt-2.5 border-t border-[var(--card-border)] flex items-center justify-between mb-3">
+                    <div className="pt-2 border-t border-[var(--card-border)] flex items-center justify-between">
                       <div className="flex flex-col">
-                        <span className="text-[9px] text-[var(--text-dim)] font-bold">مبلغ قابل پرداخت:</span>
+                        <span className="text-[9px] text-[var(--text-dim)] font-bold">قیمت:</span>
                         <span className="text-xs sm:text-sm font-black text-[var(--color-accent-primary)] font-price">
                           {formattedPrice}
                         </span>
                       </div>
 
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-                        {p.deliveryTime || (p.category === 'plan' ? 'شارژ خودکار' : p.category === 'package' ? 'دانلود آنی' : '۱ تا ۲۴ ساعت')}
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                        {p.deliveryTime || (p.category === 'plan' ? 'شارژ خودکار' : p.category === 'package' ? 'دانلود آنی' : 'تحویل فوری')}
                       </span>
                     </div>
-
-                    {/* Dual Action CTA Buttons */}
-                    <div className="grid grid-cols-2 gap-1.5">
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          if (!user) {
-                            sessionStorage.setItem('pending_checkout', JSON.stringify({
-                              productId: p.id
-                            }));
-                            window.dispatchEvent(new CustomEvent('open-auth-modal'));
-                            return;
-                          }
-                          setSelectedProduct(p);
-                        }}
-                        className="py-2 px-2 clay-btn-primary font-bold text-[11px] rounded-xl flex items-center justify-center gap-1 shadow-xs hover:scale-[1.02] transition-transform cursor-pointer"
-                      >
-                        <ShoppingBag size={13} />
-                        <span>خرید سریع</span>
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => navigate(`/store/product/${p.id}`)}
-                        className="py-2 px-2 clay-btn font-bold text-[11px] rounded-xl flex items-center justify-center gap-0.5 text-[var(--text-main)] hover:text-[var(--color-accent-primary)] cursor-pointer"
-                      >
-                        <span>جزئیات</span>
-                        <ChevronLeft size={13} />
-                      </button>
-                    </div>
                   </div>
-                </div>
+                </Link>
               );
             })}
           </div>
