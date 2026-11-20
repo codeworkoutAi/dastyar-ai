@@ -815,24 +815,28 @@ export function StoreFront() {
 
                   {/* Body Content (Ultra-Compact & High Contrast) */}
                   <div className="p-3 sm:p-3.5 flex flex-col flex-1 justify-between gap-2.5">
-                    <h3
-                      className={`text-xs sm:text-sm font-black leading-snug line-clamp-1 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors ${getProductTitleStyle(p.title, p.category)}`}
-                      title={p.title}
-                    >
-                      {usePersianDigits ? toPersianDigits(p.title) : p.title}
-                    </h3>
+                    <div className="h-10 sm:h-11 flex items-start overflow-hidden">
+                      <h3
+                        className={`text-xs sm:text-sm font-black leading-snug line-clamp-2 break-words text-right w-full group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors ${getProductTitleStyle(p.title, p.category)}`}
+                        title={p.title}
+                        dir="rtl"
+                      >
+                        {usePersianDigits ? toPersianDigits(p.title) : p.title}
+                      </h3>
+                    </div>
 
-                    {/* Price and Stock Box */}
+                    {/* Price on a Single Clean Line (Delivery Badge Removed) */}
                     <div className="pt-2 border-t border-[var(--card-border)] flex items-center justify-between">
-                      <div className="flex flex-col">
-                        <span className="text-[9px] text-[var(--text-dim)] font-bold">قیمت:</span>
-                        <span className="text-xs sm:text-sm font-black text-[var(--color-accent-primary)] font-price">
+                      <div className="flex items-center gap-1.5 min-w-0">
+                        <span className="text-[10px] sm:text-[11px] text-[var(--text-dim)] font-bold shrink-0">قیمت:</span>
+                        <span className="text-xs sm:text-sm font-black text-[var(--color-accent-primary)] font-price truncate">
                           {formattedPrice}
                         </span>
                       </div>
 
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-                        {p.deliveryTime || (p.category === 'plan' ? 'شارژ خودکار' : p.category === 'package' ? 'دانلود آنی' : 'تحویل فوری')}
+                      <span className="text-[11px] font-bold text-indigo-600 dark:text-indigo-400 flex items-center gap-0.5 shrink-0 group-hover:-translate-x-1 transition-transform">
+                        <span>مشاهده</span>
+                        <ChevronLeft size={13} />
                       </span>
                     </div>
                   </div>
