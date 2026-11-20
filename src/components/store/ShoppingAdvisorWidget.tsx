@@ -29,6 +29,56 @@ const QUICK_QUESTIONS = [
   'بهترین ابزار برای طراحی تصویر و بنر چیه؟'
 ];
 
+const GrokBotFace: React.FC<{ isHovered: boolean; isBlinking: boolean; isLoading: boolean }> = ({
+  isHovered,
+  isBlinking,
+  isLoading
+}) => {
+  return (
+    <div className="relative w-8 h-8 flex items-center justify-center">
+      {/* Eye Left */}
+      <div 
+        className={`w-2 h-4 rounded-full bg-cyan-300 dark:bg-cyan-400 shadow-[0_0_8px_rgba(56,189,248,0.8)] transition-all duration-200 transform ${
+          isBlinking ? 'scale-y-[0.1]' : isHovered ? 'scale-y-75 -rotate-12 -translate-y-0.5' : 'scale-y-100'
+        } ${isLoading ? 'animate-pulse' : ''}`}
+        style={{ marginRight: '7px' }}
+      />
+      
+      {/* Eye Right */}
+      <div 
+        className={`w-2 h-4 rounded-full bg-cyan-300 dark:bg-cyan-400 shadow-[0_0_8px_rgba(56,189,248,0.8)] transition-all duration-200 transform ${
+          isBlinking ? 'scale-y-[0.1]' : isHovered ? 'scale-y-75 rotate-12 -translate-y-0.5' : 'scale-y-100'
+        } ${isLoading ? 'animate-pulse' : ''}`}
+        style={{ marginLeft: '7px' }}
+      />
+
+      {/* Happy Smile when hovered */}
+      {isHovered && (
+        <div className="absolute bottom-0.5 w-3.5 h-1.5 border-b-2 border-cyan-300 dark:border-cyan-400 rounded-full animate-fade-in shadow-[0_0_6px_rgba(56,189,248,0.8)]" />
+      )}
+    </div>
+  );
+};
+
+const SPEECH_PROMPTS = [
+  {
+    title: 'سلام! دنبال چه اکانتی هستی؟ 👋',
+    subtitle: 'مشاوره رایگان و انتخاب هوشمند ابزار',
+    chips: [
+      { label: '💻 برنامه‌نویسی', prompt: 'برای برنامه‌نویسی و پایتون کدوم اکانت بهتره؟' },
+      { label: '🎨 تولید تصویر', prompt: 'بهترین ابزار برای طراحی تصویر و بنر چیه؟' }
+    ]
+  },
+  {
+    title: 'تخفیف‌ها و اکانت‌های ویژه ✨',
+    subtitle: 'تحویل فوری روی ایمیل شخصی با گارانتی',
+    chips: [
+      { label: '⚡ تحویل فوری', prompt: 'کدام محصولات تحویل آنی و فوری دارند؟' },
+      { label: '🛡️ تفاوت پلن‌ها', prompt: 'تفاوت اکانت اختصاصی با اشتراکی چیه؟' }
+    ]
+  }
+];
+
 interface ShoppingAdvisorWidgetProps {
   currentProductId?: number;
   defaultOpen?: boolean;
@@ -75,6 +125,43 @@ export const ShoppingAdvisorWidget: React.FC<ShoppingAdvisorWidgetProps> = ({
   };
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+
+  // Grok-Bot Companion State
+  const [isBotHovered, setIsBotHovered] = useState(false);
+  const [isBlinking, setIsBlinking] = useState(false);
+  const [showSpeechBubble, setShowSpeechBubble] = useState(false);
+  const [bubbleIndex, setBubbleIndex] = useState(0);
+  const [isBubbleDismissed, setIsBubbleDismissed] = useState(false);
+
+  // Periodic Blink effect
+  useEffect(() => {
+    const blinkInterval = setInterval(() => {
+      setIsBlinking(true);
+      setTimeout(() => setIsBlinking(false), 180);
+    }, 3800);
+    return () => clearInterval(blinkInterval);
+  }, []);
+
+  // Proactive Speech Bubble Timer
+  useEffect(() => {
+    if (isEmbedded || isOpen || isBubbleDismissed) return;
+
+    const timer = setTimeout(() => {
+      setShowSpeechBubble(true);
+    }, 3500);
+
+    return () => clearTimeout(timer);
+  }, [isOpen, isEmbedded, isBubbleDismissed]);
+
+  // Auto-hide speech bubble after 8 seconds unless hovered
+  useEffect(() => {
+    if (!showSpeechBubble || isBotHovered) return;
+    const hideTimer = setTimeout(() => {
+      setShowSpeechBubble(false);
+      setBubbleIndex(prev => (prev + 1) % SPEECH_PROMPTS.length);
+    }, 8000);
+    return () => clearTimeout(hideTimer);
+  }, [showSpeechBubble, isBotHovered]);
   const [messages, setMessages] = useState<Message[]>([
     {
       id: 'welcome',
@@ -224,12 +311,12 @@ export const ShoppingAdvisorWidget: React.FC<ShoppingAdvisorWidgetProps> = ({
       {/* Header */}
       <div className="p-3.5 sm:p-4 border-b border-[var(--card-border)] bg-[var(--card-bg)]/80 backdrop-blur-md flex items-center justify-between shrink-0">
         <div className="flex items-center gap-2.5">
-          <div className="w-9 h-9 rounded-xl clay-btn flex items-center justify-center text-indigo-600 dark:text-indigo-400 shrink-0">
-            <Sparkles size={18} />
+          <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-indigo-900 via-indigo-700 to-purple-600 dark:from-zinc-950 dark:via-indigo-950 dark:to-purple-900 flex items-center justify-center shrink-0 border border-indigo-300/40 shadow-xs">
+            <GrokBotFace isHovered={false} isBlinking={isBlinking} isLoading={loading} />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h3 className="font-black text-xs sm:text-sm text-[var(--text-main)]">مشاور خرید هوش مصنوعی</h3>
+              <h3 className="font-black text-xs sm:text-sm text-[var(--text-main)]">دستیار هوشمند خرید Dastyar</h3>
               <span className="flex h-2 w-2 relative">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
@@ -396,22 +483,97 @@ export const ShoppingAdvisorWidget: React.FC<ShoppingAdvisorWidgetProps> = ({
   // Floating Widget Mode
   return (
     <>
-      {/* Floating Trigger Button */}
+      {/* Floating Grok-Bot Interactive Companion */}
       {!isOpen && (
-        <div className="fixed bottom-5 left-4 sm:left-5 z-50 animate-slideUpScale">
-          <button
-            onClick={() => setIsOpen(true)}
-            className="px-3.5 py-2.5 sm:px-4 sm:py-3 rounded-2xl clay-btn-primary flex items-center gap-2 sm:gap-2.5 text-white font-bold text-xs sm:text-sm shadow-2xl hover:scale-105 transition-all cursor-pointer group"
-            title="مشاوره رایگان خرید اکانت"
-          >
-            <div className="w-7 h-7 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
-              <Sparkles size={16} className="text-yellow-300 animate-pulse" />
+        <div 
+          className="fixed bottom-5 left-4 sm:left-6 z-50 select-none flex flex-col items-start"
+          onMouseEnter={() => {
+            setIsBotHovered(true);
+            if (!isBubbleDismissed) setShowSpeechBubble(true);
+          }}
+          onMouseLeave={() => setIsBotHovered(false)}
+        >
+          {/* Smart Speech Bubble */}
+          {showSpeechBubble && (
+            <div className="mb-3 w-[260px] sm:w-[290px] p-3.5 rounded-2xl clay-card-thick backdrop-blur-2xl bg-white/95 dark:bg-zinc-900/95 shadow-2xl border border-indigo-200/80 dark:border-indigo-600/40 animate-slideUpScale relative">
+              {/* Close Button */}
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowSpeechBubble(false);
+                  setIsBubbleDismissed(true);
+                }}
+                className="absolute top-2.5 left-2.5 w-5 h-5 rounded-full clay-surface flex items-center justify-center text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 text-xs cursor-pointer transition-colors"
+                title="بستن پیام"
+              >
+                <X size={12} />
+              </button>
+
+              <div className="cursor-pointer" onClick={() => setIsOpen(true)}>
+                <div className="flex items-center gap-1.5 mb-1">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                  <span className="text-[11px] font-black text-indigo-600 dark:text-indigo-400">مشاور آنلاین هوش مصنوعی</span>
+                </div>
+                <h4 className="text-xs font-black text-zinc-900 dark:text-zinc-100 mb-0.5">
+                  {SPEECH_PROMPTS[bubbleIndex].title}
+                </h4>
+                <p className="text-[10px] text-zinc-500 dark:text-zinc-400 mb-2.5 font-medium">
+                  {SPEECH_PROMPTS[bubbleIndex].subtitle}
+                </p>
+              </div>
+
+              {/* Quick Action Chips */}
+              <div className="flex items-center gap-1.5 pt-1 border-t border-black/5 dark:border-white/10">
+                {SPEECH_PROMPTS[bubbleIndex].chips.map((chip, cIdx) => (
+                  <button
+                    key={cIdx}
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setIsOpen(true);
+                      handleSendMessage(chip.prompt);
+                    }}
+                    className="flex-1 py-1.5 px-2 rounded-xl clay-btn text-[10px] font-bold text-zinc-700 dark:text-zinc-200 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors text-center truncate cursor-pointer shadow-xs"
+                  >
+                    {chip.label}
+                  </button>
+                ))}
+              </div>
+
+              {/* Speech Bubble Arrow Down */}
+              <div className="absolute -bottom-2 left-6 w-3.5 h-3.5 rotate-45 bg-white dark:bg-zinc-900 border-r border-b border-indigo-200/80 dark:border-indigo-600/40" />
             </div>
-            <span>مشاور هوشمند خرید</span>
-            <span className="hidden sm:inline-block px-1.5 py-0.5 rounded-full bg-emerald-500 text-[10px] text-white font-black">
-              رایگان
-            </span>
-          </button>
+          )}
+
+          {/* Grok-Bot Main Orb Trigger */}
+          <div className="relative animate-grok-float">
+            {/* Outer Pulsing Halo Ring */}
+            <div className="absolute -inset-1.5 rounded-full border-2 border-indigo-500/30 dark:border-indigo-400/25 animate-grok-ring pointer-events-none" />
+
+            {/* Glowing Online Status Beacon */}
+            <div className="absolute -top-1 -right-1 z-20 w-4 h-4 rounded-full bg-emerald-500 border-2 border-white dark:border-zinc-950 shadow-md flex items-center justify-center">
+              <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+            </div>
+
+            {/* Main Interactive Bot Button */}
+            <button
+              type="button"
+              onClick={() => setIsOpen(true)}
+              className="w-14 h-14 sm:w-16 sm:h-16 rounded-full clay-card-thick bg-gradient-to-tr from-indigo-900 via-indigo-700 to-purple-600 dark:from-zinc-950 dark:via-indigo-950 dark:to-purple-900 border-2 border-indigo-300/50 dark:border-indigo-400/30 shadow-[0_10px_35px_rgba(99,102,241,0.4)] hover:shadow-[0_12px_45px_rgba(99,102,241,0.6)] flex items-center justify-center cursor-pointer relative overflow-hidden transition-all duration-300 transform hover:scale-105 active:scale-95 group"
+              title="گفتگو با مشاور هوشمند خرید"
+            >
+              {/* Internal Glass Highlight */}
+              <div className="absolute inset-0 bg-gradient-to-b from-white/20 to-transparent pointer-events-none rounded-full" />
+
+              {/* GrokBot Interactive Cyber Face */}
+              <GrokBotFace 
+                isHovered={isBotHovered} 
+                isBlinking={isBlinking} 
+                isLoading={loading} 
+              />
+            </button>
+          </div>
         </div>
       )}
 
