@@ -4,7 +4,7 @@ import {
   Store, CheckCircle2, XCircle, BookOpen, Package, Zap, Sparkles, 
   ChevronLeft, Search, X, ShieldCheck, CreditCard, Send, ShoppingBag, 
   ArrowUpDown, Wallet, Plus, Info, Bot, MessageSquare, Clock,
-  LayoutGrid, List, Layers, Key
+  LayoutGrid, List, Layers, Key, ChevronRight, Palette, Code, Flame
 } from 'lucide-react';
 import { CheckoutModal } from '../../components/CheckoutModal';
 import { Footer } from '../../components/Footer';
@@ -33,6 +33,41 @@ export function StoreFront() {
   // View Mode & Quick Filters
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [onlyInstant, setOnlyInstant] = useState(false);
+
+  // Hero Carousel State
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const [isCarouselPaused, setIsCarouselPaused] = useState(false);
+  const [touchStartX, setTouchStartX] = useState<number | null>(null);
+  const [touchEndX, setTouchEndX] = useState<number | null>(null);
+
+  const nextSlide = () => setCurrentSlide((prev) => (prev + 1) % 4);
+  const prevSlide = () => setCurrentSlide((prev) => (prev - 1 + 4) % 4);
+
+  useEffect(() => {
+    if (isCarouselPaused) return;
+    const timer = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % 4);
+    }, 6000);
+    return () => clearInterval(timer);
+  }, [isCarouselPaused]);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchStartX(e.targetTouches[0].clientX);
+  };
+  const handleTouchMove = (e: React.TouchEvent) => {
+    setTouchEndX(e.targetTouches[0].clientX);
+  };
+  const handleTouchEnd = () => {
+    if (touchStartX === null || touchEndX === null) return;
+    const diff = touchStartX - touchEndX;
+    if (diff > 45) {
+      nextSlide();
+    } else if (diff < -45) {
+      prevSlide();
+    }
+    setTouchStartX(null);
+    setTouchEndX(null);
+  };
 
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -192,6 +227,122 @@ export function StoreFront() {
     return result;
   }, [products, selectedCategory, searchQuery, sortBy, onlyInstant]);
 
+  const heroSlides = [
+    {
+      id: 'flagship',
+      badge: 'مرجع رسمی و قانونی اشتراک‌های هوش مصنوعی',
+      badgeColor: 'text-indigo-700 dark:text-indigo-300 border-indigo-300/40 dark:border-indigo-700/50',
+      titleHighlight: 'خرید قانونی و مطمئن',
+      titleRest: ' اشتراک ابزارهای برتر هوش مصنوعی',
+      titleGradient: 'from-indigo-600 via-purple-600 to-sky-600 dark:from-indigo-300 dark:via-purple-200 dark:to-cyan-300',
+      description: 'فعال‌سازی ۱۰۰٪ قانونی و اختصاصی روی ایمیل شخصی با تحویل فوری، گارانتی تعویض تا پایان اشتراک و پرداخت امن شتاب.',
+      primaryBtnText: 'مشاوره هوشمند انتخاب اکانت',
+      primaryBtnAction: () => window.dispatchEvent(new CustomEvent('open-advisor-widget')),
+      primaryBtnIcon: Bot,
+      secondaryBtnText: 'مشاهده محصولات و پلن‌ها',
+      secondaryBtnAction: () => document.getElementById('products-catalog')?.scrollIntoView({ behavior: 'smooth' }),
+      cardBadge: 'VIP Pass • اکانت قانونی',
+      cardTitle: 'اکانت‌های اختصاصی پرمیوم',
+      cardSubtitle: 'فعال‌سازی قانونی روی ایمیل شخصی شما',
+      features: [
+        'گارانتی کامل تعویض',
+        'پشتیبانی ۲۴ ساعته',
+        'پرداخت مستقیم شتاب',
+        'بدون قطعی و بن‌شدن'
+      ],
+      tag: '100% Guaranteed',
+      tagText: 'تایید هویت و اصالت لایسنس‌ها',
+      bgGradients: 'from-indigo-50/90 via-purple-50/40 to-sky-50/50 dark:from-slate-900/95 dark:via-indigo-950/40 dark:to-zinc-950 border-indigo-200/80 dark:border-indigo-500/25'
+    },
+    {
+      id: 'creative',
+      badge: 'استودیو هوش مصنوعی خلق تصویر و ویدیو',
+      badgeColor: 'text-purple-700 dark:text-purple-300 border-purple-300/40 dark:border-purple-700/50',
+      titleHighlight: 'خلق ایده‌ها در چند ثانیه؛',
+      titleRest: ' استودیوهای حرفه‌ای تصویر و ویدیو',
+      titleGradient: 'from-purple-600 via-pink-600 to-rose-500 dark:from-purple-300 dark:via-pink-200 dark:to-rose-300',
+      description: 'اکانت‌های اختصاصی پرمیوم با بالاترین سهمیه خلق اثر، دسترسی نامحدود به موتورهای استودیویی و گارانتی کارکرد.',
+      primaryBtnText: 'مشاهده ابزارهای خلاقیت و تصویر',
+      primaryBtnAction: () => {
+        setSelectedCategory('account');
+        document.getElementById('products-catalog')?.scrollIntoView({ behavior: 'smooth' });
+      },
+      primaryBtnIcon: Palette,
+      secondaryBtnText: 'مشاوره انتخاب ابزار طراحی',
+      secondaryBtnAction: () => window.dispatchEvent(new CustomEvent('open-advisor-widget', { detail: { prompt: 'برای تولید تصویر و طراحی گرافیک چه اکانتی مناسب‌تر است؟' } })),
+      cardBadge: 'Creative Pass • رندر نامحدود',
+      cardTitle: 'ابزارهای تخصصی هنر و تصویر',
+      cardSubtitle: 'بالاترین کیفیت خروجی و جنریت سریع',
+      features: [
+        'سهمیه کامل جنریت',
+        'کیفیت Ultra-HD و 4K',
+        'بدون صف و تاخیر',
+        'پشتیبانی تخصصی طراحی'
+      ],
+      tag: 'Studio Grade',
+      tagText: 'موتورهای فوتورئال و خلاقانه استودیویی',
+      bgGradients: 'from-purple-50/90 via-pink-50/40 to-indigo-50/50 dark:from-zinc-950 dark:via-purple-950/50 dark:to-slate-900 border-purple-200/80 dark:border-purple-500/25'
+    },
+    {
+      id: 'developers',
+      badge: 'ویژه توسعه‌دهندگان، برنامه‌نویسان و پژوهشگران',
+      badgeColor: 'text-cyan-700 dark:text-cyan-300 border-cyan-300/40 dark:border-cyan-700/50',
+      titleHighlight: 'سرعت کدنویسی را ۳ برابر کنید؛',
+      titleRest: ' با کردیت و لایسنس ادیتورها',
+      titleGradient: 'from-cyan-600 via-teal-600 to-blue-600 dark:from-cyan-300 dark:via-teal-200 dark:to-sky-300',
+      description: 'کردیت‌های رسمی با دسترسی مستقیم، بدون محدودیت توکن و قابل اتصال به VS Code و محیط‌های توسعه نرم‌افزار.',
+      primaryBtnText: 'مشاهده کلیدهای API و پلن‌ها',
+      primaryBtnAction: () => {
+        setSelectedCategory('api');
+        document.getElementById('products-catalog')?.scrollIntoView({ behavior: 'smooth' });
+      },
+      primaryBtnIcon: Code,
+      secondaryBtnText: 'مشاوره فنی و اتصال به ادیتور',
+      secondaryBtnAction: () => window.dispatchEvent(new CustomEvent('open-advisor-widget', { detail: { prompt: 'برای برنامه‌نویسی و اتصال به ادیتور چه اکانتی مناسب است؟' } })),
+      cardBadge: 'Dev License • اتصال مستقیم',
+      cardTitle: 'کردیت‌ها و کلیدهای توسعه',
+      cardSubtitle: 'پایداری بالا و پینگ عالی برای کدنویسی',
+      features: [
+        'اتصال مستقیم به ادیتور',
+        'کردیت رسمی و قانونی',
+        'بدون قطعی سرور',
+        'فعال‌سازی سریع روی حساب'
+      ],
+      tag: 'API & Editor Ready',
+      tagText: 'سازگار با تمام محیط‌های توسعه و ترمینال',
+      bgGradients: 'from-cyan-50/90 via-teal-50/40 to-blue-50/50 dark:from-slate-950 dark:via-cyan-950/40 dark:to-zinc-950 border-cyan-200/80 dark:border-cyan-500/25'
+    },
+    {
+      id: 'festival',
+      badge: 'تحویل فوری و تضمین ۱۰۰٪ اصالت سفارش',
+      badgeColor: 'text-amber-700 dark:text-amber-300 border-amber-300/40 dark:border-amber-700/50',
+      titleHighlight: 'بسته‌های جامع و تخفیف‌های ویژه؛',
+      titleRest: ' با تحویل آنی و تضمینی',
+      titleGradient: 'from-amber-600 via-orange-600 to-rose-600 dark:from-amber-300 dark:via-orange-200 dark:to-rose-300',
+      description: 'تمامی سرویس‌ها با گارانتی تعویض تا روز آخر دوره، پشتیبانی دائم تلگرام و پرداخت امن شاپرک یا کارت‌به‌کارت.',
+      primaryBtnText: 'مشاهده تخفیف‌ها و آفرها',
+      primaryBtnAction: () => {
+        setSelectedCategory('all');
+        document.getElementById('products-catalog')?.scrollIntoView({ behavior: 'smooth' });
+      },
+      primaryBtnIcon: Flame,
+      secondaryBtnText: 'پشتیبانی و راهنمایی تلگرام',
+      secondaryBtnAction: () => window.open('https://t.me/dastyar_support', '_blank'),
+      cardBadge: 'Gold Warranty • گارانتی تعویض',
+      cardTitle: 'ضمانت اصالت و عملکرد ۱۰۰٪',
+      cardSubtitle: 'پشتیبانی بی‌وقفه تا آخرین روز اشتراک',
+      features: [
+        'تحویل فوری زیر ۲۴ ساعت',
+        'ضمانت تعویض تا روز آخر',
+        'پشتیبانی تلگرام و پیامک',
+        'درگاه شاپرک و کارت‌به‌کارت'
+      ],
+      tag: 'Instant Fulfillment',
+      tagText: 'فعال‌سازی اختصاصی بدون واسطه و سریع',
+      bgGradients: 'from-amber-50/90 via-orange-50/40 to-rose-50/50 dark:from-zinc-950 dark:via-rose-950/40 dark:to-amber-950/30 border-amber-200/80 dark:border-amber-500/25'
+    }
+  ];
+
   return (
     <div className="flex flex-col min-h-screen clay-landing-bg transition-colors duration-300">
       <GlobalHeader />
@@ -241,115 +392,170 @@ export function StoreFront() {
           </div>
         )}
 
-        {/* Architectural Premium Hero Section (Rich Contrast, Digital VIP Passes Showcase, Zero Heavy Blur) */}
-        <div className="mb-10 p-6 sm:p-10 clay-card-thick rounded-3xl relative overflow-hidden bg-gradient-to-br from-indigo-50/90 via-purple-50/40 to-sky-50/50 dark:from-slate-900/95 dark:via-indigo-950/40 dark:to-zinc-950 border border-indigo-200/80 dark:border-indigo-500/25 shadow-xl border-t border-t-white/80 dark:border-t-white/15">
-          <div className="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-8 lg:gap-10">
-            {/* Right: Editorial Value Proposition & Action Buttons */}
-            <div className="space-y-4 max-w-2xl text-center lg:text-right">
-              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full clay-surface text-indigo-700 dark:text-indigo-300 text-xs font-black shadow-xs border border-indigo-300/40 dark:border-indigo-700/50">
-                <Sparkles size={14} className="text-amber-500" />
-                <span>مرجع رسمی و قانونی اشتراک‌های هوش مصنوعی</span>
-              </div>
+        {/* Dynamic Architectural Hero Carousel Section (Hardware-Accelerated 60fps, Zero Heavy Blur) */}
+        <div 
+          className="mb-10 clay-card-thick rounded-3xl relative overflow-hidden shadow-xl border border-indigo-200/80 dark:border-indigo-500/25 border-t border-t-white/80 dark:border-t-white/15 transition-all duration-500"
+          onMouseEnter={() => setIsCarouselPaused(true)}
+          onMouseLeave={() => setIsCarouselPaused(false)}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+        >
+          {/* Slides Track Container */}
+          <div className="relative w-full overflow-hidden min-h-[460px] sm:min-h-[400px] lg:min-h-[360px] p-6 sm:p-10 flex items-center">
+            {heroSlides.map((slide, idx) => {
+              const isActive = idx === currentSlide;
+              const PrimaryIcon = slide.primaryBtnIcon;
               
-              <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-[2.6rem] font-black tracking-tight leading-tight md:leading-[1.25]">
-                <span className="bg-gradient-to-l from-indigo-600 via-purple-600 to-sky-600 dark:from-indigo-300 dark:via-purple-200 dark:to-cyan-300 bg-clip-text text-transparent">
-                  خرید قانونی و مطمئن
-                </span>
-                <br className="hidden sm:inline" />
-                <span className="text-zinc-900 dark:text-zinc-100"> اشتراک ابزارهای برتر هوش مصنوعی</span>
-              </h1>
-              
-              <p className="text-xs sm:text-sm md:text-base text-zinc-600 dark:text-zinc-400 leading-relaxed max-w-xl mx-auto lg:mx-0">
-                فعال‌سازی ۱۰۰٪ قانونی و اختصاصی روی ایمیل شخصی با تحویل فوری، گارانتی تعویض تا پایان اشتراک و پرداخت امن شتاب.
-              </p>
-
-              {/* Action Buttons */}
-              <div className="flex flex-wrap items-center justify-center lg:justify-start gap-3 pt-2">
-                <button
-                  type="button"
-                  onClick={() => window.dispatchEvent(new CustomEvent('open-advisor-widget'))}
-                  className="px-6 py-3.5 clay-btn-primary font-black text-xs sm:text-sm rounded-2xl flex items-center justify-center gap-2 shadow-md hover:scale-[1.02] transition-transform cursor-pointer"
+              return (
+                <div
+                  key={slide.id}
+                  className={`w-full transition-all duration-500 ease-out transform ${
+                    isActive
+                      ? 'opacity-100 translate-x-0 relative z-10'
+                      : 'opacity-0 pointer-events-none absolute inset-0 p-6 sm:p-10 flex items-center ' +
+                        (idx < currentSlide ? 'translate-x-full' : '-translate-x-full')
+                  }`}
                 >
-                  <Bot size={18} className="text-yellow-300" />
-                  <span>مشاوره هوشمند انتخاب اکانت</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => document.getElementById('products-catalog')?.scrollIntoView({ behavior: 'smooth' })}
-                  className="px-6 py-3.5 clay-btn font-bold text-xs sm:text-sm rounded-2xl flex items-center justify-center gap-2 text-[var(--text-main)] hover:text-indigo-600 dark:hover:text-indigo-400 transition-all cursor-pointer"
-                >
-                  <ShoppingBag size={17} />
-                  <span>مشاهده محصولات و پلن‌ها</span>
-                </button>
-              </div>
-            </div>
-
-            {/* Left: Digital VIP Passes & Official Accounts Showcase */}
-            <div className="w-full lg:w-[400px] shrink-0">
-              <div className="flex flex-col gap-3">
-                {/* Main Digital Pass Card */}
-                <div className="clay-card rounded-2xl p-5 border border-indigo-200/80 dark:border-indigo-700/50 shadow-xl relative overflow-hidden bg-white/95 dark:bg-zinc-900/95 border-t border-t-white/90 dark:border-t-white/20">
-                  <div className="flex items-center justify-between pb-3 mb-3.5 border-b border-black/5 dark:border-white/10">
-                    <div className="flex items-center gap-2">
-                      <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
-                      <span className="text-[11px] font-black text-emerald-600 dark:text-emerald-400">
-                        تحویل فوری و تضمینی
-                      </span>
-                    </div>
-                    <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full clay-surface text-indigo-700 dark:text-indigo-300 border border-indigo-300/30 dark:border-indigo-700/40">
-                      VIP Pass • اکانت قانونی
-                    </span>
-                  </div>
-
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h4 className="text-sm font-black text-zinc-900 dark:text-white">
-                          اکانت‌های اختصاصی پرمیوم
-                        </h4>
-                        <span className="text-[11px] text-zinc-500 dark:text-zinc-400">
-                          فعال‌سازی قانونی روی ایمیل شخصی شما
+                  <div className="w-full flex flex-col lg:flex-row items-center justify-between gap-8 lg:gap-10">
+                    {/* Right: Text & Actions */}
+                    <div className="space-y-4 max-w-2xl text-center lg:text-right">
+                      <div className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full clay-surface text-xs font-black shadow-xs border ${slide.badgeColor}`}>
+                        <Sparkles size={14} className="text-amber-500" />
+                        <span>{slide.badge}</span>
+                      </div>
+                      
+                      <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-[2.5rem] font-black tracking-tight leading-tight md:leading-[1.25]">
+                        <span className={`bg-gradient-to-l ${slide.titleGradient} bg-clip-text text-transparent`}>
+                          {slide.titleHighlight}
                         </span>
-                      </div>
-                      <div className="w-9 h-9 rounded-xl clay-btn-thick flex items-center justify-center text-indigo-600 dark:text-indigo-400 shadow-xs">
-                        <Sparkles size={18} />
+                        <br className="hidden sm:inline" />
+                        <span className="text-zinc-900 dark:text-zinc-100">{slide.titleRest}</span>
+                      </h1>
+                      
+                      <p className="text-xs sm:text-sm md:text-base text-zinc-600 dark:text-zinc-400 leading-relaxed max-w-xl mx-auto lg:mx-0">
+                        {slide.description}
+                      </p>
+
+                      {/* Action Buttons */}
+                      <div className="flex flex-wrap items-center justify-center lg:justify-start gap-3 pt-2">
+                        <button
+                          type="button"
+                          onClick={slide.primaryBtnAction}
+                          className="px-6 py-3.5 clay-btn-primary font-black text-xs sm:text-sm rounded-2xl flex items-center justify-center gap-2 shadow-md hover:scale-[1.02] transition-transform cursor-pointer"
+                        >
+                          <PrimaryIcon size={18} className="text-yellow-300" />
+                          <span>{slide.primaryBtnText}</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={slide.secondaryBtnAction}
+                          className="px-6 py-3.5 clay-btn font-bold text-xs sm:text-sm rounded-2xl flex items-center justify-center gap-2 text-[var(--text-main)] hover:text-indigo-600 dark:hover:text-indigo-400 transition-all cursor-pointer"
+                        >
+                          <ShoppingBag size={17} />
+                          <span>{slide.secondaryBtnText}</span>
+                        </button>
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-2 pt-1 text-[11px]">
-                      <div className="p-2 rounded-xl clay-surface flex items-center gap-1.5 text-zinc-700 dark:text-zinc-300">
-                        <CheckCircle2 size={13} className="text-emerald-500 shrink-0" />
-                        <span className="truncate">گارانتی کامل تعویض</span>
-                      </div>
-                      <div className="p-2 rounded-xl clay-surface flex items-center gap-1.5 text-zinc-700 dark:text-zinc-300">
-                        <CheckCircle2 size={13} className="text-emerald-500 shrink-0" />
-                        <span className="truncate">پشتیبانی ۲۴ ساعته</span>
-                      </div>
-                      <div className="p-2 rounded-xl clay-surface flex items-center gap-1.5 text-zinc-700 dark:text-zinc-300">
-                        <CheckCircle2 size={13} className="text-emerald-500 shrink-0" />
-                        <span className="truncate">پرداخت مستقیم شتاب</span>
-                      </div>
-                      <div className="p-2 rounded-xl clay-surface flex items-center gap-1.5 text-zinc-700 dark:text-zinc-300">
-                        <CheckCircle2 size={13} className="text-emerald-500 shrink-0" />
-                        <span className="truncate">بدون قطعی و بن‌شدن</span>
+                    {/* Left: Product Visual Card */}
+                    <div className="w-full lg:w-[400px] shrink-0">
+                      <div className="flex flex-col gap-3">
+                        <div className="clay-card rounded-2xl p-5 border border-indigo-200/80 dark:border-indigo-700/50 shadow-xl relative overflow-hidden bg-white/95 dark:bg-zinc-900/95 border-t border-t-white/90 dark:border-t-white/20">
+                          <div className="flex items-center justify-between pb-3 mb-3.5 border-b border-black/5 dark:border-white/10">
+                            <div className="flex items-center gap-2">
+                              <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+                              <span className="text-[11px] font-black text-emerald-600 dark:text-emerald-400">
+                                تحویل فوری و تضمینی
+                              </span>
+                            </div>
+                            <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full clay-surface text-[var(--text-main)] border border-[var(--card-border)]">
+                              {slide.cardBadge}
+                            </span>
+                          </div>
+
+                          <div className="space-y-3">
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <h4 className="text-sm font-black text-zinc-900 dark:text-white">
+                                  {slide.cardTitle}
+                                </h4>
+                                <span className="text-[11px] text-zinc-500 dark:text-zinc-400">
+                                  {slide.cardSubtitle}
+                                </span>
+                              </div>
+                              <div className="w-9 h-9 rounded-xl clay-btn-thick flex items-center justify-center text-indigo-600 dark:text-indigo-400 shadow-xs">
+                                <Sparkles size={18} />
+                              </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-2 pt-1 text-[11px]">
+                              {slide.features.map((feat, fIdx) => (
+                                <div key={fIdx} className="p-2 rounded-xl clay-surface flex items-center gap-1.5 text-zinc-700 dark:text-zinc-300">
+                                  <CheckCircle2 size={13} className="text-emerald-500 shrink-0" />
+                                  <span className="truncate">{feat}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Sub Showcase Strip */}
+                        <div className="px-4 py-2.5 rounded-xl clay-subcard border border-indigo-200/50 dark:border-indigo-800/40 flex items-center justify-between text-xs text-zinc-600 dark:text-zinc-300">
+                          <span className="font-bold flex items-center gap-1.5">
+                            <ShieldCheck size={14} className="text-sky-500" />
+                            <span>{slide.tagText}</span>
+                          </span>
+                          <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-extrabold" dir="ltr">
+                            {slide.tag}
+                          </span>
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
+              );
+            })}
+          </div>
 
-                {/* Sub Showcase Strip */}
-                <div className="px-4 py-2.5 rounded-xl clay-subcard border border-indigo-200/50 dark:border-indigo-800/40 flex items-center justify-between text-xs text-zinc-600 dark:text-zinc-300">
-                  <span className="font-bold flex items-center gap-1.5">
-                    <ShieldCheck size={14} className="text-sky-500" />
-                    <span>تایید هویت و اصالت لایسنس‌ها</span>
-                  </span>
-                  <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-extrabold" dir="ltr">
-                    100% Guaranteed
-                  </span>
-                </div>
-              </div>
-            </div>
+          {/* Navigation Controls: Left / Right Arrows */}
+          <button
+            type="button"
+            onClick={prevSlide}
+            className="absolute right-3 top-1/2 -translate-y-1/2 z-20 w-9 h-9 rounded-full clay-btn flex items-center justify-center text-[var(--text-main)] hover:text-indigo-600 dark:hover:text-indigo-400 opacity-80 hover:opacity-100 transition-opacity cursor-pointer shadow-md"
+            title="بنر قبلی"
+          >
+            <ChevronRight size={18} />
+          </button>
+
+          <button
+            type="button"
+            onClick={nextSlide}
+            className="absolute left-3 top-1/2 -translate-y-1/2 z-20 w-9 h-9 rounded-full clay-btn flex items-center justify-center text-[var(--text-main)] hover:text-indigo-600 dark:hover:text-indigo-400 opacity-80 hover:opacity-100 transition-opacity cursor-pointer shadow-md"
+            title="بنر بعدی"
+          >
+            <ChevronLeft size={18} />
+          </button>
+
+          {/* Progress Pill Indicators */}
+          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2 px-3 py-1.5 rounded-full clay-surface/80 backdrop-blur-md border border-[var(--card-border)]">
+            {heroSlides.map((_, dotIdx) => {
+              const isDotActive = dotIdx === currentSlide;
+              return (
+                <button
+                  key={dotIdx}
+                  type="button"
+                  onClick={() => setCurrentSlide(dotIdx)}
+                  className={`transition-all duration-300 rounded-full cursor-pointer ${
+                    isDotActive
+                      ? 'w-7 h-2 bg-indigo-600 dark:bg-indigo-400 shadow-xs'
+                      : 'w-2 h-2 bg-black/25 dark:bg-white/25 hover:bg-black/50 dark:hover:bg-white/50'
+                  }`}
+                  title={`اسلاید ${dotIdx + 1}`}
+                />
+              );
+            })}
           </div>
 
           {/* 4 Trust & Value Props Badges with Vibrant Color Identities */}
