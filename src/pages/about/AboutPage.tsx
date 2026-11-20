@@ -1,6 +1,27 @@
 import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Sparkles, CheckCircle2, ShieldCheck, Zap, Globe, MessageSquare, ArrowLeft, Mail } from 'lucide-react';
+import {
+  Sparkles,
+  CheckCircle2,
+  ShieldCheck,
+  Zap,
+  ShoppingBag,
+  Clock,
+  CreditCard,
+  Headphones,
+  Bot,
+  ArrowLeft,
+  Mail,
+  Send,
+  Lock,
+  Layers,
+  Award,
+  Users,
+  Cpu,
+  Palette,
+  Code2,
+  Key
+} from 'lucide-react';
 import { GlobalHeader } from '../../components/GlobalHeader';
 import { Footer } from '../../components/Footer';
 import { setPageSeo } from '../../lib/seo';
@@ -9,14 +30,14 @@ import { toPersianDigits } from '../../lib/persianUtils';
 export const AboutPage: React.FC = () => {
   useEffect(() => {
     setPageSeo({
-      title: 'درباره Dastyar AI | دستیار هوش مصنوعی فارسی',
-      description: 'Dastyar AI چیست، چرا ساخته شد، و چرا رایگان است. دستیار هوش مصنوعی فارسی با چت رایگان نامحدود روی مدل‌های پایه و پرداخت به‌ازای مصرف برای مدل‌های پیشرفته.',
+      title: 'درباره Dastyar AI | فروشگاه تخصصی ابزارها و اکانت‌های قانونی هوش مصنوعی',
+      description: 'Dastyar AI مرجع تخصصی خرید اکانت‌های قانونی و اختصاصی هوش مصنوعی، لایسنس‌های معتبر، کلیدهای API و مشاور هوشمند خرید در ایران با تحویل سریع و ضمانت تعویض.',
       canonical: `${window.location.origin}/about`,
       schema: {
         '@context': 'https://schema.org',
         '@type': 'AboutPage',
         name: 'درباره Dastyar AI',
-        description: 'Dastyar AI چیست، چرا ساخته شد، و چرا رایگان است. دستیار هوش مصنوعی فارسی با چت رایگان نامحدود روی مدل‌های پایه و پرداخت به‌ازای مصرف برای مدل‌های پیشرفته.',
+        description: 'Dastyar AI مرجع تخصصی خرید اکانت‌های قانونی و اختصاصی هوش مصنوعی، لایسنس‌های معتبر، کلیدهای API و مشاور هوشمند خرید در ایران با تحویل سریع و ضمانت تعویض.',
         url: `${window.location.origin}/about`
       }
     });
@@ -31,11 +52,11 @@ export const AboutPage: React.FC = () => {
         <div className="text-center mb-10 sm:mb-14">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 clay-pill-thick text-xs font-bold mb-4 shadow-sm select-none">
             <Sparkles className="w-3.5 h-3.5 text-blue-500" />
-            <span>معرفی و بیانیه شفافیت پلتفرم</span>
+            <span>فروشگاه تخصصی و مرجع رسمی ابزارهای هوش مصنوعی</span>
           </div>
 
           <h1
-            className="text-2xl sm:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-l from-indigo-600 via-blue-600 to-cyan-500 dark:from-indigo-300 dark:via-blue-300 dark:to-cyan-200 leading-snug mb-4"
+            className="text-2xl sm:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-l from-indigo-600 via-blue-600 to-cyan-500 dark:from-indigo-300 dark:via-blue-300 dark:to-cyan-200 leading-snug mb-5"
             style={{ fontFamily: "'Estedad', sans-serif" }}
           >
             درباره Dastyar AI
@@ -45,131 +66,199 @@ export const AboutPage: React.FC = () => {
             className="text-base sm:text-lg text-[#525d75] dark:text-[#9aa5bc] leading-relaxed max-w-2xl mx-auto"
             style={{ fontFamily: "'Vazirmatn', sans-serif" }}
           >
-            Dastyar AI یک دستیار هوش مصنوعی فارسی‌زبان است که برای کاربران ایرانی طراحی شده است. بسیاری از ابزارهای جهانی یا به فارسی روان پاسخ نمی‌دهند، یا برای استفاده از ایران محدودیت دارند، یا کاربر را مجبور به پرداخت اشتراک ماهانه می‌کنند. ما Dastyar AI را ساختیم تا این موانع را برداریم: پاسخ فارسی طبیعی، دسترسی مستقیم، و مدلی که فقط به‌ازای مصرف واقعی هزینه می‌گیرد.
+            Dastyar AI مرجع تخصصی ارائه اکانت‌های اختصاصی، قانونی و لایسنس‌های معتبر ابزارهای برتر هوش مصنوعی در ایران است. ما بستری امن، پایدار و شفاف برای برنامه‌نویسان، طراحان، پژوهشگران و کسب‌وکارهای ایرانی فراهم ساخته‌ایم تا بدون موانع پرداخت‌های بین‌المللی، مستقیماً به پیشرفته‌ترین فناوری‌های روز دنیا دسترسی داشته باشند.
           </p>
         </div>
 
-        {/* Section 1: Why Dastyar AI? */}
+        {/* Section 1: Core Pillars */}
         <section className="clay-card p-6 sm:p-8 rounded-3xl mb-8">
           <h2
             className="text-lg sm:text-xl font-bold text-[#0f1420] dark:text-white mb-6 flex items-center gap-3"
             style={{ fontFamily: "'Estedad', sans-serif" }}
           >
             <span className="w-2.5 h-6 bg-blue-600 rounded-full" />
-            چرا Dastyar AI؟
+            چرا Dastyar AI؟ (مزایای محوری و منشور اصالت)
           </h2>
 
-          <div className="grid grid-cols-1 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="p-4 rounded-2xl clay-subcard flex items-start gap-3.5">
-              <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" />
+              <ShieldCheck className="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" />
               <div>
                 <strong className="block text-sm sm:text-base text-[#0f1420] dark:text-white font-bold mb-1">
-                  چت رایگان و نامحدود:
+                  فعال‌سازی قانونی روی ایمیل شخصی:
                 </strong>
                 <p className="text-xs sm:text-sm text-[#525d75] dark:text-[#9aa5bc] leading-relaxed">
-                  بدون نیاز به پرداخت اولیه با {toPersianDigits(15)} پیام مهمان شروع کنید و پس از ورود، نامحدود از مدل‌های پایه استفاده کنید.
+                  تمام اکانت‌های اختصاصی به صورت ۱۰۰٪ قانونی روی ایمیل شخصی خودتان فعال می‌شوند؛ بدون دسترسی اشتراکی تا امنیت، تاریخچه چت‌ها و حریم خصوصی پروژه‌های شما کاملاً اختصاصی بماند.
                 </p>
               </div>
             </div>
 
             <div className="p-4 rounded-2xl clay-subcard flex items-start gap-3.5">
-              <Zap className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
+              <Award className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
               <div>
                 <strong className="block text-sm sm:text-base text-[#0f1420] dark:text-white font-bold mb-1">
-                  پرداخت به‌ازای مصرف (Pay-As-You-Go):
+                  ضمانت کامل و گارانتی تعویض:
                 </strong>
                 <p className="text-xs sm:text-sm text-[#525d75] dark:text-[#9aa5bc] leading-relaxed">
-                  بدون اشتراک اجباری، بدون هزینه پنهان. کیف پول شما اعتبار مادام‌العمر دارد و فقط بابت استفاده واقعی کسر می‌شود.
+                  تمامی اکانت‌ها و سرویس‌ها دارای ضمانت اصالت و گارانتی تعویض در تمام طول مدت اشتراک هستند تا تجربه‌ای بی‌دغدغه و مطمئن داشته باشید.
                 </p>
               </div>
             </div>
 
             <div className="p-4 rounded-2xl clay-subcard flex items-start gap-3.5">
-              <ShieldCheck className="w-5 h-5 text-blue-500 shrink-0 mt-0.5" />
+              <Clock className="w-5 h-5 text-blue-500 shrink-0 mt-0.5" />
               <div>
                 <strong className="block text-sm sm:text-base text-[#0f1420] dark:text-white font-bold mb-1">
-                  دسترسی مستقیم از ایران:
+                  تحویل سریع ظرف {toPersianDigits(1)} تا {toPersianDigits(24)} ساعت کاری:
                 </strong>
                 <p className="text-xs sm:text-sm text-[#525d75] dark:text-[#9aa5bc] leading-relaxed">
-                  بدون نیاز به تغییر IP یا شماره تلفن خارجی.
+                  پس از ثبت سفارش، اطلاعات ورود یا فعال‌سازی در سریع‌ترین زمان ممکن از طریق پیامک، ایمیل و پنل کاربری برای شما ارسال می‌گردد.
                 </p>
               </div>
             </div>
 
             <div className="p-4 rounded-2xl clay-subcard flex items-start gap-3.5">
-              <Globe className="w-5 h-5 text-indigo-500 shrink-0 mt-0.5" />
+              <CreditCard className="w-5 h-5 text-indigo-500 shrink-0 mt-0.5" />
               <div>
                 <strong className="block text-sm sm:text-base text-[#0f1420] dark:text-white font-bold mb-1">
-                  چندکاناله:
+                  پرداخت امن ریالی (شاپرک و کارت‌به‌کارت):
                 </strong>
                 <p className="text-xs sm:text-sm text-[#525d75] dark:text-[#9aa5bc] leading-relaxed">
-                  وب، PWA قابل نصب، ربات تلگرام، و اپلیکیشن اندروید در کافه‌بازار.
+                  پرداخت مستقیم و آنی از طریق کلیه کارت‌های بانکی عضو شتاب در درگاه شاپرک، همراه با امکان واریز کارت‌به‌کارت و ثبت سریع رسید.
                 </p>
               </div>
             </div>
 
             <div className="p-4 rounded-2xl clay-subcard flex items-start gap-3.5">
-              <Sparkles className="w-5 h-5 text-cyan-500 shrink-0 mt-0.5" />
+              <Bot className="w-5 h-5 text-purple-500 shrink-0 mt-0.5" />
               <div>
                 <strong className="block text-sm sm:text-base text-[#0f1420] dark:text-white font-bold mb-1">
-                  پاسخ با داده‌های تازه:
+                  مشاور هوشمند ۲۴ ساعته خرید:
                 </strong>
                 <p className="text-xs sm:text-sm text-[#525d75] dark:text-[#9aa5bc] leading-relaxed">
-                  برای سوالاتی که به اطلاعات روز نیاز دارند، از جستجوی زنده وب در کنار دانش مدل استفاده می‌کنیم.
+                  سیستم آنلاین مشاور هوشمند در تمام صفحات سایت آماده است تا بر اساس شغل، تخصص و بودجه شما، بهترین اکانت و پکیج را پیشنهاد دهد.
+                </p>
+              </div>
+            </div>
+
+            <div className="p-4 rounded-2xl clay-subcard flex items-start gap-3.5">
+              <Headphones className="w-5 h-5 text-cyan-500 shrink-0 mt-0.5" />
+              <div>
+                <strong className="block text-sm sm:text-base text-[#0f1420] dark:text-white font-bold mb-1">
+                  پشتیبانی فنی در تلگرام:
+                </strong>
+                <p className="text-xs sm:text-sm text-[#525d75] dark:text-[#9aa5bc] leading-relaxed">
+                  تیم پشتیبانی تخصصی ما در تلگرام همواره در دسترس است تا سوالات، پیگیری سفارش‌ها و راهنمایی‌های فنی شما را در کوتاه‌ترین زمان پاسخ دهد.
                 </p>
               </div>
             </div>
           </div>
         </section>
 
-        {/* Section 2: Why Free? (Transparent Model) */}
+        {/* Section 2: Product Categories */}
+        <section className="clay-card p-6 sm:p-8 rounded-3xl mb-8">
+          <h2
+            className="text-lg sm:text-xl font-bold text-[#0f1420] dark:text-white mb-6 flex items-center gap-3"
+            style={{ fontFamily: "'Estedad', sans-serif" }}
+          >
+            <span className="w-2.5 h-6 bg-indigo-600 rounded-full" />
+            دسته‌بندی محصولات در فروشگاه Dastyar AI
+          </h2>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="p-4 rounded-2xl clay-subcard">
+              <div className="flex items-center gap-2.5 mb-2 text-blue-600 dark:text-blue-400 font-bold text-sm">
+                <Users className="w-4 h-4" />
+                <span>اکانت‌های اختصاصی پریمیوم و پلاس</span>
+              </div>
+              <p className="text-xs sm:text-sm text-[#525d75] dark:text-[#9aa5bc] leading-relaxed">
+                مناسب برای چت هوشمند، خلاصه‌سازی و تحلیل اسناد سنگین، جستجوی زنده در وب و استفاده از ابزارهای تحلیلی پیشرفته.
+              </p>
+            </div>
+
+            <div className="p-4 rounded-2xl clay-subcard">
+              <div className="flex items-center gap-2.5 mb-2 text-emerald-600 dark:text-emerald-400 font-bold text-sm">
+                <Code2 className="w-4 h-4" />
+                <span>دستیارهای برنامه‌نویسی و کدنویسی</span>
+              </div>
+              <p className="text-xs sm:text-sm text-[#525d75] dark:text-[#9aa5bc] leading-relaxed">
+                محیط‌های تعاملی و پیشرفته برای توسعه‌دهندگان، تحلیل و اشکال‌زدایی خط‌به‌خط، بازنویسی پروژه‌ها و اتوماسیون وظایف فنی.
+              </p>
+            </div>
+
+            <div className="p-4 rounded-2xl clay-subcard">
+              <div className="flex items-center gap-2.5 mb-2 text-purple-600 dark:text-purple-400 font-bold text-sm">
+                <Palette className="w-4 h-4" />
+                <span>موتورهای استودیویی طراحی و تصویر</span>
+              </div>
+              <p className="text-xs sm:text-sm text-[#525d75] dark:text-[#9aa5bc] leading-relaxed">
+                خلق تصاویر باکیفیت و فوتورئال، ادیت‌های خلاقانه و تولید انواع کانسپت‌ها و محتواهای بصری برای طراحان و دیجیتال‌آرتیست‌ها.
+              </p>
+            </div>
+
+            <div className="p-4 rounded-2xl clay-subcard">
+              <div className="flex items-center gap-2.5 mb-2 text-amber-600 dark:text-amber-400 font-bold text-sm">
+                <Key className="w-4 h-4" />
+                <span>کلیدها و توکن‌های API اختصاصی</span>
+              </div>
+              <p className="text-xs sm:text-sm text-[#525d75] dark:text-[#9aa5bc] leading-relaxed">
+                اعتبار رسمی توسعه‌دهندگان برای اتصال مستقیم به اسکریپت‌های پایتون، پلتفرم‌های اتوماسیون (مانند n8n) و زیرساخت‌های استارتاپی.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* Section 3: Story & Mission */}
         <section className="clay-card p-6 sm:p-8 rounded-3xl mb-8">
           <h2
             className="text-lg sm:text-xl font-bold text-[#0f1420] dark:text-white mb-4 flex items-center gap-3"
             style={{ fontFamily: "'Estedad', sans-serif" }}
           >
             <span className="w-2.5 h-6 bg-emerald-500 rounded-full" />
-            چرا «رایگان» است؟ (مدل شفاف)
+            داستان ما؛ دسترسی بی‌دغدغه به فناوری
           </h2>
 
-          <p className="text-sm sm:text-base text-[#525d75] dark:text-[#9aa5bc] leading-relaxed">
-            Dastyar AI یک سرویس فریمیوم است. با {toPersianDigits(15)} پیام مهمان بدون ثبت‌نام آشنا می‌شوید و پس از ورود می‌توانید به‌صورت رایگان و نامحدود با مدل‌های پایه گفتگو کنید. برای استفاده از مدل‌های تخصصی و پیشرفته یا تولید تصویر استودیویی، کیف پول خود را شارژ می‌کنید و فقط بابت همان مصرف هزینه می‌دهید. این مدل به ما اجازه می‌دهد بدون تبلیغات مزاحم، بدون فروش داده کاربران، و بدون اجبار به اشتراک ماهانه کار کنیم.
+          <p className="text-sm sm:text-base text-[#525d75] dark:text-[#9aa5bc] leading-relaxed text-justify mb-4">
+            استفاده از هوش مصنوعی دیگر یک سرگرمی نیست؛ بلکه ابزاری ضروری برای رقابت در دنیای مدرن کار و توسعه است. با این حال، متخصصان و فعالان کسب‌وکار در ایران همواره با چالش‌هایی مانند کارت‌های اعتباری بین‌المللی، فعال‌سازی‌های پرخطر و نبود پشتیبانی پاسخگو مواجه بوده‌اند.
           </p>
-        </section>
-
-        {/* Section 3: How it works? */}
-        <section className="clay-card p-6 sm:p-8 rounded-3xl mb-8">
-          <h2
-            className="text-lg sm:text-xl font-bold text-[#0f1420] dark:text-white mb-4 flex items-center gap-3"
-            style={{ fontFamily: "'Estedad', sans-serif" }}
-          >
-            <span className="w-2.5 h-6 bg-indigo-500 rounded-full" />
-            چطور کار می‌کند؟
-          </h2>
-
-          <p className="text-sm sm:text-base text-[#525d75] dark:text-[#9aa5bc] leading-relaxed">
-            Dastyar AI به چند موتور هوش مصنوعی پیشرو متصل است و بر اساس نیاز شما، بهترین موتور را برای هر درخواست انتخاب می‌کند. لازم نیست نگران انتخاب مدل یا تنظیمات فنی باشید — فقط به فارسی بنویسید و پاسخ بگیرید.
+          <p className="text-sm sm:text-base text-[#525d75] dark:text-[#9aa5bc] leading-relaxed text-justify">
+            ما در Dastyar AI متعهد شده‌ایم این فاصله را پر کنیم: با ایجاد بستری امن برای ارائه اشتراک‌های کاملاً اختصاصی، پشتیبانی همیشگی و مشاوره هوشمند، تا شما بدون هیچ نگرانی فنی، فقط روی توسعه مهارت‌ها و گسترش کسب‌وکارتان تمرکز کنید.
           </p>
         </section>
 
         {/* CTA Banner */}
         <section className="clay-card-thick p-8 sm:p-10 rounded-3xl text-center mb-8 bg-gradient-to-br from-blue-500/10 via-indigo-500/5 to-cyan-500/10">
           <p className="text-base sm:text-lg font-bold text-[#0f1420] dark:text-white mb-6">
-            همین حالا رایگان شروع کنید — {toPersianDigits(15)} پیام بدون ورود و چت نامحدود پس از ورود، بدون اشتراک اجباری.
+            نمی‌دانید کدام اکانت یا ابزار هوش مصنوعی برای کار شما مناسب‌تر است؟
           </p>
-          <Link
-            to="/?advisor=open"
-            className="inline-flex items-center gap-3 px-8 py-3.5 clay-btn-primary font-bold text-white rounded-2xl shadow-lg hover:scale-105 transition-all"
-            style={{ fontFamily: "'Estedad', sans-serif" }}
-          >
-            <span>شروع گفتگو با مشاور هوشمند</span>
-            <ArrowLeft className="w-4 h-4" />
-          </Link>
+          <div className="flex flex-wrap items-center justify-center gap-4">
+            <Link
+              to="/?advisor=open"
+              className="inline-flex items-center gap-2.5 px-6 py-3.5 clay-btn-primary font-bold text-white rounded-2xl shadow-lg hover:scale-105 transition-all text-sm sm:text-base"
+              style={{ fontFamily: "'Estedad', sans-serif" }}
+            >
+              <Bot className="w-4 h-4" />
+              <span>گفتگو با مشاور هوشمند خرید</span>
+            </Link>
+
+            <Link
+              to="/store"
+              className="inline-flex items-center gap-2.5 px-6 py-3.5 clay-card hover:clay-card-elevated font-bold text-[#0f1420] dark:text-white rounded-2xl transition-all text-sm sm:text-base border border-[var(--border-subtle)]"
+              style={{ fontFamily: "'Estedad', sans-serif" }}
+            >
+              <ShoppingBag className="w-4 h-4 text-blue-500" />
+              <span>مشاهده همه محصولات فروشگاه</span>
+            </Link>
+          </div>
         </section>
 
         {/* Contact Info */}
         <div className="text-center text-xs sm:text-sm text-[#525d75] dark:text-[#9aa5bc] py-4">
-          برای ارتباط با ما، به صفحه <Link to="/contact" className="text-blue-600 dark:text-blue-400 font-bold underline">تماس</Link> بروید یا از طریق ربات تلگرام پیام دهید.
+          نیاز به راهنمایی بیشتری دارید؟ به صفحه{' '}
+          <Link to="/contact" className="text-blue-600 dark:text-blue-400 font-bold underline">
+            تماس با ما
+          </Link>{' '}
+          مراجعه کنید یا از طریق پشتیبانی تلگرام پیام دهید.
         </div>
       </main>
 

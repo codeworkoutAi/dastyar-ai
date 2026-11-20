@@ -35,9 +35,9 @@ describe('htmlInjector SSR SEO & RAM caching', () => {
     fs.rmSync(tmpDir, { recursive: true, force: true });
   });
 
-  it('injects optimized /chat title, description, canonical, and H1', async () => {
+  it('injects optimized /about title, description, canonical, and H1', async () => {
     const req = {
-      path: '/chat',
+      path: '/about',
       protocol: 'https',
       headers: { 'x-forwarded-proto': 'https' },
       get: (name: string) => (name === 'host' ? 'dastyarai.com' : ''),
@@ -47,14 +47,14 @@ describe('htmlInjector SSR SEO & RAM caching', () => {
     await renderHtmlWithSeo(req, res, tmpDir);
 
     expect(res.headers['Content-Type']).toBe('text/html; charset=utf-8');
-    expect(res.body).toContain('<title>چت با هوش مصنوعی فارسی رایگان و نامحدود | Dastyar AI</title>');
-    expect(res.body).toContain('<link rel="canonical" href="https://dastyarai.com/chat" />');
-    expect(res.body).toContain('>چت با هوش مصنوعی فارسی رایگان</h1>');
+    expect(res.body).toContain('<title>درباره Dastyar AI | فروشگاه تخصصی ابزارها و اکانت‌های قانونی هوش مصنوعی</title>');
+    expect(res.body).toContain('<link rel="canonical" href="https://dastyarai.com/about" />');
+    expect(res.body).toContain('>درباره Dastyar AI</h1>');
   });
 
-  it('serves cached static /chat HTML from RAM after initial render and clears on invalidateSeoHtmlCache', async () => {
+  it('serves cached static /about HTML from RAM after initial render and clears on invalidateSeoHtmlCache', async () => {
     const req = {
-      path: '/chat',
+      path: '/about',
       protocol: 'https',
       headers: { 'x-forwarded-proto': 'https' },
       get: (name: string) => (name === 'host' ? 'dastyarai.com' : ''),
@@ -62,9 +62,9 @@ describe('htmlInjector SSR SEO & RAM caching', () => {
 
     const firstRes = createMockRes();
     await renderHtmlWithSeo(req, firstRes, tmpDir);
-    expect(firstRes.body).toContain('چت با هوش مصنوعی فارسی رایگان و نامحدود');
+    expect(firstRes.body).toContain('درباره Dastyar AI | فروشگاه تخصصی');
 
-    // Remove index.html from disk — RAM cache should still serve /chat cleanly
+    // Remove index.html from disk — RAM cache should still serve /about cleanly
     fs.unlinkSync(path.join(tmpDir, 'index.html'));
 
     const cachedRes = createMockRes();
