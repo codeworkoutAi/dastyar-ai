@@ -4,7 +4,7 @@ import {
   Store, CheckCircle2, XCircle, BookOpen, Package, Zap, Sparkles, 
   ChevronLeft, Search, X, ShieldCheck, CreditCard, Send, ShoppingBag, 
   ArrowUpDown, Wallet, Plus, Info, Bot, MessageSquare, Clock,
-  LayoutGrid, List, Layers, ChevronDown
+  LayoutGrid, List, Layers, Key
 } from 'lucide-react';
 import { CheckoutModal } from '../../components/CheckoutModal';
 import { Footer } from '../../components/Footer';
@@ -30,10 +30,8 @@ export function StoreFront() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // View Mode, Dropdowns & Quick Filters
+  // View Mode & Quick Filters
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [categoryDropdownOpen, setCategoryDropdownOpen] = useState(false);
-  const [sortDropdownOpen, setSortDropdownOpen] = useState(false);
   const [onlyInstant, setOnlyInstant] = useState(false);
 
   const [searchParams] = useSearchParams();
@@ -243,26 +241,26 @@ export function StoreFront() {
           </div>
         )}
 
-        {/* Refined Vibrant Hero Section (No Heavy Glow, Clean Color Harmony) */}
-        <div className="mb-10 p-6 sm:p-10 clay-card-thick rounded-3xl relative overflow-hidden bg-gradient-to-br from-indigo-50/70 via-purple-50/40 to-emerald-50/40 dark:from-indigo-950/20 dark:via-purple-950/15 dark:to-emerald-950/15 border border-indigo-200/60 dark:border-indigo-800/40">
-          <div className="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-8">
-            {/* Right: Content & Value Proposition */}
+        {/* Architectural Premium Hero Section (Rich Contrast, Digital VIP Passes Showcase, Zero Heavy Blur) */}
+        <div className="mb-10 p-6 sm:p-10 clay-card-thick rounded-3xl relative overflow-hidden bg-gradient-to-br from-indigo-50/90 via-purple-50/40 to-sky-50/50 dark:from-slate-900/95 dark:via-indigo-950/40 dark:to-zinc-950 border border-indigo-200/80 dark:border-indigo-500/25 shadow-xl border-t border-t-white/80 dark:border-t-white/15">
+          <div className="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-8 lg:gap-10">
+            {/* Right: Editorial Value Proposition & Action Buttons */}
             <div className="space-y-4 max-w-2xl text-center lg:text-right">
               <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full clay-surface text-indigo-700 dark:text-indigo-300 text-xs font-black shadow-xs border border-indigo-300/40 dark:border-indigo-700/50">
                 <Sparkles size={14} className="text-amber-500" />
-                <span>مرجع تخصصی اشتراک و اکانت‌های قانونی هوش مصنوعی</span>
+                <span>مرجع رسمی و قانونی اشتراک‌های هوش مصنوعی</span>
               </div>
               
-              <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-[2.5rem] font-black tracking-tight leading-tight md:leading-[1.25]">
-                <span className="bg-gradient-to-l from-indigo-600 via-purple-600 to-sky-600 dark:from-indigo-400 dark:via-purple-300 dark:to-sky-400 bg-clip-text text-transparent">
+              <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-[2.6rem] font-black tracking-tight leading-tight md:leading-[1.25]">
+                <span className="bg-gradient-to-l from-indigo-600 via-purple-600 to-sky-600 dark:from-indigo-300 dark:via-purple-200 dark:to-cyan-300 bg-clip-text text-transparent">
                   خرید قانونی و مطمئن
                 </span>
                 <br className="hidden sm:inline" />
-                <span className="text-[var(--text-main)]"> اشتراک ابزارهای هوش مصنوعی</span>
+                <span className="text-zinc-900 dark:text-zinc-100"> اشتراک ابزارهای برتر هوش مصنوعی</span>
               </h1>
               
-              <p className="text-xs sm:text-sm md:text-base text-[var(--text-muted)] leading-relaxed max-w-xl mx-auto lg:mx-0">
-                فعال‌سازی ۱۰۰٪ اختصاصی روی ایمیل شخصی با تحویل فوری، پشتیبانی دائم، گارانتی تعویض تا آخرین روز اشتراک و پرداخت امن بانکی.
+              <p className="text-xs sm:text-sm md:text-base text-zinc-600 dark:text-zinc-400 leading-relaxed max-w-xl mx-auto lg:mx-0">
+                فعال‌سازی ۱۰۰٪ قانونی و اختصاصی روی ایمیل شخصی با تحویل فوری، گارانتی تعویض تا پایان اشتراک و پرداخت امن شتاب.
               </p>
 
               {/* Action Buttons */}
@@ -287,98 +285,112 @@ export function StoreFront() {
               </div>
             </div>
 
-            {/* Left: Interactive AI Showcase Card */}
-            <div className="w-full lg:w-[380px] shrink-0">
-              <div className="clay-card rounded-2xl p-4 sm:p-5 border border-indigo-200/80 dark:border-indigo-800/60 shadow-md relative overflow-hidden bg-white/90 dark:bg-zinc-900/90">
-                {/* Decorative top bar */}
-                <div className="flex items-center justify-between pb-3 mb-3 border-b border-[var(--card-border)]">
-                  <div className="flex items-center gap-2">
-                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block" />
-                    <span className="text-[11px] font-black text-emerald-600 dark:text-emerald-400">
-                      مشاور فعال ۲۴ ساعته خرید
+            {/* Left: Digital VIP Passes & Official Accounts Showcase */}
+            <div className="w-full lg:w-[400px] shrink-0">
+              <div className="flex flex-col gap-3">
+                {/* Main Digital Pass Card */}
+                <div className="clay-card rounded-2xl p-5 border border-indigo-200/80 dark:border-indigo-700/50 shadow-xl relative overflow-hidden bg-white/95 dark:bg-zinc-900/95 border-t border-t-white/90 dark:border-t-white/20">
+                  <div className="flex items-center justify-between pb-3 mb-3.5 border-b border-black/5 dark:border-white/10">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+                      <span className="text-[11px] font-black text-emerald-600 dark:text-emerald-400">
+                        تحویل فوری و تضمینی
+                      </span>
+                    </div>
+                    <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full clay-surface text-indigo-700 dark:text-indigo-300 border border-indigo-300/30 dark:border-indigo-700/40">
+                      VIP Pass • اکانت قانونی
                     </span>
                   </div>
-                  <Sparkles size={14} className="text-amber-500" />
+
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h4 className="text-sm font-black text-zinc-900 dark:text-white">
+                          اکانت‌های اختصاصی پرمیوم
+                        </h4>
+                        <span className="text-[11px] text-zinc-500 dark:text-zinc-400">
+                          فعال‌سازی قانونی روی ایمیل شخصی شما
+                        </span>
+                      </div>
+                      <div className="w-9 h-9 rounded-xl clay-btn-thick flex items-center justify-center text-indigo-600 dark:text-indigo-400 shadow-xs">
+                        <Sparkles size={18} />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2 pt-1 text-[11px]">
+                      <div className="p-2 rounded-xl clay-surface flex items-center gap-1.5 text-zinc-700 dark:text-zinc-300">
+                        <CheckCircle2 size={13} className="text-emerald-500 shrink-0" />
+                        <span className="truncate">گارانتی کامل تعویض</span>
+                      </div>
+                      <div className="p-2 rounded-xl clay-surface flex items-center gap-1.5 text-zinc-700 dark:text-zinc-300">
+                        <CheckCircle2 size={13} className="text-emerald-500 shrink-0" />
+                        <span className="truncate">پشتیبانی ۲۴ ساعته</span>
+                      </div>
+                      <div className="p-2 rounded-xl clay-surface flex items-center gap-1.5 text-zinc-700 dark:text-zinc-300">
+                        <CheckCircle2 size={13} className="text-emerald-500 shrink-0" />
+                        <span className="truncate">پرداخت مستقیم شتاب</span>
+                      </div>
+                      <div className="p-2 rounded-xl clay-surface flex items-center gap-1.5 text-zinc-700 dark:text-zinc-300">
+                        <CheckCircle2 size={13} className="text-emerald-500 shrink-0" />
+                        <span className="truncate">بدون قطعی و بن‌شدن</span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
-                {/* Mini Interactive Chat Demo */}
-                <div className="space-y-2.5 text-xs">
-                  <div className="p-2.5 rounded-xl bg-black/5 dark:bg-white/5 text-[var(--text-main)] text-right">
-                    <span className="text-[10px] text-[var(--text-muted)] block mb-0.5 font-bold">سوال کاربر:</span>
-                    «برای کدنویسی و اتصال به ادیتور، کدوم اکانت بهتره؟»
-                  </div>
-
-                  <div className="p-2.5 rounded-xl bg-indigo-50/80 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800 text-indigo-900 dark:text-indigo-200 text-right leading-relaxed">
-                    <span className="text-[10px] text-indigo-600 dark:text-indigo-400 font-bold block mb-0.5 flex items-center gap-1">
-                      <Bot size={13} /> پاسخ مشاور هوشمند:
-                    </span>
-                    «اکانت اختصاصی با کردیت CODEX یا کلیدهای رسمی API؛ تحویل قانونی با گارانتی تعویض.»
-                  </div>
-                </div>
-
-                {/* Interactive prompt triggers */}
-                <div className="mt-3 pt-3 border-t border-[var(--card-border)]">
-                  <span className="text-[10px] text-[var(--text-muted)] block mb-1.5 font-bold">پرسش‌های پرتکرار (کلیک کنید):</span>
-                  <div className="flex flex-wrap gap-1.5">
-                    {[
-                      { label: 'کدنویسی و توسعه', prompt: 'برای برنامه‌نویسی و پایتون چه اکانتی مناسب‌تر است؟' },
-                      { label: 'اکانت اختصاصی چیست؟', prompt: 'تفاوت اکانت اختصاصی با اشتراکی چیست؟' },
-                      { label: 'شرایط گارانتی و فعال‌سازی', prompt: 'شرایط گارانتی و نحوه فعال‌سازی اکانت‌ها به چه صورت است؟' },
-                    ].map((item, idx) => (
-                      <button
-                        key={idx}
-                        type="button"
-                        onClick={() => window.dispatchEvent(new CustomEvent('open-advisor-widget', { detail: { prompt: item.prompt } }))}
-                        className="text-[10px] px-2.5 py-1 rounded-lg clay-surface text-[var(--text-main)] hover:text-indigo-600 dark:hover:text-indigo-400 hover:border-indigo-400/50 transition-all cursor-pointer font-bold"
-                      >
-                        {item.label}
-                      </button>
-                    ))}
-                  </div>
+                {/* Sub Showcase Strip */}
+                <div className="px-4 py-2.5 rounded-xl clay-subcard border border-indigo-200/50 dark:border-indigo-800/40 flex items-center justify-between text-xs text-zinc-600 dark:text-zinc-300">
+                  <span className="font-bold flex items-center gap-1.5">
+                    <ShieldCheck size={14} className="text-sky-500" />
+                    <span>تایید هویت و اصالت لایسنس‌ها</span>
+                  </span>
+                  <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-extrabold" dir="ltr">
+                    100% Guaranteed
+                  </span>
                 </div>
               </div>
             </div>
           </div>
 
           {/* 4 Trust & Value Props Badges with Vibrant Color Identities */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mt-8 pt-8 border-t border-[var(--card-border)]">
-            <div className="flex items-center gap-3 p-3 rounded-2xl clay-subcard border border-emerald-500/20 bg-emerald-50/50 dark:bg-emerald-950/20 hover:scale-[1.01] transition-transform">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mt-8 pt-8 border-t border-black/5 dark:border-white/10">
+            <div className="flex items-center gap-3 p-3.5 rounded-2xl clay-subcard border border-emerald-500/30 bg-emerald-50/70 dark:bg-emerald-950/30 hover:scale-[1.01] transition-transform">
               <div className="w-10 h-10 rounded-xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 shadow-xs">
                 <Zap size={19} />
               </div>
               <div className="flex flex-col">
-                <span className="text-xs font-black text-[var(--text-main)]">تحویل ۱ تا ۲۴ ساعت</span>
+                <span className="text-xs font-black text-zinc-900 dark:text-white">تحویل ۱ تا ۲۴ ساعت</span>
                 <span className="text-[10px] text-emerald-700 dark:text-emerald-300 font-semibold">فعال‌سازی قانونی و اختصاصی</span>
               </div>
             </div>
 
-            <div className="flex items-center gap-3 p-3 rounded-2xl clay-subcard border border-sky-500/20 bg-sky-50/50 dark:bg-sky-950/20 hover:scale-[1.01] transition-transform">
+            <div className="flex items-center gap-3 p-3.5 rounded-2xl clay-subcard border border-sky-500/30 bg-sky-50/70 dark:bg-sky-950/30 hover:scale-[1.01] transition-transform">
               <div className="w-10 h-10 rounded-xl bg-sky-500/15 text-sky-600 dark:text-sky-400 flex items-center justify-center shrink-0 shadow-xs">
                 <ShieldCheck size={19} />
               </div>
               <div className="flex flex-col">
-                <span className="text-xs font-black text-[var(--text-main)]">ضمانت اصالت و عملکرد</span>
+                <span className="text-xs font-black text-zinc-900 dark:text-white">ضمانت اصالت و عملکرد</span>
                 <span className="text-[10px] text-sky-700 dark:text-sky-300 font-semibold">گارانتی تعویض تا پایان دوره</span>
               </div>
             </div>
 
-            <div className="flex items-center gap-3 p-3 rounded-2xl clay-subcard border border-purple-500/20 bg-purple-50/50 dark:bg-purple-950/20 hover:scale-[1.01] transition-transform">
+            <div className="flex items-center gap-3 p-3.5 rounded-2xl clay-subcard border border-purple-500/30 bg-purple-50/70 dark:bg-purple-950/30 hover:scale-[1.01] transition-transform">
               <div className="w-10 h-10 rounded-xl bg-purple-500/15 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0 shadow-xs">
                 <CreditCard size={19} />
               </div>
               <div className="flex flex-col">
-                <span className="text-xs font-black text-[var(--text-main)]">پرداخت امن بانکی</span>
+                <span className="text-xs font-black text-zinc-900 dark:text-white">پرداخت امن بانکی</span>
                 <span className="text-[10px] text-purple-700 dark:text-purple-300 font-semibold">درگاه شاپرک و کارت‌به‌کارت</span>
               </div>
             </div>
 
-            <div className="flex items-center gap-3 p-3 rounded-2xl clay-subcard border border-amber-500/20 bg-amber-50/50 dark:bg-amber-950/20 hover:scale-[1.01] transition-transform">
+            <div className="flex items-center gap-3 p-3.5 rounded-2xl clay-subcard border border-amber-500/30 bg-amber-50/70 dark:bg-amber-950/30 hover:scale-[1.01] transition-transform">
               <div className="w-10 h-10 rounded-xl bg-amber-500/15 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 shadow-xs">
                 <Send size={19} />
               </div>
               <div className="flex flex-col">
-                <span className="text-xs font-black text-[var(--text-main)]">پشتیبانی تلگرام</span>
-                <span className="text-[10px] text-amber-700 dark:text-amber-300 font-semibold">راهنمایی و پیگیری سفارشات</span>
+                <span className="text-xs font-black text-zinc-900 dark:text-white">پشتیبانی تلگرام</span>
+                <span className="text-[10px] text-amber-700 dark:text-amber-300 font-semibold">راهنمایی و پیگیری ۲۴/۷</span>
               </div>
             </div>
           </div>
@@ -395,18 +407,55 @@ export function StoreFront() {
           </span>
         </div>
 
-        {/* Unified E-Commerce Command Bar (Search, Category, Sort, Quick Filter, View Mode) */}
-        <div className="mb-8 p-3 rounded-2xl clay-card-thick border border-[var(--card-border)] backdrop-blur-md relative z-20 shadow-sm flex flex-col lg:flex-row items-center gap-3">
-          
-          {/* 1. Live Search Input */}
-          <div className="relative flex-1 w-full clay-surface-inset rounded-xl flex items-center px-3 py-1">
+        {/* Tier 1: Category Navigation Tabs (Pills with generous breathing room & 1-click select) */}
+        <div className="mb-4 flex items-center gap-2 sm:gap-3 overflow-x-auto no-scrollbar pb-1">
+          {[
+            { id: 'all', label: 'همه محصولات', icon: Layers, count: counts.all },
+            { id: 'account', label: 'اکانت‌های اختصاصی', icon: Sparkles, count: counts.account },
+            { id: 'api', label: 'کلیدهای API', icon: Key, count: counts.api },
+            { id: 'plan', label: 'پلن‌ها و بسته‌ها', icon: Zap, count: counts.plan },
+            { id: 'package', label: 'پکیج‌های آموزشی', icon: BookOpen, count: counts.package },
+          ].map((cat) => {
+            const Icon = cat.icon;
+            const isSelected = selectedCategory === cat.id;
+            return (
+              <button
+                key={cat.id}
+                type="button"
+                onClick={() => setSelectedCategory(cat.id)}
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-bold transition-all cursor-pointer shrink-0 whitespace-nowrap ${
+                  isSelected
+                    ? 'clay-btn-primary shadow-md scale-[1.02]'
+                    : 'clay-btn text-[var(--text-muted)] hover:text-[var(--text-main)] hover:border-indigo-400/30'
+                }`}
+              >
+                <Icon size={16} className={isSelected ? 'text-white' : 'text-indigo-500'} />
+                <span>{cat.label}</span>
+                <span
+                  className={`text-[10px] px-2 py-0.5 rounded-full font-price ${
+                    isSelected
+                      ? 'bg-white/25 text-white'
+                      : 'clay-surface text-[var(--text-muted)]'
+                  }`}
+                >
+                  {usePersianDigits ? toPersianDigits(cat.count) : cat.count}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Tier 2: Search, Sort & Quick Filter Command Bar */}
+        <div className="mb-8 p-3 sm:p-4 rounded-2xl clay-card-thick border border-[var(--card-border)] shadow-md flex flex-col md:flex-row items-center justify-between gap-3 sm:gap-4">
+          {/* Live Search */}
+          <div className="relative flex-1 w-full clay-surface-inset rounded-xl flex items-center px-3 py-1.5 border border-black/5 dark:border-white/5">
             <Search className="w-4 h-4 text-[var(--text-muted)] shrink-0" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="جستجو در نام، دسته‌بندی یا ویژگی‌های ابزارها..."
-              className="w-full bg-transparent border-none py-1.5 pr-2 pl-4 text-xs font-medium text-[var(--text-main)] outline-none placeholder:text-[var(--text-dim)]"
+              placeholder="جستجو در عنوان، دسته‌بندی یا ویژگی‌های محصولات..."
+              className="w-full bg-transparent border-none py-1.5 pr-2 pl-4 text-xs sm:text-sm font-medium text-[var(--text-main)] outline-none placeholder:text-[var(--text-dim)]"
             />
             {searchQuery && (
               <button
@@ -414,140 +463,41 @@ export function StoreFront() {
                 onClick={() => setSearchQuery('')}
                 className="text-[var(--text-dim)] hover:text-[var(--text-main)] p-1 shrink-0 cursor-pointer"
               >
-                <X size={14} />
+                <X size={15} />
               </button>
             )}
           </div>
 
-          <div className="h-px w-full lg:h-8 lg:w-px clay-btn-thick hidden lg:block" />
-
-          {/* 2. Controls Group (Categories, Sort, Filter, View Mode) */}
-          <div className="flex items-center gap-2 w-full lg:w-auto overflow-x-auto no-scrollbar pb-1 lg:pb-0 flex-wrap sm:flex-nowrap">
-            
-            {/* Category Dropdown */}
-            <div className="relative shrink-0">
-              <button
-                type="button"
-                onClick={() => {
-                  setCategoryDropdownOpen(!categoryDropdownOpen);
-                  setSortDropdownOpen(false);
-                }}
-                className="h-10 px-3 rounded-xl clay-btn flex items-center gap-2 text-xs font-bold text-[var(--text-main)] hover:text-indigo-600 dark:hover:text-indigo-400 transition-all cursor-pointer"
-              >
-                <Layers size={15} className="text-indigo-500" />
-                <span>
-                  {selectedCategory === 'all' ? 'همه دسته‌ها' :
-                   selectedCategory === 'account' ? 'اکانت‌های اختصاصی' :
-                   selectedCategory === 'api' ? 'کلیدهای API' :
-                   selectedCategory === 'plan' ? 'پلن‌ها و بسته‌ها' : 'پکیج‌های آموزشی'}
-                </span>
-                <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 font-mono">
-                  {usePersianDigits ? toPersianDigits(counts[selectedCategory as keyof typeof counts] || counts.all) : (counts[selectedCategory as keyof typeof counts] || counts.all)}
-                </span>
-                <ChevronDown size={14} className={`transition-transform duration-200 ${categoryDropdownOpen ? 'rotate-180' : ''}`} />
-              </button>
-
-              {categoryDropdownOpen && (
-                <>
-                  <div className="fixed inset-0 z-40" onClick={() => setCategoryDropdownOpen(false)} />
-                  <div className="absolute right-0 top-12 z-50 w-56 rounded-2xl clay-card-thick p-2 shadow-xl border border-[var(--card-border)] animate-fadeIn">
-                    {[
-                      { id: 'all', label: 'همه محصولات', count: counts.all },
-                      { id: 'account', label: 'اکانت‌های اختصاصی', count: counts.account },
-                      { id: 'api', label: 'کلیدهای API', count: counts.api },
-                      { id: 'plan', label: 'پلن‌ها و بسته‌ها', count: counts.plan },
-                      { id: 'package', label: 'پکیج‌های آموزشی', count: counts.package },
-                    ].map((cat) => (
-                      <button
-                        key={cat.id}
-                        type="button"
-                        onClick={() => {
-                          setSelectedCategory(cat.id);
-                          setCategoryDropdownOpen(false);
-                        }}
-                        className={`w-full flex items-center justify-between p-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                          selectedCategory === cat.id
-                            ? 'clay-btn-primary text-white shadow-xs'
-                            : 'hover:bg-black/5 dark:hover:bg-white/5 text-[var(--text-main)]'
-                        }`}
-                      >
-                        <span>{cat.label}</span>
-                        <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-mono ${
-                          selectedCategory === cat.id ? 'bg-white/20 text-white' : 'bg-black/5 dark:bg-white/5 text-[var(--text-muted)]'
-                        }`}>
-                          {usePersianDigits ? toPersianDigits(cat.count) : cat.count}
-                        </span>
-                      </button>
-                    ))}
-                  </div>
-                </>
-              )}
-            </div>
-
-            {/* Sort Dropdown */}
-            <div className="relative shrink-0">
-              <button
-                type="button"
-                onClick={() => {
-                  setSortDropdownOpen(!sortDropdownOpen);
-                  setCategoryDropdownOpen(false);
-                }}
-                className="h-10 px-3 rounded-xl clay-btn flex items-center gap-2 text-xs font-bold text-[var(--text-main)] hover:text-indigo-600 dark:hover:text-indigo-400 transition-all cursor-pointer"
-              >
-                <ArrowUpDown size={14} className="text-amber-500" />
-                <span>
-                  {sortBy === 'popular' ? 'محبوب‌ترین' :
-                   sortBy === 'newest' ? 'جدیدترین' :
-                   sortBy === 'price_asc' ? 'ارزان‌ترین' : 'گران‌ترین'}
-                </span>
-                <ChevronDown size={14} className={`transition-transform duration-200 ${sortDropdownOpen ? 'rotate-180' : ''}`} />
-              </button>
-
-              {sortDropdownOpen && (
-                <>
-                  <div className="fixed inset-0 z-40" onClick={() => setSortDropdownOpen(false)} />
-                  <div className="absolute right-0 top-12 z-50 w-44 rounded-2xl clay-card-thick p-2 shadow-xl border border-[var(--card-border)] animate-fadeIn">
-                    {[
-                      { id: 'popular', label: 'محبوب‌ترین ⭐' },
-                      { id: 'newest', label: 'جدیدترین 🆕' },
-                      { id: 'price_asc', label: 'ارزان‌ترین 🟢' },
-                      { id: 'price_desc', label: 'گران‌ترین 💎' },
-                    ].map((s) => (
-                      <button
-                        key={s.id}
-                        type="button"
-                        onClick={() => {
-                          setSortBy(s.id as any);
-                          setSortDropdownOpen(false);
-                        }}
-                        className={`w-full flex items-center justify-between p-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                          sortBy === s.id
-                            ? 'clay-btn-primary text-white shadow-xs'
-                            : 'hover:bg-black/5 dark:hover:bg-white/5 text-[var(--text-main)]'
-                        }`}
-                      >
-                        <span>{s.label}</span>
-                      </button>
-                    ))}
-                  </div>
-                </>
-              )}
-            </div>
-
-            {/* Quick Instant Delivery Toggle Chip */}
+          {/* Controls: Quick Filter, Sort, View Mode */}
+          <div className="flex items-center gap-2 sm:gap-3 w-full md:w-auto justify-between md:justify-end shrink-0 flex-wrap sm:flex-nowrap">
+            {/* Instant Delivery Toggle */}
             <button
               type="button"
               onClick={() => setOnlyInstant(!onlyInstant)}
-              className={`h-10 px-3 rounded-xl flex items-center gap-1.5 text-xs font-bold transition-all cursor-pointer shrink-0 ${
+              className={`h-10 px-3.5 rounded-xl flex items-center gap-1.5 text-xs font-bold transition-all cursor-pointer shrink-0 ${
                 onlyInstant
                   ? 'clay-btn-primary bg-emerald-600 text-white shadow-xs'
                   : 'clay-btn text-[var(--text-muted)] hover:text-emerald-600 dark:hover:text-emerald-400'
               }`}
-              title="فیلتر فقط تحویل فوری"
             >
               <Zap size={14} className={onlyInstant ? 'text-yellow-300' : 'text-emerald-500'} />
               <span>تحویل فوری</span>
             </button>
+
+            {/* Sort Select */}
+            <div className="h-10 px-2.5 rounded-xl clay-surface flex items-center gap-1.5 border border-[var(--card-border)] shrink-0">
+              <ArrowUpDown size={14} className="text-amber-500 shrink-0" />
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as any)}
+                className="bg-transparent border-none text-xs font-bold text-[var(--text-main)] outline-none cursor-pointer pr-1"
+              >
+                <option value="popular" className="dark:bg-zinc-900">محبوب‌ترین ⭐</option>
+                <option value="newest" className="dark:bg-zinc-900">جدیدترین 🆕</option>
+                <option value="price_asc" className="dark:bg-zinc-900">ارزان‌ترین 🟢</option>
+                <option value="price_desc" className="dark:bg-zinc-900">گران‌ترین 💎</option>
+              </select>
+            </div>
 
             {/* View Mode Toggle (Grid / List) */}
             <div className="h-10 p-1 rounded-xl clay-surface flex items-center border border-[var(--card-border)] shrink-0">
@@ -576,7 +526,6 @@ export function StoreFront() {
                 <List size={16} />
               </button>
             </div>
-
           </div>
         </div>
 

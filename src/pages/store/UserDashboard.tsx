@@ -324,7 +324,7 @@ export const UserDashboard = () => {
               <span className="text-xl">👋</span>
             </h2>
             <p className="text-xs md:text-sm text-[#525d75] dark:text-[#9aa5bc] leading-relaxed max-w-2xl">
-              مرکز مدیریت یکپارچه حساب کاربری، مانده کیف پول، مصرف توکن‌های هوش مصنوعی و سفارش‌های فروشگاه.
+              مرکز مدیریت یکپارچه حساب کاربری، مانده کیف پول، پیگیری لایسنس‌ها و سفارش‌های فروشگاه.
             </p>
           </div>
           <div className="flex items-center gap-3 shrink-0 pt-1 md:pt-0">
@@ -826,12 +826,13 @@ export const UserDashboard = () => {
                     ) : (
                       walletData.transactions
                         .filter(tx => {
+                          if (tx.type === 'free_usage') return false;
                           if (txFilter === 'deposits') return tx.type === 'deposit' || tx.type === 'welcome_bonus';
-                          if (txFilter === 'purchases') return tx.type === 'store_purchase' || tx.type === 'chat_usage';
+                          if (txFilter === 'purchases') return tx.type === 'store_purchase';
                           return true;
                         })
                         .map(tx => {
-                          const isPurchase = tx.type === 'store_purchase' || tx.type === 'chat_usage';
+                          const isPurchase = tx.type === 'store_purchase';
                           const isBonus = tx.type === 'welcome_bonus';
 
                           return (
@@ -853,7 +854,7 @@ export const UserDashboard = () => {
                                 </div>
                                 <div>
                                   <h4 className="font-bold text-xs dark:text-white">
-                                    {tx.description || (isPurchase ? 'پرداخت سفارش فروشگاه' : 'تراکنش کیف پول')}
+                                    {tx.description || (isPurchase ? 'پرداخت سفارش فروشگاه' : isBonus ? 'بونوس هدیه ثبت‌نام' : 'شارژ کیف پول')}
                                   </h4>
                                   <div className="text-[11px] text-zinc-500 dark:text-zinc-400 flex items-center gap-2 mt-1">
                                     <span dir="ltr">
@@ -1045,7 +1046,7 @@ export const UserDashboard = () => {
               <div className="flex justify-between items-start mb-6 pb-4 border-b border-black/5 dark:border-white/5 border-dashed">
                 <div>
                   <h3 className="text-lg font-black dark:text-white flex items-center gap-2 mb-1" style={{ fontFamily: "'Estedad', sans-serif" }}>
-                    <ShoppingBag className="text-blue-500 w-5 h-5" /> چت‌باکس
+                    <ShoppingBag className="text-blue-500 w-5 h-5" /> Dastyar AI
                   </h3>
                   <p className="text-xs text-[#525d75] dark:text-[#9aa5bc]">فاکتور کالا و خدمات دیجیتال</p>
                 </div>

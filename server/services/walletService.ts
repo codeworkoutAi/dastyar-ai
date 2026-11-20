@@ -525,7 +525,7 @@ export function getUserTransactions(userId: number, limit: number = 50): any[] {
   try {
     return db.prepare(`
       SELECT * FROM wallet_transactions 
-      WHERE userId = ? 
+      WHERE userId = ? AND type != 'free_usage'
       ORDER BY createdAt DESC 
       LIMIT ?
     `).all(userId, limit);
