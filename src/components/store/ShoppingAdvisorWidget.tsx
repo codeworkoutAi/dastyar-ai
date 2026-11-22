@@ -379,7 +379,9 @@ export const ShoppingAdvisorWidget: React.FC<ShoppingAdvisorWidgetProps> = ({
                     <span className="text-[11px] font-black text-indigo-600 dark:text-indigo-400 block">
                       پیشنهاد متناسب با نیاز شما:
                     </span>
-                    {m.products.map(prod => (
+                    {m.products.map(prod => {
+                      const isProdOutOfStock = prod.status === 'out_of_stock' || (prod.stock !== undefined && prod.stock <= 0);
+                      return (
                       <div
                         key={prod.id}
                         className="p-3 rounded-xl clay-card border border-[var(--card-border)] flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 hover:scale-[1.01] transition-transform"
@@ -387,11 +389,15 @@ export const ShoppingAdvisorWidget: React.FC<ShoppingAdvisorWidgetProps> = ({
                         <div className="min-w-0">
                           <div className="flex items-center gap-1.5 flex-wrap">
                             <h4 className="font-bold text-xs text-[var(--text-main)]">{prod.title}</h4>
-                            {prod.badge && (
+                            {isProdOutOfStock ? (
+                              <span className="text-[9px] px-1.5 py-0.5 rounded-md bg-red-500/15 text-red-600 dark:text-red-400 font-bold">
+                                ناموجود
+                              </span>
+                            ) : prod.badge ? (
                               <span className="text-[9px] px-1.5 py-0.5 rounded-md bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 font-bold">
                                 {prod.badge}
                               </span>
-                            )}
+                            ) : null}
                           </div>
                           <span className="text-xs font-black text-[var(--color-accent-primary)] block mt-1 font-price">
                             {usePersianDigits ? toPersianDigits(prod.price.toLocaleString('fa-IR')) : prod.price.toLocaleString('fa-IR')} تومان
@@ -399,14 +405,25 @@ export const ShoppingAdvisorWidget: React.FC<ShoppingAdvisorWidgetProps> = ({
                         </div>
                         <button
                           onClick={() => handleProductClick(prod)}
-                          className="px-3.5 py-1.5 clay-btn-primary font-bold text-xs rounded-xl shrink-0 flex items-center justify-center gap-1.5 shadow-xs cursor-pointer hover:scale-105 transition-all w-full sm:w-auto"
+                          className={`px-3.5 py-1.5 font-bold text-xs rounded-xl shrink-0 flex items-center justify-center gap-1.5 shadow-xs cursor-pointer hover:scale-105 transition-all w-full sm:w-auto ${
+                            isProdOutOfStock ? 'clay-btn text-[var(--text-muted)]' : 'clay-btn-primary'
+                          }`}
                         >
-                          <ShoppingBag size={13} />
-                          <span>مشاهده و خرید</span>
-                          <ArrowLeft size={13} />
+                          {isProdOutOfStock ? (
+                            <>
+                              <span>مشاهده جزئیات</span>
+                              <ArrowLeft size={13} />
+                            </>
+                          ) : (
+                            <>
+                              <ShoppingBag size={13} />
+                              <span>مشاهده و خرید</span>
+                              <ArrowLeft size={13} />
+                            </>
+                          )}
                         </button>
                       </div>
-                    ))}
+                    );})}
                   </div>
                 )}
               </div>

@@ -158,7 +158,7 @@ router.post('/products', (req, res) => {
   try {
     const { 
       title, description, longDescription, faqs, price, category, image, bannerImage, baseUrl, deliveryGuide,
-      badge, features, tokenEstimate, isPopular, showOnLanding, variations, deliveryTime, deliveryType
+      badge, features, tokenEstimate, isPopular, showOnLanding, variations, deliveryTime, deliveryType, status
     } = req.body;
     
     if (!title || price === undefined || price === null || !category) {
@@ -168,8 +168,8 @@ router.post('/products', (req, res) => {
     const stmt = db.prepare(`
       INSERT INTO products (
         title, description, longDescription, faqs, price, category, image, bannerImage, baseUrl, deliveryGuide,
-        badge, features, tokenEstimate, isPopular, showOnLanding, variations, deliveryTime, deliveryType
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        badge, features, tokenEstimate, isPopular, showOnLanding, variations, deliveryTime, deliveryType, status
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
     const info = stmt.run(
       title,
@@ -189,7 +189,8 @@ router.post('/products', (req, res) => {
       showOnLanding === false ? 0 : 1,
       variations || null,
       deliveryTime || '۱ تا ۲۴ ساعت کاری',
-      deliveryType || 'hybrid'
+      deliveryType || 'hybrid',
+      status || 'active'
     );
     syncDatabase();
     clearSitemapCache();
@@ -208,7 +209,7 @@ router.put('/products/:id', (req, res) => {
     const { id } = req.params;
     const { 
       title, description, longDescription, faqs, price, category, image, bannerImage, baseUrl, deliveryGuide,
-      badge, features, tokenEstimate, isPopular, showOnLanding, variations, deliveryTime, deliveryType
+      badge, features, tokenEstimate, isPopular, showOnLanding, variations, deliveryTime, deliveryType, status
     } = req.body;
     
     if (!title || price === undefined || price === null || !category) {
@@ -225,7 +226,7 @@ router.put('/products/:id', (req, res) => {
         title = ?, description = ?, longDescription = ?, faqs = ?, price = ?, category = ?, 
         image = ?, bannerImage = ?, baseUrl = ?, deliveryGuide = ?,
         badge = ?, features = ?, tokenEstimate = ?, isPopular = ?, showOnLanding = ?,
-        variations = ?, deliveryTime = ?, deliveryType = ?
+        variations = ?, deliveryTime = ?, deliveryType = ?, status = COALESCE(?, status)
       WHERE id = ?
     `);
     stmt.run(
@@ -247,6 +248,7 @@ router.put('/products/:id', (req, res) => {
       variations || null,
       deliveryTime || '۱ تا ۲۴ ساعت کاری',
       deliveryType || 'hybrid',
+      status || null,
       id
     );
     syncDatabase();
@@ -363,10 +365,10 @@ router.get('/products/:productId/licenses', (req, res) => {
   }
 });
 
-// POST /api/admin/products/:productId/licenses
+// POST /api/admin/products/:productId/licenses & batch
 // NOTE: db.transaction() is NOT supported in libsql embedded replica (syncUrl) mode.
 // We insert each license individually and call syncDatabase() once at the end.
-router.post('/products/:productId/licenses', (req, res) => {
+const handleAddLicenses = (req: any, res: any) => {
   try {
     const { productId } = req.params;
     const { keys } = req.body; // array of strings
@@ -375,7 +377,7 @@ router.post('/products/:productId/licenses', (req, res) => {
       return res.status(400).json({ error: 'لیست لایسنس‌ها نامعتبر است' });
     }
 
-    const checkProduct = db.prepare('SELECT id FROM products WHERE id = ?').get(productId);
+    const checkProduct = db.prepare('SELECT id, status FROM products WHERE id = ?').get(productId) as any;
     if (!checkProduct) {
       return res.status(404).json({ error: 'محصول یافت نشد.' });
     }
@@ -390,6 +392,11 @@ router.post('/products/:productId/licenses', (req, res) => {
       }
     }
 
+    if (inserted > 0) {
+      // If product was out_of_stock, automatically activate it when new licenses are added
+      db.prepare("UPDATE products SET status = 'active' WHERE id = ? AND status = 'out_of_stock'").run(productId);
+    }
+
     // Sync all inserts to Turso Cloud in one go
     syncDatabase();
 
@@ -398,7 +405,10 @@ router.post('/products/:productId/licenses', (req, res) => {
     console.error('[Admin API] Error adding licenses:', error);
     res.status(500).json({ error: 'خطا در ثبت لایسنس‌ها' });
   }
-});
+};
+
+router.post('/products/:productId/licenses', handleAddLicenses);
+router.post('/products/:productId/licenses/batch', handleAddLicenses);
 
 // DELETE /api/admin/licenses/:id
 router.delete('/licenses/:id', (req, res) => {

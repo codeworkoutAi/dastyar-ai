@@ -29,6 +29,14 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ product, isOpen, o
   const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; discountPercent: number; discountAmount: number } | null>(null);
   const [couponError, setCouponError] = useState<string | null>(null);
 
+  const isOutOfStock = Boolean(
+    product && (
+      product.status === 'out_of_stock' || 
+      product.status === 'inactive' || 
+      (product.category !== 'wallet_topup' && product.stock !== undefined && product.stock <= 0)
+    )
+  );
+
   const effectivePrice = selectedVariation && typeof selectedVariation.price === 'number'
     ? selectedVariation.price 
     : (product?.price || 0);
@@ -79,6 +87,10 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ product, isOpen, o
   if (!isOpen || !product) return null;
 
   const handleCheckout = async () => {
+    if (isOutOfStock) {
+      setError('این محصول در حال حاضر ناموجود است و امکان ثبت سفارش وجود ندارد.');
+      return;
+    }
     try {
       setLoading(true);
       setError(null);
@@ -118,6 +130,10 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ product, isOpen, o
   };
 
   const handleManualCheckout = async () => {
+    if (isOutOfStock) {
+      setError('این محصول در حال حاضر ناموجود است و امکان ثبت سفارش وجود ندارد.');
+      return;
+    }
     if (isBazaar) {
       setError('این روش پرداخت در نسخه کافه‌بازار پشتیبانی نمی‌شود.');
       return;
@@ -342,9 +358,14 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ product, isOpen, o
 
  {/* Sticky Modal Footer - Always 100% visible on any screen height! */}
  <div className="p-4 sm:p-5 pt-3 border-t border-[var(--card-border)] bg-[var(--card-bg)] backdrop-blur-md shrink-0 flex flex-col gap-2">
+ {isOutOfStock && (
+ <div className="p-2.5 rounded-xl bg-red-500/10 border border-red-500/20 text-center text-xs font-bold text-red-600 dark:text-red-400">
+ ⚠️ این محصول در حال حاضر ناموجود است و امکان ثبت سفارش یا پرداخت وجود ندارد.
+ </div>
+ )}
  {(paymentMethod === 'online' || isBazaar) ? (
  <button onClick={handleCheckout}
- disabled={loading}
+ disabled={loading || isOutOfStock}
  className="w-full py-3 clay-btn-primary text-sm sm:text-base font-bold rounded-xl transition-colors flex items-center justify-center gap-2 disabled:opacity-50 shadow-sm hover:shadow"
  >
  {loading ? (
@@ -352,17 +373,21 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ product, isOpen, o
  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
  در حال انتقال به درگاه...
  </>
+ ) : isOutOfStock ? (
+ 'این محصول ناموجود است'
  ) : (
  'تایید و انتقال به درگاه پرداخت'
  )}
  </button>
  ) : (
  <button onClick={handleManualCheckout}
- disabled={loading || !trackingNumber.trim()}
+ disabled={loading || isOutOfStock || !trackingNumber.trim()}
  className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white text-sm sm:text-base font-bold rounded-xl transition-colors flex items-center justify-center gap-2 disabled:opacity-50 shadow-sm hover:shadow"
  >
  {loading ? (
  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+ ) : isOutOfStock ? (
+ 'این محصول ناموجود است'
  ) : (
  'ثبت پرداخت و ارسال فیش در تلگرام'
  )}

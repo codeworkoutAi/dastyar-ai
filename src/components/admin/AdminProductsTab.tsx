@@ -31,6 +31,7 @@ interface ProductFormData {
   title: string;
   price: string;
   category: string;
+  status: 'active' | 'out_of_stock' | 'inactive';
   description: string;
   longDescription: string;
   faqs: FaqItem[];
@@ -52,6 +53,7 @@ const INITIAL_FORM_DATA: ProductFormData = {
   title: '',
   price: '',
   category: 'account',
+  status: 'active',
   description: '',
   longDescription: '',
   faqs: [],
@@ -212,6 +214,7 @@ export const AdminProductsTab: React.FC = () => {
       title: product.title || '',
       price: product.price ? String(product.price) : '',
       category: product.category || 'account',
+      status: (product.status || 'active') as any,
       description: product.description || '',
       longDescription: product.long_description || '',
       faqs: parsedFaqs,
@@ -262,6 +265,7 @@ export const AdminProductsTab: React.FC = () => {
       title: formData.title.trim(),
       price: cleanPrice,
       category: formData.category,
+      status: formData.status,
       description: formData.description.trim(),
       long_description: formData.longDescription.trim(),
       faqs: formData.faqs,
@@ -270,6 +274,7 @@ export const AdminProductsTab: React.FC = () => {
       base_url: formData.baseUrl.trim(),
       delivery_guide: formData.deliveryGuide.trim(),
       delivery_time: formData.deliveryTime.trim(),
+      delivery_type: formData.deliveryType,
       badge: formData.badge.trim(),
       features: featuresArray,
       token_estimate: formData.tokenEstimate.trim(),
@@ -505,7 +510,7 @@ export const AdminProductsTab: React.FC = () => {
                 </div>
 
                 {/* Price and Delivery */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4">
                   <div className="space-y-1.5">
                     <label className="text-xs font-semibold text-[var(--text-muted)]">قیمت پایه (تومان) *</label>
                     <input
@@ -516,6 +521,19 @@ export const AdminProductsTab: React.FC = () => {
                       placeholder="مثال: ۱۲۰۰۰۰۰"
                       className="clay-input w-full px-3.5 py-2.5 rounded-xl text-sm"
                     />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-[var(--text-muted)]">وضعیت موجودی و فروش</label>
+                    <select
+                      value={formData.status}
+                      onChange={e => updateFormField('status', e.target.value as any)}
+                      className="clay-input w-full px-3.5 py-2.5 rounded-xl text-sm font-bold"
+                    >
+                      <option value="active">فعال و در حال فروش</option>
+                      <option value="out_of_stock">ناموجود (غیرقابل خرید)</option>
+                      <option value="inactive">غیرفعال (مخفی)</option>
+                    </select>
                   </div>
 
                   <div className="space-y-1.5">
@@ -921,10 +939,19 @@ export const AdminProductsTab: React.FC = () => {
                             {product.title}
                           </h4>
                           <span className="inline-block text-[10px] px-2 py-0.5 rounded-md clay-surface text-[var(--text-muted)]">
-                            {product.category === 'account' ? 'اکانت اشتراکی' : 
+                            {product.category === 'account' ? 'اکانت هوش مصنوعی' : 
                              product.category === 'api' ? 'کلید API' : 
                              product.category === 'license' ? 'لایسنس' : 'اعتبار'}
                           </span>
+                          {product.status === 'out_of_stock' || product.stock <= 0 ? (
+                            <span className="inline-block text-[10px] px-2 py-0.5 rounded-md bg-red-500/10 text-red-500 font-bold border border-red-500/20 mr-1.5">
+                              ناموجود ({product.stock || 0} لایسنس)
+                            </span>
+                          ) : (
+                            <span className="inline-block text-[10px] px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-500 font-bold border border-emerald-500/20 mr-1.5">
+                              موجود ({product.stock} لایسنس)
+                            </span>
+                          )}
                         </div>
 
                         {product.badge && (

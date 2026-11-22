@@ -198,11 +198,16 @@ router.post('/advisor', advisorLimiter, async (req, res) => {
 
     const cleanMsg = message.trim().slice(0, 500);
 
-    // Fetch active products safely
+    // Fetch products safely with available stock count
     const products = db.prepare(`
-      SELECT id, title, category, price, variations, description, features, deliveryTime, badge
-      FROM products
-      WHERE status = 'active' OR status IS NULL
+      SELECT 
+        p.*,
+        COUNT(CASE WHEN l.status = 'available' THEN 1 END) as stock
+      FROM products p 
+      LEFT JOIN licenses l ON p.id = l.productId
+      WHERE (p.category IS NULL OR p.category != 'wallet_topup') AND (p.status != 'inactive' OR p.status IS NULL)
+      GROUP BY p.id
+      ORDER BY p.id DESC
     `).all() as any[];
 
     const catalogSummary = products.map(p => {
@@ -215,7 +220,9 @@ router.post('/advisor', advisorLimiter, async (req, res) => {
           }
         }
       } catch (_) {}
-      return `- [ID: ${p.id}] «${p.title}» (دسته: ${p.category}) - قیمت پایه: ${Number(p.price).toLocaleString('fa-IR')} تومان ${vars ? `[پلن‌ها: ${vars}]` : ''} - زمان تحویل: ${p.deliveryTime || '۱ تا ۲۴ ساعت'} - ویژگی‌ها: ${(p.features || p.description || '').replace(/\n/g, ' ')}`;
+      const isOutOfStock = p.status === 'out_of_stock' || p.stock <= 0;
+      const stockText = isOutOfStock ? 'وضعیت: در حال حاضر ناموجود (به زودی شارژ می‌شود)' : `وضعیت: موجود (${p.stock} لایسنس آماده)`;
+      return `- [ID: ${p.id}] «${p.title}» (دسته: ${p.category}) - قیمت پایه: ${Number(p.price).toLocaleString('fa-IR')} تومان ${vars ? `[پلن‌ها: ${vars}]` : ''} - زمان تحویل: ${p.deliveryTime || '۱ تا ۲۴ ساعت'} - ${stockText} - ویژگی‌ها: ${(p.features || p.description || '').replace(/\n/g, ' ')}`;
     }).join('\n');
 
     let currentContext = '';
@@ -263,7 +270,8 @@ ${currentContext}
 ۲. مستقیماً به سوال مشتری پاسخ دهید و بهترین اکانت یا ابزار متناسب با نیازش را از کاتالوگ معرفی کنید.
 ۳. برای هر محصولی که پیشنهاد می‌دهید، تگ [RECOMMEND:ID] آن محصول را درج کنید تا کارت خرید نمایش داده شود.
 ۴. ویژگی‌های برجسته مانند زمان تحویل، ضمانت و نوع پلن را واضح توضیح دهید.
-۵. پاسخ را فوراً با متن فارسی شروع کنید و از درج هرگونه عبارت انگلیسی، متادیتا یا بررسی قوانین خودداری کنید.`;
+۵. پاسخ را فوراً با متن فارسی شروع کنید و از درج هرگونه عبارت انگلیسی، متادیتا یا بررسی قوانین خودداری کنید.
+۶. اگر محصولی در وضعیت ناموجود است و کاربر قصد خرید دارد، محترمانه توضیح دهید که موجودی به زودی شارژ خواهد شد یا می‌تواند برای استعلام زمان دقیق به پشتیبانی تلگرام پیام دهد.`;
 
     let reply = '';
 
@@ -430,7 +438,9 @@ ${currentContext}
         price: p.price,
         badge: p.badge,
         category: p.category,
-        deliveryTime: p.deliveryTime
+        deliveryTime: p.deliveryTime,
+        status: p.status,
+        stock: p.stock
       }));
 
     res.json({
@@ -567,8 +577,9 @@ router.post('/checkout', checkoutLimiter, requireAuth, async (req: any, res) => 
       return res.status(404).json({ error: 'محصول پیدا نشد' });
     }
 
-    if (product.status === 'out_of_stock' || product.status === 'inactive') {
-      return res.status(400).json({ error: 'این محصول در حال حاضر غیرفعال یا ناموجود است' });
+    const isOutOfStock = product.status === 'out_of_stock' || product.status === 'inactive' || (product.category !== 'wallet_topup' && (product.stock !== undefined && product.stock <= 0));
+    if (isOutOfStock) {
+      return res.status(400).json({ error: 'این محصول در حال حاضر ناموجود است و امکان ثبت سفارش یا پرداخت وجود ندارد.' });
     }
 
     if (product.deliveryType === 'instant' && product.stock <= 0) {
@@ -712,8 +723,9 @@ router.post('/checkout-manual', checkoutLimiter, requireAuth, (req: any, res) =>
     `).get(productId) as any;
 
     if (!product) return res.status(404).json({ error: 'محصول پیدا نشد' });
-    if (product.status === 'out_of_stock' || product.status === 'inactive') {
-      return res.status(400).json({ error: 'این محصول در حال حاضر غیرفعال یا ناموجود است' });
+    const isOutOfStock = product.status === 'out_of_stock' || product.status === 'inactive' || (product.category !== 'wallet_topup' && (product.stock !== undefined && product.stock <= 0));
+    if (isOutOfStock) {
+      return res.status(400).json({ error: 'این محصول در حال حاضر ناموجود است و امکان ثبت سفارش وجود ندارد.' });
     }
     if (product.deliveryType === 'instant' && product.stock <= 0) {
       return res.status(400).json({ error: 'موجودی لایسنس آنی این محصول به اتمام رسیده است' });

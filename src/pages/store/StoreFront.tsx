@@ -781,7 +781,9 @@ export function StoreFront() {
                     <div className="flex items-center gap-2">
                       <button
                         type="button"
+                        disabled={p.status === 'out_of_stock' || (p.stock !== undefined && p.stock <= 0)}
                         onClick={() => {
+                          if (p.status === 'out_of_stock' || (p.stock !== undefined && p.stock <= 0)) return;
                           if (!user) {
                             sessionStorage.setItem('pending_checkout', JSON.stringify({ productId: p.id }));
                             window.dispatchEvent(new CustomEvent('open-auth-modal'));
@@ -789,10 +791,10 @@ export function StoreFront() {
                           }
                           setSelectedProduct(p);
                         }}
-                        className="py-2 px-4 clay-btn-primary font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 shadow-sm hover:scale-[1.02] transition-transform cursor-pointer"
+                        className="py-2 px-4 clay-btn-primary font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 shadow-sm hover:scale-[1.02] transition-transform disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                       >
                         <ShoppingBag size={14} />
-                        <span>خرید سریع</span>
+                        <span>{p.status === 'out_of_stock' || (p.stock !== undefined && p.stock <= 0) ? 'ناموجود' : 'خرید سریع'}</span>
                       </button>
 
                       <button
@@ -867,18 +869,22 @@ export function StoreFront() {
                       {p.category === 'plan' ? 'پلن تعرفه' : p.category === 'api' ? 'کلید API' : p.category === 'account' ? 'اکانت پرمیوم' : 'پکیج دانلودی'}
                     </span>
 
-                    {/* Popular / Special Badge */}
-                    {p.badge && (
+                    {/* Popular / Special / Out of Stock Badge */}
+                    {p.status === 'out_of_stock' || (p.stock !== undefined && p.stock <= 0) ? (
+                      <span className="absolute top-2.5 left-2.5 text-[10px] font-black px-2 py-0.5 bg-red-500/90 text-white rounded-full shadow-xs">
+                        ناموجود
+                      </span>
+                    ) : p.badge ? (
                       <span className="absolute top-2.5 left-2.5 text-[10px] font-black px-2 py-0.5 bg-[var(--color-accent-primary)] text-white rounded-full shadow-xs">
                         {p.badge}
                       </span>
-                    )}
+                    ) : null}
 
                     {/* Subtle Hover Action Overlay */}
                     <div className="absolute inset-0 bg-black/25 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center pointer-events-none">
                       <span className="px-3 py-1.5 rounded-xl bg-white/95 dark:bg-zinc-900/95 text-zinc-900 dark:text-zinc-100 text-xs font-bold shadow-lg flex items-center gap-1.5 transform translate-y-1 group-hover:translate-y-0 transition-transform duration-300">
-                        <span>مشاهده و سفارش</span>
-                        <ChevronLeft size={13} className="text-indigo-600 dark:text-indigo-400" />
+                        <span>{p.status === 'out_of_stock' || (p.stock !== undefined && p.stock <= 0) ? 'ناموجود' : 'مشاهده و سفارش'}</span>
+                        <ChevronLeft size={13} className={p.status === 'out_of_stock' || (p.stock !== undefined && p.stock <= 0) ? 'text-red-500' : 'text-indigo-600 dark:text-indigo-400'} />
                       </span>
                     </div>
                   </div>
@@ -904,10 +910,16 @@ export function StoreFront() {
                         </span>
                       </div>
 
-                      <span className="text-xs sm:text-[11px] font-bold text-indigo-600 dark:text-indigo-400 flex items-center gap-0.5 shrink-0 group-hover:-translate-x-1 transition-transform">
-                        <span>مشاهده</span>
-                        <ChevronLeft size={13} />
-                      </span>
+                      {p.status === 'out_of_stock' || (p.stock !== undefined && p.stock <= 0) ? (
+                        <span className="text-xs sm:text-[11px] font-bold text-red-500 flex items-center gap-0.5 shrink-0">
+                          <span>ناموجود</span>
+                        </span>
+                      ) : (
+                        <span className="text-xs sm:text-[11px] font-bold text-indigo-600 dark:text-indigo-400 flex items-center gap-0.5 shrink-0 group-hover:-translate-x-1 transition-transform">
+                          <span>مشاهده</span>
+                          <ChevronLeft size={13} />
+                        </span>
+                      )}
                     </div>
                   </div>
                 </Link>

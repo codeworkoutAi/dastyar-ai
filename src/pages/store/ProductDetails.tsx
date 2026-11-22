@@ -131,7 +131,7 @@ export function ProductDetails() {
             url: canonicalProductUrl,
             price: (found.price || 0) * 10,
             priceCurrency: 'IRR',
-            availability: found.status === 'out_of_stock' ? 'https://schema.org/OutOfStock' : 'https://schema.org/InStock',
+            availability: (found.status === 'out_of_stock' || (found.stock !== undefined && found.stock <= 0)) ? 'https://schema.org/OutOfStock' : 'https://schema.org/InStock',
             priceValidUntil: '2028-12-31'
           }
         };
@@ -255,7 +255,16 @@ export function ProductDetails() {
     ? `${effectivePrice.toLocaleString('fa-IR')} تومان` 
     : 'رایگان';
 
+  const isOutOfStock = Boolean(
+    product && (
+      product.status === 'out_of_stock' || 
+      product.status === 'inactive' || 
+      (product.stock !== undefined && product.stock <= 0)
+    )
+  );
+
   const handleBuyClick = () => {
+    if (isOutOfStock) return;
     if (!user) {
       sessionStorage.setItem('pending_checkout', JSON.stringify({
         productId: product.id,
@@ -402,8 +411,8 @@ export function ProductDetails() {
 
                 <div className="flex items-center justify-between text-xs font-bold p-3 bg-[var(--color-input-bg)] rounded-xl border border-[var(--card-border)]">
                   <span className="text-[var(--color-text-muted)]">وضعیت موجودی:</span>
-                  <span className={product.status === 'out_of_stock' ? 'text-red-500' : 'text-emerald-500'}>
-                    {product.status === 'out_of_stock' 
+                  <span className={isOutOfStock ? 'text-red-500 font-bold' : 'text-emerald-500'}>
+                    {isOutOfStock 
                       ? 'ناموجود' 
                       : (product.stock > 0 ? 'موجود (تحویل آنی)' : 'موجود و آماده فعال‌سازی')}
                   </span>
@@ -419,10 +428,10 @@ export function ProductDetails() {
 
               <button 
                 onClick={handleBuyClick}
-                disabled={product.status === 'out_of_stock' || (product.deliveryType === 'instant' && product.stock <= 0)}
+                disabled={isOutOfStock}
                 className="w-full clay-btn-primary py-4 text-base shadow-xl disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer font-black"
               >
-                {product.status === 'out_of_stock' || (product.deliveryType === 'instant' && product.stock <= 0)
+                {isOutOfStock
                   ? 'ناموجود' 
                   : (product.stock > 0 ? 'خرید آنلاین و تحویل آنی' : 'خرید آنلاین و ثبت سفارش')}
               </button>
@@ -694,12 +703,12 @@ export function ProductDetails() {
             <button
               type="button"
               onClick={handleBuyClick}
-              disabled={product.status === 'out_of_stock' || (product.deliveryType === 'instant' && product.stock <= 0)}
+              disabled={isOutOfStock}
               className="flex-1 max-w-[220px] py-2.5 px-4 clay-btn-primary font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 shadow-md disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
             >
               <Zap size={14} />
               <span>
-                {product.status === 'out_of_stock' || (product.deliveryType === 'instant' && product.stock <= 0)
+                {isOutOfStock
                   ? 'ناموجود'
                   : (product.stock > 0 ? 'خرید آنلاین و تحویل آنی' : 'خرید آنلاین و ثبت')}
               </span>
