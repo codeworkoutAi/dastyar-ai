@@ -2,6 +2,7 @@ import express from 'express';
 import path from 'path';
 import fs from 'fs';
 import db from '../db/database';
+import { toProductSlug } from './slugUtils';
 
 const TEMPLATE_CACHE = new Map<string, string>();
 const INTERNAL_NAV_CACHE = new Map<string, { itemsHtml: string; expiresAt: number }>();
@@ -9,7 +10,19 @@ const STATIC_HTML_CACHE = new Map<string, { html: string; expiresAt: number }>()
 
 const INTERNAL_NAV_TTL_MS = 5 * 60 * 1000; // 5 minutes
 const STATIC_HTML_TTL_MS = 2 * 60 * 1000;  // 2 minutes
-const STATIC_SEO_PATHS = new Set(['/', '/landing', '/about', '/contact', '/ai-assistant']);
+const STATIC_SEO_PATHS = new Set([
+  '/', 
+  '/landing', 
+  '/about', 
+  '/contact', 
+  '/ai-assistant', 
+  '/chat', 
+  '/store', 
+  '/store/category/account', 
+  '/store/category/api', 
+  '/store/category/plan', 
+  '/store/category/package'
+]);
 
 export function invalidateSeoHtmlCache(): void {
   TEMPLATE_CACHE.clear();
@@ -123,13 +136,15 @@ export async function renderHtmlWithSeo(req: express.Request, res: express.Respo
 
     // Check /blog/:id or /blog/:slug
     const blogMatch = urlPath.match(/^\/blog\/([a-zA-Z0-9\-_]+)$/);
-    const productMatch = urlPath.match(/^\/store\/product\/(\d+)$/);
+    const productMatch = urlPath.match(/^\/store\/product\/(\d+)(?:\/[^\/]+)?$/);
     
     if (productMatch) {
       const pId = parseInt(productMatch[1], 10);
       try {
         const product = db.prepare("SELECT * FROM products WHERE id = ?").get(pId) as any;
         if (product) {
+          const productSlug = toProductSlug(product.title);
+          canonicalUrl = `${baseUrl}/store/product/${product.id}/${productSlug}`;
           pageTitle = `خرید ${product.title} | Dastyar AI`;
           pageDesc = product.description || product.title;
           pageType = 'product';
@@ -140,6 +155,14 @@ export async function renderHtmlWithSeo(req: express.Request, res: express.Respo
 
           const isAvailable = (product.stock == null || product.stock > 0 || product.category === 'plan' || product.category === 'package') ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock';
           
+          const categoryNames: Record<string, string> = {
+            account: 'اکانت‌های اختصاصی',
+            api: 'کلیدهای API',
+            plan: 'پلن‌ها و بسته‌ها',
+            package: 'پکیج‌های آموزشی'
+          };
+          const categoryName = categoryNames[product.category] || 'محصولات';
+
           structuredData = {
             '@context': 'https://schema.org',
             '@type': 'Product',
@@ -158,6 +181,15 @@ export async function renderHtmlWithSeo(req: express.Request, res: express.Respo
               price: (product.price || 0) * 10,
               availability: isAvailable,
               itemCondition: 'https://schema.org/NewCondition'
+            },
+            breadcrumb: {
+              '@type': 'BreadcrumbList',
+              itemListElement: [
+                { '@type': 'ListItem', position: 1, name: 'خانه', item: `${baseUrl}/` },
+                { '@type': 'ListItem', position: 2, name: 'فروشگاه', item: `${baseUrl}/store` },
+                { '@type': 'ListItem', position: 3, name: categoryName, item: `${baseUrl}/store/category/${product.category}` },
+                { '@type': 'ListItem', position: 4, name: product.title, item: canonicalUrl }
+              ]
             }
           };
 
@@ -271,6 +303,82 @@ export async function renderHtmlWithSeo(req: express.Request, res: express.Respo
       } else if (urlPath === '/blog') {
         pageTitle = 'مجله اخبار و مقالات هوش مصنوعی | Dastyar AI';
         pageDesc = 'آخرین اخبار هوش مصنوعی، آموزش پرامپت نویسی، معرفی ابزارها و مقالات تخصصی AI به زبان فارسی در مجله دستیار هوشمند.';
+      } else if (urlPath.startsWith('/store/category/')) {
+        const catMatch = urlPath.match(/^\/store\/category\/([a-zA-Z0-9\-_]+)$/);
+        if (catMatch) {
+          const category = catMatch[1];
+          const categoryMeta: Record<string, { title: string; description: string; name: string }> = {
+            account: {
+              title: 'خرید اکانت قانونی و اشتراک پرمیوم هوش مصنوعی | Dastyar AI',
+              description: 'خرید انواع اکانت قانونی و اشتراک پرمیوم ابزارهای پیشرفته هوش مصنوعی با تحویل فوری، پشتیبانی و گارانتی تعویض در فروشگاه Dastyar AI.',
+              name: 'اکانت‌های اختصاصی'
+            },
+            api: {
+              title: 'خرید کلید API و کردیت اختصاصی توسعه‌دهندگان هوش مصنوعی | Dastyar AI',
+              description: 'خرید کلیدهای API اختصاصی و کردیت‌های پرسرعت برنامه‌نویسی و اتصال به محیط‌های توسعه هوش مصنوعی با ضمانت اصالت در Dastyar AI.',
+              name: 'کلیدهای API'
+            },
+            plan: {
+              title: 'خرید پلن‌ها و بسته‌های اعتباری هوش مصنوعی | Dastyar AI',
+              description: 'شارژ کیف پول و خرید پلن‌ها و بسته‌های اعتباری هوش مصنوعی بدون انقضا با فعال‌سازی آنی در فروشگاه Dastyar AI.',
+              name: 'پلن‌ها و بسته‌ها'
+            },
+            package: {
+              title: 'پکیج‌ها و دوره‌های کاربردی هوش مصنوعی | Dastyar AI',
+              description: 'جامع‌ترین پکیج‌ها و دوره‌های آموزشی و کاربردی هوش مصنوعی برای ارتقای مهارت‌ها و کسب‌وکار در Dastyar AI.',
+              name: 'پکیج‌های آموزشی'
+            }
+          };
+
+          const currentCatInfo = categoryMeta[category] || {
+            title: 'دسته‌بندی ابزارها و اکانت‌های هوش مصنوعی | Dastyar AI',
+            description: 'خرید اکانت‌های قانونی و ابزارهای هوش مصنوعی با تحویل سریع و ضمانت کامل.',
+            name: 'دسته‌بندی'
+          };
+
+          pageTitle = currentCatInfo.title;
+          pageDesc = currentCatInfo.description;
+          canonicalUrl = `${baseUrl}/store/category/${category}`;
+
+          let catProducts: any[] = [];
+          try {
+            catProducts = db.prepare('SELECT id, title, price FROM products WHERE category = ? AND (status = "active" OR status IS NULL) ORDER BY id DESC').all(category) as any[];
+          } catch (_) {}
+
+          structuredData = {
+            '@context': 'https://schema.org',
+            '@graph': [
+              {
+                '@type': 'CollectionPage',
+                name: currentCatInfo.name,
+                description: pageDesc,
+                url: canonicalUrl,
+                mainEntity: {
+                  '@type': 'OfferCatalog',
+                  name: currentCatInfo.name,
+                  itemListElement: catProducts.map((p) => ({
+                    '@type': 'Offer',
+                    itemOffered: {
+                      '@type': 'Product',
+                      name: p.title,
+                      url: `${baseUrl}/store/product/${p.id}/${toProductSlug(p.title)}`
+                    },
+                    price: (p.price || 0) * 10,
+                    priceCurrency: 'IRR'
+                  }))
+                }
+              },
+              {
+                '@type': 'BreadcrumbList',
+                itemListElement: [
+                  { '@type': 'ListItem', position: 1, name: 'خانه', item: `${baseUrl}/` },
+                  { '@type': 'ListItem', position: 2, name: 'فروشگاه', item: `${baseUrl}/store` },
+                  { '@type': 'ListItem', position: 3, name: currentCatInfo.name, item: canonicalUrl }
+                ]
+              }
+            ]
+          };
+        }
       } else if (urlPath.startsWith('/store/')) {
         const storeMatch = urlPath.match(/^\/store\/(\d+)$/);
         if (storeMatch) {

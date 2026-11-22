@@ -17,6 +17,7 @@ const TagArchive = lazy(() => import('./pages/blog/TagArchive').then(m => ({ def
 const AboutPage = lazy(() => import('./pages/about/AboutPage'));
 const ContactPage = lazy(() => import('./pages/contact/ContactPage'));
 const AiAssistantPage = lazy(() => import('./pages/ai-assistant/AiAssistantPage'));
+const ChatLandingPage = lazy(() => import('./pages/chat/ChatLandingPage'));
 
 // Lazy-loaded Modals and Widgets
 const ShoppingAdvisorWidget = lazy(() => import('./components/store/ShoppingAdvisorWidget').then(m => ({ default: m.ShoppingAdvisorWidget })));
@@ -152,9 +153,11 @@ export default function App() {
         <Routes>
           <Route path="/" element={<StoreFront />} />
           <Route path="/landing" element={<LandingPage />} />
-          <Route path="/chat" element={<Navigate to="/?advisor=open" replace />} />
+          <Route path="/chat" element={<ChatLandingPage />} />
           <Route path="/store" element={<StoreFront />} />
+          <Route path="/store/category/:category" element={<StoreFront />} />
           <Route path="/store/product/:id" element={<ProductDetails />} />
+          <Route path="/store/product/:id/:slug" element={<ProductDetails />} />
           <Route path="/blog" element={<Blog />} />
           <Route path="/blog/news" element={<TagArchive forcedTag="news" />} />
           <Route path="/blog/:id" element={<Blog />} />

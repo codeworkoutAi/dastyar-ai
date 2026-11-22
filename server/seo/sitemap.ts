@@ -1,5 +1,6 @@
 import express from 'express';
 import db from '../db/database';
+import { toProductSlug } from './slugUtils';
 
 let sitemapCache: { xml: string; expires: number } | null = null;
 export const SITEMAP_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
@@ -53,6 +54,11 @@ export const sitemapHandler = (req: express.Request, res: express.Response) => {
     const staticPages = [
       { path: '/', priority: '1.0', changefreq: 'daily' },
       { path: '/store', priority: '1.0', changefreq: 'daily' },
+      { path: '/chat', priority: '0.9', changefreq: 'daily' },
+      { path: '/store/category/account', priority: '0.9', changefreq: 'daily' },
+      { path: '/store/category/api', priority: '0.9', changefreq: 'daily' },
+      { path: '/store/category/plan', priority: '0.85', changefreq: 'daily' },
+      { path: '/store/category/package', priority: '0.85', changefreq: 'daily' },
       { path: '/blog', priority: '0.9', changefreq: 'daily' },
       { path: '/blog/news', priority: '0.7', changefreq: 'daily' },
       { path: '/about', priority: '0.8', changefreq: 'monthly' },
@@ -68,7 +74,9 @@ export const sitemapHandler = (req: express.Request, res: express.Response) => {
       const storeProducts = db.prepare("SELECT id, title, bannerImage, image, createdAt FROM products WHERE status = 'active' OR status IS NULL ORDER BY id DESC").all() as any[];
       for (const p of storeProducts) {
         const date = safeDate(p.createdAt);
-        xml += `  <url>\n    <loc>${escapeXml(`${baseUrl}/store/product/${p.id}`)}</loc>\n    <lastmod>${date}</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>0.85</priority>\n`;
+        const productSlug = toProductSlug(p.title);
+        const productPath = productSlug ? `/store/product/${p.id}/${productSlug}` : `/store/product/${p.id}`;
+        xml += `  <url>\n    <loc>${escapeXml(baseUrl + productPath)}</loc>\n    <lastmod>${date}</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>0.85</priority>\n`;
         const pImg = p.bannerImage || p.image;
         if (pImg && typeof pImg === 'string' && !pImg.startsWith('data:')) {
           const imgUrl = pImg.startsWith('http') ? pImg : `${baseUrl}${pImg}`;

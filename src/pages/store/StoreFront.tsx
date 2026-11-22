@@ -14,9 +14,10 @@ import { useUIStore } from '../../store/uiStore';
 import { useSettingsStore } from '../../store/settingsStore';
 import { toPersianDigits } from '../../lib/persianUtils';
 import { setPageSeo } from '../../lib/seo';
+import { toProductSlug } from '../../lib/slugUtils';
 
 export function StoreFront() {
-  const { id } = useParams<{ id: string }>();
+  const { id, category } = useParams<{ id?: string; category?: string }>();
   const { setIsWalletOpen } = useUIStore();
   const { settings } = useSettingsStore();
   const { user, checkAuth } = useAuthStore();
@@ -104,47 +105,108 @@ export function StoreFront() {
   }, [user, products]);
 
   useEffect(() => {
+    if (category) {
+      setSelectedCategory(category);
+    } else {
+      setSelectedCategory('all');
+    }
+  }, [category]);
+
+  useEffect(() => {
     const isRoot = window.location.pathname === '/';
+    const isCategory = Boolean(category);
+
+    const categoryMeta: Record<string, { title: string; description: string; name: string }> = {
+      account: {
+        title: 'خرید اکانت قانونی و اشتراک پرمیوم هوش مصنوعی | Dastyar AI',
+        description: 'خرید انواع اکانت قانونی و اشتراک پرمیوم ابزارهای پیشرفته هوش مصنوعی با تحویل فوری، پشتیبانی و گارانتی تعویض در فروشگاه Dastyar AI.',
+        name: 'اکانت‌های اختصاصی'
+      },
+      api: {
+        title: 'خرید کلید API و کردیت اختصاصی توسعه‌دهندگان هوش مصنوعی | Dastyar AI',
+        description: 'خرید کلیدهای API اختصاصی و کردیت‌های پرسرعت برنامه‌نویسی و اتصال به محیط‌های توسعه هوش مصنوعی با ضمانت اصالت در Dastyar AI.',
+        name: 'کلیدهای API'
+      },
+      plan: {
+        title: 'خرید پلن‌ها و بسته‌های اعتباری هوش مصنوعی | Dastyar AI',
+        description: 'شارژ کیف پول و خرید پلن‌ها و بسته‌های اعتباری هوش مصنوعی بدون انقضا با فعال‌سازی آنی در فروشگاه Dastyar AI.',
+        name: 'پلن‌ها و بسته‌ها'
+      },
+      package: {
+        title: 'پکیج‌ها و دوره‌های کاربردی هوش مصنوعی | Dastyar AI',
+        description: 'جامع‌ترین پکیج‌ها و دوره‌های آموزشی و کاربردی هوش مصنوعی برای ارتقای مهارت‌ها و کسب‌وکار در Dastyar AI.',
+        name: 'پکیج‌های آموزشی'
+      }
+    };
+
+    const currentCatInfo = category ? categoryMeta[category] : null;
+
+    const pageTitle = currentCatInfo
+      ? currentCatInfo.title
+      : 'Dastyar AI | فروشگاه تخصصی ابزارها و اکانت‌های هوش مصنوعی';
+
+    const pageDesc = currentCatInfo
+      ? currentCatInfo.description
+      : 'فروشگاه تخصصی هوش مصنوعی Dastyar AI: خرید اکانت قانونی و اختصاصی، شارژ کیف پول، کلیدهای API و پکیج‌های آموزشی با تحویل سریع، ضمانت کامل و مشاور هوشمند خرید.';
+
+    const canonicalUrl = isCategory
+      ? `${window.location.origin}/store/category/${category}`
+      : (isRoot ? `${window.location.origin}/` : `${window.location.origin}/store`);
+
+    const breadcrumbItems = [
+      { '@type': 'ListItem', position: 1, name: 'خانه', item: `${window.location.origin}/` },
+      { '@type': 'ListItem', position: 2, name: 'فروشگاه', item: `${window.location.origin}/store` }
+    ];
+
+    if (currentCatInfo && category) {
+      breadcrumbItems.push({
+        '@type': 'ListItem',
+        position: 3,
+        name: currentCatInfo.name,
+        item: `${window.location.origin}/store/category/${category}`
+      });
+    }
+
     setPageSeo({
-      title: 'Dastyar AI | فروشگاه تخصصی ابزارها و اکانت‌های هوش مصنوعی',
-      description: 'فروشگاه تخصصی هوش مصنوعی Dastyar AI: خرید اکانت قانونی و اختصاصی، شارژ کیف پول، کلیدهای API و پکیج‌های آموزشی با تحویل سریع، ضمانت کامل و مشاور هوشمند خرید.',
-      canonical: isRoot ? `${window.location.origin}/` : `${window.location.origin}/store`,
+      title: pageTitle,
+      description: pageDesc,
+      canonical: canonicalUrl,
       ogType: 'website',
       schema: {
         '@context': 'https://schema.org',
         '@graph': [
           {
             '@type': 'OnlineStore',
-            name: 'فروشگاه تخصصی هوش مصنوعی Dastyar AI',
-            description: 'فروشگاه تخصصی هوش مصنوعی: خرید بسته‌های اعتباری، اکانت‌های اختصاصی، کلیدهای API و پکیج‌های آموزشی با تحویل سریع و ضمانت کامل.',
-            url: isRoot ? `${window.location.origin}/` : `${window.location.origin}/store`,
+            name: currentCatInfo ? `${currentCatInfo.name} | فروشگاه Dastyar AI` : 'فروشگاه تخصصی هوش مصنوعی Dastyar AI',
+            description: pageDesc,
+            url: canonicalUrl,
             image: `${window.location.origin}/pwa-512x512.png`,
             hasOfferCatalog: {
               '@type': 'OfferCatalog',
-              name: 'محصولات و خدمات هوش مصنوعی',
-              itemListElement: products.slice(0, 12).map((p) => ({
-                '@type': 'Offer',
-                itemOffered: {
-                  '@type': 'Product',
-                  name: p.title,
-                  url: `${window.location.origin}/store/product/${p.id}`
-                },
-                price: (p.price || 0) * 10,
-                priceCurrency: 'IRR'
-              }))
+              name: currentCatInfo ? currentCatInfo.name : 'محصولات و خدمات هوش مصنوعی',
+              itemListElement: products
+                .filter(p => !category || p.category === category)
+                .slice(0, 12)
+                .map((p) => ({
+                  '@type': 'Offer',
+                  itemOffered: {
+                    '@type': 'Product',
+                    name: p.title,
+                    url: `${window.location.origin}/store/product/${p.id}/${toProductSlug(p.title)}`
+                  },
+                  price: (p.price || 0) * 10,
+                  priceCurrency: 'IRR'
+                }))
             }
           },
           {
             '@type': 'BreadcrumbList',
-            itemListElement: [
-              { '@type': 'ListItem', position: 1, name: 'خانه', item: `${window.location.origin}/` },
-              { '@type': 'ListItem', position: 2, name: 'فروشگاه', item: `${window.location.origin}/store` }
-            ]
+            itemListElement: breadcrumbItems
           }
         ]
       }
     });
-  }, [products]);
+  }, [products, category]);
 
   const fetchProducts = async (retryCount = 0) => {
     try {
@@ -323,6 +385,7 @@ export function StoreFront() {
                 key={banner.id}
                 onClick={() => {
                   setSelectedCategory(banner.category);
+                  navigate(`/store/category/${banner.category}`);
                   document.getElementById('products-catalog')?.scrollIntoView({ behavior: 'smooth' });
                 }}
                 className={`absolute inset-0 w-full h-full transition-all duration-700 ease-in-out cursor-pointer ${
@@ -490,7 +553,14 @@ export function StoreFront() {
               <button
                 key={cat.id}
                 type="button"
-                onClick={() => setSelectedCategory(cat.id)}
+                onClick={() => {
+                  setSelectedCategory(cat.id);
+                  if (cat.id === 'all') {
+                    navigate('/store');
+                  } else {
+                    navigate(`/store/category/${cat.id}`);
+                  }
+                }}
                 className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-bold transition-all cursor-pointer shrink-0 whitespace-nowrap ${
                   isSelected
                     ? 'clay-btn-primary shadow-md scale-[1.02]'
@@ -643,7 +713,7 @@ export function StoreFront() {
                   {/* Thumbnail & Basic Info */}
                   <div className="flex items-center gap-4 w-full md:w-auto flex-1">
                     <div 
-                      onClick={() => navigate(`/store/product/${p.id}`)}
+                      onClick={() => navigate(`/store/product/${p.id}/${toProductSlug(p.title)}`)}
                       className="w-24 sm:w-28 h-20 rounded-xl overflow-hidden relative shrink-0 cursor-pointer border border-[var(--card-border)] bg-[var(--card-bg)]"
                     >
                       {p.bannerImage || p.image ? (
@@ -668,7 +738,7 @@ export function StoreFront() {
                     <div className="flex flex-col gap-1 flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
                         <h3
-                          onClick={() => navigate(`/store/product/${p.id}`)}
+                          onClick={() => navigate(`/store/product/${p.id}/${toProductSlug(p.title)}`)}
                           className="text-sm sm:text-base font-black text-[var(--text-main)] hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors cursor-pointer truncate"
                         >
                           {usePersianDigits ? toPersianDigits(p.title) : p.title}
@@ -727,7 +797,7 @@ export function StoreFront() {
 
                       <button
                         type="button"
-                        onClick={() => navigate(`/store/product/${p.id}`)}
+                        onClick={() => navigate(`/store/product/${p.id}/${toProductSlug(p.title)}`)}
                         className="py-2 px-3 clay-btn font-bold text-xs rounded-xl flex items-center justify-center gap-1 text-[var(--text-main)] hover:text-indigo-600 dark:hover:text-indigo-400 transition-all cursor-pointer"
                       >
                         <span>جزئیات</span>
@@ -761,7 +831,7 @@ export function StoreFront() {
               return (
                 <Link
                   key={p.id}
-                  to={`/store/product/${p.id}`}
+                  to={`/store/product/${p.id}/${toProductSlug(p.title)}`}
                   className="group flex flex-col clay-card-thick rounded-2xl overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-xl relative block border border-[var(--card-border)] bg-[var(--card-bg)]"
                 >
                   {/* Image / Header Banner */}

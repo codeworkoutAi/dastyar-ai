@@ -2,7 +2,7 @@ import { ChatPromptCTA } from '../../components/ChatPromptCTA';
 import { useState, useEffect } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import { parseDbDate } from '../../lib/dateUtils';
-import { Home, BookOpen, Clock, ChevronRight, Share2, Send, PenTool, MessageCircle, Search, CalendarDays, Hash, ChevronDown, Check, LayoutGrid, List, AlignJustify, LayoutDashboard } from 'lucide-react';
+import { Home, BookOpen, Clock, ChevronRight, ChevronLeft, Share2, Send, PenTool, MessageCircle, Search, CalendarDays, Hash, ChevronDown, Check, LayoutGrid, List, AlignJustify, LayoutDashboard, ShoppingBag } from 'lucide-react';
 import { MarkdownRenderer } from '../../components/MarkdownRenderer';
 import { Footer } from '../../components/Footer';
 import { GlobalHeader } from '../../components/GlobalHeader';
@@ -452,6 +452,81 @@ export function Blog() {
  )}
 
  <ChatPromptCTA prompt={`درباره «${selectedPost.title}» بیشتر توضیح بده و نکات کلیدی آن را بگو.`} className="mt-8 mb-6" />
+
+      {/* Contextual Related Products Box - Blog to Store Link Machine */}
+      <div className="mt-8 p-5 sm:p-6 rounded-3xl clay-card-thick border border-[var(--card-border)] shadow-md">
+        <div className="flex items-center justify-between gap-3 mb-4 pb-3 border-b border-[var(--card-border)]/60">
+          <div className="flex items-center gap-2">
+            <ShoppingBag className="w-5 h-5 text-[var(--color-accent-primary)]" />
+            <h3 className="text-sm sm:text-base font-black text-[var(--text-main)]">
+              ابزارها و اکانت‌های هوش مصنوعی مرتبط در فروشگاه
+            </h3>
+          </div>
+          <Link
+            to="/store"
+            className="text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1"
+          >
+            <span>مشاهده همه محصولات</span>
+            <ChevronLeft size={13} />
+          </Link>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          {[
+            {
+              id: 29,
+              slug: 'خرید-اکانت-قانونی-gemini-pro-و-gemini-advanced-فول-اختصاصی',
+              title: 'اکانت اختصاصی Gemini Pro و Advanced',
+              badge: 'فول اختصاصی',
+              price: '۷۹۹,۰۰۰ تومان',
+              desc: 'دسترسی نامحدود، پردازش اسناد و ویدیو'
+            },
+            {
+              id: 30,
+              slug: 'خرید-اکانت-قانونی-chatgpt-plus-اختصاصی-با-کردیت-codex',
+              title: 'اکانت قانونی ChatGPT Plus (کردیت CODEX)',
+              badge: 'ویژه برنامه‌نویسی',
+              price: '۷۹۹,۰۰۰ تومان',
+              desc: 'تحلیل داده، کدنویسی و پاسخگویی آنی'
+            },
+            {
+              id: 32,
+              slug: 'کردیت-اختصاصی-claude-و-gpt-ویژه-api-ادیتورها-و-n8n',
+              title: 'کردیت اختصاصی Claude و GPT (API)',
+              badge: 'ویژه توسعه‌دهندگان',
+              price: '۹۹۹,۰۰۰ تومان',
+              desc: 'اتصال به ادیتورها، Cursor و VS Code'
+            }
+          ].map((prod) => (
+            <Link
+              key={prod.id}
+              to={`/store/product/${prod.id}/${prod.slug}`}
+              className="p-3.5 rounded-2xl clay-card border border-[var(--card-border)] flex flex-col justify-between hover:scale-[1.02] transition-transform group"
+            >
+              <div>
+                <span className="inline-block text-[10px] px-2 py-0.5 rounded-md bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 font-bold mb-1.5">
+                  {prod.badge}
+                </span>
+                <h4 className="text-xs font-bold text-[var(--text-main)] group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors leading-snug line-clamp-2 mb-1">
+                  {prod.title}
+                </h4>
+                <p className="text-[11px] text-[var(--text-muted)] line-clamp-1 mb-3">
+                  {prod.desc}
+                </p>
+              </div>
+              <div className="pt-2 border-t border-[var(--card-border)]/40 flex items-center justify-between">
+                <span className="text-xs font-black text-[var(--color-accent-primary)] font-price">
+                  {prod.price}
+                </span>
+                <span className="text-[11px] font-bold text-indigo-600 dark:text-indigo-400 flex items-center gap-0.5 group-hover:-translate-x-1 transition-transform">
+                  <span>خرید</span>
+                  <ChevronLeft size={12} />
+                </span>
+              </div>
+            </Link>
+          ))}
+        </div>
+      </div>
 
       {/* CTA Banner */}
   <div className="mt-12 p-6 md:p-8 rounded-[32px] bg-gradient-to-br from-emerald-500/10 to-teal-500/10 border border-emerald-500/20 flex flex-col md:flex-row items-center justify-between gap-6 backdrop-blur-sm shadow-sm group">

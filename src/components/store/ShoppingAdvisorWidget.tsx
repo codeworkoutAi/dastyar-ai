@@ -482,6 +482,11 @@ export const ShoppingAdvisorWidget: React.FC<ShoppingAdvisorWidgetProps> = ({
     );
   }
 
+  // Hide floating widget when user is already on dedicated /chat page
+  if (location.pathname === '/chat') {
+    return null;
+  }
+
   // Floating Widget Mode
   return (
     <>

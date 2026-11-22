@@ -78,4 +78,36 @@ describe('htmlInjector SSR SEO & RAM caching', () => {
     await renderHtmlWithSeo(req, afterInvalidateRes, tmpDir);
     expect(afterInvalidateRes.sentFile).toBe(path.join(tmpDir, 'index.html'));
   });
+
+  it('injects optimized /chat title, description, and canonical', async () => {
+    const req = {
+      path: '/chat',
+      protocol: 'https',
+      headers: { 'x-forwarded-proto': 'https' },
+      get: (name: string) => (name === 'host' ? 'dastyarai.com' : ''),
+    } as any;
+    const res = createMockRes();
+
+    await renderHtmlWithSeo(req, res, tmpDir);
+
+    expect(res.headers['Content-Type']).toBe('text/html; charset=utf-8');
+    expect(res.body).toContain('مشاور هوشمند و چت با هوش مصنوعی فارسی رایگان | Dastyar AI');
+    expect(res.body).toContain('<link rel="canonical" href="https://dastyarai.com/chat" />');
+  });
+
+  it('injects category SEO metadata for /store/category/account', async () => {
+    const req = {
+      path: '/store/category/account',
+      protocol: 'https',
+      headers: { 'x-forwarded-proto': 'https' },
+      get: (name: string) => (name === 'host' ? 'dastyarai.com' : ''),
+    } as any;
+    const res = createMockRes();
+
+    await renderHtmlWithSeo(req, res, tmpDir);
+
+    expect(res.headers['Content-Type']).toBe('text/html; charset=utf-8');
+    expect(res.body).toContain('خرید اکانت قانونی و اشتراک پرمیوم هوش مصنوعی | Dastyar AI');
+    expect(res.body).toContain('<link rel="canonical" href="https://dastyarai.com/store/category/account" />');
+  });
 });

@@ -8,6 +8,7 @@ import { MarkdownRenderer } from '../../components/MarkdownRenderer';
 import { useSettingsStore } from '../../store/settingsStore';
 import { toPersianDigits } from '../../lib/persianUtils';
 import { setPageSeo } from '../../lib/seo';
+import { toProductSlug } from '../../lib/slugUtils';
 import { CheckoutModal } from '../../components/CheckoutModal';
 import { useAuthStore } from '../../store/authStore';
 import { Footer } from '../../components/Footer';
@@ -15,7 +16,7 @@ import { GlobalHeader } from '../../components/GlobalHeader';
 
 
 export function ProductDetails() {
-  const { id } = useParams<{ id: string }>();
+  const { id, slug } = useParams<{ id: string; slug?: string }>();
   const navigate = useNavigate();
   const { settings } = useSettingsStore();
   const { user, token } = useAuthStore();
@@ -104,6 +105,17 @@ export function ProductDetails() {
           }))
         } : null;
 
+        const productSlug = toProductSlug(found.title);
+        const canonicalProductUrl = `${window.location.origin}/store/product/${found.id}/${productSlug}`;
+
+        const categoryNames: Record<string, string> = {
+          account: 'اکانت‌های اختصاصی',
+          api: 'کلیدهای API',
+          plan: 'پلن‌ها و بسته‌ها',
+          package: 'پکیج‌های آموزشی'
+        };
+        const categoryName = categoryNames[found.category] || 'محصولات';
+
         const productSchema: any = {
           '@type': 'Product',
           name: found.title,
@@ -116,7 +128,7 @@ export function ProductDetails() {
           },
           offers: {
             '@type': 'Offer',
-            url: `${window.location.origin}/store/product/${found.id}`,
+            url: canonicalProductUrl,
             price: (found.price || 0) * 10,
             priceCurrency: 'IRR',
             availability: found.status === 'out_of_stock' ? 'https://schema.org/OutOfStock' : 'https://schema.org/InStock',
@@ -127,6 +139,7 @@ export function ProductDetails() {
         setPageSeo({
           title: `خرید ${found.title} با تحویل فوری | Dastyar AI`,
           description: found.description || found.title,
+          canonical: canonicalProductUrl,
           ogImage: (found.bannerImage || found.image) || undefined,
           schema: {
             '@context': 'https://schema.org',
@@ -136,8 +149,9 @@ export function ProductDetails() {
               {
                 '@type': 'BreadcrumbList',
                 itemListElement: [
-                  { '@type': 'ListItem', position: 1, name: 'فروشگاه', item: `${window.location.origin}/` },
-                  { '@type': 'ListItem', position: 2, name: found.title, item: `${window.location.origin}/store/product/${found.id}` }
+                  { '@type': 'ListItem', position: 1, name: 'فروشگاه', item: `${window.location.origin}/store` },
+                  { '@type': 'ListItem', position: 2, name: categoryName, item: `${window.location.origin}/store/category/${found.category}` },
+                  { '@type': 'ListItem', position: 3, name: found.title, item: canonicalProductUrl }
                 ]
               }
             ]
@@ -257,7 +271,7 @@ export function ProductDetails() {
   return (
     <div className="flex flex-col min-h-screen clay-landing-bg transition-colors duration-300">
       <GlobalHeader />
-      <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 py-8 animate-fade-in relative z-10 min-h-screen">
+      <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 py-8 pb-24 sm:pb-8 animate-fade-in relative z-10 min-h-screen">
         {/* Header Breadcrumb */}
         <button 
           onClick={() => navigate('/store')}
@@ -664,6 +678,32 @@ export function ProductDetails() {
                 )}
               </div>
             </div>
+          </div>
+        </div>
+
+        {/* Mobile Sticky Bottom CTA Bar */}
+        <div className="block sm:hidden fixed bottom-0 inset-x-0 z-40 bg-[var(--card-bg)]/95 backdrop-blur-md p-3 border-t border-[var(--card-border)] pb-safe shadow-[0_-8px_25px_-5px_rgba(0,0,0,0.18)]">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex flex-col min-w-0">
+              <span className="text-[10px] text-[var(--text-muted)] font-bold">مبلغ قابل پرداخت:</span>
+              <span className="text-sm font-black text-[var(--color-accent-primary)] font-price truncate">
+                {usePersianDigits ? toPersianDigits(priceText) : priceText}
+              </span>
+            </div>
+
+            <button
+              type="button"
+              onClick={handleBuyClick}
+              disabled={product.status === 'out_of_stock' || (product.deliveryType === 'instant' && product.stock <= 0)}
+              className="flex-1 max-w-[220px] py-2.5 px-4 clay-btn-primary font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 shadow-md disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+            >
+              <Zap size={14} />
+              <span>
+                {product.status === 'out_of_stock' || (product.deliveryType === 'instant' && product.stock <= 0)
+                  ? 'ناموجود'
+                  : (product.stock > 0 ? 'خرید آنلاین و تحویل آنی' : 'خرید آنلاین و ثبت')}
+              </span>
+            </button>
           </div>
         </div>
 

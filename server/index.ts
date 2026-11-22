@@ -250,13 +250,6 @@ Sitemap: ${protocol}://${host}/sitemap.xml
 
 app.get('/sitemap.xml', sitemapHandler);
 
-// Permanent 301 redirect for legacy /chat paths to store with shopping advisor triggered
-app.get(['/chat', '/chat/*'], (req, res) => {
-  const query = req.url.includes('?') ? req.url.substring(req.url.indexOf('?') + 1) : '';
-  const target = query ? `/?${query}&advisor=open` : '/?advisor=open';
-  res.redirect(301, target);
-});
-
 app.get('/llms.txt', (req, res) => {
   const filePath = path.join(process.cwd(), process.env.NODE_ENV === 'production' ? 'dist' : 'public', 'llms.txt');
   if (fs.existsSync(filePath)) {
