@@ -221,10 +221,12 @@ export const ShoppingAdvisorWidget: React.FC<ShoppingAdvisorWidgetProps> = ({
         throw new Error(data.error || 'خطا در ارتباط با مشاور هوشمند');
       }
 
-      const botContent = (data.reply || 'راهنمایی لازم ارائه شد.')
-        .replace(/\*\*([^*]+)\*\*/g, '($1)')
-        .replace(/(^|[^\*])\*([^\*]+)\*([^\*]|$)/g, '$1($2)$3')
-        .replace(/\*\*/g, '');
+      let botContent = (data.reply || 'راهنمایی لازم ارائه شد.').trim();
+      // Remove any leaked rule checks or formatting prompt artifacts
+      botContent = botContent
+        .replace(/^[:\s\-*#]*(?:formatting\s*rules\s*check|rule\s*check|guidelines\s*check|check\s*&)[\s\S]*?\n+/gi, '')
+        .replace(/no\s*[*`]+\s*anywhere!?/gi, '')
+        .trim();
 
       const botMessage: Message = {
         id: (Date.now() + 1).toString(),
@@ -368,7 +370,7 @@ export const ShoppingAdvisorWidget: React.FC<ShoppingAdvisorWidgetProps> = ({
                 }`}
               >
                 <p className="whitespace-pre-wrap">
-                  {m.content.replace(/\*\*([^*]+)\*\*/g, '($1)').replace(/\*\*/g, '')}
+                  {m.content.replace(/\*\*([^*]+)\*\*/g, '($1)').replace(/[*_~`]/g, '')}
                 </p>
 
                 {/* Recommended Products Inside Bot Bubble */}

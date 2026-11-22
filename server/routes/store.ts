@@ -14,7 +14,13 @@ import {
 } from '../services/bazaarPayService';
 import { depositWallet, getPlanCreditAmount } from '../services/walletService';
 import { notifyOrderSuccessBySms } from '../services/kavenegarService';
-import { getGeminiClient, getGeminiKeyFromPool, getGroqKeyFromPool } from '../services/utils';
+import { 
+  getGeminiClient, 
+  getGeminiKeyFromPool, 
+  getGroqKeyFromPool,
+  blacklistKey,
+  extractCleanErrorMessage
+} from '../services/utils';
 
 const router = express.Router();
 
@@ -220,28 +226,53 @@ router.post('/advisor', advisorLimiter, async (req, res) => {
       }
     }
 
-    const systemInstruction = `شما «مشاور هوشمند و تخصصی فروشگاه Dastyar AI» هستید.
-وظیفه شما راهنمایی خریداران، پاسخ به سوالات قبل از خرید و پیشنهاد بهترین اکانت یا ابزار هوش مصنوعی متناسب با نیاز کاربر است.
+    // Validation helper to reject prompt leaks, rule checks or non-Persian garbage
+    const isValidAdvisorReply = (text: string): boolean => {
+      if (!text || typeof text !== 'string') return false;
+      const trimmed = text.trim();
+      if (trimmed.length < 25) return false;
+      const persianChars = (trimmed.match(/[\u0600-\u06FF]/g) || []).length;
+      if (persianChars < 12) return false;
+      const leakPatterns = [
+        /formatting\s*rules/i,
+        /rule\s*check/i,
+        /system\s*instruction/i,
+        /check\s*&/i,
+        /no\s*[*`]+\s*anywhere/i,
+        /as\s*an\s*ai\s*language\s*model/i
+      ];
+      return !leakPatterns.some(pat => pat.test(trimmed));
+    };
 
-کاتالوگ محصولات فعال فروشگاه ما:
+    const cleanAdvisorArtifacts = (raw: string): string => {
+      if (!raw) return '';
+      return raw
+        .replace(/^[:\s\-*#]*(?:formatting\s*rules\s*check|rule\s*check|guidelines\s*check|check\s*&)[\s\S]*?\n+/gi, '')
+        .replace(/no\s*[*`]+\s*anywhere!?/gi, '')
+        .trim();
+    };
+
+    const systemInstruction = `شما «مشاور هوشمند فروشگاه Dastyar AI» هستید. وظیفه شما راهنمایی تخصصی و خرید آسان برای مشتریان فروشگاه است.
+
+کاتالوگ محصولات فعال فروشگاه:
 ${catalogSummary}
 ${currentContext}
 
-قوانین و دستورالعمل‌های شما:
-۱. به سوال کاربر با توجه به کاتالوگ فروشگاه پاسخ دهید. پاسخ‌های تکراری یا شعاری ندهید.
-۲. اگر کاربر درباره برنامه‌نویسی، طراحی تصویر، ترید، قیمت یا نحوه تحویل سوال کرد، پاسخ دقیق و کاربردی بدهید.
-۳. در هر پاسخی که محصول خاصی از فروشگاه ما را پیشنهاد می‌دهید، حتماً تگ شناسه آن محصول را با فرمت [RECOMMEND:ID] (مثلاً [RECOMMEND:${products[0]?.id || 1}]) در متن پاسخ خود درج کنید تا کارت خرید آن محصول به صورت خودکار به کاربر نشان داده شود.
-۴. لحن شما صمیمی، مطمئن، شفاف و کوتاه باشد (حداکثر ۲ تا ۴ پاراگراف).
-۵. هرگز از علامت‌های ستاره (مانند **کلمه** یا *کلمه*) برای بولد کردن متن استفاده نکنید. به جای آن، برای تأکید، مشخص کردن زمان‌ها، شرایط یا توضیحات تکمیلی، حتماً از پرانتز مانند (عبارت) استفاده کنید.`;
+دستورالعمل‌ها:
+۱. پاسخ را کاملاً به زبان فارسی صمیمی، حرفه‌ای و روان بنویسید (حداکثر ۲ تا ۳ پاراگراف کوتاه و کاربردی).
+۲. مستقیماً به سوال مشتری پاسخ دهید و بهترین اکانت یا ابزار متناسب با نیازش را از کاتالوگ معرفی کنید.
+۳. برای هر محصولی که پیشنهاد می‌دهید، تگ [RECOMMEND:ID] آن محصول را درج کنید تا کارت خرید نمایش داده شود.
+۴. ویژگی‌های برجسته مانند زمان تحویل، ضمانت و نوع پلن را واضح توضیح دهید.
+۵. پاسخ را فوراً با متن فارسی شروع کنید و از درج هرگونه عبارت انگلیسی، متادیتا یا بررسی قوانین خودداری کنید.`;
 
     let reply = '';
 
     // 1. Try Gemini Pool with candidate models
-    const geminiCandidates = ['gemini-3.6-flash', 'gemini-3.5-flash-lite', 'gemini-2.5-flash'];
+    const geminiCandidates = ['gemini-3.6-flash', 'gemini-3.5-flash-lite'];
     for (const cand of geminiCandidates) {
       if (reply) break;
+      let poolKey: string | null = null;
       try {
-        let poolKey: string | null = null;
         try {
           poolKey = getGeminiKeyFromPool([], cand);
         } catch (_) {}
@@ -263,13 +294,25 @@ ${currentContext}
             config: {
               systemInstruction,
               temperature: 0.7,
-              maxOutputTokens: 600
+              maxOutputTokens: 1000
             }
           });
-          reply = result.text?.trim() || '';
+          const candidateReply = cleanAdvisorArtifacts(result.text?.trim() || '');
+          if (isValidAdvisorReply(candidateReply)) {
+            reply = candidateReply;
+          } else {
+            console.warn(`[Advisor] Gemini ${cand} returned invalid or leaked output:`, result.text?.slice(0, 100));
+          }
         }
       } catch (geminiErr: any) {
         console.warn(`[Advisor] Gemini ${cand} failed:`, geminiErr?.message || geminiErr);
+        const errMsg = extractCleanErrorMessage(geminiErr);
+        const is429 = errMsg.includes('429') || errMsg.includes('RESOURCE_EXHAUSTED') || errMsg.includes('quota');
+        const is401 = errMsg.includes('401') || errMsg.includes('Unauthorized') || errMsg.includes('Invalid API Key');
+        const is403 = errMsg.includes('403') || errMsg.includes('PERMISSION_DENIED') || errMsg.includes('API_KEY_INVALID');
+        if (poolKey && (is429 || is401 || is403)) {
+          blacklistKey(poolKey, is429 ? '429' : (is401 ? '401' : '403'), undefined, cand);
+        }
       }
     }
 
@@ -292,13 +335,23 @@ ${currentContext}
             body: JSON.stringify({
               model: 'llama-3.3-70b-versatile',
               messages,
-              max_tokens: 600,
+              max_tokens: 1000,
               temperature: 0.7
             })
           });
           if (groqRes.ok) {
             const groqData = await groqRes.json();
-            reply = groqData.choices?.[0]?.message?.content?.trim() || '';
+            const candidateReply = cleanAdvisorArtifacts(groqData.choices?.[0]?.message?.content?.trim() || '');
+            if (isValidAdvisorReply(candidateReply)) {
+              reply = candidateReply;
+            } else {
+              console.warn('[Advisor] Groq returned invalid output:', candidateReply.slice(0, 100));
+            }
+          } else {
+            console.warn('[Advisor] Groq HTTP error:', groqRes.status);
+            if (groqRes.status === 429 || groqRes.status === 401) {
+              blacklistKey(groqKey, groqRes.status === 429 ? '429' : '401');
+            }
           }
         }
       } catch (groqErr) {
@@ -311,16 +364,25 @@ ${currentContext}
       const q = cleanMsg.toLowerCase();
       const findProd = (kw: string) => products.find(p => p.title.toLowerCase().includes(kw.toLowerCase()));
 
-      if (/برنامه|کد|پایتون|جاوا|فرانت|react|python|code|developer/i.test(q)) {
+      if (/برنامه|کد|پایتون|جاوا|فرانت|react|python|code|developer|vscode|cursor/i.test(q)) {
         const claude = findProd('Claude') || findProd('کلود');
         const gpt = findProd('ChatGPT') || findProd('چت‌جی‌پی‌تی');
         const recTags = [claude?.id, gpt?.id].filter(Boolean).map(id => `[RECOMMEND:${id}]`).join(' ');
         reply = `برای برنامه‌نویسی و توسعه نرم‌افزار، اکانت‌های (Claude Pro) (بهترین گزینه برای درک کدهای طولانی، ریفکتور و معماری) و (ChatGPT Plus) (با دسترسی به تحلیل داده‌ها و کدنویسی پیشرفته) بیشترین بازدهی را دارند. هر دو سرویس به صورت کاملاً قانونی فعال‌سازی می‌شوند و در تمام طول دوره اشتراک ضمانت دارند.\n\n${recTags}`;
-      } else if (/عکس|تصویر|طراحی|گرافیک|بنر|لوگو|میدجورنی|image|art|photo/i.test(q)) {
+      } else if (/عکس|تصویر|طراحی|گرافیک|بنر|لوگو|میدجورنی|image|art|photo|midjourney|leonardo/i.test(q)) {
         const mid = findProd('Midjourney') || findProd('میدجورنی') || findProd('Leonardo');
         const gpt = findProd('ChatGPT');
         const recTags = [mid?.id, gpt?.id].filter(Boolean).map(id => `[RECOMMEND:${id}]`).join(' ');
         reply = `برای طراحی گرافیک و تولید تصاویر خلاقانه، سرویس (Midjourney) باکیفیت‌ترین خروجی فوتورئال و هنری را ارائه می‌دهد. همچنین اکانت (ChatGPT Plus) دارای مولد تصویر DALL-E 3 بوده و برای بنرهای تبلیغاتی و ایده‌پردازی گرافیکی عالی است.\n\n${recTags}`;
+      } else if (/متن|مقاله|دانشگاه|تحقیق|تولید محتوا|ترجمه|نویسند|word|write|research/i.test(q)) {
+        const gpt = findProd('ChatGPT') || findProd('چت‌جی‌پی‌تی');
+        const claude = findProd('Claude') || findProd('کلود');
+        const recTags = [gpt?.id, claude?.id].filter(Boolean).map(id => `[RECOMMEND:${id}]`).join(' ');
+        reply = `برای تولید محتوا، مقاله‌نویسی، ترجمه تخصصی و کارهای دانشگاهی، اکانت (ChatGPT Plus) و (Claude Pro) بهترین انتخاب‌ها هستند. نگارش روان به زبان فارسی و امکان آپلود و تحلیل فایل‌های متنی و PDF از مهم‌ترین ویژگی‌های این سرویس‌ها است.\n\n${recTags}`;
+      } else if (/ترید|مالی|بورس|ارز|کریپتو|trade|crypto/i.test(q)) {
+        const gpt = findProd('ChatGPT') || findProd('چت‌جی‌پی‌تی');
+        const recTags = [gpt?.id].filter(Boolean).map(id => `[RECOMMEND:${id}]`).join(' ');
+        reply = `برای تحلیل تکنیکال، ترید و بررسی بازارهای مالی، اکانت (ChatGPT Plus) به دلیل قابلیت بارگذاری و تحلیل چارت‌های مالی، اکسل‌های معاملاتی و داده‌های آماری بیشترین کاربرد را برای تحلیل‌گران دارد.\n\n${recTags}`;
       } else if (/قیمت|هزینه|چنده|تومان|ارزان|تخفیف/i.test(q)) {
         const priceList = products.slice(0, 4).map(p => `• (${p.title}): از ${Number(p.price).toLocaleString('fa-IR')} تومان`).join('\n');
         const recTags = products.slice(0, 2).map(p => `[RECOMMEND:${p.id}]`).join(' ');
@@ -352,11 +414,12 @@ ${currentContext}
       return '';
     }).trim();
 
-    // Transform all **word** or *word* into (word) as requested by user
+    // Standardize bold/emphasized markers into clean parenthesized text or clean Persian format
     const cleanReply = strippedReply
       .replace(/\*\*([^*]+)\*\*/g, '($1)')
-      .replace(/(^|[^\*])\*([^\*]+)\*([^\*]|$)/g, '$1($2)$3')
-      .replace(/\*\*/g, '')
+      .replace(/(?:^|\s)\*([^*\n]+)\*(?:\s|$)/g, ' ($1) ')
+      .replace(/[*_~`]/g, '')
+      .replace(/[ ]{2,}/g, ' ')
       .trim();
 
     const recommendedProducts = products
