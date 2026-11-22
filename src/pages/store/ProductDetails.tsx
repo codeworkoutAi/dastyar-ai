@@ -67,11 +67,15 @@ export function ProductDetails() {
   const fetchProduct = async () => {
     try {
       setLoading(true);
-      const res = await fetch('/api/store/products');
-      if (!res.ok) throw new Error('خطا در دریافت اطلاعات محصول');
-      const data = await res.json();
-      const found = data.find((p: any) => p.id.toString() === id);
-      if (found) {
+      const res = await fetch(`/api/store/products/${id}`);
+      if (!res.ok) {
+        if (res.status === 404) {
+          throw new Error('این محصول در حال حاضر در دسترس نیست یا توسط مدیریت غیرفعال شده است.');
+        }
+        throw new Error('خطا در دریافت اطلاعات محصول');
+      }
+      const found = await res.json();
+      if (found && found.status !== 'inactive') {
         setProduct(found);
 
         // Parse variations if available

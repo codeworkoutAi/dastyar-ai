@@ -243,20 +243,25 @@ export function StoreFront() {
     return 'clay-news-title font-black drop-shadow-xs';
   };
 
+  // Filter out inactive/hidden products unconditionally
+  const visibleProducts = useMemo(() => {
+    return products.filter(p => p.status !== 'inactive');
+  }, [products]);
+
   // Category Counts
   const counts = useMemo(() => {
     return {
-      all: products.length,
-      plan: products.filter(p => p.category === 'plan').length,
-      account: products.filter(p => p.category === 'account').length,
-      api: products.filter(p => p.category === 'api').length,
-      package: products.filter(p => p.category === 'package').length,
+      all: visibleProducts.length,
+      plan: visibleProducts.filter(p => p.category === 'plan').length,
+      account: visibleProducts.filter(p => p.category === 'account').length,
+      api: visibleProducts.filter(p => p.category === 'api').length,
+      package: visibleProducts.filter(p => p.category === 'package').length,
     };
-  }, [products]);
+  }, [visibleProducts]);
 
   // Filtered & Sorted Products
   const processedProducts = useMemo(() => {
-    let result = products.filter(p => {
+    let result = visibleProducts.filter(p => {
       if (selectedCategory !== 'all' && p.category !== selectedCategory) return false;
       if (onlyInstant && !(p.deliveryType === 'instant' || (p.deliveryTime && p.deliveryTime.includes('فوری')))) {
         return false;

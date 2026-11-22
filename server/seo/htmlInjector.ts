@@ -53,7 +53,7 @@ function getCachedNavItemsHtml(baseUrl: string): string {
 
   let itemsHtml = '';
   try {
-    const topProducts = db.prepare("SELECT id, title FROM products WHERE status = 'active' OR status IS NULL ORDER BY id DESC LIMIT 8").all() as any[];
+    const topProducts = db.prepare("SELECT id, title FROM products WHERE (status != 'inactive' OR status IS NULL) AND (category IS NULL OR category != 'wallet_topup') ORDER BY id DESC LIMIT 8").all() as any[];
     const topNews = db.prepare("SELECT id, title FROM news ORDER BY createdAt DESC LIMIT 8").all() as any[];
 
     const bannedRegex = /(gemini|claude|deepseek|gpt|mistral|بدون کارت بانکی|بدون فیلترشکن)/i;
@@ -141,7 +141,7 @@ export async function renderHtmlWithSeo(req: express.Request, res: express.Respo
     if (productMatch) {
       const pId = parseInt(productMatch[1], 10);
       try {
-        const product = db.prepare("SELECT * FROM products WHERE id = ?").get(pId) as any;
+        const product = db.prepare("SELECT * FROM products WHERE id = ? AND (status != 'inactive' OR status IS NULL)").get(pId) as any;
         if (product) {
           const productSlug = toProductSlug(product.title);
           canonicalUrl = `${baseUrl}/store/product/${product.id}/${productSlug}`;
@@ -342,7 +342,7 @@ export async function renderHtmlWithSeo(req: express.Request, res: express.Respo
 
           let catProducts: any[] = [];
           try {
-            catProducts = db.prepare('SELECT id, title, price FROM products WHERE category = ? AND (status = "active" OR status IS NULL) ORDER BY id DESC').all(category) as any[];
+            catProducts = db.prepare('SELECT id, title, price FROM products WHERE category = ? AND (status != "inactive" OR status IS NULL) ORDER BY id DESC').all(category) as any[];
           } catch (_) {}
 
           structuredData = {
@@ -429,7 +429,7 @@ export async function renderHtmlWithSeo(req: express.Request, res: express.Respo
           pageTitle = 'فروشگاه اکانت و ابزارهای هوش مصنوعی | Dastyar AI';
           pageDesc = 'فروشگاه خدمات و ابزارهای هوش مصنوعی: ابزارهای پیشرفته، کلیدهای API معتبر و پکیج‌های آموزشی تخصصی با پرداخت ریالی و تحویل فوری.';
           
-          const storeProducts = db.prepare('SELECT id, title, price FROM products ORDER BY id DESC LIMIT 12').all() as any[];
+          const storeProducts = db.prepare('SELECT id, title, price FROM products WHERE (status != "inactive" OR status IS NULL) AND (category IS NULL OR category != "wallet_topup") ORDER BY id DESC LIMIT 12').all() as any[];
           structuredData = {
             '@context': 'https://schema.org',
             '@graph': [
@@ -528,7 +528,7 @@ export async function renderHtmlWithSeo(req: express.Request, res: express.Respo
           // Home / Landing page OnlineStore + FAQPage Schema for GEO & AI Answer Engines
           let topStoreProducts: any[] = [];
           try {
-            topStoreProducts = db.prepare('SELECT id, title, price FROM products WHERE status = "active" OR status IS NULL ORDER BY id DESC LIMIT 12').all() as any[];
+            topStoreProducts = db.prepare('SELECT id, title, price FROM products WHERE (status != "inactive" OR status IS NULL) AND (category IS NULL OR category != "wallet_topup") ORDER BY id DESC LIMIT 12').all() as any[];
           } catch (_) {}
 
           structuredData = {

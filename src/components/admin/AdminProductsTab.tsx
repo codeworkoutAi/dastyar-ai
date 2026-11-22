@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { 
   Key, Trash2, Edit2, Plus, ArrowRight, CheckCircle2, 
-  HelpCircle, Eye, RefreshCw, AlertCircle, Sparkles, Zap,
+  HelpCircle, Eye, EyeOff, RefreshCw, AlertCircle, Sparkles, Zap,
   Clock, ShieldCheck, Star, MessageSquare, Check, X, Filter, Search,
   Upload, Image as ImageIcon
 } from 'lucide-react';
@@ -86,6 +86,8 @@ export const AdminProductsTab: React.FC = () => {
   // Search and filter
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [togglingId, setTogglingId] = useState<number | null>(null);
 
   // Form state
   const [isAdding, setIsAdding] = useState(false);
@@ -370,13 +372,51 @@ export const AdminProductsTab: React.FC = () => {
     );
   }
 
+  const handleToggleProductStatus = async (product: any) => {
+    try {
+      setTogglingId(product.id);
+      const isCurrentlyInactive = product.status === 'inactive';
+      const targetStatus = isCurrentlyInactive ? 'active' : 'inactive';
+
+      await adminFetch<any>(`/api/admin/products/${product.id}/toggle-status`, {
+        method: 'PATCH',
+        body: JSON.stringify({ status: targetStatus })
+      });
+
+      setProducts(prev => prev.map(p => {
+        if (p.id === product.id) {
+          return { ...p, status: targetStatus };
+        }
+        return p;
+      }));
+
+      setToast({
+        message: targetStatus === 'active'
+          ? `محصول «${product.title}» فعال شد و در فروشگاه نمایش داده می‌شود.`
+          : `محصول «${product.title}» غیرفعال شد و از فروشگاه مخفی گردید.`,
+        type: 'success'
+      });
+    } catch (err: any) {
+      setToast({
+        message: err.message || 'خطا در تغییر وضعیت محصول',
+        type: 'error'
+      });
+    } finally {
+      setTogglingId(null);
+    }
+  };
+
   // Filtered products list
   const filteredProducts = products.filter(p => {
     const matchesSearch = !searchQuery.trim() || 
       p.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       p.description?.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCat = categoryFilter === 'all' || p.category === categoryFilter;
-    return matchesSearch && matchesCat;
+    const matchesStatus = statusFilter === 'all' || 
+      (statusFilter === 'active' && (p.status === 'active' || !p.status)) ||
+      (statusFilter === 'inactive' && p.status === 'inactive') ||
+      (statusFilter === 'out_of_stock' && p.status === 'out_of_stock');
+    return matchesSearch && matchesCat && matchesStatus;
   });
 
   return (
@@ -864,6 +904,17 @@ export const AdminProductsTab: React.FC = () => {
                 <option value="credit">شارژ و اعتبار</option>
               </select>
 
+              <select
+                value={statusFilter}
+                onChange={e => setStatusFilter(e.target.value)}
+                className="clay-input px-3 py-2 rounded-xl text-xs flex-1 sm:flex-initial"
+              >
+                <option value="all">همه وضعیت‌ها</option>
+                <option value="active">فقط فعال در فروشگاه</option>
+                <option value="inactive">فقط مخفی / غیرفعال</option>
+                <option value="out_of_stock">فقط ناموجود</option>
+              </select>
+
               <button
                 onClick={fetchProducts}
                 title="تازه‌سازی لیست"
@@ -898,7 +949,9 @@ export const AdminProductsTab: React.FC = () => {
                 return (
                   <div 
                     key={product.id}
-                    className="clay-card rounded-2xl p-5 flex flex-col justify-between space-y-4 hover:border-emerald-500/30 transition-all group"
+                    className={`clay-card rounded-2xl p-5 flex flex-col justify-between space-y-4 hover:border-emerald-500/30 transition-all group ${
+                      product.status === 'inactive' ? 'opacity-70 border-dashed border-amber-500/40 bg-amber-500/5' : ''
+                    }`}
                   >
                     <div className="space-y-3">
                       {/* Product Thumbnail in Admin Card */}
@@ -938,20 +991,27 @@ export const AdminProductsTab: React.FC = () => {
                           <h4 className="font-bold text-sm text-[var(--text-main)] group-hover:text-emerald-500 transition-colors">
                             {product.title}
                           </h4>
-                          <span className="inline-block text-[10px] px-2 py-0.5 rounded-md clay-surface text-[var(--text-muted)]">
-                            {product.category === 'account' ? 'اکانت هوش مصنوعی' : 
-                             product.category === 'api' ? 'کلید API' : 
-                             product.category === 'license' ? 'لایسنس' : 'اعتبار'}
-                          </span>
-                          {product.status === 'out_of_stock' || product.stock <= 0 ? (
-                            <span className="inline-block text-[10px] px-2 py-0.5 rounded-md bg-red-500/10 text-red-500 font-bold border border-red-500/20 mr-1.5">
-                              ناموجود ({product.stock || 0} لایسنس)
+                          <div className="flex flex-wrap items-center gap-1">
+                            <span className="inline-block text-[10px] px-2 py-0.5 rounded-md clay-surface text-[var(--text-muted)]">
+                              {product.category === 'account' ? 'اکانت هوش مصنوعی' : 
+                               product.category === 'api' ? 'کلید API' : 
+                               product.category === 'license' ? 'لایسنس' : 'اعتبار'}
                             </span>
-                          ) : (
-                            <span className="inline-block text-[10px] px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-500 font-bold border border-emerald-500/20 mr-1.5">
-                              موجود ({product.stock} لایسنس)
-                            </span>
-                          )}
+                            {product.status === 'inactive' ? (
+                              <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-md bg-amber-500/15 text-amber-600 dark:text-amber-400 font-bold border border-amber-500/30">
+                                <EyeOff className="w-3 h-3" />
+                                مخفی از فروشگاه
+                              </span>
+                            ) : product.status === 'out_of_stock' || product.stock <= 0 ? (
+                              <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-md bg-red-500/10 text-red-500 font-bold border border-red-500/20">
+                                ناموجود ({product.stock || 0} لایسنس)
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-500 font-bold border border-emerald-500/20">
+                                موجود ({product.stock} لایسنس)
+                              </span>
+                            )}
+                          </div>
                         </div>
 
                         {product.badge && (
@@ -990,6 +1050,31 @@ export const AdminProductsTab: React.FC = () => {
                       </button>
 
                       <div className="flex items-center gap-1.5">
+                        <button
+                          type="button"
+                          disabled={togglingId === product.id}
+                          onClick={() => handleToggleProductStatus(product)}
+                          title={product.status === 'inactive' ? 'فعال‌سازی و نمایش در فروشگاه' : 'غیرفعال‌سازی و مخفی کردن از فروشگاه'}
+                          className={`clay-btn px-2.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+                            product.status === 'inactive' 
+                              ? 'text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10' 
+                              : 'text-amber-600 dark:text-amber-400 hover:bg-amber-500/10'
+                          }`}
+                        >
+                          {togglingId === product.id ? (
+                            <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                          ) : product.status === 'inactive' ? (
+                            <>
+                              <Eye className="w-3.5 h-3.5 text-emerald-500" />
+                              <span>نمایش</span>
+                            </>
+                          ) : (
+                            <>
+                              <EyeOff className="w-3.5 h-3.5 text-amber-500" />
+                              <span>مخفی‌سازی</span>
+                            </>
+                          )}
+                        </button>
                         <button
                           onClick={() => handleEditClick(product)}
                           title="ویرایش محصول"

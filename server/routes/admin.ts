@@ -262,6 +262,45 @@ router.put('/products/:id', (req, res) => {
   }
 });
 
+// PATCH & PUT /api/admin/products/:id/toggle-status (Quick toggle active / inactive visibility)
+const handleToggleProductStatus = (req: any, res: any) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body || {};
+
+    const current = db.prepare('SELECT id, status FROM products WHERE id = ?').get(id) as any;
+    if (!current) {
+      return res.status(404).json({ error: 'محصول یافت نشد.' });
+    }
+
+    let nextStatus = status;
+    if (!nextStatus) {
+      // Toggle logic: if inactive -> active; otherwise (active or out_of_stock) -> inactive
+      nextStatus = current.status === 'inactive' ? 'active' : 'inactive';
+    }
+
+    db.prepare('UPDATE products SET status = ? WHERE id = ?').run(nextStatus, id);
+    syncDatabase();
+    clearSitemapCache();
+
+    const updated = db.prepare(`
+      SELECT p.*, COUNT(l.id) as stock 
+      FROM products p 
+      LEFT JOIN licenses l ON p.id = l.productId AND l.status = 'available'
+      WHERE p.id = ?
+      GROUP BY p.id
+    `).get(id);
+
+    res.json({ success: true, status: nextStatus, product: updated });
+  } catch (error) {
+    console.error('[Admin API] Error toggling product status:', error);
+    res.status(500).json({ error: 'خطا در تغییر وضعیت نمایش محصول' });
+  }
+};
+
+router.patch('/products/:id/toggle-status', handleToggleProductStatus);
+router.put('/products/:id/toggle-status', handleToggleProductStatus);
+
 // DELETE /api/admin/products/:id
 router.delete('/products/:id', (req, res) => {
   try {

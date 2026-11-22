@@ -69,9 +69,9 @@ export const sitemapHandler = (req: express.Request, res: express.Response) => {
       xml += `  <url>\n    <loc>${escapeXml(baseUrl + page.path)}</loc>\n    <changefreq>${page.changefreq}</changefreq>\n    <priority>${page.priority}</priority>\n  </url>\n`;
     }
 
-    // 2. Dynamic Store Products
+    // 2. Dynamic Store Products (Exclude inactive/hidden products)
     try {
-      const storeProducts = db.prepare("SELECT id, title, bannerImage, image, createdAt FROM products WHERE status = 'active' OR status IS NULL ORDER BY id DESC").all() as any[];
+      const storeProducts = db.prepare("SELECT id, title, bannerImage, image, createdAt FROM products WHERE (status != 'inactive' OR status IS NULL) AND (category IS NULL OR category != 'wallet_topup') ORDER BY id DESC").all() as any[];
       for (const p of storeProducts) {
         const date = safeDate(p.createdAt);
         const productSlug = toProductSlug(p.title);

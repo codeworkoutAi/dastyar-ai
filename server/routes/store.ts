@@ -464,7 +464,8 @@ router.get('/products', (req, res) => {
         COUNT(CASE WHEN l.status = 'available' THEN 1 END) as stock
       FROM products p 
       LEFT JOIN licenses l ON p.id = l.productId
-      WHERE p.category IS NULL OR p.category != 'wallet_topup'
+      WHERE (p.category IS NULL OR p.category != 'wallet_topup')
+        AND (p.status != 'inactive' OR p.status IS NULL)
       GROUP BY p.id
       ORDER BY p.id DESC
     `).all();
@@ -485,12 +486,12 @@ router.get('/products/:id', (req, res) => {
         COUNT(CASE WHEN l.status = 'available' THEN 1 END) as stock
       FROM products p 
       LEFT JOIN licenses l ON p.id = l.productId
-      WHERE p.id = ?
+      WHERE p.id = ? AND (p.status != 'inactive' OR p.status IS NULL)
       GROUP BY p.id
     `).get(id);
 
     if (!product) {
-      return res.status(404).json({ error: 'محصول پیدا نشد' });
+      return res.status(404).json({ error: 'محصول پیدا نشد یا غیرفعال شده است' });
     }
     res.json(product);
   } catch (error) {
