@@ -15,8 +15,9 @@ dotenv.config({ path: '/root/.config/dastyar/.env', quiet: true });
 const IS_TEST = !!process.env.VITEST || process.env.NODE_ENV === 'test';
 
 // Ensure data directory exists
+const workerId = process.env.VITEST_POOL_ID || process.env.VITEST_WORKER_ID || 'main';
 const dataDir = IS_TEST
-  ? path.join(process.cwd(), 'server', 'data', '.test-tmp')
+  ? path.join(process.cwd(), 'server', 'data', '.test-tmp', `worker-${workerId}`)
   : path.join(process.cwd(), 'server', 'data');
 if (!fs.existsSync(dataDir)) {
   fs.mkdirSync(dataDir, { recursive: true });
@@ -65,21 +66,23 @@ function connect() {
   // local SQLite and let the app boot. DNS resolution is synchronous (lookupSync), so
   // this stays inside the deferred connect() and adds no startup latency of its own.
   let tursoResolvable = false;
-  try {
-    const hostname = new URL(syncUrl).hostname;
-    // lookupSync only exists on newer Node; fall back to the callback form, which is
-    // fine here because connect() itself is already deferred off the startup path.
-    if (typeof (dns as any).lookupSync === 'function') {
-      (dns as any).lookupSync(hostname);
-      tursoResolvable = true;
-    } else {
-      dns.lookup(hostname, (err: any) => {
-        if (err) console.warn('[Database] Turso host lookup failed:', err.message);
-      });
-      tursoResolvable = true;
+  if (syncUrl && authToken) {
+    try {
+      const hostname = new URL(syncUrl).hostname;
+      // lookupSync only exists on newer Node; fall back to the callback form, which is
+      // fine here because connect() itself is already deferred off the startup path.
+      if (typeof (dns as any).lookupSync === 'function') {
+        (dns as any).lookupSync(hostname);
+        tursoResolvable = true;
+      } else {
+        dns.lookup(hostname, (err: any) => {
+          if (err) console.warn('[Database] Turso host lookup failed:', err.message);
+        });
+        tursoResolvable = true;
+      }
+    } catch (e) {
+      console.warn('[Database] Turso host not resolvable, using local SQLite for this boot:', (e as any)?.message || e);
     }
-  } catch (e) {
-    console.warn('[Database] Turso host not resolvable, using local SQLite for this boot:', (e as any)?.message || e);
   }
 
   if (syncUrl && authToken && tursoResolvable) {
@@ -111,7 +114,7 @@ function connect() {
       console.warn(`[Database] ⚠️ Turso Cloud connection failed (${initErr?.message || 'Network/DNS error'}). Falling back gracefully to local SQLite database mode.`);
       instance = new Database(dbPath);
       try {
-        instance.exec('PRAGMA journal_mode = WAL;');
+        instance.exec('PRAGMA journal_mode = WAL; PRAGMA busy_timeout = 5000;');
       } catch (e) {}
     }
   }
@@ -141,7 +144,7 @@ function connect() {
   console.log('[Database] No TURSO credentials provided, using local SQLite Database.');
   instance = new Database(dbPath);
   try {
-    instance.exec('PRAGMA journal_mode = WAL;');
+    instance.exec('PRAGMA journal_mode = WAL; PRAGMA busy_timeout = 5000;');
   } catch (e) {}
   }
 

@@ -4,12 +4,12 @@ import db from '../db/database';
 import { isSafeBaseUrl, getGeminiClient, sanitizeErrorMessage, getPollinationsImageUrl, translateAndEnhanceImagePrompt, generatePollinationsImage, getGeminiKeyFromPool, getGroqKeyFromPool, blacklistKey, extractCleanErrorMessage } from '../services/utils';
 import { aiRouteLimiter } from '../middleware/rateLimiter';
 import jwt from 'jsonwebtoken';
-import { JWT_SECRET } from '../middleware/auth';
+import { JWT_SECRET, requireAuth, requireAdmin } from '../middleware/auth';
 import { deductImageCost, refundImageCost, deductOrUseFreeImageQuota } from '../services/walletService';
 
 const router = express.Router();
 
-router.get('/api/server-ip', async (req, res) => {
+router.get('/api/server-ip', requireAuth, requireAdmin, async (req, res) => {
   try {
     const response = await fetch('https://api.ipify.org?format=json');
     const data = await response.json();

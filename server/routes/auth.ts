@@ -89,8 +89,8 @@ router.post('/otp/send', otpSendLimiter, async (req, res) => {
       }
     }
 
-    // Generate secure 5-digit numeric OTP code
-    const code = Math.floor(10000 + Math.random() * 90000).toString();
+    // Generate cryptographically secure 5-digit numeric OTP code
+    const code = crypto.randomInt(10000, 100000).toString();
     const expiresAt = new Date(Date.now() + 2 * 60 * 1000).toISOString(); // 2 minutes
 
     // Upsert into otps table

@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeAll, beforeEach, afterEach, vi } from 'vitest';
 import {
   isKeyBlacklisted,
   blacklistKey,
@@ -11,8 +11,13 @@ import {
 } from '../keyHealthService';
 import { getGeminiKeyFromPool } from '../utils';
 import db from '../../db/database';
+import { initializeSchema } from '../../db/schema';
 
 describe('keyHealthService – 429 & Auth Key Blacklisting', () => {
+  beforeAll(() => {
+    initializeSchema();
+  });
+
   beforeEach(() => {
     resetBlacklist();
   });
