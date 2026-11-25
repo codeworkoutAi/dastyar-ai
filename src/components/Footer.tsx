@@ -14,7 +14,8 @@ import {
  Headphones,
  ShieldCheck,
  Sparkles,
- ArrowLeft
+ ArrowLeft,
+ Cpu
 } from 'lucide-react';
 import { toPersianDigits } from '../lib/persianUtils';
 import { isBazaarEnvironment } from '../lib/bazaarUtils';
@@ -143,6 +144,17 @@ export function Footer() {
  </Link>
  </li>
  )}
+ <li>
+ <Link
+ to="/tarapol"
+ className="group inline-flex items-center gap-2.5 text-zinc-600 dark:text-zinc-400 dark:text-[#9aa5bc] hover:text-zinc-800 dark:text-zinc-100 dark:hover:text-white transition-all"
+ >
+ <div className="clay-debossed-socket w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
+ <Cpu className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+ </div>
+ <span className="font-bold group-hover:-translate-x-1 transition-transform">تَراپُل (شورای هوش مصنوعی)</span>
+ </Link>
+ </li>
  </ul>
  </div>
 

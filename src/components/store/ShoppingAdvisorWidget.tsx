@@ -380,7 +380,7 @@ export const ShoppingAdvisorWidget: React.FC<ShoppingAdvisorWidgetProps> = ({
                       پیشنهاد متناسب با نیاز شما:
                     </span>
                     {m.products.map(prod => {
-                      const isProdOutOfStock = prod.status === 'out_of_stock' || (prod.stock !== undefined && prod.stock <= 0);
+                      const isProdOutOfStock = (prod as any).status === 'out_of_stock' || ((prod as any).stock !== undefined && (prod as any).stock <= 0);
                       return (
                       <div
                         key={prod.id}

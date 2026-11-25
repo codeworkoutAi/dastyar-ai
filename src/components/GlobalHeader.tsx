@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Bot, Store, BookOpen, LogIn, User, Settings, Menu, X, Smartphone, Wallet, Sparkles } from 'lucide-react';
+import { Bot, Store, BookOpen, LogIn, User, Settings, Menu, X, Smartphone, Wallet, Sparkles, Cpu } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import { ThemeToggle } from './ThemeToggle';
 import { useUIStore } from '../store/uiStore';
@@ -32,6 +32,7 @@ export const GlobalHeader: React.FC = () => {
 
   const navLinks = [
     ...(!isBazaar ? [{ name: 'فروشگاه', path: '/', icon: Store }] : []),
+    { name: 'تَراپُل (AI Bridge)', path: '/tarapol', icon: Cpu },
     { name: 'وبلاگ و مقالات', path: '/blog', icon: BookOpen },
     { name: 'دستیار AI', path: '/ai-assistant', icon: Sparkles },
   ];

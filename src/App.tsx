@@ -18,6 +18,7 @@ const AboutPage = lazy(() => import('./pages/about/AboutPage'));
 const ContactPage = lazy(() => import('./pages/contact/ContactPage'));
 const AiAssistantPage = lazy(() => import('./pages/ai-assistant/AiAssistantPage'));
 const ChatLandingPage = lazy(() => import('./pages/chat/ChatLandingPage'));
+const TarapolPage = lazy(() => import('./pages/tarapol/TarapolPage'));
 
 // Lazy-loaded Modals and Widgets
 const ShoppingAdvisorWidget = lazy(() => import('./components/store/ShoppingAdvisorWidget').then(m => ({ default: m.ShoppingAdvisorWidget })));
@@ -166,6 +167,7 @@ export default function App() {
           <Route path="/about" element={<AboutPage />} />
           <Route path="/contact" element={<ContactPage />} />
           <Route path="/ai-assistant" element={<AiAssistantPage />} />
+          <Route path="/tarapol" element={<TarapolPage />} />
         </Routes>
 
         {/* Global Modals - Loaded on demand only when opened */}
