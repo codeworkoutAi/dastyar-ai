@@ -24,7 +24,9 @@ import {
   ExternalLink,
   HelpCircle,
   Clock,
-  Star
+  Star,
+  XCircle,
+  AlertTriangle
 } from 'lucide-react';
 import { GlobalHeader } from '../../components/GlobalHeader';
 import { Footer } from '../../components/Footer';
@@ -437,10 +439,10 @@ export function TarapolPage() {
               </div>
               <h3 className="text-sm font-black text-zinc-900 dark:text-white flex items-center gap-1.5">
                 <Server size={16} className="text-purple-500" />
-                پکیج هوشمند تَراپُل
+                همگام‌سازی تفاضلی و پیوست خودکار
               </h3>
               <p className="text-xs text-zinc-600 dark:text-zinc-300 leading-relaxed">
-                کانتکست‌ساز تَراپُل وضعیت گیت، معماری و فایل‌های مرتبط را استخراج کرده و به پورت 8765 لوکال می‌فرستد.
+                سیستم Smart Delta Sync فقط فایل‌های تغییریافته را استخراج می‌کند و پرونده‌های حجیم را به‌صورت خودکار به‌عنوان فایل پیوست (.md) به وب‌چت ارسال می‌نماید.
               </p>
             </div>
 
@@ -531,6 +533,89 @@ export function TarapolPage() {
                 </div>
               </div>
 
+            </div>
+          </div>
+        </section>
+
+
+        {/* ========================================================
+            COMPETITIVE COMPARISON TABLE
+           ======================================================== */}
+        <section className="py-6">
+          <div className="text-center max-w-3xl mx-auto mb-10 space-y-2.5">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-xl clay-pill text-xs font-bold text-indigo-600 dark:text-indigo-400">
+              <Compass size={14} />
+              <span>مقایسه شفاف و فنی</span>
+            </div>
+            <h2
+              className="text-2xl sm:text-3xl font-black text-zinc-900 dark:text-white"
+              style={{ fontFamily: "'Estedad', sans-serif" }}
+            >
+              تفاوت تَراپُل با ابزارهای اتصال تک‌مدلی چیست؟
+            </h2>
+            <p className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400">
+              مقایسه ساختار معماری، حریم خصوصی، مدل‌های تحت پشتیبانی و ایمنی پروژه
+            </p>
+          </div>
+
+          <div className="clay-card rounded-3xl overflow-hidden border border-zinc-200/60 dark:border-zinc-800/60">
+            <div className="overflow-x-auto">
+              <table className="w-full text-right border-collapse">
+                <thead>
+                  <tr className="bg-black/5 dark:bg-white/5 border-b border-zinc-200/60 dark:border-zinc-800/60 text-xs sm:text-sm">
+                    <th className="p-4 sm:p-5 font-black text-zinc-800 dark:text-zinc-100">ویژگی کلیدی</th>
+                    <th className="p-4 sm:p-5 font-black text-indigo-600 dark:text-indigo-400 bg-indigo-500/5">نرم‌افزار تَراپُل (Tarapol v2.1)</th>
+                    <th className="p-4 sm:p-5 font-bold text-zinc-500 dark:text-zinc-400">ابزارهای تک‌مدلی معمولی</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-zinc-200/40 dark:divide-zinc-800/40 text-xs sm:text-sm">
+                  <tr>
+                    <td className="p-4 sm:p-5 font-bold text-zinc-800 dark:text-zinc-200">مدل‌های تحت پشتیبانی</td>
+                    <td className="p-4 sm:p-5 font-bold text-emerald-600 dark:text-emerald-400 bg-indigo-500/5">
+                      چندمدلی: Google Gemini (Neon / Hydrogen) + Alibaba Qwen4-Max + DeepSeek R1
+                    </td>
+                    <td className="p-4 sm:p-5 text-zinc-500 dark:text-zinc-400">محدود به یک پلتفرم (فقط Gemini)</td>
+                  </tr>
+                  <tr>
+                    <td className="p-4 sm:p-5 font-bold text-zinc-800 dark:text-zinc-200">شورای هم‌زمان مدل‌ها (/council)</td>
+                    <td className="p-4 sm:p-5 font-bold text-emerald-600 dark:text-emerald-400 bg-indigo-500/5 flex items-center gap-1.5">
+                      <CheckCircle2 size={16} className="shrink-0" />
+                      <span>نقد و اجماع هم‌زمان Google Neon و Qwen4-Max</span>
+                    </td>
+                    <td className="p-4 sm:p-5 text-rose-500">
+                      <span className="inline-flex items-center gap-1"><XCircle size={15} /> ندارد</span>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="p-4 sm:p-5 font-bold text-zinc-800 dark:text-zinc-200">نیاز اجباری به اشتراک دلاری گوگل</td>
+                    <td className="p-4 sm:p-5 font-bold text-emerald-600 dark:text-emerald-400 bg-indigo-500/5">
+                      خیر — با Qwen4-Max و DeepSeek رایگان وب هم کاملاً کار می‌کند
+                    </td>
+                    <td className="p-4 sm:p-5 text-zinc-500 dark:text-zinc-400">اجبار به داشتن اکانت پولی Gemini Pro/Plus</td>
+                  </tr>
+                  <tr>
+                    <td className="p-4 sm:p-5 font-bold text-zinc-800 dark:text-zinc-200">حریم خصوصی لایسنس و IP</td>
+                    <td className="p-4 sm:p-5 font-bold text-emerald-600 dark:text-emerald-400 bg-indigo-500/5">
+                      ۱۰۰٪ آفلاین سخت‌افزاری — بدون اتصال به سرور یا ثبت IP
+                    </td>
+                    <td className="p-4 sm:p-5 text-zinc-500 dark:text-zinc-400">نیازمند بررسی آنلاین دوره‌ای سرور و ثبت IP</td>
+                  </tr>
+                  <tr>
+                    <td className="p-4 sm:p-5 font-bold text-zinc-800 dark:text-zinc-200">ایمنی فایل‌ها و کنترل کد</td>
+                    <td className="p-4 sm:p-5 font-bold text-emerald-600 dark:text-emerald-400 bg-indigo-500/5">
+                      نقش مشاور ارشد + کنترل امن تغییرات توسط ایجنت IDE
+                    </td>
+                    <td className="p-4 sm:p-5 text-zinc-500 dark:text-zinc-400">ویرایش مستقیم و اجرای ترمینال بدون تایید مرحله‌ای</td>
+                  </tr>
+                  <tr>
+                    <td className="p-4 sm:p-5 font-bold text-zinc-800 dark:text-zinc-200">حفظ نشست و حجم فایل‌ها</td>
+                    <td className="p-4 sm:p-5 font-bold text-emerald-600 dark:text-emerald-400 bg-indigo-500/5">
+                      همگام‌سازی تفاضلی (Delta Sync) + ارسال فایل‌های حجیم به‌صورت پیوست
+                    </td>
+                    <td className="p-4 sm:p-5 text-zinc-500 dark:text-zinc-400">همگام‌سازی یک‌طرفه تک‌مدلی</td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
           </div>
         </section>
@@ -824,6 +909,70 @@ export function TarapolPage() {
                 </div>
               );
             })}
+          </div>
+        </section>
+
+
+        {/* ========================================================
+            LEGAL TERMS, PRIVACY & DISCLAIMER
+           ======================================================== */}
+        <section className="py-6 max-w-4xl mx-auto w-full">
+          <div className="clay-card p-6 sm:p-8 rounded-3xl border border-amber-500/20 bg-amber-500/5 space-y-5">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-amber-500/15 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
+                <ShieldCheck size={20} />
+              </div>
+              <div>
+                <h3 className="text-base sm:text-lg font-black text-zinc-900 dark:text-white">
+                  شرایط استفاده، حریم خصوصی و سلب مسئولیت قانونی
+                </h3>
+                <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                  پیش از خرید لایسنس، لطفاً موارد شفاف زیر را مطالعه فرمایید
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs text-zinc-600 dark:text-zinc-300 leading-relaxed">
+              <div className="p-4 rounded-2xl clay-surface space-y-1.5">
+                <div className="font-black text-zinc-900 dark:text-white flex items-center gap-1.5">
+                  <Lock size={14} className="text-emerald-500" />
+                  <span>۱. حریم خصوصی ۱۰۰٪ محلی و آفلاین</span>
+                </div>
+                <p>
+                  رمز عبور گوگل یا کیوئن، سورس‌کد پروژه‌ها و حتی IP شما به هیچ سروری از جانب ما ارسال نمی‌شود. لایسنس نرم‌افزار کاملاً آفلاین و مبتنی بر امضای سخت‌افزاری است و ترافیک فقط میان مرورگر شخصی شما و IDE برقرار می‌شود.
+                </p>
+              </div>
+
+              <div className="p-4 rounded-2xl clay-surface space-y-1.5">
+                <div className="font-black text-zinc-900 dark:text-white flex items-center gap-1.5">
+                  <AlertTriangle size={14} className="text-amber-500" />
+                  <span>۲. استقلال از سرویس‌دهندگان و ریسک حساب وب</span>
+                </div>
+                <p>
+                  تَراپُل محصولی مستقل است و وابستگی رسمی به Google یا Alibaba ندارد. با وجود تعبیه حالت ایمنی انسانی (Human Safety Mode)، مسئولیت سهمیه، محدودیت حساب‌ها یا تغییرات ناگهانی رابط وب بر عهده سرویس‌دهنده مقصد و کاربر است.
+                </p>
+              </div>
+
+              <div className="p-4 rounded-2xl clay-surface space-y-1.5">
+                <div className="font-black text-zinc-900 dark:text-white flex items-center gap-1.5">
+                  <Code2 size={14} className="text-indigo-500" />
+                  <span>۳. ماهیت مشاوره‌ای و کنترل کد با Git</span>
+                </div>
+                <p>
+                  تَراپُل ابزار مشاوره ارشد هوش مصنوعی است و خروجی مدل‌ها ممکن است نیازمند بررسی تخصصی باشد. بازبینی نهایی کدها و نگهداری نسخه پشتیبان (توصیه اکید به استفاده از Git) بر عهده برنامه‌نویس است.
+                </p>
+              </div>
+
+              <div className="p-4 rounded-2xl clay-surface space-y-1.5">
+                <div className="font-black text-zinc-900 dark:text-white flex items-center gap-1.5">
+                  <Key size={14} className="text-purple-500" />
+                  <span>۴. مقررات لایسنس دیجیتال و عدم اشتراک‌گذاری</span>
+                </div>
+                <p>
+                  این نرم‌افزار کالای دیجیتال است و کلید اختصاصی بلافاصله صادر می‌شود؛ بنابراین پس از فعال‌سازی امکان عودت وجه وجود ندارد. انتقال، فروش مجدد، مهندسی معکوس یا دور زدن قفل سخت‌افزاری ممنوع بوده و موجب ابطال لایسنس می‌شود.
+                </p>
+              </div>
+            </div>
           </div>
         </section>
 
