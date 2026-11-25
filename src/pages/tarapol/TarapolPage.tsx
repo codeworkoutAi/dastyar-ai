@@ -138,24 +138,36 @@ export function TarapolPage() {
 
   const faqs = [
     {
+      q: 'آیا با خرید این محصول اشتراک پولی Gemini Pro یا Qwen دریافت می‌کنم؟',
+      a: 'خیر. تَراپُل صرفاً نرم‌افزار پل ارتباطی است و اشتراک پولی جمینای جزو این بسته نیست. با این حال، برخلاف ابزارهای تک‌مدلی، شما می‌توانید با حساب رایگان در سایت‌های Alibaba Qwen (مدل Qwen4-Max) و DeepSeek R1 بدون هیچ هزینه اشتراک دلاری از تَراپُل استفاده کنید و در صورت داشتن اشتراک Gemini، به مدل‌های Gemini 4 Neon و Hydrogen نیز متصل شوید.'
+    },
+    {
       q: 'آیا کدهای پروژه من به سرورهای واسط ارسال می‌شوند؟',
-      a: 'خیر، به هیچ وجه. نرم‌افزار تَراپُل کاملاً به صورت محلی (روی رایانه شما در پورت 8765) اجرا می‌شود. ارتباط فقط میان مرورگر کروم شخصی شما و محیط توسعه شما برقرار است و هیچ سرور میانی در این میان وجود ندارد.'
+      a: 'خیر، به هیچ وجه. نرم‌افزار تَراپُل کاملاً به صورت محلی (روی رایانه شما در پورت 8765) اجرا می‌شود. ارتباط فقط میان مرورگر کروم شخصی شما و محیط توسعه شما برقرار است و هیچ سرور میانی، کلید لاگ یا ردیابی IP در این میان وجود ندارد.'
     },
     {
       q: 'تفاوت تَراپُل با جمینای داخلی Antigravity چیست؟',
-      a: 'در Antigravity اخیراً مدل Gemini 4 Hydrogen در دسترس قرار گرفته است، اما مدل‌های تفکر عمیق‌تر مانند Gemini 4 Neon و همچنین مدل قدرتمند Alibaba Qwen4-Max در دسترس نیستند. تَراپُل این امکان را به شما می‌دهد که این مدل‌های فوق‌العاده را به عنوان مشاور ارشد در کنار مدل مجری خود داشته باشید.'
+      a: 'در Antigravity اخیراً مدل Gemini 4 Hydrogen در دسترس قرار گرفته است، اما مدل‌های تفکر عمیق‌تر مانند Gemini 4 Neon و همچنین مدل قدرتمند Alibaba Qwen4-Max در دسترس نیستند. تَراپُل این امکان را به شما می‌دهد که این مدل‌های فوق‌العاده را به عنوان شورای مشاور ارشد در کنار مدل مجری خود داشته باشید.'
     },
     {
       q: 'شورای هوش مصنوعی (/council) دقیقاً چطور کار می‌کند؟',
-      a: 'کافیست در پنجره چت Antigravity عبارت council/ را به همراه سوال یا معماری مدنظرتان بنویسید. تَراپُل به صورت خودکار فایل‌های مرتبط پروژه را بسته‌بندی کرده و همزمان برای Google Gemini 4 Neon و Alibaba Qwen4-Max ارسال می‌کند و اجماع نظر تفکیک‌شده آن‌ها را در قالب یک گزارش ساختاریافته به شما تحویل می‌دهد.'
+      a: 'کافیست در پنجره چت Antigravity عبارت council/ را به همراه سوال یا معماری مدنظرتان بنویسید. تَراپُل با فناوری Smart Delta Sync فایل‌های تغییریافته پروژه را به‌صورت پیوست (.md) بسته‌بندی کرده و همزمان برای Google Gemini 4 Neon و Alibaba Qwen4-Max ارسال می‌کند و اجماع نظر تفکیک‌شده آن‌ها را به شما تحویل می‌دهد.'
     },
     {
-      q: 'آیا در ادیتورهای Cursor و VS Code هم قابل استفاده است؟',
-      a: 'بله! در تنظیمات OpenAI ادیتور Cursor یا اکستنشن‌های VS Code (مانند Cline، Roo Code و Continue)، کافیست آدرس Base URL را برابر با http://localhost:8765/v1 بگذارید تا از تمامی مدل‌ها بهره‌مند شوید.'
+      q: 'با کدام محیط‌های توسعه (IDE) سازگار است؟ آیا از MCP پشتیبانی می‌کند؟',
+      a: 'بله! تَراپُل از هر دو استاندارد رسمی OpenAI Proxy (در آدرس http://localhost:8765/v1) و سرور MCP (Model Context Protocol) پشتیبانی می‌کند و با محیط‌های Google Antigravity، Cursor، VS Code، Claude Code، Cline، Roo Code و Continue سازگار است.'
     },
     {
-      q: 'لایسنس نرم‌افزار به چه صورت فعال می‌شود؟',
-      a: 'پس از خرید، کد لایسنس اختصاصی همراه با لینک دانلود نرم‌افزار نصبی Tarapol-Setup-v2.1.exe در اختیارتان قرار می‌گیرد. با وارد کردن کد در نرم‌افزار، لایسنس به صورت آفلاین بر روی سیستم شما فعال و دائمی می‌شود.'
+      q: 'آیا ممکن است حساب گوگل من محدود یا مسدود شود؟',
+      a: 'هرگونه خودکارسازی رابط وب منوط به سیاست‌های پلتفرم مقصد است؛ به همین دلیل در تَراپُل «حالت ایمنی انسانی (Human Safety Mode)» با مکث‌های تصادفی و رفتار غیررباتیک روی مرورگر واقعی خودتان تعبیه شده است تا ریسک به حداقل برسد. با این حال پیشنهاد می‌شود با آگاهی از قوانین پلتفرم مقصد و روی حساب شخصی خود استفاده کنید.'
+    },
+    {
+      q: 'اگر گوگل یا علی‌بابا رابط کاربری سایت خود را تغییر دهند چه می‌شود؟',
+      a: 'تیم توسعه تَراپُل ساختار وب‌چت‌ها را به‌طور مداوم پایش می‌کند و به‌روزرسانی‌های سازگاری اکستنشن و نرم‌افزار را به‌صورت رایگان برای دارندگان لایسنس عرضه می‌نماید.'
+    },
+    {
+      q: 'آیا روی مک (macOS) یا لینوکس اجرا می‌شود؟ لایسنس چطور فعال می‌شود؟',
+      a: 'نسخه نصبی فعلی تَراپُل (Tarapol-Setup-v2.1.exe) ویژه ویندوز ۱۰ و ۱۱ (۶۴ بیتی) است و نیاز به نصب دستی Node.js یا پایتون ندارد. پس از خرید، کد لایسنس اختصاصی در اختیارتان قرار می‌گیرد و بر اساس پلن انتخابی (۱، ۲ یا ۵ دستگاه) به‌صورت دائمی و کاملاً آفلاین فعال می‌شود.'
     }
   ];
 
@@ -513,28 +525,127 @@ export function TarapolPage() {
                 </div>
               </div>
 
-              {/* Cursor & VS Code Side */}
+              {/* Cursor, VS Code & MCP Side */}
               <div className="space-y-4 text-right lg:border-r lg:border-zinc-200 dark:lg:border-zinc-800 lg:pr-8">
                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400 text-xs font-bold">
                   <Server size={14} />
-                  <span>سازگار با Cursor، VS Code و Roo Code</span>
+                  <span>سازگار با Cursor، VS Code، Claude Code، Cline، Roo Code و Continue</span>
                 </div>
                 <h3 className="text-xl sm:text-2xl font-black text-zinc-900 dark:text-white">
-                  پروکسی سازگار با استاندارد رسمی OpenAI
+                  پروکسی استاندارد OpenAI + سرور بومی MCP
                 </h3>
                 <p className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-300 leading-relaxed">
-                  تَراپُل یک اندپوینت کامل روی پورت ۸۷۶۵ باز می‌کند. کافیست در تنظیمات ادیتور خود مقادیر زیر را وارد کنید تا تمام جریان‌های کاری شما متصل شوند:
+                  تَراپُل هم یک سرور پروکسی سازگار با استاندارد OpenAI روی پورت ۸۷۶۵ باز می‌کند و هم یک سرور اختصاصی <strong>MCP (Model Context Protocol)</strong> را با یک کلیک به IDE شما متصل می‌سازد و هر لحظه با کلید روشن/خاموش آنی به مدل پیش‌فرض IDE برمی‌گردد:
                 </p>
                 <div className="p-4 rounded-2xl bg-zinc-900 text-zinc-100 font-mono text-xs space-y-2 text-left" dir="ltr">
-                  <div className="text-zinc-400 text-[11px]">// Cursor & VS Code OpenAI Settings:</div>
+                  <div className="text-zinc-400 text-[11px]">// Cursor, Cline, Roo Code, Continue & MCP:</div>
                   <div>Base URL: <span className="text-emerald-400">http://localhost:8765/v1</span></div>
                   <div>API Key:  <span className="text-cyan-400">tarapol-free-key</span> (یا هر متنی)</div>
-                  <div>Models:   <span className="text-amber-400">gemini-4-neon, qwen-4-max, auto</span></div>
+                  <div>Models:   <span className="text-amber-400">gemini-4-neon, qwen-4-max, deepseek-r1</span></div>
                 </div>
               </div>
 
             </div>
           </div>
+        </section>
+
+
+        {/* ========================================================
+            WEB ACCOUNTS & MODEL MATRIX + AUDIENCE + PREREQUISITES
+           ======================================================== */}
+        <section className="py-6 space-y-8">
+          
+          {/* Models Available Per Web Account */}
+          <div className="clay-card p-6 sm:p-8 rounded-3xl space-y-5">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-zinc-200/60 dark:border-zinc-800/60 pb-4">
+              <div>
+                <h3 className="text-lg sm:text-xl font-black text-zinc-900 dark:text-white">
+                  با هر حساب وب به چه مدل‌هایی دسترسی دارید؟
+                </h3>
+                <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
+                  سهمیه هر حساب توسط سرویس‌دهنده مقصد تعیین می‌شود؛ اشتراک پولی Gemini جزو محصول نیست و تَراپُل از حساب مرورگر خودتان استفاده می‌کند.
+                </p>
+              </div>
+              <span className="px-3 py-1 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 text-xs font-bold self-start sm:self-center">
+                بدون نیاز به هزینه دلاری API
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs sm:text-sm">
+              <div className="p-4 rounded-2xl clay-surface space-y-2 border border-emerald-500/20">
+                <div className="font-black text-emerald-600 dark:text-emerald-400">حساب رایگان Qwen و DeepSeek</div>
+                <p className="text-xs text-zinc-600 dark:text-zinc-300 leading-relaxed">
+                  دسترسی کاملاً رایگان به مدل پرچمدار برنامه‌نویسی <strong>Alibaba Qwen4-Max</strong> و مدل استدلالی <strong>DeepSeek R1 / V3</strong> بدون نیاز به خرید اشتراک خارجی.
+                </p>
+              </div>
+              <div className="p-4 rounded-2xl clay-surface space-y-2 border border-indigo-500/20">
+                <div className="font-black text-indigo-600 dark:text-indigo-400">دارندگان اشتراک Gemini Plus / Pro</div>
+                <p className="text-xs text-zinc-600 dark:text-zinc-300 leading-relaxed">
+                  دسترسی به مدل‌های تفکر عمیق <strong>Google Gemini 4 Neon</strong>، <strong>Hydrogen</strong> و <strong>Argon</strong> مستقیماً داخل Antigravity و Cursor.
+                </p>
+              </div>
+              <div className="p-4 rounded-2xl clay-surface space-y-2 border border-purple-500/20">
+                <div className="font-black text-purple-600 dark:text-purple-400">کنترل پنل فارسی و حالت ایمنی انسانی</div>
+                <p className="text-xs text-zinc-600 dark:text-zinc-300 leading-relaxed">
+                  نصب آسان بدون نیاز به نصب دستی Node.js یا پایتون، همراه با <strong>کلید روشن/خاموش آنی</strong> و مکث انسانی ۱۵۰۰ms برای ایمنی حساب.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Target Audience + System Prerequisites */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
+            <div className="clay-card p-6 sm:p-8 rounded-3xl space-y-4">
+              <h3 className="text-base sm:text-lg font-black text-zinc-900 dark:text-white flex items-center gap-2">
+                <Users size={18} className="text-indigo-500" />
+                <span>این نرم‌افزار برای چه کسانی مناسب است؟</span>
+              </h3>
+              <ul className="space-y-2.5 text-xs sm:text-sm text-zinc-600 dark:text-zinc-300">
+                <li className="flex items-start gap-2">
+                  <CheckCircle2 size={15} className="text-emerald-500 shrink-0 mt-0.5" />
+                  <span>کاربران <strong>Google Antigravity</strong> که به دنبال مشاوره مدل‌های خارج از IDE مانند <strong>Gemini 4 Neon</strong> و <strong>Qwen4-Max</strong> هستند.</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <CheckCircle2 size={15} className="text-emerald-500 shrink-0 mt-0.5" />
+                  <span>توسعه‌دهندگان <strong>Cursor، VS Code، Cline، Roo Code و Claude Code</strong> که نمی‌خواهند هزینه دلاری جداگانه برای توکن‌های API بپردازند.</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <CheckCircle2 size={15} className="text-emerald-500 shrink-0 mt-0.5" />
+                  <span>برنامه‌نویسانی که پیش از تغییرات حساس، یک <strong>شورای نقد و بازبینی کد</strong> با امنیت محلی می‌خواهند.</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <CheckCircle2 size={15} className="text-emerald-500 shrink-0 mt-0.5" />
+                  <span>افرادی که به دنبال لایسنس دائمی و کاملاً آفلاین بدون ثبت IP در سرور واسط هستند.</span>
+                </li>
+              </ul>
+            </div>
+
+            <div className="clay-card p-6 sm:p-8 rounded-3xl space-y-4">
+              <h3 className="text-base sm:text-lg font-black text-zinc-900 dark:text-white flex items-center gap-2">
+                <Laptop size={18} className="text-purple-500" />
+                <span>پیش‌نیازهای سیستم و نصب</span>
+              </h3>
+              <ul className="space-y-2.5 text-xs sm:text-sm text-zinc-600 dark:text-zinc-300">
+                <li className="flex items-start gap-2">
+                  <CheckCircle2 size={15} className="text-indigo-500 shrink-0 mt-0.5" />
+                  <span>سیستم‌عامل <strong>ویندوز ۱۰ یا ۱۱ (۶۴ بیتی)</strong> — نسخه مک (macOS) و لینوکس در حال حاضر ارائه نمی‌شود.</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <CheckCircle2 size={15} className="text-indigo-500 shrink-0 mt-0.5" />
+                  <span>مرورگر <strong>Google Chrome</strong> یا <strong>Microsoft Edge</strong> با اکستنشن اختصاصی تَراپُل.</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <CheckCircle2 size={15} className="text-indigo-500 shrink-0 mt-0.5" />
+                  <span>حساب کاربری در پلتفرم هدف (حساب رایگان Qwen/DeepSeek یا اشتراک فعال Gemini در مرورگر؛ اشتراک Gemini جزو محصول نیست).</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <CheckCircle2 size={15} className="text-indigo-500 shrink-0 mt-0.5" />
+                  <span>دسترسی اینترنت به وب‌سایت‌های <span className="font-mono text-[11px]" dir="ltr">gemini.google.com</span> یا <span className="font-mono text-[11px]" dir="ltr">chat.qwen.ai</span>.</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+
         </section>
 
 
@@ -832,7 +943,7 @@ export function TarapolPage() {
                   نصب نرم‌افزار تَراپُل
                 </h4>
                 <p className="text-xs text-zinc-600 dark:text-zinc-300 leading-relaxed">
-                  فایل نصبی <strong>Tarapol-Setup-v2.1.exe</strong> را اجرا کرده و با کد لایسنس اختصاصی خود آن را فعال کنید.
+                  فایل نصبی <strong>Tarapol-Setup-v2.1.exe</strong> را اجرا کنید (بدون نیاز به نصب دستی Node.js یا پایتون). اگر ویندوز پیام آبی <em>Windows protected your PC</em> نشان داد، روی <strong>More info</strong> و سپس <strong>Run anyway</strong> بزنید و کد لایسنس را در کنترل پنل فارسی وارد کنید.
                 </p>
               </div>
 
@@ -841,10 +952,10 @@ export function TarapolPage() {
                   ۲
                 </div>
                 <h4 className="text-sm font-black text-zinc-900 dark:text-white">
-                  فعال‌سازی اکستنشن کروم
+                  اتصال اکستنشن کروم و انتخاب IDE
                 </h4>
                 <p className="text-xs text-zinc-600 dark:text-zinc-300 leading-relaxed">
-                  افزونه تَراپُل را در مرورگر لود کرده و تب چت Gemini یا Qwen را باز بگذارید تا وضعیت سبز شود.
+                  افزونه تَراپُل را در کروم/اج لود کرده و تب Gemini، Qwen یا DeepSeek را باز بگذارید. در پنل کنترل، نرم‌افزارهای Antigravity، Cursor و VS Code به‌صورت خودکار شناسایی و با یک کلیک متصل می‌شوند.
                 </p>
               </div>
 
