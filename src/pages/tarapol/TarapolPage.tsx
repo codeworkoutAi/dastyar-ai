@@ -131,11 +131,11 @@ export function TarapolPage() {
     >
       <GlobalHeader />
 
-      <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 space-y-16 sm:space-y-24">
+      <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-16 space-y-20 sm:space-y-28">
         <TarapolHero usePersianDigits={usePersianDigits} />
-        <IdeIntegrationTabs />
-        <ComparisonMatrix />
         <FeatureBentoGrid />
+        <IdeIntegrationTabs />
+        <ComparisonMatrix usePersianDigits={usePersianDigits} />
         <PricingCards3D formatPrice={formatPrice} onSelectPlan={handleOpenCheckout} />
         <TechnicalFaq />
       </main>
