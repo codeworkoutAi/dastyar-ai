@@ -61,7 +61,7 @@ export function TarapolPage() {
         '@type': 'SoftwareApplication',
         name: 'نرم‌افزار تَراپُل (Tarapol Universal AI Gateway)',
         applicationCategory: 'DeveloperApplication',
-        operatingSystem: 'Windows 10, Windows 11',
+        operatingSystem: 'Windows 10/11, macOS, Linux',
         description: 'شورای مشاوران ارشد هوش مصنوعی و گیت‌وی محلی برای ارتباط محیط‌های کدنویسی با برترین مدل‌های استدلالی وب (Gemini 4 Neon و Qwen4-Max).',
         image: `${window.location.origin}/images/products/tarapol-box.jpg`,
         offers: {
@@ -167,7 +167,7 @@ export function TarapolPage() {
     },
     {
       q: 'آیا روی مک (macOS) یا لینوکس اجرا می‌شود؟ لایسنس چطور فعال می‌شود؟',
-      a: 'نسخه نصبی فعلی تَراپُل (Tarapol-Setup-v2.1.exe) ویژه ویندوز ۱۰ و ۱۱ (۶۴ بیتی) است و نیاز به نصب دستی Node.js یا پایتون ندارد. پس از خرید، کد لایسنس اختصاصی در اختیارتان قرار می‌گیرد و بر اساس پلن انتخابی (۱، ۲ یا ۵ دستگاه) به‌صورت دائمی و کاملاً آفلاین فعال می‌شود.'
+      a: 'بله! تَراپُل دارای نسخه‌های رسمی و مستقل برای هر سه سیستم‌عامل ویندوز (Tarapol-Setup-v2.1.exe)، مک (Tarapol-macOS-v2.1.dmg سازگار با Apple Silicon و Intel) و لینوکس (Tarapol-Linux-x64-v2.1.tar.gz) است و هیچ نیازی به نصب دستی Node.js یا پایتون ندارد. پس از خرید، کد لایسنس اختصاصی به‌صورت دائمی و کاملاً آفلاین روی سیستم شما فعال می‌شود.'
     }
   ];
 
@@ -336,7 +336,7 @@ export function TarapolPage() {
                   <div className="mt-3 px-3 py-2 rounded-xl bg-black/5 dark:bg-white/5 flex items-center justify-between text-xs text-zinc-600 dark:text-zinc-300">
                     <span className="font-bold flex items-center gap-1.5">
                       <Terminal size={14} className="text-indigo-500" />
-                      Windows 10/11 x64
+                      Windows · macOS · Linux
                     </span>
                     <span className="font-mono text-[11px] text-zinc-500">Node + Python GUI</span>
                   </div>
@@ -628,7 +628,7 @@ export function TarapolPage() {
               <ul className="space-y-2.5 text-xs sm:text-sm text-zinc-600 dark:text-zinc-300">
                 <li className="flex items-start gap-2">
                   <CheckCircle2 size={15} className="text-indigo-500 shrink-0 mt-0.5" />
-                  <span>سیستم‌عامل <strong>ویندوز ۱۰ یا ۱۱ (۶۴ بیتی)</strong> — نسخه مک (macOS) و لینوکس در حال حاضر ارائه نمی‌شود.</span>
+                  <span>پشتیبانی رسمی از <strong>ویندوز ۱۰ و ۱۱</strong> (فایل نصبی .exe)، <strong>مک (macOS)</strong> (بسته .dmg) و <strong>لینوکس x64</strong> (.tar.gz) — بدون نیاز به نصب دستی Node.js یا پایتون.</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <CheckCircle2 size={15} className="text-indigo-500 shrink-0 mt-0.5" />
@@ -680,6 +680,13 @@ export function TarapolPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-zinc-200/40 dark:divide-zinc-800/40 text-xs sm:text-sm">
+                  <tr>
+                    <td className="p-4 sm:p-5 font-bold text-zinc-800 dark:text-zinc-200">سیستم‌عامل‌های تحت پشتیبانی</td>
+                    <td className="p-4 sm:p-5 font-bold text-emerald-600 dark:text-emerald-400 bg-indigo-500/5">
+                      چندپلتفرمه بومی: ویندوز (.exe) + مک (.dmg) + لینوکس (.tar.gz)
+                    </td>
+                    <td className="p-4 sm:p-5 text-zinc-500 dark:text-zinc-400">محدود به ویندوز ۱۰ و ۱۱</td>
+                  </tr>
                   <tr>
                     <td className="p-4 sm:p-5 font-bold text-zinc-800 dark:text-zinc-200">مدل‌های تحت پشتیبانی</td>
                     <td className="p-4 sm:p-5 font-bold text-emerald-600 dark:text-emerald-400 bg-indigo-500/5">
@@ -943,7 +950,7 @@ export function TarapolPage() {
                   نصب نرم‌افزار تَراپُل
                 </h4>
                 <p className="text-xs text-zinc-600 dark:text-zinc-300 leading-relaxed">
-                  فایل نصبی <strong>Tarapol-Setup-v2.1.exe</strong> را اجرا کنید (بدون نیاز به نصب دستی Node.js یا پایتون). اگر ویندوز پیام آبی <em>Windows protected your PC</em> نشان داد، روی <strong>More info</strong> و سپس <strong>Run anyway</strong> بزنید و کد لایسنس را در کنترل پنل فارسی وارد کنید.
+                  فایل متناسب با سیستم خود را اجرا کنید: در ویندوز <strong>Tarapol-Setup-v2.1.exe</strong> (در پیام آبی SmartScreen روی More info → Run anyway بزنید)، در مک <strong>Tarapol-macOS-v2.1.dmg</strong> (کلیک راست → Open) و در لینوکس <strong>Launch-Tarapol.sh</strong> را باز کرده و کد لایسنس را وارد نمایید.
                 </p>
               </div>
 
