@@ -1483,4 +1483,110 @@ router.post('/products/:id/reviews', requireAuth, (req: any, res) => {
   }
 });
 
+function escapeXml(str: string): string {
+  return String(str || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
+}
+
+function buildTorobProducts(baseUrl: string) {
+  const rows = db.prepare(`
+    SELECT
+      p.*,
+      COUNT(CASE WHEN l.status = 'available' THEN 1 END) as stock
+    FROM products p
+    LEFT JOIN licenses l ON p.id = l.productId
+    WHERE (p.category IS NULL OR p.category NOT IN ('wallet_topup', 'plan'))
+      AND (p.status != 'inactive' OR p.status IS NULL)
+    GROUP BY p.id
+    ORDER BY p.id DESC
+  `).all() as any[];
+
+  return rows.map((p) => {
+    const isTarapol = String(p.slug || '').toLowerCase().includes('tarapol') || String(p.title || '').includes('تراپل') || String(p.title || '').includes('تَراپُل');
+    const pageUrl = isTarapol
+      ? `${baseUrl}/tarapol`
+      : `${baseUrl}/store/product/${encodeURIComponent(p.slug || String(p.id))}`;
+
+    let imageUrl = `${baseUrl}/og-image.png`;
+    if (typeof p.image === 'string' && p.image.trim() && !p.image.startsWith('data:')) {
+      imageUrl = p.image.startsWith('http') ? p.image : `${baseUrl}${p.image.startsWith('/') ? '' : '/'}${p.image}`;
+    } else if (isTarapol) {
+      imageUrl = `${baseUrl}/images/products/tarapol-box.webp`;
+    }
+
+    const rawPrice = Number(p.price || 0);
+    const oldPrice = Number(p.originalPrice || 0);
+    const hasStock = Number(p.stock || 0) > 0 || p.deliveryType !== 'auto';
+
+    return {
+      title: String(p.title || '').trim(),
+      page_url: pageUrl,
+      price: rawPrice,
+      old_price: oldPrice > rawPrice ? oldPrice : 0,
+      availability: hasStock ? 'instock' : 'outofstock',
+      image_url: imageUrl,
+      short_desc: String(p.description || '').replace(/\s+/g, ' ').trim().slice(0, 300),
+      category_name: String(p.category || 'ابزار هوش مصنوعی'),
+    };
+  }).filter((item) => item.title && item.price > 0);
+}
+
+// GET /api/store/torob/products (Torob standard JSON product API)
+router.get('/torob/products', (req, res) => {
+  try {
+    const baseUrl = getSafeBaseUrl(req);
+    const page = Math.max(1, Number(req.query.page || 1));
+    const limit = Math.min(200, Math.max(1, Number(req.query.limit || 100)));
+    const allItems = buildTorobProducts(baseUrl);
+    const maxPages = Math.max(1, Math.ceil(allItems.length / limit));
+    const start = (page - 1) * limit;
+
+    res.setHeader('Cache-Control', 'public, max-age=300');
+    res.json({
+      count: allItems.length,
+      max_pages: maxPages,
+      products: allItems.slice(start, start + limit),
+    });
+  } catch (error) {
+    console.error('[Store API] Torob JSON feed error:', error);
+    res.status(500).json({ error: 'خطای سرور در تولید خوراک ترب' });
+  }
+});
+
+// GET /api/store/torob/feed.xml (Torob XML product feed)
+router.get('/torob/feed.xml', (req, res) => {
+  try {
+    const baseUrl = getSafeBaseUrl(req);
+    const items = buildTorobProducts(baseUrl);
+    const xmlItems = items.map((item) => `
+    <item>
+      <title>${escapeXml(item.title)}</title>
+      <link>${escapeXml(item.page_url)}</link>
+      <description>${escapeXml(item.short_desc)}</description>
+      <g:price>${item.price} IRT</g:price>
+      <g:availability>${item.availability === 'instock' ? 'in stock' : 'out of stock'}</g:availability>
+      <g:image_link>${escapeXml(item.image_url)}</g:image_link>
+      <g:product_type>${escapeXml(item.category_name)}</g:product_type>
+    </item>`).join('');
+
+    res.setHeader('Content-Type', 'application/xml; charset=utf-8');
+    res.setHeader('Cache-Control', 'public, max-age=300');
+    res.send(`<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:g="http://base.google.com/ns/1.0">
+  <channel>
+    <title>Dastyar AI Store - Torob Feed</title>
+    <link>${escapeXml(baseUrl)}</link>
+    <description>فروشگاه ابزارها و اکانت‌های هوش مصنوعی دستیار</description>${xmlItems}
+  </channel>
+</rss>`);
+  } catch (error) {
+    console.error('[Store API] Torob XML feed error:', error);
+    res.status(500).type('text/plain').send('Error generating Torob XML feed');
+  }
+});
+
 export default router;
