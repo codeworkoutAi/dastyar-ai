@@ -64,6 +64,7 @@ export const sitemapHandler = (req: express.Request, res: express.Response) => {
       { path: '/about', priority: '0.8', changefreq: 'monthly' },
       { path: '/contact', priority: '0.8', changefreq: 'monthly' },
       { path: '/ai-assistant', priority: '0.9', changefreq: 'weekly' },
+      { path: '/tarapol', priority: '0.95', changefreq: 'weekly' },
     ];
     for (const page of staticPages) {
       xml += `  <url>\n    <loc>${escapeXml(baseUrl + page.path)}</loc>\n    <changefreq>${page.changefreq}</changefreq>\n    <priority>${page.priority}</priority>\n  </url>\n`;

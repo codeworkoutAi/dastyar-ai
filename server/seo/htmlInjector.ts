@@ -16,6 +16,7 @@ const STATIC_SEO_PATHS = new Set([
   '/about', 
   '/contact', 
   '/ai-assistant', 
+  '/tarapol',
   '/chat', 
   '/store', 
   '/store/category/account', 
@@ -618,7 +619,32 @@ export async function renderHtmlWithSeo(req: express.Request, res: express.Respo
           pageTitle = 'تماس با Dastyar AI';
           pageDesc = 'راه‌های تماس با تیم Dastyar AI — ایمیل، تلگرام، و فرم تماس.';
           pageType = 'website';
-        } else if (urlPath === '/ai-assistant') {
+        } else if (urlPath === '/tarapol') {
+          pageTitle = 'تَراپُل (Tarapol) | شورای مشاوره مدل‌های هوش مصنوعی وب در محیط کدنویسی';
+          pageDesc = 'نرم‌افزار تَراپُل محیط کدنویسی شما (Antigravity، Cursor و VS Code) را به شورای مدل‌های برتر وب از جمله Google Gemini 4 Neon و Alibaba Qwen4-Max متصل می‌کند؛ امن، سریع و بدون هزینه دلاری API.';
+          pageImage = `${baseUrl}/images/products/tarapol-box.webp`;
+          pageType = 'product';
+          structuredData = {
+            '@context': 'https://schema.org',
+            '@type': 'SoftwareApplication',
+            name: 'نرم‌افزار تَراپُل (Tarapol)',
+            applicationCategory: 'DeveloperApplication',
+            operatingSystem: 'Windows 10/11, macOS, Linux',
+            description: pageDesc,
+            image: pageImage,
+            url: `${baseUrl}/tarapol`,
+            offers: {
+              '@type': 'AggregateOffer',
+              priceCurrency: 'IRR',
+              lowPrice: '3900000',
+              highPrice: '14900000',
+              offerCount: '3'
+            }
+          };
+        } else if (urlPath === '/tarapol') {
+      html = html.replace(/<h1[^>]*>.*?<\/h1>/, '<h1 style="font-size:20px;font-weight:700;margin:0 0 8px 0;color:#f8fafc;">نرم‌افزار تَراپُل (Tarapol) — شورای مشاوره مدل‌های برتر وب</h1>');
+      html = html.replace(/<h2[^>]*>.*?<\/h2>/, '');
+    } else if (urlPath === '/ai-assistant') {
           pageTitle = 'دستیار هوش مصنوعی چیست؟ راهنمای انتخاب و خرید ابزارهای هوش مصنوعی | Dastyar AI';
           pageDesc = 'دستیار هوش مصنوعی چیست، چه کاربردهایی دارد و چطور بهترین اکانت قانونی هوش مصنوعی را متناسب با نیاز شغلی خود انتخاب و خریداری کنیم؟ راهنمای کامل Dastyar AI.';
           pageType = 'article';
@@ -677,6 +703,9 @@ export async function renderHtmlWithSeo(req: express.Request, res: express.Respo
       html = html.replace(/<h2[^>]*>.*?<\/h2>/, '');
     } else if (urlPath === '/contact') {
       html = html.replace(/<h1[^>]*>.*?<\/h1>/, '<h1 style="font-size:20px;font-weight:700;margin:0 0 8px 0;color:#f8fafc;">تماس با Dastyar AI</h1>');
+      html = html.replace(/<h2[^>]*>.*?<\/h2>/, '');
+    } else if (urlPath === '/tarapol') {
+      html = html.replace(/<h1[^>]*>.*?<\/h1>/, '<h1 style="font-size:20px;font-weight:700;margin:0 0 8px 0;color:#f8fafc;">نرم‌افزار تَراپُل (Tarapol) — شورای مشاوره مدل‌های برتر وب</h1>');
       html = html.replace(/<h2[^>]*>.*?<\/h2>/, '');
     } else if (urlPath === '/ai-assistant') {
       html = html.replace(/<h1[^>]*>.*?<\/h1>/, '<h1 style="font-size:20px;font-weight:700;margin:0 0 8px 0;color:#f8fafc;">دستیار هوش مصنوعی چیست؟</h1>');

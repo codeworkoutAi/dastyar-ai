@@ -81,6 +81,17 @@ export const TechnicalFaq: React.FC = () => {
             <ArrowLeft size={16} />
           </Link>
         </div>
+
+        {/* GEO / SEO Internal Links to Educational Guide & Release Post */}
+        <div className="pt-4 border-t border-subtle flex flex-wrap items-center justify-center gap-4 text-xs font-bold text-[var(--text-muted)]">
+          <Link to="/blog/tarapol-ai-council-guide" className="hover:text-[var(--accent-primary)] transition-colors">
+            راهنمای آموزشی تشکیل شورای هوش مصنوعی با تَراپُل ←
+          </Link>
+          <span className="text-[var(--text-dim)]">·</span>
+          <Link to="/blog/tarapol-v2-1-release" className="hover:text-[var(--accent-primary)] transition-colors">
+            معرفی کامل نسخه ۲.۱ تَراپُل ←
+          </Link>
+        </div>
       </div>
     </section>
   );

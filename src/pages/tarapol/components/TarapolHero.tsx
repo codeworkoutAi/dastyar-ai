@@ -1,12 +1,45 @@
-import React from 'react';
-import { Key, Sparkles, CheckCircle2, Users } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Key, Sparkles, CheckCircle2, Users, ChevronRight, ChevronLeft } from 'lucide-react';
+import { toPersianDigits } from '../../../lib/persianUtils';
 
 const COUNCIL_MODELS = [
   { name: 'Google Gemini 4 Neon', icon: '/icons/gemini.svg' },
   { name: 'Alibaba Qwen4-Max', icon: '/icons/qwen.svg' },
 ];
 
+const HERO_SLIDES = [
+  { title: '۱. داشبورد و پایش لحظه‌ای', src: '/images/tarapol/app-dashboard.webp' },
+  { title: '۲. محیط‌های توسعه متصل', src: '/images/tarapol/app-ides.webp' },
+  { title: '۳. مدل‌ها و وب‌چت', src: '/images/tarapol/app-models.webp' },
+  { title: '۴. تنظیمات شبکه', src: '/images/tarapol/app-network.webp' },
+  { title: '۵. تنظیمات موتور', src: '/images/tarapol/app-engine.webp' },
+  { title: '۶. مدیریت لایسنس دائمی', src: '/images/tarapol/app-license.webp' },
+  { title: '۷. لاگ و عیب‌یابی', src: '/images/tarapol/app-logs.webp' },
+  { title: '۸. راهنما و آموزش گام‌به‌گام', src: '/images/tarapol/app-guide.webp' },
+];
+
 export const TarapolHero: React.FC = () => {
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
+
+  useEffect(() => {
+    if (isPaused) return;
+    const timer = window.setInterval(() => {
+      setActiveIndex((prev) => (prev + 1) % HERO_SLIDES.length);
+    }, 3500);
+    return () => window.clearInterval(timer);
+  }, [isPaused]);
+
+  const handlePrev = () => {
+    setActiveIndex((prev) => (prev - 1 + HERO_SLIDES.length) % HERO_SLIDES.length);
+  };
+
+  const handleNext = () => {
+    setActiveIndex((prev) => (prev + 1) % HERO_SLIDES.length);
+  };
+
+  const currentSlide = HERO_SLIDES[activeIndex];
+
   return (
     <section className="pt-4 sm:pt-8 pb-4">
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-center">
@@ -56,7 +89,10 @@ export const TarapolHero: React.FC = () => {
               'امنیت کامل کدها روی سیستم شخصی شما',
               'نصب سریع روی ویندوز، مک و لینوکس',
             ].map((item) => (
-              <div key={item} className="flex items-center gap-2 text-xs sm:text-sm font-bold text-[var(--text-main)]">
+              <div
+                key={item}
+                className="flex items-center gap-2 text-xs sm:text-sm font-bold text-[var(--text-main)]"
+              >
                 <CheckCircle2 size={15} className="text-emerald-500 shrink-0" />
                 <span>{item}</span>
               </div>
@@ -83,25 +119,73 @@ export const TarapolHero: React.FC = () => {
           </div>
         </div>
 
-        {/* Left Column: Attractive 3D Product Visual */}
-        <div className="lg:col-span-6">
+        {/* Left Column: Ordered Animated App Carousel (1 -> 8) */}
+        <div
+          className="lg:col-span-6"
+          onMouseEnter={() => setIsPaused(true)}
+          onMouseLeave={() => setIsPaused(false)}
+        >
           <div className="clay-card-elevated rounded-card p-3 sm:p-4 space-y-3">
-            <div className="rounded-2xl overflow-hidden clay-surface-inset aspect-[16/10] bg-[#0f172a]">
-              <img
-                src="/images/tarapol/hero-bridge.webp"
-                alt="تَراپُل — اتصال مستقیم محیط کدنویسی به شورای مدل‌های هوش مصنوعی وب"
-                className="w-full h-full object-cover"
-                loading="eager"
-              />
+            {/* Carousel Stage */}
+            <div className="relative rounded-2xl overflow-hidden clay-surface-inset aspect-[16/9] bg-[#18181b]">
+              {HERO_SLIDES.map((slide, idx) => (
+                <img
+                  key={slide.src}
+                  src={slide.src}
+                  alt={slide.title}
+                  className={`absolute inset-0 w-full h-full object-cover transition-all duration-500 ${
+                    idx === activeIndex
+                      ? 'opacity-100 scale-100'
+                      : 'opacity-0 scale-[0.98] pointer-events-none'
+                  }`}
+                  loading={idx === 0 ? 'eager' : 'lazy'}
+                />
+              ))}
+
+              {/* Prev / Next Controls */}
+              <button
+                type="button"
+                onClick={handlePrev}
+                aria-label="تصویر قبلی"
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/55 hover:bg-black/75 text-white flex items-center justify-center transition-colors cursor-pointer"
+              >
+                <ChevronRight size={16} />
+              </button>
+              <button
+                type="button"
+                onClick={handleNext}
+                aria-label="تصویر بعدی"
+                className="absolute left-2.5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/55 hover:bg-black/75 text-white flex items-center justify-center transition-colors cursor-pointer"
+              >
+                <ChevronLeft size={16} />
+              </button>
             </div>
-            <div className="px-2 py-1 flex items-center justify-between text-xs">
-              <span className="font-bold text-[var(--text-main)] flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-emerald-500" />
-                شورای هم‌فکری مدل‌های وب آماده اتصال
-              </span>
-              <span className="text-[11px] font-bold text-[var(--text-dim)]">
-                Windows · macOS · Linux
-              </span>
+
+            {/* Ordered Slide Footer & Dots */}
+            <div className="px-1.5 py-0.5 flex flex-wrap items-center justify-between gap-2">
+              <div className="text-xs font-bold text-[var(--text-main)] flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                <span>{currentSlide.title}</span>
+              </div>
+
+              <div className="flex items-center gap-1.5">
+                {HERO_SLIDES.map((slide, idx) => (
+                  <button
+                    key={slide.src}
+                    type="button"
+                    onClick={() => setActiveIndex(idx)}
+                    aria-label={slide.title}
+                    className={`h-2 rounded-full transition-all cursor-pointer ${
+                      idx === activeIndex
+                        ? 'w-5 bg-[var(--accent-primary)]'
+                        : 'w-2 bg-[var(--text-dim)]/40 hover:bg-[var(--text-dim)]'
+                    }`}
+                  />
+                ))}
+                <span className="text-[11px] font-bold text-[var(--text-dim)] mr-1.5 tabular-nums">
+                  {toPersianDigits(String(activeIndex + 1))} / {toPersianDigits(String(HERO_SLIDES.length))}
+                </span>
+              </div>
             </div>
           </div>
         </div>

@@ -5,6 +5,7 @@ import { CheckoutModal } from '../../components/CheckoutModal';
 import { setPageSeo } from '../../lib/seo';
 import { toPersianDigits } from '../../lib/persianUtils';
 import { useSettingsStore } from '../../store/settingsStore';
+import { useAuthStore } from '../../store/authStore';
 import { TarapolHero } from './components/TarapolHero';
 import { CouncilLiveDemo } from './components/CouncilLiveDemo';
 import { IdeIntegrationTabs } from './components/IdeIntegrationTabs';
@@ -16,6 +17,8 @@ import { PricingPlan } from './data/tarapolContent';
 
 export function TarapolPage() {
   const { settings } = useSettingsStore();
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const setAuthModalOpen = useAuthStore((s) => s.setAuthModalOpen);
   const usePersianDigits = settings?.appearance?.persianNumerals ?? false;
 
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
@@ -30,7 +33,7 @@ export function TarapolPage() {
       keywords:
         'تراپل, tarapol, antigravity, gemini 4 neon, qwen4-max, cursor ai, شورای هوش مصنوعی, دستیار کدنویسی, خرید لایسنس تراپل',
       canonical: `${window.location.origin}/tarapol`,
-      ogImage: `${window.location.origin}/images/products/tarapol-box.jpg`,
+      ogImage: `${window.location.origin}/images/products/tarapol-box.webp`,
       ogType: 'product',
       schema: {
         '@context': 'https://schema.org',
@@ -40,7 +43,7 @@ export function TarapolPage() {
         operatingSystem: 'Windows 10/11, macOS, Linux',
         description:
           'نرم‌افزار اتصال محیط‌های کدنویسی به شورای مشاوره مدل‌های برتر وب (Gemini 4 Neon و Qwen4-Max) بدون نیاز به هزینه دلاری API.',
-        image: `${window.location.origin}/images/products/tarapol-box.jpg`,
+        image: `${window.location.origin}/images/products/tarapol-box.webp`,
         offers: {
           '@type': 'AggregateOffer',
           priceCurrency: 'IRR',
@@ -138,7 +141,12 @@ export function TarapolPage() {
         <FeatureBentoGrid />
         <IdeIntegrationTabs />
         <ComparisonMatrix />
-        <PricingCards3D formatPrice={formatPrice} onSelectPlan={handleOpenCheckout} />
+        <PricingCards3D
+          formatPrice={formatPrice}
+          onSelectPlan={handleOpenCheckout}
+          isAuthenticated={isAuthenticated}
+          onRequireAuth={() => setAuthModalOpen(true)}
+        />
         <TechnicalFaq />
       </main>
 

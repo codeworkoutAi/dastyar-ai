@@ -1,11 +1,34 @@
 import React from 'react';
-import { Key, Laptop, Sparkles, Users, CheckCircle2, PackageCheck } from 'lucide-react';
+import { Key, Laptop, Sparkles, Users, CheckCircle2, PackageCheck, Download, Lock } from 'lucide-react';
 import { PRICING_PLANS, PricingPlan } from '../data/tarapolContent';
 
 interface PricingCards3DProps {
   formatPrice: (price: number) => string;
   onSelectPlan: (planId: PricingPlan['id']) => void;
+  isAuthenticated: boolean;
+  onRequireAuth: () => void;
 }
+
+const DOWNLOAD_LINKS = [
+  {
+    id: 'windows',
+    label: 'دانلود نسخه ویندوز (.exe)',
+    size: '۵۲ مگابایت · v2.1.4',
+    url: 'https://drive.google.com/uc?export=download&id=1gYdKi07EKdRT8aEpNkqOuNkaNr1o_Y3Y',
+  },
+  {
+    id: 'macos',
+    label: 'دانلود نسخه مک (.dmg)',
+    size: '۸۰ مگابایت · v2.1.4',
+    url: 'https://drive.google.com/uc?export=download&id=1J6n7RbY8oWzjLfCSXay5WDo0BR5fKdH4',
+  },
+  {
+    id: 'linux',
+    label: 'دانلود نسخه لینوکس (.tar.gz)',
+    size: '۶۰ مگابایت · v2.1.4',
+    url: 'https://drive.google.com/uc?export=download&id=1rDSuBuoLOEhMmevbskgCKDogR6pTZIil',
+  },
+];
 
 const PLAN_ICONS: Record<PricingPlan['id'], React.FC<{ size?: number }>> = {
   starter: Laptop,
@@ -13,7 +36,12 @@ const PLAN_ICONS: Record<PricingPlan['id'], React.FC<{ size?: number }>> = {
   team: Users,
 };
 
-export const PricingCards3D: React.FC<PricingCards3DProps> = ({ formatPrice, onSelectPlan }) => {
+export const PricingCards3D: React.FC<PricingCards3DProps> = ({
+  formatPrice,
+  onSelectPlan,
+  isAuthenticated,
+  onRequireAuth,
+}) => {
   return (
     <section id="pricing-section" className="py-4 scroll-mt-24 space-y-10">
       <div className="text-center max-w-2xl mx-auto space-y-2.5">
@@ -36,9 +64,9 @@ export const PricingCards3D: React.FC<PricingCards3DProps> = ({ formatPrice, onS
       <div className="clay-card rounded-card p-4 sm:p-6 max-w-3xl mx-auto flex flex-col sm:flex-row items-center gap-5">
         <div className="w-24 h-28 sm:w-28 sm:h-32 rounded-2xl clay-surface p-2 shrink-0 flex items-center justify-center overflow-hidden">
           <img
-            src="/images/products/tarapol-box.jpg"
+            src="/images/products/tarapol-box.webp"
             alt="بسته نرم‌افزار تَراپُل نسخه ۲.۱"
-            className="w-full h-full object-contain rounded-xl"
+            className="w-full h-full object-cover rounded-xl"
             loading="lazy"
           />
         </div>
@@ -131,6 +159,74 @@ export const PricingCards3D: React.FC<PricingCards3DProps> = ({ formatPrice, onS
             </div>
           );
         })}
+      </div>
+
+      {/* Authenticated Direct Download Box */}
+      <div id="download-section" className="clay-card rounded-card p-5 sm:p-7 space-y-5 scroll-mt-24">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="space-y-1 text-right">
+            <div className="inline-flex items-center gap-1.5 text-xs font-black text-[var(--accent-primary)]">
+              <Download size={15} />
+              <span>دانلود مستقیم فایل نصبی تَراپُل (نسخه ۲.۱.۴)</span>
+            </div>
+            <p className="text-xs sm:text-sm text-[var(--text-muted)]">
+              {isAuthenticated
+                ? 'حساب شما تایید شده است؛ سیستم‌عامل خود را برای دانلود مستقیم انتخاب کنید:'
+                : 'برای دریافت لینک مستقیم دانلود، ابتدا وارد حساب کاربری خود شوید یا ثبت‌نام کنید.'}
+            </p>
+          </div>
+          {!isAuthenticated && (
+            <button
+              type="button"
+              onClick={onRequireAuth}
+              className="px-4 py-2.5 rounded-btn clay-btn-primary text-white text-xs font-black flex items-center gap-1.5 shrink-0 cursor-pointer"
+            >
+              <Lock size={14} />
+              <span>ورود / ثبت‌نام برای دانلود</span>
+            </button>
+          )}
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {DOWNLOAD_LINKS.map((item) =>
+            isAuthenticated ? (
+              <a
+                key={item.id}
+                href={item.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="clay-surface hover:clay-card-elevated rounded-2xl p-4 flex items-center justify-between gap-3 transition-transform hover:-translate-y-0.5"
+              >
+                <div className="text-right">
+                  <div className="text-xs sm:text-sm font-black text-[var(--text-main)]">
+                    {item.label}
+                  </div>
+                  <div className="text-[11px] text-[var(--text-dim)] mt-0.5">{item.size}</div>
+                </div>
+                <span className="w-9 h-9 rounded-xl clay-btn-primary text-white flex items-center justify-center shrink-0">
+                  <Download size={16} />
+                </span>
+              </a>
+            ) : (
+              <button
+                key={item.id}
+                type="button"
+                onClick={onRequireAuth}
+                className="clay-surface rounded-2xl p-4 flex items-center justify-between gap-3 text-right opacity-85 hover:opacity-100 transition-opacity cursor-pointer"
+              >
+                <div>
+                  <div className="text-xs sm:text-sm font-black text-[var(--text-main)]">
+                    {item.label}
+                  </div>
+                  <div className="text-[11px] text-[var(--text-dim)] mt-0.5">{item.size}</div>
+                </div>
+                <span className="w-9 h-9 rounded-xl clay-surface-inset text-[var(--text-muted)] flex items-center justify-center shrink-0">
+                  <Lock size={15} />
+                </span>
+              </button>
+            )
+          )}
+        </div>
       </div>
     </section>
   );
