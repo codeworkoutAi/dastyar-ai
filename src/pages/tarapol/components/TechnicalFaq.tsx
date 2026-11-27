@@ -8,18 +8,17 @@ export const TechnicalFaq: React.FC = () => {
 
   return (
     <section id="faq-section" className="py-4 scroll-mt-24 space-y-12">
-      {/* Technical FAQ Accordion */}
-      <div className="max-w-4xl mx-auto space-y-6">
+      <div className="max-w-3xl mx-auto space-y-6">
         <div className="text-center space-y-2.5">
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl clay-surface text-xs font-bold text-[var(--accent-primary)]">
             <HelpCircle size={14} />
-            <span>پاسخ‌های شفاف فنی</span>
+            <span>پاسخ‌های شفاف</span>
           </span>
           <h2
             className="text-2xl sm:text-3xl font-black text-[var(--text-main)]"
             style={{ fontFamily: "'Estedad', sans-serif" }}
           >
-            سوالات متداول توسعه‌دهندگان
+            سوالات متداول خریداران
           </h2>
         </div>
 
@@ -55,16 +54,16 @@ export const TechnicalFaq: React.FC = () => {
         </div>
       </div>
 
-      {/* Final Conversion CTA Card */}
-      <div className="clay-card-elevated rounded-card p-6 sm:p-10 text-center space-y-5 max-w-4xl mx-auto">
+      {/* Final Conversion CTA */}
+      <div className="clay-card-elevated rounded-card p-6 sm:p-9 text-center space-y-4 max-w-3xl mx-auto">
         <h3
           className="text-xl sm:text-2xl font-black text-[var(--text-main)]"
           style={{ fontFamily: "'Estedad', sans-serif" }}
         >
-          آماده‌اید شورای مدل‌های پرچمدار را وارد IDE خود کنید؟
+          شورای مدل‌های برتر را به محیط کدنویسی خود بیاورید
         </h3>
         <p className="text-xs sm:text-sm text-[var(--text-muted)] max-w-xl mx-auto leading-relaxed">
-          با یک بار خرید لایسنس دائمی تَراپُل، برای همیشه از هزینه دلاری API بی‌نیاز شوید و کدهایتان را با هم‌فکری هم‌زمان دو مدل برتر بازبینی کنید.
+          با یک بار تهیه لایسنس تَراپُل، برای همیشه از هزینه‌های دلاری API بی‌نیاز شوید و با اطمینان بیشتر کدنویسی کنید.
         </p>
         <div className="flex flex-wrap items-center justify-center gap-3.5 pt-1">
           <a
@@ -78,7 +77,7 @@ export const TechnicalFaq: React.FC = () => {
             to="/contact"
             className="px-5 py-3.5 rounded-btn clay-btn text-[var(--text-main)] font-bold text-sm flex items-center gap-2 transition-transform hover:-translate-y-0.5 active:scale-95"
           >
-            <span>سوال فنی دارید؟ تماس با پشتیبانی</span>
+            <span>سوالی دارید؟ تماس با پشتیبانی</span>
             <ArrowLeft size={16} />
           </Link>
         </div>

@@ -6,9 +6,10 @@ import { setPageSeo } from '../../lib/seo';
 import { toPersianDigits } from '../../lib/persianUtils';
 import { useSettingsStore } from '../../store/settingsStore';
 import { TarapolHero } from './components/TarapolHero';
+import { CouncilLiveDemo } from './components/CouncilLiveDemo';
 import { IdeIntegrationTabs } from './components/IdeIntegrationTabs';
-import { ComparisonMatrix } from './components/ComparisonMatrix';
 import { FeatureBentoGrid } from './components/FeatureBentoGrid';
+import { ComparisonMatrix } from './components/ComparisonMatrix';
 import { PricingCards3D } from './components/PricingCards3D';
 import { TechnicalFaq } from './components/TechnicalFaq';
 import { PricingPlan } from './data/tarapolContent';
@@ -23,22 +24,22 @@ export function TarapolPage() {
 
   useEffect(() => {
     setPageSeo({
-      title: 'تَراپُل (Tarapol) | شورای مشاوران ارشد هوش مصنوعی برای Antigravity و Cursor',
+      title: 'تَراپُل (Tarapol) | شورای مشاوره مدل‌های هوش مصنوعی وب در محیط کدنویسی',
       description:
-        'پل ارتباطی اختصاصی میان محیط توسعه (Google Antigravity و Cursor) و مدل‌های وب پرچمدار Google Gemini 4 Neon و Alibaba Qwen4-Max برای بازبینی عمیق کد، معماری سیستم و عیب‌یابی بدون هزینه دلاری API.',
+        'نرم‌افزار تَراپُل محیط کدنویسی شما (Antigravity، Cursor و VS Code) را به شورای مدل‌های برتر وب از جمله Google Gemini 4 Neon و Alibaba Qwen4-Max متصل می‌کند؛ امن، سریع و بدون هزینه دلاری API.',
       keywords:
-        'تراپل, tarapol, antigravity, antigravity bridge, gemini 4 neon, qwen4-max, cursor ai, هوش مصنوعی برنامه نویسی, شورای هوش مصنوعی, آنتی گرویتی, دستیار هوشمند کدنویسی, خرید لایسنس تراپل',
+        'تراپل, tarapol, antigravity, gemini 4 neon, qwen4-max, cursor ai, شورای هوش مصنوعی, دستیار کدنویسی, خرید لایسنس تراپل',
       canonical: `${window.location.origin}/tarapol`,
       ogImage: `${window.location.origin}/images/products/tarapol-box.jpg`,
       ogType: 'product',
       schema: {
         '@context': 'https://schema.org',
         '@type': 'SoftwareApplication',
-        name: 'نرم‌افزار تَراپُل (Tarapol Universal AI Gateway)',
+        name: 'نرم‌افزار تَراپُل (Tarapol)',
         applicationCategory: 'DeveloperApplication',
         operatingSystem: 'Windows 10/11, macOS, Linux',
         description:
-          'شورای مشاوران ارشد هوش مصنوعی و گیت‌وی محلی برای ارتباط محیط‌های کدنویسی با برترین مدل‌های استدلالی وب (Gemini 4 Neon و Qwen4-Max).',
+          'نرم‌افزار اتصال محیط‌های کدنویسی به شورای مشاوره مدل‌های برتر وب (Gemini 4 Neon و Qwen4-Max) بدون نیاز به هزینه دلاری API.',
         image: `${window.location.origin}/images/products/tarapol-box.jpg`,
         offers: {
           '@type': 'AggregateOffer',
@@ -97,7 +98,7 @@ export function TarapolPage() {
 
     const fallbackProduct = productData || {
       id: 34,
-      title: 'لایسنس نرم‌افزار تَراپُل (Tarapol AI Gateway) | شورای مشاوران ارشد هوش مصنوعی',
+      title: 'لایسنس نرم‌افزار تَراپُل (Tarapol) | شورای مدل‌های هوش مصنوعی',
       price: planId === 'starter' ? 390000 : planId === 'team' ? 1490000 : 690000,
       category: 'software',
       image: '/images/products/tarapol-box.jpg',
@@ -131,11 +132,12 @@ export function TarapolPage() {
     >
       <GlobalHeader />
 
-      <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 space-y-16 sm:space-y-24">
-        <TarapolHero usePersianDigits={usePersianDigits} />
+      <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-14 space-y-16 sm:space-y-24">
+        <TarapolHero />
+        <CouncilLiveDemo />
+        <FeatureBentoGrid />
         <IdeIntegrationTabs />
         <ComparisonMatrix />
-        <FeatureBentoGrid />
         <PricingCards3D formatPrice={formatPrice} onSelectPlan={handleOpenCheckout} />
         <TechnicalFaq />
       </main>
