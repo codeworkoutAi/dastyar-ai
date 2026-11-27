@@ -642,7 +642,7 @@ export async function renderHtmlWithSeo(req: express.Request, res: express.Respo
             }
           };
         } else if (urlPath === '/tarapol') {
-      html = html.replace(/<h1[^>]*>.*?<\/h1>/, '<h1 style="font-size:20px;font-weight:700;margin:0 0 8px 0;color:#f8fafc;">نرم‌افزار تَراپُل (Tarapol) — شورای مشاوره مدل‌های برتر وب</h1>');
+      html = html.replace(/<h1[^>]*>.*?<\/h1>/, '<h1 style="font-size:20px;font-weight:700;margin:0 0 8px 0;color:#f8fafc;">نرم‌افزار تَراپُل (Tarapol) — شورای مشاوره مدل‌های برتر وب</h1><p style="font-size:14px;line-height:1.8;color:#cbd5e1;margin:0 0 12px 0;"><strong>نرم‌افزار تَراپُل (Tarapol)</strong> پل دسکتاپ اتصال مستقیم <strong>۵ محیط کدنویسی</strong> (Cursor، VS Code، Antigravity، Claude Code و Cline) به <strong>شورای مدل‌های برتر وب</strong> (Gemini 4 Neon و Qwen4-Max) است؛ با <strong>۱۰۰٪ صرفه‌جویی در هزینه دلاری API</strong> و راه‌اندازی در کمتر از ۲ دقیقه.</p>');
       html = html.replace(/<h2[^>]*>.*?<\/h2>/, '');
     } else if (urlPath === '/ai-assistant') {
           pageTitle = 'دستیار هوش مصنوعی چیست؟ راهنمای انتخاب و خرید ابزارهای هوش مصنوعی | Dastyar AI';
@@ -705,7 +705,7 @@ export async function renderHtmlWithSeo(req: express.Request, res: express.Respo
       html = html.replace(/<h1[^>]*>.*?<\/h1>/, '<h1 style="font-size:20px;font-weight:700;margin:0 0 8px 0;color:#f8fafc;">تماس با Dastyar AI</h1>');
       html = html.replace(/<h2[^>]*>.*?<\/h2>/, '');
     } else if (urlPath === '/tarapol') {
-      html = html.replace(/<h1[^>]*>.*?<\/h1>/, '<h1 style="font-size:20px;font-weight:700;margin:0 0 8px 0;color:#f8fafc;">نرم‌افزار تَراپُل (Tarapol) — شورای مشاوره مدل‌های برتر وب</h1>');
+      html = html.replace(/<h1[^>]*>.*?<\/h1>/, '<h1 style="font-size:20px;font-weight:700;margin:0 0 8px 0;color:#f8fafc;">نرم‌افزار تَراپُل (Tarapol) — شورای مشاوره مدل‌های برتر وب</h1><p style="font-size:14px;line-height:1.8;color:#cbd5e1;margin:0 0 12px 0;"><strong>نرم‌افزار تَراپُل (Tarapol)</strong> پل دسکتاپ اتصال مستقیم <strong>۵ محیط کدنویسی</strong> (Cursor، VS Code، Antigravity، Claude Code و Cline) به <strong>شورای مدل‌های برتر وب</strong> (Gemini 4 Neon و Qwen4-Max) است؛ با <strong>۱۰۰٪ صرفه‌جویی در هزینه دلاری API</strong> و راه‌اندازی در کمتر از ۲ دقیقه.</p>');
       html = html.replace(/<h2[^>]*>.*?<\/h2>/, '');
     } else if (urlPath === '/ai-assistant') {
       html = html.replace(/<h1[^>]*>.*?<\/h1>/, '<h1 style="font-size:20px;font-weight:700;margin:0 0 8px 0;color:#f8fafc;">دستیار هوش مصنوعی چیست؟</h1>');

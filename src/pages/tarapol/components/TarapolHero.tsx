@@ -61,9 +61,10 @@ export const TarapolHero: React.FC = () => {
           </h1>
 
           <p className="text-xs sm:text-sm text-[var(--text-muted)] leading-relaxed">
-            تَراپُل محیط کدنویسی شما را مستقیم به مدل‌های برتر وب وصل می‌کند تا به‌جای یک نظر، از{' '}
-            <strong className="text-[var(--text-main)]">هم‌فکری هم‌زمان یک شورا</strong>{' '}
-            روی پروژه خود استفاده کنید — امن روی سیستم شما و بدون هزینه دلاری API.
+            <strong className="text-[var(--text-main)]">نرم‌افزار تَراپُل (Tarapol)</strong> پل دسکتاپ اتصال مستقیم{' '}
+            <strong className="text-[var(--text-main)]">۵ محیط کدنویسی</strong> (Cursor، VS Code، Antigravity، Claude Code و Cline) به{' '}
+            <strong className="text-[var(--text-main)]">شورای مدل‌های برتر وب</strong> (Gemini 4 Neon و Qwen4-Max) است؛ با{' '}
+            <strong className="text-[var(--text-main)]">۱۰۰٪ صرفه‌جویی در هزینه دلاری API</strong> و راه‌اندازی در کمتر از ۲ دقیقه.
           </p>
 
           {/* Council Model Badges */}
