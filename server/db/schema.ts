@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import db from './database';
+import { seedTarapolPosts } from './seedTarapolPosts';
 
 export function initializeSchema() {
   console.log('[Database] Initializing SQLite schema...');
@@ -621,6 +622,8 @@ export function initializeSchema() {
   } catch (migErr) {
     console.warn('[Database] News tag migration note:', (migErr as any)?.message || migErr);
   }
+
+  seedTarapolPosts(db);
 
   console.log('[Database] SQLite schema ready.');
 }
